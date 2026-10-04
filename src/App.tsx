@@ -2,6 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { actions, applyAction, formatTime, initialState, isOpen, locations, type GameState } from './game'
 
 const SAVE_KEY = 'street-life-save-v3'
+type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal'
+
+const mapPositions: Record<string, { left: string; top: string }> = {
+  station: { left: '13%', top: '18%' },
+  shop: { left: '64%', top: '14%' },
+  support: { left: '40%', top: '38%' },
+  jobcenter: { left: '70%', top: '51%' },
+  shelter: { left: '16%', top: '65%' },
+  work: { left: '53%', top: '76%' },
+}
 
 function loadGame(): GameState {
   try {
@@ -20,6 +30,7 @@ function Stat({ label, value, icon }: { label: string; value: number; icon: stri
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('Morning. You have a little cash and no plan yet.')
+  const [screen, setScreen] = useState<Screen>('location')
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const currentActions = actions.filter((x) => x.locationId === current.id)
   const open = isOpen(current, game.minutes)
@@ -31,18 +42,22 @@ export default function App() {
       if (document.visibilityState !== 'visible') return
       setGame((prev) => applyAction(prev, { minutes: 1 }))
     }, 1000)
-
     return () => window.clearInterval(timer)
   }, [])
 
   function travel(id: string) {
     const destination = locations.find((x) => x.id === id)
-    if (!destination || destination.id === game.locationId) return
+    if (!destination) return
+    if (destination.id === game.locationId) {
+      setScreen('location')
+      return
+    }
     setGame((prev) => {
       const next = applyAction(prev, { minutes: destination.travelMinutes })
       setMessage(`You walked to ${destination.name}. ${destination.travelMinutes} minutes passed.`)
       return { ...next, locationId: destination.id }
     })
+    setScreen('location')
   }
 
   function act(actionId: string) {
@@ -67,10 +82,14 @@ export default function App() {
     localStorage.removeItem(SAVE_KEY)
     setGame(initialState)
     setMessage('New run started.')
+    setScreen('location')
   }
 
+  const nav = (target: Screen, icon: string, label: string) =>
+    <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
+
   return <main className="shell">
-    <header><div><p className="eyebrow">STREET LIFE · STAGE 2</p><h1>Day {game.day} <span>{formatTime(game.minutes)}</span></h1></div><div className="money">{game.money.toFixed(2)} zł</div></header>
+    <header><div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span>{formatTime(game.minutes)}</span></h1></div><div className="money">{game.money.toFixed(2)} zł</div></header>
 
     <section className="needs">
       <Stat icon="🍞" label="Food" value={game.hunger} />
@@ -81,37 +100,53 @@ export default function App() {
       <Stat icon="🙂" label="Mood" value={game.mood} />
     </section>
 
-    <section className="current">
-      <div className="location-icon">{current.icon}</div>
-      <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : 'CLOSED'}</p><h2>{current.name}</h2><p>{current.description}</p></div>
-    </section>
+    {screen === 'location' && <>
+      <section className="current">
+        <div className="location-icon">{current.icon}</div>
+        <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : 'CLOSED'}</p><h2>{current.name}</h2><p>{current.description}</p></div>
+      </section>
+      <section className="event"><span>●</span><p>{message}</p></section>
+      <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
+      <section className="actions">
+        {currentActions.length ? currentActions.map((action) => {
+          const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
+          return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
+            <div><strong>{action.name}</strong><small>{action.description}</small></div>
+            <span>{action.cost ? `${action.cost} zł · ` : ''}~{action.minutes} min</span>
+          </button>
+        }) : <p className="empty">Nothing useful to do here yet.</p>}
+      </section>
+    </>}
 
-    <section className="event"><span>●</span><p>{message}</p></section>
+    {screen === 'map' && <>
+      <div className="section-title map-title"><h2>City map</h2><span>Tap a place to travel</span></div>
+      <section className="city-map">
+        <div className="road road-a" /><div className="road road-b" /><div className="road road-c" />
+        {locations.map((location) => {
+          const here = location.id === game.locationId
+          const locationOpen = isOpen(location, game.minutes)
+          const pos = mapPositions[location.id] ?? { left: '45%', top: '45%' }
+          return <button key={location.id} className={here ? 'map-pin here' : 'map-pin'} style={pos} onClick={() => travel(location.id)}>
+            <span className="pin-icon">{location.icon}</span>
+            <strong>{location.name}</strong>
+            <small>{here ? 'You are here' : `${location.travelMinutes} min · ${locationOpen ? 'open' : 'closed'}`}</small>
+          </button>
+        })}
+      </section>
+      <section className="map-legend"><span>● Current location</span><span>Walking adds travel time</span></section>
+    </>}
 
-    <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
-    <section className="actions">
-      {currentActions.length ? currentActions.map((action) => {
-        const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
-        return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
-          <div><strong>{action.name}</strong><small>{action.description}</small></div>
-          <span>{action.cost ? `${action.cost} zł · ` : ''}~{action.minutes} min</span>
-        </button>
-      }) : <p className="empty">Nothing useful to do here yet. This location comes in the next stage.</p>}
-    </section>
+    {screen === 'inventory' && <section className="placeholder"><span>🎒</span><h2>Inventory</h2><p>Your backpack is almost empty. Food, water, phone and documents will live here.</p></section>}
+    {screen === 'status' && <section className="placeholder"><span>👤</span><h2>Status</h2><p>Character condition, work situation and longer-term progress will appear here.</p></section>}
+    {screen === 'journal' && <section className="placeholder"><span>📓</span><h2>Journal</h2><p>Objectives, appointments and important events will be recorded here.</p></section>}
 
-    <div className="section-title city-title"><h2>City</h2><span>Travel costs time</span></div>
-    <section className="grid">
-      {locations.map((location) => {
-        const locationOpen = isOpen(location, game.minutes)
-        const here = location.id === game.locationId
-        return <button key={location.id} className={here ? 'place here' : 'place'} onClick={() => travel(location.id)} disabled={here}>
-          <div className="place-top"><span className="place-icon">{location.icon}</span><span className={locationOpen ? 'open' : 'closed'}>{locationOpen ? 'OPEN' : 'CLOSED'}</span></div>
-          <strong>{location.name}</strong><small>{here ? 'Current location' : `~${location.travelMinutes} min`}</small>
-          <em>{formatTime(location.open)}–{location.close === 1440 ? '24:00' : formatTime(location.close)}</em>
-        </button>
-      })}
-    </section>
-
-    <footer><p>Stage 2: six survival stats now react differently to time and choices.</p><button className="reset" onClick={reset}>Reset save</button></footer>
+    <footer><button className="reset" onClick={reset}>Reset save</button></footer>
+    <nav className="bottom-nav">
+      {nav('map', '🗺️', 'Map')}
+      {nav('inventory', '🎒', 'Inventory')}
+      <button className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} onClick={() => setScreen('location')}><span>{current.icon}</span><small>Place</small></button>
+      {nav('status', '👤', 'Status')}
+      {nav('journal', '📓', 'Journal')}
+    </nav>
   </main>
 }
