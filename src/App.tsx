@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { actions, applyAction, formatTime, initialState, isOpen, locations, type GameState } from './game'
 
-const SAVE_KEY = 'street-life-save-v2'
+const SAVE_KEY = 'street-life-save-v3'
 
 function loadGame(): GameState {
   try {
@@ -48,7 +48,7 @@ export default function App() {
     }
     setGame((prev) => {
       const result = action.resolve(prev)
-      setMessage(result.message)
+      setMessage(result.message ?? 'Time passes.')
       return applyAction(prev, result)
     })
   }
@@ -64,8 +64,11 @@ export default function App() {
 
     <section className="needs">
       <Stat icon="🍞" label="Food" value={game.hunger} />
+      <Stat icon="💧" label="Thirst" value={game.thirst} />
       <Stat icon="⚡" label="Energy" value={game.energy} />
-      <Stat icon="💧" label="Hygiene" value={game.hygiene} />
+      <Stat icon="❤️" label="Health" value={game.health} />
+      <Stat icon="🚿" label="Hygiene" value={game.hygiene} />
+      <Stat icon="🙂" label="Mood" value={game.mood} />
     </section>
 
     <section className="current">
@@ -99,6 +102,6 @@ export default function App() {
       })}
     </section>
 
-    <footer><p>Stage 2: location actions, costs, consequences and time pressure.</p><button className="reset" onClick={reset}>Reset save</button></footer>
+    <footer><p>Stage 2: six survival stats now react differently to time and choices.</p><button className="reset" onClick={reset}>Reset save</button></footer>
   </main>
 }
