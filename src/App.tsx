@@ -275,7 +275,29 @@ export default function App() {
         <Stat icon="🙂" label="Mood" value={game.mood} />
       </div>
     </section>}
-    {screen === 'journal' && <section className="placeholder"><span>📓</span><h2>Journal</h2><p>Objectives, appointments and important events will be recorded here.</p></section>}
+    {screen === 'journal' && <section className="journal-screen">
+      <div className="journal-heading"><div><p className="eyebrow">DAY {game.day} · {weekday(game.day)}</p><h2>Journal</h2></div><span>📓</span></div>
+
+      <div className="next-event">
+        <div className="next-event-icon">⏰</div>
+        <div><p className="eyebrow">NEXT IMPORTANT</p><strong>Social support opens at 08:00</strong><small>Visit the office and ask what help is available.</small></div>
+        <b>08:00</b>
+      </div>
+
+      <div className="journal-section-title"><h3>🎯 Goals</h3><span>1 / 4</span></div>
+      <div className="goal-list">
+        <div className="goal done"><span>✓</span><div><strong>Get through the morning</strong><small>Find your bearings and check what you have.</small></div></div>
+        <div className="goal"><span>○</span><div><strong>Find a safe place to sleep</strong><small>Check the shelter before it fills up.</small></div></div>
+        <div className="goal"><span>○</span><div><strong>Visit social support</strong><small>Ask about documents, benefits and available help.</small></div></div>
+        <div className="goal"><span>○</span><div><strong>Look for work</strong><small>Visit the job centre or find a day job.</small></div></div>
+      </div>
+
+      <div className="journal-section-title"><h3>📝 Today</h3><span>Day {game.day}</span></div>
+      <div className="timeline">
+        <div className="timeline-entry"><time>08:00</time><i /><div><strong>Woke up at the station</strong><small>You have a little cash and need to make a plan for the day.</small></div></div>
+        <div className="timeline-entry"><time>{formatTime(game.minutes)}</time><i /><div><strong>Current situation</strong><small>You are at {current.name}. Condition: {overall.label.toLowerCase()}.</small></div></div>
+      </div>
+    </section>}
 
     <footer><button className="reset" onClick={reset}>Reset save</button></footer>
     <nav className={screen === 'travel' ? 'bottom-nav travelling' : 'bottom-nav'}>
