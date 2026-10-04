@@ -136,7 +136,7 @@ export default function App() {
     {screen === 'location' && <>
       <section className="current">
         <div className="location-icon">{current.icon}</div>
-        <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : 'CLOSED'}</p><h2>{current.name}</h2><p>{current.description}</p></div>
+        <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}</p><h2>{current.name}</h2><p>{current.description}</p></div>
       </section>
       <section className="event"><span>●</span><p>{message}</p></section>
       <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
