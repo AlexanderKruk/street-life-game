@@ -25,6 +25,14 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setGame((prev) => applyAction(prev, { minutes: 1 }))
+    }, 1000)
+
+    return () => window.clearInterval(timer)
+  }, [])
+
   function travel(id: string) {
     const destination = locations.find((x) => x.id === id)
     if (!destination || destination.id === game.locationId) return
