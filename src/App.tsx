@@ -31,7 +31,15 @@ function loadGame(): GameState {
 
 function Stat({ label, value, icon }: { label: string; value: number; icon: string }) {
   const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
-  return <div className="stat"><span>{icon}</span><div><div className="stat-label">{label}</div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
+  return <div className="stat"><span>{icon}</span><div><div className="stat-label"><span>{label}</span><b>{Math.round(value)}</b></div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
+}
+
+function overallStatus(game: GameState) {
+  const values = [game.hunger, game.thirst, game.energy, game.health, game.hygiene, game.mood]
+  const lowest = Math.min(...values)
+  if (lowest <= 30) return { label: 'BAD', icon: '😣', level: 'bad' }
+  if (lowest <= 60) return { label: 'FAIR', icon: '😐', level: 'fair' }
+  return { label: 'OK', icon: '🙂', level: 'ok' }
 }
 
 export default function App() {
@@ -43,6 +51,7 @@ export default function App() {
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const currentActions = actions.filter((x) => x.locationId === current.id)
   const open = isOpen(current, game.minutes)
+  const overall = overallStatus(game)
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
 
@@ -127,16 +136,13 @@ export default function App() {
     <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
 
   return <main className="shell">
-    <header><div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div><div className="money">{game.money.toFixed(2)} zł</div></header>
-
-    <section className="needs">
-      <Stat icon="🍞" label="Food" value={game.hunger} />
-      <Stat icon="💧" label="Thirst" value={game.thirst} />
-      <Stat icon="⚡" label="Energy" value={game.energy} />
-      <Stat icon="❤️" label="Health" value={game.health} />
-      <Stat icon="🚿" label="Hygiene" value={game.hygiene} />
-      <Stat icon="🙂" label="Mood" value={game.mood} />
-    </section>
+    <header>
+      <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
+      <div className="header-info">
+        <button className={`overall-status ${overall.level}`} onClick={() => setScreen('status')}><span>{overall.icon}</span>{overall.label}</button>
+        <div className="money">{game.money.toFixed(2)} zł</div>
+      </div>
+    </header>
 
     {screen === 'location' && <>
       <section className="current">
@@ -206,7 +212,17 @@ export default function App() {
     })()}
 
     {screen === 'inventory' && <section className="placeholder"><span>🎒</span><h2>Inventory</h2><p>Your backpack is almost empty. Food, water, phone and documents will live here.</p></section>}
-    {screen === 'status' && <section className="placeholder"><span>👤</span><h2>Status</h2><p>Character condition, work situation and longer-term progress will appear here.</p></section>}
+    {screen === 'status' && <section className="status-screen">
+      <div className="status-heading"><div><p className="eyebrow">YOUR CONDITION</p><h2>{overall.icon} {overall.label}</h2></div><p>Your weakest need determines the overall condition.</p></div>
+      <div className="status-needs">
+        <Stat icon="🍞" label="Food" value={game.hunger} />
+        <Stat icon="💧" label="Thirst" value={game.thirst} />
+        <Stat icon="⚡" label="Energy" value={game.energy} />
+        <Stat icon="❤️" label="Health" value={game.health} />
+        <Stat icon="🚿" label="Hygiene" value={game.hygiene} />
+        <Stat icon="🙂" label="Mood" value={game.mood} />
+      </div>
+    </section>}
     {screen === 'journal' && <section className="placeholder"><span>📓</span><h2>Journal</h2><p>Objectives, appointments and important events will be recorded here.</p></section>}
 
     <footer><button className="reset" onClick={reset}>Reset save</button></footer>
