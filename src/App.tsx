@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { actions, applyAction, formatTime, initialState, isOpen, locations, type GameState } from './game'
 
 const SAVE_KEY = 'street-life-save-v3'
-const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
 function weekday(day: number) {
   return WEEKDAYS[(day - 1) % WEEKDAYS.length]
