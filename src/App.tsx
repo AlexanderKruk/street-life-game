@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { actions, applyAction, formatTime, initialState, isOpen, locations, type GameState } from './game'
 
 const SAVE_KEY = 'street-life-save-v3'
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+function weekday(day: number) {
+  return WEEKDAYS[(day - 1) % WEEKDAYS.length]
+}
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
@@ -122,7 +127,7 @@ export default function App() {
     <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
 
   return <main className="shell">
-    <header><div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span>{formatTime(game.minutes)}</span></h1></div><div className="money">{game.money.toFixed(2)} zł</div></header>
+    <header><div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div><div className="money">{game.money.toFixed(2)} zł</div></header>
 
     <section className="needs">
       <Stat icon="🍞" label="Food" value={game.hunger} />
