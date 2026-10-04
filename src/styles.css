@@ -170,3 +170,39 @@ button.inventory-item { width:100%; }
   .inventory-item { min-height:104px; padding:12px; align-items:flex-start; flex-direction:column; gap:8px; }
   .item-icon { flex:0; font-size:30px; text-align:left; }
 }
+
+/* Journal */
+.journal-screen { margin-top:20px; }
+.journal-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:12px; }
+.journal-heading h2 { margin-bottom:0; font-size:28px; }
+.journal-heading > span { font-size:34px; }
+.next-event { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:13px; padding:16px; border:1px solid #4b4937; border-radius:18px; background:#1b1b16; margin-bottom:24px; }
+.next-event-icon { font-size:30px; }
+.next-event .eyebrow { margin-bottom:3px; color:#aaa16f; }
+.next-event strong,.next-event small { display:block; }
+.next-event small { color:#9ca39d; margin-top:4px; line-height:1.35; }
+.next-event > b { color:#d5c77d; font-size:13px; }
+.journal-section-title { display:flex; justify-content:space-between; align-items:center; margin:18px 2px 9px; }
+.journal-section-title h3 { margin:0; font-size:15px; }
+.journal-section-title span { color:#7f8b96; font-size:11px; }
+.goal-list { display:grid; gap:7px; }
+.goal { display:grid; grid-template-columns:26px 1fr; gap:9px; padding:13px; border:1px solid #303a43; border-radius:14px; background:#141a20; }
+.goal > span { color:#8f9ca7; font-size:18px; line-height:1; }
+.goal strong,.goal small { display:block; }
+.goal small { color:#89959f; margin-top:4px; line-height:1.35; }
+.goal.done { opacity:.58; }
+.goal.done > span { color:#77b68b; }
+.goal.done strong { text-decoration:line-through; }
+.timeline { padding:4px 0 0; }
+.timeline-entry { display:grid; grid-template-columns:48px 12px 1fr; gap:8px; min-height:66px; }
+.timeline-entry time { color:#77838e; font-size:10px; padding-top:2px; }
+.timeline-entry i { position:relative; width:7px; height:7px; border-radius:50%; background:#7c9586; margin-top:3px; }
+.timeline-entry i::after { content:""; position:absolute; top:10px; left:3px; width:1px; height:50px; background:#2e3941; }
+.timeline-entry:last-child i::after { display:none; }
+.timeline-entry strong,.timeline-entry small { display:block; }
+.timeline-entry strong { font-size:13px; }
+.timeline-entry small { color:#89959f; margin-top:4px; line-height:1.35; }
+@media (max-width:520px) {
+  .next-event { grid-template-columns:auto 1fr; }
+  .next-event > b { grid-column:2; }
+}
