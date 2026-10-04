@@ -10,9 +10,9 @@ function weekday(day: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
-type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean }
+type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 
-const INITIAL_INVENTORY: Inventory = { water: 1, food: 1, phoneBattery: 62, jacket: 78, documents: true }
+const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 
 const mapPositions: Record<string, { left: string; top: string }> = {
   station: { left: '13%', top: '18%' },
@@ -235,7 +235,7 @@ export default function App() {
     })()}
 
     {screen === 'inventory' && <section className="inventory-screen">
-      <div className="inventory-heading"><div><p className="eyebrow">BACKPACK</p><h2>Inventory</h2></div><span>5 item types</span></div>
+      <div className="inventory-heading"><div><p className="eyebrow">BACKPACK</p><h2>Inventory</h2></div><span>8 item types</span></div>
       <div className="inventory-grid">
         <button className="inventory-item usable" onClick={() => useItem('water')} disabled={inventory.water <= 0}>
           <span className="item-icon">💧</span><div><strong>Water</strong><small>{inventory.water > 0 ? `×${inventory.water} · tap to drink` : 'Empty'}</small></div>
@@ -251,6 +251,15 @@ export default function App() {
         </div>
         <div className="inventory-item">
           <span className="item-icon">🪪</span><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
+        </div>
+        <div className="inventory-item">
+          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>×{inventory.cigarettes}</small></div>
+        </div>
+        <div className="inventory-item">
+          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>×{inventory.medicines}</small></div>
+        </div>
+        <div className="inventory-item">
+          <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
         </div>
       </div>
       <p className="inventory-note">Consumables can be used here. Other items will matter for travel, jobs, services and events.</p>
