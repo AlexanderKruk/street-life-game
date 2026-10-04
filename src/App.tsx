@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { actions, applyAction, formatTime, initialState, isOpen, locations, type GameState } from './game'
 
 const SAVE_KEY = 'street-life-save-v3'
-type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal'
+type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
+type TravelMode = 'walk' | 'transit'
+type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
 
 const mapPositions: Record<string, { left: string; top: string }> = {
   station: { left: '13%', top: '18%' },
@@ -31,6 +33,8 @@ export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('Morning. You have a little cash and no plan yet.')
   const [screen, setScreen] = useState<Screen>('location')
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
+  const [trip, setTrip] = useState<Trip | null>(null)
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const currentActions = actions.filter((x) => x.locationId === current.id)
   const open = isOpen(current, game.minutes)
@@ -40,24 +44,51 @@ export default function App() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return
-      setGame((prev) => applyAction(prev, { minutes: 1 }))
+      setGame((prev) => {
+        const next = applyAction(prev, { minutes: 1 })
+        if (!trip || trip.mode !== 'walk') return next
+        return {
+          ...next,
+          energy: Math.max(0, next.energy - 0.12),
+          thirst: Math.max(0, next.thirst - 0.04),
+        }
+      })
+      setTrip((active) => {
+        if (!active) return null
+        if (active.remaining > 1) return { ...active, remaining: active.remaining - 1 }
+        const destination = locations.find((x) => x.id === active.destinationId)
+        if (destination) {
+          setGame((prev) => ({ ...prev, locationId: destination.id }))
+          setMessage(`You arrived at ${destination.name} by ${active.mode === 'walk' ? 'walking' : 'public transport'}.`)
+          setScreen('location')
+        }
+        return null
+      })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [trip])
 
-  function travel(id: string) {
-    const destination = locations.find((x) => x.id === id)
-    if (!destination) return
-    if (destination.id === game.locationId) {
+  function chooseDestination(id: string) {
+    if (id === game.locationId) {
       setScreen('location')
       return
     }
-    setGame((prev) => {
-      const next = applyAction(prev, { minutes: destination.travelMinutes })
-      setMessage(`You walked to ${destination.name}. ${destination.travelMinutes} minutes passed.`)
-      return { ...next, locationId: destination.id }
-    })
-    setScreen('location')
+    setSelectedDestination(id)
+  }
+
+  function startTravel(mode: TravelMode) {
+    const destination = locations.find((x) => x.id === selectedDestination)
+    if (!destination) return
+    const total = mode === 'walk' ? destination.travelMinutes : Math.max(4, Math.ceil(destination.travelMinutes * 0.35))
+    const fare = 4.4
+    if (mode === 'transit' && game.money < fare) {
+      setMessage('You do not have enough money for public transport.')
+      return
+    }
+    if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
+    setTrip({ destinationId: destination.id, mode, total, remaining: total })
+    setSelectedDestination(null)
+    setScreen('travel')
   }
 
   function act(actionId: string) {
@@ -83,6 +114,8 @@ export default function App() {
     setGame(initialState)
     setMessage('New run started.')
     setScreen('location')
+    setTrip(null)
+    setSelectedDestination(null)
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
@@ -126,7 +159,7 @@ export default function App() {
           const here = location.id === game.locationId
           const locationOpen = isOpen(location, game.minutes)
           const pos = mapPositions[location.id] ?? { left: '45%', top: '45%' }
-          return <button key={location.id} className={here ? 'map-pin here' : 'map-pin'} style={pos} onClick={() => travel(location.id)}>
+          return <button key={location.id} className={here ? 'map-pin here' : 'map-pin'} style={pos} onClick={() => chooseDestination(location.id)}>
             <span className="pin-icon">{location.icon}</span>
             <strong>{location.name}</strong>
             <small>{here ? 'You are here' : `${location.travelMinutes} min · ${locationOpen ? 'open' : 'closed'}`}</small>
@@ -136,12 +169,43 @@ export default function App() {
       <section className="map-legend"><span>● Current location</span><span>Walking adds travel time</span></section>
     </>}
 
+    {screen === 'travel' && trip && (() => {
+      const destination = locations.find((x) => x.id === trip.destinationId)
+      const progress = ((trip.total - trip.remaining) / trip.total) * 100
+      return <section className="travel-screen">
+        <div className="travel-icon">{trip.mode === 'walk' ? '🚶' : '🚌'}</div>
+        <p className="eyebrow">ON THE WAY</p>
+        <h2>{current.name} → {destination?.name}</h2>
+        <p>{trip.mode === 'walk' ? 'Walking costs more energy and a little extra water.' : 'Public transport is faster and saves your energy.'}</p>
+        <div className="travel-progress"><i style={{ width: `${progress}%` }} /></div>
+        <strong>{trip.remaining} min remaining</strong>
+        <small>{trip.remaining} real seconds</small>
+      </section>
+    })()}
+
+    {selectedDestination && screen === 'map' && (() => {
+      const destination = locations.find((x) => x.id === selectedDestination)
+      if (!destination) return null
+      const transitMinutes = Math.max(4, Math.ceil(destination.travelMinutes * 0.35))
+      return <div className="travel-sheet">
+        <button className="sheet-close" onClick={() => setSelectedDestination(null)}>×</button>
+        <p className="eyebrow">TRAVEL TO</p>
+        <h2>{destination.icon} {destination.name}</h2>
+        <button className="travel-option" onClick={() => startTravel('walk')}>
+          <span>🚶</span><div><strong>Walk</strong><small>{destination.travelMinutes} min · free · more energy</small></div>
+        </button>
+        <button className="travel-option" onClick={() => startTravel('transit')} disabled={game.money < 4.4}>
+          <span>🚌</span><div><strong>Public transport</strong><small>{transitMinutes} min · 4.40 zł · less energy</small></div>
+        </button>
+      </div>
+    })()}
+
     {screen === 'inventory' && <section className="placeholder"><span>🎒</span><h2>Inventory</h2><p>Your backpack is almost empty. Food, water, phone and documents will live here.</p></section>}
     {screen === 'status' && <section className="placeholder"><span>👤</span><h2>Status</h2><p>Character condition, work situation and longer-term progress will appear here.</p></section>}
     {screen === 'journal' && <section className="placeholder"><span>📓</span><h2>Journal</h2><p>Objectives, appointments and important events will be recorded here.</p></section>}
 
     <footer><button className="reset" onClick={reset}>Reset save</button></footer>
-    <nav className="bottom-nav">
+    <nav className={screen === 'travel' ? 'bottom-nav travelling' : 'bottom-nav'}>
       {nav('map', '🗺️', 'Map')}
       {nav('inventory', '🎒', 'Inventory')}
       <button className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} onClick={() => setScreen('location')}><span>{current.icon}</span><small>Place</small></button>
