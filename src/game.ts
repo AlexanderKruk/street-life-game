@@ -80,10 +80,10 @@ export function formatTime(minutes: number) {
 export function applyAction(state: GameState, result: ActionResult): GameState {
   const total = state.minutes + result.minutes
   const extraDays = Math.floor(total / 1440)
-  const hunger = clamp(state.hunger - Math.ceil(result.minutes / 22) + (result.hunger ?? 0))
-  const thirst = clamp(state.thirst - Math.ceil(result.minutes / 15) + (result.thirst ?? 0))
-  const energy = clamp(state.energy - Math.ceil(result.minutes / 30) + (result.energy ?? 0))
-  const hygiene = clamp(state.hygiene - Math.ceil(result.minutes / 70) + (result.hygiene ?? 0))
+  const hunger = clamp(state.hunger - result.minutes / 14.4 + (result.hunger ?? 0))
+  const thirst = clamp(state.thirst - result.minutes / 10.8 + (result.thirst ?? 0))
+  const energy = clamp(state.energy - result.minutes / 9.6 + (result.energy ?? 0))
+  const hygiene = clamp(state.hygiene - result.minutes / 43.2 + (result.hygiene ?? 0))
   const criticalPenalty = hunger <= 5 || thirst <= 5 || energy <= 3 ? Math.ceil(result.minutes / 90) : 0
 
   return {
