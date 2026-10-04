@@ -48,7 +48,7 @@ export default function App() {
     <main className="shell">
       <header>
         <div>
-          <p className="eyebrow">STREET LIFE · PROTOTYPE</p>
+          <p className="eyebrow">STREET LIFE · PLAYABLE PROTOTYPE</p>
           <h1>Day {game.day} <span>{formatTime(game.minutes)}</span></h1>
         </div>
         <div className="money">{game.money.toFixed(2)} zł</div>
