@@ -10,6 +10,9 @@ function weekday(day: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
+type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean }
+
+const INITIAL_INVENTORY: Inventory = { water: 1, food: 1, phoneBattery: 62, jacket: 78, documents: true }
 
 const mapPositions: Record<string, { left: string; top: string }> = {
   station: { left: '13%', top: '18%' },
@@ -48,12 +51,21 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('location')
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [trip, setTrip] = useState<Trip | null>(null)
+  const [inventory, setInventory] = useState<Inventory>(() => {
+    try {
+      const raw = localStorage.getItem('street-life-inventory-v1')
+      return raw ? { ...INITIAL_INVENTORY, ...JSON.parse(raw) } : INITIAL_INVENTORY
+    } catch {
+      return INITIAL_INVENTORY
+    }
+  })
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const currentActions = actions.filter((x) => x.locationId === current.id)
   const open = isOpen(current, game.minutes)
   const overall = overallStatus(game)
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
+  useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -123,6 +135,15 @@ export default function App() {
     })
   }
 
+  function useItem(item: 'water' | 'food') {
+    if (inventory[item] <= 0) return
+    setInventory((prev) => ({ ...prev, [item]: prev[item] - 1 }))
+    setGame((prev) => item === 'water'
+      ? { ...prev, thirst: Math.min(100, prev.thirst + 38) }
+      : { ...prev, hunger: Math.min(100, prev.hunger + 28), mood: Math.min(100, prev.mood + 2) })
+    setMessage(item === 'water' ? 'You drank a bottle of water.' : 'You ate the food from your backpack.')
+  }
+
   function reset() {
     localStorage.removeItem(SAVE_KEY)
     setGame(initialState)
@@ -130,6 +151,8 @@ export default function App() {
     setScreen('location')
     setTrip(null)
     setSelectedDestination(null)
+    setInventory(INITIAL_INVENTORY)
+    localStorage.removeItem('street-life-inventory-v1')
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
@@ -211,7 +234,27 @@ export default function App() {
       </div>
     })()}
 
-    {screen === 'inventory' && <section className="placeholder"><span>🎒</span><h2>Inventory</h2><p>Your backpack is almost empty. Food, water, phone and documents will live here.</p></section>}
+    {screen === 'inventory' && <section className="inventory-screen">
+      <div className="inventory-heading"><div><p className="eyebrow">BACKPACK</p><h2>Inventory</h2></div><span>5 item types</span></div>
+      <div className="inventory-grid">
+        <button className="inventory-item usable" onClick={() => useItem('water')} disabled={inventory.water <= 0}>
+          <span className="item-icon">💧</span><div><strong>Water</strong><small>{inventory.water > 0 ? `×${inventory.water} · tap to drink` : 'Empty'}</small></div>
+        </button>
+        <button className="inventory-item usable" onClick={() => useItem('food')} disabled={inventory.food <= 0}>
+          <span className="item-icon">🥪</span><div><strong>Food</strong><small>{inventory.food > 0 ? `×${inventory.food} · tap to eat` : 'Empty'}</small></div>
+        </button>
+        <div className="inventory-item">
+          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {inventory.phoneBattery}%</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
+        </div>
+        <div className="inventory-item">
+          <span className="item-icon">🧥</span><div><strong>Jacket</strong><small>Condition {inventory.jacket}%</small><div className="item-meter"><i style={{ width: `${inventory.jacket}%` }} /></div></div>
+        </div>
+        <div className="inventory-item">
+          <span className="item-icon">🪪</span><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
+        </div>
+      </div>
+      <p className="inventory-note">Consumables can be used here. Other items will matter for travel, jobs, services and events.</p>
+    </section>}
     {screen === 'status' && <section className="status-screen">
       <div className="status-heading"><div><p className="eyebrow">YOUR CONDITION</p><h2>{overall.icon} {overall.label}</h2></div><p>Your weakest need determines the overall condition.</p></div>
       <div className="status-needs">
