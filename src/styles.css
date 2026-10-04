@@ -52,7 +52,8 @@ footer p { margin:0; }
 .reset { background:transparent; border:1px solid #303b45; color:#9aa5b0; padding:8px 10px; border-radius:10px; white-space:nowrap; }
 @media (max-width:520px) {
   .shell { padding:18px 12px 36px; }
-  .needs { grid-template-columns:1fr; }
+  .needs { grid-template-columns:repeat(2,1fr); }
+  .stat { grid-template-columns:22px 1fr 25px; padding:9px; }
   .stat { grid-template-columns:24px 1fr 28px; }
   .current { min-height:130px; padding:18px; }
   .location-icon { font-size:45px; }
