@@ -121,3 +121,29 @@ footer p { margin:0; }
 .travel-progress i { display:block; height:100%; background:#6fa987; transition:width .8s linear; }
 .bottom-nav.travelling { pointer-events:none; opacity:.45; }
 @keyframes travel-bob { from { transform:translateY(0); } to { transform:translateY(-7px); } }
+
+/* Compact header condition and detailed status */
+.header-info { display:flex; align-items:center; gap:8px; }
+.overall-status { border:1px solid #3b4855; border-radius:999px; padding:9px 11px; background:#141a20; color:#f2f5f7; font-weight:800; font-size:11px; letter-spacing:.04em; white-space:nowrap; }
+.overall-status span { margin-right:5px; }
+.overall-status.ok { border-color:#365944; }
+.overall-status.fair { border-color:#66552f; }
+.overall-status.bad { border-color:#673b3b; }
+.status-screen { margin-top:20px; }
+.status-heading { padding:20px; border:1px solid #34404c; border-radius:20px; background:#12181e; display:flex; justify-content:space-between; align-items:end; gap:20px; margin-bottom:12px; }
+.status-heading h2 { margin-bottom:0; font-size:28px; }
+.status-heading > p { max-width:270px; margin:0; color:#8996a1; font-size:12px; line-height:1.4; text-align:right; }
+.status-needs { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.status-needs .stat { min-height:70px; padding:14px; }
+.status-needs .stat-label { display:flex; justify-content:space-between; gap:12px; font-size:12px; }
+.status-needs .stat-label b { color:#dbe1e6; font-weight:700; }
+.status-needs .bar { height:8px; margin-top:8px; }
+@media (max-width:520px) {
+  header { gap:8px; }
+  .header-info { flex-direction:column; align-items:flex-end; gap:5px; }
+  .overall-status { padding:6px 9px; }
+  .money { padding:7px 10px; font-size:12px; }
+  .status-heading { align-items:flex-start; flex-direction:column; gap:8px; }
+  .status-heading > p { text-align:left; }
+  .status-needs { grid-template-columns:1fr; }
+}
