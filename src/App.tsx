@@ -27,6 +27,7 @@ export default function App() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return
       setGame((prev) => applyAction(prev, { minutes: 1 }))
     }, 1000)
 
