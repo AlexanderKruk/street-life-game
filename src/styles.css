@@ -101,3 +101,23 @@ footer p { margin:0; }
   .map-pin small { font-size:8px; }
   .bottom-nav { width:calc(100% - 14px); }
 }
+
+/* Real-time travel */
+.travel-sheet { position:fixed; z-index:30; left:50%; bottom:max(88px,calc(env(safe-area-inset-bottom) + 78px)); transform:translateX(-50%); width:min(700px,calc(100% - 24px)); padding:20px; border:1px solid #46525d; border-radius:22px; background:#12191f; box-shadow:0 18px 60px rgba(0,0,0,.6); }
+.travel-sheet h2 { margin-bottom:16px; }
+.sheet-close { position:absolute; right:14px; top:12px; width:34px; height:34px; border:0; border-radius:50%; background:#252e36; color:#dce2e7; font-size:24px; }
+.travel-option { width:100%; display:flex; align-items:center; gap:14px; padding:15px; margin-top:9px; border:1px solid #35414c; border-radius:15px; background:#1a2229; color:#f2f5f7; text-align:left; }
+.travel-option:disabled { opacity:.35; }
+.travel-option > span { font-size:30px; }
+.travel-option div { display:flex; flex-direction:column; gap:4px; }
+.travel-option small { color:#93a0aa; }
+.travel-screen { min-height:390px; margin-top:22px; border:1px solid #34404c; border-radius:24px; background:linear-gradient(145deg,#18231f,#11171c); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:34px; }
+.travel-icon { font-size:72px; margin-bottom:16px; animation:travel-bob .7s ease-in-out infinite alternate; }
+.travel-screen h2 { margin-bottom:8px; }
+.travel-screen p:not(.eyebrow) { max-width:390px; color:#9ca8b5; line-height:1.45; }
+.travel-screen > strong { margin-top:13px; font-size:18px; }
+.travel-screen > small { color:#73808b; margin-top:3px; }
+.travel-progress { width:min(360px,90%); height:9px; margin-top:18px; border-radius:999px; background:#303943; overflow:hidden; }
+.travel-progress i { display:block; height:100%; background:#6fa987; transition:width .8s linear; }
+.bottom-nav.travelling { pointer-events:none; opacity:.45; }
+@keyframes travel-bob { from { transform:translateY(0); } to { transform:translateY(-7px); } }
