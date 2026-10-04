@@ -13,7 +13,8 @@ function loadGame(): GameState {
 }
 
 function Stat({ label, value, icon }: { label: string; value: number; icon: string }) {
-  return <div className="stat"><span>{icon}</span><div><div className="stat-label">{label}</div><div className="bar"><i style={{ width: `${value}%` }} /></div></div><b>{value}</b></div>
+  const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
+  return <div className="stat"><span>{icon}</span><div><div className="stat-label">{label}</div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
 }
 
 export default function App() {
