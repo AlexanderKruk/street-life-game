@@ -30,12 +30,13 @@ type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: strin
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
-type StoredItems = { documents: boolean; medicines: number; cigarettes: number }
+type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
-const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0 }
+const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0 }
+const SCHRONISKO_FOOD_CAPACITY = 4
 const NIGHT_SHELTER_STORAGE = 6
 const SCHRONISKO_STORAGE = 16
 const STACK_SIZE = 4
@@ -416,6 +417,24 @@ export default function App() {
     setMessage(`Took ${amount} ${item} from storage.`)
   }
 
+  function storeFood() {
+    if (current.id !== 'residential-shelter' || inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) return
+    const amount = Math.min(inventory.food, SCHRONISKO_FOOD_CAPACITY - storage.food)
+    setInventory((prev) => ({ ...prev, food: prev.food - amount }))
+    setStorage((prev) => ({ ...prev, food: prev.food + amount }))
+    setMessage(`Stored ${amount} food in Schronisko.`)
+  }
+
+  function takeStoredFood() {
+    if (current.id !== 'residential-shelter' || storage.food <= 0) return
+    const amount = Math.min(storage.food, STACK_SIZE)
+    const candidate = { ...inventory, food: inventory.food + amount }
+    if (backpackSlots(candidate) > BACKPACK_CAPACITY) { setMessage('Backpack full.'); return }
+    setStorage((prev) => ({ ...prev, food: prev.food - amount }))
+    setInventory(candidate)
+    setMessage(`Took ${amount} food from Schronisko storage.`)
+  }
+
   function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
     if (!open || current.id !== 'support') return
     if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
@@ -569,11 +588,12 @@ export default function App() {
       </section>}
       {(current.id === 'shelter' || current.id === 'residential-shelter') && <section className="storage-panel">
         <div className="storage-heading"><div><p className="eyebrow">SAFE STORAGE</p><h2>Stored belongings</h2></div><span>{usedStorageSlots}/{storageCapacity} slots</span></div>
-        <p className="storage-note">{current.id === 'residential-shelter' ? 'Schronisko gives you more long-term storage.' : 'Night shelter has limited storage.'} Food and water must stay in your backpack.</p>
+        <p className="storage-note">{current.id === 'residential-shelter' ? 'Schronisko gives you more long-term storage.' : 'Night shelter has limited storage.'} {current.id === 'residential-shelter' ? ' Water must stay in your backpack; Schronisko has a separate small food shelf.' : ' Food and water must stay in your backpack.'}</p>
         <div className="storage-grid">
           <div><strong>🪪 Documents</strong><small>{storage.documents ? 'Stored safely' : inventory.documents ? 'Carried with you' : 'Missing'}</small><button onClick={() => storage.documents ? takeStoredItem('documents') : storeItem('documents')} disabled={storage.documents ? inventory.documents : !inventory.documents}>{storage.documents ? 'Take' : 'Store'}</button></div>
           <div><strong>💊 Medicine ×{storage.medicines}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.medicines > 0 ? storeItem('medicines') : takeStoredItem('medicines')} disabled={inventory.medicines <= 0 && storage.medicines <= 0}>{inventory.medicines > 0 ? 'Store' : 'Take'}</button></div>
           <div><strong>🚬 Cigarettes ×{storage.cigarettes}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.cigarettes > 0 ? storeItem('cigarettes') : takeStoredItem('cigarettes')} disabled={inventory.cigarettes <= 0 && storage.cigarettes <= 0}>{inventory.cigarettes > 0 ? 'Store' : 'Take'}</button></div>
+          {current.id === 'residential-shelter' && <div><strong>🥪 Food ×{storage.food}/{SCHRONISKO_FOOD_CAPACITY}</strong><small>Separate food shelf · does not use storage slots</small><button onClick={() => inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? storeFood() : takeStoredFood()} disabled={(inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) && storage.food <= 0}>{inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? 'Store' : 'Take'}</button></div>}
         </div>
       </section>}
       {(current.id === 'support' || current.id === 'residential-shelter') && <section className="charging-station">
