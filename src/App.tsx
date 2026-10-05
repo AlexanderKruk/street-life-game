@@ -25,11 +25,18 @@ type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
 type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
+type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string }
 
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const STACK_SIZE = 4
 const CIGARETTE_STACK_SIZE = 20
+const SHOP_ITEMS: ShopItem[] = [
+  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 1, description: 'Bottle · stack 4' },
+  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4' },
+  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20' },
+  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4' },
+]
 
 function stackSlots(count: number) {
   return count > 0 ? Math.ceil(count / STACK_SIZE) : 0
@@ -37,6 +44,11 @@ function stackSlots(count: number) {
 
 function backpackSlots(inventory: Inventory) {
   return stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
+}
+
+function canAddToBackpack(inventory: Inventory, item: ShopItem) {
+  const next = { ...inventory, [item.id]: inventory[item.id] + item.quantity }
+  return backpackSlots(next) <= BACKPACK_CAPACITY
 }
 
 const mapPositions: Record<string, { left: string; top: string }> = {
@@ -163,6 +175,21 @@ export default function App() {
     })
   }
 
+  function buyItem(item: ShopItem) {
+    if (!open || current.id !== 'shop') return
+    if (game.money < item.price) {
+      setMessage(`You need ${item.price.toFixed(2)} zł for that.`)
+      return
+    }
+    if (!canAddToBackpack(inventory, item)) {
+      setMessage('Backpack full. Use or remove something first.')
+      return
+    }
+    setInventory((prev) => ({ ...prev, [item.id]: prev[item.id] + item.quantity }))
+    setGame((prev) => applyAction(prev, { minutes: 3, money: -item.price }))
+    setMessage(`Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
+  }
+
   function useItem(item: 'water' | 'food') {
     if (inventory[item] <= 0) return
     setInventory((prev) => ({ ...prev, [item]: prev[item] - 1 }))
@@ -202,16 +229,32 @@ export default function App() {
         <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}</p><h2>{current.name}</h2><p>{current.description}</p></div>
       </section>
       <section className="event"><span>●</span><p>{message}</p></section>
-      <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
-      <section className="actions">
-        {currentActions.length ? currentActions.map((action) => {
-          const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
-          return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
-            <div><strong>{action.name}</strong><small>{action.description}</small></div>
-            <span>{action.cost ? `${action.cost} zł · ` : ''}~{action.minutes} min</span>
-          </button>
-        }) : <p className="empty">Nothing useful to do here yet.</p>}
-      </section>
+      {current.id === 'shop' && open && <section className="shop">
+        <div className="shop-heading"><div><p className="eyebrow">STORE SHELF</p><h2>Buy supplies</h2></div><span>🎒 {usedBackpackSlots}/{BACKPACK_CAPACITY}</span></div>
+        <div className="shop-grid">
+          {SHOP_ITEMS.map((item) => {
+            const fits = canAddToBackpack(inventory, item)
+            const affordable = game.money >= item.price
+            return <button className="shop-item" key={item.id} onClick={() => buyItem(item)} disabled={!fits || !affordable}>
+              <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}</strong><small>{item.description}</small></div>
+              <b>{!fits ? 'FULL' : `${item.price.toFixed(2)} zł`}</b>
+            </button>
+          })}
+        </div>
+        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 12}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small></div><b>12.00 zł</b></button>
+      </section>}
+      {current.id !== 'shop' && <>
+        <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
+        <section className="actions">
+          {currentActions.length ? currentActions.map((action) => {
+            const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
+            return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
+              <div><strong>{action.name}</strong><small>{action.description}</small></div>
+              <span>{action.cost ? `${action.cost} zł · ` : ''}~{action.minutes} min</span>
+            </button>
+          }) : <p className="empty">Nothing useful to do here yet.</p>}
+        </section>
+      </>}
     </>}
 
     {screen === 'map' && <>
