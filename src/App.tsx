@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { actions, applyAction, formatTime, initialState, isOpen, locations, type GameState } from './game'
+import { pickStreetEvent, type StreetEvent, type StreetEventChoice } from './events'
 
 const SAVE_KEY = 'street-life-save-v3'
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
@@ -116,6 +117,7 @@ export default function App() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [musicOn, setMusicOn] = useState(false)
   const [navigationOn, setNavigationOn] = useState(true)
+  const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
       const raw = localStorage.getItem('street-life-inventory-v1')
@@ -164,7 +166,7 @@ export default function App() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return
+      if (document.visibilityState !== 'visible' || activeEvent) return
       setGame((prev) => {
         const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
         const next = applyAction(prev, { minutes: 1 })
@@ -199,7 +201,7 @@ export default function App() {
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn])
+  }, [trip, effects, musicOn, navigationOn, activeEvent])
 
   function watchVideo() {
     const videoDrain = 9 * phoneDrainMultiplier(inventory.phoneCondition)
@@ -240,35 +242,58 @@ export default function App() {
     setTrip({ destinationId: destination.id, mode, total, remaining: total })
     setSelectedDestination(null)
     setScreen('travel')
+    if (!activeEvent) {
+      const event = pickStreetEvent('travel', { locationId: game.locationId, travelMode: mode, weather: weather.label, housing: life.housing, documents: inventory.documents }, mode === 'walk' ? 0.30 : 0.18)
+      if (event) setActiveEvent(event)
+    }
   }
 
   function act(actionId: string) {
     const action = actions.find((x) => x.id === actionId)
-    if (!action) return
-    if (!open && action.requiresOpen !== false) {
-      setMessage(`${current.name} is closed. Come back during opening hours.`)
-      return
+    if (!action || activeEvent) return
+    if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
+    if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
+
+    const result = action.resolve(game)
+    const next = applyAction(game, result)
+    setGame(next)
+    setMessage(result.message ?? 'Time passes.')
+
+    if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
+      setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
+      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, 0.45)
+      if (wakeEvent) setActiveEvent(wakeEvent)
+    } else {
+      const locationEvent = pickStreetEvent('location', { locationId: current.id, weather: weather.label, housing: life.housing, documents: inventory.documents }, 0.20)
+      if (locationEvent) setActiveEvent(locationEvent)
     }
-    if (action.cost && game.money < action.cost) {
-      setMessage(`You need ${action.cost.toFixed(2)} zł for that.`)
-      return
+    if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
+    if (actionId === 'shop-meal') {
+      const expiresAt = absoluteMinutes(next) + 240
+      setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
     }
-    setGame((prev) => {
-      const result = action.resolve(prev)
-      setMessage(result.message ?? 'Time passes.')
-      const next = applyAction(prev, result)
-      if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
-        setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
-      }
-      if (actionId === 'residential-stay') {
-        setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
-      }
-      if (actionId === 'shop-meal') {
-        const expiresAt = absoluteMinutes(next) + 240
-        setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
-      }
-      return next
-    })
+  }
+
+  function resolveStreetEvent(choice: StreetEventChoice) {
+    const outcome = choice.outcome
+    setGame((prev) => applyAction(prev, {
+      minutes: outcome.minutes ?? 0,
+      money: outcome.money,
+      mood: outcome.mood,
+      energy: outcome.energy,
+      health: outcome.health,
+      hygiene: outcome.hygiene,
+    }))
+    setInventory((prev) => ({
+      ...prev,
+      food: Math.max(0, prev.food + (outcome.food ?? 0)),
+      water: Math.max(0, prev.water + (outcome.water ?? 0)),
+      phoneCondition: Math.max(0, Math.min(100, prev.phoneCondition + (outcome.phoneCondition ?? 0))),
+      jacket: Math.max(0, Math.min(100, prev.jacket + (outcome.jacketCondition ?? 0))),
+      documents: outcome.loseDocuments ? false : prev.documents,
+    }))
+    setMessage(outcome.message)
+    setActiveEvent(null)
   }
 
   function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
@@ -363,6 +388,7 @@ export default function App() {
     setSelectedDestination(null)
     setMusicOn(false)
     setNavigationOn(true)
+    setActiveEvent(null)
     setInventory(INITIAL_INVENTORY)
     setLife(INITIAL_LIFE)
     setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
@@ -579,6 +605,16 @@ export default function App() {
         <div className="timeline-entry"><time>{formatTime(game.minutes)}</time><i /><div><strong>Current situation</strong><small>You are at {current.name}. Condition: {overall.label.toLowerCase()}.</small></div></div>
       </div>
     </section>}
+
+    {activeEvent && <div className="event-overlay">
+      <section className="event-card">
+        <div className="event-card-icon">{activeEvent.icon}</div>
+        <p className="eyebrow">STREET EVENT</p>
+        <h2>{activeEvent.title}</h2>
+        <p>{activeEvent.text}</p>
+        <div className="event-choices">{activeEvent.choices.map((choice) => <button key={choice.label} onClick={() => resolveStreetEvent(choice)}>{choice.label}</button>)}</div>
+      </section>
+    </div>}
 
     <footer><button className="reset" onClick={reset}>Reset save</button></footer>
     <nav className={screen === 'travel' ? 'bottom-nav travelling' : 'bottom-nav'}>
