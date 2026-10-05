@@ -240,3 +240,13 @@ button.inventory-item { width:100%; }
 .effect-body > strong { display:block; margin-bottom:5px; }
 .effect .effect-impact { flex-direction:row; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:4px; }
 .effect-time { color:#7f8b96 !important; font-size:10px; white-space:nowrap; text-align:right; }
+
+/* Weather */
+.weather { padding:9px 11px; border:1px solid #3b4855; border-radius:999px; background:#141a20; color:#dfe5e9; font-size:11px; font-weight:800; white-space:nowrap; }
+.weather span { margin-right:5px; }
+@media (max-width:520px) {
+  .header-info { display:grid; grid-template-columns:auto auto; gap:5px; }
+  .weather { grid-column:1 / -1; justify-self:end; padding:5px 8px; }
+  .overall-status { grid-column:1; }
+  .money { grid-column:2; }
+}
