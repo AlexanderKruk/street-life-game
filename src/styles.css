@@ -359,3 +359,7 @@ button.inventory-item { width:100%; }
 .dice-math { min-height:24px; color:#9eabb5; font-size:13px; font-weight:750; }
 .dice-result { display:block; margin:8px 0 14px; font-size:15px; letter-spacing:.08em; }
 .dice-card button { width:100%; min-height:50px; margin-top:14px; border:1px solid #596771; border-radius:13px; background:#e6eaed; color:#10161a; font-weight:850; }
+
+.event-choices button { display:flex; flex-direction:column; justify-content:center; gap:3px; }
+.event-choices button small { color:#9aa5ae; font-size:10px; font-weight:650; }
+.event-choices button:disabled { opacity:.42; cursor:not-allowed; }
