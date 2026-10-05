@@ -402,3 +402,7 @@ These are current code realities, not planned features:
 - Some actions can be physically impossible before the roll.
 - Prefer safe choice vs risky check vs walk-away when it creates a meaningful decision.
 - Do not add abstract RPG stats unless the existing survival/life stats prove insufficient.
+
+
+### Variable sleep duration
+Sleep duration is player-controlled from **1 to 10 hours** in one-hour steps for ground sleep, bench sleep, Night shelter beds, and Schronisko. Recovery and penalties scale from the previous 8-hour values. Street wake-event risk scales with sleep length (capped), so a short nap is safer than a long exposed sleep. Night shelter still checks bed availability first; if no bed is available, only the 30-minute queue penalty applies. Indoor Health recovery scales with sleep duration and still requires Hunger and Thirst above 20.
