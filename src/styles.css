@@ -286,3 +286,14 @@ button.inventory-item { width:100%; }
 .shop-impact em.positive { color:#9ed0ad; background:#1c3024; }
 .shop-impact em.negative { color:#e2a0a0; background:#352222; }
 .shop-meal .shop-impact { margin-top:4px; }
+
+/* Inventory sections */
+.inventory-section-heading { display:flex; justify-content:space-between; align-items:end; gap:14px; margin:18px 2px 9px; }
+.inventory-section-heading > div { display:flex; flex-direction:column; gap:3px; }
+.inventory-section-heading strong { font-size:14px; }
+.inventory-section-heading small { color:#7f8b96; font-size:10px; }
+.inventory-section-heading > span { color:#8f9ba5; font-size:10px; font-weight:800; white-space:nowrap; }
+.essentials-heading { margin-top:26px; padding-top:17px; border-top:1px solid #27313a; }
+.essentials-heading > span { color:#7f9c88; }
+.backpack-grid { margin-top:25px; }
+.essentials-grid { margin-top:0; }
