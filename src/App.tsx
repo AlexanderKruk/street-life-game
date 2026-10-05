@@ -24,14 +24,14 @@ function temperatureAt(base: number, minutes: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
-type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
+type Inventory = { water: number; food: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
-const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
+const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const STACK_SIZE = 4
 const CIGARETTE_STACK_SIZE = 20
@@ -47,6 +47,10 @@ const SHOP_ITEMS: ShopItem[] = [
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
   { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
 ]
+
+function phoneDrainMultiplier(condition: number) {
+  return 1 + (100 - Math.max(0, Math.min(100, condition))) * 0.007
+}
 
 function stackSlots(count: number) {
   return count > 0 ? Math.ceil(count / STACK_SIZE) : 0
@@ -176,8 +180,9 @@ export default function App() {
       })
       setInventory((prev) => {
         const sunny = WEATHER[(game.day - 1) % WEATHER.length].label === 'Clear'
-        const navigationDrain = trip && navigationOn ? (sunny ? 15 : 12) / 60 : 0
-        const musicDrain = musicOn ? 4 / 60 : 0
+        const drainMultiplier = phoneDrainMultiplier(prev.phoneCondition)
+        const navigationDrain = trip && navigationOn ? ((sunny ? 15 : 12) / 60) * drainMultiplier : 0
+        const musicDrain = musicOn ? (4 / 60) * drainMultiplier : 0
         return { ...prev, phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain) }
       })
       if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012) }))
@@ -197,10 +202,11 @@ export default function App() {
   }, [trip, effects, musicOn, navigationOn])
 
   function watchVideo() {
-    if (inventory.phoneBattery < 9) { setMessage('Not enough battery for 30 minutes of video.'); return }
-    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 9) }))
+    const videoDrain = 9 * phoneDrainMultiplier(inventory.phoneCondition)
+    if (inventory.phoneBattery < videoDrain) { setMessage('Not enough battery for 30 minutes of video.'); return }
+    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - videoDrain) }))
     setGame((prev) => applyAction(prev, { minutes: 30, mood: 8 }))
-    setMessage('You watched videos for 30 minutes. Mood improved, but the phone used 9% battery.')
+    setMessage('You watched videos for 30 minutes. Mood improved, but the worn phone used more battery.')
   }
 
   function chargePhone() {
@@ -507,12 +513,12 @@ export default function App() {
         <div className="phone-actions">
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
-          <button onClick={watchVideo} disabled={inventory.phoneBattery < 9}><span>🎬</span><div><strong>Watch video</strong><small>30 min · −9% battery · Mood +</small></div></button>
+          <button onClick={watchVideo} disabled={inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
         </div>
       </div>
       <div className="inventory-grid essentials-grid">
         <div className="inventory-item">
-          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · {inventory.phoneBattery <= 0 ? 'OFF' : inventory.phoneBattery <= 5 ? 'CRITICAL' : inventory.phoneBattery <= 20 ? 'LOW' : 'Ready'}</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
+          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · {inventory.phoneBattery <= 0 ? 'OFF' : inventory.phoneBattery <= 5 ? 'CRITICAL' : inventory.phoneBattery <= 20 ? 'LOW' : 'Ready'}</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div><small>Condition {Math.round(inventory.phoneCondition)}% · {inventory.phoneCondition > 70 ? 'Used' : inventory.phoneCondition > 40 ? 'Worn' : inventory.phoneCondition > 15 ? 'Damaged' : 'Barely working'} · drain ×{phoneDrainMultiplier(inventory.phoneCondition).toFixed(1)}</small><div className="item-meter"><i style={{ width: `${inventory.phoneCondition}%` }} /></div></div>
         </div>
         <div className="inventory-item">
           <span className="item-icon">🧥</span><div><strong>Jacket</strong><small>Condition {inventory.jacket}%</small><div className="item-meter"><i style={{ width: `${inventory.jacket}%` }} /></div></div>
