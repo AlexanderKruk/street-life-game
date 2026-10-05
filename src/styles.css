@@ -348,3 +348,14 @@ button.inventory-item { width:100%; }
 .game-over-card h2 { margin:5px 0 10px; }
 .game-over-card > p:not(.eyebrow) { color:#b8c0c7; line-height:1.5; }
 .game-over-card button { width:100%; min-height:50px; margin-top:18px; border:1px solid #59656e; border-radius:13px; background:#e5e9ec; color:#11171b; font-weight:850; }
+
+/* D20 skill checks */
+.dice-overlay { position:fixed; inset:0; z-index:110; display:grid; place-items:center; padding:20px; background:rgba(4,7,10,.9); backdrop-filter:blur(7px); }
+.dice-card { width:min(100%,390px); padding:26px 22px; border:1px solid #47535e; border-radius:22px; background:#11181e; text-align:center; box-shadow:0 28px 80px rgba(0,0,0,.68); }
+.d20 { width:126px; height:126px; margin:24px auto 14px; display:grid; place-items:center; clip-path:polygon(50% 0,95% 28%,82% 84%,50% 100%,18% 84%,5% 28%); background:#dfe5e8; color:#10161a; font-size:42px; font-weight:950; filter:drop-shadow(0 10px 14px rgba(0,0,0,.42)); }
+.d20.rolling-ready { font-size:25px; letter-spacing:1px; }
+.d20.critical { background:#e9dfb9; }
+.d20.critical-fail { background:#d7a9a9; }
+.dice-math { min-height:24px; color:#9eabb5; font-size:13px; font-weight:750; }
+.dice-result { display:block; margin:8px 0 14px; font-size:15px; letter-spacing:.08em; }
+.dice-card button { width:100%; min-height:50px; margin-top:14px; border:1px solid #596771; border-radius:13px; background:#e6eaed; color:#10161a; font-weight:850; }
