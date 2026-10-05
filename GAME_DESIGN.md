@@ -211,9 +211,9 @@ Night shelter:
 
 ### Safe storage
 
-Night shelter and Schronisko share a persistent safe-storage inventory. Night shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Food and water cannot be stored.
+Night shelter and Schronisko share a persistent safe-storage inventory. Night shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Night shelter cannot store food or water.
 
-Currently storable: documents, medicine and cigarettes. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
+Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Water is not stored. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
 
 ## Work
 
@@ -349,7 +349,7 @@ The UI includes:
 
 These are current code realities, not planned features:
 - Health recovery is currently limited to safe indoor sleep; doctor/medical-care recovery is not implemented yet.
-- Safe storage currently supports documents, medicine and cigarettes. Food/drink are intentionally excluded; more item types can be added later.
+- Safe storage supports documents, medicine and cigarettes. Schronisko additionally stores up to 4 Food in a separate shelf; Night shelter cannot store food, and water storage is not implemented.
 - The shop shelf is only rendered while the shop is open instead of remaining visible/disabled when closed.
 - Phone Condition increases battery drain, but Condition 0 does not yet universally disable all phone functions.
 - Music's Mood gain can continue based on toggle state even if battery reaches zero.
