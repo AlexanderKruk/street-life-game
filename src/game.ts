@@ -49,7 +49,7 @@ export type GameAction = {
 export const locations: Location[] = [
   { id: 'station', name: 'Station', icon: '🚉', description: 'Crowds, benches and small chances to earn.', open: 0, close: 1440, travelMinutes: 10 },
   { id: 'shop', name: 'Discount shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 15 },
-  { id: 'shelter', name: 'Shelter', icon: '🛏️', description: 'A bed and shower, but places are limited.', open: 1020, close: 1320, travelMinutes: 20 },
+  { id: 'shelter', name: 'Night shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 20 },
   { id: 'support', name: 'Social support', icon: '🏢', description: 'Documents, advice and access to help.', open: 480, close: 960, travelMinutes: 25 },
   { id: 'jobcenter', name: 'Job centre', icon: '📋', description: 'Vacancies and appointments.', open: 480, close: 900, travelMinutes: 25 },
   { id: 'work', name: 'Day work', icon: '📦', description: 'Short shifts. Pay is not guaranteed.', open: 420, close: 1080, travelMinutes: 30 },
@@ -102,6 +102,7 @@ export function applyAction(state: GameState, result: ActionResult): GameState {
 
 export function isOpen(location: Location, minutes: number) {
   if (location.open === 0 && location.close === 1440) return true
+  if (location.open > location.close) return minutes >= location.open || minutes < location.close
   return minutes >= location.open && minutes < location.close
 }
 
