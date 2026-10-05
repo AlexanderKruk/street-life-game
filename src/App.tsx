@@ -3,6 +3,13 @@ import { actions, applyAction, formatTime, initialState, isOpen, locations, type
 
 const SAVE_KEY = 'street-life-save-v3'
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+const WEATHER = [
+  { icon: '☁️', label: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
+  { icon: '🌧️', label: 'Rain', temp: 7, energyDrain: 0.025, thirstDrain: 0 },
+  { icon: '☀️', label: 'Clear', temp: 16, energyDrain: 0, thirstDrain: 0.02 },
+  { icon: '🌬️', label: 'Windy', temp: 6, energyDrain: 0.035, thirstDrain: 0 },
+  { icon: '🌦️', label: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
+]
 
 function weekday(day: number) {
   return WEEKDAYS[(day - 1) % WEEKDAYS.length]
@@ -63,6 +70,7 @@ export default function App() {
   const currentActions = actions.filter((x) => x.locationId === current.id)
   const open = isOpen(current, game.minutes)
   const overall = overallStatus(game)
+  const weather = WEATHER[(game.day - 1) % WEATHER.length]
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
@@ -71,12 +79,12 @@ export default function App() {
     const timer = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return
       setGame((prev) => {
+        const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
         const next = applyAction(prev, { minutes: 1 })
-        if (!trip || trip.mode !== 'walk') return next
         return {
           ...next,
-          energy: Math.max(0, next.energy - 0.12),
-          thirst: Math.max(0, next.thirst - 0.04),
+          energy: Math.max(0, next.energy - currentWeather.energyDrain - (trip?.mode === 'walk' ? 0.12 : 0)),
+          thirst: Math.max(0, next.thirst - currentWeather.thirstDrain - (trip?.mode === 'walk' ? 0.04 : 0)),
         }
       })
       setTrip((active) => {
@@ -162,6 +170,7 @@ export default function App() {
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
       <div className="header-info">
+        <div className="weather" title={weather.label}><span>{weather.icon}</span>{weather.temp}°C</div>
         <button className={`overall-status ${overall.level}`} onClick={() => setScreen('status')}><span>{overall.icon}</span>{overall.label}</button>
         <div className="money">{game.money.toFixed(2)} zł</div>
       </div>
