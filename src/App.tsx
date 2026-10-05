@@ -25,7 +25,7 @@ function temperatureAt(base: number, minutes: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
-type Inventory = { water: number; food: number; foodFreshness: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
+type Inventory = { water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
@@ -33,7 +33,7 @@ type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housi
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
-const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
+const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0, foodFreshness: 100 }
 const SCHRONISKO_FOOD_CAPACITY = 4
@@ -42,6 +42,8 @@ const NIGHT_SHELTER_STORAGE = 6
 const SCHRONISKO_STORAGE = 16
 const STACK_SIZE = 4
 const CIGARETTE_STACK_SIZE = 20
+const BOTTLE_STACK_SIZE = 8
+const BOTTLE_DEPOSIT = 0.5
 const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
   cold: { icon: '🤒', name: 'Cold', kind: 'negative', impacts: ['Energy −−', 'Mood −'] },
   'free-transit': { icon: '🎫', name: 'Free transport', kind: 'positive', impacts: ['Travel +++'] },
@@ -79,7 +81,7 @@ function storageSlots(storage: StoredItems) {
 }
 
 function backpackSlots(inventory: Inventory) {
-  return stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
+  return stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
 }
 
 function absoluteMinutes(game: GameState) {
@@ -284,6 +286,27 @@ export default function App() {
       return
     }
     setSelectedDestination(id)
+  }
+
+  function searchStreetBottles() {
+    if (activeEvent || current.id !== 'street') return
+    const found = Math.floor(Math.random() * 5)
+    const currentBottleSlots = inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0
+    const otherSlots = backpackSlots(inventory) - currentBottleSlots
+    const bottleCapacity = Math.max(0, BACKPACK_CAPACITY - otherSlots) * BOTTLE_STACK_SIZE
+    const collected = Math.min(found, Math.max(0, bottleCapacity - inventory.bottles))
+    setGame((prev) => applyAction(prev, { minutes: 45, energy: -4, hygiene: -10, mood: collected > 0 ? 1 : -3 }))
+    if (collected > 0) setInventory((prev) => ({ ...prev, bottles: prev.bottles + collected }))
+    setMessage(found === 0 ? 'You searched the bins but found no returnable bottles.' : collected === 0 ? 'You found bottles, but there is no room in your backpack.' : collected < found ? `You found ${found} bottles but could only carry ${collected}.` : `You found ${collected} returnable bottle${collected === 1 ? '' : 's'}.`)
+  }
+
+  function returnBottles() {
+    if (!open || current.id !== 'shop' || inventory.bottles <= 0) return
+    const count = inventory.bottles
+    const payout = count * BOTTLE_DEPOSIT
+    setInventory((prev) => ({ ...prev, bottles: 0 }))
+    setGame((prev) => applyAction(prev, { minutes: 5, money: payout }))
+    setMessage(`Returned ${count} bottle${count === 1 ? '' : 's'} for ${payout.toFixed(2)} zł.`)
   }
 
   function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
@@ -626,6 +649,7 @@ export default function App() {
       {current.id === 'shop' && open && <section className="shop">
         <div className="shop-heading"><div><p className="eyebrow">STORE SHELF</p><h2>Buy supplies</h2></div><span>🎒 {usedBackpackSlots}/{BACKPACK_CAPACITY}</span></div>
         <div className="shop-grid">
+          {inventory.bottles > 0 && <button className="shop-item" onClick={returnBottles}><span>♻️</span><div><strong>Return bottles ×{inventory.bottles}</strong><small>Deposit return · 0.50 zł each</small><div className="shop-impact"><em className="positive">Cash +{(inventory.bottles * BOTTLE_DEPOSIT).toFixed(2)} zł</em></div></div><b>RETURN</b></button>}
           {SHOP_ITEMS.map((item) => {
             const fits = canAddToBackpack(inventory, item)
             const affordable = game.money >= item.price
@@ -670,6 +694,7 @@ export default function App() {
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
           {current.id === 'street' && <>
+            <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search bins for bottles</strong><small>Look for returnable bottles. They take backpack space and can be returned at the shop.</small></div><span>~45 min</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>~480 min</span></button>}
@@ -746,6 +771,7 @@ export default function App() {
         <button className="inventory-item usable" onClick={() => useItem('food')} disabled={inventory.food <= 0}>
           <span className="item-icon">🥪</span><div><strong>Food</strong><small>{inventory.food > 0 ? `×${inventory.food} · tap to eat` : 'Empty'}</small></div>
         </button>
+        <div className="inventory-item"><span className="item-icon">♻️</span><div><strong>Returnable bottles</strong><small>{inventory.bottles > 0 ? `×${inventory.bottles} · stack ${BOTTLE_STACK_SIZE} · 0.50 zł each` : 'Empty · return at Discount shop'}</small></div></div>
         <button className="inventory-item usable" onClick={smokeCigarette} disabled={inventory.cigarettes <= 0}>
           <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>{inventory.cigarettes > 0 ? `×${inventory.cigarettes} · tap to smoke` : 'Empty'}</small></div>
         </button>
@@ -753,7 +779,7 @@ export default function App() {
           <span className="item-icon">💊</span><div><strong>Medicine</strong><small>{inventory.medicines > 0 ? `×${inventory.medicines} · treats Cold` : 'Empty'}</small></div>
         </button>
       </div>
-      <p className="inventory-note">Water, food and medicine stack up to {STACK_SIZE} per slot. Cigarettes stack up to {CIGARETTE_STACK_SIZE} per slot.</p>
+      <p className="inventory-note">Water, food and medicine stack up to {STACK_SIZE} per slot. Bottles stack up to {BOTTLE_STACK_SIZE}. Cigarettes stack up to {CIGARETTE_STACK_SIZE} per slot.</p>
 
       <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>These do not use backpack slots</small></div><span>FREE</span></div>
       <div className="phone-panel">
