@@ -228,3 +228,10 @@ button.inventory-item { width:100%; }
 .effect.positive > b { color:#9ed0ad; background:#1c3024; }
 .effect.negative { border-color:#4d3434; }
 .effect.negative > b { color:#dca4a4; background:#352222; }
+
+.effect.positive strong { color:#72c98d; }
+.effect.negative strong { color:#df7777; }
+.effect-impact { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+.effect-impact b,.effect-impact em { font-size:10px; font-style:normal; font-weight:800; white-space:nowrap; padding:3px 6px; border-radius:7px; }
+.effect.positive .effect-impact b,.effect.positive .effect-impact em { color:#9ed0ad; background:#1c3024; }
+.effect.negative .effect-impact b,.effect.negative .effect-impact em { color:#e2a0a0; background:#352222; }
