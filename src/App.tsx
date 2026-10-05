@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actions, applyAction, formatTime, initialState, isOpen, locations, type GameState } from './game'
+import { actions, applyAction, energyCap, formatTime, healthEnergyMultiplier, initialState, isOpen, locations, type GameState } from './game'
 import { pickStreetEvent, type StreetEvent, type StreetEventChoice } from './events'
 
 const SAVE_KEY = 'street-life-save-v3'
@@ -149,6 +149,8 @@ export default function App() {
   const weather = WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
   const usedBackpackSlots = backpackSlots(inventory)
+  const gameOver = game.health <= 0
+  const dayWorkEnergyRequired = 55
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
@@ -166,18 +168,27 @@ export default function App() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible' || activeEvent) return
+      if (document.visibilityState !== 'visible' || activeEvent || gameOver) return
       setGame((prev) => {
         const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
         const next = applyAction(prev, { minutes: 1 })
         const cold = effects.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(prev))
         const wellFed = effects.some((effect) => effect.id === 'well-fed' && effect.expiresAt > absoluteMinutes(prev))
+        const hunger = Math.min(100, next.hunger + (wellFed ? 0.035 : 0))
+        const thirst = Math.max(0, next.thirst - currentWeather.thirstDrain - (trip?.mode === 'walk' ? 0.04 : 0))
+        const healthDamage =
+          (thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
+          (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) +
+          (cold ? 0.012 : 0)
+        const health = Math.max(0, next.health - healthDamage)
+        const movementDrain = (trip?.mode === 'walk' ? 0.12 : 0) * healthEnergyMultiplier(health)
         return {
           ...next,
-          hunger: Math.min(100, next.hunger + (wellFed ? 0.035 : 0)),
-          energy: Math.max(0, next.energy - currentWeather.energyDrain - (trip?.mode === 'walk' ? 0.12 : 0) - (cold ? 0.045 : 0)),
+          hunger,
+          health,
+          energy: Math.min(energyCap(health), Math.max(0, next.energy - currentWeather.energyDrain - movementDrain - (cold ? 0.045 : 0))),
           mood: Math.max(0, next.mood - (cold ? 0.012 : 0)),
-          thirst: Math.max(0, next.thirst - currentWeather.thirstDrain - (trip?.mode === 'walk' ? 0.04 : 0)),
+          thirst,
         }
       })
       setInventory((prev) => {
@@ -201,7 +212,7 @@ export default function App() {
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, gameOver])
 
   function watchVideo() {
     const videoDrain = 9 * phoneDrainMultiplier(inventory.phoneCondition)
@@ -331,6 +342,7 @@ export default function App() {
 
   function takeDayWork() {
     if (!open || current.id !== 'work') return
+    if (game.energy < dayWorkEnergyRequired) { setMessage(`You need at least ${dayWorkEnergyRequired} Energy to start this shift.`); return }
     setGame((prev) => applyAction(prev, { minutes: 180, money: 35, energy: -18, thirst: -8, hygiene: -10, mood: 3 }))
     setLife((status) => ({ ...status, employment: 'Day work', income: 'Irregular' }))
     setMessage('You completed a short shift. +35 zł. Day work is now part of your current situation.')
@@ -445,8 +457,8 @@ export default function App() {
         </button>
       </section>}
       {current.id === 'work' && <section className="actions">
-        <button className="action" onClick={takeDayWork} disabled={!open}>
-          <div><strong>Take a short shift</strong><small>Three hours of physical work. Pays 35 zł.</small></div><span>+35 zł · ~180 min</span>
+        <button className="action" onClick={takeDayWork} disabled={!open || game.energy < dayWorkEnergyRequired}>
+          <div><strong>Take a short shift</strong><small>{game.energy < dayWorkEnergyRequired ? `Need at least ${dayWorkEnergyRequired} Energy · current ${Math.floor(game.energy)}` : 'Three hours of physical work. Pays 35 zł.'}</small></div><span>+35 zł · ~180 min</span>
         </button>
       </section>}
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
@@ -562,7 +574,7 @@ export default function App() {
       <div className="status-needs">
         <Stat icon="🍞" label="Food" value={game.hunger} compact />
         <Stat icon="💧" label="Thirst" value={game.thirst} compact />
-        <Stat icon="⚡" label="Energy" value={game.energy} compact />
+        <Stat icon="⚡" label={energyCap(game.health) < 100 ? `Energy · max ${energyCap(game.health)}` : 'Energy'} value={game.energy} compact />
         <Stat icon="❤️" label="Health" value={game.health} compact />
         <Stat icon="🚿" label="Hygiene" value={game.hygiene} compact />
         <Stat icon="🙂" label="Mood" value={game.mood} compact />
@@ -606,7 +618,17 @@ export default function App() {
       </div>
     </section>}
 
-    {activeEvent && <div className="event-overlay">
+    {gameOver && <div className="game-over-overlay">
+      <section className="game-over-card">
+        <div className="game-over-icon">❤️‍🩹</div>
+        <p className="eyebrow">RUN OVER</p>
+        <h2>Your health reached zero</h2>
+        <p>You made it to Day {game.day}. Food, water and medicine can stop causes of damage, but lost health needs proper recovery and care.</p>
+        <button onClick={reset}>Start new run</button>
+      </section>
+    </div>}
+
+    {!gameOver && activeEvent && <div className="event-overlay">
       <section className="event-card">
         <div className="event-card-icon">{activeEvent.icon}</div>
         <p className="eyebrow">STREET EVENT</p>
