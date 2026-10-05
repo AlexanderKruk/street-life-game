@@ -137,7 +137,12 @@ Phone, jacket, documents and transit card are essentials/equipped items and use 
 
 Using inventory:
 - Water: consumes 1 and restores +38 Thirst.
-- Food: consumes 1 and restores +28 Food and +2 Mood.
+- Food is stored as one stack with an average freshness value, so different ages do not consume extra backpack slots.
+- Freshness falls from 100% to 0% over roughly 48 game hours, including while stored in Schronisko.
+- Fresh (>50%): consumes 1, restores +28 Food and +2 Mood.
+- Stale (>20–50%): consumes 1, restores +24 Food and -2 Mood.
+- Spoiled (0–20%): consumes 1, restores +18 Food, -5 Mood and -3 Health.
+- Adding newly obtained food to an existing stack recalculates the stack's weighted average freshness.
 - Cigarette: consumes 1, +5 Mood, -0.5 Health.
 - Medicine: consumes 1 only when Cold is active and removes Cold.
 
@@ -213,7 +218,7 @@ Night shelter:
 
 Night shelter and Schronisko share a persistent safe-storage inventory. Night shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Night shelter cannot store food or water.
 
-Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Water is not stored. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
+Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food uses the same average-freshness model as backpack food and continues to spoil at the normal rate. Water is not stored. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
 
 ## Work
 
