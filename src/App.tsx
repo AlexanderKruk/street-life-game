@@ -28,7 +28,7 @@ type Inventory = { water: number; food: number; phoneBattery: number; jacket: nu
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
-type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Shelter'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular' }
+type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
@@ -79,6 +79,7 @@ const mapPositions: Record<string, { left: string; top: string }> = {
   jobcenter: { left: '70%', top: '51%' },
   shelter: { left: '16%', top: '65%' },
   work: { left: '53%', top: '76%' },
+  'residential-shelter': { left: '80%', top: '75%' },
 }
 
 function loadGame(): GameState {
@@ -228,12 +229,48 @@ export default function App() {
       if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
         setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
       }
+      if (actionId === 'residential-stay') {
+        setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
+      }
       if (actionId === 'shop-meal') {
         const expiresAt = absoluteMinutes(next) + 240
         setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
       }
       return next
     })
+  }
+
+  function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
+    if (!open || current.id !== 'support') return
+    if (kind === 'housing') {
+      if (life.schroniskoReferral) {
+        setMessage('You already have a referral to Schronisko. It is available on the map.')
+        return
+      }
+      setGame((prev) => applyAction(prev, { minutes: 35, mood: 3 }))
+      setLife((status) => ({ ...status, schroniskoReferral: true }))
+      setMessage('The social worker issued a referral. Schronisko 24/7 is now available on the map.')
+      return
+    }
+    if (kind === 'documents') {
+      if (inventory.documents) {
+        setMessage('Your basic documents are currently complete.')
+        return
+      }
+      setGame((prev) => applyAction(prev, { minutes: 60, mood: 3 }))
+      setInventory((prev) => ({ ...prev, documents: true }))
+      setMessage('The social worker helped you restore your basic documents.')
+      return
+    }
+    if (kind === 'transport') {
+      const expiresAt = absoluteMinutes(game) + 3 * 1440
+      setGame((prev) => applyAction(prev, { minutes: 25 }))
+      setEffects((active) => [...active.filter((effect) => effect.id !== 'free-transit'), { id: 'free-transit', expiresAt }])
+      setMessage('You received free public transport for 3 days.')
+      return
+    }
+    setGame((prev) => applyAction(prev, { minutes: 30, mood: 2 }))
+    setMessage('The social worker explained which benefits may be available. Applications will be added as the progression expands.')
   }
 
   function takeDayWork() {
@@ -334,12 +371,21 @@ export default function App() {
         </div>
         <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 12}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>12.00 zł</b></button>
       </section>}
+      {current.id === 'support' && <section className="support-menu">
+        <div className="section-title"><h2>Talk to a social worker</h2><span>Choose what you need help with</span></div>
+        <div className="support-grid">
+          <button onClick={() => socialSupport('housing')} disabled={!open}><span>🏠</span><div><strong>Housing</strong><small>{life.schroniskoReferral ? 'Referral issued · Schronisko unlocked' : 'Ask about stable accommodation'}</small></div></button>
+          <button onClick={() => socialSupport('documents')} disabled={!open}><span>📄</span><div><strong>Documents</strong><small>{inventory.documents ? 'Documents complete' : 'Restore missing documents'}</small></div></button>
+          <button onClick={() => socialSupport('transport')} disabled={!open}><span>🎫</span><div><strong>Transport</strong><small>Apply for 3 days of free public transport</small></div></button>
+          <button onClick={() => socialSupport('benefits')} disabled={!open}><span>💰</span><div><strong>Benefits</strong><small>Ask what financial support is available</small></div></button>
+        </div>
+      </section>}
       {current.id === 'work' && <section className="actions">
         <button className="action" onClick={takeDayWork} disabled={!open}>
           <div><strong>Take a short shift</strong><small>Three hours of physical work. Pays 35 zł.</small></div><span>+35 zł · ~180 min</span>
         </button>
       </section>}
-      {current.id !== 'shop' && current.id !== 'work' && <>
+      {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
           {currentActions.length ? currentActions.map((action) => {
@@ -357,7 +403,7 @@ export default function App() {
       <div className="section-title map-title"><h2>City map</h2><span>Tap a place to travel</span></div>
       <section className="city-map">
         <div className="road road-a" /><div className="road road-b" /><div className="road road-c" />
-        {locations.map((location) => {
+        {locations.filter((location) => location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko').map((location) => {
           const here = location.id === game.locationId
           const locationOpen = isOpen(location, game.minutes)
           const pos = mapPositions[location.id] ?? { left: '45%', top: '45%' }
