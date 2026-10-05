@@ -132,6 +132,7 @@ Stack sizes:
 - Water: 4/slot.
 - Food: 4/slot.
 - Medicine: 4/slot.
+- Returnable bottles: 8/slot.
 - Cigarettes: 20/slot.
 
 Phone, jacket, documents and transit card are essentials/equipped items and use no backpack slots.
@@ -172,6 +173,8 @@ Phone Condition can currently be damaged by street events, especially drops and 
 
 ## Shop
 
+The Discount shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
+
 The Discount shop currently sells:
 - Water: 3 zł, one bottle.
 - Cheap food: 5 zł, one item.
@@ -201,7 +204,7 @@ Street has its own small survival loop:
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
 - Once a bench is found, **Sleep on the bench** becomes available: 8 hours, better Energy recovery than the ground, -7 Hygiene, -5 Mood, no direct Health recovery, and a 65% Street wake-event attempt.
-- **Search bins for bottles** — 45 minutes; random earnings 0/3/7 zł, with Hygiene/Energy costs.
+- **Search bins for bottles** — 45 minutes; finds 0–4 returnable bottles, with Hygiene/Energy costs. Bottles are inventory items rather than instant cash, stack 8 per backpack slot, and collection is limited by available backpack capacity. They can be returned at the Discount shop for 0.50 zł each.
 - The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Housing and social support
