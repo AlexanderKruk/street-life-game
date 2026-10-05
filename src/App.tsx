@@ -110,6 +110,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('location')
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [trip, setTrip] = useState<Trip | null>(null)
+  const [musicOn, setMusicOn] = useState(false)
+  const [navigationOn, setNavigationOn] = useState(true)
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
       const raw = localStorage.getItem('street-life-inventory-v1')
@@ -172,6 +174,13 @@ export default function App() {
           thirst: Math.max(0, next.thirst - currentWeather.thirstDrain - (trip?.mode === 'walk' ? 0.04 : 0)),
         }
       })
+      setInventory((prev) => {
+        const sunny = WEATHER[(game.day - 1) % WEATHER.length].label === 'Clear'
+        const navigationDrain = trip && navigationOn ? (sunny ? 15 : 12) / 60 : 0
+        const musicDrain = musicOn ? 4 / 60 : 0
+        return { ...prev, phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain) }
+      })
+      if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012) }))
       setTrip((active) => {
         if (!active) return null
         if (active.remaining > 1) return { ...active, remaining: active.remaining - 1 }
@@ -185,7 +194,23 @@ export default function App() {
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects])
+  }, [trip, effects, musicOn, navigationOn])
+
+  function watchVideo() {
+    if (inventory.phoneBattery < 9) { setMessage('Not enough battery for 30 minutes of video.'); return }
+    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 9) }))
+    setGame((prev) => applyAction(prev, { minutes: 30, mood: 8 }))
+    setMessage('You watched videos for 30 minutes. Mood improved, but the phone used 9% battery.')
+  }
+
+  function chargePhone() {
+    if (inventory.phoneBattery >= 100) { setMessage('Phone is already fully charged.'); return }
+    if (current.id !== 'support' && current.id !== 'residential-shelter') return
+    if (!open) return
+    setInventory((prev) => ({ ...prev, phoneBattery: Math.min(100, prev.phoneBattery + 25) }))
+    setGame((prev) => applyAction(prev, { minutes: 30 }))
+    setMessage('You charged the phone for 30 minutes. Battery +25%.')
+  }
 
   function chooseDestination(id: string) {
     if (id === game.locationId) {
@@ -330,6 +355,8 @@ export default function App() {
     setScreen('location')
     setTrip(null)
     setSelectedDestination(null)
+    setMusicOn(false)
+    setNavigationOn(true)
     setInventory(INITIAL_INVENTORY)
     setLife(INITIAL_LIFE)
     setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
@@ -379,6 +406,11 @@ export default function App() {
           <button onClick={() => socialSupport('transport')} disabled={!open}><span>🎫</span><div><strong>Transport</strong><small>Apply for 3 days of free public transport</small></div></button>
           <button onClick={() => socialSupport('benefits')} disabled={!open}><span>💰</span><div><strong>Benefits</strong><small>Ask what financial support is available</small></div></button>
         </div>
+      </section>}
+      {(current.id === 'support' || current.id === 'residential-shelter') && <section className="charging-station">
+        <button className="action" onClick={chargePhone} disabled={!open || inventory.phoneBattery >= 100}>
+          <div><strong>🔌 Charge phone</strong><small>Use a public socket for 30 minutes.</small></div><span>+25% · ~30 min</span>
+        </button>
       </section>}
       {current.id === 'work' && <section className="actions">
         <button className="action" onClick={takeDayWork} disabled={!open}>
@@ -470,9 +502,17 @@ export default function App() {
       <p className="inventory-note">Water, food and medicine stack up to {STACK_SIZE} per slot. Cigarettes stack up to {CIGARETTE_STACK_SIZE} per slot.</p>
 
       <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>These do not use backpack slots</small></div><span>FREE</span></div>
+      <div className="phone-panel">
+        <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
+        <div className="phone-actions">
+          <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
+          <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
+          <button onClick={watchVideo} disabled={inventory.phoneBattery < 9}><span>🎬</span><div><strong>Watch video</strong><small>30 min · −9% battery · Mood +</small></div></button>
+        </div>
+      </div>
       <div className="inventory-grid essentials-grid">
         <div className="inventory-item">
-          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {inventory.phoneBattery}%</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
+          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · {inventory.phoneBattery <= 0 ? 'OFF' : inventory.phoneBattery <= 5 ? 'CRITICAL' : inventory.phoneBattery <= 20 ? 'LOW' : 'Ready'}</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
         </div>
         <div className="inventory-item">
           <span className="item-icon">🧥</span><div><strong>Jacket</strong><small>Condition {inventory.jacket}%</small><div className="item-meter"><i style={{ width: `${inventory.jacket}%` }} /></div></div>
