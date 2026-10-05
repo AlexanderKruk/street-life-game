@@ -75,7 +75,7 @@ Walking's extra Energy cost is also multiplied by the Health multiplier.
 
 At Health 0 the run ends and a Run Over screen is shown. Starting a new run resets the save.
 
-Food, water and medicine are currently designed primarily to remove/prevent causes of Health loss; medicine does not directly restore Health.
+Food, water and medicine are primarily designed to remove/prevent causes of Health loss; medicine does not directly restore Health. Safe 8-hour indoor sleep can restore Health only when Food and Thirst are both above 20: Night shelter +2 Health, Schronisko +3 Health.
 
 ## Weather
 
@@ -209,6 +209,12 @@ Night shelter:
 - Failure costs 30 minutes and -8 Mood.
 - Successful shelter rest sets temporary Night shelter housing and may trigger a wake event.
 
+### Safe storage
+
+Night shelter and Schronisko share a persistent safe-storage inventory. Night shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Food and water cannot be stored.
+
+Currently storable: documents, medicine and cigarettes. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
+
 ## Work
 
 Day work is open 07:00–18:00.
@@ -224,9 +230,9 @@ The job requirement is intentionally based on Energy rather than directly requir
 
 ## Documents
 
-Documents are a physical essential item/state. Street events can remove them. The Help center can restore missing documents.
+Documents are a physical essential item/state. Street events can remove carried documents. Documents stored at a shelter are protected. The Help center can restore missing documents.
 
-Documents are included in event context and life status, providing a foundation for future formal-service/job requirements.
+Documents are included in event context and life status. Help-center Transport and Benefits applications currently require carried documents; Housing help and document-restoration remain available without them.
 
 ## Street event engine
 
@@ -342,8 +348,8 @@ The UI includes:
 ## Known implementation gaps / current limitations
 
 These are current code realities, not planned features:
-- Health has damage and game-over consequences, but no complete long-term recovery loop yet.
-- Food/drink shelter storage is intentionally not implemented; Schronisko storage in general is not implemented yet.
+- Health recovery is currently limited to safe indoor sleep; doctor/medical-care recovery is not implemented yet.
+- Safe storage currently supports documents, medicine and cigarettes. Food/drink are intentionally excluded; more item types can be added later.
 - The shop shelf is only rendered while the shop is open instead of remaining visible/disabled when closed.
 - Phone Condition increases battery drain, but Condition 0 does not yet universally disable all phone functions.
 - Music's Mood gain can continue based on toggle state even if battery reaches zero.
