@@ -10,6 +10,7 @@ export type GameState = {
   health: number
   hygiene: number
   mood: number
+  intoxication: number
   locationId: string
 }
 
@@ -32,6 +33,7 @@ export type ActionResult = {
   health?: number
   hygiene?: number
   mood?: number
+  intoxication?: number
   message?: string
 }
 
@@ -67,6 +69,7 @@ export const initialState: GameState = {
   health: 82,
   hygiene: 55,
   mood: 58,
+  intoxication: 0,
   locationId: 'street',
 }
 
@@ -101,6 +104,8 @@ export function applyAction(state: GameState, result: ActionResult): GameState {
   const nextHealth = clamp(state.health + (result.health ?? 0))
   const energy = Math.min(energyCap(nextHealth), clamp(state.energy - energySpent + (result.energy ?? 0)))
   const hygiene = clamp(state.hygiene - result.minutes / 43.2 + (result.hygiene ?? 0))
+  // Abstract gameplay scale, not BAC/promille. Roughly 10 points wear off per game hour.
+  const intoxication = clamp(state.intoxication - result.minutes / 6 + (result.intoxication ?? 0))
 
   return {
     ...state,
@@ -113,6 +118,7 @@ export function applyAction(state: GameState, result: ActionResult): GameState {
     health: nextHealth,
     hygiene,
     mood: clamp(state.mood + (result.mood ?? 0)),
+    intoxication,
   }
 }
 
