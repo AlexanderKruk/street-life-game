@@ -25,7 +25,7 @@ type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
 type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
-type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string }
+type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 
@@ -40,10 +40,10 @@ const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' |
 }
 
 const SHOP_ITEMS: ShopItem[] = [
-  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 1, description: 'Bottle · stack 4' },
-  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4' },
-  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20' },
-  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4' },
+  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 1, description: 'Bottle · stack 4', impacts: ['Thirst +++'] },
+  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food ++', 'Mood +'] },
+  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
+  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
 ]
 
 function stackSlots(count: number) {
@@ -299,12 +299,12 @@ export default function App() {
             const fits = canAddToBackpack(inventory, item)
             const affordable = game.money >= item.price
             return <button className="shop-item" key={item.id} onClick={() => buyItem(item)} disabled={!fits || !affordable}>
-              <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}</strong><small>{item.description}</small></div>
+              <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}</strong><small>{item.description}</small><div className="shop-impact">{item.impacts.map((impact) => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div></div>
               <b>{!fits ? 'FULL' : `${item.price.toFixed(2)} zł`}</b>
             </button>
           })}
         </div>
-        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 12}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small></div><b>12.00 zł</b></button>
+        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 12}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>12.00 zł</b></button>
       </section>}
       {current.id !== 'shop' && <>
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
