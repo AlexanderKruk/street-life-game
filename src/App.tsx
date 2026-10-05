@@ -28,7 +28,7 @@ type Inventory = { water: number; food: number; phoneBattery: number; jacket: nu
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
-type LifeSituation = { housing: 'Street' | 'Shelter'; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular' }
+type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Shelter'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular' }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
@@ -146,6 +146,11 @@ export default function App() {
   useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
   useEffect(() => { localStorage.setItem('street-life-situation-v1', JSON.stringify(life)) }, [life])
   useEffect(() => {
+    if (life.housing === 'Night shelter' && life.housingUntil !== undefined && absoluteMinutes(game) >= life.housingUntil) {
+      setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
+    }
+  }, [game.day, game.minutes, life.housing, life.housingUntil])
+  useEffect(() => {
     const now = absoluteMinutes(game)
     setEffects((prev) => prev.filter((effect) => effect.expiresAt > now))
   }, [game.day, game.minutes])
@@ -221,7 +226,7 @@ export default function App() {
       setMessage(result.message ?? 'Time passes.')
       const next = applyAction(prev, result)
       if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
-        setLife((status) => ({ ...status, housing: 'Shelter' }))
+        setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
       }
       if (actionId === 'shop-meal') {
         const expiresAt = absoluteMinutes(next) + 240
