@@ -416,6 +416,13 @@ export default function App() {
         <Stat icon="🚿" label="Hygiene" value={game.hygiene} compact />
         <Stat icon="🙂" label="Mood" value={game.mood} compact />
       </div>
+      <div className="life-heading"><h3>Life situation</h3><span>Current status</span></div>
+      <div className="life-situation">
+        <div className="life-card"><span>🏠</span><div><small>Housing</small><strong>Street</strong></div></div>
+        <div className="life-card"><span>💼</span><div><small>Employment</small><strong>Unemployed</strong></div></div>
+        <div className="life-card"><span>💰</span><div><small>Income</small><strong>None</strong></div></div>
+        <div className="life-card"><span>📄</span><div><small>Documents</small><strong>{inventory.documents ? 'Complete' : 'Missing'}</strong></div></div>
+      </div>
       <div className="effects-heading"><h3>Effects</h3><span>{effects.length} active</span></div>
       <div className="effects-list">
         {effects.length ? effects.map((active) => {
