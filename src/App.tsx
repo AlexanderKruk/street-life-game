@@ -27,6 +27,11 @@ type Trip = { destinationId: string; mode: TravelMode; total: number; remaining:
 type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
+const BACKPACK_CAPACITY = 8
+
+function backpackSlots(inventory: Inventory) {
+  return [inventory.water, inventory.food, inventory.cigarettes, inventory.medicines].filter((count) => count > 0).length
+}
 
 const mapPositions: Record<string, { left: string; top: string }> = {
   station: { left: '13%', top: '18%' },
@@ -79,6 +84,7 @@ export default function App() {
   const overall = overallStatus(game)
   const weather = WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
+  const usedBackpackSlots = backpackSlots(inventory)
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
@@ -252,7 +258,8 @@ export default function App() {
     })()}
 
     {screen === 'inventory' && <section className="inventory-screen">
-      <div className="inventory-heading"><div><p className="eyebrow">BACKPACK</p><h2>Inventory</h2></div><span>8 item types</span></div>
+      <div className="inventory-heading"><div><p className="eyebrow">BACKPACK</p><h2>Inventory</h2></div><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
+      <div className="backpack-capacity"><i style={{ width: `${(usedBackpackSlots / BACKPACK_CAPACITY) * 100}%` }} /><small>{BACKPACK_CAPACITY - usedBackpackSlots} free</small></div>
       <div className="inventory-grid">
         <button className="inventory-item usable" onClick={() => useItem('water')} disabled={inventory.water <= 0}>
           <span className="item-icon">💧</span><div><strong>Water</strong><small>{inventory.water > 0 ? `×${inventory.water} · tap to drink` : 'Empty'}</small></div>
@@ -279,7 +286,7 @@ export default function App() {
           <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
         </div>
       </div>
-      <p className="inventory-note">Consumables can be used here. Other items will matter for travel, jobs, services and events.</p>
+      <p className="inventory-note">Consumables use backpack slots. Phone, jacket, documents and transit card are equipped and do not use backpack space.</p>
     </section>}
     {screen === 'status' && <section className="status-screen">
       <div className="status-heading"><div><p className="eyebrow">YOUR CONDITION</p><h2>{overall.icon} {overall.label}</h2></div><p>Your weakest need determines the overall condition.</p></div>
