@@ -24,7 +24,7 @@ export type EventOutcome = {
 }
 
 export type DiceCheck = {
-  stat: 'reflex'
+  stat: 'reflex' | 'persuasion'
   dc: number
   requirements?: { minEnergy?: number; minHealth?: number }
   success: EventOutcome
@@ -79,8 +79,14 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Accept', outcome:{ food:1, mood:3, message:'You received some food for later.' } },
     { label:'Decline', outcome:{ message:'You thank them and decline.' } }
   ]},
-  { id:'useful-tip', trigger:'location', icon:'💬', title:'A useful tip', text:'Someone nearby tells you about places where people can get help.', weight:4, choices:[
-    { label:'Listen', outcome:{ minutes:10, mood:3, message:'The conversation costs a little time, but gives you some hope.' } },
+  { id:'useful-tip', trigger:'location', icon:'💬', title:'A useful tip', text:'Someone nearby mentions a place where people can get help, but seems ready to leave.', weight:4, choices:[
+    { label:'Ask for details · Persuasion DC 12', check:{ stat:'persuasion', dc:12,
+      success:{ minutes:10, mood:5, message:'You keep the conversation going and get several useful details about where to find help.' },
+      failure:{ minutes:5, mood:-1, message:'You try to get more information, but the conversation ends quickly.' },
+      criticalSuccess:{ minutes:10, mood:7, message:'The conversation goes extremely well. You get clear directions and a genuinely useful tip.' },
+      criticalFailure:{ minutes:5, mood:-3, message:'You come across badly and the person cuts the conversation short.' }
+    }},
+    { label:'Just listen', outcome:{ minutes:10, mood:3, message:'You listen without pushing for more details. The conversation gives you some hope.' } },
     { label:'Keep going', outcome:{ message:'You decide not to stop.' } }
   ]},
   { id:'rough-crowd', trigger:'location', icon:'⚠️', title:'Trouble nearby', text:'An argument nearby is getting louder. Staying around feels risky.', weight:2, eligible:c=>c.locationId==='station', choices:[
