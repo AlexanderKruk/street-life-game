@@ -162,6 +162,11 @@ export const actions: GameAction[] = [
     resolve: () => ({ minutes: 30, energy: 8, hygiene: 4, mood: 8, message: 'You settle into your place. You now have stable 24/7 shelter accommodation.' }),
   },
   {
+    id: 'residential-sleep', locationId: 'residential-shelter', name: 'Sleep safely',
+    description: 'Sleep for eight hours in your assigned place. Recovery is better when fed and hydrated.', minutes: 8 * 60,
+    resolve: (state) => ({ minutes: 8 * 60, energy: 90, health: state.hunger > 20 && state.thirst > 20 ? 3 : 0, hygiene: 3, mood: 8, message: state.hunger > 20 && state.thirst > 20 ? 'A safe full night restores some health.' : 'You sleep safely, but hunger or dehydration prevents physical recovery.' }),
+  },
+  {
     id: 'shelter-shower', locationId: 'shelter', name: 'Ask for a shower',
     description: 'There may be a queue, but it restores hygiene.', minutes: 35,
     resolve: () => ({ minutes: 35, hygiene: 55, energy: 4, mood: 4, message: 'You got a shower after waiting your turn.' }),
@@ -169,8 +174,8 @@ export const actions: GameAction[] = [
   {
     id: 'shelter-rest', locationId: 'shelter', name: 'Try to get a bed',
     description: 'A place is not guaranteed. Trying still costs time.', minutes: 30,
-    resolve: () => Math.random() < .7
-      ? { minutes: 8 * 60, energy: 85, hygiene: 5, mood: 10, message: 'You got a bed. The night passes indoors.' }
+    resolve: (state) => Math.random() < .7
+      ? { minutes: 8 * 60, energy: 85, health: state.hunger > 20 && state.thirst > 20 ? 2 : 0, hygiene: 5, mood: 10, message: state.hunger > 20 && state.thirst > 20 ? 'You got a bed. Safe sleep restores a little health.' : 'You got a bed. You rest indoors, but hunger or dehydration prevents physical recovery.' }
       : { minutes: 30, mood: -8, message: 'No beds left tonight. You waited in line for nothing.' },
   },
 ]
