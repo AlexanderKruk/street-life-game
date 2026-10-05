@@ -30,10 +30,14 @@ type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: strin
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
+type StoredItems = { documents: boolean; medicines: number; cigarettes: number }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
+const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0 }
+const NIGHT_SHELTER_STORAGE = 6
+const SCHRONISKO_STORAGE = 16
 const STACK_SIZE = 4
 const CIGARETTE_STACK_SIZE = 20
 const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
@@ -55,6 +59,10 @@ function phoneDrainMultiplier(condition: number) {
 
 function stackSlots(count: number) {
   return count > 0 ? Math.ceil(count / STACK_SIZE) : 0
+}
+
+function storageSlots(storage: StoredItems) {
+  return (storage.documents ? 1 : 0) + stackSlots(storage.medicines) + (storage.cigarettes > 0 ? Math.ceil(storage.cigarettes / CIGARETTE_STACK_SIZE) : 0)
 }
 
 function backpackSlots(inventory: Inventory) {
@@ -127,6 +135,14 @@ export default function App() {
       return INITIAL_INVENTORY
     }
   })
+  const [storage, setStorage] = useState<StoredItems>(() => {
+    try {
+      const raw = localStorage.getItem('street-life-storage-v1')
+      return raw ? { ...INITIAL_STORAGE, ...JSON.parse(raw) } : INITIAL_STORAGE
+    } catch {
+      return INITIAL_STORAGE
+    }
+  })
   const [life, setLife] = useState<LifeSituation>(() => {
     try {
       const raw = localStorage.getItem('street-life-situation-v1')
@@ -152,9 +168,12 @@ export default function App() {
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
   const dayWorkEnergyRequired = 55
+  const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
+  const usedStorageSlots = storageSlots(storage)
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
+  useEffect(() => { localStorage.setItem('street-life-storage-v1', JSON.stringify(storage)) }, [storage])
   useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
   useEffect(() => { localStorage.setItem('street-life-situation-v1', JSON.stringify(life)) }, [life])
   useEffect(() => {
@@ -359,8 +378,50 @@ export default function App() {
     setActiveEvent(null)
   }
 
+  function storeItem(item: 'documents' | 'medicines' | 'cigarettes') {
+    if (current.id !== 'shelter' && current.id !== 'residential-shelter') return
+    if (!open) return
+    if (item === 'documents') {
+      if (!inventory.documents || storage.documents || usedStorageSlots >= storageCapacity) return
+      setInventory((prev) => ({ ...prev, documents: false }))
+      setStorage((prev) => ({ ...prev, documents: true }))
+      setMessage('Documents stored safely. They are no longer carried on the street.')
+      return
+    }
+    const amount = item === 'medicines' ? Math.min(4, inventory.medicines) : Math.min(20, inventory.cigarettes)
+    if (amount <= 0) return
+    const candidate = { ...storage, [item]: storage[item] + amount }
+    if (storageSlots(candidate) > storageCapacity) { setMessage('Storage is full.'); return }
+    setInventory((prev) => ({ ...prev, [item]: prev[item] - amount }))
+    setStorage(candidate)
+    setMessage(`Stored ${amount} ${item}.`)
+  }
+
+  function takeStoredItem(item: 'documents' | 'medicines' | 'cigarettes') {
+    if (current.id !== 'shelter' && current.id !== 'residential-shelter') return
+    if (!open) return
+    if (item === 'documents') {
+      if (!storage.documents || inventory.documents) return
+      setStorage((prev) => ({ ...prev, documents: false }))
+      setInventory((prev) => ({ ...prev, documents: true }))
+      setMessage('You took your documents with you.')
+      return
+    }
+    const amount = item === 'medicines' ? Math.min(4, storage.medicines) : Math.min(20, storage.cigarettes)
+    if (amount <= 0) return
+    const candidate = { ...inventory, [item]: inventory[item] + amount }
+    if (backpackSlots(candidate) > BACKPACK_CAPACITY) { setMessage('Backpack full.'); return }
+    setStorage((prev) => ({ ...prev, [item]: prev[item] - amount }))
+    setInventory(candidate)
+    setMessage(`Took ${amount} ${item} from storage.`)
+  }
+
   function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
     if (!open || current.id !== 'support') return
+    if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
+      setMessage(storage.documents ? 'Your documents are stored at the shelter. Take them with you for this application.' : 'You need basic documents for this application. Ask for help restoring them first.')
+      return
+    }
     if (kind === 'housing') {
       if (life.schroniskoReferral) {
         setMessage('You already have a referral to Schronisko. It is available on the map.')
@@ -455,9 +516,11 @@ export default function App() {
     setActiveEvent(null)
     setDiceCheck(null)
     setInventory(INITIAL_INVENTORY)
+    setStorage(INITIAL_STORAGE)
     setLife(INITIAL_LIFE)
     setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
     localStorage.removeItem('street-life-inventory-v1')
+    localStorage.removeItem('street-life-storage-v1')
     localStorage.removeItem('street-life-effects-v1')
     localStorage.removeItem('street-life-situation-v1')
   }
@@ -500,8 +563,17 @@ export default function App() {
         <div className="support-grid">
           <button onClick={() => socialSupport('housing')} disabled={!open}><span>🏠</span><div><strong>Housing</strong><small>{life.schroniskoReferral ? 'Referral issued · Schronisko unlocked' : 'Ask about stable accommodation'}</small></div></button>
           <button onClick={() => socialSupport('documents')} disabled={!open}><span>📄</span><div><strong>Documents</strong><small>{inventory.documents ? 'Documents complete' : 'Restore missing documents'}</small></div></button>
-          <button onClick={() => socialSupport('transport')} disabled={!open}><span>🎫</span><div><strong>Transport</strong><small>Apply for 3 days of free public transport</small></div></button>
-          <button onClick={() => socialSupport('benefits')} disabled={!open}><span>💰</span><div><strong>Benefits</strong><small>Ask what financial support is available</small></div></button>
+          <button onClick={() => socialSupport('transport')} disabled={!open || !inventory.documents}><span>🎫</span><div><strong>Transport</strong><small>Apply for 3 days of free public transport</small></div></button>
+          <button onClick={() => socialSupport('benefits')} disabled={!open || !inventory.documents}><span>💰</span><div><strong>Benefits</strong><small>Ask what financial support is available</small></div></button>
+        </div>
+      </section>}
+      {(current.id === 'shelter' || current.id === 'residential-shelter') && <section className="storage-panel">
+        <div className="storage-heading"><div><p className="eyebrow">SAFE STORAGE</p><h2>Stored belongings</h2></div><span>{usedStorageSlots}/{storageCapacity} slots</span></div>
+        <p className="storage-note">{current.id === 'residential-shelter' ? 'Schronisko gives you more long-term storage.' : 'Night shelter has limited storage.'} Food and water must stay in your backpack.</p>
+        <div className="storage-grid">
+          <div><strong>🪪 Documents</strong><small>{storage.documents ? 'Stored safely' : inventory.documents ? 'Carried with you' : 'Missing'}</small><button onClick={() => storage.documents ? takeStoredItem('documents') : storeItem('documents')} disabled={storage.documents ? inventory.documents : !inventory.documents}>{storage.documents ? 'Take' : 'Store'}</button></div>
+          <div><strong>💊 Medicine ×{storage.medicines}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.medicines > 0 ? storeItem('medicines') : takeStoredItem('medicines')} disabled={inventory.medicines <= 0 && storage.medicines <= 0}>{inventory.medicines > 0 ? 'Store' : 'Take'}</button></div>
+          <div><strong>🚬 Cigarettes ×{storage.cigarettes}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.cigarettes > 0 ? storeItem('cigarettes') : takeStoredItem('cigarettes')} disabled={inventory.cigarettes <= 0 && storage.cigarettes <= 0}>{inventory.cigarettes > 0 ? 'Store' : 'Take'}</button></div>
         </div>
       </section>}
       {(current.id === 'support' || current.id === 'residential-shelter') && <section className="charging-station">
@@ -637,7 +709,7 @@ export default function App() {
         <div className="life-card"><span>🏠</span><div><small>Housing</small><strong>{life.housing}</strong></div></div>
         <div className="life-card"><span>💼</span><div><small>Employment</small><strong>{life.employment}</strong></div></div>
         <div className="life-card"><span>💰</span><div><small>Income</small><strong>{life.income}</strong></div></div>
-        <div className="life-card"><span>📄</span><div><small>Documents</small><strong>{inventory.documents ? 'Complete' : 'Missing'}</strong></div></div>
+        <div className="life-card"><span>📄</span><div><small>Documents</small><strong>{inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'}</strong></div></div>
       </div>
       <div className="effects-heading"><h3>Effects</h3><span>{effects.length} active</span></div>
       <div className="effects-list">
