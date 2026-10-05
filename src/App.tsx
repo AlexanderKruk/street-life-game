@@ -274,6 +274,12 @@ export default function App() {
         <Stat icon="🚿" label="Hygiene" value={game.hygiene} compact />
         <Stat icon="🙂" label="Mood" value={game.mood} compact />
       </div>
+      <div className="effects-heading"><h3>Effects</h3><span>3 active</span></div>
+      <div className="effects-list">
+        <div className="effect negative"><span>🤒</span><div><strong>Cold</strong><small>Energy drains a little faster.</small></div><b>2 days</b></div>
+        <div className="effect positive"><span>🎫</span><div><strong>Free transport</strong><small>Social support covered your travel.</small></div><b>3 days</b></div>
+        <div className="effect positive"><span>🍲</span><div><strong>Well fed</strong><small>Hunger decreases more slowly.</small></div><b>4h</b></div>
+      </div>
     </section>}
     {screen === 'journal' && <section className="journal-screen">
       <div className="journal-heading"><div><p className="eyebrow">DAY {game.day} · {weekday(game.day)}</p><h2>Journal</h2></div><span>📓</span></div>
