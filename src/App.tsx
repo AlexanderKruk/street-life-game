@@ -26,11 +26,19 @@ type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
 type Inventory = { water: number; food: number; phoneBattery: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string }
+type EffectId = 'cold' | 'free-transit' | 'well-fed'
+type ActiveEffect = { id: EffectId; expiresAt: number }
 
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const STACK_SIZE = 4
 const CIGARETTE_STACK_SIZE = 20
+const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
+  cold: { icon: '🤒', name: 'Cold', kind: 'negative', impacts: ['Energy −−', 'Mood −'] },
+  'free-transit': { icon: '🎫', name: 'Free transport', kind: 'positive', impacts: ['Travel +++'] },
+  'well-fed': { icon: '🍲', name: 'Well fed', kind: 'positive', impacts: ['Food +++', 'Mood +'] },
+}
+
 const SHOP_ITEMS: ShopItem[] = [
   { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 1, description: 'Bottle · stack 4' },
   { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4' },
@@ -44,6 +52,17 @@ function stackSlots(count: number) {
 
 function backpackSlots(inventory: Inventory) {
   return stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
+}
+
+function absoluteMinutes(game: GameState) {
+  return (game.day - 1) * 1440 + game.minutes
+}
+
+function remainingEffect(expiresAt: number, game: GameState) {
+  const left = Math.max(0, expiresAt - absoluteMinutes(game))
+  if (left >= 1440) return `${Math.ceil(left / 1440)} days`
+  if (left >= 60) return `${Math.ceil(left / 60)}h`
+  return `${left}m`
 }
 
 function canAddToBackpack(inventory: Inventory, item: ShopItem) {
@@ -96,6 +115,14 @@ export default function App() {
       return INITIAL_INVENTORY
     }
   })
+  const [effects, setEffects] = useState<ActiveEffect[]>(() => {
+    try {
+      const raw = localStorage.getItem('street-life-effects-v1')
+      return raw ? JSON.parse(raw) : [{ id: 'cold', expiresAt: 2 * 1440 + 480 }]
+    } catch {
+      return [{ id: 'cold', expiresAt: 2 * 1440 + 480 }]
+    }
+  })
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const currentActions = actions.filter((x) => x.locationId === current.id)
   const open = isOpen(current, game.minutes)
@@ -106,6 +133,11 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
+  useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
+  useEffect(() => {
+    const now = absoluteMinutes(game)
+    setEffects((prev) => prev.filter((effect) => effect.expiresAt > now))
+  }, [game.day, game.minutes])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -113,9 +145,13 @@ export default function App() {
       setGame((prev) => {
         const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
         const next = applyAction(prev, { minutes: 1 })
+        const cold = effects.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(prev))
+        const wellFed = effects.some((effect) => effect.id === 'well-fed' && effect.expiresAt > absoluteMinutes(prev))
         return {
           ...next,
-          energy: Math.max(0, next.energy - currentWeather.energyDrain - (trip?.mode === 'walk' ? 0.12 : 0)),
+          hunger: Math.min(100, next.hunger + (wellFed ? 0.035 : 0)),
+          energy: Math.max(0, next.energy - currentWeather.energyDrain - (trip?.mode === 'walk' ? 0.12 : 0) - (cold ? 0.045 : 0)),
+          mood: Math.max(0, next.mood - (cold ? 0.012 : 0)),
           thirst: Math.max(0, next.thirst - currentWeather.thirstDrain - (trip?.mode === 'walk' ? 0.04 : 0)),
         }
       })
@@ -132,7 +168,7 @@ export default function App() {
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip])
+  }, [trip, effects])
 
   function chooseDestination(id: string) {
     if (id === game.locationId) {
@@ -146,7 +182,8 @@ export default function App() {
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const total = mode === 'walk' ? destination.travelMinutes : Math.max(4, Math.ceil(destination.travelMinutes * 0.35))
-    const fare = 4.4
+    const freeTransit = effects.some((effect) => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
+    const fare = freeTransit ? 0 : 4.4
     if (mode === 'transit' && game.money < fare) {
       setMessage('You do not have enough money for public transport.')
       return
@@ -171,7 +208,12 @@ export default function App() {
     setGame((prev) => {
       const result = action.resolve(prev)
       setMessage(result.message ?? 'Time passes.')
-      return applyAction(prev, result)
+      const next = applyAction(prev, result)
+      if (actionId === 'shop-meal') {
+        const expiresAt = absoluteMinutes(next) + 240
+        setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
+      }
+      return next
     })
   }
 
@@ -188,6 +230,25 @@ export default function App() {
     setInventory((prev) => ({ ...prev, [item.id]: prev[item.id] + item.quantity }))
     setGame((prev) => applyAction(prev, { minutes: 3, money: -item.price }))
     setMessage(`Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
+  }
+
+  function useMedicine() {
+    if (inventory.medicines <= 0) return
+    const hasCold = effects.some((effect) => effect.id === 'cold')
+    if (!hasCold) {
+      setMessage('You are not sick. No reason to use medicine now.')
+      return
+    }
+    setInventory((prev) => ({ ...prev, medicines: prev.medicines - 1 }))
+    setEffects((prev) => prev.filter((effect) => effect.id !== 'cold'))
+    setMessage('The medicine helped. Cold removed.')
+  }
+
+  function smokeCigarette() {
+    if (inventory.cigarettes <= 0) return
+    setInventory((prev) => ({ ...prev, cigarettes: prev.cigarettes - 1 }))
+    setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 5), health: Math.max(0, prev.health - 0.5) }))
+    setMessage('You smoked a cigarette. Mood +, health slightly worse.')
   }
 
   function useItem(item: 'water' | 'food') {
@@ -207,7 +268,9 @@ export default function App() {
     setTrip(null)
     setSelectedDestination(null)
     setInventory(INITIAL_INVENTORY)
+    setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
     localStorage.removeItem('street-life-inventory-v1')
+    localStorage.removeItem('street-life-effects-v1')
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
@@ -300,8 +363,8 @@ export default function App() {
         <button className="travel-option" onClick={() => startTravel('walk')}>
           <span>🚶</span><div><strong>Walk</strong><small>{destination.travelMinutes} min · free · more energy</small></div>
         </button>
-        <button className="travel-option" onClick={() => startTravel('transit')} disabled={game.money < 4.4}>
-          <span>🚌</span><div><strong>Public transport</strong><small>{transitMinutes} min · 4.40 zł · less energy</small></div>
+        <button className="travel-option" onClick={() => startTravel('transit')} disabled={!effects.some((effect) => effect.id === 'free-transit') && game.money < 4.4}>
+          <span>🚌</span><div><strong>Public transport</strong><small>{transitMinutes} min · {effects.some((effect) => effect.id === 'free-transit') ? 'FREE' : '4.40 zł'} · less energy</small></div>
         </button>
       </div>
     })()}
@@ -325,12 +388,12 @@ export default function App() {
         <div className="inventory-item">
           <span className="item-icon">🪪</span><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
         </div>
-        <div className="inventory-item">
-          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>×{inventory.cigarettes}</small></div>
-        </div>
-        <div className="inventory-item">
-          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>×{inventory.medicines}</small></div>
-        </div>
+        <button className="inventory-item usable" onClick={smokeCigarette} disabled={inventory.cigarettes <= 0}>
+          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>{inventory.cigarettes > 0 ? `×${inventory.cigarettes} · tap to smoke` : 'Empty'}</small></div>
+        </button>
+        <button className="inventory-item usable" onClick={useMedicine} disabled={inventory.medicines <= 0}>
+          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>{inventory.medicines > 0 ? `×${inventory.medicines} · treats Cold` : 'Empty'}</small></div>
+        </button>
         <div className="inventory-item">
           <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
         </div>
@@ -347,11 +410,12 @@ export default function App() {
         <Stat icon="🚿" label="Hygiene" value={game.hygiene} compact />
         <Stat icon="🙂" label="Mood" value={game.mood} compact />
       </div>
-      <div className="effects-heading"><h3>Effects</h3><span>3 active</span></div>
+      <div className="effects-heading"><h3>Effects</h3><span>{effects.length} active</span></div>
       <div className="effects-list">
-        <div className="effect negative"><span>🤒</span><div className="effect-body"><strong>Cold</strong><div className="effect-impact"><b>Energy −−</b><em>Mood −</em></div></div><small className="effect-time">2 days</small></div>
-        <div className="effect positive"><span>🎫</span><div className="effect-body"><strong>Free transport</strong><div className="effect-impact"><b>Travel +++</b></div></div><small className="effect-time">3 days</small></div>
-        <div className="effect positive"><span>🍲</span><div className="effect-body"><strong>Well fed</strong><div className="effect-impact"><b>Food +++</b><em>Mood +</em></div></div><small className="effect-time">4h</small></div>
+        {effects.length ? effects.map((active) => {
+          const effect = EFFECTS[active.id]
+          return <div className={`effect ${effect.kind}`} key={active.id}><span>{effect.icon}</span><div className="effect-body"><strong>{effect.name}</strong><div className="effect-impact">{effect.impacts.map((impact) => <b key={impact}>{impact}</b>)}</div></div><small className="effect-time">{remainingEffect(active.expiresAt, game)}</small></div>
+        }) : <p className="empty">No active effects.</p>}
       </div>
     </section>}
     {screen === 'journal' && <section className="journal-screen">
