@@ -129,15 +129,6 @@ export const actions: GameAction[] = [
     resolve: () => ({ minutes: 8 * 60, energy: 52, hygiene: -12, mood: -9, message: 'You sleep on the ground in short, uneasy stretches. You wake stiff, dirty and exhausted.' }),
   },
   {
-    id: 'street-bottles', locationId: 'street', name: 'Search bins for bottles',
-    description: 'Check rubbish bins for returnable bottles. Slow, dirty, and unpredictable.', minutes: 45, requiresOpen: false,
-    resolve: () => {
-      const roll = Math.random()
-      const earned = roll < .30 ? 0 : roll < .80 ? 3 : 7
-      return { minutes: 45, money: earned, hygiene: -10, energy: -4, mood: earned ? 1 : -3, message: earned ? `You found returnable bottles worth ${earned} zł.` : 'You searched the bins but found nothing worth returning.' }
-    },
-  },
-  {
     id: 'station-bottles', locationId: 'station', name: 'Look for returnable bottles',
     description: 'Search bins and platforms. Slow, dirty, and unpredictable.', minutes: 45, requiresOpen: false,
     resolve: () => {
