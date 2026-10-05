@@ -276,9 +276,9 @@ export default function App() {
       </div>
       <div className="effects-heading"><h3>Effects</h3><span>3 active</span></div>
       <div className="effects-list">
-        <div className="effect negative"><span>🤒</span><div><strong>Cold</strong><small>2 days remaining</small></div><div className="effect-impact"><b>Energy −−</b><em>Mood −</em></div></div>
-        <div className="effect positive"><span>🎫</span><div><strong>Free transport</strong><small>3 days remaining</small></div><div className="effect-impact"><b>Travel +++</b></div></div>
-        <div className="effect positive"><span>🍲</span><div><strong>Well fed</strong><small>4h remaining</small></div><div className="effect-impact"><b>Food +++</b><em>Mood +</em></div></div>
+        <div className="effect negative"><span>🤒</span><div className="effect-body"><strong>Cold</strong><div className="effect-impact"><b>Energy −−</b><em>Mood −</em></div></div><small className="effect-time">2 days</small></div>
+        <div className="effect positive"><span>🎫</span><div className="effect-body"><strong>Free transport</strong><div className="effect-impact"><b>Travel +++</b></div></div><small className="effect-time">3 days</small></div>
+        <div className="effect positive"><span>🍲</span><div className="effect-body"><strong>Well fed</strong><div className="effect-impact"><b>Food +++</b><em>Mood +</em></div></div><small className="effect-time">4h</small></div>
       </div>
     </section>}
     {screen === 'journal' && <section className="journal-screen">
