@@ -275,6 +275,13 @@ export default function App() {
       setScreen('location')
       return
     }
+    if (id === 'street') {
+      setGame((prev) => ({ ...prev, locationId: 'street' }))
+      setSelectedDestination(null)
+      setScreen('location')
+      setMessage('You step outside onto the street.')
+      return
+    }
     setSelectedDestination(id)
   }
 
