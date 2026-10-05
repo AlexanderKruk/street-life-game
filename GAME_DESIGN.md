@@ -406,3 +406,7 @@ These are current code realities, not planned features:
 
 ### Variable sleep duration
 Sleep duration is player-controlled from **1 to 10 hours** in one-hour steps for ground sleep, bench sleep, Night shelter beds, and Schronisko. Recovery and penalties scale from the previous 8-hour values. Street wake-event risk scales with sleep length (capped), so a short nap is safer than a long exposed sleep. Night shelter still checks bed availability first; if no bed is available, only the 30-minute queue penalty applies. Indoor Health recovery scales with sleep duration and still requires Hunger and Thirst above 20.
+
+
+### Alcohol / intoxication
+The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/promille). It starts at 0 and currently falls by about 10 points per game hour as time passes. The Night shelter has a strict admission threshold: **Intoxication above 10 means no bed/admission until the character sobers up**. This creates a direct survival tradeoff for future alcohol items/events. The Status screen exposes the current Intoxication value. Alcohol sources and individual drink strengths can be added on top of this system.
