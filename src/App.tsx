@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { actions, applyAction, energyCap, formatTime, healthEnergyMultiplier, initialState, isOpen, locations, type GameState } from './game'
-import { pickStreetEvent, type StreetEvent, type StreetEventChoice } from './events'
+import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 
 const SAVE_KEY = 'street-life-save-v3'
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
@@ -118,6 +118,7 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(false)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
+  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean } | null>(null)
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
       const raw = localStorage.getItem('street-life-inventory-v1')
@@ -285,8 +286,7 @@ export default function App() {
     }
   }
 
-  function resolveStreetEvent(choice: StreetEventChoice) {
-    const outcome = choice.outcome
+  function applyEventOutcome(outcome: EventOutcome) {
     setGame((prev) => applyAction(prev, {
       minutes: outcome.minutes ?? 0,
       money: outcome.money,
@@ -304,6 +304,43 @@ export default function App() {
       documents: outcome.loseDocuments ? false : prev.documents,
     }))
     setMessage(outcome.message)
+  }
+
+  function reflexModifier() {
+    if (game.energy >= 80) return 2
+    if (game.energy >= 60) return 1
+    if (game.energy < 20) return -2
+    if (game.energy < 40) return -1
+    return 0
+  }
+
+  function resolveStreetEvent(choice: StreetEventChoice) {
+    if (choice.check) {
+      setDiceCheck({ choice, roll: null, modifier: reflexModifier(), resolved: false })
+      return
+    }
+    if (choice.outcome) applyEventOutcome(choice.outcome)
+    setActiveEvent(null)
+  }
+
+  function rollDice() {
+    if (!diceCheck?.choice.check || diceCheck.roll !== null) return
+    const roll = Math.floor(Math.random() * 20) + 1
+    setDiceCheck({ ...diceCheck, roll, resolved: false })
+  }
+
+  function acceptDiceResult() {
+    if (!diceCheck?.choice.check || diceCheck.roll === null) return
+    const check = diceCheck.choice.check
+    const roll = diceCheck.roll
+    const success = roll === 20 || (roll !== 1 && roll + diceCheck.modifier >= check.dc)
+    const outcome = roll === 20 && check.criticalSuccess
+      ? check.criticalSuccess
+      : roll === 1 && check.criticalFailure
+        ? check.criticalFailure
+        : success ? check.success : check.failure
+    applyEventOutcome(outcome)
+    setDiceCheck(null)
     setActiveEvent(null)
   }
 
@@ -401,6 +438,7 @@ export default function App() {
     setMusicOn(false)
     setNavigationOn(true)
     setActiveEvent(null)
+    setDiceCheck(null)
     setInventory(INITIAL_INVENTORY)
     setLife(INITIAL_LIFE)
     setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
@@ -628,7 +666,18 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && activeEvent && <div className="event-overlay">
+    {!gameOver && diceCheck?.choice.check && <div className="dice-overlay">
+      <section className="dice-card">
+        <p className="eyebrow">REFLEX CHECK · DC {diceCheck.choice.check.dc}</p>
+        <div className={diceCheck.roll === null ? 'd20 rolling-ready' : diceCheck.roll === 20 ? 'd20 critical' : diceCheck.roll === 1 ? 'd20 critical-fail' : 'd20'}>{diceCheck.roll ?? 'D20'}</div>
+        <div className="dice-math">{diceCheck.roll === null ? `Energy modifier ${diceCheck.modifier >= 0 ? '+' : ''}${diceCheck.modifier}` : `${diceCheck.roll} ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} = ${diceCheck.roll + diceCheck.modifier}`}</div>
+        {diceCheck.roll === null
+          ? <button onClick={rollDice}>Roll D20</button>
+          : <><strong className="dice-result">{diceCheck.roll === 20 ? 'CRITICAL SUCCESS' : diceCheck.roll === 1 ? 'CRITICAL FAILURE' : diceCheck.roll + diceCheck.modifier >= diceCheck.choice.check.dc ? 'SUCCESS' : 'FAILURE'}</strong><button onClick={acceptDiceResult}>Continue</button></>}
+      </section>
+    </div>}
+
+    {!gameOver && activeEvent && !diceCheck && <div className="event-overlay">
       <section className="event-card">
         <div className="event-card-icon">{activeEvent.icon}</div>
         <p className="eyebrow">STREET EVENT</p>
