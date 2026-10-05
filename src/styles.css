@@ -308,3 +308,13 @@ button.inventory-item { width:100%; }
 .life-card div { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .life-card small { color:#7f8b96; font-size:10px; }
 .life-card strong { font-size:13px; }
+
+/* Social worker support */
+.support-menu { margin-top:14px; }
+.support-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.support-grid button { display:grid; grid-template-columns:34px 1fr; gap:9px; align-items:center; text-align:left; min-height:76px; padding:11px; border:1px solid #303a43; border-radius:14px; background:#141a20; color:inherit; }
+.support-grid button > span { font-size:23px; text-align:center; }
+.support-grid button div { display:flex; flex-direction:column; gap:4px; }
+.support-grid button strong { font-size:13px; }
+.support-grid button small { color:#8d98a3; font-size:10px; line-height:1.25; }
+.support-grid button:disabled { opacity:.42; }
