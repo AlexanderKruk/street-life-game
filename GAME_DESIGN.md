@@ -196,7 +196,13 @@ Cold additionally drains Energy by 0.045/min and Mood by 0.012/min, on top of it
 
 Street is the starting location. It is always available and represents the least stable housing state rather than using Station as a stand-in for homelessness. Street is not treated as a normal travel destination: choosing Street from another location means simply stepping outside, with no fare, travel-mode choice or travel time. Travelling from Street to a specific destination still uses the normal walking/public-transport flow.
 
-Street currently offers **Sleep outside**: 8 hours, partial Energy recovery, -8 Hygiene and -6 Mood, with no direct Health recovery. After sleeping, the game attempts a Street-housing wake event at 75%, making the existing overnight theft event naturally reachable. Street sleep is intentionally worse and riskier than Night shelter or Schronisko sleep.
+Street has its own small survival loop:
+- **Sleep on the ground** — 8 hours, weak Energy recovery, -12 Hygiene, -9 Mood and no direct Health recovery. It attempts a Street-housing wake event at 75%.
+- **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
+- Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
+- Once a bench is found, **Sleep on the bench** becomes available: 8 hours, better Energy recovery than the ground, -7 Hygiene, -5 Mood, no direct Health recovery, and a 65% Street wake-event attempt.
+- **Search bins for bottles** — 45 minutes; random earnings 0/3/7 zł, with Hygiene/Energy costs.
+- The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Housing and social support
 
