@@ -297,3 +297,14 @@ button.inventory-item { width:100%; }
 .essentials-heading > span { color:#7f9c88; }
 .backpack-grid { margin-top:25px; }
 .essentials-grid { margin-top:0; }
+
+/* Life situation */
+.life-heading { display:flex; justify-content:space-between; align-items:center; margin:20px 2px 9px; }
+.life-heading h3 { margin:0; font-size:15px; }
+.life-heading span { color:#7f8b96; font-size:11px; }
+.life-situation { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+.life-card { min-height:66px; display:grid; grid-template-columns:34px 1fr; align-items:center; gap:9px; padding:11px 12px; border:1px solid #303a43; border-radius:14px; background:#141a20; }
+.life-card > span { font-size:23px; text-align:center; }
+.life-card div { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.life-card small { color:#7f8b96; font-size:10px; }
+.life-card strong { font-size:13px; }
