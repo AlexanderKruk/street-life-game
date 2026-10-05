@@ -28,7 +28,9 @@ type Inventory = { water: number; food: number; phoneBattery: number; jacket: nu
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
+type LifeSituation = { housing: 'Street' | 'Shelter'; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular' }
 
+const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const STACK_SIZE = 4
@@ -115,6 +117,14 @@ export default function App() {
       return INITIAL_INVENTORY
     }
   })
+  const [life, setLife] = useState<LifeSituation>(() => {
+    try {
+      const raw = localStorage.getItem('street-life-situation-v1')
+      return raw ? { ...INITIAL_LIFE, ...JSON.parse(raw) } : INITIAL_LIFE
+    } catch {
+      return INITIAL_LIFE
+    }
+  })
   const [effects, setEffects] = useState<ActiveEffect[]>(() => {
     try {
       const raw = localStorage.getItem('street-life-effects-v1')
@@ -134,6 +144,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
   useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
+  useEffect(() => { localStorage.setItem('street-life-situation-v1', JSON.stringify(life)) }, [life])
   useEffect(() => {
     const now = absoluteMinutes(game)
     setEffects((prev) => prev.filter((effect) => effect.expiresAt > now))
@@ -209,12 +220,22 @@ export default function App() {
       const result = action.resolve(prev)
       setMessage(result.message ?? 'Time passes.')
       const next = applyAction(prev, result)
+      if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
+        setLife((status) => ({ ...status, housing: 'Shelter' }))
+      }
       if (actionId === 'shop-meal') {
         const expiresAt = absoluteMinutes(next) + 240
         setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
       }
       return next
     })
+  }
+
+  function takeDayWork() {
+    if (!open || current.id !== 'work') return
+    setGame((prev) => applyAction(prev, { minutes: 180, money: 35, energy: -18, thirst: -8, hygiene: -10, mood: 3 }))
+    setLife((status) => ({ ...status, employment: 'Day work', income: 'Irregular' }))
+    setMessage('You completed a short shift. +35 zł. Day work is now part of your current situation.')
   }
 
   function buyItem(item: ShopItem) {
@@ -268,9 +289,11 @@ export default function App() {
     setTrip(null)
     setSelectedDestination(null)
     setInventory(INITIAL_INVENTORY)
+    setLife(INITIAL_LIFE)
     setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
     localStorage.removeItem('street-life-inventory-v1')
     localStorage.removeItem('street-life-effects-v1')
+    localStorage.removeItem('street-life-situation-v1')
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
@@ -306,7 +329,12 @@ export default function App() {
         </div>
         <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 12}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>12.00 zł</b></button>
       </section>}
-      {current.id !== 'shop' && <>
+      {current.id === 'work' && <section className="actions">
+        <button className="action" onClick={takeDayWork} disabled={!open}>
+          <div><strong>Take a short shift</strong><small>Three hours of physical work. Pays 35 zł.</small></div><span>+35 zł · ~180 min</span>
+        </button>
+      </section>}
+      {current.id !== 'shop' && current.id !== 'work' && <>
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
           {currentActions.length ? currentActions.map((action) => {
@@ -418,9 +446,9 @@ export default function App() {
       </div>
       <div className="life-heading"><h3>Life situation</h3><span>Current status</span></div>
       <div className="life-situation">
-        <div className="life-card"><span>🏠</span><div><small>Housing</small><strong>Street</strong></div></div>
-        <div className="life-card"><span>💼</span><div><small>Employment</small><strong>Unemployed</strong></div></div>
-        <div className="life-card"><span>💰</span><div><small>Income</small><strong>None</strong></div></div>
+        <div className="life-card"><span>🏠</span><div><small>Housing</small><strong>{life.housing}</strong></div></div>
+        <div className="life-card"><span>💼</span><div><small>Employment</small><strong>{life.employment}</strong></div></div>
+        <div className="life-card"><span>💰</span><div><small>Income</small><strong>{life.income}</strong></div></div>
         <div className="life-card"><span>📄</span><div><small>Documents</small><strong>{inventory.documents ? 'Complete' : 'Missing'}</strong></div></div>
       </div>
       <div className="effects-heading"><h3>Effects</h3><span>{effects.length} active</span></div>
