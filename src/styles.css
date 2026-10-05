@@ -256,3 +256,27 @@ button.inventory-item { width:100%; }
 .backpack-capacity i { display:block; height:100%; border-radius:inherit; background:#6fa987; transition:width .25s ease; }
 .backpack-capacity small { position:absolute; right:0; top:12px; color:#6f7b85; font-size:9px; }
 .inventory-grid { margin-top:25px; }
+
+/* Shop */
+.shop { margin-top:20px; }
+.shop-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:10px; }
+.shop-heading h2 { margin:0; font-size:22px; }
+.shop-heading > span { color:#8f9ba5; font-size:11px; }
+.shop-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.shop-item,.shop-meal { border:1px solid #35414c; border-radius:15px; background:#192129; color:#f1f4f6; text-align:left; }
+.shop-item { min-height:92px; padding:12px; display:grid; grid-template-columns:34px 1fr; gap:8px; align-items:start; }
+.shop-item > span { font-size:27px; }
+.shop-item div { min-width:0; display:flex; flex-direction:column; gap:3px; }
+.shop-item strong { font-size:13px; }
+.shop-item small { color:#8f9ba5; font-size:10px; }
+.shop-item b { grid-column:2; color:#a9c7b3; font-size:11px; }
+.shop-item:disabled { opacity:.38; }
+.shop-meal { width:100%; margin-top:8px; padding:13px; display:grid; grid-template-columns:36px 1fr auto; gap:10px; align-items:center; }
+.shop-meal > span { font-size:28px; }
+.shop-meal div { display:flex; flex-direction:column; gap:3px; }
+.shop-meal small { color:#8f9ba5; }
+.shop-meal b { color:#a9c7b3; font-size:11px; white-space:nowrap; }
+@media (max-width:420px) {
+  .shop-item { grid-template-columns:30px 1fr; }
+  .shop-item > span { font-size:24px; }
+}
