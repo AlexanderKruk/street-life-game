@@ -47,6 +47,7 @@ export type GameAction = {
 }
 
 export const locations: Location[] = [
+  { id: 'street', name: 'Street', icon: '🌆', description: 'An exposed city block. Free to stay, but there is little safety or real rest.', open: 0, close: 1440, travelMinutes: 8 },
   { id: 'station', name: 'Station', icon: '🚉', description: 'Crowds, benches and small chances to earn.', open: 0, close: 1440, travelMinutes: 10 },
   { id: 'shop', name: 'Discount shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 15 },
   { id: 'shelter', name: 'Night shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 20 },
@@ -66,7 +67,7 @@ export const initialState: GameState = {
   health: 82,
   hygiene: 55,
   mood: 58,
-  locationId: 'station',
+  locationId: 'street',
 }
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value))
@@ -122,6 +123,11 @@ export function isOpen(location: Location, minutes: number) {
 }
 
 export const actions: GameAction[] = [
+  {
+    id: 'street-sleep', locationId: 'street', name: 'Sleep outside',
+    description: 'Try to get through eight hours outside. Free, exposed, and much less restorative than a bed.', minutes: 8 * 60, requiresOpen: false,
+    resolve: () => ({ minutes: 8 * 60, energy: 62, hygiene: -8, mood: -6, message: 'You sleep outside in short, uneasy stretches. You recover some energy, but wake dirty and worn down.' }),
+  },
   {
     id: 'station-bottles', locationId: 'station', name: 'Look for returnable bottles',
     description: 'Search bins and platforms. Slow, dirty, and unpredictable.', minutes: 45, requiresOpen: false,
