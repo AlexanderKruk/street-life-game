@@ -26,6 +26,7 @@ export type EventOutcome = {
 export type DiceCheck = {
   stat: 'reflex'
   dc: number
+  requirements?: { minEnergy?: number; minHealth?: number }
   success: EventOutcome
   failure: EventOutcome
   criticalSuccess?: EventOutcome
@@ -51,7 +52,7 @@ export type StreetEvent = {
 
 export const STREET_EVENTS: StreetEvent[] = [
   { id:'phone-drop', trigger:'travel', icon:'📱', title:'The phone slips', text:'Your old phone slips from your hand while you are walking. You have a split second to react.', weight:3, eligible:c=>c.travelMode==='walk', choices:[
-    { label:'Try to catch it · Reflex DC 11', check:{ stat:'reflex', dc:11,
+    { label:'Try to catch it · Reflex DC 11', check:{ stat:'reflex', dc:11, requirements:{ minEnergy:20, minHealth:20 },
       success:{ mood:2, message:'You catch the phone just before it hits the pavement.' },
       failure:{ phoneCondition:-8, mood:-3, message:'Too slow. The phone hits the pavement and takes damage.' },
       criticalSuccess:{ mood:4, message:'Perfect catch. Somehow you snatch it out of the air without breaking stride.' },
