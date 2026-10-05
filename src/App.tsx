@@ -99,6 +99,7 @@ function canAddToBackpack(inventory: Inventory, item: ShopItem) {
 }
 
 const mapPositions: Record<string, { left: string; top: string }> = {
+  street: { left: '35%', top: '17%' },
   station: { left: '13%', top: '18%' },
   shop: { left: '64%', top: '14%' },
   support: { left: '40%', top: '38%' },
@@ -308,7 +309,11 @@ export default function App() {
     setGame(next)
     setMessage(result.message ?? 'Time passes.')
 
-    if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
+    if (actionId === 'street-sleep') {
+      setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
+      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Street', documents: inventory.documents }, 0.75)
+      if (wakeEvent) setActiveEvent(wakeEvent)
+    } else if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
       setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
       const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, 0.45)
       if (wakeEvent) setActiveEvent(wakeEvent)
