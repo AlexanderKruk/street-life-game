@@ -340,3 +340,11 @@ button.inventory-item { width:100%; }
 .event-choices { display:grid; gap:9px; margin-top:18px; }
 .event-choices button { min-height:48px; padding:11px 14px; border:1px solid #46535e; border-radius:12px; background:#1c252c; color:inherit; font-weight:750; text-align:left; }
 .event-choices button:active { transform:translateY(1px); }
+
+/* End of run */
+.game-over-overlay { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:20px; background:rgba(4,6,8,.92); backdrop-filter:blur(7px); }
+.game-over-card { width:min(100%,420px); padding:26px 22px; border:1px solid #4a3434; border-radius:22px; background:#15191d; text-align:center; box-shadow:0 28px 80px rgba(0,0,0,.65); }
+.game-over-icon { font-size:48px; margin-bottom:8px; }
+.game-over-card h2 { margin:5px 0 10px; }
+.game-over-card > p:not(.eyebrow) { color:#b8c0c7; line-height:1.5; }
+.game-over-card button { width:100%; min-height:50px; margin-top:18px; border:1px solid #59656e; border-radius:13px; background:#e5e9ec; color:#11171b; font-weight:850; }
