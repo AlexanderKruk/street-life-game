@@ -306,7 +306,12 @@ export default function App() {
     setMessage(outcome.message)
   }
 
-  function reflexModifier() {
+  function checkModifier(choice: StreetEventChoice) {
+    if (choice.check?.stat === 'persuasion') {
+      const hygiene = game.hygiene >= 80 ? 2 : game.hygiene >= 60 ? 1 : game.hygiene < 20 ? -3 : game.hygiene < 40 ? -2 : 0
+      const mood = game.mood >= 75 ? 1 : game.mood < 25 ? -1 : 0
+      return hygiene + mood
+    }
     if (game.energy >= 80) return 2
     if (game.energy >= 60) return 1
     if (game.energy < 20) return -2
@@ -326,7 +331,7 @@ export default function App() {
     if (choice.check) {
       const unavailable = checkUnavailableReason(choice)
       if (unavailable) return
-      setDiceCheck({ choice, roll: null, modifier: reflexModifier(), resolved: false })
+      setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false })
       return
     }
     if (choice.outcome) applyEventOutcome(choice.outcome)
@@ -678,9 +683,9 @@ export default function App() {
 
     {!gameOver && diceCheck?.choice.check && <div className="dice-overlay">
       <section className="dice-card">
-        <p className="eyebrow">REFLEX CHECK · DC {diceCheck.choice.check.dc}</p>
+        <p className="eyebrow">{diceCheck.choice.check.stat.toUpperCase()} CHECK · DC {diceCheck.choice.check.dc}</p>
         <div className={diceCheck.roll === null ? 'd20 rolling-ready' : diceCheck.roll === 20 ? 'd20 critical' : diceCheck.roll === 1 ? 'd20 critical-fail' : 'd20'}>{diceCheck.roll ?? 'D20'}</div>
-        <div className="dice-math">{diceCheck.roll === null ? `Energy modifier ${diceCheck.modifier >= 0 ? '+' : ''}${diceCheck.modifier}` : `${diceCheck.roll} ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} = ${diceCheck.roll + diceCheck.modifier}`}</div>
+        <div className="dice-math">{diceCheck.roll === null ? `${diceCheck.choice.check.stat === 'persuasion' ? 'Hygiene + Mood' : 'Energy'} modifier ${diceCheck.modifier >= 0 ? '+' : ''}${diceCheck.modifier}` : `${diceCheck.roll} ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} = ${diceCheck.roll + diceCheck.modifier}`}</div>
         {diceCheck.roll === null
           ? <button onClick={rollDice}>Roll D20</button>
           : <><strong className="dice-result">{diceCheck.roll === 20 ? 'CRITICAL SUCCESS' : diceCheck.roll === 1 ? 'CRITICAL FAILURE' : diceCheck.roll + diceCheck.modifier >= diceCheck.choice.check.dc ? 'SUCCESS' : 'FAILURE'}</strong><button onClick={acceptDiceResult}>Continue</button></>}
