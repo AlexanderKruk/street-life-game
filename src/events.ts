@@ -23,9 +23,19 @@ export type EventOutcome = {
   loseDocuments?: boolean
 }
 
+export type DiceCheck = {
+  stat: 'reflex'
+  dc: number
+  success: EventOutcome
+  failure: EventOutcome
+  criticalSuccess?: EventOutcome
+  criticalFailure?: EventOutcome
+}
+
 export type StreetEventChoice = {
   label: string
-  outcome: EventOutcome
+  outcome?: EventOutcome
+  check?: DiceCheck
 }
 
 export type StreetEvent = {
@@ -40,8 +50,14 @@ export type StreetEvent = {
 }
 
 export const STREET_EVENTS: StreetEvent[] = [
-  { id:'phone-drop', trigger:'travel', icon:'📱', title:'The phone slips', text:'Your old phone slips from your hand and hits the pavement.', weight:3, eligible:c=>c.travelMode==='walk', choices:[
-    { label:'Check the damage', outcome:{ phoneCondition:-8, mood:-3, message:'The corner is cracked. The phone still works, but it is in worse condition.' } }
+  { id:'phone-drop', trigger:'travel', icon:'📱', title:'The phone slips', text:'Your old phone slips from your hand while you are walking. You have a split second to react.', weight:3, eligible:c=>c.travelMode==='walk', choices:[
+    { label:'Try to catch it · Reflex DC 11', check:{ stat:'reflex', dc:11,
+      success:{ mood:2, message:'You catch the phone just before it hits the pavement.' },
+      failure:{ phoneCondition:-8, mood:-3, message:'Too slow. The phone hits the pavement and takes damage.' },
+      criticalSuccess:{ mood:4, message:'Perfect catch. Somehow you snatch it out of the air without breaking stride.' },
+      criticalFailure:{ phoneCondition:-15, mood:-6, message:'It slips through your fingers twice and hits the pavement hard.' }
+    }},
+    { label:'Let it fall', outcome:{ phoneCondition:-8, mood:-3, message:'You do not risk the grab. The phone hits the pavement and takes damage.' } }
   ]},
   { id:'rain-phone', trigger:'travel', icon:'🌧️', title:'Caught in the rain', text:'Rain gets through your clothes and your phone gets damp.', weight:4, eligible:c=>c.travelMode==='walk' && (c.weather==='Rain' || c.weather==='Showers'), choices:[
     { label:'Hide it under the jacket', outcome:{ jacketCondition:-2, phoneCondition:-3, mood:-2, message:'You protected it as best you could, but some moisture got inside.' } },
