@@ -288,6 +288,14 @@ export default function App() {
     setSelectedDestination(id)
   }
 
+  function askForMoney() {
+    if (activeEvent || current.id !== 'street') return
+    const roll = Math.random()
+    const earned = roll < 0.35 ? 0 : roll < 0.65 ? 1 : roll < 0.85 ? 2 : roll < 0.96 ? 3 : 5
+    setGame((prev) => applyAction(prev, { minutes: 45, money: earned, energy: -2, mood: earned > 0 ? 1 : -3 }))
+    setMessage(earned > 0 ? `You spend 45 minutes asking passers-by for help and collect ${earned.toFixed(2)} zł in small change.` : 'You spend 45 minutes asking passers-by for help. Nobody gives you anything.')
+  }
+
   function searchStreetBottles() {
     if (activeEvent || current.id !== 'street') return
     const found = Math.floor(Math.random() * 7)
@@ -699,6 +707,7 @@ export default function App() {
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
           {current.id === 'street' && <>
+            <button className="action" onClick={askForMoney}><div><strong>🤲 Ask passers-by for money</strong><small>Spend time asking for small change. Usually little or nothing.</small></div><span>~45 min</span></button>
             <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search bins for bottles</strong><small>Look for returnable bottles. They take backpack space and can be returned at the shop.</small></div><span>~45 min</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
