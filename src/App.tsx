@@ -32,9 +32,9 @@ function loadGame(): GameState {
   }
 }
 
-function Stat({ label, value, icon }: { label: string; value: number; icon: string }) {
+function Stat({ label, value, icon, compact = false }: { label: string; value: number; icon: string; compact?: boolean }) {
   const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
-  return <div className="stat"><span>{icon}</span><div><div className="stat-label"><span>{label}</span><b>{Math.round(value)}</b></div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
+  return <div className={compact ? 'stat compact' : 'stat'}><span>{icon}</span><div><div className="stat-label"><span>{label}</span>{!compact && <b>{Math.round(value)}</b>}</div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
 }
 
 function overallStatus(game: GameState) {
@@ -267,12 +267,12 @@ export default function App() {
     {screen === 'status' && <section className="status-screen">
       <div className="status-heading"><div><p className="eyebrow">YOUR CONDITION</p><h2>{overall.icon} {overall.label}</h2></div><p>Your weakest need determines the overall condition.</p></div>
       <div className="status-needs">
-        <Stat icon="🍞" label="Food" value={game.hunger} />
-        <Stat icon="💧" label="Thirst" value={game.thirst} />
-        <Stat icon="⚡" label="Energy" value={game.energy} />
-        <Stat icon="❤️" label="Health" value={game.health} />
-        <Stat icon="🚿" label="Hygiene" value={game.hygiene} />
-        <Stat icon="🙂" label="Mood" value={game.mood} />
+        <Stat icon="🍞" label="Food" value={game.hunger} compact />
+        <Stat icon="💧" label="Thirst" value={game.thirst} compact />
+        <Stat icon="⚡" label="Energy" value={game.energy} compact />
+        <Stat icon="❤️" label="Health" value={game.health} compact />
+        <Stat icon="🚿" label="Hygiene" value={game.hygiene} compact />
+        <Stat icon="🙂" label="Mood" value={game.mood} compact />
       </div>
     </section>}
     {screen === 'journal' && <section className="journal-screen">
