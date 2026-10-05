@@ -133,11 +133,14 @@ footer p { margin:0; }
 .status-heading { padding:20px; border:1px solid #34404c; border-radius:20px; background:#12181e; display:flex; justify-content:space-between; align-items:end; gap:20px; margin-bottom:12px; }
 .status-heading h2 { margin-bottom:0; font-size:28px; }
 .status-heading > p { max-width:270px; margin:0; color:#8996a1; font-size:12px; line-height:1.4; text-align:right; }
-.status-needs { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-.status-needs .stat { min-height:70px; padding:14px; }
+.status-needs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.status-needs .stat { min-height:58px; padding:10px; }
 .status-needs .stat-label { display:flex; justify-content:space-between; gap:12px; font-size:12px; }
 .status-needs .stat-label b { color:#dbe1e6; font-weight:700; }
-.status-needs .bar { height:8px; margin-top:8px; }
+.status-needs .bar { height:6px; margin-top:5px; }
+.status-needs .stat.compact { grid-template-columns:24px 1fr; }
+.status-needs .stat.compact > span { font-size:18px; }
+.status-needs .stat.compact .stat-label { margin-bottom:2px; }
 @media (max-width:520px) {
   header { gap:8px; }
   .header-info { flex-direction:column; align-items:flex-end; gap:5px; }
@@ -145,7 +148,10 @@ footer p { margin:0; }
   .money { padding:7px 10px; font-size:12px; }
   .status-heading { align-items:flex-start; flex-direction:column; gap:8px; }
   .status-heading > p { text-align:left; }
-  .status-needs { grid-template-columns:1fr; }
+  .status-needs { grid-template-columns:repeat(3,1fr); gap:6px; }
+  .status-needs .stat { min-height:56px; padding:8px; grid-template-columns:20px 1fr; gap:5px; }
+  .status-needs .stat.compact > span { font-size:16px; }
+  .status-needs .stat-label { font-size:10px; }
 }
 
 /* Inventory */
