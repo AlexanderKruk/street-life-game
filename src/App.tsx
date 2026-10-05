@@ -138,6 +138,7 @@ export default function App() {
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [trip, setTrip] = useState<Trip | null>(null)
   const [musicOn, setMusicOn] = useState(false)
+  const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean } | null>(null)
@@ -285,6 +286,29 @@ export default function App() {
     setSelectedDestination(id)
   }
 
+  function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
+    if (activeEvent || current.id !== 'street') return
+    if (kind === 'find-bench') {
+      const found = Math.random() < 0.7
+      setGame((prev) => applyAction(prev, { minutes: 20, energy: -2, mood: found ? 1 : -2 }))
+      setStreetBenchFound(found)
+      setMessage(found ? 'You found a usable bench nearby.' : 'You looked around, but every decent place to sit is occupied or unusable.')
+      return
+    }
+    if (!streetBenchFound) return
+    if (kind === 'bench-rest') {
+      setGame((prev) => applyAction(prev, { minutes: 45, energy: 18, mood: 2 }))
+      setMessage('You sit on the bench and get off your feet for a while.')
+      return
+    }
+    const next = applyAction(game, { minutes: 8 * 60, energy: 66, hygiene: -7, mood: -5 })
+    setGame(next)
+    setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
+    setMessage('You sleep on the bench. It is still exposed, but better than the ground.')
+    const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, 0.65)
+    if (wakeEvent) setActiveEvent(wakeEvent)
+  }
+
   function startTravel(mode: TravelMode) {
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
@@ -296,6 +320,7 @@ export default function App() {
       return
     }
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
+    setStreetBenchFound(false)
     setTrip({ destinationId: destination.id, mode, total, remaining: total })
     setSelectedDestination(null)
     setScreen('travel')
@@ -565,6 +590,7 @@ export default function App() {
     setTrip(null)
     setSelectedDestination(null)
     setMusicOn(false)
+    setStreetBenchFound(false)
     setNavigationOn(true)
     setActiveEvent(null)
     setDiceCheck(null)
@@ -643,6 +669,11 @@ export default function App() {
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
+          {current.id === 'street' && <>
+            {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
+            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
+            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>~480 min</span></button>}
+          </>}
           {currentActions.length ? currentActions.map((action) => {
             const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
             return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
