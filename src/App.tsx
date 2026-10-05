@@ -370,15 +370,28 @@ export default function App() {
     })()}
 
     {screen === 'inventory' && <section className="inventory-screen">
-      <div className="inventory-heading"><div><p className="eyebrow">BACKPACK</p><h2>Inventory</h2></div><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
+      <div className="inventory-heading"><div><p className="eyebrow">INVENTORY</p><h2>Your things</h2></div></div>
+
+      <div className="inventory-section-heading"><div><strong>🎒 Backpack</strong><small>Consumables use slots</small></div><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
       <div className="backpack-capacity"><i style={{ width: `${(usedBackpackSlots / BACKPACK_CAPACITY) * 100}%` }} /><small>{BACKPACK_CAPACITY - usedBackpackSlots} free</small></div>
-      <div className="inventory-grid">
+      <div className="inventory-grid backpack-grid">
         <button className="inventory-item usable" onClick={() => useItem('water')} disabled={inventory.water <= 0}>
           <span className="item-icon">💧</span><div><strong>Water</strong><small>{inventory.water > 0 ? `×${inventory.water} · tap to drink` : 'Empty'}</small></div>
         </button>
         <button className="inventory-item usable" onClick={() => useItem('food')} disabled={inventory.food <= 0}>
           <span className="item-icon">🥪</span><div><strong>Food</strong><small>{inventory.food > 0 ? `×${inventory.food} · tap to eat` : 'Empty'}</small></div>
         </button>
+        <button className="inventory-item usable" onClick={smokeCigarette} disabled={inventory.cigarettes <= 0}>
+          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>{inventory.cigarettes > 0 ? `×${inventory.cigarettes} · tap to smoke` : 'Empty'}</small></div>
+        </button>
+        <button className="inventory-item usable" onClick={useMedicine} disabled={inventory.medicines <= 0}>
+          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>{inventory.medicines > 0 ? `×${inventory.medicines} · treats Cold` : 'Empty'}</small></div>
+        </button>
+      </div>
+      <p className="inventory-note">Water, food and medicine stack up to {STACK_SIZE} per slot. Cigarettes stack up to {CIGARETTE_STACK_SIZE} per slot.</p>
+
+      <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>These do not use backpack slots</small></div><span>FREE</span></div>
+      <div className="inventory-grid essentials-grid">
         <div className="inventory-item">
           <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {inventory.phoneBattery}%</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
         </div>
@@ -388,17 +401,10 @@ export default function App() {
         <div className="inventory-item">
           <span className="item-icon">🪪</span><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
         </div>
-        <button className="inventory-item usable" onClick={smokeCigarette} disabled={inventory.cigarettes <= 0}>
-          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>{inventory.cigarettes > 0 ? `×${inventory.cigarettes} · tap to smoke` : 'Empty'}</small></div>
-        </button>
-        <button className="inventory-item usable" onClick={useMedicine} disabled={inventory.medicines <= 0}>
-          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>{inventory.medicines > 0 ? `×${inventory.medicines} · treats Cold` : 'Empty'}</small></div>
-        </button>
         <div className="inventory-item">
           <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
         </div>
       </div>
-      <p className="inventory-note">Food, water and medicine stack up to {STACK_SIZE} per slot; cigarettes stack up to {CIGARETTE_STACK_SIZE}. Phone, jacket, documents and transit card are equipped and do not use backpack space.</p>
     </section>}
     {screen === 'status' && <section className="status-screen">
       <div className="status-heading"><div><p className="eyebrow">YOUR CONDITION</p><h2>{overall.icon} {overall.label}</h2></div><p>Your weakest need determines the overall condition.</p></div>
