@@ -194,7 +194,7 @@ Cold additionally drains Energy by 0.045/min and Mood by 0.012/min, on top of it
 
 ## Street and sleeping outside
 
-Street is the starting location. It is always available and represents the least stable housing state rather than using Station as a stand-in for homelessness.
+Street is the starting location. It is always available and represents the least stable housing state rather than using Station as a stand-in for homelessness. Street is not treated as a normal travel destination: choosing Street from another location means simply stepping outside, with no fare, travel-mode choice or travel time. Travelling from Street to a specific destination still uses the normal walking/public-transport flow.
 
 Street currently offers **Sleep outside**: 8 hours, partial Energy recovery, -8 Hygiene and -6 Mood, with no direct Health recovery. After sleeping, the game attempts a Street-housing wake event at 75%, making the existing overnight theft event naturally reachable. Street sleep is intentionally worse and riskier than Night shelter or Schronisko sleep.
 
