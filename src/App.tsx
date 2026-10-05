@@ -25,18 +25,19 @@ function temperatureAt(base: number, minutes: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
-type Inventory = { water: number; food: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
+type Inventory = { water: number; food: number; foodFreshness: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
-type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number }
+type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
-const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
+const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
-const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0 }
+const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0, foodFreshness: 100 }
 const SCHRONISKO_FOOD_CAPACITY = 4
+const FOOD_FRESHNESS_PER_MINUTE = 100 / (48 * 60)
 const NIGHT_SHELTER_STORAGE = 6
 const SCHRONISKO_STORAGE = 16
 const STACK_SIZE = 4
@@ -53,6 +54,17 @@ const SHOP_ITEMS: ShopItem[] = [
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
   { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
 ]
+
+function foodFreshnessLabel(value: number) {
+  if (value > 50) return 'Fresh'
+  if (value > 20) return 'Stale'
+  return 'Spoiled'
+}
+
+function mixFreshness(currentCount: number, currentFreshness: number, addedCount: number, addedFreshness: number) {
+  const total = currentCount + addedCount
+  return total <= 0 ? 100 : (currentCount * currentFreshness + addedCount * addedFreshness) / total
+}
 
 function phoneDrainMultiplier(condition: number) {
   return 1 + (100 - Math.max(0, Math.min(100, condition))) * 0.007
@@ -212,12 +224,17 @@ export default function App() {
           thirst,
         }
       })
+      setStorage((prev) => prev.food > 0 ? { ...prev, foodFreshness: Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE) } : prev)
       setInventory((prev) => {
         const sunny = WEATHER[(game.day - 1) % WEATHER.length].label === 'Clear'
         const drainMultiplier = phoneDrainMultiplier(prev.phoneCondition)
         const navigationDrain = trip && navigationOn ? ((sunny ? 15 : 12) / 60) * drainMultiplier : 0
         const musicDrain = musicOn ? (4 / 60) * drainMultiplier : 0
-        return { ...prev, phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain) }
+        return {
+          ...prev,
+          foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE) : 100,
+          phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
+        }
       })
       if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012) }))
       setTrip((active) => {
@@ -318,6 +335,7 @@ export default function App() {
     setInventory((prev) => ({
       ...prev,
       food: Math.max(0, prev.food + (outcome.food ?? 0)),
+      foodFreshness: (outcome.food ?? 0) > 0 ? mixFreshness(prev.food, prev.foodFreshness, outcome.food ?? 0, 100) : prev.foodFreshness,
       water: Math.max(0, prev.water + (outcome.water ?? 0)),
       phoneCondition: Math.max(0, Math.min(100, prev.phoneCondition + (outcome.phoneCondition ?? 0))),
       jacket: Math.max(0, Math.min(100, prev.jacket + (outcome.jacketCondition ?? 0))),
@@ -420,8 +438,9 @@ export default function App() {
   function storeFood() {
     if (current.id !== 'residential-shelter' || inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) return
     const amount = Math.min(inventory.food, SCHRONISKO_FOOD_CAPACITY - storage.food)
-    setInventory((prev) => ({ ...prev, food: prev.food - amount }))
-    setStorage((prev) => ({ ...prev, food: prev.food + amount }))
+    const freshness = inventory.foodFreshness
+    setInventory((prev) => ({ ...prev, food: prev.food - amount, foodFreshness: prev.food <= amount ? 100 : prev.foodFreshness }))
+    setStorage((prev) => ({ ...prev, food: prev.food + amount, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, amount, freshness) }))
     setMessage(`Stored ${amount} food in Schronisko.`)
   }
 
@@ -430,8 +449,9 @@ export default function App() {
     const amount = Math.min(storage.food, STACK_SIZE)
     const candidate = { ...inventory, food: inventory.food + amount }
     if (backpackSlots(candidate) > BACKPACK_CAPACITY) { setMessage('Backpack full.'); return }
-    setStorage((prev) => ({ ...prev, food: prev.food - amount }))
-    setInventory(candidate)
+    const freshness = storage.foodFreshness
+    setStorage((prev) => ({ ...prev, food: prev.food - amount, foodFreshness: prev.food <= amount ? 100 : prev.foodFreshness }))
+    setInventory({ ...candidate, foodFreshness: mixFreshness(inventory.food, inventory.foodFreshness, amount, freshness) })
     setMessage(`Took ${amount} food from Schronisko storage.`)
   }
 
@@ -490,7 +510,9 @@ export default function App() {
       setMessage('Backpack full. Use or remove something first.')
       return
     }
-    setInventory((prev) => ({ ...prev, [item.id]: prev[item.id] + item.quantity }))
+    setInventory((prev) => item.id === 'food'
+      ? { ...prev, food: prev.food + item.quantity, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, item.quantity, 100) }
+      : { ...prev, [item.id]: prev[item.id] + item.quantity })
     setGame((prev) => applyAction(prev, { minutes: 3, money: -item.price }))
     setMessage(`Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
   }
@@ -593,7 +615,7 @@ export default function App() {
           <div><strong>🪪 Documents</strong><small>{storage.documents ? 'Stored safely' : inventory.documents ? 'Carried with you' : 'Missing'}</small><button onClick={() => storage.documents ? takeStoredItem('documents') : storeItem('documents')} disabled={storage.documents ? inventory.documents : !inventory.documents}>{storage.documents ? 'Take' : 'Store'}</button></div>
           <div><strong>💊 Medicine ×{storage.medicines}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.medicines > 0 ? storeItem('medicines') : takeStoredItem('medicines')} disabled={inventory.medicines <= 0 && storage.medicines <= 0}>{inventory.medicines > 0 ? 'Store' : 'Take'}</button></div>
           <div><strong>🚬 Cigarettes ×{storage.cigarettes}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.cigarettes > 0 ? storeItem('cigarettes') : takeStoredItem('cigarettes')} disabled={inventory.cigarettes <= 0 && storage.cigarettes <= 0}>{inventory.cigarettes > 0 ? 'Store' : 'Take'}</button></div>
-          {current.id === 'residential-shelter' && <div><strong>🥪 Food ×{storage.food}/{SCHRONISKO_FOOD_CAPACITY}</strong><small>Separate food shelf · does not use storage slots</small><button onClick={() => inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? storeFood() : takeStoredFood()} disabled={(inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) && storage.food <= 0}>{inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? 'Store' : 'Take'}</button></div>}
+          {current.id === 'residential-shelter' && <div><strong>🥪 Food ×{storage.food}/{SCHRONISKO_FOOD_CAPACITY}</strong><small>Separate food shelf · {storage.food > 0 ? `${foodFreshnessLabel(storage.foodFreshness)} · ${Math.round(storage.foodFreshness)}%` : 'empty'}</small><div className="freshness-bar"><i style={{ width: `${storage.food > 0 ? storage.foodFreshness : 0}%` }} /></div><button onClick={() => inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? storeFood() : takeStoredFood()} disabled={(inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) && storage.food <= 0}>{inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? 'Store' : 'Take'}</button></div>}
         </div>
       </section>}
       {(current.id === 'support' || current.id === 'residential-shelter') && <section className="charging-station">
