@@ -124,9 +124,18 @@ export function isOpen(location: Location, minutes: number) {
 
 export const actions: GameAction[] = [
   {
-    id: 'street-sleep', locationId: 'street', name: 'Sleep outside',
-    description: 'Try to get through eight hours outside. Free, exposed, and much less restorative than a bed.', minutes: 8 * 60, requiresOpen: false,
-    resolve: () => ({ minutes: 8 * 60, energy: 62, hygiene: -8, mood: -6, message: 'You sleep outside in short, uneasy stretches. You recover some energy, but wake dirty and worn down.' }),
+    id: 'street-sleep', locationId: 'street', name: 'Sleep on the ground',
+    description: 'Lie down wherever you can. Free, exposed, dirty, and barely restorative.', minutes: 8 * 60, requiresOpen: false,
+    resolve: () => ({ minutes: 8 * 60, energy: 52, hygiene: -12, mood: -9, message: 'You sleep on the ground in short, uneasy stretches. You wake stiff, dirty and exhausted.' }),
+  },
+  {
+    id: 'street-bottles', locationId: 'street', name: 'Search bins for bottles',
+    description: 'Check rubbish bins for returnable bottles. Slow, dirty, and unpredictable.', minutes: 45, requiresOpen: false,
+    resolve: () => {
+      const roll = Math.random()
+      const earned = roll < .30 ? 0 : roll < .80 ? 3 : 7
+      return { minutes: 45, money: earned, hygiene: -10, energy: -4, mood: earned ? 1 : -3, message: earned ? `You found returnable bottles worth ${earned} zł.` : 'You searched the bins but found nothing worth returning.' }
+    },
   },
   {
     id: 'station-bottles', locationId: 'station', name: 'Look for returnable bottles',
