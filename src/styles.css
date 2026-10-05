@@ -280,3 +280,9 @@ button.inventory-item { width:100%; }
   .shop-item { grid-template-columns:30px 1fr; }
   .shop-item > span { font-size:24px; }
 }
+
+.shop-impact { display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+.shop-impact em { padding:3px 5px; border-radius:6px; font-size:9px; font-style:normal; font-weight:800; white-space:nowrap; }
+.shop-impact em.positive { color:#9ed0ad; background:#1c3024; }
+.shop-impact em.negative { color:#e2a0a0; background:#352222; }
+.shop-meal .shop-impact { margin-top:4px; }
