@@ -250,3 +250,9 @@ button.inventory-item { width:100%; }
   .overall-status { grid-column:1; }
   .money { grid-column:2; }
 }
+
+/* Backpack capacity */
+.backpack-capacity { position:relative; height:8px; margin:-3px 0 13px; border-radius:999px; background:#303943; overflow:visible; }
+.backpack-capacity i { display:block; height:100%; border-radius:inherit; background:#6fa987; transition:width .25s ease; }
+.backpack-capacity small { position:absolute; right:0; top:12px; color:#6f7b85; font-size:9px; }
+.inventory-grid { margin-top:25px; }
