@@ -314,8 +314,18 @@ export default function App() {
     return 0
   }
 
+  function checkUnavailableReason(choice: StreetEventChoice) {
+    const requirements = choice.check?.requirements
+    if (!requirements) return null
+    if (requirements.minHealth !== undefined && game.health < requirements.minHealth) return `Too weak · need Health ${requirements.minHealth}`
+    if (requirements.minEnergy !== undefined && game.energy < requirements.minEnergy) return `Too exhausted · need Energy ${requirements.minEnergy}`
+    return null
+  }
+
   function resolveStreetEvent(choice: StreetEventChoice) {
     if (choice.check) {
+      const unavailable = checkUnavailableReason(choice)
+      if (unavailable) return
       setDiceCheck({ choice, roll: null, modifier: reflexModifier(), resolved: false })
       return
     }
@@ -683,7 +693,10 @@ export default function App() {
         <p className="eyebrow">STREET EVENT</p>
         <h2>{activeEvent.title}</h2>
         <p>{activeEvent.text}</p>
-        <div className="event-choices">{activeEvent.choices.map((choice) => <button key={choice.label} onClick={() => resolveStreetEvent(choice)}>{choice.label}</button>)}</div>
+        <div className="event-choices">{activeEvent.choices.map((choice) => {
+          const unavailable = checkUnavailableReason(choice)
+          return <button key={choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable}><span>{choice.label}</span>{unavailable && <small>{unavailable}</small>}</button>
+        })}</div>
       </section>
     </div>}
 
