@@ -28,9 +28,14 @@ type Inventory = { water: number; food: number; phoneBattery: number; jacket: nu
 
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, phoneBattery: 62, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
+const STACK_SIZE = 4
+
+function stackSlots(count: number) {
+  return count > 0 ? Math.ceil(count / STACK_SIZE) : 0
+}
 
 function backpackSlots(inventory: Inventory) {
-  return [inventory.water, inventory.food, inventory.cigarettes, inventory.medicines].filter((count) => count > 0).length
+  return stackSlots(inventory.water) + stackSlots(inventory.food) + stackSlots(inventory.cigarettes) + stackSlots(inventory.medicines)
 }
 
 const mapPositions: Record<string, { left: string; top: string }> = {
@@ -286,7 +291,7 @@ export default function App() {
           <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
         </div>
       </div>
-      <p className="inventory-note">Consumables use backpack slots. Phone, jacket, documents and transit card are equipped and do not use backpack space.</p>
+      <p className="inventory-note">Consumables stack up to {STACK_SIZE} per slot. A fifth item starts a new slot. Phone, jacket, documents and transit card are equipped and do not use backpack space.</p>
     </section>}
     {screen === 'status' && <section className="status-screen">
       <div className="status-heading"><div><p className="eyebrow">YOUR CONDITION</p><h2>{overall.icon} {overall.label}</h2></div><p>Your weakest need determines the overall condition.</p></div>
