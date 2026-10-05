@@ -290,14 +290,19 @@ export default function App() {
 
   function searchStreetBottles() {
     if (activeEvent || current.id !== 'street') return
-    const found = Math.floor(Math.random() * 5)
+    const found = Math.floor(Math.random() * 7)
+    const returnable = Array.from({ length: found }, () => Math.random() < 0.65).filter(Boolean).length
     const currentBottleSlots = inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0
     const otherSlots = backpackSlots(inventory) - currentBottleSlots
     const bottleCapacity = Math.max(0, BACKPACK_CAPACITY - otherSlots) * BOTTLE_STACK_SIZE
-    const collected = Math.min(found, Math.max(0, bottleCapacity - inventory.bottles))
+    const collected = Math.min(returnable, Math.max(0, bottleCapacity - inventory.bottles))
     setGame((prev) => applyAction(prev, { minutes: 45, energy: -4, hygiene: -10, mood: collected > 0 ? 1 : -3 }))
     if (collected > 0) setInventory((prev) => ({ ...prev, bottles: prev.bottles + collected }))
-    setMessage(found === 0 ? 'You searched the bins but found no returnable bottles.' : collected === 0 ? 'You found bottles, but there is no room in your backpack.' : collected < found ? `You found ${found} bottles but could only carry ${collected}.` : `You found ${collected} returnable bottle${collected === 1 ? '' : 's'}.`)
+    if (found === 0) setMessage('You searched the bins but found no bottles.')
+    else if (returnable === 0) setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}, but none can be returned for a deposit.`)
+    else if (collected === 0) setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}; ${returnable} were returnable, but your backpack has no room.`)
+    else if (collected < returnable) setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}; ${returnable} were returnable, but you could only carry ${collected}.`)
+    else setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}; ${returnable} can be returned. You keep those.`)
   }
 
   function returnBottles() {
