@@ -14,6 +14,13 @@ const WEATHER = [
 function weekday(day: number) {
   return WEEKDAYS[(day - 1) % WEEKDAYS.length]
 }
+
+function temperatureAt(base: number, minutes: number) {
+  const hour = minutes / 60
+  // Coldest around 05:00, warmest around 15:00.
+  const dailySwing = -Math.cos(((hour - 5) / 10) * Math.PI)
+  return Math.round(base + dailySwing * 4)
+}
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
@@ -71,6 +78,7 @@ export default function App() {
   const open = isOpen(current, game.minutes)
   const overall = overallStatus(game)
   const weather = WEATHER[(game.day - 1) % WEATHER.length]
+  const temperature = temperatureAt(weather.temp, game.minutes)
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
@@ -170,7 +178,7 @@ export default function App() {
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
       <div className="header-info">
-        <div className="weather" title={weather.label}><span>{weather.icon}</span>{weather.temp}°C</div>
+        <div className="weather" title={weather.label}><span>{weather.icon}</span>{temperature}°C</div>
         <button className={`overall-status ${overall.level}`} onClick={() => setScreen('status')}><span>{overall.icon}</span>{overall.label}</button>
         <div className="money">{game.money.toFixed(2)} zł</div>
       </div>
