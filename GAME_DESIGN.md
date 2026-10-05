@@ -9,7 +9,7 @@ Street Life is currently a mobile-first location/map survival prototype. The pla
 The game persists four groups in localStorage: main game state, inventory, active effects and life situation. Reset restores the initial state.
 
 Initial state:
-- Day 1, Monday, 08:00, Station.
+- Day 1, Monday, 08:00, Street.
 - 18 zł.
 - Food 72, Thirst 66, Energy 68, Health 82, Hygiene 55, Mood 58.
 - Housing: Street. Employment: Unemployed. Income: None.
@@ -95,6 +95,7 @@ Rain/Showers also enable the rain-phone street event.
 ## Locations and opening hours
 
 Implemented locations:
+- Street — 24/7 and the starting location. It represents an exposed city block rather than the Station.
 - Station — 24/7.
 - Discount shop — 07:00–22:00.
 - Night shelter — 18:00–08:00.
@@ -190,6 +191,12 @@ Implemented timed effects:
 The default test/new state currently starts with Cold lasting into Day 2.
 
 Cold additionally drains Energy by 0.045/min and Mood by 0.012/min, on top of its Health damage. Medicine removes Cold.
+
+## Street and sleeping outside
+
+Street is the starting location. It is always available and represents the least stable housing state rather than using Station as a stand-in for homelessness.
+
+Street currently offers **Sleep outside**: 8 hours, partial Energy recovery, -8 Hygiene and -6 Mood, with no direct Health recovery. After sleeping, the game attempts a Street-housing wake event at 75%, making the existing overnight theft event naturally reachable. Street sleep is intentionally worse and riskier than Night shelter or Schronisko sleep.
 
 ## Housing and social support
 
@@ -362,8 +369,7 @@ These are current code realities, not planned features:
 - Travel times are destination-based rather than pair-to-pair.
 - Public transport has no service timetable.
 - Food granted by street events does not currently check backpack capacity.
-- The Street-only night-theft wake event is not naturally reachable through a dedicated street-sleep action yet.
-- Not every custom action currently rolls a location event.
+ - Not every custom action currently rolls a location event.
 - Journal goals and the next-important entry are mostly static placeholders.
 - Benefits support is a placeholder.
 - Documents exist and can be lost/restored, but most formal actions do not yet require them.
