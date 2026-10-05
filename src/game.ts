@@ -51,6 +51,7 @@ export const locations: Location[] = [
   { id: 'shop', name: 'Discount shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 15 },
   { id: 'shelter', name: 'Night shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 20 },
   { id: 'support', name: 'Help center', icon: '🤝', description: 'Social workers can help with documents, benefits, accommodation and other support.', open: 480, close: 960, travelMinutes: 25 },
+  { id: 'residential-shelter', name: 'Schronisko', icon: '🏠', description: '24/7 supported accommodation. Access requires a referral from the help center.', open: 0, close: 1440, travelMinutes: 30 },
   { id: 'jobcenter', name: 'Job centre', icon: '📋', description: 'Vacancies and appointments.', open: 480, close: 900, travelMinutes: 25 },
   { id: 'work', name: 'Day work', icon: '📦', description: 'Short shifts. Pay is not guaranteed.', open: 420, close: 1080, travelMinutes: 30 },
 ]
@@ -140,6 +141,11 @@ export const actions: GameAction[] = [
     id: 'support-worker', locationId: 'support', name: 'Talk to a social worker',
     description: 'Explain your situation and find out what support you can apply for.', minutes: 30,
     resolve: () => ({ minutes: 30, mood: 4, message: 'The social worker listened to your situation and explained what help may be available. More support options will unlock here as you progress.' }),
+  },
+  {
+    id: 'residential-stay', locationId: 'residential-shelter', name: 'Settle into your place',
+    description: 'Use your assigned place in the 24/7 shelter.', minutes: 30,
+    resolve: () => ({ minutes: 30, energy: 8, hygiene: 4, mood: 8, message: 'You settle into your place. You now have stable 24/7 shelter accommodation.' }),
   },
   {
     id: 'shelter-shower', locationId: 'shelter', name: 'Ask for a shower',
