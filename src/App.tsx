@@ -141,6 +141,7 @@ export default function App() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [musicOn, setMusicOn] = useState(false)
   const [streetBenchFound, setStreetBenchFound] = useState(false)
+  const [sleepHours, setSleepHours] = useState(8)
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
@@ -289,6 +290,44 @@ export default function App() {
     setSelectedDestination(id)
   }
 
+  function sleep(hours: number, kind: 'ground' | 'bench' | 'shelter' | 'residential') {
+    if (activeEvent || hours < 1 || hours > 10) return
+    const minutes = hours * 60
+    const scale = hours / 8
+    if (kind === 'bench' && (!streetBenchFound || current.id !== 'street')) return
+    if (kind === 'ground' && current.id !== 'street') return
+    if (kind === 'shelter' && current.id !== 'shelter') return
+    if (kind === 'residential' && current.id !== 'residential-shelter') return
+    if (kind === 'shelter' && Math.random() >= .7) {
+      setGame((prev) => applyAction(prev, { minutes: 30, mood: -8 }))
+      setMessage('No beds left tonight. You waited in line for nothing.')
+      return
+    }
+    const fed = game.hunger > 20 && game.thirst > 20
+    const result = kind === 'ground'
+      ? { minutes, energy: 52 * scale, hygiene: -12 * scale, mood: -9 * scale }
+      : kind === 'bench'
+        ? { minutes, energy: 66 * scale, hygiene: -7 * scale, mood: -5 * scale }
+        : kind === 'shelter'
+          ? { minutes, energy: 85 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
+          : { minutes, energy: 90 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
+    const next = applyAction(game, result)
+    setGame(next)
+    if (kind === 'ground' || kind === 'bench') {
+      setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
+      const baseChance = kind === 'ground' ? 0.75 : 0.65
+      const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, Math.min(0.9, baseChance * scale))
+      if (wakeEvent) setActiveEvent(wakeEvent)
+    } else if (kind === 'shelter') {
+      setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
+      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, Math.min(0.65, 0.45 * scale))
+      if (wakeEvent) setActiveEvent(wakeEvent)
+    } else {
+      setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
+    }
+    setMessage(`You sleep for ${hours} hour${hours === 1 ? '' : 's'} ${kind === 'ground' ? 'on the ground' : kind === 'bench' ? 'on the bench' : kind === 'shelter' ? 'in the night shelter' : 'in your shelter place'}.${(kind === 'shelter' || kind === 'residential') && !fed ? ' Hunger or dehydration prevents health recovery.' : ''}`)
+  }
+
   function askForMoney() {
     if (activeEvent || current.id !== 'street') return
     const attemptsToday = begging.day === game.day ? begging.attempts : 0
@@ -344,12 +383,7 @@ export default function App() {
       setMessage('You sit on the bench and get off your feet for a while.')
       return
     }
-    const next = applyAction(game, { minutes: 8 * 60, energy: 66, hygiene: -7, mood: -5 })
-    setGame(next)
-    setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-    setMessage('You sleep on the bench. It is still exposed, but better than the ground.')
-    const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, 0.65)
-    if (wakeEvent) setActiveEvent(wakeEvent)
+    sleep(sleepHours, 'bench')
   }
 
   function startTravel(mode: TravelMode) {
@@ -378,6 +412,10 @@ export default function App() {
     if (!action || activeEvent) return
     if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
     if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
+
+    if (actionId === 'street-sleep') { sleep(sleepHours, 'ground'); return }
+    if (actionId === 'shelter-rest') { sleep(sleepHours, 'shelter'); return }
+    if (actionId === 'residential-sleep') { sleep(sleepHours, 'residential'); return }
 
     const result = action.resolve(game)
     const next = applyAction(game, result)
@@ -714,12 +752,13 @@ export default function App() {
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
+          {(current.id === 'street' || current.id === 'shelter' || current.id === 'residential-shelter') && <label className="sleep-hours">Sleep <select value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></label>}
           {current.id === 'street' && <>
             <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
             <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search bins for bottles</strong><small>Look for returnable bottles. They take backpack space and can be returned at the shop.</small></div><span>~45 min</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
-            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>~480 min</span></button>}
+            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>{sleepHours} h</span></button>}
           </>}
           {currentActions.length ? currentActions.map((action) => {
             const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
