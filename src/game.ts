@@ -71,6 +71,19 @@ export const initialState: GameState = {
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value))
 
+export function energyCap(health: number) {
+  if (health < 20) return 60
+  if (health < 40) return 75
+  return 100
+}
+
+export function healthEnergyMultiplier(health: number) {
+  if (health < 20) return 1.6
+  if (health < 40) return 1.3
+  if (health < 70) return 1.15
+  return 1
+}
+
 export function formatTime(minutes: number) {
   const normalized = ((minutes % 1440) + 1440) % 1440
   const h = Math.floor(normalized / 60)
@@ -83,9 +96,10 @@ export function applyAction(state: GameState, result: ActionResult): GameState {
   const extraDays = Math.floor(total / 1440)
   const hunger = clamp(state.hunger - result.minutes / 14.4 + (result.hunger ?? 0))
   const thirst = clamp(state.thirst - result.minutes / 10.8 + (result.thirst ?? 0))
-  const energy = clamp(state.energy - result.minutes / 9.6 + (result.energy ?? 0))
+  const energySpent = result.minutes / 9.6 * healthEnergyMultiplier(state.health)
+  const nextHealth = clamp(state.health + (result.health ?? 0))
+  const energy = Math.min(energyCap(nextHealth), clamp(state.energy - energySpent + (result.energy ?? 0)))
   const hygiene = clamp(state.hygiene - result.minutes / 43.2 + (result.hygiene ?? 0))
-  const criticalPenalty = hunger <= 5 || thirst <= 5 || energy <= 3 ? Math.ceil(result.minutes / 90) : 0
 
   return {
     ...state,
@@ -95,7 +109,7 @@ export function applyAction(state: GameState, result: ActionResult): GameState {
     hunger,
     thirst,
     energy,
-    health: clamp(state.health - criticalPenalty + (result.health ?? 0)),
+    health: nextHealth,
     hygiene,
     mood: clamp(state.mood + (result.mood ?? 0)),
   }
