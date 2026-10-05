@@ -298,6 +298,10 @@ export default function App() {
     if (kind === 'ground' && current.id !== 'street') return
     if (kind === 'shelter' && current.id !== 'shelter') return
     if (kind === 'residential' && current.id !== 'residential-shelter') return
+    if (kind === 'shelter' && game.intoxication > 10) {
+      setMessage('The night shelter refuses admission because you are visibly intoxicated. You need to sober up first.')
+      return
+    }
     if (kind === 'shelter' && Math.random() >= .7) {
       setGame((prev) => applyAction(prev, { minutes: 30, mood: -8 }))
       setMessage('No beds left tonight. You waited in line for nothing.')
