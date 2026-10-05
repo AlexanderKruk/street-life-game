@@ -204,7 +204,7 @@ Street has its own small survival loop:
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
 - Once a bench is found, **Sleep on the bench** becomes available: 8 hours, better Energy recovery than the ground, -7 Hygiene, -5 Mood, no direct Health recovery, and a 65% Street wake-event attempt.
-- **Search bins for bottles** — 45 minutes; finds 0–4 returnable bottles, with Hygiene/Energy costs. Bottles are inventory items rather than instant cash, stack 8 per backpack slot, and collection is limited by available backpack capacity. They can be returned at the Discount shop for 0.50 zł each.
+- **Search bins for bottles** — 45 minutes; finds 0–6 bottles, with Hygiene/Energy costs. Each found bottle independently has a 65% chance to be eligible for the deposit system, so finding 5 bottles may yield only 3 returnable ones. Ineligible bottles are discarded and do not use inventory space. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, and collection is limited by available backpack capacity. They can be returned at the Discount shop for 0.50 zł each.
 - The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Housing and social support
