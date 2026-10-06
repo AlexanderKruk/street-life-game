@@ -629,6 +629,13 @@ export default function App() {
       const expiresAt = absoluteMinutes(next) + 240
       setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
     }
+    if (actionId === 'daycenter-charge') {
+      setInventory((prev) => ({ ...prev, phoneBattery: 100 }))
+      setMessage('You wait indoors while your phone charges to 100%.')
+    }
+    if (actionId === 'daycenter-doctor') {
+      setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
+    }
   }
 
   function applyEventOutcome(outcome: EventOutcome) {
@@ -900,7 +907,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-06</div>
+        <div className="trash-build">Build 2026.10.06-07</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
