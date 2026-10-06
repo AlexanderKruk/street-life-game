@@ -669,12 +669,18 @@ export default function App() {
       const locationEvent = pickStreetEvent('location', { locationId: current.id, weather: weather.label, housing: life.housing, documents: inventory.documents }, 0.20)
       if (locationEvent) setActiveEvent(locationEvent)
     }
-    if (actionId === 'support-shelter-renew') {
+    if (actionId === 'shelter-social-worker') {
+      const workerDay = weekday(game.day)
+      if ((workerDay !== 'Tu' && workerDay !== 'Fr') || game.minutes < 960 || game.minutes >= 1200) {
+        setMessage('The shelter social worker is available Tuesdays and Fridays from 16:00 to 20:00.')
+        return
+      }
       if ((life.shelterUntilDay ?? 0) < game.day) {
         setMessage('There is no active shelter booking to extend. Register at the shelter first.')
       } else {
-        setLife((status) => ({ ...status, shelterUntilDay: game.day + 29 }))
-        setMessage('The social worker extended your shelter place for 30 days.')
+        const extension = (life.shelterStrikes ?? 0) === 0 && (life.shelterMisses ?? 0) === 0 ? 30 : (life.shelterStrikes ?? 0) + (life.shelterMisses ?? 0) <= 2 ? 14 : 7
+        setLife((status) => ({ ...status, shelterUntilDay: game.day + extension - 1 }))
+        setMessage(`After discussing your situation, the social worker extends your place for ${extension} days.`)
       }
     }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
@@ -964,7 +970,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-10</div>
+        <div className="trash-build">Build 2026.10.06-11</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
