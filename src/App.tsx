@@ -271,14 +271,14 @@ export default function App() {
         const next = applyAction(prev, { minutes: 1 })
         const cold = effects.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(prev))
         const wellFed = effects.some((effect) => effect.id === 'well-fed' && effect.expiresAt > absoluteMinutes(prev))
-        const hunger = Math.min(100, next.hunger + (wellFed ? 0.035 : 0))
+        const hunger = Math.max(0, Math.min(100, next.hunger + (wellFed ? 0.035 : 0) - (trip?.mode === 'walk' ? 0.055 : 0)))
         const thirst = Math.max(0, next.thirst - currentWeather.thirstDrain - (trip?.mode === 'walk' ? 0.04 : 0))
         const healthDamage =
           (thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
           (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) +
           (cold ? 0.012 : 0)
         const health = Math.max(0, next.health - healthDamage)
-        const movementDrain = (trip?.mode === 'walk' ? 0.025 : 0) * healthEnergyMultiplier(health)
+        const movementDrain = (trip?.mode === 'walk' ? 0.01 : 0) * healthEnergyMultiplier(health)
         return {
           ...next,
           hunger,
@@ -1068,12 +1068,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-25</div>
+        <div className="trash-build">Build 2026.10.06-26</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-25</div>
+    <div className="build-badge">v2026.10.06-26</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
