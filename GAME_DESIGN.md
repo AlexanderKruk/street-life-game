@@ -2,6 +2,8 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
+**Last gameplay sync:** 2026-10-06 · through commit `b1089a5` (shelter quiet hours). Future updates should advance this marker to the latest gameplay commit included in this document.
+
 ## Core loop and save
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
@@ -103,6 +105,7 @@ Implemented locations:
 - Schronisko — 24/7, hidden until referral/unlocked.
 - Job centre — 08:00–15:00.
 - Day work — 07:00–18:00.
+- Day Center & Clinic — 08:00–16:00. Capacity is probabilistic and easier to get in earlier in the day.
 
 The player may travel to a closed location. Actions that require it to be open are disabled.
 
@@ -110,9 +113,11 @@ The player may travel to a closed location. Actions that require it to be open a
 
 Travel is not teleportation. The player chooses walking or public transport.
 
-Walking uses the destination's configured travel time. Public transport takes 35% of that time, rounded up, with a minimum of 4 minutes.
+Walking destinations are configured at roughly 60–120 minutes. Public transport takes 50% of the configured walking time, producing roughly 30–60 minute trips. Transit time represents the whole trip: walking to/from stops, waiting and riding.
 
 Public transport normally costs 4.40 zł. The Free transport effect reduces the fare to 0.
+
+The player can also choose **Ride without ticket** for 0 zł. This uses the same transit travel time but first makes a visible **Reflex DC 12** D20 check. Success means a free ride; failure currently applies a 20 zł penalty and -8 Mood; natural 20 gives a small Mood bonus, while natural 1 applies a 35 zł penalty and -12 Mood.
 
 Walking adds:
 - Thirst drain: 0.04/min.
@@ -175,6 +180,8 @@ Phone Condition can currently be damaged by street events, especially drops and 
 
 The Discount shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
 
+Each purchasable backpack item also has a **STEAL** option. Theft uses the shared visible D20 system: **Reflex DC 12**. Success adds the selected item without paying; failure gives no item and hurts Mood. Natural 20 is a faster/clean critical success; natural 1 is a worse failed attempt.
+
 The Discount shop currently sells:
 - Water: 3 zł, one bottle.
 - Cheap food: 5 zł, one item.
@@ -205,7 +212,7 @@ Street has its own small survival loop. Its economy is deliberately capped aroun
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
 - Once a bench is found, **Sleep on the bench** becomes available: 8 hours, better Energy recovery than the ground, -7 Hygiene, -5 Mood, no direct Health recovery, and a 65% Street wake-event attempt.
-- **Search bins for bottles** — 45 minutes; finds 0–6 bottles, with Hygiene/Energy costs. Each found bottle independently has a 65% chance to be eligible for the deposit system, so finding 5 bottles may yield only 3 returnable ones. Ineligible bottles are discarded and do not use inventory space. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, and collection is limited by available backpack capacity. They can be returned at the Discount shop for 0.50 zł each.
+- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Discount shop for 0.50 zł each. Time/cost scales with time spent searching.
 - The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Housing and social support
@@ -225,17 +232,34 @@ Help center actions:
 Schronisko is 24/7 and requires the referral to appear on the map. Settling in takes 30 minutes, gives +8 Energy, +4 Hygiene and +8 Mood, and sets Housing to Schronisko.
 
 Night shelter:
+- First registration creates a reserved place for **7 days**; the old random 70% bed-availability roll is no longer the admission model.
+- With an active booking, nightly check-in is **18:00–22:00**.
+- Missing 3 required nights within the current 30-day game-month cancels the place and blocks re-registration until the next month.
+- Leaving after 08:00 creates a shelter rule strike; 3 strikes cancel the place and block re-registration until the next month.
+- **Quiet hours are 22:00–06:00.** During that period normal shelter actions are blocked and only sleeping is allowed.
 - Shower: 35 minutes, +55 Hygiene, +4 Energy, +4 Mood.
-- Try for a bed: 70% success.
-- Successful bed advances 8 hours and gives +85 Energy, +5 Hygiene and +10 Mood.
-- Failure costs 30 minutes and -8 Mood.
-- Successful shelter rest sets temporary Night shelter housing and may trigger a wake event.
+- Free dinner is served **19:00–20:30**, once per day.
+- Free breakfast is served **06:30–07:00**, once per day.
+- Thursday laundry is a two-step persistent cycle: leave clothes **06:30–08:00 Thursday**, then collect them **18:00–22:00 Thursday**. Pickup is only possible if clothes were actually left that morning.
+- A shelter social worker is available **Tuesday and Friday, 16:00–20:00**. Renewal is handled through a short interview about why the player still needs the place, what they are already doing and what they plan to do next. The extension is not based on missed nights/strikes: first renewal can reach 30 days; later renewal length depends on renewal count and constructive/progress answers, currently producing 7, 14 or 30 days.
 
 ### Safe storage
 
 Night shelter and Schronisko share a persistent safe-storage inventory. Night shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Night shelter cannot store food or water.
 
 Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food uses the same average-freshness model as backpack food and continues to spoil at the normal rate. Water is not stored. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
+
+## Day Center & Clinic
+
+The Day Center & Clinic is open **08:00–16:00** and represents a daytime drop-in service. Entry capacity is currently rolled when using its actions: before 10:00 90%, 10:00–12:00 75%, 12:00–14:00 55%, 14:00–16:00 35%. If full, the player loses 15 minutes and 2 Mood.
+
+Implemented services:
+- Stay indoors: 60 minutes, +10 Energy, +5 Mood.
+- Shower: 40 minutes, +50 Hygiene, +4 Mood.
+- Laundry: 90 minutes, +18 Hygiene, +5 Mood.
+- Charge phone: 60 minutes and Battery becomes 100%.
+- Clinic: 60 minutes, restores some Health and removes Cold.
+
 
 ## Work
 
@@ -332,8 +356,9 @@ Context is part of the design rule: poor Hygiene should make ordinary negotiatio
 ## Existing location actions
 
 Station:
-- Look for returnable bottles: 45 minutes; random earnings 0/3/7 zł, -8 Hygiene, -3 Energy and Mood result depending on success.
 - Sit and recover: 40 minutes, +13 Energy, +2 Mood.
+- Charge phone: 60 minutes, +60 percentage points Battery (capped at 100), with small Energy/Mood recovery.
+- Sleep on the bench using the variable 1–10 hour sleep system. Station-specific risk events are not yet implemented.
 
 Night shelter actions are described above. Schronisko settle action is described above.
 
@@ -370,7 +395,7 @@ The UI includes:
 ## Known implementation gaps / current limitations
 
 These are current code realities, not planned features:
-- Health recovery is currently limited to safe indoor sleep; doctor/medical-care recovery is not implemented yet.
+- Health recovery exists through safe indoor sleep, Hospital care and the Day Center clinic.
 - Safe storage supports documents, medicine and cigarettes. Schronisko additionally stores up to 4 Food in a separate shelf; Night shelter cannot store food, and water storage is not implemented.
 - The shop shelf is only rendered while the shop is open instead of remaining visible/disabled when closed.
 - Phone Condition increases battery drain, but Condition 0 does not yet universally disable all phone functions.
@@ -378,6 +403,9 @@ These are current code realities, not planned features:
 - Travel state is not persisted, so reloading during a trip can return the player to the previous location after fare was already paid.
 - Travel times are destination-based rather than pair-to-pair.
 - Public transport has no service timetable.
+- Day Center capacity is currently rerolled per service action rather than once per visit/admission.
+- Station bench sleep still shares generic bench wake-event plumbing and should eventually have station-specific risk handling.
+- Shelter social-worker promises/plans are stored but are not yet verified against completed gameplay milestones.
 - Food granted by street events does not currently check backpack capacity.
  - Not every custom action currently rolls a location event.
 - Journal goals and the next-important entry are mostly static placeholders.
@@ -397,7 +425,7 @@ These are current code realities, not planned features:
 - Items have physical consequences and wear, especially the phone.
 - Food and drink belong in the backpack rather than shelter food storage.
 - Random events should create choices, not just arbitrary punishment.
-- D20 is for explicit uncertain choices, not every action.
+- D20 is for explicit uncertain choices, not every action. It is now shared by street events, shop theft and fare dodging.
 - DC describes situational difficulty; modifiers come from the character's actual condition/context.
 - Some actions can be physically impossible before the roll.
 - Prefer safe choice vs risky check vs walk-away when it creates a meaningful decision.
