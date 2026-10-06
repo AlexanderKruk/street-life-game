@@ -155,7 +155,7 @@ export default function App() {
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
-  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean } | null>(null)
+  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id'] } | null>(null)
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
       const raw = localStorage.getItem('street-life-inventory-v1')
@@ -794,6 +794,12 @@ export default function App() {
         ? check.criticalFailure
         : success ? check.success : check.failure
     applyEventOutcome(outcome)
+    if (diceCheck.stealItemId && success) {
+      const item = SHOP_ITEMS.find((entry) => entry.id === diceCheck.stealItemId)
+      if (item) setInventory((prev) => item.id === 'food'
+        ? { ...prev, food: prev.food + item.quantity, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, item.quantity, 100) }
+        : { ...prev, [item.id]: prev[item.id] + item.quantity })
+    }
     setDiceCheck(null)
     setActiveEvent(null)
   }
@@ -924,16 +930,17 @@ export default function App() {
       setMessage('Backpack full. You have nowhere to hide the item.')
       return
     }
-    setGame((prev) => applyAction(prev, { minutes: 5, mood: -2 }))
-    if (Math.random() < 0.55) {
-      setInventory((prev) => item.id === 'food'
-        ? { ...prev, food: prev.food + item.quantity, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, item.quantity, 100) }
-        : { ...prev, [item.id]: prev[item.id] + item.quantity })
-      setMessage(`You stole ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} without being stopped.`)
-    } else {
-      setGame((prev) => ({ ...prev, mood: Math.max(0, prev.mood - 8) }))
-      setMessage('Store staff caught you trying to steal. You leave without the item.')
+    const choice: StreetEventChoice = {
+      label: `Steal ${item.name} · Reflex DC 12`,
+      check: {
+        stat: 'reflex', dc: 12,
+        success: { minutes: 5, message: `You steal ${item.name} without being stopped.` },
+        failure: { minutes: 5, mood: -8, message: 'Store staff catch you trying to steal. You leave without the item.' },
+        criticalSuccess: { minutes: 3, mood: 2, message: `Perfect timing. You take ${item.name} without drawing attention.` },
+        criticalFailure: { minutes: 10, mood: -12, message: 'You make an obvious attempt and store staff stop you immediately.' },
+      },
     }
+    setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })
   }
 
   function useMedicine() {
@@ -1011,7 +1018,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-13</div>
+        <div className="trash-build">Build 2026.10.06-14</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
