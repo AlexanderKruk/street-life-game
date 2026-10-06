@@ -488,8 +488,6 @@ export default function App() {
   function startTrashDrag(id: number, clientX: number, clientY: number, bounds: DOMRect) {
     const item = trashGame?.items.find((entry) => entry.id === id)
     if (!item || item.collected || !trashGame) return false
-    const topLayer = trashGame.items.reduce((max, entry) => entry.collected || entry.cleared ? max : Math.max(max, entry.layer), -1)
-    if (!item.cleared && item.layer !== topLayer) return false
     const pointerX = ((clientX - bounds.left) / bounds.width) * 100
     const pointerY = ((clientY - bounds.top) / bounds.height) * 100
     trashDrag.current = { id, offsetX: pointerX - item.x, offsetY: pointerY - item.y, moved: false }
@@ -902,7 +900,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-04</div>
+        <div className="trash-build">Build 2026.10.06-05</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
