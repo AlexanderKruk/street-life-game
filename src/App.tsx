@@ -918,6 +918,24 @@ export default function App() {
     setMessage(`Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
   }
 
+  function stealItem(item: ShopItem) {
+    if (!open || current.id !== 'shop') return
+    if (!canAddToBackpack(inventory, item)) {
+      setMessage('Backpack full. You have nowhere to hide the item.')
+      return
+    }
+    setGame((prev) => applyAction(prev, { minutes: 5, mood: -2 }))
+    if (Math.random() < 0.55) {
+      setInventory((prev) => item.id === 'food'
+        ? { ...prev, food: prev.food + item.quantity, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, item.quantity, 100) }
+        : { ...prev, [item.id]: prev[item.id] + item.quantity })
+      setMessage(`You stole ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} without being stopped.`)
+    } else {
+      setGame((prev) => ({ ...prev, mood: Math.max(0, prev.mood - 8) }))
+      setMessage('Store staff caught you trying to steal. You leave without the item.')
+    }
+  }
+
   function useMedicine() {
     if (inventory.medicines <= 0) return
     const hasCold = effects.some((effect) => effect.id === 'cold')
@@ -993,7 +1011,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-12</div>
+        <div className="trash-build">Build 2026.10.06-13</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
@@ -1041,10 +1059,10 @@ export default function App() {
           {SHOP_ITEMS.map((item) => {
             const fits = canAddToBackpack(inventory, item)
             const affordable = game.money >= item.price
-            return <button className="shop-item" key={item.id} onClick={() => buyItem(item)} disabled={!fits || !affordable}>
+            return <div className="shop-item" key={item.id}>
               <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}</strong><small>{item.description}</small><div className="shop-impact">{item.impacts.map((impact) => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div></div>
-              <b>{!fits ? 'FULL' : `${item.price.toFixed(2)} zł`}</b>
-            </button>
+              <div><button onClick={() => buyItem(item)} disabled={!fits || !affordable}>{!fits ? 'FULL' : `BUY ${item.price.toFixed(2)} zł`}</button><button onClick={() => stealItem(item)} disabled={!fits}>STEAL</button></div>
+            </div>
           })}
         </div>
         <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 12}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>12.00 zł</b></button>
