@@ -32,7 +32,7 @@ type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
-type TrashItem = { id: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean }
+type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
@@ -454,21 +454,29 @@ export default function App() {
   function searchStreetBottles() {
     if (activeEvent || current.id !== 'street' || trashGame) return
     const clutter = ['📰','🥤','📦','🍌','🥫','🧻','🛍️','🍕','🧤','🥡','🧃','🗞️']
-    const count = 26
+    const layers = 6
+    const perLayer = 3
+    const count = layers * perLayer
     const bottleCount = 2 + Math.floor(Math.random() * 5)
     const bottleIndexes = new Set<number>()
     while (bottleIndexes.size < bottleCount) bottleIndexes.add(Math.floor(Math.random() * count))
     const items: TrashItem[] = Array.from({ length: count }, (_, id) => {
       const bottle = bottleIndexes.has(id)
-      const angle = Math.random() * Math.PI * 2
-      const radius = Math.sqrt(Math.random()) * 29
+      const layer = Math.floor(id / perLayer)
+      const slot = id % perLayer
+      const base = [
+        { x: 19, y: 31 },
+        { x: 48, y: 19 },
+        { x: 40, y: 53 },
+      ][slot]
       return {
         id,
+        layer,
         icon: bottle ? (Math.random() < .5 ? '🍾' : '🧴') : clutter[Math.floor(Math.random() * clutter.length)],
-        x: 44 + Math.cos(angle) * radius,
-        y: 44 + Math.sin(angle) * radius,
-        rotation: -70 + Math.random() * 140,
-        scale: bottle ? .95 + Math.random() * .3 : 1.15 + Math.random() * .55,
+        x: base.x + (Math.random() * 14 - 7),
+        y: base.y + (Math.random() * 14 - 7),
+        rotation: -75 + Math.random() * 150,
+        scale: bottle ? 1.45 + Math.random() * .35 : 1.9 + Math.random() * .55,
         bottle,
         returnable: bottle && Math.random() < .65,
       }
@@ -479,8 +487,8 @@ export default function App() {
   function moveTrashItem(id: number, clientX: number, clientY: number, bounds: DOMRect) {
     setTrashGame((active) => {
       if (!active) return null
-      const maxLayer = active.items.reduce((max, item) => item.collected ? max : Math.max(max, item.id), 0)
-      return { ...active, items: active.items.map((item) => item.id === id && item.id === maxLayer ? {
+      const topLayer = active.items.reduce((max, item) => item.collected ? max : Math.max(max, item.layer), -1)
+      return { ...active, items: active.items.map((item) => item.id === id && item.layer === topLayer ? {
         ...item,
         x: Math.max(3, Math.min(82, ((clientX - bounds.left) / bounds.width) * 100 - 8)),
         y: Math.max(3, Math.min(82, ((clientY - bounds.top) / bounds.height) * 100 - 8)),
