@@ -32,7 +32,7 @@ type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
-type TrashItem = { id: number; icon: string; x: number; y: number; rotation: number; bottle: boolean; returnable: boolean; collected?: boolean; moved?: boolean }
+type TrashItem = { id: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
@@ -454,18 +454,21 @@ export default function App() {
   function searchStreetBottles() {
     if (activeEvent || current.id !== 'street' || trashGame) return
     const clutter = ['📰','🥤','📦','🍌','🥫','🧻','🛍️','🍕','🧤','🥡','🧃','🗞️']
-    const count = 16
-    const bottleCount = Math.floor(Math.random() * 6)
+    const count = 26
+    const bottleCount = 2 + Math.floor(Math.random() * 5)
     const bottleIndexes = new Set<number>()
     while (bottleIndexes.size < bottleCount) bottleIndexes.add(Math.floor(Math.random() * count))
     const items: TrashItem[] = Array.from({ length: count }, (_, id) => {
       const bottle = bottleIndexes.has(id)
+      const angle = Math.random() * Math.PI * 2
+      const radius = Math.sqrt(Math.random()) * 29
       return {
         id,
         icon: bottle ? (Math.random() < .5 ? '🍾' : '🧴') : clutter[Math.floor(Math.random() * clutter.length)],
-        x: 8 + Math.random() * 70,
-        y: 15 + Math.random() * 58,
-        rotation: -35 + Math.random() * 70,
+        x: 44 + Math.cos(angle) * radius,
+        y: 44 + Math.sin(angle) * radius,
+        rotation: -70 + Math.random() * 140,
+        scale: bottle ? .95 + Math.random() * .3 : 1.15 + Math.random() * .55,
         bottle,
         returnable: bottle && Math.random() < .65,
       }
@@ -474,12 +477,15 @@ export default function App() {
   }
 
   function moveTrashItem(id: number, clientX: number, clientY: number, bounds: DOMRect) {
-    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
-      ...item,
-      moved: true,
-      x: Math.max(0, Math.min(88, ((clientX - bounds.left) / bounds.width) * 100 - 6)),
-      y: Math.max(5, Math.min(82, ((clientY - bounds.top) / bounds.height) * 100 - 6)),
-    } : item) } : null)
+    setTrashGame((active) => {
+      if (!active) return null
+      const maxLayer = active.items.reduce((max, item) => item.collected ? max : Math.max(max, item.id), 0)
+      return { ...active, items: active.items.map((item) => item.id === id && item.id === maxLayer ? {
+        ...item,
+        x: Math.max(3, Math.min(82, ((clientX - bounds.left) / bounds.width) * 100 - 8)),
+        y: Math.max(3, Math.min(82, ((clientY - bounds.top) / bounds.height) * 100 - 8)),
+      } : item) }
+    })
   }
 
   function collectTrashBottle(id: number) {
@@ -852,10 +858,10 @@ export default function App() {
           {trashGame.items.map((item, index) => !item.collected && <button
             key={item.id}
             className={item.bottle ? 'trash-piece bottle-piece' : 'trash-piece'}
-            style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `rotate(${item.rotation}deg)`, zIndex: index + 2 }}
+            style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: index + 2 }}
             onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId) }}
             onPointerMove={(e) => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; moveTrashItem(item.id, e.clientX, e.clientY, e.currentTarget.parentElement!.getBoundingClientRect()) }}
-            onPointerUp={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); if (item.bottle && !item.moved) collectTrashBottle(item.id) }}
+            onPointerUp={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId) }}
             onClick={() => item.bottle && collectTrashBottle(item.id)}
           >{item.icon}</button>)}
         </div>
