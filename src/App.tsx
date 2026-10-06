@@ -228,7 +228,6 @@ export default function App() {
     }
     setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
     setMobileServiceUntil(game.day * 1440)
-    setMessage('Mobile service auto-renewed for today. Cost: 1 zł.')
   }, [game.day, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
   useEffect(() => { if (!mobileServiceActive) { setMusicOn(false); setNavigationOn(false) } }, [mobileServiceActive])
   useEffect(() => { localStorage.setItem('street-life-storage-v1', JSON.stringify(storage)) }, [storage])
@@ -1134,12 +1133,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-38</div>
+        <div className="trash-build">Build 2026.10.06-39</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-38</div>
+    <div className="build-badge">v2026.10.06-39</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1150,7 +1149,7 @@ export default function App() {
     </header>
 
     {screen === 'location' && <>
-      <section className="current">
+      <section className="current location-summary">
         <div className="location-icon">{current.icon}</div>
         <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}</p><h2>{current.name}</h2><p>{current.description}</p></div>
       </section>
