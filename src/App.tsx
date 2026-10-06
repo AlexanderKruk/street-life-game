@@ -902,7 +902,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-03</div>
+        <div className="trash-build">Build 2026.10.06-04</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
@@ -1166,8 +1166,13 @@ export default function App() {
         <p className="eyebrow">SLEEPING</p>
         <h2>{sleeping.kind === 'ground' ? 'On the ground' : sleeping.kind === 'bench' ? 'On the bench' : sleeping.kind === 'shelter' ? 'Night shelter' : 'Schronisko'}</h2>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>Wake at {formatTime((sleeping.startAbsolute + sleeping.total) % 1440)}</span></div>
-        <div className="sleep-progress"><i style={{ width: `${Math.min(100, Math.max(0, ((sleeping.total - sleeping.remaining) / sleeping.total) * 100))}%` }} /></div>
-        <p>{Math.floor((sleeping.total - sleeping.remaining) / 60)}h {(sleeping.total - sleeping.remaining) % 60}m / {sleeping.total / 60}h</p>
+        {(() => {
+          const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor((Date.now() - sleeping.realStartedAt) / 1000)))
+          return <>
+            <div className="sleep-progress"><i style={{ width: `${(elapsed / sleeping.total) * 100}%` }} /></div>
+            <p>{Math.floor(elapsed / 60)}h {elapsed % 60}m / {sleeping.total / 60}h</p>
+          </>
+        })()}
         <small>You cannot perform other actions until you wake up.</small>
         <button className="sleep-debug-wake" onClick={() => { const active = sleeping; setSleeping(null); finishSleep(active) }}>Wake up (debug)</button>
       </section>
