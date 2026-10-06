@@ -238,7 +238,7 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (game.energy > 0 || sleeping || gameOver || activeEvent) return
+    if (game.energy > 0 || sleeping || gameOver || activeEvent || trip) return
     const safeKind = current.id === 'residential-shelter'
       ? 'residential'
       : current.id === 'shelter' && open && game.intoxication <= 10
@@ -252,7 +252,7 @@ export default function App() {
     if (safeKind === 'ground' && current.id !== 'street') setGame((prev) => ({ ...prev, locationId: 'street' }))
     setSleeping({ kind: safeKind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + hours * 60 * 1000, forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, gameOver, activeEvent, current.id, open, game.intoxication])
+  }, [game.energy, sleeping, gameOver, activeEvent, trip, current.id, open, game.intoxication])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -958,9 +958,22 @@ export default function App() {
   function takeDayWork() {
     if (!open || current.id !== 'work') return
     if (game.energy < dayWorkEnergyRequired) { setMessage(`You need at least ${dayWorkEnergyRequired} Energy to start this shift.`); return }
-    setGame((prev) => applyAction(prev, { minutes: 180, money: 35, energy: -18, thirst: -8, hygiene: -10, mood: 3 }))
+    setGame((prev) => {
+      const weather = WEATHER[(prev.day - 1) % WEATHER.length]
+      const temperature = temperatureAt(weather.temp, prev.minutes + 90)
+      const heatMultiplier = temperature >= 25 ? 1.5 : temperature >= 18 ? 1.2 : 1
+      return applyAction(prev, {
+        minutes: 180,
+        money: 35,
+        hunger: -10 * heatMultiplier,
+        thirst: -14 * heatMultiplier,
+        energy: -5,
+        hygiene: -8 * heatMultiplier,
+        mood: 3,
+      })
+    })
     setLife((status) => ({ ...status, employment: 'Day work', income: 'Irregular' }))
-    setMessage('You completed a short shift. +35 zł. Day work is now part of your current situation.')
+    setMessage('You completed a 3-hour physical shift. +35 zł. Physical work increases hunger, thirst and hygiene loss, especially in warm weather.')
   }
 
   function buyItem(item: ShopItem) {
@@ -1074,12 +1087,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-28</div>
+        <div className="trash-build">Build 2026.10.06-29</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-28</div>
+    <div className="build-badge">v2026.10.06-29</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
