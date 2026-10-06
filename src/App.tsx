@@ -504,18 +504,18 @@ export default function App() {
     const nextX = Math.max(-30, Math.min(110, pointerX - drag.offsetX))
     const nextY = Math.max(-30, Math.min(110, pointerY - drag.offsetY))
     drag.moved = true
+    const draggedItem = trashGame?.items.find((entry) => entry.id === id)
+    const itemRadius = 9 * (draggedItem?.scale ?? 1)
     const centerX = nextX + 9
     const centerY = nextY + 9
-    // The bin clips its contents visually, so treat crossing the inner rim as
-    // throwing ordinary rubbish out instead of requiring the item to travel
-    // beyond the clipped element.
     const dx = centerX - 50
     const dy = centerY - 50
     const distanceFromCenter = Math.sqrt(dx * dx + dy * dy)
-    const cleared = distanceFromCenter > 30
-    // Crossing into the visible rim is enough to discard ordinary rubbish.
-    // This avoids fighting the circular overflow clipping on touch screens.
-    const outside = distanceFromCenter > 36
+    // An item becomes cleared as soon as its outer edge reaches the rim.
+    const cleared = distanceFromCenter + itemRadius > 38
+    // Discard only the item currently being dragged, once roughly 25% of its
+    // size has crossed the rim. Untouched items are never evaluated here.
+    const outside = distanceFromCenter + itemRadius * 0.5 > 40
     setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
       ...item,
       x: nextX,
@@ -902,7 +902,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-01</div>
+        <div className="trash-build">Build 2026.10.06-02</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
