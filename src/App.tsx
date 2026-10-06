@@ -1116,12 +1116,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-35</div>
+        <div className="trash-build">Build 2026.10.06-36</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-35</div>
+    <div className="build-badge">v2026.10.06-36</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1285,12 +1285,12 @@ export default function App() {
       <div className="inventory-section-heading"><div><strong>🎒 Backpack</strong><small>Consumables use slots</small></div><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
       <div className="backpack-capacity"><i style={{ width: `${(usedBackpackSlots / BACKPACK_CAPACITY) * 100}%` }} /><small>{BACKPACK_CAPACITY - usedBackpackSlots} free</small></div>
       <div className="inventory-grid backpack-grid">
-        <button className="inventory-item usable" onClick={() => useItem('water')} disabled={inventory.water <= 0}>
-          <span className="item-icon">💧</span><div><strong>Water</strong><small>{inventory.water > 0 ? `×${inventory.water} · tap to drink` : 'Empty'}</small></div>
-        </button>
-        <button className="inventory-item usable" onClick={() => useItem('food')} disabled={inventory.food <= 0}>
-          <span className="item-icon">🥪</span><div><strong>Food</strong><small>{inventory.food > 0 ? `×${inventory.food} · tap to eat` : 'Empty'}</small></div>
-        </button>
+        {inventory.water > 0 && <button className="inventory-item usable" onClick={() => useItem('water')}>
+          <span className="item-icon">💧</span><div><strong>Water</strong><small>×{inventory.water} · tap to drink</small></div>
+        </button>}
+        {inventory.food > 0 && <button className="inventory-item usable" onClick={() => useItem('food')}>
+          <span className="item-icon">🥪</span><div><strong>Food</strong><small>×{inventory.food} · tap to eat</small></div>
+        </button>}
         {inventory.bottles > 0 && Array.from({ length: Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) }, (_, stackIndex) => {
           const stackCount = Math.min(BOTTLE_STACK_SIZE, inventory.bottles - stackIndex * BOTTLE_STACK_SIZE)
           return <div className="inventory-item" key={`bottle-stack-${stackIndex}`}><span className="item-icon">♻️</span><div><strong>Returnable bottles</strong><small>×{stackCount} / {BOTTLE_STACK_SIZE} · 0.50 zł each</small></div></div>
@@ -1298,9 +1298,9 @@ export default function App() {
         {inventory.cigarettes > 0 && <button className="inventory-item usable" onClick={smokeCigarette}>
           <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>×{inventory.cigarettes} · tap to smoke</small></div>
         </button>}
-        <button className="inventory-item usable" onClick={useMedicine} disabled={inventory.medicines <= 0}>
-          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>{inventory.medicines > 0 ? `×${inventory.medicines} · treats Cold` : 'Empty'}</small></div>
-        </button>
+        {inventory.medicines > 0 && <button className="inventory-item usable" onClick={useMedicine}>
+          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>×{inventory.medicines} · treats Cold</small></div>
+        </button>}
       </div>
       <p className="inventory-note">Water, food and medicine stack up to {STACK_SIZE} per slot. Bottles stack up to {BOTTLE_STACK_SIZE}. Cigarettes stack up to {CIGARETTE_STACK_SIZE} per slot.</p>
 
