@@ -1224,7 +1224,7 @@ export default function App() {
           <span>🚌</span><div><strong>Public transport</strong><small>{transitMinutes} min · {effects.some((effect) => effect.id === 'free-transit') ? 'FREE' : '4.40 zł'} · less energy</small></div>
         </button>
         <button className="travel-option" onClick={attemptFareDodge}>
-          <span>🎲</span><div><strong>Ride without ticket</strong><small>{transitMinutes} min · free</small><small>Risk: 20–35 zł fine</small></div>
+          <span>🥷</span><div><strong>Ride without ticket</strong><small>{transitMinutes} min · free</small><small>Risk: 20–35 zł fine</small></div>
         </button>
 
       </div>
