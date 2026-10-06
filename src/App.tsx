@@ -501,13 +501,20 @@ export default function App() {
     if (!drag || drag.id !== id) return
     const pointerX = ((clientX - bounds.left) / bounds.width) * 100
     const pointerY = ((clientY - bounds.top) / bounds.height) * 100
-    const nextX = Math.max(-8, Math.min(88, pointerX - drag.offsetX))
-    const nextY = Math.max(-8, Math.min(88, pointerY - drag.offsetY))
+    const nextX = Math.max(-30, Math.min(110, pointerX - drag.offsetX))
+    const nextY = Math.max(-30, Math.min(110, pointerY - drag.offsetY))
     drag.moved = true
     const centerX = nextX + 9
     const centerY = nextY + 9
-    const cleared = centerX < 22 || centerX > 78 || centerY < 22 || centerY > 78
-    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? { ...item, x: nextX, y: nextY, cleared: item.cleared || cleared } : item) } : null)
+    const cleared = centerX < 18 || centerX > 82 || centerY < 18 || centerY > 82
+    const outside = centerX < -2 || centerX > 102 || centerY < -2 || centerY > 102
+    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
+      ...item,
+      x: nextX,
+      y: nextY,
+      cleared: item.cleared || cleared,
+      collected: !item.bottle && outside ? true : item.collected,
+    } : item) } : null)
   }
 
   function collectTrashBottle(id: number) {
