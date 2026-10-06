@@ -424,3 +424,7 @@ Emergency treatment is **not an action at the Hospital location**. The player ca
 
 ### Mobile service
 Phone data/service is a recurring survival expense: **1 zł buys 24 game hours**. Time can be topped up before expiry and stacks from the later of the current expiry or the current game time. Navigation, Music and online Video require active mobile service. The ambulance emergency call explicitly does **not** require paid service; it only requires a working phone with battery. Remaining service time is shown in the phone panel and persists across saves.
+
+
+### Sleep in real time
+Sleep is a blocking game state rather than an instant time skip. The selected 1–10 game hours advance at the normal clock rate (**1 real second = 1 game minute**). A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. There is no manual Wake Up action: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Wake events are resolved after the sleep period.
