@@ -579,7 +579,7 @@ export default function App() {
   function startTravel(mode: TravelMode) {
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
-    const total = mode === 'walk' ? destination.travelMinutes : Math.max(4, Math.ceil(destination.travelMinutes * 0.35))
+    const total = mode === 'walk' ? destination.travelMinutes : Math.ceil(destination.travelMinutes * 0.5)
     const freeTransit = effects.some((effect) => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
     const fare = freeTransit ? 0 : 4.4
     if (mode === 'transit' && game.money < fare) {
@@ -900,7 +900,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-05</div>
+        <div className="trash-build">Build 2026.10.06-06</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
