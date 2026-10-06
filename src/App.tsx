@@ -25,6 +25,7 @@ function temperatureAt(base: number, minutes: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
+type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number }
 type Inventory = { water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
@@ -144,6 +145,7 @@ export default function App() {
   const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
   const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [sleepHours, setSleepHours] = useState(8)
+  const [sleeping, setSleeping] = useState<SleepState | null>(null)
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
@@ -249,6 +251,12 @@ export default function App() {
         }
       })
       if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012) }))
+      setSleeping((active) => {
+        if (!active) return null
+        if (active.remaining > 1) return { ...active, remaining: active.remaining - 1 }
+        window.setTimeout(() => finishSleep(active), 0)
+        return null
+      })
       setTrip((active) => {
         if (!active) return null
         if (active.remaining > 1) return { ...active, remaining: active.remaining - 1 }
@@ -262,7 +270,7 @@ export default function App() {
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, gameOver])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, gameOver, sleeping])
 
   function buyMobileService() {
     if (game.money < 1) { setMessage('You need 1 zł to activate mobile service for 24 hours.'); return }
@@ -306,9 +314,7 @@ export default function App() {
   }
 
   function sleep(hours: number, kind: 'ground' | 'bench' | 'shelter' | 'residential') {
-    if (activeEvent || hours < 1 || hours > 10) return
-    const minutes = hours * 60
-    const scale = hours / 8
+    if (activeEvent || sleeping || hours < 1 || hours > 10) return
     if (kind === 'bench' && (!streetBenchFound || current.id !== 'street')) return
     if (kind === 'ground' && current.id !== 'street') return
     if (kind === 'shelter' && current.id !== 'shelter') return
@@ -322,29 +328,37 @@ export default function App() {
       setMessage('No beds left tonight. You waited in line for nothing.')
       return
     }
+    setMusicOn(false)
+    setNavigationOn(false)
+    setSleeping({ kind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game) })
+    setMessage('You are sleeping.')
+  }
+
+  function finishSleep(sleep: SleepState) {
+    const hours = sleep.total / 60
+    const scale = hours / 8
     const fed = game.hunger > 20 && game.thirst > 20
-    const result = kind === 'ground'
-      ? { minutes, energy: 52 * scale, hygiene: -12 * scale, mood: -9 * scale }
-      : kind === 'bench'
-        ? { minutes, energy: 66 * scale, hygiene: -7 * scale, mood: -5 * scale }
-        : kind === 'shelter'
-          ? { minutes, energy: 85 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
-          : { minutes, energy: 90 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
-    const next = applyAction(game, result)
-    setGame(next)
-    if (kind === 'ground' || kind === 'bench') {
+    const result = sleep.kind === 'ground'
+      ? { minutes: 0, energy: 52 * scale, hygiene: -12 * scale, mood: -9 * scale }
+      : sleep.kind === 'bench'
+        ? { minutes: 0, energy: 66 * scale, hygiene: -7 * scale, mood: -5 * scale }
+        : sleep.kind === 'shelter'
+          ? { minutes: 0, energy: 85 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
+          : { minutes: 0, energy: 90 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
+    setGame((prev) => applyAction(prev, result))
+    if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-      const baseChance = kind === 'ground' ? 0.75 : 0.65
+      const baseChance = sleep.kind === 'ground' ? 0.75 : 0.65
       const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, Math.min(0.9, baseChance * scale))
       if (wakeEvent) setActiveEvent(wakeEvent)
-    } else if (kind === 'shelter') {
-      setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
+    } else if (sleep.kind === 'shelter') {
+      setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(game) }))
       const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, Math.min(0.65, 0.45 * scale))
       if (wakeEvent) setActiveEvent(wakeEvent)
     } else {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     }
-    setMessage(`You sleep for ${hours} hour${hours === 1 ? '' : 's'} ${kind === 'ground' ? 'on the ground' : kind === 'bench' ? 'on the bench' : kind === 'shelter' ? 'in the night shelter' : 'in your shelter place'}.${(kind === 'shelter' || kind === 'residential') && !fed ? ' Hunger or dehydration prevents health recovery.' : ''}`)
+    setMessage(`You slept for ${hours} hour${hours === 1 ? '' : 's'}.`)
   }
 
   function hospitalVisit() {
@@ -987,7 +1001,19 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && activeEvent && !diceCheck && <div className="event-overlay">
+    {sleeping && <div className="sleep-overlay">
+      <section className="sleep-card">
+        <div className="sleep-icon">😴</div>
+        <p className="eyebrow">SLEEPING</p>
+        <h2>{sleeping.kind === 'ground' ? 'On the ground' : sleeping.kind === 'bench' ? 'On the bench' : sleeping.kind === 'shelter' ? 'Night shelter' : 'Schronisko'}</h2>
+        <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>Wake at {formatTime((sleeping.startAbsolute + sleeping.total) % 1440)}</span></div>
+        <div className="sleep-progress"><i style={{ width: `${Math.min(100, Math.max(0, ((sleeping.total - sleeping.remaining) / sleeping.total) * 100))}%` }} /></div>
+        <p>{Math.floor((sleeping.total - sleeping.remaining) / 60)}h {(sleeping.total - sleeping.remaining) % 60}m / {sleeping.total / 60}h</p>
+        <small>You cannot perform other actions until you wake up.</small>
+      </section>
+    </div>}
+
+    {!gameOver && activeEvent && !diceCheck && !sleeping && <div className="event-overlay">
       <section className="event-card">
         <div className="event-card-icon">{activeEvent.icon}</div>
         <p className="eyebrow">STREET EVENT</p>
