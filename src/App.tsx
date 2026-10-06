@@ -146,7 +146,7 @@ function overallStatus(game: GameState) {
 
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
-  const [message, setMessage] = useState('Morning. You have a little cash and no plan yet.')
+  const [message, setMessage] = useState('')
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>('location')
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
@@ -1133,12 +1133,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-40</div>
+        <div className="trash-build">Build 2026.10.06-41</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-40</div>
+    <div className="build-badge">v2026.10.06-41</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1153,7 +1153,7 @@ export default function App() {
         <div className="location-icon">{current.icon}</div>
         <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}</p><h2>{current.name}</h2><p>{current.description}</p></div>
       </section>
-      <section className="event"><span>●</span><p>{message}</p></section>
+      {message && <section className="event"><span>●</span><p>{message}</p></section>}
       {shelterInterview && <section className="shop">
         <div className="shop-heading"><div><p className="eyebrow">SOCIAL WORKER</p><h2>{shelterInterview.step === 'reason' ? 'Why do you still need a place?' : shelterInterview.step === 'action' ? 'What are you doing about your situation?' : 'What will you do next?'}</h2></div></div>
         <div className="shop-grid">
