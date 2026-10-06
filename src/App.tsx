@@ -1116,12 +1116,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-36</div>
+        <div className="trash-build">Build 2026.10.06-37</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-36</div>
+    <div className="build-badge">v2026.10.06-37</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1210,7 +1210,7 @@ export default function App() {
           </>}
           {current.id === 'street' && <>
             <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
-            <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>MINIGAME</span></button>
+            <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span onClick={(e) => e.stopPropagation()}><select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></span></button>}
