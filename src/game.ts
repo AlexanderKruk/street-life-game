@@ -64,7 +64,7 @@ export const locations: Location[] = [
 export const initialState: GameState = {
   day: 1,
   minutes: 8 * 60,
-  money: 18,
+  money: 100,
   hunger: 72,
   thirst: 66,
   energy: 68,
