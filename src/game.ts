@@ -231,6 +231,26 @@ export const actions: GameAction[] = [
     resolve: () => ({ minutes: 35, hygiene: 55, energy: 4, mood: 4, message: 'You got a shower after waiting your turn.' }),
   },
   {
+    id: 'shelter-dinner', locationId: 'shelter', name: 'Dinner',
+    description: 'Free evening meal served from 19:00 to 20:30.', minutes: 20,
+    resolve: () => ({ minutes: 20, hunger: 34, thirst: 10, mood: 4, message: 'You eat the free shelter dinner.' }),
+  },
+  {
+    id: 'shelter-breakfast', locationId: 'shelter', name: 'Breakfast',
+    description: 'Free breakfast served from 06:30 to 07:00.', minutes: 15,
+    resolve: () => ({ minutes: 15, hunger: 25, thirst: 8, mood: 3, message: 'You eat breakfast before leaving the shelter.' }),
+  },
+  {
+    id: 'shelter-laundry-drop', locationId: 'shelter', name: 'Leave clothes for laundry',
+    description: 'Thursday morning only. Leave your clothes and collect them in the evening.', minutes: 10,
+    resolve: () => ({ minutes: 10, mood: 1, message: 'You leave your clothes for the Thursday laundry.' }),
+  },
+  {
+    id: 'shelter-laundry-pickup', locationId: 'shelter', name: 'Collect clean laundry',
+    description: 'Thursday evening. Collect the clothes you left in the morning.', minutes: 10,
+    resolve: () => ({ minutes: 10, hygiene: 18, mood: 4, message: 'You collect your clean clothes.' }),
+  },
+  {
     id: 'shelter-rest', locationId: 'shelter', name: 'Register / use your bed',
     description: 'Register first for a 7-day place. With an active booking, arrive between 18:00 and 22:00.', minutes: 30,
     resolve: (state) => Math.random() < .7
