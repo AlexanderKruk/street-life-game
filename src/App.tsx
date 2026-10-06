@@ -30,7 +30,7 @@ type Inventory = { water: number; food: number; foodFreshness: number; bottles: 
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
-type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number }
+type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits' }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
 type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
@@ -139,6 +139,7 @@ function overallStatus(game: GameState) {
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('Morning. You have a little cash and no plan yet.')
+  const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>('location')
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [trip, setTrip] = useState<Trip | null>(null)
@@ -677,11 +678,11 @@ export default function App() {
       }
       if ((life.shelterUntilDay ?? 0) < game.day) {
         setMessage('There is no active shelter booking to extend. Register at the shelter first.')
-      } else {
-        const extension = (life.shelterStrikes ?? 0) === 0 && (life.shelterMisses ?? 0) === 0 ? 30 : (life.shelterStrikes ?? 0) + (life.shelterMisses ?? 0) <= 2 ? 14 : 7
-        setLife((status) => ({ ...status, shelterUntilDay: game.day + extension - 1 }))
-        setMessage(`After discussing your situation, the social worker extends your place for ${extension} days.`)
+        return
       }
+      setShelterInterview({ step: 'reason' })
+      setMessage('The social worker asks why you still need the shelter place.')
+      return
     }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     if (actionId === 'shop-meal') {
@@ -699,6 +700,28 @@ export default function App() {
     if (actionId === 'daycenter-doctor') {
       setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
     }
+  }
+
+  function answerShelterInterview(value: string) {
+    if (!shelterInterview) return
+    if (shelterInterview.step === 'reason') {
+      setShelterInterview({ ...shelterInterview, reason: value, step: 'action' })
+      return
+    }
+    if (shelterInterview.step === 'action') {
+      setShelterInterview({ ...shelterInterview, action: value, step: 'plan' })
+      return
+    }
+    const renewals = life.shelterRenewals ?? 0
+    const realProgress = life.employment === 'Day work' || life.schroniskoReferral || shelterInterview.action === 'documents'
+    const constructive = value !== 'nothing'
+    let extension = renewals === 0 ? 30 : realProgress && constructive ? 30 : constructive ? 14 : 7
+    if (renewals >= 2 && !realProgress) extension = constructive ? 14 : 7
+    const plan = value === 'jobcenter' || value === 'daywork' || value === 'documents' || value === 'benefits' ? value : undefined
+    setLife((status) => ({ ...status, shelterUntilDay: game.day + extension - 1, shelterRenewals: renewals + 1, shelterPlan: plan }))
+    setGame((prev) => applyAction(prev, { minutes: 30, mood: extension >= 14 ? 3 : -2 }))
+    setMessage(`After the interview, your shelter place is extended for ${extension} days.${plan ? ' The social worker expects you to follow the plan you agreed to.' : ''}`)
+    setShelterInterview(null)
   }
 
   function applyEventOutcome(outcome: EventOutcome) {
@@ -970,7 +993,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-11</div>
+        <div className="trash-build">Build 2026.10.06-12</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
@@ -990,6 +1013,27 @@ export default function App() {
         <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}</p><h2>{current.name}</h2><p>{current.description}</p></div>
       </section>
       <section className="event"><span>●</span><p>{message}</p></section>
+      {shelterInterview && <section className="shop">
+        <div className="shop-heading"><div><p className="eyebrow">SOCIAL WORKER</p><h2>{shelterInterview.step === 'reason' ? 'Why do you still need a place?' : shelterInterview.step === 'action' ? 'What are you doing about your situation?' : 'What will you do next?'}</h2></div></div>
+        <div className="shop-grid">
+          {shelterInterview.step === 'reason' && <>
+            <button className="shop-item" onClick={() => answerShelterInterview('work')}><div><strong>I still cannot afford housing</strong><small>I am trying to get enough stable income.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I am sorting out documents/support</strong><small>The process is not finished yet.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('health')}><div><strong>Health is making things difficult</strong><small>I need more time to stabilize.</small></div></button>
+          </>}
+          {shelterInterview.step === 'action' && <>
+            <button className="shop-item" onClick={() => answerShelterInterview('job')}><div><strong>I am looking for work</strong><small>Applications and job-search activity.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I am working on documents or benefits</strong><small>Administrative steps are already underway.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('nothing')}><div><strong>Nothing concrete yet</strong><small>I have not made much progress.</small></div></button>
+          </>}
+          {shelterInterview.step === 'plan' && <>
+            <button className="shop-item" onClick={() => answerShelterInterview('jobcenter')}><div><strong>Go to the Job Centre</strong><small>Take a concrete step toward regular work.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('daywork')}><div><strong>Take available day work</strong><small>Start earning while looking for something stable.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>Finish document/support matters</strong><small>Continue the administrative process.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('nothing')}><div><strong>I cannot promise anything yet</strong><small>No concrete next step.</small></div></button>
+          </>}
+        </div>
+      </section>}
       {current.id === 'shop' && open && <section className="shop">
         <div className="shop-heading"><div><p className="eyebrow">STORE SHELF</p><h2>Buy supplies</h2></div><span>🎒 {usedBackpackSlots}/{BACKPACK_CAPACITY}</span></div>
         <div className="shop-grid">
