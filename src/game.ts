@@ -123,6 +123,20 @@ export function applyAction(state: GameState, result: ActionResult): GameState {
   }
 }
 
+export function applySleepTime(state: GameState, minutes: number): GameState {
+  const total = state.minutes + minutes
+  const extraDays = Math.floor(total / 1440)
+  return {
+    ...state,
+    day: state.day + extraDays,
+    minutes: total % 1440,
+    hunger: clamp(state.hunger - minutes / 14.4),
+    thirst: clamp(state.thirst - minutes / 10.8),
+    hygiene: clamp(state.hygiene - minutes / 43.2),
+    intoxication: clamp(state.intoxication - minutes / 6),
+  }
+}
+
 export function isOpen(location: Location, minutes: number) {
   if (location.open === 0 && location.close === 1440) return true
   if (location.open > location.close) return minutes >= location.open || minutes < location.close
@@ -134,15 +148,6 @@ export const actions: GameAction[] = [
     id: 'street-sleep', locationId: 'street', name: 'Sleep on the ground',
     description: 'Lie down wherever you can. Free, exposed, dirty, and barely restorative.', minutes: 8 * 60, requiresOpen: false,
     resolve: () => ({ minutes: 8 * 60, energy: 52, hygiene: -12, mood: -9, message: 'You sleep on the ground in short, uneasy stretches. You wake stiff, dirty and exhausted.' }),
-  },
-  {
-    id: 'station-bottles', locationId: 'station', name: 'Look for returnable bottles',
-    description: 'Search bins and platforms. Slow, dirty, and unpredictable.', minutes: 45, requiresOpen: false,
-    resolve: () => {
-      const roll = Math.random()
-      const earned = roll < .25 ? 0 : roll < .75 ? 3 : 7
-      return { minutes: 45, money: earned, hygiene: -8, energy: -3, mood: earned ? 2 : -4, message: earned ? `You found enough bottles to make ${earned} zł.` : 'Nothing worth returning this time. You only lost time.' }
-    },
   },
   {
     id: 'station-rest', locationId: 'station', name: 'Sit and recover',
