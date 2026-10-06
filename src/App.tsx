@@ -602,6 +602,15 @@ export default function App() {
     if (!action || activeEvent) return
     if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
     if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
+    if (current.id === 'daycenter' && actionId.startsWith('daycenter-')) {
+      const hour = game.minutes / 60
+      const chance = hour < 10 ? 0.9 : hour < 12 ? 0.75 : hour < 14 ? 0.55 : 0.35
+      if (Math.random() > chance) {
+        setGame((prev) => applyAction(prev, { minutes: 15, mood: -2 }))
+        setMessage('The day center is full right now. You wait for a while, but no place opens up.')
+        return
+      }
+    }
 
     if (actionId === 'street-sleep') { sleep(sleepHours, 'ground'); return }
     if (actionId === 'shelter-rest') { sleep(sleepHours, 'shelter'); return }
@@ -907,7 +916,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-07</div>
+        <div className="trash-build">Build 2026.10.06-08</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
