@@ -278,7 +278,7 @@ export default function App() {
           (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) +
           (cold ? 0.012 : 0)
         const health = Math.max(0, next.health - healthDamage)
-        const movementDrain = (trip?.mode === 'walk' ? 0.12 : 0) * healthEnergyMultiplier(health)
+        const movementDrain = (trip?.mode === 'walk' ? 0.025 : 0) * healthEnergyMultiplier(health)
         return {
           ...next,
           hunger,
@@ -374,7 +374,7 @@ export default function App() {
   }
 
   function sleep(hours: number, kind: 'ground' | 'bench' | 'shelter' | 'residential') {
-    if (activeEvent || sleeping || hours < 1 || hours > 10) return
+    if (activeEvent || sleeping || trip || screen === 'travel' || hours < 1 || hours > 10) return
     if (kind === 'bench' && current.id !== 'station' && (!streetBenchFound || current.id !== 'street')) return
     if (kind === 'ground' && current.id !== 'street') return
     if (kind === 'shelter' && current.id !== 'shelter') return
@@ -399,8 +399,8 @@ export default function App() {
       : sleep.kind === 'bench'
         ? { minutes: 0, energy: 66 * scale, hygiene: -7 * scale, mood: -5 * scale }
         : sleep.kind === 'shelter'
-          ? { minutes: 0, energy: 85 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
-          : { minutes: 0, energy: 90 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
+          ? { minutes: 0, energy: 100 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
+          : { minutes: 0, energy: 100 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
     setGame((prev) => applyAction(prev, result))
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
@@ -1068,12 +1068,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-24</div>
+        <div className="trash-build">Build 2026.10.06-25</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-24</div>
+    <div className="build-badge">v2026.10.06-25</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
