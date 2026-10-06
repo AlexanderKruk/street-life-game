@@ -106,6 +106,7 @@ const mapPositions: Record<string, { left: string; top: string }> = {
   shop: { left: '64%', top: '14%' },
   support: { left: '40%', top: '38%' },
   jobcenter: { left: '70%', top: '51%' },
+  hospital: { left: '20%', top: '43%' },
   shelter: { left: '16%', top: '65%' },
   work: { left: '53%', top: '76%' },
   'residential-shelter': { left: '80%', top: '75%' },
@@ -330,6 +331,28 @@ export default function App() {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     }
     setMessage(`You sleep for ${hours} hour${hours === 1 ? '' : 's'} ${kind === 'ground' ? 'on the ground' : kind === 'bench' ? 'on the bench' : kind === 'shelter' ? 'in the night shelter' : 'in your shelter place'}.${(kind === 'shelter' || kind === 'residential') && !fed ? ' Hunger or dehydration prevents health recovery.' : ''}`)
+  }
+
+  function hospitalVisit(kind: 'regular' | 'emergency') {
+    if (activeEvent || current.id !== 'hospital') return
+    if (kind === 'regular') {
+      if (!open) { setMessage('Regular medical care is closed. Emergency care remains available for critical conditions.'); return }
+      if (!inventory.documents) { setMessage('You need your documents for a regular medical appointment. Emergency care does not require them.'); return }
+      setGame((prev) => {
+        const afterTime = applyAction(prev, { minutes: 90, mood: 3 })
+        return { ...afterTime, health: Math.max(afterTime.health, 65) }
+      })
+      setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
+      setMessage('A doctor examines you and treats what they can. Your condition is brought back to a stable level.')
+      return
+    }
+    if (game.health > 20) { setMessage('Emergency care is reserved for critical conditions. Your Health must be 20 or lower.'); return }
+    const hours = 4 + Math.floor(Math.random() * 5)
+    setGame((prev) => {
+      const afterTime = applyAction(prev, { minutes: hours * 60, energy: -15, mood: -5 })
+      return { ...afterTime, health: Math.max(afterTime.health, 35) }
+    })
+    setMessage(`Emergency staff stabilize you without requiring documents. You lose about ${hours} hours, and your Health is stabilized to 35 rather than fully restored.`)
   }
 
   function askForMoney() {
@@ -756,6 +779,10 @@ export default function App() {
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
+          {current.id === 'hospital' && <>
+            <button className="action" onClick={() => hospitalVisit('regular')} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
+            <button className="action" onClick={() => hospitalVisit('emergency')} disabled={game.health > 20}><div><strong>🚑 Emergency care</strong><small>{game.health <= 20 ? 'No documents required. Stabilization only.' : 'Available only at Health 20 or lower.'}</small></div><span>4–8 h</span></button>
+          </>}
           {(current.id === 'street' || current.id === 'shelter' || current.id === 'residential-shelter') && <label className="sleep-hours">Sleep <select value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></label>}
           {current.id === 'street' && <>
             <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
