@@ -141,6 +141,7 @@ export default function App() {
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [trip, setTrip] = useState<Trip | null>(null)
   const [musicOn, setMusicOn] = useState(false)
+  const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
   const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [sleepHours, setSleepHours] = useState(8)
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
@@ -187,12 +188,16 @@ export default function App() {
   const temperature = temperatureAt(weather.temp, game.minutes)
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
+  const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
+  const mobileServiceMinutesLeft = Math.max(0, mobileServiceUntil - absoluteMinutes(game))
   const dayWorkEnergyRequired = 55
   const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
   const usedStorageSlots = storageSlots(storage)
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
+  useEffect(() => { localStorage.setItem('street-life-mobile-service-until', String(mobileServiceUntil)) }, [mobileServiceUntil])
+  useEffect(() => { if (!mobileServiceActive) { setMusicOn(false); setNavigationOn(false) } }, [mobileServiceActive])
   useEffect(() => { localStorage.setItem('street-life-storage-v1', JSON.stringify(storage)) }, [storage])
   useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
   useEffect(() => { localStorage.setItem('street-life-situation-v1', JSON.stringify(life)) }, [life])
@@ -259,7 +264,16 @@ export default function App() {
     return () => window.clearInterval(timer)
   }, [trip, effects, musicOn, navigationOn, activeEvent, gameOver])
 
+  function buyMobileService() {
+    if (game.money < 1) { setMessage('You need 1 zł to activate mobile service for 24 hours.'); return }
+    const now = absoluteMinutes(game)
+    setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
+    setMobileServiceUntil((until) => Math.max(until, now) + 1440)
+    setMessage('Mobile service activated for another 24 hours. Cost: 1 zł.')
+  }
+
   function watchVideo() {
+    if (!mobileServiceActive) { setMessage('You need active mobile service to use online video.'); return }
     const videoDrain = 9 * phoneDrainMultiplier(inventory.phoneCondition)
     if (inventory.phoneBattery < videoDrain) { setMessage('Not enough battery for 30 minutes of video.'); return }
     setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - videoDrain) }))
@@ -881,10 +895,11 @@ export default function App() {
       <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>These do not use backpack slots</small></div><span>FREE</span></div>
       <div className="phone-panel">
         <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
+        <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
         <div className="phone-actions">
-          <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
-          <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
-          <button onClick={watchVideo} disabled={inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
+          <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
+          <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
+          <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
           <button onClick={callAmbulance} disabled={game.health > 20 || inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0}><span>🚑</span><div><strong>Call ambulance</strong><small>{game.health <= 20 ? 'Emergency · no documents required' : 'Available at Health 20 or lower'}</small></div></button>
         </div>
       </div>
