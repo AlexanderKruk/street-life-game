@@ -1068,12 +1068,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-19</div>
+        <div className="trash-build">Build 2026.10.06-20</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-19</div>
+    <div className="build-badge">v2026.10.06-20</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1284,7 +1284,6 @@ export default function App() {
       </div>
     </section>}
     {screen === 'status' && <section className="status-screen">
-      <div className="status-heading"><div><p className="eyebrow">YOUR CONDITION</p><h2>{overall.icon} {overall.label}</h2></div><p>Your weakest need determines the overall condition.</p></div>
       <div className="status-needs">
         <Stat icon="🍞" label="Food" value={game.hunger} compact />
         <Stat icon="💧" label="Thirst" value={game.thirst} compact />
@@ -1389,7 +1388,7 @@ export default function App() {
       {nav('map', '🗺️', 'Map')}
       {nav('inventory', '🎒', 'Inventory')}
       <button className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} onClick={() => setScreen('location')}><span>{current.icon}</span><small>Place</small></button>
-      {nav('status', '👤', 'Status')}
+      <button className={screen === 'status' ? 'nav-item active' : 'nav-item'} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><span>{overall.icon}</span></button>
       {nav('journal', '📓', 'Journal')}
     </nav>
   </main>
