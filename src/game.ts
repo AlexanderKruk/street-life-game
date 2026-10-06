@@ -206,8 +206,8 @@ export const actions: GameAction[] = [
     resolve: (state) => ({ minutes: 60, health: state.health < 65 ? 12 : 4, mood: 3, message: 'You are seen at the clinic and receive basic medical care.' }),
   },
   {
-    id: 'support-shelter-renew', locationId: 'support', name: 'Renew shelter place',
-    description: 'Ask a social worker to extend an active shelter booking for 30 days.', minutes: 30,
+    id: 'shelter-social-worker', locationId: 'shelter', name: 'Talk to shelter social worker',
+    description: 'Available Tuesdays and Fridays, 16:00–20:00. Discuss extending your current place.', minutes: 30,
     resolve: () => ({ minutes: 30, mood: 2, message: 'You discuss extending your shelter place.' }),
   },
   {
