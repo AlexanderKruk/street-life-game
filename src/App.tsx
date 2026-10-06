@@ -802,19 +802,18 @@ export default function App() {
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
-          {(current.id === 'street' || current.id === 'shelter' || current.id === 'residential-shelter') && <label className="sleep-hours">Sleep <select value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></label>}
           {current.id === 'street' && <>
             <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
             <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search bins for bottles</strong><small>Look for returnable bottles. They take backpack space and can be returned at the shop.</small></div><span>~45 min</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
-            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>{sleepHours} h</span></button>}
+            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span onClick={(e) => e.stopPropagation()}><select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></span></button>}
           </>}
           {currentActions.length ? currentActions.map((action) => {
             const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
             return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
               <div><strong>{action.name}</strong><small>{action.description}</small></div>
-              <span>{action.cost ? `${action.cost} zł · ` : ''}~{action.minutes} min</span>
+              <span onClick={(e) => (action.id === 'street-sleep' || action.id === 'shelter-rest' || action.id === 'residential-sleep') && e.stopPropagation()}>{action.id === 'street-sleep' || action.id === 'shelter-rest' || action.id === 'residential-sleep' ? <select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select> : <>{action.cost ? `${action.cost} zł · ` : ''}~{action.minutes} min</>}</span>
             </button>
           }) : <p className="empty">Nothing useful to do here yet.</p>}
         </section>
