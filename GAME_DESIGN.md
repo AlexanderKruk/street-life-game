@@ -420,3 +420,7 @@ The city map includes a **Hospital**. Regular medical care is open 08:00–18:00
 
 ### Calling an ambulance
 Emergency treatment is **not an action at the Hospital location**. The player calls an ambulance from the Phone use panel alongside Navigation, Music and Video. The option is enabled only at Health ≤20 and requires a functioning phone with some battery. Calling consumes a small amount of phone battery, transports the character directly to Hospital, advances 4–8 hours and stabilizes Health to 35. Documents are not required. The Hospital location itself is for regular documented care.
+
+
+### Mobile service
+Phone data/service is a recurring survival expense: **1 zł buys 24 game hours**. Time can be topped up before expiry and stacks from the later of the current expiry or the current game time. Navigation, Music and online Video require active mobile service. The ambulance emergency call explicitly does **not** require paid service; it only requires a working phone with battery. Remaining service time is shown in the phone panel and persists across saves.
