@@ -241,10 +241,10 @@ export default function App() {
         const targetAbsolute = sleeping.startAbsolute + elapsed
         setGame((prev) => {
           const delta = Math.max(0, targetAbsolute - absoluteMinutes(prev))
-          return delta > 0 ? applyAction(prev, { minutes: delta }) : prev
+          return delta > 0 ? applySleepTime(prev, delta) : prev
         })
       }
-      if (sleeping && document.visibilityState !== 'visible') return
+      if (sleeping) return
       setGame((prev) => {
         const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
         const next = applyAction(prev, { minutes: 1 })
@@ -793,6 +793,8 @@ export default function App() {
     localStorage.removeItem('street-life-effects-v1')
     localStorage.removeItem('street-life-situation-v1')
     localStorage.removeItem('street-life-sleep-v1')
+    setMobileServiceUntil(0)
+    localStorage.removeItem('street-life-mobile-service-until')
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
