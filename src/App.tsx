@@ -1010,6 +1010,7 @@ export default function App() {
         <div className="sleep-progress"><i style={{ width: `${Math.min(100, Math.max(0, ((sleeping.total - sleeping.remaining) / sleeping.total) * 100))}%` }} /></div>
         <p>{Math.floor((sleeping.total - sleeping.remaining) / 60)}h {(sleeping.total - sleeping.remaining) % 60}m / {sleeping.total / 60}h</p>
         <small>You cannot perform other actions until you wake up.</small>
+        <button className="sleep-debug-wake" onClick={() => { const active = sleeping; setSleeping(null); finishSleep(active) }}>Wake up (debug)</button>
       </section>
     </div>}
 
