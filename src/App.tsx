@@ -506,8 +506,14 @@ export default function App() {
     drag.moved = true
     const centerX = nextX + 9
     const centerY = nextY + 9
-    const cleared = centerX < 18 || centerX > 82 || centerY < 18 || centerY > 82
-    const outside = centerX < -2 || centerX > 102 || centerY < -2 || centerY > 102
+    // The bin clips its contents visually, so treat crossing the inner rim as
+    // throwing ordinary rubbish out instead of requiring the item to travel
+    // beyond the clipped element.
+    const dx = centerX - 50
+    const dy = centerY - 50
+    const distanceFromCenter = Math.sqrt(dx * dx + dy * dy)
+    const cleared = distanceFromCenter > 34
+    const outside = distanceFromCenter > 43
     setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
       ...item,
       x: nextX,
