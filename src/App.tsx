@@ -25,7 +25,7 @@ function temperatureAt(base: number, minutes: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
-type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number }
+type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean }
 type Inventory = { water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
@@ -217,6 +217,23 @@ export default function App() {
   }, [game.day, game.minutes])
 
   useEffect(() => {
+    if (game.energy > 0 || sleeping || gameOver || activeEvent) return
+    const safeKind = current.id === 'residential-shelter'
+      ? 'residential'
+      : current.id === 'shelter' && open && game.intoxication <= 10
+        ? 'shelter'
+        : 'ground'
+    const hours = safeKind === 'ground' ? 2 + Math.floor(Math.random() * 3) : 8
+    const realStartedAt = Date.now()
+    setMusicOn(false)
+    setNavigationOn(false)
+    setTrip(null)
+    if (safeKind === 'ground' && current.id !== 'street') setGame((prev) => ({ ...prev, locationId: 'street' }))
+    setSleeping({ kind: safeKind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + hours * 60 * 1000, forced: true })
+    setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
+  }, [game.energy, sleeping, gameOver, activeEvent, current.id, open, game.intoxication])
+
+  useEffect(() => {
     const timer = window.setInterval(() => {
       if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || gameOver) return
       if (sleeping) {
@@ -363,6 +380,20 @@ export default function App() {
     setGame((prev) => applyAction(prev, result))
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
+      const sleepWeather = WEATHER[(game.day - 1) % WEATHER.length]
+      const sleepTemp = temperatureAt(sleepWeather.temp, game.minutes)
+      const illnessChance = Math.min(0.65, Math.max(0.05,
+        0.08 +
+        (sleepTemp <= 5 ? 0.28 : sleepTemp <= 10 ? 0.16 : sleepTemp <= 15 ? 0.07 : 0) +
+        (sleepWeather.label === 'Rain' ? 0.22 : sleepWeather.label === 'Showers' ? 0.14 : sleepWeather.label === 'Windy' ? 0.10 : 0) +
+        (sleep.kind === 'ground' ? 0.08 : 0)
+      ))
+      if (Math.random() < illnessChance) {
+        setEffects((active) => active.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(game))
+          ? active
+          : [...active, { id: 'cold', expiresAt: absoluteMinutes(game) + 2 * 1440 }])
+        setMessage(`You slept outside in ${sleepWeather.label.toLowerCase()} weather and woke up feeling sick.`)
+      }
       const baseChance = sleep.kind === 'ground' ? 0.75 : 0.65
       const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, Math.min(0.9, baseChance * scale))
       if (wakeEvent) setActiveEvent(wakeEvent)
