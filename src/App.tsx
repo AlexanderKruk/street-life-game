@@ -333,26 +333,32 @@ export default function App() {
     setMessage(`You sleep for ${hours} hour${hours === 1 ? '' : 's'} ${kind === 'ground' ? 'on the ground' : kind === 'bench' ? 'on the bench' : kind === 'shelter' ? 'in the night shelter' : 'in your shelter place'}.${(kind === 'shelter' || kind === 'residential') && !fed ? ' Hunger or dehydration prevents health recovery.' : ''}`)
   }
 
-  function hospitalVisit(kind: 'regular' | 'emergency') {
+  function hospitalVisit() {
     if (activeEvent || current.id !== 'hospital') return
-    if (kind === 'regular') {
-      if (!open) { setMessage('Regular medical care is closed. Emergency care remains available for critical conditions.'); return }
-      if (!inventory.documents) { setMessage('You need your documents for a regular medical appointment. Emergency care does not require them.'); return }
-      setGame((prev) => {
-        const afterTime = applyAction(prev, { minutes: 90, mood: 3 })
-        return { ...afterTime, health: Math.max(afterTime.health, 65) }
-      })
-      setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
-      setMessage('A doctor examines you and treats what they can. Your condition is brought back to a stable level.')
-      return
-    }
-    if (game.health > 20) { setMessage('Emergency care is reserved for critical conditions. Your Health must be 20 or lower.'); return }
+    if (!open) { setMessage('Regular medical care is closed.'); return }
+    if (!inventory.documents) { setMessage('You need your documents for a regular medical appointment.'); return }
+    setGame((prev) => {
+      const afterTime = applyAction(prev, { minutes: 90, mood: 3 })
+      return { ...afterTime, health: Math.max(afterTime.health, 65) }
+    })
+    setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
+    setMessage('A doctor examines you and treats what they can. Your condition is brought back to a stable level.')
+  }
+
+  function callAmbulance() {
+    if (activeEvent) return
+    if (game.health > 20) { setMessage('An ambulance is only available as a gameplay emergency option at Health 20 or lower.'); return }
+    if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0) { setMessage('Your phone is not working, so you cannot call an ambulance.'); return }
     const hours = 4 + Math.floor(Math.random() * 5)
+    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2 * phoneDrainMultiplier(prev.phoneCondition)) }))
     setGame((prev) => {
       const afterTime = applyAction(prev, { minutes: hours * 60, energy: -15, mood: -5 })
-      return { ...afterTime, health: Math.max(afterTime.health, 35) }
+      return { ...afterTime, health: Math.max(afterTime.health, 35), locationId: 'hospital' }
     })
-    setMessage(`Emergency staff stabilize you without requiring documents. You lose about ${hours} hours, and your Health is stabilized to 35 rather than fully restored.`)
+    setSelectedDestination(null)
+    setTrip(null)
+    setScreen('location')
+    setMessage(`You call an ambulance. Emergency staff stabilize you without requiring documents. About ${hours} hours pass and your Health is stabilized to 35.`)
   }
 
   function askForMoney() {
@@ -780,8 +786,7 @@ export default function App() {
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
         <section className="actions">
           {current.id === 'hospital' && <>
-            <button className="action" onClick={() => hospitalVisit('regular')} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
-            <button className="action" onClick={() => hospitalVisit('emergency')} disabled={game.health > 20}><div><strong>🚑 Emergency care</strong><small>{game.health <= 20 ? 'No documents required. Stabilization only.' : 'Available only at Health 20 or lower.'}</small></div><span>4–8 h</span></button>
+            <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {(current.id === 'street' || current.id === 'shelter' || current.id === 'residential-shelter') && <label className="sleep-hours">Sleep <select value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></label>}
           {current.id === 'street' && <>
@@ -880,6 +885,7 @@ export default function App() {
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
           <button onClick={watchVideo} disabled={inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
+          <button onClick={callAmbulance} disabled={game.health > 20 || inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0}><span>🚑</span><div><strong>Call ambulance</strong><small>{game.health <= 20 ? 'Emergency · no documents required' : 'Available at Health 20 or lower'}</small></div></button>
         </div>
       </div>
       <div className="inventory-grid essentials-grid">
