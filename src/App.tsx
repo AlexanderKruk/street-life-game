@@ -30,11 +30,11 @@ type Inventory = { water: number; food: number; foodFreshness: number; bottles: 
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
-type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
+type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
 type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
-const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
+const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0, foodFreshness: 100 }
@@ -357,11 +357,6 @@ export default function App() {
       setMessage('The night shelter refuses admission because you are visibly intoxicated. You need to sober up first.')
       return
     }
-    if (kind === 'shelter' && Math.random() >= .7) {
-      setGame((prev) => applyAction(prev, { minutes: 30, mood: -8 }))
-      setMessage('No beds left tonight. You waited in line for nothing.')
-      return
-    }
     setMusicOn(false)
     setNavigationOn(false)
     const realStartedAt = Date.now()
@@ -614,7 +609,22 @@ export default function App() {
 
     if (actionId === 'street-sleep') { sleep(sleepHours, 'ground'); return }
     if (actionId === 'station-sleep') { sleep(sleepHours, 'bench'); return }
-    if (actionId === 'shelter-rest') { sleep(sleepHours, 'shelter'); return }
+    if (actionId === 'shelter-rest') {
+      const blocked = (life.shelterBlockedUntilDay ?? 0) > game.day
+      if (blocked) { setMessage(`You lost your shelter place. You can register again on Day ${life.shelterBlockedUntilDay}.`); return }
+      const activeBooking = (life.shelterUntilDay ?? 0) >= game.day
+      if (!activeBooking) {
+        if (game.minutes < 1080 || game.minutes > 1320) { setMessage('Registration is available between 18:00 and 22:00.'); return }
+        setGame((prev) => applyAction(prev, { minutes: 30, mood: 3 }))
+        setLife((status) => ({ ...status, housing: 'Night shelter', shelterRegisteredDay: game.day, shelterUntilDay: game.day + 6, shelterAuditDay: game.day, shelterMisses: 0, shelterMissMonth: Math.floor((game.day - 1) / 30), shelterStrikes: 0 }))
+        setMessage('You registered for a shelter place for 7 days. Come between 18:00 and 22:00 each night and leave by 08:00.')
+        return
+      }
+      if (game.minutes < 1080 || game.minutes > 1320) { setMessage('Your reserved place can be checked into between 18:00 and 22:00.'); return }
+      setLife((status) => ({ ...status, shelterLastStayDay: game.day, housing: 'Night shelter' }))
+      sleep(sleepHours, 'shelter')
+      return
+    }
     if (actionId === 'residential-sleep') { sleep(sleepHours, 'residential'); return }
 
     const result = action.resolve(game)
@@ -633,6 +643,14 @@ export default function App() {
     } else {
       const locationEvent = pickStreetEvent('location', { locationId: current.id, weather: weather.label, housing: life.housing, documents: inventory.documents }, 0.20)
       if (locationEvent) setActiveEvent(locationEvent)
+    }
+    if (actionId === 'support-shelter-renew') {
+      if ((life.shelterUntilDay ?? 0) < game.day) {
+        setMessage('There is no active shelter booking to extend. Register at the shelter first.')
+      } else {
+        setLife((status) => ({ ...status, shelterUntilDay: game.day + 29 }))
+        setMessage('The social worker extended your shelter place for 30 days.')
+      }
     }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     if (actionId === 'shop-meal') {
@@ -921,7 +939,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-09</div>
+        <div className="trash-build">Build 2026.10.06-10</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
