@@ -151,6 +151,7 @@ export default function App() {
   })
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number } | null>(null)
+  const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean } | null>(null)
@@ -484,16 +485,26 @@ export default function App() {
     setTrashGame({ items, startedAt: Date.now(), found: 0, rejected: 0 })
   }
 
+  function startTrashDrag(id: number, clientX: number, clientY: number, bounds: DOMRect) {
+    const item = trashGame?.items.find((entry) => entry.id === id)
+    if (!item || item.collected || !trashGame) return false
+    const topLayer = trashGame.items.reduce((max, entry) => entry.collected ? max : Math.max(max, entry.layer), -1)
+    if (item.layer !== topLayer) return false
+    const pointerX = ((clientX - bounds.left) / bounds.width) * 100
+    const pointerY = ((clientY - bounds.top) / bounds.height) * 100
+    trashDrag.current = { id, offsetX: pointerX - item.x, offsetY: pointerY - item.y, moved: false }
+    return true
+  }
+
   function moveTrashItem(id: number, clientX: number, clientY: number, bounds: DOMRect) {
-    setTrashGame((active) => {
-      if (!active) return null
-      const topLayer = active.items.reduce((max, item) => item.collected ? max : Math.max(max, item.layer), -1)
-      return { ...active, items: active.items.map((item) => item.id === id && item.layer === topLayer ? {
-        ...item,
-        x: Math.max(3, Math.min(82, ((clientX - bounds.left) / bounds.width) * 100 - 8)),
-        y: Math.max(3, Math.min(82, ((clientY - bounds.top) / bounds.height) * 100 - 8)),
-      } : item) }
-    })
+    const drag = trashDrag.current
+    if (!drag || drag.id !== id) return
+    const pointerX = ((clientX - bounds.left) / bounds.width) * 100
+    const pointerY = ((clientY - bounds.top) / bounds.height) * 100
+    const nextX = Math.max(-8, Math.min(88, pointerX - drag.offsetX))
+    const nextY = Math.max(-8, Math.min(88, pointerY - drag.offsetY))
+    drag.moved = true
+    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? { ...item, x: nextX, y: nextY } : item) } : null)
   }
 
   function collectTrashBottle(id: number) {
@@ -867,10 +878,9 @@ export default function App() {
             key={item.id}
             className={item.bottle ? 'trash-piece bottle-piece' : 'trash-piece'}
             style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: index + 2 }}
-            onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId) }}
+            onPointerDown={(e) => { const bounds = e.currentTarget.parentElement!.getBoundingClientRect(); if (startTrashDrag(item.id, e.clientX, e.clientY, bounds)) e.currentTarget.setPointerCapture(e.pointerId) }}
             onPointerMove={(e) => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; moveTrashItem(item.id, e.clientX, e.clientY, e.currentTarget.parentElement!.getBoundingClientRect()) }}
-            onPointerUp={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId) }}
-            onClick={() => item.bottle && collectTrashBottle(item.id)}
+            onPointerUp={(e) => { const moved = trashDrag.current?.id === item.id && trashDrag.current.moved; trashDrag.current = null; if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); if (item.bottle && !moved) collectTrashBottle(item.id) }}
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
