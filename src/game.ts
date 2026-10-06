@@ -55,6 +55,7 @@ export const locations: Location[] = [
   { id: 'shelter', name: 'Night shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 90 },
   { id: 'support', name: 'Help center', icon: '🤝', description: 'Social workers can help with documents, benefits, accommodation and other support.', open: 480, close: 960, travelMinutes: 105 },
   { id: 'residential-shelter', name: 'Schronisko', icon: '🏠', description: '24/7 supported accommodation. Access requires a referral from the help center.', open: 0, close: 1440, travelMinutes: 120 },
+  { id: 'daycenter', name: 'Day Center & Clinic', icon: '🧼', description: 'A daytime drop-in center with showers, laundry, phone charging, a warm indoor space and basic medical help.', open: 480, close: 1080, travelMinutes: 90 },
   { id: 'hospital', name: 'Hospital', icon: '🏥', description: 'Regular medical care requires documents. Emergency care is available for critical conditions.', open: 480, close: 1080, travelMinutes: 105 },
   { id: 'jobcenter', name: 'Job centre', icon: '📋', description: 'Vacancies and appointments.', open: 480, close: 900, travelMinutes: 105 },
   { id: 'work', name: 'Day work', icon: '📦', description: 'Short shifts. Pay is not guaranteed.', open: 420, close: 1080, travelMinutes: 120 },
@@ -168,6 +169,31 @@ export const actions: GameAction[] = [
     id: 'shop-meal', locationId: 'shop', name: 'Buy a filling meal',
     description: 'Costs more, but buys you breathing room.', minutes: 15, cost: 12,
     resolve: () => ({ minutes: 15, money: -12, hunger: 48, thirst: 8, mood: 5, message: 'A proper meal helps. 12 zł gone, but you feel much better.' }),
+  },
+  {
+    id: 'daycenter-stay', locationId: 'daycenter', name: 'Stay indoors',
+    description: 'Spend some time somewhere warm and safe during the day.', minutes: 60,
+    resolve: () => ({ minutes: 60, energy: 10, mood: 5, message: 'You spend an hour indoors, warm up and get off your feet.' }),
+  },
+  {
+    id: 'daycenter-shower', locationId: 'daycenter', name: 'Take a shower',
+    description: 'Use the free shower. There may be a short wait.', minutes: 40,
+    resolve: () => ({ minutes: 40, hygiene: 50, mood: 4, message: 'You shower and feel much cleaner.' }),
+  },
+  {
+    id: 'daycenter-laundry', locationId: 'daycenter', name: 'Do laundry',
+    description: 'Wash and dry your clothes while you are here.', minutes: 90,
+    resolve: () => ({ minutes: 90, hygiene: 18, mood: 5, message: 'Your clothes are washed and dried.' }),
+  },
+  {
+    id: 'daycenter-charge', locationId: 'daycenter', name: 'Charge phone',
+    description: 'Leave your phone charging while you wait.', minutes: 60,
+    resolve: () => ({ minutes: 60, energy: 4, message: 'You spend an hour by a power outlet.' }),
+  },
+  {
+    id: 'daycenter-doctor', locationId: 'daycenter', name: 'See the clinic',
+    description: 'Ask for basic medical help at the free clinic.', minutes: 60,
+    resolve: (state) => ({ minutes: 60, health: state.health < 65 ? 12 : 4, mood: 3, message: 'You are seen at the clinic and receive basic medical care.' }),
   },
   {
     id: 'support-worker', locationId: 'support', name: 'Talk to a social worker',
