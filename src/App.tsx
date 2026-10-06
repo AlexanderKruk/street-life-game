@@ -1068,18 +1068,17 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-22</div>
+        <div className="trash-build">Build 2026.10.06-23</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-22</div>
+    <div className="build-badge">v2026.10.06-23</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
       <div className="header-info">
         <div className="weather" title={weather.label}><span>{weather.icon}</span>{temperature}°C</div>
-        <button className={`overall-status ${overall.level}`} onClick={() => setScreen('status')}><span>{overall.icon}</span>{overall.label}</button>
         <div className="money">{game.money.toFixed(2)} zł</div>
       </div>
     </header>
