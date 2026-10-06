@@ -2,7 +2,7 @@ export type EventTrigger = 'travel' | 'location' | 'wake'
 
 export type EventContext = {
   locationId: string
-  travelMode?: 'walk' | 'transit'
+  travelMode?: 'walk' | 'transit' | 'fare-dodge'
   weather: string
   housing: 'Street' | 'Night shelter' | 'Schronisko'
   documents: boolean
