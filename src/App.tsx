@@ -290,47 +290,48 @@ export default function App() {
         })
       }
       if (sleeping) return
+      const tickMinutes = trip ? Math.min(10, trip.remaining) : 1
       setGame((prev) => {
         const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
-        const next = applyAction(prev, { minutes: 1 })
+        const next = applyAction(prev, { minutes: tickMinutes })
         const cold = effects.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(prev))
         const wellFed = effects.some((effect) => effect.id === 'well-fed' && effect.expiresAt > absoluteMinutes(prev))
-        const hunger = Math.max(0, Math.min(100, next.hunger + (wellFed ? 0.035 : 0) - (trip?.mode === 'walk' ? 0.055 : 0)))
-        const thirst = Math.max(0, next.thirst - currentWeather.thirstDrain - (trip?.mode === 'walk' ? 0.04 : 0))
+        const hunger = Math.max(0, Math.min(100, next.hunger + (wellFed ? 0.035 * tickMinutes : 0) - (trip?.mode === 'walk' ? 0.055 * tickMinutes : 0)))
+        const thirst = Math.max(0, next.thirst - currentWeather.thirstDrain * tickMinutes - (trip?.mode === 'walk' ? 0.04 * tickMinutes : 0))
         const healthDamage =
-          (thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
+          ((thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
           (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) +
-          (cold ? 0.012 : 0)
+          (cold ? 0.012 : 0)) * tickMinutes
         const health = Math.max(0, next.health - healthDamage)
-        const movementDrain = (trip?.mode === 'walk' ? 0.01 : 0) * healthEnergyMultiplier(health)
+        const movementDrain = (trip?.mode === 'walk' ? 0.01 * tickMinutes : 0) * healthEnergyMultiplier(health)
         const currentTemperature = temperatureAt(currentWeather.temp, prev.minutes)
         const walkingHygieneDrain = trip?.mode === 'walk'
           ? currentTemperature >= 25 ? 0.05 : currentTemperature >= 18 ? 0.033 : 0.025
           : 0
-        const hygiene = Math.max(0, next.hygiene - walkingHygieneDrain)
+        const hygiene = Math.max(0, next.hygiene - walkingHygieneDrain * tickMinutes)
         return {
           ...next,
           hunger,
           health,
           hygiene,
-          energy: Math.min(energyCap(health), Math.max(0, next.energy - currentWeather.energyDrain - movementDrain - (cold ? 0.045 : 0))),
-          mood: Math.max(0, next.mood - (cold ? 0.012 : 0)),
+          energy: Math.min(energyCap(health), Math.max(0, next.energy - currentWeather.energyDrain * tickMinutes - movementDrain - (cold ? 0.045 * tickMinutes : 0))),
+          mood: Math.max(0, next.mood - (cold ? 0.012 * tickMinutes : 0)),
           thirst,
         }
       })
-      setStorage((prev) => prev.food > 0 ? { ...prev, foodFreshness: Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE) } : prev)
+      setStorage((prev) => prev.food > 0 ? { ...prev, foodFreshness: Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * tickMinutes) } : prev)
       setInventory((prev) => {
         const sunny = WEATHER[(game.day - 1) % WEATHER.length].label === 'Clear'
         const drainMultiplier = phoneDrainMultiplier(prev.phoneCondition)
-        const navigationDrain = trip && navigationOn ? ((sunny ? 15 : 12) / 60) * drainMultiplier : 0
-        const musicDrain = musicOn ? (4 / 60) * drainMultiplier : 0
+        const navigationDrain = trip && navigationOn ? ((sunny ? 15 : 12) / 60) * drainMultiplier * tickMinutes : 0
+        const musicDrain = musicOn ? (4 / 60) * drainMultiplier * tickMinutes : 0
         return {
           ...prev,
-          foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE) : 100,
+          foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * tickMinutes) : 100,
           phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
         }
       })
-      if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012) }))
+      if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012 * tickMinutes) }))
       setSleeping((active) => {
         if (!active) return null
         const elapsed = Math.min(active.total, Math.max(0, Math.floor((Date.now() - active.realStartedAt) / 1000)))
@@ -341,7 +342,7 @@ export default function App() {
       })
       setTrip((active) => {
         if (!active) return null
-        if (active.remaining > 1) return { ...active, remaining: active.remaining - 1 }
+        if (active.remaining > tickMinutes) return { ...active, remaining: active.remaining - tickMinutes }
         const destination = locations.find((x) => x.id === active.destinationId)
         if (destination) {
           setGame((prev) => ({ ...prev, locationId: destination.id }))
@@ -1115,12 +1116,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-33</div>
+        <div className="trash-build">Build 2026.10.06-34</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-33</div>
+    <div className="build-badge">v2026.10.06-34</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
