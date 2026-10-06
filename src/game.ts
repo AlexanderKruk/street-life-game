@@ -105,7 +105,7 @@ export function applyAction(state: GameState, result: ActionResult): GameState {
   const energySpent = result.minutes / 9.6 * healthEnergyMultiplier(state.health)
   const nextHealth = clamp(state.health + (result.health ?? 0))
   const energy = Math.min(energyCap(nextHealth), clamp(state.energy - energySpent + (result.energy ?? 0)))
-  const hygiene = clamp(state.hygiene - result.minutes / 43.2 + (result.hygiene ?? 0))
+  const hygiene = clamp(state.hygiene - result.minutes / 180 + (result.hygiene ?? 0))
   // Abstract gameplay scale, not BAC/promille. Roughly 10 points wear off per game hour.
   const intoxication = clamp(state.intoxication - result.minutes / 6 + (result.intoxication ?? 0))
 
@@ -133,7 +133,7 @@ export function applySleepTime(state: GameState, minutes: number): GameState {
     minutes: total % 1440,
     hunger: clamp(state.hunger - minutes / 14.4),
     thirst: clamp(state.thirst - minutes / 10.8),
-    hygiene: clamp(state.hygiene - minutes / 43.2),
+    hygiene: clamp(state.hygiene - minutes / 180),
     intoxication: clamp(state.intoxication - minutes / 6),
   }
 }
