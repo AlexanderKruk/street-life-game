@@ -25,7 +25,7 @@ function temperatureAt(base: number, minutes: number) {
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
-type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number }
+type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number }
 type Inventory = { water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
@@ -145,7 +145,9 @@ export default function App() {
   const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
   const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [sleepHours, setSleepHours] = useState(8)
-  const [sleeping, setSleeping] = useState<SleepState | null>(null)
+  const [sleeping, setSleeping] = useState<SleepState | null>(() => {
+    try { const raw = localStorage.getItem('street-life-sleep-v1'); return raw ? JSON.parse(raw) : null } catch { return null }
+  })
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
@@ -203,6 +205,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('street-life-storage-v1', JSON.stringify(storage)) }, [storage])
   useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
   useEffect(() => { localStorage.setItem('street-life-situation-v1', JSON.stringify(life)) }, [life])
+  useEffect(() => { if (sleeping) localStorage.setItem('street-life-sleep-v1', JSON.stringify(sleeping)); else localStorage.removeItem('street-life-sleep-v1') }, [sleeping])
   useEffect(() => {
     if (life.housing === 'Night shelter' && life.housingUntil !== undefined && absoluteMinutes(game) >= life.housingUntil) {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
@@ -215,7 +218,8 @@ export default function App() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible' || activeEvent || gameOver) return
+      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || gameOver) return
+      if (sleeping && document.visibilityState !== 'visible') return
       setGame((prev) => {
         const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
         const next = applyAction(prev, { minutes: 1 })
@@ -253,7 +257,9 @@ export default function App() {
       if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012) }))
       setSleeping((active) => {
         if (!active) return null
-        if (active.remaining > 1) return { ...active, remaining: active.remaining - 1 }
+        const elapsed = Math.min(active.total, Math.max(0, Math.floor((Date.now() - active.realStartedAt) / 1000)))
+        const remaining = Math.max(0, active.total - elapsed)
+        if (remaining > 0) return remaining === active.remaining ? active : { ...active, remaining }
         window.setTimeout(() => finishSleep(active), 0)
         return null
       })
@@ -330,7 +336,8 @@ export default function App() {
     }
     setMusicOn(false)
     setNavigationOn(false)
-    setSleeping({ kind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game) })
+    const realStartedAt = Date.now()
+    setSleeping({ kind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + hours * 60 * 1000 })
     setMessage('You are sleeping.')
   }
 
@@ -741,10 +748,12 @@ export default function App() {
     setStorage(INITIAL_STORAGE)
     setLife(INITIAL_LIFE)
     setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
+    setSleeping(null)
     localStorage.removeItem('street-life-inventory-v1')
     localStorage.removeItem('street-life-storage-v1')
     localStorage.removeItem('street-life-effects-v1')
     localStorage.removeItem('street-life-situation-v1')
+    localStorage.removeItem('street-life-sleep-v1')
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
