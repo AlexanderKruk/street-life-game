@@ -93,6 +93,7 @@ footer p { margin:0; }
 .nav-item.active { color:#f3f6f8; background:#252e36; }
 .nav-item.home { margin:-17px 2px 0; border:1px solid #3c4853; background:#1a2229; }
 .nav-item.home span { font-size:26px; }
+.nav-item.home small { max-width:86px; min-height:20px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:8px; line-height:10px; text-align:center; }
 @media (max-width:520px) {
   .city-map { height:470px; }
   .map-pin { width:96px; padding:8px 5px; }
