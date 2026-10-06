@@ -197,3 +197,8 @@ export const actions: GameAction[] = [
       : { minutes: 30, mood: -8, message: 'No beds left tonight. You waited in line for nothing.' },
   },
 ]
+
+
+export function absoluteMinutes(state: GameState) {
+  return (state.day - 1) * 1440 + state.minutes
+}
