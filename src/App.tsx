@@ -218,6 +218,23 @@ export default function App() {
     const now = absoluteMinutes(game)
     setEffects((prev) => prev.filter((effect) => effect.expiresAt > now))
   }, [game.day, game.minutes])
+  useEffect(() => {
+    if (!life.shelterRegisteredDay || !life.shelterUntilDay) return
+    const previousDay = game.day - 1
+    if (previousDay < life.shelterRegisteredDay || (life.shelterAuditDay ?? 0) >= previousDay) return
+    setLife((status) => {
+      const month = Math.floor((previousDay - 1) / 30)
+      const missesBefore = status.shelterMissMonth === month ? (status.shelterMisses ?? 0) : 0
+      const missed = status.shelterLastStayDay !== previousDay
+      const misses = missesBefore + (missed ? 1 : 0)
+      if (misses >= 3) {
+        const blockedUntil = (month + 1) * 30 + 1
+        setMessage(`You missed three shelter nights this month. Your place was cancelled; you can register again on Day ${blockedUntil}.`)
+        return { ...status, housing: 'Street', housingUntil: undefined, shelterUntilDay: undefined, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month, shelterBlockedUntilDay: blockedUntil }
+      }
+      return { ...status, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month }
+    })
+  }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
     if (game.energy > 0 || sleeping || gameOver || activeEvent) return
@@ -333,6 +350,14 @@ export default function App() {
   }
 
   function chooseDestination(id: string) {
+    if (game.locationId === 'shelter' && id !== 'shelter' && game.minutes > 480 && game.minutes < 1080 && (life.shelterUntilDay ?? 0) >= game.day) {
+      const strikes = (life.shelterStrikes ?? 0) + 1
+      const evicted = strikes >= 3
+      const month = Math.floor((game.day - 1) / 30)
+      const blockedUntil = (month + 1) * 30 + 1
+      setLife((status) => ({ ...status, shelterStrikes: strikes, ...(evicted ? { housing: 'Street' as const, housingUntil: undefined, shelterUntilDay: undefined, shelterBlockedUntilDay: blockedUntil } : {}) }))
+      setMessage(evicted ? `Third shelter rule violation: your place was cancelled. You can register again on Day ${blockedUntil}.` : `You left the shelter after 08:00. Rule violation ${strikes}/3.`)
+    }
     if (id === game.locationId) {
       setScreen('location')
       return
@@ -396,7 +421,7 @@ export default function App() {
       const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, Math.min(0.9, baseChance * scale))
       if (wakeEvent) setActiveEvent(wakeEvent)
     } else if (sleep.kind === 'shelter') {
-      setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(game) }))
+      setLife((status) => ({ ...status, housing: 'Night shelter', shelterLastStayDay: Math.max(status.shelterLastStayDay ?? 0, Math.floor(sleep.startAbsolute / 1440) + 1) }))
       const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, Math.min(0.65, 0.45 * scale))
       if (wakeEvent) setActiveEvent(wakeEvent)
     } else {
