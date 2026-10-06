@@ -145,6 +145,8 @@ export default function App() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [musicOn, setMusicOn] = useState(false)
   const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
+  const [mobileAutoRenew, setMobileAutoRenew] = useState<boolean>(() => localStorage.getItem('street-life-mobile-auto-renew') !== 'false')
+  const [mobileRenewedDay, setMobileRenewedDay] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-renewed-day') ?? 0))
   const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [sleepHours, setSleepHours] = useState(8)
   const [sleeping, setSleeping] = useState<SleepState | null>(() => {
@@ -205,6 +207,20 @@ export default function App() {
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
   useEffect(() => { localStorage.setItem('street-life-mobile-service-until', String(mobileServiceUntil)) }, [mobileServiceUntil])
+  useEffect(() => { localStorage.setItem('street-life-mobile-auto-renew', String(mobileAutoRenew)) }, [mobileAutoRenew])
+  useEffect(() => { localStorage.setItem('street-life-mobile-renewed-day', String(mobileRenewedDay)) }, [mobileRenewedDay])
+  useEffect(() => {
+    if (!mobileAutoRenew || mobileRenewedDay >= game.day) return
+    setMobileRenewedDay(game.day)
+    if (game.money < 1) {
+      setMobileServiceUntil(Math.min(mobileServiceUntil, (game.day - 1) * 1440))
+      setMessage('Mobile service auto-renewal failed: you need 1 zł.')
+      return
+    }
+    setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
+    setMobileServiceUntil(game.day * 1440)
+    setMessage('Mobile service auto-renewed for today. Cost: 1 zł.')
+  }, [game.day, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
   useEffect(() => { if (!mobileServiceActive) { setMusicOn(false); setNavigationOn(false) } }, [mobileServiceActive])
   useEffect(() => { localStorage.setItem('street-life-storage-v1', JSON.stringify(storage)) }, [storage])
   useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
@@ -1064,7 +1080,11 @@ export default function App() {
     localStorage.removeItem('street-life-situation-v1')
     localStorage.removeItem('street-life-sleep-v1')
     setMobileServiceUntil(0)
+    setMobileAutoRenew(true)
+    setMobileRenewedDay(0)
     localStorage.removeItem('street-life-mobile-service-until')
+    localStorage.removeItem('street-life-mobile-auto-renew')
+    localStorage.removeItem('street-life-mobile-renewed-day')
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
@@ -1087,12 +1107,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-30</div>
+        <div className="trash-build">Build 2026.10.06-31</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-30</div>
+    <div className="build-badge">v2026.10.06-31</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1279,6 +1299,7 @@ export default function App() {
       <div className="phone-panel">
         <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
+        <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Pay 1 zł automatically at the start of each game day</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
         <div className="phone-actions">
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
