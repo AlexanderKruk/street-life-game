@@ -349,7 +349,7 @@ export default function App() {
 
   function sleep(hours: number, kind: 'ground' | 'bench' | 'shelter' | 'residential') {
     if (activeEvent || sleeping || hours < 1 || hours > 10) return
-    if (kind === 'bench' && (!streetBenchFound || current.id !== 'street')) return
+    if (kind === 'bench' && current.id !== 'station' && (!streetBenchFound || current.id !== 'street')) return
     if (kind === 'ground' && current.id !== 'street') return
     if (kind === 'shelter' && current.id !== 'shelter') return
     if (kind === 'residential' && current.id !== 'residential-shelter') return
@@ -613,6 +613,7 @@ export default function App() {
     }
 
     if (actionId === 'street-sleep') { sleep(sleepHours, 'ground'); return }
+    if (actionId === 'station-sleep') { sleep(sleepHours, 'bench'); return }
     if (actionId === 'shelter-rest') { sleep(sleepHours, 'shelter'); return }
     if (actionId === 'residential-sleep') { sleep(sleepHours, 'residential'); return }
 
@@ -641,6 +642,10 @@ export default function App() {
     if (actionId === 'daycenter-charge') {
       setInventory((prev) => ({ ...prev, phoneBattery: 100 }))
       setMessage('You wait indoors while your phone charges to 100%.')
+    }
+    if (actionId === 'station-charge') {
+      setInventory((prev) => ({ ...prev, phoneBattery: Math.min(100, prev.phoneBattery + 60) }))
+      setMessage('You spend an hour charging your phone at the station.')
     }
     if (actionId === 'daycenter-doctor') {
       setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
@@ -916,7 +921,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-08</div>
+        <div className="trash-build">Build 2026.10.06-09</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
