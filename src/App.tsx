@@ -279,7 +279,11 @@ export default function App() {
           (cold ? 0.012 : 0)
         const health = Math.max(0, next.health - healthDamage)
         const movementDrain = (trip?.mode === 'walk' ? 0.01 : 0) * healthEnergyMultiplier(health)
-        const hygiene = Math.max(0, next.hygiene - (trip?.mode === 'walk' ? 0.012 : 0))
+        const currentTemperature = temperatureAt(currentWeather.temp, prev.minutes)
+        const walkingHygieneDrain = trip?.mode === 'walk'
+          ? currentTemperature >= 25 ? 0.05 : currentTemperature >= 18 ? 0.033 : 0.025
+          : 0
+        const hygiene = Math.max(0, next.hygiene - walkingHygieneDrain)
         return {
           ...next,
           hunger,
@@ -1070,12 +1074,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-27</div>
+        <div className="trash-build">Build 2026.10.06-28</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-27</div>
+    <div className="build-badge">v2026.10.06-28</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
