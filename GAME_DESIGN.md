@@ -416,3 +416,7 @@ The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/
 The city map includes a **Hospital**. Regular medical care is open 08:00–18:00 and requires the character to physically carry their documents. A regular visit takes about 90 minutes, removes the current Cold effect, and brings Health up to at least 65 rather than acting as an unlimited heal button.
 
 **Emergency care** is available regardless of documents but only when Health is **20 or lower**. It consumes a random 4–8 game hours, costs Energy/Mood, and only stabilizes Health to **35**. Its purpose is to prevent a critical character from becoming trapped or dying solely because their documents are missing; it is intentionally worse than planned medical care.
+
+
+### Calling an ambulance
+Emergency treatment is **not an action at the Hospital location**. The player calls an ambulance from the Phone use panel alongside Navigation, Music and Video. The option is enabled only at Health ≤20 and requires a functioning phone with some battery. Calling consumes a small amount of phone battery, transports the character directly to Hospital, advances 4–8 hours and stabilizes Health to 35. Documents are not required. The Hospital location itself is for regular documented care.
