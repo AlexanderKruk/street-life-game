@@ -512,8 +512,10 @@ export default function App() {
     const dx = centerX - 50
     const dy = centerY - 50
     const distanceFromCenter = Math.sqrt(dx * dx + dy * dy)
-    const cleared = distanceFromCenter > 34
-    const outside = distanceFromCenter > 43
+    const cleared = distanceFromCenter > 30
+    // Crossing into the visible rim is enough to discard ordinary rubbish.
+    // This avoids fighting the circular overflow clipping on touch screens.
+    const outside = distanceFromCenter > 36
     setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
       ...item,
       x: nextX,
@@ -900,6 +902,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
+        <div className="trash-build">Build 2026.10.06-01</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
