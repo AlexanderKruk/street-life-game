@@ -32,7 +32,7 @@ type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
-type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean }
+type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
@@ -488,8 +488,8 @@ export default function App() {
   function startTrashDrag(id: number, clientX: number, clientY: number, bounds: DOMRect) {
     const item = trashGame?.items.find((entry) => entry.id === id)
     if (!item || item.collected || !trashGame) return false
-    const topLayer = trashGame.items.reduce((max, entry) => entry.collected ? max : Math.max(max, entry.layer), -1)
-    if (item.layer !== topLayer) return false
+    const topLayer = trashGame.items.reduce((max, entry) => entry.collected || entry.cleared ? max : Math.max(max, entry.layer), -1)
+    if (!item.cleared && item.layer !== topLayer) return false
     const pointerX = ((clientX - bounds.left) / bounds.width) * 100
     const pointerY = ((clientY - bounds.top) / bounds.height) * 100
     trashDrag.current = { id, offsetX: pointerX - item.x, offsetY: pointerY - item.y, moved: false }
@@ -504,7 +504,10 @@ export default function App() {
     const nextX = Math.max(-8, Math.min(88, pointerX - drag.offsetX))
     const nextY = Math.max(-8, Math.min(88, pointerY - drag.offsetY))
     drag.moved = true
-    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? { ...item, x: nextX, y: nextY } : item) } : null)
+    const centerX = nextX + 9
+    const centerY = nextY + 9
+    const cleared = centerX < 22 || centerX > 78 || centerY < 22 || centerY > 78
+    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? { ...item, x: nextX, y: nextY, cleared: item.cleared || cleared } : item) } : null)
   }
 
   function collectTrashBottle(id: number) {
