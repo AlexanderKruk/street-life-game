@@ -638,6 +638,10 @@ export default function App() {
     const action = actions.find((x) => x.id === actionId)
     if (!action || activeEvent) return
     if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
+    if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && actionId !== 'shelter-rest') {
+      setMessage('Quiet hours are 22:00–06:00. Only sleeping is allowed right now.')
+      return
+    }
     if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
     if (current.id === 'daycenter' && actionId.startsWith('daycenter-')) {
       const hour = game.minutes / 60
@@ -1064,7 +1068,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-16</div>
+        <div className="trash-build">Build 2026.10.06-17</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
