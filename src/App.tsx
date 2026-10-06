@@ -131,7 +131,7 @@ function Stat({ label, value, icon, compact = false }: { label: string; value: n
 function overallStatus(game: GameState) {
   const values = [game.hunger, game.thirst, game.energy, game.health, game.hygiene, game.mood]
   const lowest = Math.min(...values)
-  if (lowest <= 30) return { label: 'BAD', icon: '😣', level: 'bad' }
+  if (lowest <= 30) return { label: 'BAD', icon: '☹️', level: 'bad' }
   if (lowest <= 60) return { label: 'FAIR', icon: '😐', level: 'fair' }
   return { label: 'OK', icon: '🙂', level: 'ok' }
 }
@@ -1068,12 +1068,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-21</div>
+        <div className="trash-build">Build 2026.10.06-22</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-21</div>
+    <div className="build-badge">v2026.10.06-22</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
