@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-06 · through commit `b1089a5` (shelter quiet hours). Future updates should advance this marker to the latest gameplay commit included in this document.
+**Last gameplay sync:** 2026-10-06 · through commit `a7661fb` (walking cost shifted from Energy to Food/Thirst). Current visible build: `v2026.10.06-26`. Future updates should advance this marker to the latest gameplay commit included in this document.
 
 ## Core loop and save
 
@@ -38,7 +38,7 @@ Six needs are tracked from 0 to 100:
 Normal elapsed-time decay in `applyAction`:
 - Food loses 1 point per 14.4 game minutes: roughly 100 points per 24 hours.
 - Thirst loses 1 point per 10.8 minutes: roughly 100 points per 18 hours.
-- Energy normally loses 1 point per 9.6 minutes: roughly 100 points per 16 hours, before Health/weather/walking/cold modifiers.
+- Energy normally loses 1 point per 9.6 minutes: roughly 100 points per 16 hours of wakefulness, before Health/weather/cold modifiers. Walking now adds only a small extra Energy cost; its main physical cost is Food and Thirst.
 - Hygiene loses 1 point per 43.2 minutes: roughly 100 points per 3 days.
 - Mood does not have a generic base decay; particular effects/actions/events change it.
 
@@ -73,7 +73,7 @@ Low Health also increases Energy consumption:
 - Health 20–39: x1.30.
 - Health below 20: x1.60.
 
-Walking's extra Energy cost is also multiplied by the Health multiplier.
+Walking's small extra Energy cost is also multiplied by the Health multiplier. The design intent is that sustained walking makes the player hungry and thirsty much faster than it makes them sleepy.
 
 At Health 0 the run ends and a Run Over screen is shown. Starting a new run resets the save.
 
@@ -119,9 +119,12 @@ Public transport normally costs 4.40 zł. The Free transport effect reduces the 
 
 The player can also choose **Ride without ticket** for 0 zł. This uses the same transit travel time but first makes a visible **Reflex DC 12** D20 check. Success means a free ride; failure currently applies a 20 zł penalty and -8 Mood; natural 20 gives a small Mood bonus, while natural 1 applies a 35 zł penalty and -12 Mood.
 
-Walking adds:
-- Thirst drain: 0.04/min.
-- Energy drain: 0.12/min, multiplied by the current Health energy multiplier.
+Walking adds on top of normal elapsed-time decay:
+- Food drain: 0.055/min (about 3.3 extra points/hour).
+- Thirst drain: 0.04/min (about 2.4 extra points/hour).
+- Energy drain: 0.01/min (about 0.6 extra points/hour), multiplied by the current Health energy multiplier.
+
+At normal Health this means roughly 1 hour of ordinary activity costs 4.2 Food, 5.6 Thirst and 6.25 Energy, while 1 hour of walking costs about 7.5 Food, 8.0 Thirst and 6.85 Energy. Travel and sleep are mutually exclusive: sleep cannot be started while a trip is in progress.
 
 Travel has its own progress screen. A travel street-event roll occurs when travel begins:
 - Walking: 30% chance to attempt to spawn an eligible event.
@@ -455,4 +458,4 @@ Phone data/service is a recurring survival expense: **1 zł buys 24 game hours**
 
 
 ### Sleep in real time
-Sleep is a blocking game state rather than an instant time skip. The selected 1–10 game hours advance at the normal clock rate (**1 real second = 1 game minute**). A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. There is no manual Wake Up action: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Wake events are resolved after the sleep period.
+Sleep is a blocking game state rather than an instant time skip. The selected 1–10 game hours advance at the normal clock rate (**1 real second = 1 game minute**). A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. There is no manual Wake Up action: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Wake events are resolved after the sleep period. Eight hours of safe indoor sleep (Night shelter or Schronisko) restores up to 100 Energy; ground and bench sleep remain deliberately less restorative. Sleep cannot start during travel.
