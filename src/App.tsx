@@ -54,6 +54,7 @@ const STACK_SIZE = 4
 const CIGARETTE_STACK_SIZE = 20
 const BOTTLE_STACK_SIZE = 8
 const BOTTLE_DEPOSIT = 0.5
+const DEBUG_SLEEP_SPEED = 10
 const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
   cold: { icon: '🤒', name: 'Cold', kind: 'negative', impacts: ['Energy −−', 'Mood −'] },
   'free-transit': { icon: '🎫', name: 'Free transport', kind: 'positive', impacts: ['Travel +++'] },
@@ -274,7 +275,7 @@ export default function App() {
     setNavigationOn(false)
     setTrip(null)
     if (safeKind === 'ground' && current.id !== 'street') setGame((prev) => ({ ...prev, locationId: 'street' }))
-    setSleeping({ kind: safeKind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + hours * 60 * 1000, forced: true })
+    setSleeping({ kind: safeKind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (hours * 60 * 1000) / DEBUG_SLEEP_SPEED, forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
   }, [game.energy, sleeping, gameOver, activeEvent, trip, current.id, open, game.intoxication])
 
@@ -282,7 +283,7 @@ export default function App() {
     const timer = window.setInterval(() => {
       if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || gameOver) return
       if (sleeping) {
-        const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor((Date.now() - sleeping.realStartedAt) / 1000)))
+        const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
         const targetAbsolute = sleeping.startAbsolute + elapsed
         setGame((prev) => {
           const delta = Math.max(0, targetAbsolute - absoluteMinutes(prev))
@@ -417,7 +418,7 @@ export default function App() {
     setMusicOn(false)
     setNavigationOn(false)
     const realStartedAt = Date.now()
-    setSleeping({ kind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + hours * 60 * 1000 })
+    setSleeping({ kind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (hours * 60 * 1000) / DEBUG_SLEEP_SPEED })
     setMessage('You are sleeping.')
   }
 
@@ -1133,12 +1134,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-41</div>
+        <div className="trash-build">Build 2026.10.06-42</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-41</div>
+    <div className="build-badge">v2026.10.06-42</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
