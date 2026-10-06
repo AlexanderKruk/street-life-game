@@ -23,7 +23,7 @@ function temperatureAt(base: number, minutes: number) {
   return Math.round(base + dailySwing * 4)
 }
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
-type TravelMode = 'walk' | 'transit'
+type TravelMode = 'walk' | 'transit' | 'fare-dodge'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
 type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean }
 type Inventory = { water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
@@ -155,7 +155,7 @@ export default function App() {
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
-  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id'] } | null>(null)
+  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(null)
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
       const raw = localStorage.getItem('street-life-inventory-v1')
@@ -597,6 +597,22 @@ export default function App() {
     sleep(sleepHours, 'bench')
   }
 
+  function attemptFareDodge() {
+    const destination = locations.find((x) => x.id === selectedDestination)
+    if (!destination) return
+    const choice: StreetEventChoice = {
+      label: 'Ride without a ticket · Reflex DC 12',
+      check: {
+        stat: 'reflex', dc: 12,
+        success: { message: 'No ticket inspection this time. You ride for free.' },
+        failure: { money: -20, mood: -8, message: 'A ticket inspector catches you. You receive a 20 zł penalty.' },
+        criticalSuccess: { mood: 2, message: 'You avoid inspection completely and ride for free.' },
+        criticalFailure: { money: -35, mood: -12, message: 'Bad luck: inspectors catch you immediately. The penalty is 35 zł.' },
+      },
+    }
+    setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, fareDodgeDestinationId: destination.id })
+  }
+
   function startTravel(mode: TravelMode) {
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
@@ -794,6 +810,16 @@ export default function App() {
         ? check.criticalFailure
         : success ? check.success : check.failure
     applyEventOutcome(outcome)
+    if (diceCheck.fareDodgeDestinationId) {
+      const destination = locations.find((entry) => entry.id === diceCheck.fareDodgeDestinationId)
+      if (destination) {
+        const total = Math.ceil(destination.travelMinutes * 0.5)
+        setStreetBenchFound(false)
+        setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total })
+        setSelectedDestination(null)
+        setScreen('travel')
+      }
+    }
     if (diceCheck.stealItemId && success) {
       const item = SHOP_ITEMS.find((entry) => entry.id === diceCheck.stealItemId)
       if (item) setInventory((prev) => item.id === 'food'
@@ -1018,7 +1044,7 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-14</div>
+        <div className="trash-build">Build 2026.10.06-15</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
@@ -1162,7 +1188,7 @@ export default function App() {
     {selectedDestination && screen === 'map' && (() => {
       const destination = locations.find((x) => x.id === selectedDestination)
       if (!destination) return null
-      const transitMinutes = Math.max(4, Math.ceil(destination.travelMinutes * 0.35))
+      const transitMinutes = Math.ceil(destination.travelMinutes * 0.5)
       return <div className="travel-sheet">
         <button className="sheet-close" onClick={() => setSelectedDestination(null)}>×</button>
         <p className="eyebrow">TRAVEL TO</p>
@@ -1173,6 +1199,10 @@ export default function App() {
         <button className="travel-option" onClick={() => startTravel('transit')} disabled={!effects.some((effect) => effect.id === 'free-transit') && game.money < 4.4}>
           <span>🚌</span><div><strong>Public transport</strong><small>{transitMinutes} min · {effects.some((effect) => effect.id === 'free-transit') ? 'FREE' : '4.40 zł'} · less energy</small></div>
         </button>
+        <button className="travel-option" onClick={attemptFareDodge}>
+          <span>🎲</span><div><strong>Ride without ticket</strong><small>{transitMinutes} min · FREE · Reflex DC 12 · risk of fine</small></div>
+        </button>
+
       </div>
     })()}
 
