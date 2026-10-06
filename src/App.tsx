@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { actions, applyAction, applySleepTime, energyCap, formatTime, healthEnergyMultiplier, initialState, isOpen, locations, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 
