@@ -1116,12 +1116,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-34</div>
+        <div className="trash-build">Build 2026.10.06-35</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-34</div>
+    <div className="build-badge">v2026.10.06-35</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1295,9 +1295,9 @@ export default function App() {
           const stackCount = Math.min(BOTTLE_STACK_SIZE, inventory.bottles - stackIndex * BOTTLE_STACK_SIZE)
           return <div className="inventory-item" key={`bottle-stack-${stackIndex}`}><span className="item-icon">♻️</span><div><strong>Returnable bottles</strong><small>×{stackCount} / {BOTTLE_STACK_SIZE} · 0.50 zł each</small></div></div>
         })}
-        <button className="inventory-item usable" onClick={smokeCigarette} disabled={inventory.cigarettes <= 0}>
-          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>{inventory.cigarettes > 0 ? `×${inventory.cigarettes} · tap to smoke` : 'Empty'}</small></div>
-        </button>
+        {inventory.cigarettes > 0 && <button className="inventory-item usable" onClick={smokeCigarette}>
+          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>×{inventory.cigarettes} · tap to smoke</small></div>
+        </button>}
         <button className="inventory-item usable" onClick={useMedicine} disabled={inventory.medicines <= 0}>
           <span className="item-icon">💊</span><div><strong>Medicine</strong><small>{inventory.medicines > 0 ? `×${inventory.medicines} · treats Cold` : 'Empty'}</small></div>
         </button>
