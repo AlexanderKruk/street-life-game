@@ -428,3 +428,8 @@ button.inventory-item { width:100%; }
 
 
 .build-badge { position:fixed; top:max(8px, env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:1000; padding:4px 9px; border:1px solid rgba(255,255,255,.14); border-radius:999px; background:rgba(11,14,18,.78); color:#8f9aa6; font-size:11px; font-weight:700; letter-spacing:.04em; line-height:1; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); pointer-events:none; }
+
+/* Current location is informational, not an action card. */
+.location-summary { min-height:auto; padding:10px 2px 12px; border:0; border-radius:0; background:transparent; gap:12px; }
+.location-summary .location-icon { font-size:38px; }
+.location-summary h2 { font-size:22px; margin-bottom:3px; }
