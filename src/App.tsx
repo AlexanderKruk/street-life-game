@@ -162,6 +162,7 @@ export default function App() {
   })
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number } | null>(null)
+  const [trashSummary, setTrashSummary] = useState<{ minutes: number; found: number; rejected: number } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
@@ -597,9 +598,18 @@ export default function App() {
     const minutes = Math.min(60, Math.max(10, Math.ceil(realSeconds / 5) * 5))
     const { found, rejected } = trashGame
     setGame((prev) => applyAction(prev, { minutes, energy: -Math.max(1, minutes / 15), hygiene: -Math.max(2, minutes / 5), mood: found > 0 ? 1 : -2 }))
+    setTrashSummary({ minutes, found, rejected })
     setTrashGame(null)
     setMessage(found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable bottle${found === 1 ? '' : 's'}.` : rejected > 0 ? `You searched for ${minutes} minutes. The bottles you found were not returnable.` : `You searched for ${minutes} minutes and found nothing useful.`)
   }
+
+  useEffect(() => {
+    if (!trashGame) return
+    const timer = window.setInterval(() => {
+      if (Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
+    }, 250)
+    return () => window.clearInterval(timer)
+  }, [trashGame])
 
   function returnBottles() {
     if (!open || current.id !== 'shop' || inventory.bottles <= 0) return
@@ -1100,6 +1110,14 @@ export default function App() {
     <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
 
   return <main className="shell">
+    {trashSummary && <div className="trash-overlay">
+      <section className="trash-card">
+        <p className="eyebrow">SEARCH COMPLETE</p>
+        <h2>Trash search results</h2>
+        <div className="trash-result"><span>⏱️ Time: {trashSummary.minutes} min</span><span>♻️ Kept: {trashSummary.found}</span><span>🚫 Rejected: {trashSummary.rejected}</span></div>
+        <button className="trash-stop" onClick={() => setTrashSummary(null)}>Continue</button>
+      </section>
+    </div>}
     {trashGame && <div className="trash-overlay">
       <section className="trash-card">
         <div className="trash-head"><div><p className="eyebrow">SEARCHING TRASH</p><h2>Dig for bottles</h2></div><div><strong>♻️ {trashGame.found}</strong><small> kept</small></div></div>
@@ -1116,12 +1134,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-37</div>
+        <div className="trash-build">Build 2026.10.06-38</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-37</div>
+    <div className="build-badge">v2026.10.06-38</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
