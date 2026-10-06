@@ -16,6 +16,14 @@ function weekday(day: number) {
   return WEEKDAYS[(day - 1) % WEEKDAYS.length]
 }
 
+function formatTravelTime(minutes: number) {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours === 0) return `${mins}m`
+  if (mins === 0) return `${hours}h`
+  return `${hours}h ${mins}m`
+}
+
 function temperatureAt(base: number, minutes: number) {
   const hour = minutes / 60
   // Coldest around 05:00, warmest around 15:00.
@@ -1107,12 +1115,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-32</div>
+        <div className="trash-build">Build 2026.10.06-33</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-32</div>
+    <div className="build-badge">v2026.10.06-33</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1228,7 +1236,7 @@ export default function App() {
           return <button key={location.id} className={here ? 'map-pin here' : 'map-pin'} style={pos} onClick={() => chooseDestination(location.id)}>
             <span className="pin-icon">{location.icon}</span>
             <strong>{location.name}</strong>
-            <small>{here ? 'You are here' : `${location.travelMinutes} min · ${locationOpen ? 'open' : 'closed'}`}</small>
+            <small>{here ? 'You are here' : `${locationOpen ? 'open' : 'closed'}`}</small>
           </button>
         })}
       </section>
@@ -1244,7 +1252,7 @@ export default function App() {
         <h2>{current.name} → {destination?.name}</h2>
         <p>{trip.mode === 'walk' ? 'Walking costs more energy and a little extra water.' : 'Public transport is faster and saves your energy.'}</p>
         <div className="travel-progress"><i style={{ width: `${progress}%` }} /></div>
-        <strong>{trip.remaining} min remaining</strong>
+        <strong>{formatTravelTime(trip.remaining)} remaining</strong>
         <small>{trip.remaining} real seconds</small>
       </section>
     })()}
@@ -1258,13 +1266,13 @@ export default function App() {
         <p className="eyebrow">TRAVEL TO</p>
         <h2>{destination.icon} {destination.name}</h2>
         <button className="travel-option" onClick={() => startTravel('walk')}>
-          <span>🚶</span><div><strong>Walk</strong><small>{destination.travelMinutes} min · free · more energy</small></div>
+          <span>🚶</span><div><strong>Walk</strong><small>{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
         <button className="travel-option" onClick={() => startTravel('transit')} disabled={!effects.some((effect) => effect.id === 'free-transit') && game.money < 4.4}>
-          <span>🚌</span><div><strong>Public transport</strong><small>{transitMinutes} min · {effects.some((effect) => effect.id === 'free-transit') ? 'FREE' : '4.40 zł'} · less energy</small></div>
+          <span>🚌</span><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {effects.some((effect) => effect.id === 'free-transit') ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
         </button>
         <button className="travel-option" onClick={attemptFareDodge}>
-          <span>🥷</span><div><strong>Ride without ticket</strong><small>{transitMinutes} min · free</small><small>Risk: 20–35 zł fine</small></div>
+          <span>🥷</span><div><strong>Ride without ticket</strong><small>{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
         </button>
 
       </div>
