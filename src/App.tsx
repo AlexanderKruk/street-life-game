@@ -32,6 +32,7 @@ type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
+type TrashItem = { id: number; icon: string; x: number; y: number; rotation: number; bottle: boolean; returnable: boolean; collected?: boolean; moved?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None' }
 const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 6, medicines: 2, transitCard: true }
@@ -149,6 +150,7 @@ export default function App() {
     try { const raw = localStorage.getItem('street-life-sleep-v1'); return raw ? JSON.parse(raw) : null } catch { return null }
   })
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
+  const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean } | null>(null)
@@ -450,20 +452,60 @@ export default function App() {
   }
 
   function searchStreetBottles() {
-    if (activeEvent || current.id !== 'street') return
-    const found = Math.floor(Math.random() * 7)
-    const returnable = Array.from({ length: found }, () => Math.random() < 0.65).filter(Boolean).length
+    if (activeEvent || current.id !== 'street' || trashGame) return
+    const clutter = ['📰','🥤','📦','🍌','🥫','🧻','🛍️','🍕','🧤','🥡','🧃','🗞️']
+    const count = 16
+    const bottleCount = Math.floor(Math.random() * 6)
+    const bottleIndexes = new Set<number>()
+    while (bottleIndexes.size < bottleCount) bottleIndexes.add(Math.floor(Math.random() * count))
+    const items: TrashItem[] = Array.from({ length: count }, (_, id) => {
+      const bottle = bottleIndexes.has(id)
+      return {
+        id,
+        icon: bottle ? (Math.random() < .5 ? '🍾' : '🧴') : clutter[Math.floor(Math.random() * clutter.length)],
+        x: 8 + Math.random() * 70,
+        y: 15 + Math.random() * 58,
+        rotation: -35 + Math.random() * 70,
+        bottle,
+        returnable: bottle && Math.random() < .65,
+      }
+    })
+    setTrashGame({ items, startedAt: Date.now(), found: 0, rejected: 0 })
+  }
+
+  function moveTrashItem(id: number, clientX: number, clientY: number, bounds: DOMRect) {
+    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
+      ...item,
+      moved: true,
+      x: Math.max(0, Math.min(88, ((clientX - bounds.left) / bounds.width) * 100 - 6)),
+      y: Math.max(5, Math.min(82, ((clientY - bounds.top) / bounds.height) * 100 - 6)),
+    } : item) } : null)
+  }
+
+  function collectTrashBottle(id: number) {
+    if (!trashGame) return
+    const item = trashGame.items.find((entry) => entry.id === id)
+    if (!item || !item.bottle || item.collected) return
+    if (!item.returnable) {
+      setTrashGame((active) => active ? { ...active, rejected: active.rejected + 1, items: active.items.map((entry) => entry.id === id ? { ...entry, collected: true } : entry) } : null)
+      return
+    }
     const currentBottleSlots = inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0
     const otherSlots = backpackSlots(inventory) - currentBottleSlots
     const bottleCapacity = Math.max(0, BACKPACK_CAPACITY - otherSlots) * BOTTLE_STACK_SIZE
-    const collected = Math.min(returnable, Math.max(0, bottleCapacity - inventory.bottles))
-    setGame((prev) => applyAction(prev, { minutes: 45, energy: -4, hygiene: -10, mood: collected > 0 ? 1 : -3 }))
-    if (collected > 0) setInventory((prev) => ({ ...prev, bottles: prev.bottles + collected }))
-    if (found === 0) setMessage('You searched the bins but found no bottles.')
-    else if (returnable === 0) setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}, but none can be returned for a deposit.`)
-    else if (collected === 0) setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}; ${returnable} were returnable, but your backpack has no room.`)
-    else if (collected < returnable) setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}; ${returnable} were returnable, but you could only carry ${collected}.`)
-    else setMessage(`You found ${found} bottle${found === 1 ? '' : 's'}; ${returnable} can be returned. You keep those.`)
+    if (inventory.bottles >= bottleCapacity) { setMessage('Your backpack has no room for another bottle.'); return }
+    setInventory((prev) => ({ ...prev, bottles: prev.bottles + 1 }))
+    setTrashGame((active) => active ? { ...active, found: active.found + 1, items: active.items.map((entry) => entry.id === id ? { ...entry, collected: true } : entry) } : null)
+  }
+
+  function finishTrashSearch() {
+    if (!trashGame) return
+    const realSeconds = Math.max(5, Math.floor((Date.now() - trashGame.startedAt) / 1000))
+    const minutes = Math.min(60, Math.max(10, Math.ceil(realSeconds / 5) * 5))
+    const { found, rejected } = trashGame
+    setGame((prev) => applyAction(prev, { minutes, energy: -Math.max(1, minutes / 15), hygiene: -Math.max(2, minutes / 5), mood: found > 0 ? 1 : -2 }))
+    setTrashGame(null)
+    setMessage(found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable bottle${found === 1 ? '' : 's'}.` : rejected > 0 ? `You searched for ${minutes} minutes. The bottles you found were not returnable.` : `You searched for ${minutes} minutes and found nothing useful.`)
   }
 
   function returnBottles() {
@@ -801,6 +843,27 @@ export default function App() {
     <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
 
   return <main className="shell">
+    {trashGame && <div className="trash-overlay">
+      <section className="trash-card">
+        <div className="trash-head"><div><p className="eyebrow">SEARCHING TRASH</p><h2>Dig for bottles</h2></div><div><strong>♻️ {trashGame.found}</strong><small> kept</small></div></div>
+        <p className="trash-tip">Drag rubbish aside. Tap a bottle to check whether it can be returned.</p>
+        <div className="trash-bin">
+          <div className="trash-bin-rim">BIN</div>
+          {trashGame.items.map((item, index) => !item.collected && <button
+            key={item.id}
+            className={item.bottle ? 'trash-piece bottle-piece' : 'trash-piece'}
+            style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `rotate(${item.rotation}deg)`, zIndex: index + 2 }}
+            onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId) }}
+            onPointerMove={(e) => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; moveTrashItem(item.id, e.clientX, e.clientY, e.currentTarget.parentElement!.getBoundingClientRect()) }}
+            onPointerUp={(e) => { e.currentTarget.releasePointerCapture(e.pointerId); if (item.bottle && !item.moved) collectTrashBottle(item.id) }}
+            onClick={() => item.bottle && collectTrashBottle(item.id)}
+          >{item.icon}</button>)}
+        </div>
+        <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
+        <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
+      </section>
+    </div>}
+
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
       <div className="header-info">
@@ -868,7 +931,7 @@ export default function App() {
           </>}
           {current.id === 'street' && <>
             <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
-            <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search bins for bottles</strong><small>Look for returnable bottles. They take backpack space and can be returned at the shop.</small></div><span>~45 min</span></button>
+            <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>MINIGAME</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span onClick={(e) => e.stopPropagation()}><select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></span></button>}
