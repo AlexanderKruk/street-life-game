@@ -416,3 +416,7 @@ button.inventory-item { width:100%; }
 .trash-bin-rim{top:8px;z-index:90;pointer-events:none}
 .trash-piece{width:76px;height:76px;font-size:58px;filter:drop-shadow(0 8px 5px rgba(0,0,0,.5));z-index:auto}
 .bottle-piece{font-size:62px}
+
+/* Six deep trash layers: a few oversized objects cover most of the opening */
+.trash-piece{width:112px;height:112px;font-size:86px}
+.bottle-piece{font-size:90px}
