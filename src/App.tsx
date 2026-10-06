@@ -219,6 +219,14 @@ export default function App() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || gameOver) return
+      if (sleeping) {
+        const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor((Date.now() - sleeping.realStartedAt) / 1000)))
+        const targetAbsolute = sleeping.startAbsolute + elapsed
+        setGame((prev) => {
+          const delta = Math.max(0, targetAbsolute - absoluteMinutes(prev))
+          return delta > 0 ? applyAction(prev, { minutes: delta }) : prev
+        })
+      }
       if (sleeping && document.visibilityState !== 'visible') return
       setGame((prev) => {
         const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
