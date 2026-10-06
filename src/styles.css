@@ -409,3 +409,10 @@ button.inventory-item { width:100%; }
 .bottle-piece{font-size:45px}
 .trash-result{display:flex;justify-content:space-between;font-size:13px;padding:10px 2px 8px}
 .trash-stop{width:100%;min-height:48px;border-radius:14px;font-weight:800}
+
+/* Top-down round bin: dense layered pile */
+.trash-bin{width:min(100%,430px);aspect-ratio:1/1;height:auto!important;margin:0 auto;border:14px solid #596168;border-radius:50%;background:radial-gradient(circle at 48% 42%,#24292d 0 48%,#15191c 72%,#090b0d 100%);box-shadow:inset 0 0 0 8px #30363b,inset 0 20px 35px rgba(255,255,255,.035),inset 0 -35px 55px rgba(0,0,0,.65);overflow:hidden}
+.trash-bin:after{inset:7%;border-radius:50%;background:radial-gradient(circle,transparent 0 45%,rgba(0,0,0,.13) 75%,rgba(0,0,0,.4) 100%);z-index:80}
+.trash-bin-rim{top:8px;z-index:90;pointer-events:none}
+.trash-piece{width:76px;height:76px;font-size:58px;filter:drop-shadow(0 8px 5px rgba(0,0,0,.5));z-index:auto}
+.bottle-piece{font-size:62px}
