@@ -156,6 +156,16 @@ export const actions: GameAction[] = [
     resolve: () => ({ minutes: 40, energy: 13, mood: 2, message: 'You rested for a while. Your legs feel a little better.' }),
   },
   {
+    id: 'station-charge', locationId: 'station', name: 'Charge phone',
+    description: 'Use a public power outlet for an hour.', minutes: 60, requiresOpen: false,
+    resolve: () => ({ minutes: 60, energy: 5, mood: 1, message: 'You spend an hour near a power outlet at the station.' }),
+  },
+  {
+    id: 'station-sleep', locationId: 'station', name: 'Try to sleep',
+    description: 'Try to get some sleep on a station bench. Risks will be added later.', minutes: 8 * 60, requiresOpen: false,
+    resolve: () => ({ minutes: 0, message: 'You try to sleep on a station bench.' }),
+  },
+  {
     id: 'shop-water', locationId: 'shop', name: 'Buy water',
     description: 'A bottle of water. Cheap and immediately useful.', minutes: 5, cost: 3,
     resolve: () => ({ minutes: 5, money: -3, thirst: 38, message: 'You drank a bottle of water. 3 zł spent.' }),
