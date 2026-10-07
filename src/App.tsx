@@ -3,6 +3,7 @@ import { actions, applyAction, applySleepTime, energyCap, formatTime, healthEner
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 
 const SAVE_KEY = 'street-life-save-v3'
+const DISCOVERY_KEY = 'street-life-discovered-v1'
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const WEATHER = [
   { icon: '☁️', label: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
@@ -148,6 +149,15 @@ function overallStatus(game: GameState) {
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('')
+  const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(DISCOVERY_KEY)
+      if (raw) return JSON.parse(raw)
+      return localStorage.getItem(SAVE_KEY) ? locations.map((location) => location.id) : ['street']
+    } catch {
+      return ['street']
+    }
+  })
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>(() => {
     const saved = localStorage.getItem('street-life-screen')
@@ -219,6 +229,7 @@ export default function App() {
   const usedStorageSlots = storageSlots(storage)
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
+  useEffect(() => { localStorage.setItem(DISCOVERY_KEY, JSON.stringify(discoveredLocations)) }, [discoveredLocations])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
   useEffect(() => {
     if (screen !== 'travel') localStorage.setItem('street-life-screen', screen)
@@ -1085,6 +1096,8 @@ export default function App() {
 
   function reset() {
     localStorage.removeItem(SAVE_KEY)
+    localStorage.removeItem(DISCOVERY_KEY)
+    setDiscoveredLocations(['street'])
     setGame(initialState)
     setMessage('New run started.')
     setScreen('location')
@@ -1112,6 +1125,12 @@ export default function App() {
     localStorage.removeItem('street-life-mobile-service-until')
     localStorage.removeItem('street-life-mobile-auto-renew')
     localStorage.removeItem('street-life-mobile-renewed-day')
+  }
+
+  function discoverLocation(id: string, label: string) {
+    setDiscoveredLocations((prev) => prev.includes(id) ? prev : [...prev, id])
+    setMessage(`${label} added to your map.`)
+    setScreen('map')
   }
 
   const nav = (target: Screen, icon: string, label: string) =>
@@ -1142,12 +1161,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-47</div>
+        <div className="trash-build">Build 2026.10.07-48</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-47</div>
+    <div className="build-badge">v2026.10.07-48</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1252,11 +1271,22 @@ export default function App() {
       </>}
     </>}
 
+    {screen === 'location' && current.id === 'street' && discoveredLocations.length === 1 && <section className="panel">
+      <p className="eyebrow">WHERE TO START?</p>
+      <h2>Figure out what is nearby</h2>
+      <p className="muted">You do not know the city yet. Pick a direction to investigate.</p>
+      <div className="actions">
+        <button className="action" onClick={() => discoverLocation('support', 'Help Center')}><div><strong>🏢 Look for a help center</strong><small>Find somewhere that may explain your options.</small></div></button>
+        <button className="action" onClick={() => discoverLocation('station', 'Station')}><div><strong>🚉 Find the station</strong><small>A public place where you may be able to wait.</small></div></button>
+        <button className="action" onClick={() => discoverLocation('shop', 'Discount shop')}><div><strong>🛒 Find a shop</strong><small>Locate somewhere to buy basic food and water.</small></div></button>
+      </div>
+    </section>}
+
     {screen === 'map' && <>
       <div className="section-title map-title"><h2>City map</h2><span>Tap a place to travel</span></div>
       <section className="city-map">
         <div className="road road-a" /><div className="road road-b" /><div className="road road-c" />
-        {locations.filter((location) => location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko').map((location) => {
+        {locations.filter((location) => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko')).map((location) => {
           const here = location.id === game.locationId
           const locationOpen = isOpen(location, game.minutes)
           const pos = mapPositions[location.id] ?? { left: '45%', top: '45%' }
