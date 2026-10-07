@@ -150,7 +150,7 @@ function overallStatus(game: GameState) {
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('')
-  const [infoModal, setInfoModal] = useState<{ title: string; text: string } | null>(null)
+  const [infoModal, setInfoModal] = useState<{ title: string; text: string; costs?: string[] } | null>(null)
   const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(DISCOVERY_KEY)
@@ -661,9 +661,9 @@ export default function App() {
     setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
     if (kind === 'shelter' && game.minutes >= 22 * 60) {
       setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
-      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.' })
+      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.', costs: ['⏱ 15 min', '🔋 −2%', '💰 0 zł'] })
     } else {
-      setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.` })
+      setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.`, costs: ['⏱ 15 min', '🔋 −2%', '💰 0 zł'] })
     }
   }
 
@@ -1173,6 +1173,7 @@ export default function App() {
         <p className="eyebrow">SEARCH RESULT</p>
         <h2>{infoModal.title}</h2>
         <p className="muted">{infoModal.text}</p>
+        {infoModal.costs?.length ? <div className="trash-result">{infoModal.costs.map((cost) => <span key={cost}>{cost}</span>)}</div> : null}
         <button className="trash-stop" onClick={() => setInfoModal(null)}>OK</button>
       </section>
     </div>}
@@ -1200,12 +1201,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-51</div>
+        <div className="trash-build">Build 2026.10.07-52</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-51</div>
+    <div className="build-badge">v2026.10.07-52</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
