@@ -1142,12 +1142,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-44</div>
+        <div className="trash-build">Build 2026.10.07-45</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-44</div>
+    <div className="build-badge">v2026.10.07-45</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1328,7 +1328,6 @@ export default function App() {
           <span className="item-icon">💊</span><div><strong>Medicine</strong><small>×{inventory.medicines} · treats Cold</small></div>
         </button>}
       </div>
-      <p className="inventory-note">Water, food and medicine stack up to {STACK_SIZE} per slot. Bottles stack up to {BOTTLE_STACK_SIZE}. Cigarettes stack up to {CIGARETTE_STACK_SIZE} per slot.</p>
 
       <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>These do not use backpack slots</small></div><span>FREE</span></div>
       {phoneOpen && <div className="phone-overlay" onClick={() => setPhoneOpen(false)}><div className="phone-modal" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setPhoneOpen(false)}>×</button><div className="phone-panel">
