@@ -285,11 +285,10 @@ export const actions: GameAction[] = [
     resolve: () => ({ minutes: 10, hygiene: 18, mood: 4, message: 'You collect your clean clothes.' }),
   },
   {
-    id: 'shelter-rest', locationId: 'shelter', name: 'Register / use your bed',
-    description: 'Register first for a 7-day place. With an active booking, arrive between 18:00 and 22:00.', minutes: 30,
-    resolve: (state) => Math.random() < .7
-      ? { minutes: 8 * 60, energy: 85, health: state.hunger > 20 && state.thirst > 20 ? 2 : 0, hygiene: 5, mood: 10, message: state.hunger > 20 && state.thirst > 20 ? 'You got a bed. Safe sleep restores a little health.' : 'You got a bed. You rest indoors, but hunger or dehydration prevents physical recovery.' }
-      : { minutes: 30, mood: -8, message: 'No beds left tonight. You waited in line for nothing.' },
+    id: 'shelter-rest', locationId: 'shelter', name: 'Registration / reserved bed',
+    description: 'First join the 20-minute registration queue from 19:00. With a reserved place, use your bed from 18:00 to 22:00.', minutes: 20,
+    // App owns the persisted queue and booking; this resolver cannot grant a bed.
+    resolve: () => ({ minutes: 0, message: 'A bed requires successful registration.' }),
   },
 ]
 

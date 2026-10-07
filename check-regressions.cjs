@@ -97,6 +97,33 @@ setup();for(let i=0;i<3;i++){click(/Ask passers-by for money/);ok();}assert(scre
 cleanup();render(React.createElement(App));assert(screen.getByRole('button',{name:/Ask passers-by for money/}).disabled);
 setup({day:2},{'street-life-begging-v1':{day:1,attempts:3}});assert(!screen.getByRole('button',{name:/Ask passers-by for money/}).disabled);click(/Ask passers-by for money/);assert.deepEqual(read('street-life-begging-v1'),{day:2,attempts:1});
 
+// Unregistered visitors only have registration, and must finish the full queue.
+const vacancyKey=(slots)=>({shelterVacancyDay:1,shelterVacancies:slots});
+setup({locationId:'shelter',minutes:1140},{[lifeKey]:vacancyKey(1)});
+assert.equal(document.querySelectorAll('.actions .action').length,1);assert(!screen.queryByRole('button',{name:/shower/i}));assert(!document.querySelector('.storage-panel'));assert(!screen.queryByLabelText('Sleep duration'));
+click(/Join registration queue/);assert(screen.getByRole('dialog',{name:'Shelter registration queue'}));assert(!read(lifeKey).shelterUntilDay);
+advance(19000);assert.equal(read(stateKey).minutes,1159);assert(!read(lifeKey).shelterUntilDay);assert.equal(read('street-life-shelter-queue-v1').remaining,1);
+advance(1000);assert.equal(read(stateKey).minutes,1160);assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterLastStayDay,1);assert(!localStorage.getItem('street-life-shelter-queue-v1'));assert(screen.getByRole('dialog').textContent.includes('20 min'));ok();assert(screen.getByRole('button',{name:/Ask for a shower/}));assert(document.querySelector('.storage-panel'));assert(screen.getByRole('button',{name:/Use your reserved bed/}));
+
+// No vacancies still costs twenty minutes; failed attempts cannot reroll today.
+setup({locationId:'shelter',minutes:1140},{[lifeKey]:vacancyKey(0)});click(/Join registration queue/);advance(20000);
+assert(!read(lifeKey).shelterUntilDay);assert(screen.getByRole('dialog').textContent.includes('no free places'));assert.equal(read(stateKey).minutes,1160);ok();assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
+cleanup();render(React.createElement(App));assert.equal(read(lifeKey).shelterVacancies,0);assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
+
+// Queue order reduces available places at later arrival times.
+for(const [slots,minute,accepted] of [[1,1140,true],[1,1170,false],[2,1170,true],[2,1200,false],[3,1200,true],[3,1230,false]]) {
+ setup({locationId:'shelter',minutes:minute},{[lifeKey]:vacancyKey(slots)});click(/Join registration queue/);advance(20000);assert.equal(!!read(lifeKey).shelterUntilDay,accepted);
+}
+
+// A reload keeps queue position, today's vacancies and remaining wait.
+setup({locationId:'shelter',minutes:1140},{[lifeKey]:vacancyKey(2)});click(/Join registration queue/);advance(7000);const queued=read('street-life-shelter-queue-v1');
+cleanup();Math.random=()=>0;render(React.createElement(App));assert.deepEqual(read('street-life-shelter-queue-v1'),queued);assert.equal(read(lifeKey).shelterVacancies,2);advance(12000);assert(!read(lifeKey).shelterUntilDay);advance(1000);assert.equal(read(lifeKey).shelterUntilDay,7);
+
+// Tomorrow permits a new attempt; before registration hours the queue is closed.
+setup({day:2,locationId:'shelter',minutes:1140},{[lifeKey]:{shelterRegistrationAttemptDay:1,shelterVacancyDay:2,shelterVacancies:1}});assert(!screen.getByRole('button',{name:/Join registration queue/}).disabled);
+setup({locationId:'shelter',minutes:1139});assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
+setup({locationId:'shelter',minutes:1320});assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
+
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
@@ -126,4 +153,4 @@ for(let block=1;block<=3;block++) {
 near(advanceTime(full,480,{sleeping:true}).energy,100);
 near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
 assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
-cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, sleep, exertion/weather and Well fed pacing.');
+cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues/vacancies/access/reload, sleep and exertion.');

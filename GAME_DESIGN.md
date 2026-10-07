@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-07 · awake Energy pacing update. Current visible build: `v2026.10.07-56`.
+**Last gameplay sync:** 2026-10-07 · night-shelter registration queue. Current visible build: `v2026.10.07-57`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -10,7 +10,7 @@ The rules below describe the implemented prototype, including its current test s
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot) and the daily begging allowance in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot) the daily begging allowance, daily night-shelter vacancies/registration attempt and an active registration queue in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
 
 Initial state:
 - Day 1, Monday, 08:00, Street.
@@ -148,7 +148,7 @@ On Street, three initial information actions are offered while their targets rem
 
 Each search requires active mobile service and at least 2% Battery, advances 15 game minutes, consumes 2 percentage points of Battery and saves the discovered address to the map. Its result window also shows the actual need changes caused by those 15 minutes.
 
-Searching for Night shelter at or after 22:00 (checked at the start of the search) says registration is closed tonight and creates a saved goal to be there **next game day at 19:00**. This guidance currently differs from the implemented 18:00 opening/check-in rule.
+Searching for Night shelter at or after 22:00 (checked at the start of the search) says registration is closed tonight and creates a saved goal to be there **next game day at 19:00**. First registration starts at 19:00; reserved-place check-in starts at 18:00.
 
 Schronisko also requires a referral or current Schronisko housing. Issuing the referral adds its address to discovery; older saves with a referral/housing but missing discovery are repaired on load. Discovery is persistent and resets on a new run. See limitations for services without a connected discovery route.
 
@@ -269,7 +269,7 @@ Street has its own small survival loop. Its economy is deliberately capped aroun
 
 ## Variable sleep duration
 
-Sleep duration is player-controlled from **1 to 10 hours** in one-hour steps for ground sleep, bench sleep, Night shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Wake-event chance scales with duration; the separate Cold chance currently does not. Night shelter uses the registration/reserved-place rules above, not a random bed-availability check.
+Sleep duration is player-controlled from **1 to 10 hours** in one-hour steps for ground sleep, bench sleep, Night shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Wake-event chance scales with duration; the separate Cold chance currently does not. Night shelter beds require successful queue registration and an active reserved place; existing bookings skip the registration queue.
 
 | Sleep place | Raw recovery/penalties at 8 hours |
 | --- | --- |
@@ -286,7 +286,7 @@ Outdoor sleep independently rolls for a two-day Cold effect at waking. Chance is
 
 Sleep is a blocking game state rather than an instant time skip. In the current test build, the selected 1–10 game hours advance at **10 game minutes per real second** (`DEBUG_SLEEP_SPEED = 10`): an 8-hour sleep lasts about 48 real seconds. A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. There is no manual Wake Up action: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Sleep starts with Music and Navigation switched off. Sleep state and wall-clock timestamps are saved, and the game catches up to the scheduled waking time after a reload. The sleep result opens after the period finishes; any generated wake event is shown after OK. Sleep cannot start during travel.
 
-At Energy 0, when no trip/event/D20/interview/result/sleep/game-over is active, the character automatically falls asleep: 8 hours at Schronisko or an open Night shelter with Intoxication ≤10; otherwise a random 2–4 hours on the ground, moving to Street if necessary. This forced-sleep path currently does not check the Night shelter reservation separately.
+At Energy 0, when no trip/event/D20/interview/registration-queue/result/sleep/game-over is active, the character automatically falls asleep: 8 hours at Schronisko or an open Night shelter with an active booking and Intoxication ≤10; otherwise a random 2–4 hours on the ground, moving to Street if necessary.
 
 ## Alcohol / intoxication
 The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/promille). It starts at 0 and currently falls by about 10 points per game hour as time passes. The Night shelter has a strict admission threshold: **Intoxication above 10 blocks shelter sleep until the character sobers up**. This creates a direct survival tradeoff for future alcohol items/events. The Status screen exposes the current Intoxication value. Alcohol sources and individual drink strengths can be added on top of this system.
@@ -308,7 +308,12 @@ Help center actions:
 Schronisko is 24/7 and requires the referral to appear on the map. Settling in takes 30 minutes, gives +8 Energy, +4 Hygiene and +8 Mood, and sets Housing to Schronisko.
 
 Night shelter:
-- First registration takes 30 minutes, gives +3 Mood before elapsed-time decay and creates a reserved place for **7 days**. The active UI bypasses the older random bed-availability resolver.
+- Before registration/when a booking expires, the only shelter service shown is **Join registration queue**. Bed/sleep, meals, shower, laundry, social-worker appointment and safe storage require an active booking.
+- First registration is open **19:00–22:00**. Each game day has **0–3 vacancies**, sampled uniformly once on the first shelter visit that day and saved. Reloading/returning does not reroll them.
+- Registration requires actually waiting **20 game minutes** (20 visible real seconds at the ordinary timer speed). A blocking queue/progress screen is shown; ordinary needs/time costs apply during the wait. The queue pauses when hidden and persists its remaining time, original vacancy count, position and result snapshot across reloads.
+- Arrival order matters: the prototype models one earlier applicant per 30 minutes after 19:00 (`peopleAhead = floor((joinMinute - 1140) / 30)`). A place is granted if today's vacancies exceed the number ahead. Before other eligibility rules, this yields 75% at 19:00–19:29, 50% at 19:30–19:59, 25% at 20:00–20:29 and 0% from 20:30. These are simulated prototype odds, not claims about a real facility.
+- After the full wait, success grants +3 Mood and a **7-day** booking, marks this evening as a stay, clears the arrival goal and reveals shelter services. Failure gives -5 Mood; the result explains whether there were zero places or earlier applicants took them. Both outcomes show actual time/resource changes.
+- Only one completed registration attempt per game day is available; tomorrow allows another attempt, subject to any existing shelter ban. An active booking does not consume vacancies or require another queue.
 - With an active booking, nightly check-in is **18:00–22:00**.
 - Missing 3 required nights within the current 30-day game-month cancels the place and blocks re-registration until the next month.
 - Actually departing after 08:00 and before 18:00 with an active booking creates a shelter rule strike. Selecting/cancelling a route does not count; walking, paid/fare-dodging transit or stepping onto Street does. A rejected unpaid transit attempt does not count; 3 strikes cancel the place and block re-registration until the next month.
@@ -324,7 +329,7 @@ Night shelter:
 
 Night shelter and Schronisko share a persistent safe-storage inventory. Night shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Night shelter cannot store food or water.
 
-Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food uses the same average-freshness model as backpack food and continues to spoil at the normal rate. Water is not stored. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
+Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food uses the same average-freshness model as backpack food and continues to spoil at the normal rate. Water is not stored. Night-shelter storage access requires an active booking. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
 
 ## Day Center & Clinic
 
@@ -504,7 +509,7 @@ These are current code realities, not planned features:
 
 ## Regression checks (v54)
 
-`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. GitHub Pages deployment runs these checks before building/publishing.
+`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. GitHub Pages deployment runs these checks before building/publishing.
 
 ## Design principles already established by implemented systems
 
