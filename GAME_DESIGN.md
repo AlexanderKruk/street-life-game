@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-07 · night-shelter registration queue. Current visible build: `v2026.10.07-57`.
+**Last gameplay sync:** 2026-10-08 · action availability and ordering. Current visible build: `v2026.10.08-58`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -10,7 +10,7 @@ The rules below describe the implemented prototype, including its current test s
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot) the daily begging allowance, daily night-shelter vacancies/registration attempt and an active registration queue in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt and an active registration queue in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
 
 Initial state:
 - Day 1, Monday, 08:00, Street.
@@ -47,6 +47,12 @@ Sleep reports changes across the whole sleep session. Its outcome text states th
 While the player reads the result, game time and travel progression stop. Pressing OK dismisses it. If sleeping or a location action also generated a street event, the player acknowledges the action result before interacting with that event. The event's resolved choice then receives its own result window.
 
 Current snapshot coverage includes game needs/money/intoxication, carried inventory and active-effect membership. Housing/employment/referrals, storage contents, discovered addresses, mobile-service duration and effect-duration extensions are described in outcome text where available; they do not have dedicated numeric result rows.
+
+## Action availability (v58)
+
+Location action lists show all currently enabled choices first, followed by a dimmed **Unavailable now** group. Within each group, the existing order is stable. Unavailable actions remain visible, cannot be clicked, and configured actions show the schedule or missing requirement. Disabled sleep selectors cannot be changed either. Street custom actions and configured actions share the same ordering; support and phone choices use it too.
+
+Configured actions use the same availability function for display and execution. It checks location opening hours, quiet hours, meals/laundry/social-worker schedules, daily meal/laundry limits, registration attempts/bans, booking, intoxication and money. Availability and ordering update with game time and state, without requiring a failed click. Examples: Dinner is disabled from 20:30 onward; Breakfast is enabled only 06:30–07:00 and only before that day's meal was received; laundry pickup requires Thursday evening and clothes left that morning. Storage buttons are disabled while the location is closed.
 
 ## Needs and condition
 
@@ -314,7 +320,7 @@ Night shelter:
 - Arrival order matters: the prototype models one earlier applicant per 30 minutes after 19:00 (`peopleAhead = floor((joinMinute - 1140) / 30)`). A place is granted if today's vacancies exceed the number ahead. Before other eligibility rules, this yields 75% at 19:00–19:29, 50% at 19:30–19:59, 25% at 20:00–20:29 and 0% from 20:30. These are simulated prototype odds, not claims about a real facility.
 - After the full wait, success grants +3 Mood and a **7-day** booking, marks this evening as a stay, clears the arrival goal and reveals shelter services. Failure gives -5 Mood; the result explains whether there were zero places or earlier applicants took them. Both outcomes show actual time/resource changes.
 - Only one completed registration attempt per game day is available; tomorrow allows another attempt, subject to any existing shelter ban. An active booking does not consume vacancies or require another queue.
-- With an active booking, nightly check-in is **18:00–22:00**.
+- With an active booking, nightly check-in is **18:00–22:00**. Once admitted for that night, the bed remains usable during quiet hours and after midnight until closing at 08:00. After-midnight sleep counts toward the preceding shelter night, rather than marking the coming night as already stayed.
 - Missing 3 required nights within the current 30-day game-month cancels the place and blocks re-registration until the next month.
 - Actually departing after 08:00 and before 18:00 with an active booking creates a shelter rule strike. Selecting/cancelling a route does not count; walking, paid/fare-dodging transit or stepping onto Street does. A rejected unpaid transit attempt does not count; 3 strikes cancel the place and block re-registration until the next month.
 - **Quiet hours are 22:00–06:00.** During that period normal shelter actions are blocked and only sleeping is allowed.
@@ -509,7 +515,7 @@ These are current code realities, not planned features:
 
 ## Regression checks (v54)
 
-`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. GitHub Pages deployment runs these checks before building/publishing.
+`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. GitHub Pages deployment runs these checks before building/publishing.
 
 ## Design principles already established by implemented systems
 

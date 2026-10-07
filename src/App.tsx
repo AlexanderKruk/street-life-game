@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Children, Fragment, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, isOpen, locations, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
@@ -156,6 +156,21 @@ function loadGame(): GameState {
   }
 }
 
+// Flatten conditional fragments before sorting, so custom and configured
+// actions share one available-first ordering and keep their order within a group.
+function AvailableFirst({ children, className, tag = 'section' }: { children: ReactNode; className: string; tag?: 'section' | 'div' }) {
+  function flatten(nodes: ReactNode): ReactNode[] {
+    return Children.toArray(nodes).flatMap(node =>
+      isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment ? flatten(node.props.children) : [node])
+  }
+  const nodes = flatten(children)
+  const disabled = (node: ReactNode) => isValidElement<{ disabled?: boolean }>(node) && !!node.props.disabled
+  const available = nodes.filter(node => !disabled(node))
+  const unavailable = nodes.filter(disabled)
+  const Tag = tag
+  return <Tag className={className}>{available}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable}</Tag>
+}
+
 function Stat({ label, value, icon, compact = false }: { label: string; value: number; icon: string; compact?: boolean }) {
   const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
   return <div className={compact ? 'stat compact' : 'stat'}><span>{icon}</span><div><div className="stat-label"><span>{label}</span>{!compact && <b>{Math.round(value)}</b>}</div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
@@ -261,7 +276,6 @@ export default function App() {
   const shelterBooked = (life.shelterUntilDay ?? 0) >= game.day
   const currentActions = actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest'))
   const open = isOpen(current, game.minutes)
-  const shelterWorkerAvailable = (weekday(game.day) === 'Tu' || weekday(game.day) === 'Fr') && game.minutes >= 960 && game.minutes < 1200 && (life.shelterUntilDay ?? 0) >= game.day
   const overall = overallStatus(game)
   const weather = WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
@@ -602,7 +616,9 @@ export default function App() {
       const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, Math.min(0.9, baseChance * scale))
       if (wakeEvent) setActiveEvent(wakeEvent)
     } else if (sleep.kind === 'shelter') {
-      setLife((status) => ({ ...status, housing: 'Night shelter', shelterLastStayDay: Math.max(status.shelterLastStayDay ?? 0, Math.floor(sleep.startAbsolute / 1440) + 1) }))
+      const sleepStartDay = Math.floor(sleep.startAbsolute / 1440) + 1
+      const stayNightDay = sleep.startAbsolute % 1440 < 480 ? sleepStartDay - 1 : sleepStartDay
+      setLife((status) => ({ ...status, housing: 'Night shelter', shelterLastStayDay: Math.max(status.shelterLastStayDay ?? 0, stayNightDay) }))
       const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, Math.min(0.65, 0.45 * scale))
       if (wakeEvent) setActiveEvent(wakeEvent)
     } else {
@@ -846,10 +862,54 @@ export default function App() {
     }
   }
 
+  function actionUnavailableReason(action: (typeof actions)[number]): string | null {
+    const id = action.id
+    if (action.locationId !== current.id) return 'This action is available at another location.'
+    if (current.id === 'shelter' && !shelterBooked && id !== 'shelter-rest') return 'Register for a place first.'
+    if (id === 'shelter-rest') {
+      if ((life.shelterBlockedUntilDay ?? 0) > game.day) return `Registration blocked until Day ${life.shelterBlockedUntilDay}.`
+      if (!shelterBooked) {
+        if (life.shelterRegistrationAttemptDay === game.day) return 'You already queued today. Try tomorrow from 19:00.'
+        if (game.minutes < SHELTER_REGISTRATION_OPEN || game.minutes >= 1320) return 'Registration 19:00–22:00.'
+      } else {
+        const nightDay = game.minutes < 480 ? game.day - 1 : game.day
+        const alreadyAdmitted = life.shelterLastStayDay === nightDay
+        if (!open) return 'Night shelter opens at 18:00.'
+        if (!alreadyAdmitted && (game.minutes < 1080 || game.minutes > 1320)) return 'Bed check-in 18:00–22:00.'
+        if (game.intoxication > 10) return 'Too intoxicated: sober up before using your bed.'
+      }
+    }
+    if (id === 'shelter-social-worker') {
+      if ((weekday(game.day) !== 'Tu' && weekday(game.day) !== 'Fr') || game.minutes < 960 || game.minutes >= 1200) return 'Social worker: Tuesday / Friday, 16:00–20:00.'
+      return null // Appointment hours are separate from overnight opening hours.
+    }
+    if (id === 'shelter-dinner') {
+      if (game.minutes < 1140 || game.minutes >= 1230) return 'Dinner 19:00–20:30.'
+      if (life.shelterDinnerDay === game.day) return 'You already had dinner today.'
+    }
+    if (id === 'shelter-breakfast') {
+      if (game.minutes < 390 || game.minutes >= 420) return 'Breakfast 06:30–07:00.'
+      if (life.shelterBreakfastDay === game.day) return 'You already had breakfast today.'
+    }
+    if (id === 'shelter-laundry-drop') {
+      if (weekday(game.day) !== 'Th' || game.minutes < 390 || game.minutes >= 480) return 'Leave laundry: Thursday, 06:30–08:00.'
+      if (life.shelterLaundryDropDay === game.day) return 'Your clothes are already in the laundry.'
+    }
+    if (id === 'shelter-laundry-pickup') {
+      if (weekday(game.day) !== 'Th' || game.minutes < 1080 || game.minutes >= 1320) return 'Collect laundry: Thursday, 18:00–22:00.'
+      if (life.shelterLaundryDropDay !== game.day) return 'Leave your clothes for laundry first.'
+    }
+    if (!open && action.requiresOpen !== false) return `Closed · opens at ${formatTime(current.open)}.`
+    if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && id !== 'shelter-rest') return 'Quiet hours 22:00–06:00 · sleeping only.'
+    if (action.cost && game.money < action.cost) return `Need ${action.cost.toFixed(2)} zł.`
+    return null
+  }
+
   function actImpl(actionId: string) {
     const action = actions.find((x) => x.id === actionId)
     if (!action || action.locationId !== current.id || activeEvent || shelterQueue) return
-    if (current.id === 'shelter' && !shelterBooked && actionId !== 'shelter-rest') { setMessage('Register for a place before using shelter services.'); return }
+    const unavailable = actionUnavailableReason(action)
+    if (unavailable) { setMessage(unavailable); return }
     if (actionId === 'shelter-social-worker') {
       const workerDay = weekday(game.day)
       if ((workerDay !== 'Tu' && workerDay !== 'Fr') || game.minutes < 960 || game.minutes >= 1200) {
@@ -919,8 +979,8 @@ export default function App() {
         setMessage('You join the registration queue. You will know whether there is a place after 20 minutes.')
         return
       }
-      if (game.minutes < 1080 || game.minutes > 1320) { setMessage('Your reserved place can be checked into between 18:00 and 22:00.'); return }
-      setLife((status) => ({ ...status, shelterLastStayDay: game.day, housing: 'Night shelter' }))
+      const stayNightDay = game.minutes < 480 ? game.day - 1 : game.day
+      setLife((status) => ({ ...status, shelterLastStayDay: stayNightDay, housing: 'Night shelter' }))
       sleep(sleepHours, 'shelter')
       return
     }
@@ -1339,12 +1399,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-57</div>
+        <div className="trash-build">Build 2026.10.08-58</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-57</div>
+    <div className="build-badge">v2026.10.08-58</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1400,21 +1460,21 @@ export default function App() {
       </section>}
       {current.id === 'support' && <section className="support-menu">
         <div className="section-title"><h2>Talk to a social worker</h2><span>Choose what you need help with</span></div>
-        <div className="support-grid">
+        <AvailableFirst tag="div" className="support-grid">
           <button onClick={() => socialSupport('housing')} disabled={!open}><span>🏠</span><div><strong>Housing</strong><small>{life.schroniskoReferral ? 'Referral issued · Schronisko unlocked' : 'Ask about stable accommodation'}</small></div></button>
           <button onClick={() => socialSupport('documents')} disabled={!open}><span>📄</span><div><strong>Documents</strong><small>{inventory.documents ? 'Documents complete' : 'Restore missing documents'}</small></div></button>
           <button onClick={() => socialSupport('transport')} disabled={!open || !inventory.documents}><span>🎫</span><div><strong>Transport</strong><small>Apply for 3 days of free public transport</small></div></button>
           <button onClick={() => socialSupport('benefits')} disabled={!open || !inventory.documents}><span>💰</span><div><strong>Benefits</strong><small>Ask what financial support is available</small></div></button>
-        </div>
+        </AvailableFirst>
       </section>}
       {((current.id === 'shelter' && shelterBooked) || current.id === 'residential-shelter') && <section className="storage-panel">
         <div className="storage-heading"><div><p className="eyebrow">SAFE STORAGE</p><h2>Stored belongings</h2></div><span>{usedStorageSlots}/{storageCapacity} slots</span></div>
         <p className="storage-note">{current.id === 'residential-shelter' ? 'Schronisko gives you more long-term storage.' : 'Night shelter has limited storage.'} {current.id === 'residential-shelter' ? ' Water must stay in your backpack; Schronisko has a separate small food shelf.' : ' Food and water must stay in your backpack.'}</p>
         <div className="storage-grid">
-          <div><strong>🪪 Documents</strong><small>{storage.documents ? 'Stored safely' : inventory.documents ? 'Carried with you' : 'Missing'}</small><button onClick={() => storage.documents ? takeStoredItem('documents') : storeItem('documents')} disabled={storage.documents ? inventory.documents : !inventory.documents}>{storage.documents ? 'Take' : 'Store'}</button></div>
-          <div><strong>💊 Medicine ×{storage.medicines}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.medicines > 0 ? storeItem('medicines') : takeStoredItem('medicines')} disabled={inventory.medicines <= 0 && storage.medicines <= 0}>{inventory.medicines > 0 ? 'Store' : 'Take'}</button></div>
-          <div><strong>🚬 Cigarettes ×{storage.cigarettes}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.cigarettes > 0 ? storeItem('cigarettes') : takeStoredItem('cigarettes')} disabled={inventory.cigarettes <= 0 && storage.cigarettes <= 0}>{inventory.cigarettes > 0 ? 'Store' : 'Take'}</button></div>
-          {current.id === 'residential-shelter' && <div><strong>🥪 Food ×{storage.food}/{SCHRONISKO_FOOD_CAPACITY}</strong><small>Separate food shelf · {storage.food > 0 ? `${foodFreshnessLabel(storage.foodFreshness)} · ${Math.round(storage.foodFreshness)}%` : 'empty'}</small><div className="freshness-bar"><i style={{ width: `${storage.food > 0 ? storage.foodFreshness : 0}%` }} /></div><button onClick={() => inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? storeFood() : takeStoredFood()} disabled={(inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) && storage.food <= 0}>{inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? 'Store' : 'Take'}</button></div>}
+          <div><strong>🪪 Documents</strong><small>{storage.documents ? 'Stored safely' : inventory.documents ? 'Carried with you' : 'Missing'}</small><button onClick={() => storage.documents ? takeStoredItem('documents') : storeItem('documents')} disabled={!open || (storage.documents ? inventory.documents : !inventory.documents)}>{storage.documents ? 'Take' : 'Store'}</button></div>
+          <div><strong>💊 Medicine ×{storage.medicines}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.medicines > 0 ? storeItem('medicines') : takeStoredItem('medicines')} disabled={!open || (inventory.medicines <= 0 && storage.medicines <= 0)}>{inventory.medicines > 0 ? 'Store' : 'Take'}</button></div>
+          <div><strong>🚬 Cigarettes ×{storage.cigarettes}</strong><small>Store/take up to one stack</small><button onClick={() => inventory.cigarettes > 0 ? storeItem('cigarettes') : takeStoredItem('cigarettes')} disabled={!open || (inventory.cigarettes <= 0 && storage.cigarettes <= 0)}>{inventory.cigarettes > 0 ? 'Store' : 'Take'}</button></div>
+          {current.id === 'residential-shelter' && <div><strong>🥪 Food ×{storage.food}/{SCHRONISKO_FOOD_CAPACITY}</strong><small>Separate food shelf · {storage.food > 0 ? `${foodFreshnessLabel(storage.foodFreshness)} · ${Math.round(storage.foodFreshness)}%` : 'empty'}</small><div className="freshness-bar"><i style={{ width: `${storage.food > 0 ? storage.foodFreshness : 0}%` }} /></div><button onClick={() => inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? storeFood() : takeStoredFood()} disabled={!open || ((inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) && storage.food <= 0)}>{inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? 'Store' : 'Take'}</button></div>}
         </div>
       </section>}
       {(current.id === 'support' || current.id === 'residential-shelter') && <section className="charging-station">
@@ -1422,14 +1482,14 @@ export default function App() {
           <div><strong>🔌 Charge phone</strong><small>Use a public socket for 30 minutes.</small></div><span>+25% · ~30 min</span>
         </button>
       </section>}
-      {current.id === 'work' && <section className="actions">
+      {current.id === 'work' && <AvailableFirst className="actions">
         <button className="action" onClick={takeDayWork} disabled={!open || game.energy < dayWorkEnergyRequired}>
           <div><strong>Take a short shift</strong><small>{game.energy < dayWorkEnergyRequired ? `Need at least ${dayWorkEnergyRequired} Energy · current ${Math.floor(game.energy)}` : 'Three hours of physical work. Pays 35 zł.'}</small></div><span>+35 zł · ~180 min</span>
         </button>
-      </section>}
+      </AvailableFirst>}
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
-        <section className="actions">
+        <AvailableFirst className="actions">
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
@@ -1446,13 +1506,14 @@ export default function App() {
           {currentActions.length ? currentActions.map((action) => {
             const registering = action.id === 'shelter-rest' && !shelterBooked
             const selectableSleep = action.id === 'street-sleep' || (action.id === 'shelter-rest' && shelterBooked) || action.id === 'residential-sleep'
-            const unavailable = (registering && (game.minutes < SHELTER_REGISTRATION_OPEN || game.minutes >= 1320 || life.shelterRegistrationAttemptDay === game.day || (life.shelterBlockedUntilDay ?? 0) > game.day)) || (action.id === 'shelter-social-worker' ? !shelterWorkerAvailable : (!open && action.requiresOpen !== false)) || (!!action.cost && game.money < action.cost)
+            const unavailableReason = actionUnavailableReason(action)
+            const unavailable = unavailableReason !== null
             return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
-              <div><strong>{registering ? 'Join registration queue' : action.id === 'shelter-rest' ? 'Use your reserved bed' : action.name}</strong><small>{registering ? life.shelterRegistrationAttemptDay === game.day ? 'No places left for you today. Try tomorrow from 19:00.' : 'Registration 19:00–22:00 · wait 20 min. Earlier arrivals have a better chance; places are limited.' : action.id === 'shelter-rest' ? 'Use your reserved bed · arrive 18:00–22:00 and leave by 08:00.' : action.description}</small></div>
-              <span onClick={(e) => selectableSleep && e.stopPropagation()}>{selectableSleep ? <select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select> : <>{action.cost ? `${action.cost} zł · ` : ''}~{registering ? SHELTER_QUEUE_MINUTES : action.minutes} min</>}</span>
+              <div><strong>{registering ? 'Join registration queue' : action.id === 'shelter-rest' ? 'Use your reserved bed' : action.name}</strong><small>{registering ? life.shelterRegistrationAttemptDay === game.day ? 'No places left for you today. Try tomorrow from 19:00.' : 'Registration 19:00–22:00 · wait 20 min. Earlier arrivals have a better chance; places are limited.' : action.id === 'shelter-rest' ? 'Use your reserved bed · arrive 18:00–22:00 and leave by 08:00.' : action.description}{unavailableReason && <em className="action-unavailable-reason">{unavailableReason}</em>}</small></div>
+              <span onClick={(e) => selectableSleep && e.stopPropagation()}>{selectableSleep ? <select aria-label="Sleep duration" disabled={unavailable} value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select> : <>{action.cost ? `${action.cost} zł · ` : ''}~{registering ? SHELTER_QUEUE_MINUTES : action.minutes} min</>}</span>
             </button>
           }) : <p className="empty">Nothing useful to do here yet.</p>}
-        </section>
+        </AvailableFirst>
       </>}
     </>}
 
@@ -1538,13 +1599,13 @@ export default function App() {
       {phoneOpen && <div className="phone-overlay" onClick={() => setPhoneOpen(false)}><div className="phone-modal" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setPhoneOpen(false)}>×</button><div className="phone-panel">
         <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
-        <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Pay 1 zł automatically at the start of each game day</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
-        <div className="phone-actions">
+        <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Renew expired service automatically for 1 zł</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
+        <AvailableFirst tag="div" className="phone-actions">
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
           <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
           <button onClick={callAmbulance} disabled={game.health > 20 || inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0}><span>🚑</span><div><strong>Call ambulance</strong><small>{game.health <= 20 ? 'Emergency · no documents required' : 'Available at Health 20 or lower'}</small></div></button>
-        </div>
+        </AvailableFirst>
       </div></div></div>}
       <div className="inventory-grid essentials-grid">
         <button className="inventory-item usable" onClick={() => setPhoneOpen(true)}>

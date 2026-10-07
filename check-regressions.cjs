@@ -124,6 +124,31 @@ setup({day:2,locationId:'shelter',minutes:1140},{[lifeKey]:{shelterRegistrationA
 setup({locationId:'shelter',minutes:1139});assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
 setup({locationId:'shelter',minutes:1320});assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
 
+// Time/weekday/daily limits disable services before a click and put them last.
+function availableFirst(selector='.actions') {
+ const buttons=[...document.querySelector(selector).querySelectorAll(':scope > button')];
+ const firstDisabled=buttons.findIndex(button=>button.disabled);
+ if(firstDisabled>=0)assert(buttons.slice(firstDisabled).every(button=>button.disabled));
+}
+const admitted={...booking,shelterLastStayDay:1};
+setup({locationId:'shelter',minutes:1320},{[lifeKey]:admitted});
+assert(screen.getByRole('button',{name:/Dinner/}).disabled);assert(screen.getByRole('button',{name:/Breakfast/}).disabled);assert(screen.getByRole('button',{name:/Ask for a shower/}).disabled);assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);availableFirst();
+const at22=read(stateKey);fireEvent.click(screen.getByRole('button',{name:/Dinner/}));assert.deepEqual(read(stateKey),at22);
+setup({locationId:'shelter',minutes:1229},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Dinner/}).disabled);advance(1000);assert(screen.getByRole('button',{name:/Dinner/}).disabled);availableFirst();
+setup({locationId:'shelter',minutes:1150},{[lifeKey]:admitted});click(/Dinner/);ok();assert(screen.getByRole('button',{name:/Dinner/}).disabled);assert(screen.getByRole('button',{name:/Dinner/}).textContent.includes('already had dinner'));availableFirst();
+setup({day:2,locationId:'shelter',minutes:390},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Breakfast/}).disabled);availableFirst();
+setup({day:2,locationId:'shelter',minutes:420},{[lifeKey]:admitted});assert(screen.getByRole('button',{name:/Breakfast/}).disabled);availableFirst();
+setup({day:4,locationId:'shelter',minutes:405},{[lifeKey]:{...booking,shelterLastStayDay:3}});assert(!screen.getByRole('button',{name:/Leave clothes for laundry/}).disabled);assert(screen.getByRole('button',{name:/Collect clean laundry/}).disabled);click(/Leave clothes for laundry/);ok();assert(screen.getByRole('button',{name:/Leave clothes for laundry/}).disabled);availableFirst();
+setup({day:4,locationId:'shelter',minutes:1100},{[lifeKey]:{...booking,shelterLastStayDay:3,shelterLaundryDropDay:4}});assert(!screen.getByRole('button',{name:/Collect clean laundry/}).disabled);availableFirst();
+setup({day:2,locationId:'shelter',minutes:990},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Talk to shelter social worker/}).disabled);availableFirst();
+// Already-admitted players can sleep after quiet hours begin, including after midnight.
+setup({locationId:'shelter',minutes:1380},{[lifeKey]:admitted});click(/Use your reserved bed/);assert(document.querySelector('.sleep-overlay'));
+setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);click(/Use your reserved bed/);click('Wake up (debug)');assert.equal(read(lifeKey).shelterLastStayDay,1);
+setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:{...booking,shelterLastStayDay:0}});assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
+// Sorting also spans Street fragments and configured actions, plus support choices.
+setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});availableFirst();assert(screen.getByRole('button',{name:/Search online for a place to sleep/}).disabled);
+setup({locationId:'support'},{[invKey]:{documents:false}});availableFirst('.support-grid');
+
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
@@ -153,4 +178,4 @@ for(let block=1;block<=3;block++) {
 near(advanceTime(full,480,{sleeping:true}).energy,100);
 near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
 assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
-cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues/vacancies/access/reload, sleep and exertion.');
+cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues, schedule/daily limits, available-first lists, sleep and exertion.');
