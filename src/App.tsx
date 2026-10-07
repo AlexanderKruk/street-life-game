@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { actions, applyAction, applySleepTime, energyCap, formatTime, healthEnergyMultiplier, initialState, isOpen, locations, type GameState } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, isOpen, locations, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
 
@@ -7,13 +7,6 @@ const SAVE_KEY = 'street-life-save-v3'
 const DISCOVERY_KEY = 'street-life-discovered-v1'
 const GOAL_KEY = 'street-life-goal-v1'
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-const WEATHER = [
-  { icon: '☁️', label: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
-  { icon: '🌧️', label: 'Rain', temp: 7, energyDrain: 0.025, thirstDrain: 0 },
-  { icon: '☀️', label: 'Clear', temp: 16, energyDrain: 0, thirstDrain: 0.02 },
-  { icon: '🌬️', label: 'Windy', temp: 6, energyDrain: 0.035, thirstDrain: 0 },
-  { icon: '🌦️', label: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
-]
 
 function weekday(day: number) {
   return WEEKDAYS[(day - 1) % WEEKDAYS.length]
@@ -27,12 +20,6 @@ function formatTravelTime(minutes: number) {
   return `${hours}h ${mins}m`
 }
 
-function temperatureAt(base: number, minutes: number) {
-  const hour = minutes / 60
-  // Coldest around 05:00, warmest around 15:00.
-  const dailySwing = -Math.cos(((hour - 5) / 10) * Math.PI)
-  return Math.round(base + dailySwing * 4)
-}
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit' | 'fare-dodge'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
@@ -114,6 +101,25 @@ function canAddToBackpack(inventory: Inventory, item: ShopItem) {
   return backpackSlots(next) <= BACKPACK_CAPACITY
 }
 
+function fitEventSupplies(inventory: Inventory, outcome: EventOutcome) {
+  const next = { ...inventory,
+    food: Math.max(0, inventory.food + Math.min(0, outcome.food ?? 0)),
+    water: Math.max(0, inventory.water + Math.min(0, outcome.water ?? 0)),
+  }
+  const rejected: string[] = []
+  for (const item of ['food', 'water'] as const) {
+    const requested = Math.max(0, outcome[item] ?? 0)
+    const otherSlots = backpackSlots(next) - stackSlots(next[item])
+    const capacity = Math.max(0, BACKPACK_CAPACITY - otherSlots) * STACK_SIZE
+    const accepted = Math.min(requested, Math.max(0, capacity - next[item]))
+    if (item === 'food' && accepted > 0) next.foodFreshness = mixFreshness(next.food, next.foodFreshness, accepted, 100)
+    next[item] += accepted
+    if (requested > accepted) rejected.push(`${requested - accepted} ${item}`)
+  }
+  if (next.food <= 0) next.foodFreshness = 100
+  return { inventory: next, rejected }
+}
+
 const mapPositions: Record<string, { left: string; top: string }> = {
   street: { left: '35%', top: '17%' },
   station: { left: '13%', top: '18%' },
@@ -124,6 +130,18 @@ const mapPositions: Record<string, { left: string; top: string }> = {
   shelter: { left: '16%', top: '65%' },
   work: { left: '53%', top: '76%' },
   'residential-shelter': { left: '80%', top: '75%' },
+}
+
+function loadTrip(): Trip | null {
+  try {
+    const raw = localStorage.getItem('street-life-trip-v1')
+    if (!raw) return null
+    const saved = JSON.parse(raw) as Trip
+    return locations.some(location => location.id === saved.destinationId) &&
+      ['walk', 'transit', 'fare-dodge'].includes(saved.mode) &&
+      Number.isFinite(saved.total) && saved.total > 0 && Number.isFinite(saved.remaining) &&
+      saved.remaining >= 0 && saved.remaining <= saved.total ? saved : null
+  } catch { return null }
 }
 
 function loadGame(): GameState {
@@ -167,12 +185,13 @@ export default function App() {
   })
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>(() => {
+    if (loadTrip()) return 'travel'
     const saved = localStorage.getItem('street-life-screen')
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
   })
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [phoneOpen, setPhoneOpen] = useState(false)
-  const [trip, setTrip] = useState<Trip | null>(null)
+  const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const [musicOn, setMusicOn] = useState(false)
   const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
   const [mobileAutoRenew, setMobileAutoRenew] = useState<boolean>(() => localStorage.getItem('street-life-mobile-auto-renew') !== 'false')
@@ -182,7 +201,14 @@ export default function App() {
   const [sleeping, setSleeping] = useState<SleepState | null>(() => {
     try { const raw = localStorage.getItem('street-life-sleep-v1'); return raw ? JSON.parse(raw) : null } catch { return null }
   })
-  const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
+  const [begging, setBegging] = useState<{ day: number; attempts: number }>(() => {
+    try {
+      const raw = localStorage.getItem('street-life-begging-v1')
+      const saved = raw ? JSON.parse(raw) : null
+      return saved && Number.isInteger(saved.day) && saved.day >= 1 && Number.isInteger(saved.attempts) && saved.attempts >= 0
+        ? { day: saved.day, attempts: Math.min(3, saved.attempts) } : { day: game.day, attempts: 0 }
+    } catch { return { day: game.day, attempts: 0 } }
+  })
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
@@ -223,6 +249,7 @@ export default function App() {
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const currentActions = actions.filter((x) => x.locationId === current.id)
   const open = isOpen(current, game.minutes)
+  const shelterWorkerAvailable = (weekday(game.day) === 'Tu' || weekday(game.day) === 'Fr') && game.minutes >= 960 && game.minutes < 1200 && (life.shelterUntilDay ?? 0) >= game.day
   const overall = overallStatus(game)
   const weather = WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
@@ -234,6 +261,41 @@ export default function App() {
   const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
   const usedStorageSlots = storageSlots(storage)
 
+  function applyAction(state: GameState, result: ActionResult) {
+    return applyGameAction(state, result, { effects, walking: trip?.mode === 'walk', music: musicOn })
+  }
+
+  function applySleepTime(state: GameState, minutes: number) {
+    return applyGameSleepTime(state, minutes, { effects })
+  }
+
+  const [inventoryAgedAt, setInventoryAgedAt] = useState(absoluteMinutes(game))
+  const agedThrough = useRef(absoluteMinutes(game))
+  useEffect(() => {
+    const now = absoluteMinutes(game)
+    const elapsed = Math.max(0, now - agedThrough.current)
+    agedThrough.current = now
+    setInventoryAgedAt(now)
+    if (elapsed === 0) return
+    setStorage(prev => prev.food > 0 ? { ...prev, foodFreshness: Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * elapsed) } : prev)
+    setInventory(prev => {
+      const multiplier = phoneDrainMultiplier(prev.phoneCondition)
+      const navigationDrain = trip && navigationOn ? (weather.label === 'Clear' ? 15 : 12) / 60 * multiplier * elapsed : 0
+      const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
+      return { ...prev,
+        foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * elapsed) : 100,
+        phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
+      }
+    })
+  }, [game.day, game.minutes])
+
+  // Repair older saves that already received a referral without its map address.
+  useEffect(() => {
+    if (life.schroniskoReferral || life.housing === 'Schronisko') {
+      setDiscoveredLocations(prev => prev.includes('residential-shelter') ? prev : [...prev, 'residential-shelter'])
+    }
+  }, [life.schroniskoReferral, life.housing])
+
   function resultSnapshot(): ResultSnapshot {
     return { game: { ...game }, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
   }
@@ -244,13 +306,13 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!pendingResult) return
+    if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game)) return
     setPendingResult(null)
     if (sleeping || trashGame || shelterInterview || diceCheck) return
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     setInfoModal(previous => ({ title: previous?.title ?? pendingResult.title, text: previous?.text ?? message, ...summary }))
-  }, [pendingResult, game, inventory, effects, sleeping, trashGame, shelterInterview, diceCheck, message])
+  }, [pendingResult, game, inventory, effects, sleeping, trashGame, shelterInterview, diceCheck, message, inventoryAgedAt])
 
   function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
   function watchVideo(...args: Parameters<typeof watchVideoImpl>) { runWithResult('Watch videos', () => watchVideoImpl(...args)) }
@@ -276,6 +338,7 @@ export default function App() {
   function smokeCigarette(...args: Parameters<typeof smokeCigaretteImpl>) { runWithResult('Smoke a cigarette', () => smokeCigaretteImpl(...args)) }
   function useItem(...args: Parameters<typeof useItemImpl>) { runWithResult(args[0] === 'water' ? 'Drink water' : 'Eat food', () => useItemImpl(...args)) }
 
+  useEffect(() => { localStorage.setItem('street-life-begging-v1', JSON.stringify(begging)) }, [begging])
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem(DISCOVERY_KEY, JSON.stringify(discoveredLocations)) }, [discoveredLocations])
   useEffect(() => { if (activeGoal) localStorage.setItem(GOAL_KEY, JSON.stringify(activeGoal)); else localStorage.removeItem(GOAL_KEY) }, [activeGoal])
@@ -288,20 +351,20 @@ export default function App() {
   useEffect(() => { localStorage.setItem('street-life-mobile-auto-renew', String(mobileAutoRenew)) }, [mobileAutoRenew])
   useEffect(() => { localStorage.setItem('street-life-mobile-renewed-day', String(mobileRenewedDay)) }, [mobileRenewedDay])
   useEffect(() => {
-    if (!mobileAutoRenew || mobileRenewedDay >= game.day) return
+    if (!mobileAutoRenew || mobileServiceUntil > absoluteMinutes(game) || mobileRenewedDay >= game.day) return
     setMobileRenewedDay(game.day)
     if (game.money < 1) {
-      setMobileServiceUntil(Math.min(mobileServiceUntil, (game.day - 1) * 1440))
       setMessage('Mobile service auto-renewal failed: you need 1 zł.')
       return
     }
     setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
-    setMobileServiceUntil(game.day * 1440)
-  }, [game.day, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
+    setMobileServiceUntil(until => Math.max(until, absoluteMinutes(game)) + 1440)
+  }, [game.day, game.minutes, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
   useEffect(() => { if (!mobileServiceActive) { setMusicOn(false); setNavigationOn(false) } }, [mobileServiceActive])
   useEffect(() => { localStorage.setItem('street-life-storage-v1', JSON.stringify(storage)) }, [storage])
   useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
   useEffect(() => { localStorage.setItem('street-life-situation-v1', JSON.stringify(life)) }, [life])
+  useEffect(() => { if (trip) localStorage.setItem('street-life-trip-v1', JSON.stringify(trip)); else localStorage.removeItem('street-life-trip-v1') }, [trip])
   useEffect(() => { if (sleeping) localStorage.setItem('street-life-sleep-v1', JSON.stringify(sleeping)); else localStorage.removeItem('street-life-sleep-v1') }, [sleeping])
   useEffect(() => {
     if (life.housing === 'Night shelter' && life.housingUntil !== undefined && absoluteMinutes(game) >= life.housingUntil) {
@@ -331,7 +394,7 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (game.energy > 0 || sleeping || gameOver || activeEvent || trip || infoModal || pendingResult) return
+    if (game.energy > 0 || sleeping || gameOver || activeEvent || diceCheck || shelterInterview || trip || infoModal || pendingResult) return
     const safeKind = current.id === 'residential-shelter'
       ? 'residential'
       : current.id === 'shelter' && open && game.intoxication <= 10
@@ -345,11 +408,11 @@ export default function App() {
     if (safeKind === 'ground' && current.id !== 'street') setGame((prev) => ({ ...prev, locationId: 'street' }))
     setSleeping({ kind: safeKind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (hours * 60 * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, gameOver, activeEvent, trip, current.id, open, game.intoxication, infoModal, pendingResult])
+  }, [game.energy, sleeping, gameOver, activeEvent, diceCheck, shelterInterview, trip, current.id, open, game.intoxication, infoModal, pendingResult])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || gameOver || infoModal || pendingResult || trashGame) return
+      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || trashGame) return
       if (sleeping) {
         const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
         const targetAbsolute = sleeping.startAbsolute + elapsed
@@ -360,51 +423,11 @@ export default function App() {
       }
       if (sleeping) return
       const tickMinutes = trip ? Math.min(10, trip.remaining) : 1
-      setGame((prev) => {
-        const currentWeather = WEATHER[(prev.day - 1) % WEATHER.length]
-        const next = applyAction(prev, { minutes: tickMinutes })
-        const cold = effects.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(prev))
-        const wellFed = effects.some((effect) => effect.id === 'well-fed' && effect.expiresAt > absoluteMinutes(prev))
-        const hunger = Math.max(0, Math.min(100, next.hunger + (wellFed ? 0.035 * tickMinutes : 0) - (trip?.mode === 'walk' ? 0.055 * tickMinutes : 0)))
-        const thirst = Math.max(0, next.thirst - currentWeather.thirstDrain * tickMinutes - (trip?.mode === 'walk' ? 0.04 * tickMinutes : 0))
-        const healthDamage =
-          ((thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
-          (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) +
-          (cold ? 0.012 : 0)) * tickMinutes
-        const health = Math.max(0, next.health - healthDamage)
-        const movementDrain = (trip?.mode === 'walk' ? 0.01 * tickMinutes : 0) * healthEnergyMultiplier(health)
-        const currentTemperature = temperatureAt(currentWeather.temp, prev.minutes)
-        const walkingHygieneDrain = trip?.mode === 'walk'
-          ? currentTemperature >= 25 ? 0.05 : currentTemperature >= 18 ? 0.033 : 0.025
-          : 0
-        const hygiene = Math.max(0, next.hygiene - walkingHygieneDrain * tickMinutes)
-        return {
-          ...next,
-          hunger,
-          health,
-          hygiene,
-          energy: Math.min(energyCap(health), Math.max(0, next.energy - currentWeather.energyDrain * tickMinutes - movementDrain - (cold ? 0.045 * tickMinutes : 0))),
-          mood: Math.max(0, next.mood - (cold ? 0.012 * tickMinutes : 0)),
-          thirst,
-        }
-      })
-      setStorage((prev) => prev.food > 0 ? { ...prev, foodFreshness: Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * tickMinutes) } : prev)
-      setInventory((prev) => {
-        const sunny = WEATHER[(game.day - 1) % WEATHER.length].label === 'Clear'
-        const drainMultiplier = phoneDrainMultiplier(prev.phoneCondition)
-        const navigationDrain = trip && navigationOn ? ((sunny ? 15 : 12) / 60) * drainMultiplier * tickMinutes : 0
-        const musicDrain = musicOn ? (4 / 60) * drainMultiplier * tickMinutes : 0
-        return {
-          ...prev,
-          foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * tickMinutes) : 100,
-          phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
-        }
-      })
-      if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012 * tickMinutes) }))
+      setGame(prev => applyAction(prev, { minutes: tickMinutes }))
       setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, gameOver, sleeping, infoModal, pendingResult, trashGame])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, infoModal, pendingResult, trashGame])
 
   useEffect(() => {
     if (!trip || trip.remaining > 0) return
@@ -444,7 +467,7 @@ export default function App() {
     setMessage('You charged the phone for 30 minutes. Battery +25%.')
   }
 
-  function chooseDestination(id: string) {
+  function recordShelterDeparture(id: string) {
     if (game.locationId === 'shelter' && id !== 'shelter' && game.minutes > 480 && game.minutes < 1080 && (life.shelterUntilDay ?? 0) >= game.day) {
       const strikes = (life.shelterStrikes ?? 0) + 1
       const evicted = strikes >= 3
@@ -453,11 +476,15 @@ export default function App() {
       setLife((status) => ({ ...status, shelterStrikes: strikes, ...(evicted ? { housing: 'Street' as const, housingUntil: undefined, shelterUntilDay: undefined, shelterBlockedUntilDay: blockedUntil } : {}) }))
       setMessage(evicted ? `Third shelter rule violation: your place was cancelled. You can register again on Day ${blockedUntil}.` : `You left the shelter after 08:00. Rule violation ${strikes}/3.`)
     }
+  }
+
+  function chooseDestination(id: string) {
     if (id === game.locationId) {
       setScreen('location')
       return
     }
     if (id === 'street') {
+      recordShelterDeparture(id)
       setGame((prev) => ({ ...prev, locationId: 'street' }))
       setSelectedDestination(null)
       setScreen('location')
@@ -763,6 +790,7 @@ export default function App() {
       setMessage('You do not have enough money for public transport.')
       return
     }
+    recordShelterDeparture(destination.id)
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
     setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot() })
@@ -777,6 +805,20 @@ export default function App() {
   function actImpl(actionId: string) {
     const action = actions.find((x) => x.id === actionId)
     if (!action || activeEvent) return
+    if (actionId === 'shelter-social-worker') {
+      const workerDay = weekday(game.day)
+      if ((workerDay !== 'Tu' && workerDay !== 'Fr') || game.minutes < 960 || game.minutes >= 1200) {
+        setMessage('The shelter social worker is available Tuesdays and Fridays from 16:00 to 20:00.')
+        return
+      }
+      if ((life.shelterUntilDay ?? 0) < game.day) {
+        setMessage('There is no active shelter booking to extend. Register at the shelter first.')
+        return
+      }
+      setShelterInterview({ step: 'reason' })
+      setMessage('The social worker asks why you still need the shelter place.')
+      return
+    }
     if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
     if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && actionId !== 'shelter-rest') {
       setMessage('Quiet hours are 22:00–06:00. Only sleeping is allowed right now.')
@@ -850,20 +892,6 @@ export default function App() {
       const locationEvent = pickStreetEvent('location', { locationId: current.id, weather: weather.label, housing: life.housing, documents: inventory.documents }, 0.20)
       if (locationEvent) setActiveEvent(locationEvent)
     }
-    if (actionId === 'shelter-social-worker') {
-      const workerDay = weekday(game.day)
-      if ((workerDay !== 'Tu' && workerDay !== 'Fr') || game.minutes < 960 || game.minutes >= 1200) {
-        setMessage('The shelter social worker is available Tuesdays and Fridays from 16:00 to 20:00.')
-        return
-      }
-      if ((life.shelterUntilDay ?? 0) < game.day) {
-        setMessage('There is no active shelter booking to extend. Register at the shelter first.')
-        return
-      }
-      setShelterInterview({ step: 'reason' })
-      setMessage('The social worker asks why you still need the shelter place.')
-      return
-    }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     if (actionId === 'shop-meal') {
       const expiresAt = absoluteMinutes(next) + 240
@@ -914,15 +942,13 @@ export default function App() {
       hygiene: outcome.hygiene,
     }))
     setInventory((prev) => ({
-      ...prev,
-      food: Math.max(0, prev.food + (outcome.food ?? 0)),
-      foodFreshness: (outcome.food ?? 0) > 0 ? mixFreshness(prev.food, prev.foodFreshness, outcome.food ?? 0, 100) : prev.foodFreshness,
-      water: Math.max(0, prev.water + (outcome.water ?? 0)),
+      ...fitEventSupplies(prev, outcome).inventory,
       phoneCondition: Math.max(0, Math.min(100, prev.phoneCondition + (outcome.phoneCondition ?? 0))),
       jacket: Math.max(0, Math.min(100, prev.jacket + (outcome.jacketCondition ?? 0))),
       documents: outcome.loseDocuments ? false : prev.documents,
     }))
-    setMessage(outcome.message)
+    const { rejected } = fitEventSupplies(inventory, outcome)
+    setMessage(rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message)
   }
 
   function checkModifier(choice: StreetEventChoice) {
@@ -978,6 +1004,7 @@ export default function App() {
       const destination = locations.find((entry) => entry.id === diceCheck.fareDodgeDestinationId)
       if (destination) {
         const total = Math.ceil(destination.travelMinutes * 0.5)
+        recordShelterDeparture(destination.id)
         setStreetBenchFound(false)
         setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } })
         setSelectedDestination(null)
@@ -1059,6 +1086,7 @@ export default function App() {
       return
     }
     if (kind === 'housing') {
+      setDiscoveredLocations(prev => prev.includes('residential-shelter') ? prev : [...prev, 'residential-shelter'])
       if (life.schroniskoReferral) {
         setMessage('You already have a referral to Schronisko. It is available on the map.')
         return
@@ -1167,11 +1195,21 @@ export default function App() {
 
   function useItemImpl(item: 'water' | 'food') {
     if (inventory[item] <= 0) return
-    setInventory((prev) => ({ ...prev, [item]: prev[item] - 1 }))
-    setGame((prev) => item === 'water'
-      ? { ...prev, thirst: Math.min(100, prev.thirst + 38) }
-      : { ...prev, hunger: Math.min(100, prev.hunger + 28), mood: Math.min(100, prev.mood + 2) })
-    setMessage(item === 'water' ? 'You drank a bottle of water.' : 'You ate the food from your backpack.')
+    const freshness = inventory.foodFreshness
+    setInventory(prev => ({ ...prev, [item]: prev[item] - 1,
+      foodFreshness: item === 'food' && prev.food <= 1 ? 100 : prev.foodFreshness }))
+    if (item === 'water') {
+      setGame(prev => applyAction(prev, { minutes: 0, thirst: 38 }))
+      setMessage('You drank a bottle of water.')
+    } else {
+      const spoiled = freshness <= 20
+      const stale = freshness <= 50
+      setGame(prev => applyAction(prev, { minutes: 0,
+        hunger: spoiled ? 10 : stale ? 20 : 28,
+        health: spoiled ? -8 : 0, mood: spoiled ? -4 : stale ? 0 : 2 }))
+      setMessage(spoiled ? 'You ate spoiled food. It eased hunger a little, but damaged your health and mood.' :
+        stale ? 'You ate stale food. It was less filling.' : 'You ate the food from your backpack.')
+    }
   }
 
   function reset() {
@@ -1202,6 +1240,8 @@ export default function App() {
     localStorage.removeItem('street-life-effects-v1')
     localStorage.removeItem('street-life-situation-v1')
     localStorage.removeItem('street-life-sleep-v1')
+    localStorage.removeItem('street-life-trip-v1')
+    localStorage.removeItem('street-life-begging-v1')
     setMobileServiceUntil(0)
     setMobileAutoRenew(true)
     setMobileRenewedDay(0)
@@ -1246,12 +1286,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-53</div>
+        <div className="trash-build">Build 2026.10.07-54</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-53</div>
+    <div className="build-badge">v2026.10.07-54</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1351,7 +1391,7 @@ export default function App() {
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span onClick={(e) => e.stopPropagation()}><select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></span></button>}
           </>}
           {currentActions.length ? currentActions.map((action) => {
-            const unavailable = (!open && action.requiresOpen !== false) || (!!action.cost && game.money < action.cost)
+            const unavailable = (action.id === 'shelter-social-worker' ? !shelterWorkerAvailable : (!open && action.requiresOpen !== false)) || (!!action.cost && game.money < action.cost)
             return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
               <div><strong>{action.name}</strong><small>{action.description}</small></div>
               <span onClick={(e) => (action.id === 'street-sleep' || action.id === 'shelter-rest' || action.id === 'residential-sleep') && e.stopPropagation()}>{action.id === 'street-sleep' || action.id === 'shelter-rest' || action.id === 'residential-sleep' ? <select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select> : <>{action.cost ? `${action.cost} zł · ` : ''}~{action.minutes} min</>}</span>

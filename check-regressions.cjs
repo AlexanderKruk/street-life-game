@@ -1,0 +1,109 @@
+const {JSDOM}=require('jsdom');
+const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'http://localhost/street-life-game/',pretendToBeVisual:true});
+for(const k of ['window','document','localStorage','HTMLElement','Node','Event','MouseEvent'])global[k]=dom.window[k];
+Object.defineProperty(global,'navigator',{value:dom.window.navigator});
+global.IS_REACT_ACT_ENVIRONMENT=true;
+let now=1800000000000, nextId=1;
+Date.now=()=>now;
+const callbacks=new Map();
+window.setInterval=(fn,delay)=>{const id=nextId++;callbacks.set(id,{fn,delay});return id};
+window.clearInterval=id=>callbacks.delete(id);
+require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'regression-app.cjs',external:['react','react-dom','react/jsx-runtime']});
+const React=require('react');
+const {render,screen,fireEvent,within,act,cleanup,configure}=require('@testing-library/react');
+configure({getElementError:message=>new Error(message)});
+process.on('uncaughtException',error=>{console.error(error.message);cleanup();dom.window.close();process.exit(1)});
+const assert=require('node:assert/strict');
+const App=require('./regression-app.cjs').default;
+const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
+const read=k=>JSON.parse(localStorage.getItem(k));
+function setup(s={},extra={}){
+ cleanup();localStorage.clear();
+ localStorage.setItem(stateKey,JSON.stringify({day:1,minutes:480,money:100,hunger:72,thirst:66,energy:68,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...s}));
+ localStorage.setItem('street-life-effects-v1','[]');
+ localStorage.setItem('street-life-discovered-v1','["street","station","shop","support","shelter","work"]');
+ localStorage.setItem('street-life-mobile-auto-renew','false');
+ localStorage.setItem('street-life-mobile-renewed-day',String(s.day??1));
+ localStorage.setItem('street-life-mobile-service-until','5000');
+ for(const[k,v]of Object.entries(extra))localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));
+ Math.random=()=>.99;
+ render(React.createElement(App));
+}
+function click(name){fireEvent.click(screen.getByRole('button',{name}));}
+function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
+function advance(ms){for(let t=0;t<ms;t+=1000){now+=1000;act(()=>{for(const{fn}of [...callbacks.values()])fn()})}}
+function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
+
+
+// P1: referral opens map, including migration of a v53 save.
+setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
+assert(read(lifeKey).schroniskoReferral);assert(document.querySelector('.city-map').textContent.includes('Schronisko'));
+setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.querySelector('.city-map').textContent.includes('Schronisko'));
+
+// Sleep and immediate work must apply disease/dehydration and age both food stores.
+setup({hunger:0,thirst:0,health:90,energy:68},{'street-life-effects-v1':[{id:'cold',expiresAt:10000}], [invKey]:{food:2,foodFreshness:100}, 'street-life-storage-v1':{food:2,foodFreshness:100}});
+click(/Sleep on the ground/);click('Wake up (debug)');
+assert(Math.abs(read(stateKey).health - (90 - .147 * 480)) < 1e-8);
+assert(Math.abs(read(invKey).foodFreshness - (100 - 100 / 2880 * 480)) < 1e-8);
+assert(Math.abs(read('street-life-storage-v1').foodFreshness - read(invKey).foodFreshness) < 1e-8);
+setup({locationId:'work',hunger:0,thirst:0,health:90,energy:75},{'street-life-effects-v1':[{id:'cold',expiresAt:10000}], [invKey]:{food:2,foodFreshness:100}});
+click(/Take a short shift/);assert(Math.abs(read(stateKey).health - (90 - .147 * 180)) < 1e-8);assert(read(invKey).foodFreshness < 94);
+
+// Cancelled routes must never count as a departure; actual walking does, once.
+setup({locationId:'shelter',minutes:540},{[lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,shelterStrikes:0}});
+click(/Map$/);for(let i=0;i<3;i++){click(/^.*Station/);fireEvent.click(document.querySelector('.travel-sheet .sheet-close'));}
+assert.equal(read(stateKey).locationId,'shelter');assert.equal(read(lifeKey).shelterStrikes,0);
+click(/^.*Station/);click(/Walk/);assert.equal(read(lifeKey).shelterStrikes,1);
+
+
+// D20 freezes time and prevents exhaustion, both before and after rolling.
+setup({locationId:'shop',energy:.15});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);const frozen=read(stateKey);advance(3000);
+assert.deepEqual(read(stateKey),frozen);assert(document.querySelector('.dice-overlay'));assert(!document.querySelector('.sleep-overlay'));
+click('Roll D20');advance(3000);assert.deepEqual(read(stateKey),frozen);click('Continue');assert(read(stateKey).minutes > frozen.minutes);
+setup({energy:.15});click(/Map$/);click(/^.*Station/);click(/Ride without/);const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
+
+// Auto renewal keeps prepaid time and money; expired service buys a full day.
+setup({day:2},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'6000'});
+assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6000);assert.equal(read(stateKey).money,100);
+setup({day:2},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'1500'});
+assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),3360);assert.equal(read(stateKey).money,99);
+setup({day:2,money:0},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'6000'});
+assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6000);
+
+// A paid trip resumes from remaining time with its original result snapshot.
+setup();click(/Map$/);click(/^.*Station/);click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
+cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);
+advance(3000);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
+
+// Fresh, stale and spoiled food have different effects; empty stacks reset freshness.
+for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]) {
+  setup({hunger:20},{[invKey]:{food:1,foodFreshness:freshness}});click(/Inventory$/);click(/Food.*tap to eat/);
+  assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,58+mood);assert.equal(read(invKey).foodFreshness,100);
+}
+
+
+// Worker access follows appointment hours, not overnight accommodation hours.
+const booking={housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterAuditDay:1,shelterLastStayDay:1};
+setup({locationId:'shelter',minutes:1080},{[lifeKey]:booking});const worker=screen.getByRole('button',{name:/Talk to shelter social worker/});assert(worker.disabled);fireEvent.click(worker);assert.equal(read(stateKey).minutes,1080);
+setup({day:2,locationId:'shelter',minutes:1020},{[lifeKey]:booking});assert(!screen.getByRole('button',{name:/Talk to shelter social worker/}).disabled);click(/Talk to shelter social worker/);assert.equal(read(stateKey).minutes,1020);advance(3000);assert.equal(read(stateKey).minutes,1020);
+click(/I still cannot afford housing/);click(/I am looking for work/);click(/Go to the Job Centre/);assert.equal(read(stateKey).minutes,1050);assert.equal(read(lifeKey).shelterUntilDay,31);assert(screen.getByRole('dialog').textContent.includes('30 min'));
+
+// Full backpack rejects new stacks; a partial stack still accepts food.
+setup({locationId:'station'},{[invKey]:{food:4,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);assert(screen.getByRole('dialog').textContent.includes('no backpack room'));
+setup({locationId:'station'},{[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);
+
+// Daily begging allowance survives reload and resets only on the next game day.
+setup();for(let i=0;i<3;i++){click(/Ask passers-by for money/);ok();}assert(screen.getByRole('button',{name:/Ask passers-by for money/}).disabled);
+cleanup();render(React.createElement(App));assert(screen.getByRole('button',{name:/Ask passers-by for money/}).disabled);
+setup({day:2},{'street-life-begging-v1':{day:1,attempts:3}});assert(!screen.getByRole('button',{name:/Ask passers-by for money/}).disabled);click(/Ask passers-by for money/);assert.deepEqual(read('street-life-begging-v1'),{day:2,attempts:1});
+
+// Unified time gives identical results for large blocks and minute ticks,
+// including effect expiry, weather change and crossing midnight.
+require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
+const {advanceTime,initialState}=require('./regression-game.cjs');
+for(const context of [{},{sleeping:true},{walking:true,music:true}]) {
+ const start={...initialState,minutes:1430,hunger:12,thirst:12,health:80};
+ const options={...context,effects:[{id:'cold',expiresAt:1450},{id:'well-fed',expiresAt:1460}]};
+ const block=advanceTime(start,100,options);let ticks=start;for(let i=0;i<100;i++)ticks=advanceTime(ticks,1,options);assert.deepEqual(block,ticks);assert.equal(block.day,2);assert.equal(block.minutes,90);
+}
+cleanup();dom.window.close();console.log('PASS: all 10 review findings, save migration, clock equivalence across midnight/effect expiry.');

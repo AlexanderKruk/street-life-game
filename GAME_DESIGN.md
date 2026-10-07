@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-07 · through gameplay commit `112475c17f076650abd442b06dc1f3697e5c67ab`. Current visible build: `v2026.10.07-53`.
+**Last gameplay sync:** 2026-10-07 · review fixes P1/P2. Current visible build: `v2026.10.07-54`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -10,7 +10,7 @@ The rules below describe the implemented prototype, including its current test s
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry and an active sleep session in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Travel, pending results and street-event choices are not persisted.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot) and the daily begging allowance in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
 
 Initial state:
 - Day 1, Monday, 08:00, Street.
@@ -25,9 +25,9 @@ Time is a primary pressure. Ordinary visible gameplay advances **1 game minute p
 
 Actions can advance larger blocks of game time immediately. Passing 1440 minutes advances the day. Weekdays cycle Monday through Sunday.
 
-The autonomous timer pauses while an action result is pending or its OK window is open, during a street event, during the trash minigame, and after Health reaches zero. Ordinary gameplay/travel also pauses when the browser/app is hidden. Sleep is an exception: its saved wall-clock timestamps allow it to catch up while hidden or after reloading.
+The autonomous timer pauses while an action result is pending or its OK window is open, during a street event or D20 check (including theft/fare dodging), during the shelter interview, during the trash minigame, and after Health reaches zero. Ordinary gameplay/travel also pauses when the browser/app is hidden. Sleep is an exception: its saved wall-clock timestamps allow it to catch up while hidden or after reloading.
 
-## Action and event results (v53)
+## Action and event results (v53–v54)
 
 Completed actions and resolved event choices use a shared **RESULT** window with an **OK** button. It contains the outcome text and, when applicable, two sections:
 
@@ -58,7 +58,9 @@ Six needs are tracked from 0 to 100:
 - Hygiene
 - Mood
 
-Normal elapsed-time decay in `applyAction`:
+All elapsed time uses `advanceTime`: ordinary ticks, travel, sleep and immediate actions. It evaluates minute by minute, including midnight/weather changes and expiry of Cold/Well fed. Bonuses are applied after elapsed time. Backpack/stored food ages for every elapsed minute; background Music/Navigation battery costs follow elapsed time too. Sleep skips awake Energy costs, while Food, Thirst, Hygiene, intoxication, weather Thirst drain and illness/dehydration/starvation Health damage continue.
+
+Normal elapsed-time decay:
 - Food loses 1 point per 14.4 game minutes: roughly 100 points per 24 hours.
 - Thirst loses 1 point per 10.8 minutes: roughly 100 points per 18 hours.
 - Energy normally loses 1 point per 9.6 minutes: roughly 100 points per 16 hours of wakefulness, before Health/weather/cold modifiers. Walking now adds only a small extra Energy cost; its main physical cost is Food and Thirst.
@@ -76,7 +78,7 @@ The Status screen shows the six needs plus Housing, Employment, Income, Document
 
 Health is long-term physical condition and is deliberately more consequential than an ordinary refillable meter.
 
-Current automatic Health damage per game minute:
+Current automatic Health damage per game minute (also during sleep, work and other immediate actions):
 - Thirst = 0: -0.10 Health.
 - Thirst 1–10: -0.025.
 - Food = 0: -0.035.
@@ -146,7 +148,7 @@ Each search requires active mobile service and at least 2% Battery, advances 15 
 
 Searching for Night shelter at or after 22:00 (checked at the start of the search) says registration is closed tonight and creates a saved goal to be there **next game day at 19:00**. This guidance currently differs from the implemented 18:00 opening/check-in rule.
 
-Schronisko also requires a referral or current Schronisko housing in addition to being discovered. Discovery is persistent and resets on a new run. See limitations for services without a connected discovery route.
+Schronisko also requires a referral or current Schronisko housing. Issuing the referral adds its address to discovery; older saves with a referral/housing but missing discovery are repaired on load. Discovery is persistent and resets on a new run. See limitations for services without a connected discovery route.
 
 ## Travel
 
@@ -167,7 +169,7 @@ At normal Health this means roughly 1 hour of ordinary activity costs 4.2 Food, 
 
 Walking also adds Hygiene loss per minute based on the current temperature: 0.025 below 18°C, 0.033 at 18–24°C and 0.05 at 25°C or above.
 
-Travel has its own progress screen. Arrival opens a result window summarizing changes since departure; changes from a travel event can also be included in that overall trip summary. A travel street-event roll occurs when travel begins:
+Travel has its own progress screen. Active trips persist their mode, destination, remaining minutes and initial result snapshot; reloading resumes the progress screen without repeating fare payment. Arrival opens a result window summarizing changes since departure; changes from a travel event can also be included in that overall trip summary. A travel street-event roll occurs when travel begins:
 - Walking: 30% chance to attempt to spawn an eligible event.
 - Public transport: 18%.
 
@@ -191,7 +193,7 @@ Using inventory:
 - Food is stored as one stack with an average freshness value, so different ages do not consume extra backpack slots.
 - Freshness falls from 100% to 0% over roughly 48 game hours, including while stored in Schronisko.
 - Freshness labels: Fresh >50%, Stale >20–50%, Spoiled 0–20%.
-- Current backpack consumption uses the same effect for all freshness levels: consumes 1, restores up to +28 Food and +2 Mood. Freshness-dependent eating penalties are not currently applied.
+- Every food use consumes 1 portion. Fresh (>50%): +28 Food, +2 Mood. Stale (>20–50%): +20 Food, no Mood bonus. Spoiled (0–20%): +10 Food, -8 Health, -4 Mood. Values are raw changes before caps. Emptying a stack resets its freshness to 100%.
 - Adding newly obtained food to an existing stack recalculates the stack's weighted average freshness.
 - Cigarette: consumes 1, +5 Mood, -0.5 Health.
 - Medicine: consumes 1 only when Cold is active and removes Cold.
@@ -222,7 +224,7 @@ Phone Condition can currently be damaged by street events, especially drops and 
 ## Mobile service
 Phone data/service is a recurring survival expense: **1 zł buys 24 game hours**. Time can be topped up before expiry and stacks from the later of the current expiry or the current game time. Navigation, Music and online Video require active mobile service. The ambulance emergency call explicitly does **not** require paid service; it only requires a working phone with battery. Remaining service time is shown in the phone panel and persists across saves.
 
-Auto-renew is ON by default. Once per game day it pays 1 zł and sets expiry to that day's midnight. If funds are insufficient, service expires and the UI explains the failure. Navigation and Music are switched off when service is inactive. Manual top-ups stack as described above; the current daily auto-renew can overwrite an existing later expiry, so the two modes are not fully reconciled.
+Auto-renew is ON by default. It attempts renewal only when the existing paid service has expired, at most once per game day. On success it pays 1 zł and adds a full 1440 minutes from the later of existing expiry or current time. Already prepaid time is preserved with no extra automatic charge. Insufficient funds leave the expiry unchanged and produce a failure message; manual top-up remains available. Navigation and Music are switched off when service is inactive.
 
 ## Shop
 
@@ -255,7 +257,7 @@ Cold additionally drains Energy by 0.045/min and Mood by 0.012/min, on top of it
 Street is the starting location. It is always available and represents the least stable housing state rather than using Station as a stand-in for homelessness. Street is not treated as a normal travel destination: choosing Street from another location means simply stepping outside, with no fare, travel-mode choice or travel time. Travelling from Street to a specific destination still uses the normal walking/public-transport flow.
 
 Street has its own small survival loop. Its economy is deliberately capped around emergency survival: street activities should help pay for water, cheap food or a bus ticket, but should not compete with actual work:
-- **Ask passers-by for money** — 45 minutes. Current payout distribution is 0 zł (35%), 1 zł (30%), 2 zł (20%), 3 zł (11%) or 5 zł (4%). It also costs some Energy; getting nothing hurts Mood. Expected gross income is only about 1.34 zł per attempt, so repeatedly begging is a survival fallback rather than a viable job. The activity is limited to **3 attempts per game day**; the UI shows the remaining attempts, and the allowance resets automatically when the game day changes.
+- **Ask passers-by for money** — 45 minutes. Current payout distribution is 0 zł (35%), 1 zł (30%), 2 zł (20%), 3 zł (11%) or 5 zł (4%). It also costs some Energy; getting nothing hurts Mood. Expected gross income is only about 1.34 zł per attempt, so repeatedly begging is a survival fallback rather than a viable job. The activity is limited to **3 attempts per game day**; the UI shows the remaining attempts, and the allowance resets automatically when the game day changes. The day/attempt counter is saved, so reloading does not grant extra attempts.
 - **Sleep on the ground** — selectable 1–10 hours. At 8 hours: +52 Energy, -12 Hygiene, -9 Mood and no direct Health recovery, plus elapsed-time Food/Thirst/Hygiene loss. Street wake-event attempt: min(90%, 75% × hours / 8).
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
@@ -274,7 +276,7 @@ Sleep duration is player-controlled from **1 to 10 hours** in one-hour steps for
 | Night shelter | +100 Energy, +5 Hygiene, +10 Mood; +2 Health only if Food and Thirst are both >20 at waking. |
 | Schronisko | +100 Energy, +3 Hygiene, +8 Mood; +3 Health only if Food and Thirst are both >20 at waking. |
 
-During sleep, Food loses minutes / 14.4, Thirst loses minutes / 10.8, Hygiene loses minutes / 180 and Intoxication loses minutes / 6. Ordinary awake Energy loss is skipped. Actual Energy recovery is still capped by Health and all needs are clamped to 0–100.
+During sleep, the shared time calculation applies Food loss (minutes / 14.4), Thirst loss (minutes / 10.8 plus weather), Hygiene loss (minutes / 180), intoxication decay, active Cold/Well fed modifiers and Health damage from illness, dehydration and starvation. Backpack and stored food continue ageing. Ordinary awake Energy loss is skipped. Actual Energy recovery is still capped by Health and all needs are clamped to 0–100.
 
 Outdoor sleep independently rolls for a two-day Cold effect at waking. Chance is clamped to 5–65%: base 8%, plus temperature (≤5°C +28%, ≤10°C +16%, ≤15°C +7%), weather (Rain +22%, Showers +14%, Windy +10%) and ground sleeping +8%. It uses waking-day weather/temperature. An already active Cold is neither duplicated nor extended by this roll. The sleep result preserves the illness text and shows a newly started Cold only when applicable.
 
@@ -282,7 +284,7 @@ Outdoor sleep independently rolls for a two-day Cold effect at waking. Chance is
 
 Sleep is a blocking game state rather than an instant time skip. In the current test build, the selected 1–10 game hours advance at **10 game minutes per real second** (`DEBUG_SLEEP_SPEED = 10`): an 8-hour sleep lasts about 48 real seconds. A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. There is no manual Wake Up action: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Sleep starts with Music and Navigation switched off. Sleep state and wall-clock timestamps are saved, and the game catches up to the scheduled waking time after a reload. The sleep result opens after the period finishes; any generated wake event is shown after OK. Sleep cannot start during travel.
 
-At Energy 0, when no trip/event/result/sleep/game-over is active, the character automatically falls asleep: 8 hours at Schronisko or an open Night shelter with Intoxication ≤10; otherwise a random 2–4 hours on the ground, moving to Street if necessary. This forced-sleep path currently does not check the Night shelter reservation separately.
+At Energy 0, when no trip/event/D20/interview/result/sleep/game-over is active, the character automatically falls asleep: 8 hours at Schronisko or an open Night shelter with Intoxication ≤10; otherwise a random 2–4 hours on the ground, moving to Street if necessary. This forced-sleep path currently does not check the Night shelter reservation separately.
 
 ## Alcohol / intoxication
 The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/promille). It starts at 0 and currently falls by about 10 points per game hour as time passes. The Night shelter has a strict admission threshold: **Intoxication above 10 blocks shelter sleep until the character sobers up**. This creates a direct survival tradeoff for future alcohol items/events. The Status screen exposes the current Intoxication value. Alcohol sources and individual drink strengths can be added on top of this system.
@@ -307,14 +309,14 @@ Night shelter:
 - First registration takes 30 minutes, gives +3 Mood before elapsed-time decay and creates a reserved place for **7 days**. The active UI bypasses the older random bed-availability resolver.
 - With an active booking, nightly check-in is **18:00–22:00**.
 - Missing 3 required nights within the current 30-day game-month cancels the place and blocks re-registration until the next month.
-- Leaving after 08:00 creates a shelter rule strike; 3 strikes cancel the place and block re-registration until the next month.
+- Actually departing after 08:00 and before 18:00 with an active booking creates a shelter rule strike. Selecting/cancelling a route does not count; walking, paid/fare-dodging transit or stepping onto Street does. A rejected unpaid transit attempt does not count; 3 strikes cancel the place and block re-registration until the next month.
 - **Quiet hours are 22:00–06:00.** During that period normal shelter actions are blocked and only sleeping is allowed.
 - Shower: 35 minutes, +55 Hygiene, +4 Energy, +4 Mood.
 - Intoxication above 10 blocks shelter sleep/admission to bed; the initial registration branch itself does not currently check intoxication.
 - Free dinner is served **19:00–20:30**, once per day: 20 minutes, +34 Food, +10 Thirst, +4 Mood before normal elapsed-time decay.
 - Free breakfast is served **06:30–07:00**, once per day: 15 minutes, +25 Food, +8 Thirst, +3 Mood before normal elapsed-time decay.
 - Thursday laundry is a two-step persistent cycle: leave clothes **06:30–08:00 Thursday**, then collect them **18:00–22:00 Thursday**. Pickup is only possible if clothes were actually left that morning.
-- A shelter social worker is available **Tuesday and Friday, 16:00–20:00**. Renewal is handled through a short interview about why the player still needs the place, what they are already doing and what they plan to do next. The extension is not based on missed nights/strikes: first renewal can reach 30 days; later renewal length depends on renewal count and constructive/progress answers, currently producing 7, 14 or 30 days. The current flow advances 30 minutes when opening the interview and another 30 minutes when completing it.
+- A shelter social worker is available **Tuesday and Friday, 16:00–20:00**. Renewal is handled through a short interview about why the player still needs the place, what they are already doing and what they plan to do next. The extension is not based on missed nights/strikes: first renewal can reach 30 days; later renewal length depends on renewal count and constructive/progress answers, currently producing 7, 14 or 30 days. Availability is checked before spending time, independently of night-shelter bed opening hours. The interview pauses background time and charges 30 minutes once, when completed; opening it or an unavailable appointment spends no time.
 
 ### Safe storage
 
@@ -377,7 +379,7 @@ Implemented events:
 9. **A quiet night** — wake event; +5 Mood and +5 Energy.
 10. **Something happened overnight** — Street housing wake event; loses up to 5 zł through clamping, -7 Mood and documents.
 
-Event outcomes can currently change time, money, Mood, Energy, Health, Hygiene, Food, Water, phone condition, jacket condition and document possession.
+Event outcomes can currently change time, money, Mood, Energy, Health, Hygiene, Food, Water, phone condition, jacket condition and document possession. Food/Water gains respect backpack capacity, including free space in existing stacks; excess supplies are left behind with an explanatory result. For an outcome giving both, Food is fitted first, then Water.
 
 ## D20 checks
 
@@ -481,13 +483,11 @@ These are current code realities, not planned features:
 - The shop shelf is only rendered while the shop is open instead of remaining visible/disabled when closed.
 - Phone Condition increases battery drain, but Condition 0 does not yet universally disable all phone functions.
 - Music's Mood gain can continue based on toggle state even if battery reaches zero.
-- Travel state is not persisted, so reloading during a trip can return the player to the previous location after fare was already paid.
 - Travel times are destination-based rather than pair-to-pair.
 - Public transport has no service timetable.
 - Day Center capacity is currently rerolled per service action rather than once per visit/admission.
 - Station bench sleep still shares generic bench wake-event plumbing and should eventually have station-specific risk handling.
 - Shelter social-worker promises/plans are stored but are not yet verified against completed gameplay milestones.
-- Food granted by street events does not currently check backpack capacity.
 - Not every custom action currently rolls a location event.
 - Journal goals and the next-important entry are mostly static placeholders; the late-night shelter-search goal is separately dynamic and saved.
 - Benefits support is a placeholder.
@@ -496,13 +496,13 @@ These are current code realities, not planned features:
 - The temperature day-cycle formula currently uses a 20-hour cosine period despite the comment describing a normal daily cycle.
 - The Night shelter timing/check-in rules should be revisited for long sleeps and initial registration versus nightly stays.
 - Active effects and some old saves may expose transitional edge cases as schemas evolve.
-- Freshness is tracked/displayed, but backpack eating currently ignores freshness penalties.
-- The gradual map only has connected online discovery routes for Night shelter, Day work and Help center. Other services, including Schronisko after referral, can remain hidden in a new run because referral does not itself add the address to the discovery list.
-- Sleep bypasses the ordinary awake timer's weather/Cold/dehydration/starvation Health-damage calculation. Those consequences are not simulated continuously during sleep.
-- Instant time-advancing actions apply base need decay but do not simulate every awake timer modifier minute by minute.
-- The begging attempt counter is not saved and can reset on reload.
+- The gradual map has connected online discovery routes for Night shelter, Day work and Help center, plus Schronisko through a referral. Other services still lack a connected discovery route in a new run.
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
+
+## Regression checks (v54)
+
+`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. A pure time check verifies large blocks equal minute ticks across midnight/weather changes and effect expiry. GitHub Pages deployment runs these checks before building/publishing.
 
 ## Design principles already established by implemented systems
 
@@ -518,5 +518,6 @@ These are current code realities, not planned features:
 - Prefer safe choice vs risky check vs walk-away when it creates a meaningful decision.
 - Do not add abstract RPG stats unless the existing survival/life stats prove insufficient.
 - Result feedback should show actual changes, hide zero rows and let the player read before time resumes.
+
 
 

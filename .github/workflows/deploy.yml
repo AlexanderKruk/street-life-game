@@ -23,9 +23,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+      - name: Gameplay regression checks
+        run: npm test
       - name: Build
         run: npm run build
       - name: Setup Pages
@@ -45,3 +47,4 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+

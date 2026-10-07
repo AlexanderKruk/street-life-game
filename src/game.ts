@@ -97,45 +97,74 @@ export function formatTime(minutes: number) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-export function applyAction(state: GameState, result: ActionResult): GameState {
-  const total = state.minutes + result.minutes
-  const extraDays = Math.floor(total / 1440)
-  const hunger = clamp(state.hunger - result.minutes / 14.4 + (result.hunger ?? 0))
-  const thirst = clamp(state.thirst - result.minutes / 10.8 + (result.thirst ?? 0))
-  const energySpent = result.minutes / 9.6 * healthEnergyMultiplier(state.health)
-  const nextHealth = clamp(state.health + (result.health ?? 0))
-  const energy = Math.min(energyCap(nextHealth), clamp(state.energy - energySpent + (result.energy ?? 0)))
-  const hygiene = clamp(state.hygiene - result.minutes / 180 + (result.hygiene ?? 0))
-  // Abstract gameplay scale, not BAC/promille. Roughly 10 points wear off per game hour.
-  const intoxication = clamp(state.intoxication - result.minutes / 6 + (result.intoxication ?? 0))
+export const WEATHER = [
+  { icon: '☁️', label: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
+  { icon: '🌧️', label: 'Rain', temp: 7, energyDrain: 0.025, thirstDrain: 0 },
+  { icon: '☀️', label: 'Clear', temp: 16, energyDrain: 0, thirstDrain: 0.02 },
+  { icon: '🌬️', label: 'Windy', temp: 6, energyDrain: 0.035, thirstDrain: 0 },
+  { icon: '🌦️', label: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
+]
 
-  return {
-    ...state,
-    day: state.day + extraDays,
-    minutes: total % 1440,
-    money: Math.max(0, state.money + (result.money ?? 0)),
-    hunger,
-    thirst,
-    energy,
-    health: nextHealth,
-    hygiene,
-    mood: clamp(state.mood + (result.mood ?? 0)),
-    intoxication,
+export function temperatureAt(base: number, minutes: number) {
+  return Math.round(base - Math.cos(((minutes / 60 - 5) / 10) * Math.PI) * 4)
+}
+
+export type TimeContext = {
+  effects?: readonly { id: string; expiresAt: number }[]
+  sleeping?: boolean
+  walking?: boolean
+  music?: boolean
+}
+
+// Minute-sized steps make an instant action and timer ticks use the same rules,
+// including effect expiry and changes of day/weather within an action.
+export function advanceTime(state: GameState, minutes: number, context: TimeContext = {}): GameState {
+  let next = { ...state }
+  for (let left = Math.max(0, minutes); left > 0;) {
+    const step = Math.min(1, left)
+    left -= step
+    const now = absoluteMinutes(next)
+    const weather = WEATHER[(next.day - 1) % WEATHER.length]
+    const active = (id: string) => context.effects?.some(effect => effect.id === id && effect.expiresAt > now)
+    const cold = active('cold')
+    const wellFed = active('well-fed')
+    const hunger = clamp(next.hunger - step / 14.4 + (wellFed ? 0.035 * step : 0) - (context.walking ? 0.055 * step : 0))
+    const thirst = clamp(next.thirst - step / 10.8 - weather.thirstDrain * step - (context.walking ? 0.04 * step : 0))
+    const health = clamp(next.health - ((thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
+      (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) + (cold ? 0.012 : 0)) * step)
+    const temperature = temperatureAt(weather.temp, next.minutes)
+    const walkingHygiene = context.walking ? (temperature >= 25 ? 0.05 : temperature >= 18 ? 0.033 : 0.025) : 0
+    const energyDrain = context.sleeping ? 0 :
+      step / 9.6 * healthEnergyMultiplier(next.health) + weather.energyDrain * step +
+      (context.walking ? 0.01 * step * healthEnergyMultiplier(health) : 0) + (cold ? 0.045 * step : 0)
+    const total = next.minutes + step
+    next = { ...next, day: next.day + Math.floor(total / 1440), minutes: total % 1440,
+      hunger, thirst, health, energy: Math.min(energyCap(health), clamp(next.energy - energyDrain)),
+      hygiene: clamp(next.hygiene - step / 180 - walkingHygiene * step),
+      mood: clamp(next.mood - (cold ? 0.012 * step : 0) + (context.music ? 0.012 * step : 0)),
+      intoxication: clamp(next.intoxication - step / 6),
+    }
+  }
+  return next
+}
+
+export function applyAction(state: GameState, result: ActionResult, context: TimeContext = {}): GameState {
+  const next = advanceTime(state, result.minutes, context)
+  const health = clamp(next.health + (result.health ?? 0))
+  return { ...next,
+    money: Math.max(0, next.money + (result.money ?? 0)),
+    hunger: clamp(next.hunger + (result.hunger ?? 0)),
+    thirst: clamp(next.thirst + (result.thirst ?? 0)),
+    energy: Math.min(energyCap(health), clamp(next.energy + (result.energy ?? 0))),
+    health,
+    hygiene: clamp(next.hygiene + (result.hygiene ?? 0)),
+    mood: clamp(next.mood + (result.mood ?? 0)),
+    intoxication: clamp(next.intoxication + (result.intoxication ?? 0)),
   }
 }
 
-export function applySleepTime(state: GameState, minutes: number): GameState {
-  const total = state.minutes + minutes
-  const extraDays = Math.floor(total / 1440)
-  return {
-    ...state,
-    day: state.day + extraDays,
-    minutes: total % 1440,
-    hunger: clamp(state.hunger - minutes / 14.4),
-    thirst: clamp(state.thirst - minutes / 10.8),
-    hygiene: clamp(state.hygiene - minutes / 180),
-    intoxication: clamp(state.intoxication - minutes / 6),
-  }
+export function applySleepTime(state: GameState, minutes: number, context: TimeContext = {}): GameState {
+  return advanceTime(state, minutes, { ...context, sleeping: true, walking: false, music: false })
 }
 
 export function isOpen(location: Location, minutes: number) {
@@ -263,3 +292,4 @@ export const actions: GameAction[] = [
 export function absoluteMinutes(state: GameState) {
   return (state.day - 1) * 1440 + state.minutes
 }
+
