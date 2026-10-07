@@ -149,7 +149,10 @@ export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('')
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
-  const [screen, setScreen] = useState<Screen>('location')
+  const [screen, setScreen] = useState<Screen>(() => {
+    const saved = localStorage.getItem('street-life-screen')
+    return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
+  })
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [trip, setTrip] = useState<Trip | null>(null)
   const [musicOn, setMusicOn] = useState(false)
@@ -216,6 +219,10 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
+  useEffect(() => {
+    if (screen !== 'travel') localStorage.setItem('street-life-screen', screen)
+  }, [screen])
+
   useEffect(() => { localStorage.setItem('street-life-mobile-service-until', String(mobileServiceUntil)) }, [mobileServiceUntil])
   useEffect(() => { localStorage.setItem('street-life-mobile-auto-renew', String(mobileAutoRenew)) }, [mobileAutoRenew])
   useEffect(() => { localStorage.setItem('street-life-mobile-renewed-day', String(mobileRenewedDay)) }, [mobileRenewedDay])
@@ -1134,12 +1141,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.06-42</div>
+        <div className="trash-build">Build 2026.10.07-43</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.06-42</div>
+    <div className="build-badge">v2026.10.07-43</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
