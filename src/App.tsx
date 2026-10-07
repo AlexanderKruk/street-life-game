@@ -4,6 +4,7 @@ import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventC
 
 const SAVE_KEY = 'street-life-save-v3'
 const DISCOVERY_KEY = 'street-life-discovered-v1'
+const GOAL_KEY = 'street-life-goal-v1'
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const WEATHER = [
   { icon: '☁️', label: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
@@ -158,6 +159,9 @@ export default function App() {
       return ['street', 'station', 'shop']
     }
   })
+  const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => {
+    try { const raw = localStorage.getItem(GOAL_KEY); return raw ? JSON.parse(raw) : null } catch { return null }
+  })
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>(() => {
     const saved = localStorage.getItem('street-life-screen')
@@ -230,6 +234,7 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem(DISCOVERY_KEY, JSON.stringify(discoveredLocations)) }, [discoveredLocations])
+  useEffect(() => { if (activeGoal) localStorage.setItem(GOAL_KEY, JSON.stringify(activeGoal)); else localStorage.removeItem(GOAL_KEY) }, [activeGoal])
   useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
   useEffect(() => {
     if (screen !== 'travel') localStorage.setItem('street-life-screen', screen)
@@ -653,7 +658,12 @@ export default function App() {
     setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2) }))
     setGame((prev) => applyAction(prev, { minutes: 15 }))
     setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
-    setMessage(result.message)
+    if (kind === 'shelter' && game.minutes >= 22 * 60) {
+      setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
+      setMessage('You find a night shelter, but registration is closed for tonight. Come tomorrow from 19:00 to request a place.')
+    } else {
+      setMessage(result.message)
+    }
   }
 
   function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
@@ -1115,6 +1125,8 @@ export default function App() {
     localStorage.removeItem(SAVE_KEY)
     localStorage.removeItem(DISCOVERY_KEY)
     setDiscoveredLocations(['street', 'station', 'shop'])
+    setActiveGoal(null)
+    localStorage.removeItem(GOAL_KEY)
     setGame(initialState)
     setMessage('New run started.')
     setScreen('location')
@@ -1178,12 +1190,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-49</div>
+        <div className="trash-build">Build 2026.10.07-50</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-49</div>
+    <div className="build-badge">v2026.10.07-50</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1192,6 +1204,8 @@ export default function App() {
         <div className="money">{game.money.toFixed(2)} zł</div>
       </div>
     </header>
+
+    {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <>
       <section className="current location-summary">
