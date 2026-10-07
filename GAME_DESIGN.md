@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-07 · review fixes P1/P2. Current visible build: `v2026.10.07-54`.
+**Last gameplay sync:** 2026-10-07 · food/water pacing update. Current visible build: `v2026.10.07-55`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -60,9 +60,11 @@ Six needs are tracked from 0 to 100:
 
 All elapsed time uses `advanceTime`: ordinary ticks, travel, sleep and immediate actions. It evaluates minute by minute, including midnight/weather changes and expiry of Cold/Well fed. Bonuses are applied after elapsed time. Backpack/stored food ages for every elapsed minute; background Music/Navigation battery costs follow elapsed time too. Sleep skips awake Energy costs, while Food, Thirst, Hygiene, intoxication, weather Thirst drain and illness/dehydration/starvation Health damage continue.
 
+At 100%, Food covers 48 game hours and Water covers 24 game hours at baseline. These are meter durations, not the lifetime of one inventory portion/bottle. The initial 72 Food / 66 Water gives about 34.6 / 15.8 hours before physical-work, walking and weather costs. Food freshness remains a separate 48-hour spoilage system.
+
 Normal elapsed-time decay:
-- Food loses 1 point per 14.4 game minutes: roughly 100 points per 24 hours.
-- Thirst loses 1 point per 10.8 minutes: roughly 100 points per 18 hours.
+- Food loses 1 point per 28.8 game minutes: 100 points per 48 hours.
+- Thirst loses 1 point per 14.4 minutes: 100 points per 24 hours before weather/exertion.
 - Energy normally loses 1 point per 9.6 minutes: roughly 100 points per 16 hours of wakefulness, before Health/weather/cold modifiers. Walking now adds only a small extra Energy cost; its main physical cost is Food and Thirst.
 - Hygiene loses 1 point per 180 game minutes: roughly 8 points per 24 hours before walking, work and action penalties.
 - Mood does not have a generic base decay; particular effects/actions/events change it.
@@ -112,7 +114,7 @@ Current base temperatures are 9°C, 7°C, 16°C, 6°C and 10°C respectively. A 
 
 Weather effects:
 - Rain: extra Energy drain 0.025/min.
-- Clear: extra Thirst drain 0.02/min.
+- Clear: +15% of baseline Thirst drain (about 0.01042/min).
 - Windy: extra Energy drain 0.035/min.
 - Showers: extra Energy drain 0.015/min.
 - Cloudy: no extra drain.
@@ -161,11 +163,11 @@ Public transport normally costs 4.40 zł. The Free transport effect reduces the 
 The player can also choose **Ride without ticket** for 0 zł. This uses the same transit travel time but first makes a visible **Reflex DC 12** D20 check. Success means a free ride; failure currently applies a 20 zł penalty and -8 Mood; natural 20 gives a small Mood bonus, while natural 1 applies a 35 zł penalty and -12 Mood.
 
 Walking adds on top of normal elapsed-time decay:
-- Food drain: 0.055/min (about 3.3 extra points/hour).
-- Thirst drain: 0.04/min (about 2.4 extra points/hour).
+- Food drain: +25% of baseline (about 0.00868/min, 0.52 extra points/hour).
+- Thirst drain: +25% of baseline (about 0.01736/min, 1.04 extra points/hour).
 - Energy drain: 0.01/min (about 0.6 extra points/hour), multiplied by the current Health energy multiplier.
 
-At normal Health this means roughly 1 hour of ordinary activity costs 4.2 Food, 5.6 Thirst and 6.25 Energy, while 1 hour of walking costs about 7.5 Food, 8.0 Thirst and 6.85 Energy. Travel and sleep are mutually exclusive: sleep cannot be started while a trip is in progress.
+At normal Health this means roughly 1 hour of ordinary activity costs 2.08 Food, 4.17 Thirst and 6.25 Energy, while 1 hour of walking costs about 2.60 Food, 5.21 Thirst and 6.85 Energy. Travel and sleep are mutually exclusive: sleep cannot be started while a trip is in progress.
 
 Walking also adds Hygiene loss per minute based on the current temperature: 0.025 below 18°C, 0.033 at 18–24°C and 0.05 at 25°C or above.
 
@@ -239,7 +241,7 @@ The Discount shop currently sells:
 - Medicine: 9 zł for 1.
 - Hot meal: 12 zł, eaten immediately and does not use backpack space.
 
-The hot meal advances 15 minutes, restores +48 Food, +8 Thirst and +5 Mood through the action, and activates Well fed for 4 hours. Well fed offsets Food decay by +0.035/min while active.
+The hot meal advances 15 minutes, restores +48 Food, +8 Thirst and +5 Mood through the action, and activates Well fed for 4 hours. Well fed halves baseline Food decay while active; the walking surcharge still applies. It never passively replenishes Food.
 
 ## Effects
 
@@ -276,7 +278,7 @@ Sleep duration is player-controlled from **1 to 10 hours** in one-hour steps for
 | Night shelter | +100 Energy, +5 Hygiene, +10 Mood; +2 Health only if Food and Thirst are both >20 at waking. |
 | Schronisko | +100 Energy, +3 Hygiene, +8 Mood; +3 Health only if Food and Thirst are both >20 at waking. |
 
-During sleep, the shared time calculation applies Food loss (minutes / 14.4), Thirst loss (minutes / 10.8 plus weather), Hygiene loss (minutes / 180), intoxication decay, active Cold/Well fed modifiers and Health damage from illness, dehydration and starvation. Backpack and stored food continue ageing. Ordinary awake Energy loss is skipped. Actual Energy recovery is still capped by Health and all needs are clamped to 0–100.
+During sleep, the shared time calculation applies Food loss (minutes / 28.8), Thirst loss (minutes / 14.4 plus weather), Hygiene loss (minutes / 180), intoxication decay, active Cold/Well fed modifiers and Health damage from illness, dehydration and starvation. Backpack and stored food continue ageing. Ordinary awake Energy loss is skipped. Actual Energy recovery is still capped by Health and all needs are clamped to 0–100.
 
 Outdoor sleep independently rolls for a two-day Cold effect at waking. Chance is clamped to 5–65%: base 8%, plus temperature (≤5°C +28%, ≤10°C +16%, ≤15°C +7%), weather (Rain +22%, Showers +14%, Windy +10%) and ground sleeping +8%. It uses waking-day weather/temperature. An already active Cold is neither duplicated nor extended by this roll. The sleep result preserves the illness text and shows a newly started Cold only when applicable.
 
@@ -502,7 +504,7 @@ These are current code realities, not planned features:
 
 ## Regression checks (v54)
 
-`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. A pure time check verifies large blocks equal minute ticks across midnight/weather changes and effect expiry. GitHub Pages deployment runs these checks before building/publishing.
+`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. GitHub Pages deployment runs these checks before building/publishing.
 
 ## Design principles already established by implemented systems
 

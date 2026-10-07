@@ -106,4 +106,14 @@ for(const context of [{},{sleeping:true},{walking:true,music:true}]) {
  const options={...context,effects:[{id:'cold',expiresAt:1450},{id:'well-fed',expiresAt:1460}]};
  const block=advanceTime(start,100,options);let ticks=start;for(let i=0;i<100;i++)ticks=advanceTime(ticks,1,options);assert.deepEqual(block,ticks);assert.equal(block.day,2);assert.equal(block.minutes,90);
 }
-cleanup();dom.window.close();console.log('PASS: all 10 review findings, save migration, clock equivalence across midnight/effect expiry.');
+// Full Food lasts 48 hours and full Water 24 hours at baseline. Day 1/2
+// weather adds no water surcharge, so the entire baseline food test is exact.
+const full={...initialState, minutes:0, hunger:100, thirst:100, energy:100, health:100};
+const near=(actual,expected)=>assert(Math.abs(actual-expected)<1e-8,`${actual} != ${expected}`);
+const day=advanceTime(full,1440);near(day.hunger,50);near(day.thirst,0);
+const twoDays=advanceTime(full,2880);near(twoDays.hunger,0);
+const sleep=advanceTime(full,480,{sleeping:true});near(sleep.hunger,100-100/6);near(sleep.thirst,100-100/3);
+const walk=advanceTime(full,60,{walking:true});near(walk.hunger,100-100/48*1.25);near(walk.thirst,100-100/24*1.25);
+const sunny=advanceTime({...full,day:3},60);near(sunny.thirst,100-100/24*1.15);
+const fed=advanceTime({...full,hunger:50},240,{effects:[{id:'well-fed',expiresAt:240}]});near(fed.hunger,50-100/48*4*.5);assert(fed.hunger < 50);
+cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food, sleep, exertion/weather and Well fed pacing.');

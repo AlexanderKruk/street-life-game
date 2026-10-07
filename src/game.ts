@@ -97,10 +97,14 @@ export function formatTime(minutes: number) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
+// A full meter lasts two days for food and one day for water at baseline.
+export const NEED_DRAIN = { food: 100 / (48 * 60), water: 100 / (24 * 60) }
+const WALKING_NEED_MULTIPLIER = 1.25
+
 export const WEATHER = [
   { icon: '☁️', label: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
   { icon: '🌧️', label: 'Rain', temp: 7, energyDrain: 0.025, thirstDrain: 0 },
-  { icon: '☀️', label: 'Clear', temp: 16, energyDrain: 0, thirstDrain: 0.02 },
+  { icon: '☀️', label: 'Clear', temp: 16, energyDrain: 0, thirstDrain: NEED_DRAIN.water * 0.15 },
   { icon: '🌬️', label: 'Windy', temp: 6, energyDrain: 0.035, thirstDrain: 0 },
   { icon: '🌦️', label: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
 ]
@@ -128,8 +132,9 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const active = (id: string) => context.effects?.some(effect => effect.id === id && effect.expiresAt > now)
     const cold = active('cold')
     const wellFed = active('well-fed')
-    const hunger = clamp(next.hunger - step / 14.4 + (wellFed ? 0.035 * step : 0) - (context.walking ? 0.055 * step : 0))
-    const thirst = clamp(next.thirst - step / 10.8 - weather.thirstDrain * step - (context.walking ? 0.04 * step : 0))
+    const walkingExtra = context.walking ? WALKING_NEED_MULTIPLIER - 1 : 0
+    const hunger = clamp(next.hunger - NEED_DRAIN.food * ((wellFed ? 0.5 : 1) + walkingExtra) * step)
+    const thirst = clamp(next.thirst - (NEED_DRAIN.water * (1 + walkingExtra) + weather.thirstDrain) * step)
     const health = clamp(next.health - ((thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
       (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) + (cold ? 0.012 : 0)) * step)
     const temperature = temperatureAt(weather.temp, next.minutes)
