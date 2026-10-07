@@ -97,8 +97,8 @@ export function formatTime(minutes: number) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-// A full meter lasts two days for food and one day for water at baseline.
-export const NEED_DRAIN = { food: 100 / (48 * 60), water: 100 / (24 * 60) }
+// Baseline full meters: Food 48h, Water 24h, awake Energy 36h.
+export const NEED_DRAIN = { food: 100 / (48 * 60), water: 100 / (24 * 60), energy: 100 / (36 * 60) }
 const WALKING_NEED_MULTIPLIER = 1.25
 
 export const WEATHER = [
@@ -140,7 +140,7 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const temperature = temperatureAt(weather.temp, next.minutes)
     const walkingHygiene = context.walking ? (temperature >= 25 ? 0.05 : temperature >= 18 ? 0.033 : 0.025) : 0
     const energyDrain = context.sleeping ? 0 :
-      step / 9.6 * healthEnergyMultiplier(next.health) + weather.energyDrain * step +
+      NEED_DRAIN.energy * step * healthEnergyMultiplier(next.health) + weather.energyDrain * step +
       (context.walking ? 0.01 * step * healthEnergyMultiplier(health) : 0) + (cold ? 0.045 * step : 0)
     const total = next.minutes + step
     next = { ...next, day: next.day + Math.floor(total / 1440), minutes: total % 1440,

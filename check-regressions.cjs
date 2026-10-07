@@ -116,4 +116,14 @@ const sleep=advanceTime(full,480,{sleeping:true});near(sleep.hunger,100-100/6);n
 const walk=advanceTime(full,60,{walking:true});near(walk.hunger,100-100/48*1.25);near(walk.thirst,100-100/24*1.25);
 const sunny=advanceTime({...full,day:3},60);near(sunny.thirst,100-100/24*1.15);
 const fed=advanceTime({...full,hunger:50},240,{effects:[{id:'well-fed',expiresAt:240}]});near(fed.hunger,50-100/48*4*.5);assert(fed.hunger < 50);
-cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food, sleep, exertion/weather and Well fed pacing.');
+// Hold weather, health and sustenance at baseline across three 12h blocks
+// to measure awake Energy independently of dehydration and next-day rain.
+let baselineEnergy=100;
+for(let block=1;block<=3;block++) {
+ baselineEnergy=advanceTime({...full,energy:baselineEnergy},720).energy;
+ near(baselineEnergy,Math.max(0,100-block*100/3));
+}
+near(advanceTime(full,480,{sleeping:true}).energy,100);
+near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
+assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
+cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, sleep, exertion/weather and Well fed pacing.');

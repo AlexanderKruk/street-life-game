@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-07 · food/water pacing update. Current visible build: `v2026.10.07-55`.
+**Last gameplay sync:** 2026-10-07 · awake Energy pacing update. Current visible build: `v2026.10.07-56`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -65,7 +65,7 @@ At 100%, Food covers 48 game hours and Water covers 24 game hours at baseline. T
 Normal elapsed-time decay:
 - Food loses 1 point per 28.8 game minutes: 100 points per 48 hours.
 - Thirst loses 1 point per 14.4 minutes: 100 points per 24 hours before weather/exertion.
-- Energy normally loses 1 point per 9.6 minutes: roughly 100 points per 16 hours of wakefulness, before Health/weather/cold modifiers. Walking now adds only a small extra Energy cost; its main physical cost is Food and Thirst.
+- Energy normally loses 1 point per 21.6 minutes: 100 points per 36 hours of wakefulness, before Health/weather/cold modifiers. Walking now adds only a small extra Energy cost; its main physical cost is Food and Thirst.
 - Hygiene loses 1 point per 180 game minutes: roughly 8 points per 24 hours before walking, work and action penalties.
 - Mood does not have a generic base decay; particular effects/actions/events change it.
 
@@ -167,7 +167,7 @@ Walking adds on top of normal elapsed-time decay:
 - Thirst drain: +25% of baseline (about 0.01736/min, 1.04 extra points/hour).
 - Energy drain: 0.01/min (about 0.6 extra points/hour), multiplied by the current Health energy multiplier.
 
-At normal Health this means roughly 1 hour of ordinary activity costs 2.08 Food, 4.17 Thirst and 6.25 Energy, while 1 hour of walking costs about 2.60 Food, 5.21 Thirst and 6.85 Energy. Travel and sleep are mutually exclusive: sleep cannot be started while a trip is in progress.
+At normal Health this means roughly 1 hour of ordinary activity costs 2.08 Food, 4.17 Thirst and 2.78 Energy, while 1 hour of walking costs about 2.60 Food, 5.21 Thirst and 3.38 Energy. Travel and sleep are mutually exclusive: sleep cannot be started while a trip is in progress.
 
 Walking also adds Hygiene loss per minute based on the current temperature: 0.025 below 18°C, 0.033 at 18–24°C and 0.05 at 25°C or above.
 
@@ -504,7 +504,7 @@ These are current code realities, not planned features:
 
 ## Regression checks (v54)
 
-`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. GitHub Pages deployment runs these checks before building/publishing.
+`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. GitHub Pages deployment runs these checks before building/publishing.
 
 ## Design principles already established by implemented systems
 
