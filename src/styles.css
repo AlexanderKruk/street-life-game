@@ -440,3 +440,8 @@ button.inventory-item { width:100%; }
 .city-map .map-pin { position:relative !important; left:auto !important; top:auto !important; width:100%; min-height:108px; transform:none; padding:12px 8px; justify-content:center; }
 .city-map .map-pin:active { transform:scale(.98); }
 @media (min-width:620px) { .city-map { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+
+.phone-overlay { position:fixed; z-index:60; inset:0; padding:24px 14px calc(90px + env(safe-area-inset-bottom)); background:rgba(4,7,10,.72); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; }
+.phone-modal { position:relative; width:min(620px,100%); max-height:calc(100dvh - 130px); overflow:auto; border:1px solid #3b4855; border-radius:22px; background:#10171d; box-shadow:0 20px 60px rgba(0,0,0,.55); padding:14px; }
+.phone-modal .phone-panel { margin:0; }
+.phone-modal .sheet-close { z-index:2; }
