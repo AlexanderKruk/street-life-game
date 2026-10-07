@@ -154,6 +154,7 @@ export default function App() {
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
   })
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
+  const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(null)
   const [musicOn, setMusicOn] = useState(false)
   const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
@@ -1141,12 +1142,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-43</div>
+        <div className="trash-build">Build 2026.10.07-44</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-43</div>
+    <div className="build-badge">v2026.10.07-44</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1330,7 +1331,7 @@ export default function App() {
       <p className="inventory-note">Water, food and medicine stack up to {STACK_SIZE} per slot. Bottles stack up to {BOTTLE_STACK_SIZE}. Cigarettes stack up to {CIGARETTE_STACK_SIZE} per slot.</p>
 
       <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>These do not use backpack slots</small></div><span>FREE</span></div>
-      <div className="phone-panel">
+      {phoneOpen && <div className="phone-overlay" onClick={() => setPhoneOpen(false)}><div className="phone-modal" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setPhoneOpen(false)}>×</button><div className="phone-panel">
         <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
         <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Pay 1 zł automatically at the start of each game day</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
@@ -1340,11 +1341,11 @@ export default function App() {
           <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
           <button onClick={callAmbulance} disabled={game.health > 20 || inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0}><span>🚑</span><div><strong>Call ambulance</strong><small>{game.health <= 20 ? 'Emergency · no documents required' : 'Available at Health 20 or lower'}</small></div></button>
         </div>
-      </div>
+      </div></div></div>}
       <div className="inventory-grid essentials-grid">
-        <div className="inventory-item">
-          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · {inventory.phoneBattery <= 0 ? 'OFF' : inventory.phoneBattery <= 5 ? 'CRITICAL' : inventory.phoneBattery <= 20 ? 'LOW' : 'Ready'}</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div><small>Condition {Math.round(inventory.phoneCondition)}% · {inventory.phoneCondition > 70 ? 'Used' : inventory.phoneCondition > 40 ? 'Worn' : inventory.phoneCondition > 15 ? 'Damaged' : 'Barely working'} · drain ×{phoneDrainMultiplier(inventory.phoneCondition).toFixed(1)}</small><div className="item-meter"><i style={{ width: `${inventory.phoneCondition}%` }} /></div></div>
-        </div>
+        <button className="inventory-item usable" onClick={() => setPhoneOpen(true)}>
+          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · tap to open</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
+        </button>
         <div className="inventory-item">
           <span className="item-icon">🧥</span><div><strong>Jacket</strong><small>Condition {inventory.jacket}%</small><div className="item-meter"><i style={{ width: `${inventory.jacket}%` }} /></div></div>
         </div>
