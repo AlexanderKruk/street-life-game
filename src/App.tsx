@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { actions, applyAction, applySleepTime, energyCap, formatTime, healthEnergyMultiplier, initialState, isOpen, locations, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
+import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
 
 const SAVE_KEY = 'street-life-save-v3'
 const DISCOVERY_KEY = 'street-life-discovered-v1'
@@ -34,8 +35,8 @@ function temperatureAt(base: number, minutes: number) {
 }
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit' | 'fare-dodge'
-type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number }
-type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean }
+type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
+type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
 type Inventory = { water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
@@ -150,11 +151,12 @@ function overallStatus(game: GameState) {
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('')
-  const [infoModal, setInfoModal] = useState<{ title: string; text: string; costs?: string[] } | null>(null)
+  const [infoModal, setInfoModal] = useState<({ title: string; text: string } & Partial<ResultSummary>) | null>(null)
+  const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean } | null>(null)
   const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(DISCOVERY_KEY)
-      if (raw) return JSON.parse(raw)
+      if (raw) return [...new Set((JSON.parse(raw) as string[]).map(id => id === 'night-shelter' ? 'shelter' : id))]
       return localStorage.getItem(SAVE_KEY) ? locations.map((location) => location.id) : ['street', 'station', 'shop']
     } catch {
       return ['street', 'station', 'shop']
@@ -181,8 +183,7 @@ export default function App() {
     try { const raw = localStorage.getItem('street-life-sleep-v1'); return raw ? JSON.parse(raw) : null } catch { return null }
   })
   const [begging, setBegging] = useState<{ day: number; attempts: number }>({ day: 1, attempts: 0 })
-  const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number } | null>(null)
-  const [trashSummary, setTrashSummary] = useState<{ minutes: number; found: number; rejected: number } | null>(null)
+  const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
@@ -232,6 +233,48 @@ export default function App() {
   const dayWorkEnergyRequired = 55
   const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
   const usedStorageSlots = storageSlots(storage)
+
+  function resultSnapshot(): ResultSnapshot {
+    return { game: { ...game }, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
+  }
+
+  function runWithResult(title: string, action: () => void, before = resultSnapshot(), includeTime = true, always = false) {
+    action()
+    setPendingResult({ title, before, includeTime, always })
+  }
+
+  useEffect(() => {
+    if (!pendingResult) return
+    setPendingResult(null)
+    if (sleeping || trashGame || shelterInterview || diceCheck) return
+    const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
+    if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
+    setInfoModal(previous => ({ title: previous?.title ?? pendingResult.title, text: previous?.text ?? message, ...summary }))
+  }, [pendingResult, game, inventory, effects, sleeping, trashGame, shelterInterview, diceCheck, message])
+
+  function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
+  function watchVideo(...args: Parameters<typeof watchVideoImpl>) { runWithResult('Watch videos', () => watchVideoImpl(...args)) }
+  function chargePhone(...args: Parameters<typeof chargePhoneImpl>) { runWithResult('Charge phone', () => chargePhoneImpl(...args)) }
+  function hospitalVisit(...args: Parameters<typeof hospitalVisitImpl>) { runWithResult('Medical appointment', () => hospitalVisitImpl(...args)) }
+  function callAmbulance(...args: Parameters<typeof callAmbulanceImpl>) { runWithResult('Emergency care', () => callAmbulanceImpl(...args)) }
+  function askForMoney(...args: Parameters<typeof askForMoneyImpl>) { runWithResult('Ask for money', () => askForMoneyImpl(...args)) }
+  function finishTrashSearch(...args: Parameters<typeof finishTrashSearchImpl>) { runWithResult('Trash search results', () => finishTrashSearchImpl(...args), trashGame?.before ?? resultSnapshot()) }
+  function returnBottles(...args: Parameters<typeof returnBottlesImpl>) { runWithResult('Return bottles', () => returnBottlesImpl(...args)) }
+  function searchOnlineFor(...args: Parameters<typeof searchOnlineForImpl>) { runWithResult('Online search', () => searchOnlineForImpl(...args)) }
+  function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Look for a bench' : 'Rest on the bench', () => streetActionImpl(...args)) }
+  function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args)) }
+  function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
+  function applyEventOutcome(...args: Parameters<typeof applyEventOutcomeImpl>) { runWithResult(activeEvent?.title ?? 'Event result', () => applyEventOutcomeImpl(...args), resultSnapshot(), true, true) }
+  function storeItem(...args: Parameters<typeof storeItemImpl>) { runWithResult('Store belongings', () => storeItemImpl(...args)) }
+  function takeStoredItem(...args: Parameters<typeof takeStoredItemImpl>) { runWithResult('Collect belongings', () => takeStoredItemImpl(...args)) }
+  function storeFood(...args: Parameters<typeof storeFoodImpl>) { runWithResult('Store food', () => storeFoodImpl(...args)) }
+  function takeStoredFood(...args: Parameters<typeof takeStoredFoodImpl>) { runWithResult('Collect food', () => takeStoredFoodImpl(...args)) }
+  function socialSupport(...args: Parameters<typeof socialSupportImpl>) { runWithResult('Social support', () => socialSupportImpl(...args)) }
+  function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
+  function buyItem(...args: Parameters<typeof buyItemImpl>) { runWithResult(`Buy ${args[0].name}`, () => buyItemImpl(...args)) }
+  function useMedicine(...args: Parameters<typeof useMedicineImpl>) { runWithResult('Use medicine', () => useMedicineImpl(...args)) }
+  function smokeCigarette(...args: Parameters<typeof smokeCigaretteImpl>) { runWithResult('Smoke a cigarette', () => smokeCigaretteImpl(...args)) }
+  function useItem(...args: Parameters<typeof useItemImpl>) { runWithResult(args[0] === 'water' ? 'Drink water' : 'Eat food', () => useItemImpl(...args)) }
 
   useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
   useEffect(() => { localStorage.setItem(DISCOVERY_KEY, JSON.stringify(discoveredLocations)) }, [discoveredLocations])
@@ -288,7 +331,7 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (game.energy > 0 || sleeping || gameOver || activeEvent || trip) return
+    if (game.energy > 0 || sleeping || gameOver || activeEvent || trip || infoModal || pendingResult) return
     const safeKind = current.id === 'residential-shelter'
       ? 'residential'
       : current.id === 'shelter' && open && game.intoxication <= 10
@@ -300,13 +343,13 @@ export default function App() {
     setNavigationOn(false)
     setTrip(null)
     if (safeKind === 'ground' && current.id !== 'street') setGame((prev) => ({ ...prev, locationId: 'street' }))
-    setSleeping({ kind: safeKind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (hours * 60 * 1000) / DEBUG_SLEEP_SPEED, forced: true })
+    setSleeping({ kind: safeKind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (hours * 60 * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, gameOver, activeEvent, trip, current.id, open, game.intoxication])
+  }, [game.energy, sleeping, gameOver, activeEvent, trip, current.id, open, game.intoxication, infoModal, pendingResult])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || gameOver) return
+      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || gameOver || infoModal || pendingResult || trashGame) return
       if (sleeping) {
         const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
         const targetAbsolute = sleeping.startAbsolute + elapsed
@@ -358,30 +401,24 @@ export default function App() {
         }
       })
       if (musicOn) setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 0.012 * tickMinutes) }))
-      setSleeping((active) => {
-        if (!active) return null
-        const elapsed = Math.min(active.total, Math.max(0, Math.floor((Date.now() - active.realStartedAt) / 1000)))
-        const remaining = Math.max(0, active.total - elapsed)
-        if (remaining > 0) return remaining === active.remaining ? active : { ...active, remaining }
-        window.setTimeout(() => finishSleep(active), 0)
-        return null
-      })
-      setTrip((active) => {
-        if (!active) return null
-        if (active.remaining > tickMinutes) return { ...active, remaining: active.remaining - tickMinutes }
-        const destination = locations.find((x) => x.id === active.destinationId)
-        if (destination) {
-          setGame((prev) => ({ ...prev, locationId: destination.id }))
-          setMessage(`You arrived at ${destination.name} by ${active.mode === 'walk' ? 'walking' : 'public transport'}.`)
-          setScreen('location')
-        }
-        return null
-      })
+      setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, gameOver, sleeping])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, gameOver, sleeping, infoModal, pendingResult, trashGame])
 
-  function buyMobileService() {
+  useEffect(() => {
+    if (!trip || trip.remaining > 0) return
+    const destination = locations.find(location => location.id === trip.destinationId)
+    if (!destination) { setTrip(null); return }
+    runWithResult('Arrival', () => {
+      setGame(previous => ({ ...previous, locationId: destination.id }))
+      setMessage(`You arrived at ${destination.name} by ${trip.mode === 'walk' ? 'walking' : 'public transport'}.`)
+      setScreen('location')
+      setTrip(null)
+    }, trip.before ?? resultSnapshot(), true, true)
+  }, [trip])
+
+  function buyMobileServiceImpl() {
     if (game.money < 1) { setMessage('You need 1 zł to activate mobile service for 24 hours.'); return }
     const now = absoluteMinutes(game)
     setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
@@ -389,7 +426,7 @@ export default function App() {
     setMessage('Mobile service activated for another 24 hours. Cost: 1 zł.')
   }
 
-  function watchVideo() {
+  function watchVideoImpl() {
     if (!mobileServiceActive) { setMessage('You need active mobile service to use online video.'); return }
     const videoDrain = 9 * phoneDrainMultiplier(inventory.phoneCondition)
     if (inventory.phoneBattery < videoDrain) { setMessage('Not enough battery for 30 minutes of video.'); return }
@@ -398,7 +435,7 @@ export default function App() {
     setMessage('You watched videos for 30 minutes. Mood improved, but the worn phone used more battery.')
   }
 
-  function chargePhone() {
+  function chargePhoneImpl() {
     if (inventory.phoneBattery >= 100) { setMessage('Phone is already fully charged.'); return }
     if (current.id !== 'support' && current.id !== 'residential-shelter') return
     if (!open) return
@@ -443,14 +480,29 @@ export default function App() {
     setMusicOn(false)
     setNavigationOn(false)
     const realStartedAt = Date.now()
-    setSleeping({ kind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (hours * 60 * 1000) / DEBUG_SLEEP_SPEED })
+    setSleeping({ kind, total: hours * 60, remaining: hours * 60, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (hours * 60 * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot() })
     setMessage('You are sleeping.')
   }
 
+  useEffect(() => {
+    if (!sleeping || absoluteMinutes(game) < sleeping.startAbsolute + sleeping.total) return
+    finishSleep(sleeping)
+  }, [sleeping, game.day, game.minutes])
+
   function finishSleep(sleep: SleepState) {
+    setSleeping(null)
+    const before = sleep.before ?? { ...resultSnapshot(), game: { ...game, day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 } }
+    runWithResult('Sleep complete', () => {
+      setGame(previous => applySleepTime(previous, Math.max(0, sleep.startAbsolute + sleep.total - absoluteMinutes(previous))))
+      finishSleepImpl(sleep)
+    }, before, false, true)
+  }
+
+  function finishSleepImpl(sleep: SleepState) {
     const hours = sleep.total / 60
     const scale = hours / 8
-    const fed = game.hunger > 20 && game.thirst > 20
+    const wakeState = applySleepTime(game, Math.max(0, sleep.startAbsolute + sleep.total - absoluteMinutes(game)))
+    const fed = wakeState.hunger > 20 && wakeState.thirst > 20
     const result = sleep.kind === 'ground'
       ? { minutes: 0, energy: 52 * scale, hygiene: -12 * scale, mood: -9 * scale }
       : sleep.kind === 'bench'
@@ -459,10 +511,11 @@ export default function App() {
           ? { minutes: 0, energy: 100 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
           : { minutes: 0, energy: 100 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
     setGame((prev) => applyAction(prev, result))
+    let illnessText = ''
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-      const sleepWeather = WEATHER[(game.day - 1) % WEATHER.length]
-      const sleepTemp = temperatureAt(sleepWeather.temp, game.minutes)
+      const sleepWeather = WEATHER[(wakeState.day - 1) % WEATHER.length]
+      const sleepTemp = temperatureAt(sleepWeather.temp, wakeState.minutes)
       const illnessChance = Math.min(0.65, Math.max(0.05,
         0.08 +
         (sleepTemp <= 5 ? 0.28 : sleepTemp <= 10 ? 0.16 : sleepTemp <= 15 ? 0.07 : 0) +
@@ -470,10 +523,10 @@ export default function App() {
         (sleep.kind === 'ground' ? 0.08 : 0)
       ))
       if (Math.random() < illnessChance) {
-        setEffects((active) => active.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(game))
+        setEffects((active) => active.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))
           ? active
-          : [...active, { id: 'cold', expiresAt: absoluteMinutes(game) + 2 * 1440 }])
-        setMessage(`You slept outside in ${sleepWeather.label.toLowerCase()} weather and woke up feeling sick.`)
+          : [...active, { id: 'cold', expiresAt: absoluteMinutes(wakeState) + 2 * 1440 }])
+        if (!effects.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))) illnessText = ` You woke up with a cold after sleeping outside in ${sleepWeather.label.toLowerCase()} weather.`
       }
       const baseChance = sleep.kind === 'ground' ? 0.75 : 0.65
       const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, Math.min(0.9, baseChance * scale))
@@ -485,10 +538,10 @@ export default function App() {
     } else {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     }
-    setMessage(`You slept for ${hours} hour${hours === 1 ? '' : 's'}.`)
+    setMessage(`You slept for ${hours} hour${hours === 1 ? '' : 's'}.${illnessText}`)
   }
 
-  function hospitalVisit() {
+  function hospitalVisitImpl() {
     if (activeEvent || current.id !== 'hospital') return
     if (!open) { setMessage('Regular medical care is closed.'); return }
     if (!inventory.documents) { setMessage('You need your documents for a regular medical appointment.'); return }
@@ -500,7 +553,7 @@ export default function App() {
     setMessage('A doctor examines you and treats what they can. Your condition is brought back to a stable level.')
   }
 
-  function callAmbulance() {
+  function callAmbulanceImpl() {
     if (activeEvent) return
     if (game.health > 20) { setMessage('An ambulance is only available as a gameplay emergency option at Health 20 or lower.'); return }
     if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0) { setMessage('Your phone is not working, so you cannot call an ambulance.'); return }
@@ -516,7 +569,7 @@ export default function App() {
     setMessage(`You call an ambulance. Emergency staff stabilize you without requiring documents. About ${hours} hours pass and your Health is stabilized to 35.`)
   }
 
-  function askForMoney() {
+  function askForMoneyImpl() {
     if (activeEvent || current.id !== 'street') return
     const attemptsToday = begging.day === game.day ? begging.attempts : 0
     if (attemptsToday >= 3) {
@@ -560,7 +613,7 @@ export default function App() {
         returnable: bottle && Math.random() < .65,
       }
     })
-    setTrashGame({ items, startedAt: Date.now(), found: 0, rejected: 0 })
+    setTrashGame({ items, startedAt: Date.now(), before: resultSnapshot(), found: 0, rejected: 0 })
   }
 
   function startTrashDrag(id: number, clientX: number, clientY: number, bounds: DOMRect) {
@@ -617,13 +670,12 @@ export default function App() {
     setTrashGame((active) => active ? { ...active, found: active.found + 1, items: active.items.map((entry) => entry.id === id ? { ...entry, collected: true } : entry) } : null)
   }
 
-  function finishTrashSearch() {
+  function finishTrashSearchImpl() {
     if (!trashGame) return
     const realSeconds = Math.max(5, Math.floor((Date.now() - trashGame.startedAt) / 1000))
     const minutes = Math.min(60, Math.max(10, Math.ceil(realSeconds / 5) * 5))
     const { found, rejected } = trashGame
     setGame((prev) => applyAction(prev, { minutes, energy: -Math.max(1, minutes / 15), hygiene: -Math.max(2, minutes / 5), mood: found > 0 ? 1 : -2 }))
-    setTrashSummary({ minutes, found, rejected })
     setTrashGame(null)
     setMessage(found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable bottle${found === 1 ? '' : 's'}.` : rejected > 0 ? `You searched for ${minutes} minutes. The bottles you found were not returnable.` : `You searched for ${minutes} minutes and found nothing useful.`)
   }
@@ -636,7 +688,7 @@ export default function App() {
     return () => window.clearInterval(timer)
   }, [trashGame])
 
-  function returnBottles() {
+  function returnBottlesImpl() {
     if (!open || current.id !== 'shop' || inventory.bottles <= 0) return
     const count = inventory.bottles
     const payout = count * BOTTLE_DEPOSIT
@@ -645,13 +697,13 @@ export default function App() {
     setMessage(`Returned ${count} bottle${count === 1 ? '' : 's'} for ${payout.toFixed(2)} zł.`)
   }
 
-  function searchOnlineFor(kind: 'shelter' | 'work' | 'help') {
+  function searchOnlineForImpl(kind: 'shelter' | 'work' | 'help') {
     if (current.id !== 'street') return
     if (!mobileServiceActive) { setMessage('You need mobile internet to search online.'); return }
     if (inventory.phoneBattery < 2) { setMessage('Your phone battery is too low to search online.'); return }
 
     const result = kind === 'shelter'
-      ? { id: 'night-shelter', label: 'Night Shelter', message: 'You find information about a night shelter and save its address.' }
+      ? { id: 'shelter', label: 'Night Shelter', message: 'You find information about a night shelter and save its address.' }
       : kind === 'work'
         ? { id: 'work', label: 'Day Work', message: 'You find a place advertising casual day work and save the address.' }
         : { id: 'support', label: 'Help Center', message: 'You find a local help center and save its address.' }
@@ -661,13 +713,13 @@ export default function App() {
     setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
     if (kind === 'shelter' && game.minutes >= 22 * 60) {
       setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
-      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.', costs: ['⏱ 15 min', '🔋 −2%', '💰 0 zł'] })
+      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.',  })
     } else {
-      setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.`, costs: ['⏱ 15 min', '🔋 −2%', '💰 0 zł'] })
+      setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.`,  })
     }
   }
 
-  function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
+  function streetActionImpl(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
     if (activeEvent || current.id !== 'street') return
     if (kind === 'find-bench') {
       const found = Math.random() < 0.7
@@ -713,7 +765,7 @@ export default function App() {
     }
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
-    setTrip({ destinationId: destination.id, mode, total, remaining: total })
+    setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot() })
     setSelectedDestination(null)
     setScreen('travel')
     if (!activeEvent) {
@@ -722,7 +774,7 @@ export default function App() {
     }
   }
 
-  function act(actionId: string) {
+  function actImpl(actionId: string) {
     const action = actions.find((x) => x.id === actionId)
     if (!action || activeEvent) return
     if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
@@ -830,7 +882,7 @@ export default function App() {
     }
   }
 
-  function answerShelterInterview(value: string) {
+  function answerShelterInterviewImpl(value: string) {
     if (!shelterInterview) return
     if (shelterInterview.step === 'reason') {
       setShelterInterview({ ...shelterInterview, reason: value, step: 'action' })
@@ -852,7 +904,7 @@ export default function App() {
     setShelterInterview(null)
   }
 
-  function applyEventOutcome(outcome: EventOutcome) {
+  function applyEventOutcomeImpl(outcome: EventOutcome) {
     setGame((prev) => applyAction(prev, {
       minutes: outcome.minutes ?? 0,
       money: outcome.money,
@@ -927,7 +979,7 @@ export default function App() {
       if (destination) {
         const total = Math.ceil(destination.travelMinutes * 0.5)
         setStreetBenchFound(false)
-        setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total })
+        setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } })
         setSelectedDestination(null)
         setScreen('travel')
       }
@@ -942,7 +994,7 @@ export default function App() {
     setActiveEvent(null)
   }
 
-  function storeItem(item: 'documents' | 'medicines' | 'cigarettes') {
+  function storeItemImpl(item: 'documents' | 'medicines' | 'cigarettes') {
     if (current.id !== 'shelter' && current.id !== 'residential-shelter') return
     if (!open) return
     if (item === 'documents') {
@@ -961,7 +1013,7 @@ export default function App() {
     setMessage(`Stored ${amount} ${item}.`)
   }
 
-  function takeStoredItem(item: 'documents' | 'medicines' | 'cigarettes') {
+  function takeStoredItemImpl(item: 'documents' | 'medicines' | 'cigarettes') {
     if (current.id !== 'shelter' && current.id !== 'residential-shelter') return
     if (!open) return
     if (item === 'documents') {
@@ -980,7 +1032,7 @@ export default function App() {
     setMessage(`Took ${amount} ${item} from storage.`)
   }
 
-  function storeFood() {
+  function storeFoodImpl() {
     if (current.id !== 'residential-shelter' || inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) return
     const amount = Math.min(inventory.food, SCHRONISKO_FOOD_CAPACITY - storage.food)
     const freshness = inventory.foodFreshness
@@ -989,7 +1041,7 @@ export default function App() {
     setMessage(`Stored ${amount} food in Schronisko.`)
   }
 
-  function takeStoredFood() {
+  function takeStoredFoodImpl() {
     if (current.id !== 'residential-shelter' || storage.food <= 0) return
     const amount = Math.min(storage.food, STACK_SIZE)
     const candidate = { ...inventory, food: inventory.food + amount }
@@ -1000,7 +1052,7 @@ export default function App() {
     setMessage(`Took ${amount} food from Schronisko storage.`)
   }
 
-  function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
+  function socialSupportImpl(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
     if (!open || current.id !== 'support') return
     if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
       setMessage(storage.documents ? 'Your documents are stored at the shelter. Take them with you for this application.' : 'You need basic documents for this application. Ask for help restoring them first.')
@@ -1037,7 +1089,7 @@ export default function App() {
     setMessage('The social worker explained which benefits may be available. Applications will be added as the progression expands.')
   }
 
-  function takeDayWork() {
+  function takeDayWorkImpl() {
     if (!open || current.id !== 'work') return
     if (game.energy < dayWorkEnergyRequired) { setMessage(`You need at least ${dayWorkEnergyRequired} Energy to start this shift.`); return }
     setGame((prev) => {
@@ -1058,7 +1110,7 @@ export default function App() {
     setMessage('You completed a 3-hour physical shift. +35 zł. Physical work increases hunger, thirst and hygiene loss, especially in warm weather.')
   }
 
-  function buyItem(item: ShopItem) {
+  function buyItemImpl(item: ShopItem) {
     if (!open || current.id !== 'shop') return
     if (game.money < item.price) {
       setMessage(`You need ${item.price.toFixed(2)} zł for that.`)
@@ -1094,7 +1146,7 @@ export default function App() {
     setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })
   }
 
-  function useMedicine() {
+  function useMedicineImpl() {
     if (inventory.medicines <= 0) return
     const hasCold = effects.some((effect) => effect.id === 'cold')
     if (!hasCold) {
@@ -1106,14 +1158,14 @@ export default function App() {
     setMessage('The medicine helped. Cold removed.')
   }
 
-  function smokeCigarette() {
+  function smokeCigaretteImpl() {
     if (inventory.cigarettes <= 0) return
     setInventory((prev) => ({ ...prev, cigarettes: prev.cigarettes - 1 }))
     setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 5), health: Math.max(0, prev.health - 0.5) }))
     setMessage('You smoked a cigarette. Mood +, health slightly worse.')
   }
 
-  function useItem(item: 'water' | 'food') {
+  function useItemImpl(item: 'water' | 'food') {
     if (inventory[item] <= 0) return
     setInventory((prev) => ({ ...prev, [item]: prev[item] - 1 }))
     setGame((prev) => item === 'water'
@@ -1168,21 +1220,14 @@ export default function App() {
     <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
 
   return <main className="shell">
-    {infoModal && <div className="phone-overlay">
-      <section className="phone-modal">
-        <p className="eyebrow">SEARCH RESULT</p>
-        <h2>{infoModal.title}</h2>
+    {infoModal && <div className="phone-overlay result-overlay">
+      <section className="phone-modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title">
+        <p className="eyebrow">RESULT</p>
+        <h2 id="result-title">{infoModal.title}</h2>
         <p className="muted">{infoModal.text}</p>
-        {infoModal.costs?.length ? <div className="trash-result">{infoModal.costs.map((cost) => <span key={cost}>{cost}</span>)}</div> : null}
-        <button className="trash-stop" onClick={() => setInfoModal(null)}>OK</button>
-      </section>
-    </div>}
-    {trashSummary && <div className="trash-overlay">
-      <section className="trash-card">
-        <p className="eyebrow">SEARCH COMPLETE</p>
-        <h2>Trash search results</h2>
-        <div className="trash-result"><span>⏱️ Time: {trashSummary.minutes} min</span><span>♻️ Kept: {trashSummary.found}</span><span>🚫 Rejected: {trashSummary.rejected}</span></div>
-        <button className="trash-stop" onClick={() => setTrashSummary(null)}>Continue</button>
+        {infoModal.changes?.length ? <div className="result-section"><h3>Changes & consequences</h3><div className="result-rows">{infoModal.changes.map(change => <div key={change.label} className={`result-row ${change.kind}`}><span>{change.label}</span><strong>{change.value}</strong></div>)}</div></div> : null}
+        {infoModal.costs?.length ? <div className="result-section"><h3>Spent</h3><div className="result-rows">{infoModal.costs.map(cost => <div key={cost.label} className={`result-row ${cost.kind}`}><span>{cost.label}</span><strong>{cost.value}</strong></div>)}</div></div> : null}
+        <button className="trash-stop" autoFocus onClick={() => setInfoModal(null)}>OK</button>
       </section>
     </div>}
     {trashGame && <div className="trash-overlay">
@@ -1201,12 +1246,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-52</div>
+        <div className="trash-build">Build 2026.10.07-53</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-52</div>
+    <div className="build-badge">v2026.10.07-53</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1296,7 +1341,7 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
-            {!discoveredLocations.includes('night-shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             {!discoveredLocations.includes('work') && <button className="action" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Search online for quick work</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             {!discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Search online for free help</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
@@ -1497,7 +1542,7 @@ export default function App() {
         <h2>{sleeping.kind === 'ground' ? 'On the ground' : sleeping.kind === 'bench' ? 'On the bench' : sleeping.kind === 'shelter' ? 'Night shelter' : 'Schronisko'}</h2>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>Wake at {formatTime((sleeping.startAbsolute + sleeping.total) % 1440)}</span></div>
         {(() => {
-          const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor((Date.now() - sleeping.realStartedAt) / 1000)))
+          const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
           return <>
             <div className="sleep-progress"><i style={{ width: `${(elapsed / sleeping.total) * 100}%` }} /></div>
             <p>{Math.floor(elapsed / 60)}h {elapsed % 60}m / {sleeping.total / 60}h</p>
@@ -1508,7 +1553,7 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && activeEvent && !diceCheck && !sleeping && <div className="event-overlay">
+    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <div className="event-overlay">
       <section className="event-card">
         <div className="event-card-icon">{activeEvent.icon}</div>
         <p className="eyebrow">STREET EVENT</p>
