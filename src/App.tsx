@@ -150,6 +150,7 @@ function overallStatus(game: GameState) {
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [message, setMessage] = useState('')
+  const [infoModal, setInfoModal] = useState<{ title: string; text: string } | null>(null)
   const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(DISCOVERY_KEY)
@@ -660,9 +661,9 @@ export default function App() {
     setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
     if (kind === 'shelter' && game.minutes >= 22 * 60) {
       setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
-      setMessage('You find a night shelter, but registration is closed for tonight. Come tomorrow from 19:00 to request a place.')
+      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.' })
     } else {
-      setMessage(result.message)
+      setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.` })
     }
   }
 
@@ -1129,6 +1130,7 @@ export default function App() {
     localStorage.removeItem(GOAL_KEY)
     setGame(initialState)
     setMessage('New run started.')
+    setInfoModal(null)
     setScreen('location')
     setTrip(null)
     setSelectedDestination(null)
@@ -1166,6 +1168,14 @@ export default function App() {
     <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
 
   return <main className="shell">
+    {infoModal && <div className="phone-overlay">
+      <section className="phone-modal">
+        <p className="eyebrow">SEARCH RESULT</p>
+        <h2>{infoModal.title}</h2>
+        <p className="muted">{infoModal.text}</p>
+        <button className="trash-stop" onClick={() => setInfoModal(null)}>OK</button>
+      </section>
+    </div>}
     {trashSummary && <div className="trash-overlay">
       <section className="trash-card">
         <p className="eyebrow">SEARCH COMPLETE</p>
@@ -1190,12 +1200,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-50</div>
+        <div className="trash-build">Build 2026.10.07-51</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-50</div>
+    <div className="build-badge">v2026.10.07-51</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
