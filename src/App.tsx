@@ -153,9 +153,9 @@ export default function App() {
     try {
       const raw = localStorage.getItem(DISCOVERY_KEY)
       if (raw) return JSON.parse(raw)
-      return localStorage.getItem(SAVE_KEY) ? locations.map((location) => location.id) : ['street']
+      return localStorage.getItem(SAVE_KEY) ? locations.map((location) => location.id) : ['street', 'station', 'shop']
     } catch {
-      return ['street']
+      return ['street', 'station', 'shop']
     }
   })
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
@@ -1097,7 +1097,7 @@ export default function App() {
   function reset() {
     localStorage.removeItem(SAVE_KEY)
     localStorage.removeItem(DISCOVERY_KEY)
-    setDiscoveredLocations(['street'])
+    setDiscoveredLocations(['street', 'station', 'shop'])
     setGame(initialState)
     setMessage('New run started.')
     setScreen('location')
@@ -1271,16 +1271,6 @@ export default function App() {
       </>}
     </>}
 
-    {screen === 'location' && current.id === 'street' && discoveredLocations.length === 1 && <section className="panel">
-      <p className="eyebrow">WHERE TO START?</p>
-      <h2>Figure out what is nearby</h2>
-      <p className="muted">You do not know the city yet. Pick a direction to investigate.</p>
-      <div className="actions">
-        <button className="action" onClick={() => discoverLocation('support', 'Help Center')}><div><strong>🏢 Look for a help center</strong><small>Find somewhere that may explain your options.</small></div></button>
-        <button className="action" onClick={() => discoverLocation('station', 'Station')}><div><strong>🚉 Find the station</strong><small>A public place where you may be able to wait.</small></div></button>
-        <button className="action" onClick={() => discoverLocation('shop', 'Discount shop')}><div><strong>🛒 Find a shop</strong><small>Locate somewhere to buy basic food and water.</small></div></button>
-      </div>
-    </section>}
 
     {screen === 'map' && <>
       <div className="section-title map-title"><h2>City map</h2><span>Tap a place to travel</span></div>
