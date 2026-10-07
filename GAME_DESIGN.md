@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · action availability and ordering. Current visible build: `v2026.10.08-58`.
+**Last gameplay sync:** 2026-10-08 · morning night-shelter checkout. Current visible build: `v2026.10.08-59`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -10,7 +10,7 @@ The rules below describe the implemented prototype, including its current test s
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt and an active registration queue in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
 
 Initial state:
 - Day 1, Monday, 08:00, Street.
@@ -53,6 +53,12 @@ Current snapshot coverage includes game needs/money/intoxication, carried invent
 Location action lists show all currently enabled choices first, followed by a dimmed **Unavailable now** group. Within each group, the existing order is stable. Unavailable actions remain visible, cannot be clicked, and configured actions show the schedule or missing requirement. Disabled sleep selectors cannot be changed either. Street custom actions and configured actions share the same ordering; support and phone choices use it too.
 
 Configured actions use the same availability function for display and execution. It checks location opening hours, quiet hours, meals/laundry/social-worker schedules, daily meal/laundry limits, registration attempts/bans, booking, intoxication and money. Availability and ordering update with game time and state, without requiring a failed click. Examples: Dinner is disabled from 20:30 onward; Breakfast is enabled only 06:30–07:00 and only before that day's meal was received; laundry pickup requires Thursday evening and clothes left that morning. Storage buttons are disabled while the location is closed.
+
+## Morning night-shelter checkout (v59)
+
+At 07:30 a blocking reminder tells the guest to leave by 08:00. While it is open, time pauses. Clicking **Leave the night shelter · 30 min** starts a real wait of 30 game minutes (1 minute per visible real second), with a progress bar. The character remains inside until the wait finishes, then moves to Street. Normal needs and food freshness decay throughout checkout; its result reports the full 30 minutes and actual changes. Reload preserves progress, and hiding the app pauses departure.
+
+Night-shelter sleep, including forced sleep and restored sessions, ends no later than 07:30. Recovery reflects the actual shortened sleep. A sleep result is acknowledged before the checkout reminder appears. A returning saved guest already past the deadline also receives the reminder during the morning. Routine checkout keeps the reservation and stored belongings, changes current housing to Street, adds no violation, and is recorded once per day. Schronisko and outdoor sleep are unaffected.
 
 ## Needs and condition
 

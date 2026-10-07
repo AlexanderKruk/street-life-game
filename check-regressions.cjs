@@ -149,6 +149,42 @@ setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:{...booking,shelterLast
 setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});availableFirst();assert(screen.getByRole('button',{name:/Search online for a place to sleep/}).disabled);
 setup({locationId:'support'},{[invKey]:{documents:false}});availableFirst('.support-grid');
 
+// Morning reminder appears at 07:30, freezes the clock, and takes a full
+// visible 30-minute checkout; reload keeps progress and the booking survives.
+const departureKey='street-life-shelter-departure-v1';
+const checkoutBooking={...booking,shelterLastStayDay:1,shelterStrikes:0};
+setup({day:2,locationId:'shelter',minutes:449},{[lifeKey]:checkoutBooking,'street-life-storage-v1':{documents:true,medicines:2}});
+assert(!screen.queryByRole('dialog',{name:'Leave the night shelter'}));advance(1000);
+assert.equal(read(stateKey).minutes,450);assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
+const reminderState=read(stateKey);advance(5000);assert.deepEqual(read(stateKey),reminderState);
+click(/Leave the night shelter · 30 min/);assert(screen.getByRole('dialog',{name:'Leaving the night shelter'}));
+advance(11000);assert.equal(read(stateKey).minutes,461);assert.equal(read(stateKey).locationId,'shelter');
+const departureSaved=read(departureKey);cleanup();render(React.createElement(App));assert.deepEqual(read(departureKey),departureSaved);
+Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});advance(4000);assert.equal(read(stateKey).minutes,461);
+Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});advance(18000);assert.equal(read(stateKey).minutes,479);assert.equal(read(stateKey).locationId,'shelter');
+advance(1000);assert.equal(read(stateKey).minutes,480);assert.equal(read(stateKey).locationId,'street');
+assert.equal(read(lifeKey).housing,'Street');assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterStrikes,0);assert.equal(read(lifeKey).shelterCheckoutDay,2);
+assert.equal(read('street-life-storage-v1').medicines,2);assert(!localStorage.getItem(departureKey));assert(screen.getByRole('dialog').textContent.includes('30 min'));assert(read(stateKey).thirst<reminderState.thirst);ok();
+assert(!screen.queryByRole('dialog',{name:'Leave the night shelter'}));
+setup({day:2,locationId:'shelter',minutes:451},{[lifeKey]:{...checkoutBooking,shelterCheckoutDay:2}});assert(!screen.queryByRole('dialog',{name:'Leave the night shelter'}));
+setup({day:3,locationId:'shelter',minutes:450},{[lifeKey]:{...checkoutBooking,shelterLastStayDay:2,shelterCheckoutDay:2}});assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
+
+// Exhaustion cannot interrupt checkout; once outside, its result comes first.
+setup({day:2,locationId:'shelter',minutes:450,energy:.01},{[lifeKey]:checkoutBooking});click(/Leave the night shelter · 30 min/);advance(29000);
+assert.equal(read(stateKey).energy,0);assert(!localStorage.getItem('street-life-sleep-v1'));assert.equal(read(stateKey).locationId,'shelter');advance(1000);assert.equal(read(stateKey).locationId,'street');assert(screen.getByRole('dialog').textContent.includes('Shelter checkout'));
+
+// Natural sleep, exhaustion, and a saved long sleep all wake by 07:30.
+setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:checkoutBooking});click(/Use your reserved bed/);
+assert.equal(read('street-life-sleep-v1').total,420);advance(41000);assert.equal(read(stateKey).minutes,440);advance(1000);
+assert.equal(read(stateKey).minutes,450);assert(!localStorage.getItem('street-life-sleep-v1'));assert(screen.getByRole('dialog').textContent.includes('You slept for 7 hours'));ok();assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
+setup({day:2,locationId:'shelter',minutes:449,energy:0},{[lifeKey]:checkoutBooking});assert.equal(read('street-life-sleep-v1').total,1);advance(1000);assert.equal(read(stateKey).minutes,450);ok();assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
+setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:checkoutBooking,'street-life-sleep-v1':{kind:'shelter',startAbsolute:1470,total:480,remaining:480,realStartedAt:now-60000,realWakeAt:now+60000}});
+advance(1000);assert.equal(read(stateKey).minutes,450);ok();assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
+// Late saved guests are prompted, while other accommodations are unaffected.
+setup({day:2,locationId:'shelter',minutes:490},{[lifeKey]:checkoutBooking});assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
+setup({day:2,locationId:'street',minutes:450});assert(!document.querySelector('.checkout-overlay'));
+setup({day:2,locationId:'residential-shelter',minutes:450},{[lifeKey]:{housing:'Schronisko'}});assert(!document.querySelector('.checkout-overlay'));
+
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
@@ -178,4 +214,4 @@ for(let block=1;block<=3;block++) {
 near(advanceTime(full,480,{sleeping:true}).energy,100);
 near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
 assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
-cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues, schedule/daily limits, available-first lists, sleep and exertion.');
+cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues and morning checkout, schedule/daily limits, available-first lists, sleep and exertion.');
