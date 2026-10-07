@@ -639,6 +639,23 @@ export default function App() {
     setMessage(`Returned ${count} bottle${count === 1 ? '' : 's'} for ${payout.toFixed(2)} zł.`)
   }
 
+  function searchOnlineFor(kind: 'shelter' | 'work' | 'help') {
+    if (current.id !== 'street') return
+    if (!mobileServiceActive) { setMessage('You need mobile internet to search online.'); return }
+    if (inventory.phoneBattery < 2) { setMessage('Your phone battery is too low to search online.'); return }
+
+    const result = kind === 'shelter'
+      ? { id: 'night-shelter', label: 'Night Shelter', message: 'You find information about a night shelter and save its address.' }
+      : kind === 'work'
+        ? { id: 'work', label: 'Day Work', message: 'You find a place advertising casual day work and save the address.' }
+        : { id: 'support', label: 'Help Center', message: 'You find a local help center and save its address.' }
+
+    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2) }))
+    setGame((prev) => applyAction(prev, { minutes: 15 }))
+    setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
+    setMessage(result.message)
+  }
+
   function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
     if (activeEvent || current.id !== 'street') return
     if (kind === 'find-bench') {
@@ -1161,12 +1178,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.07-48</div>
+        <div className="trash-build">Build 2026.10.07-49</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.07-48</div>
+    <div className="build-badge">v2026.10.07-49</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1254,6 +1271,9 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
+            {!discoveredLocations.includes('night-shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!discoveredLocations.includes('work') && <button className="action" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Search online for quick work</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Search online for free help</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
             <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
