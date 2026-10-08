@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · 3-in-1 shower gel and shower cleaning limits. Current visible build: `v2026.10.08-70`.
+**Last gameplay sync:** 2026-10-08 · 3-in-1 shower gel: 10 zł for 20 automatic shower uses. Current visible build: `v2026.10.08-71`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -196,7 +196,8 @@ Backpack capacity is 8 slots.
 Stack sizes:
 - Water: 4 half-liter portions/slot (2 L).
 - Food, bread rolls, canned food: 4 of each type/slot.
-- Wet wipes and 3-in-1 shower gel: 5 uses of each type/slot.
+- Wet wipes: 5 uses/slot.
+- 3-in-1 shower gel: 20 uses/slot (one bottle).
 - Medicine: 4/slot.
 - Returnable bottles: 8/slot.
 - Cigarettes: 20/slot.
@@ -258,7 +259,7 @@ The Discount shop currently sells:
 - Bread roll: 1 zł, one item.
 - Pull-tab canned food: 6 zł, one item.
 - Wet wipes: 5 zł, five uses.
-- 3-in-1 shower gel: 8 zł, five showers; backpack quantity is remaining uses.
+- 3-in-1 shower gel: 10 zł, twenty showers; backpack quantity is remaining uses.
 - Cigarettes: 6 zł for 5.
 - Medicine: 9 zł for 1.
 - Hot meal: 8 zł, eaten immediately and does not use backpack space.

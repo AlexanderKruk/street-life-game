@@ -42,7 +42,7 @@ const SCHRONISKO_FOOD_CAPACITY = 4
 const FOOD_FRESHNESS_PER_MINUTE = 100 / (48 * 60)
 const BREAD_FRESHNESS_PER_MINUTE = 100 / (24 * 60)
 const WIPES_STACK_SIZE = 5
-const SHOWER_GEL_USES_PER_SLOT = 5
+const SHOWER_GEL_USES_PER_SLOT = 20
 const NIGHT_SHELTER_STORAGE = 6
 const SCHRONISKO_STORAGE = 16
 const STACK_SIZE = 4
@@ -67,7 +67,7 @@ const SHOP_ITEMS: ShopItem[] = [
   { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food +12'] },
   { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 6, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food +32', 'Mood +'] },
   { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene +10 · max 60'] },
-  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 8, quantity: 5, description: '5 showers · used automatically', impacts: ['Shower ×1.5', 'Hygiene max 100'] },
+  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Shower ×1.5', 'Hygiene max 100'] },
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
   { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
 ]
@@ -1575,12 +1575,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-70</div>
+        <div className="trash-build">Build 2026.10.08-71</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-70</div>
+    <div className="build-badge">v2026.10.08-71</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
