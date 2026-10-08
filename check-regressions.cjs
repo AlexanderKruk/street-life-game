@@ -30,6 +30,7 @@ function setup(s={},extra={}){
  render(React.createElement(App));
 }
 function click(name){fireEvent.click(screen.getByRole('button',{name}));}
+function beginSleep(name,hours=8){click(name);fireEvent.change(screen.getByLabelText('Sleep duration'),{target:{value:String(hours)}});click('Start sleeping');}
 function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function advance(ms){for(let t=0;t<ms;t+=1000){now+=1000;act(()=>{for(const{fn}of [...callbacks.values()])fn()})}}
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
@@ -42,7 +43,7 @@ setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.q
 
 // Sleep and immediate work must apply disease/dehydration and age both food stores.
 setup({hunger:0,thirst:0,health:90,energy:68},{'street-life-effects-v1':[{id:'cold',expiresAt:10000}], [invKey]:{food:2,foodFreshness:100}, 'street-life-storage-v1':{food:2,foodFreshness:100}});
-click(/Sleep on the ground/);click('Wake up (debug)');
+beginSleep(/Sleep on the ground/);click('Wake up (debug)');
 assert(Math.abs(read(stateKey).health - (90 - .147 * 480)) < 1e-8);
 assert(Math.abs(read(invKey).foodFreshness - (100 - 100 / 2880 * 480)) < 1e-8);
 assert(Math.abs(read('street-life-storage-v1').foodFreshness - read(invKey).foodFreshness) < 1e-8);
@@ -142,8 +143,8 @@ setup({day:4,locationId:'shelter',minutes:405},{[lifeKey]:{...booking,shelterLas
 setup({day:4,locationId:'shelter',minutes:1100},{[lifeKey]:{...booking,shelterLastStayDay:3,shelterLaundryDropDay:4}});assert(!screen.getByRole('button',{name:/Collect clean laundry/}).disabled);availableFirst();
 setup({day:2,locationId:'shelter',minutes:990},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Talk to shelter social worker/}).disabled);availableFirst();
 // Already-admitted players can sleep after quiet hours begin, including after midnight.
-setup({locationId:'shelter',minutes:1380},{[lifeKey]:admitted});click(/Use your reserved bed/);assert(document.querySelector('.sleep-overlay'));
-setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);click(/Use your reserved bed/);click('Wake up (debug)');assert.equal(read(lifeKey).shelterLastStayDay,1);
+setup({locationId:'shelter',minutes:1380},{[lifeKey]:admitted});beginSleep(/Use your reserved bed/);assert(document.querySelector('.sleep-overlay'));
+setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);beginSleep(/Use your reserved bed/);click('Wake up (debug)');assert.equal(read(lifeKey).shelterLastStayDay,1);
 setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:{...booking,shelterLastStayDay:0}});assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
 // Sorting also spans Street fragments and configured actions, plus support choices.
 setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});availableFirst();assert(screen.getByRole('button',{name:/Search online for a place to sleep/}).disabled);
@@ -174,7 +175,7 @@ setup({day:2,locationId:'shelter',minutes:450,energy:.01},{[lifeKey]:checkoutBoo
 assert.equal(read(stateKey).energy,0);assert(!localStorage.getItem('street-life-sleep-v1'));assert.equal(read(stateKey).locationId,'shelter');advance(1000);assert.equal(read(stateKey).locationId,'street');assert(screen.getByRole('dialog').textContent.includes('Shelter checkout'));
 
 // Natural sleep, exhaustion, and a saved long sleep all wake by 07:30.
-setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:checkoutBooking});click(/Use your reserved bed/);
+setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:checkoutBooking});beginSleep(/Use your reserved bed/);
 assert.equal(read('street-life-sleep-v1').total,420);advance(41000);assert.equal(read(stateKey).minutes,440);advance(1000);
 assert.equal(read(stateKey).minutes,450);assert(!localStorage.getItem('street-life-sleep-v1'));assert(screen.getByRole('dialog').textContent.includes('You slept for 7 hours'));ok();assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
 setup({day:2,locationId:'shelter',minutes:449,energy:0},{[lifeKey]:checkoutBooking});assert.equal(read('street-life-sleep-v1').total,1);advance(1000);assert.equal(read(stateKey).minutes,450);ok();assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
@@ -184,6 +185,37 @@ advance(1000);assert.equal(read(stateKey).minutes,450);ok();assert(screen.getByR
 setup({day:2,locationId:'shelter',minutes:490},{[lifeKey]:checkoutBooking});assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
 setup({day:2,locationId:'street',minutes:450});assert(!document.querySelector('.checkout-overlay'));
 setup({day:2,locationId:'residential-shelter',minutes:450},{[lifeKey]:{housing:'Schronisko'}});assert(!document.querySelector('.checkout-overlay'));
+
+// Sleep planning pauses the complete game state, shows next-day wake times,
+// and does not consume time or start sleep until explicitly confirmed.
+setup({minutes:1410,energy:.01});assert(!screen.queryByLabelText('Sleep duration'));click(/Sleep on the ground/);
+assert(screen.getByRole('dialog',{name:'How long do you want to sleep?'}));assert.equal(document.querySelectorAll('.actions select').length,0);
+const planState=read(stateKey),planInventory=read(invKey);advance(12000);
+assert.deepEqual(read(stateKey),planState);assert.deepEqual(read(invKey),planInventory);assert(!localStorage.getItem('street-life-sleep-v1'));
+fireEvent.change(screen.getByLabelText('Sleep duration'),{target:{value:'2'}});
+assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 01:30'));
+assert(screen.getByRole('option',{name:'10 h · wake Day 2 Tu · 09:30'}));advance(3000);assert.deepEqual(read(stateKey),planState);
+click('Cancel');assert(!screen.queryByRole('dialog'));assert.deepEqual(read(stateKey),planState);advance(1000);assert.equal(read(stateKey).minutes,1411);
+setup({minutes:1410});click(/Sleep on the ground/);fireEvent.change(screen.getByLabelText('Sleep duration'),{target:{value:'2'}});click('Start sleeping');
+assert.equal(read('street-life-sleep-v1').total,120);assert.equal(read('street-life-sleep-v1').startAbsolute,1410);assert(!document.querySelector('.sleep-choice-modal'));
+advance(1000);assert.equal(read(stateKey).minutes,1420);
+
+// Cancelling a reserved bed never marks attendance. The shortened shelter
+// duration shown in the chooser is exactly the duration that starts.
+const notAdmitted={...booking,housing:'Street',shelterLastStayDay:0};
+setup({locationId:'shelter',minutes:1380},{[lifeKey]:admitted});click(/Use your reserved bed/);
+assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 07:00'));
+fireEvent.change(screen.getByLabelText('Sleep duration'),{target:{value:'10'}});
+assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 07:30'));assert(document.querySelector('.sleep-choice-modal').textContent.includes('Sleep time: 8h 30m'));
+click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,510);
+setup({locationId:'shelter',minutes:1140},{[lifeKey]:notAdmitted});click(/Use your reserved bed/);advance(10000);click('Cancel');assert.equal(read(lifeKey).shelterLastStayDay,0);assert.equal(read(lifeKey).housing,'Street');assert.equal(read(stateKey).minutes,1140);
+click(/Use your reserved bed/);fireEvent.keyDown(window,{key:'Escape'});assert(!screen.queryByRole('dialog'));assert.equal(read(lifeKey).shelterLastStayDay,0);
+click(/Use your reserved bed/);click('Start sleeping');assert.equal(read(lifeKey).shelterLastStayDay,1);assert.equal(read(lifeKey).housing,'Night shelter');
+
+// Station, street bench and Schronisko all use the same paused chooser.
+setup({locationId:'station',minutes:1380});beginSleep(/Try to sleep/,2);assert.equal(read('street-life-sleep-v1').kind,'bench');assert.equal(read('street-life-sleep-v1').total,120);
+setup();Math.random=()=>0;click(/Look for a bench/);ok();Math.random=()=>.99;click(/Sleep on the bench/);assert(screen.getByLabelText('Sleep duration'));click('Start sleeping');assert.equal(read('street-life-sleep-v1').kind,'bench');
+setup({locationId:'residential-shelter',minutes:449});click(/Sleep safely/);fireEvent.change(screen.getByLabelText('Sleep duration'),{target:{value:'2'}});assert(document.querySelector('.sleep-choice-preview').textContent.includes('09:29'));click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,120);
 
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
@@ -214,4 +246,4 @@ for(let block=1;block<=3;block++) {
 near(advanceTime(full,480,{sleeping:true}).energy,100);
 near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
 assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
-cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues and morning checkout, schedule/daily limits, available-first lists, sleep and exertion.');
+cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues and morning checkout, paused sleep planning, schedule/daily limits, available-first lists, sleep and exertion.');

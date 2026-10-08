@@ -243,6 +243,7 @@ export default function App() {
   })
   const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [sleepHours, setSleepHours] = useState(8)
+  const [sleepChoice, setSleepChoice] = useState<SleepState['kind'] | null>(null)
   const [sleeping, setSleeping] = useState<SleepState | null>(() => {
     try {
       const raw = localStorage.getItem('street-life-sleep-v1')
@@ -357,6 +358,7 @@ export default function App() {
   }
 
   function runWithResult(title: string, action: () => void, before = resultSnapshot(), includeTime = true, always = false) {
+    if (sleepChoice && title !== 'Start sleeping') return
     if (shelterQueue && title !== 'Shelter registration') return
     if (shelterDeparture && title !== 'Shelter checkout') return
     if (shelterCheckoutDue && !activeEvent && !diceCheck && !shelterInterview && title !== 'Sleep complete') return
@@ -367,11 +369,11 @@ export default function App() {
   useEffect(() => {
     if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game)) return
     setPendingResult(null)
-    if (sleeping || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
+    if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     setInfoModal(previous => ({ title: previous?.title ?? pendingResult.title, text: previous?.text ?? message, ...summary }))
-  }, [pendingResult, game, inventory, effects, sleeping, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
+  }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
   function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
   function watchVideo(...args: Parameters<typeof watchVideoImpl>) { runWithResult('Watch videos', () => watchVideoImpl(...args)) }
@@ -509,7 +511,7 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (game.energy > 0 || sleeping || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
+    if (game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
     const safeKind = current.id === 'residential-shelter'
       ? 'residential'
       : current.id === 'shelter' && shelterBooked && open && game.intoxication <= 10
@@ -524,11 +526,11 @@ export default function App() {
     const total = safeKind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
     setSleeping({ kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult])
+  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
+      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
       if (sleeping) {
         const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
         const targetAbsolute = sleeping.startAbsolute + elapsed
@@ -544,7 +546,7 @@ export default function App() {
       setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame])
 
   useEffect(() => {
     if (!trip || trip.remaining > 0) return
@@ -596,7 +598,7 @@ export default function App() {
   }
 
   function chooseDestination(id: string) {
-    if (shelterQueue || shelterDeparture || shelterCheckoutDue) return
+    if (sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
     if (id === game.locationId) {
       setScreen('location')
       return
@@ -612,20 +614,48 @@ export default function App() {
     setSelectedDestination(id)
   }
 
-  function sleep(hours: number, kind: 'ground' | 'bench' | 'shelter' | 'residential') {
-    if (activeEvent || shelterQueue || shelterDeparture || shelterCheckoutDue || sleeping || trip || screen === 'travel' || hours < 1 || hours > 10) return
-    if (kind === 'bench' && current.id !== 'station' && (!streetBenchFound || current.id !== 'street')) return
-    if (kind === 'ground' && current.id !== 'street') return
-    if (kind === 'shelter' && (current.id !== 'shelter' || !shelterBooked || !open)) return
-    if (kind === 'residential' && current.id !== 'residential-shelter') return
-    if (kind === 'shelter' && game.intoxication > 10) {
-      setMessage('The night shelter refuses admission because you are visibly intoxicated. You need to sober up first.')
-      return
+  function canStartSleep(kind: SleepState['kind']) {
+    if (activeEvent || shelterQueue || shelterDeparture || shelterCheckoutDue || sleeping || trip || screen === 'travel' || gameOver) return false
+    if (kind === 'bench' && current.id !== 'station' && (!streetBenchFound || current.id !== 'street')) return false
+    if (kind === 'ground' && current.id !== 'street') return false
+    if (kind === 'shelter' && (current.id !== 'shelter' || !shelterBooked || !open || game.intoxication > 10)) return false
+    if (kind === 'residential' && current.id !== 'residential-shelter') return false
+    return true
+  }
+
+  function requestSleep(kind: SleepState['kind']) {
+    if (sleepChoice || !canStartSleep(kind)) return
+    setSleepChoice(kind)
+  }
+
+  function chosenSleepMinutes(hours: number, kind: SleepState['kind']) {
+    return kind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
+  }
+
+  function wakeLabel(hours: number, kind: SleepState['kind']) {
+    const wake = absoluteMinutes(game) + chosenSleepMinutes(hours, kind)
+    const day = Math.floor(wake / 1440) + 1
+    return `Day ${day} ${weekday(day)} · ${formatTime(wake % 1440)}`
+  }
+
+  useEffect(() => {
+    if (!sleepChoice) return
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSleepChoice(null) }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [sleepChoice])
+
+  function sleep(hours: number, kind: SleepState['kind']) {
+    if (!canStartSleep(kind) || !Number.isInteger(hours) || hours < 1 || hours > 10) return
+    setSleepChoice(null)
+    if (kind === 'shelter') {
+      const stayNightDay = game.minutes < 480 ? game.day - 1 : game.day
+      setLife(status => ({ ...status, shelterLastStayDay: stayNightDay, housing: 'Night shelter' }))
     }
     setMusicOn(false)
     setNavigationOn(false)
     const realStartedAt = Date.now()
-    const total = kind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
+    const total = chosenSleepMinutes(hours, kind)
     setSleeping({ kind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot() })
     setMessage('You are sleeping.')
   }
@@ -882,7 +912,7 @@ export default function App() {
       setMessage('You sit on the bench and get off your feet for a while.')
       return
     }
-    sleep(sleepHours, 'bench')
+    requestSleep('bench')
   }
 
   function attemptFareDodge() {
@@ -902,7 +932,7 @@ export default function App() {
   }
 
   function startTravel(mode: TravelMode) {
-    if (shelterQueue || shelterDeparture || shelterCheckoutDue) return
+    if (sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const total = mode === 'walk' ? destination.travelMinutes : Math.ceil(destination.travelMinutes * 0.5)
@@ -1002,8 +1032,8 @@ export default function App() {
       }
     }
 
-    if (actionId === 'street-sleep') { sleep(sleepHours, 'ground'); return }
-    if (actionId === 'station-sleep') { sleep(sleepHours, 'bench'); return }
+    if (actionId === 'street-sleep') { requestSleep('ground'); return }
+    if (actionId === 'station-sleep') { requestSleep('bench'); return }
     if (actionId === 'shelter-dinner') {
       if (game.minutes < 1140 || game.minutes >= 1230) { setMessage('Dinner is served from 19:00 to 20:30.'); return }
       if (life.shelterDinnerDay === game.day) { setMessage('You already had dinner here today.'); return }
@@ -1041,12 +1071,10 @@ export default function App() {
         setMessage('You join the registration queue. You will know whether there is a place after 20 minutes.')
         return
       }
-      const stayNightDay = game.minutes < 480 ? game.day - 1 : game.day
-      setLife((status) => ({ ...status, shelterLastStayDay: stayNightDay, housing: 'Night shelter' }))
-      sleep(sleepHours, 'shelter')
+      requestSleep('shelter')
       return
     }
-    if (actionId === 'residential-sleep') { sleep(sleepHours, 'residential'); return }
+    if (actionId === 'residential-sleep') { requestSleep('residential'); return }
 
     const result = action.resolve(game)
     const next = applyAction(game, result)
@@ -1410,6 +1438,8 @@ export default function App() {
     setLife(INITIAL_LIFE)
     setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
     setSleeping(null)
+    setSleepChoice(null)
+    setSleepHours(8)
     localStorage.removeItem('street-life-inventory-v1')
     localStorage.removeItem('street-life-storage-v1')
     localStorage.removeItem('street-life-effects-v1')
@@ -1437,6 +1467,27 @@ export default function App() {
     <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
 
   return <main className="shell">
+    {sleepChoice && <div className="phone-overlay result-overlay">
+      <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
+        <p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p>
+        <h2 id="sleep-choice-title">How long do you want to sleep?</h2>
+        <p className="muted">{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</p>
+        <label className="sleep-choice-label" htmlFor="sleep-duration">Sleep duration</label>
+        <select id="sleep-duration" autoFocus value={sleepHours} onChange={event => setSleepHours(Number(event.target.value))}>
+          {Array.from({ length: 10 }, (_, i) => i + 1).map(hours => <option key={hours} value={hours}>{hours} h · wake {wakeLabel(hours, sleepChoice)}</option>)}
+        </select>
+        <div className="sleep-choice-preview">
+          <div><small>Current time</small><strong>Day {game.day} {weekday(game.day)} · {formatTime(game.minutes)}</strong></div>
+          <div><small>Wake up at</small><strong>{wakeLabel(sleepHours, sleepChoice)}</strong></div>
+        </div>
+        <p className="muted">Sleep time: {formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}.</p>
+        {sleepChoice === 'shelter' && <p className="muted">Night shelter sleep ends by 07:30 so you can leave by 08:00. Longer choices are shortened automatically.</p>}
+        <div className="sleep-choice-buttons">
+          <button onClick={() => setSleepChoice(null)}>Cancel</button>
+          <button className="trash-stop" onClick={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}>Start sleeping</button>
+        </div>
+      </section>
+    </div>}
     {infoModal && <div className="phone-overlay result-overlay">
       <section className="phone-modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title">
         <p className="eyebrow">RESULT</p>
@@ -1463,12 +1514,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-59</div>
+        <div className="trash-build">Build 2026.10.08-60</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-59</div>
+    <div className="build-badge">v2026.10.08-60</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1565,16 +1616,16 @@ export default function App() {
             <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>
             {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
-            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span onClick={(e) => e.stopPropagation()}><select aria-label="Sleep duration" value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select></span></button>}
+            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>Choose duration</span></button>}
           </>}
           {currentActions.length ? currentActions.map((action) => {
             const registering = action.id === 'shelter-rest' && !shelterBooked
-            const selectableSleep = action.id === 'street-sleep' || (action.id === 'shelter-rest' && shelterBooked) || action.id === 'residential-sleep'
+            const selectableSleep = action.id === 'street-sleep' || action.id === 'station-sleep' || (action.id === 'shelter-rest' && shelterBooked) || action.id === 'residential-sleep'
             const unavailableReason = actionUnavailableReason(action)
             const unavailable = unavailableReason !== null
             return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
               <div><strong>{registering ? 'Join registration queue' : action.id === 'shelter-rest' ? 'Use your reserved bed' : action.name}</strong><small>{registering ? life.shelterRegistrationAttemptDay === game.day ? 'No places left for you today. Try tomorrow from 19:00.' : 'Registration 19:00–22:00 · wait 20 min. Earlier arrivals have a better chance; places are limited.' : action.id === 'shelter-rest' ? 'Use your reserved bed · arrive 18:00–22:00 and leave by 08:00.' : action.description}{unavailableReason && <em className="action-unavailable-reason">{unavailableReason}</em>}</small></div>
-              <span onClick={(e) => selectableSleep && e.stopPropagation()}>{selectableSleep ? <select aria-label="Sleep duration" disabled={unavailable} value={sleepHours} onChange={(e) => setSleepHours(Number(e.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map((hours) => <option key={hours} value={hours}>{hours} h</option>)}</select> : <>{action.cost ? `${action.cost} zł · ` : ''}~{registering ? SHELTER_QUEUE_MINUTES : action.minutes} min</>}</span>
+              <span>{selectableSleep ? 'Choose duration' : <>{action.cost ? `${action.cost} zł · ` : ''}~{registering ? SHELTER_QUEUE_MINUTES : action.minutes} min</>}</span>
             </button>
           }) : <p className="empty">Nothing useful to do here yet.</p>}
         </AvailableFirst>

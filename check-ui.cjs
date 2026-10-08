@@ -20,6 +20,7 @@ function setup(state={},effects=[]){
  render(React.createElement(App));
 }
 function button(name){fireEvent.click(screen.getByRole('button',{name}));}
+function beginSleep(hours=2){button(/Sleep on the ground/);fireEvent.change(screen.getByLabelText('Sleep duration'),{target:{value:String(hours)}});button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 (async()=>{
@@ -27,15 +28,15 @@ function summary(){return screen.getByRole('dialog').textContent;}
  let text=summary();assert(text.includes('−2%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
  const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
  close();button(/Map$/);assert(screen.getByText('Night shelter',{exact:true}));fireEvent.click(document.querySelector('.nav-item.home'));
- fireEvent.change(screen.getAllByLabelText('Sleep duration')[0],{target:{value:'2'}});button(/Sleep on the ground/);button('Wake up (debug)');
+ beginSleep();button('Wake up (debug)');
  text=summary();assert(text.includes('2 hours'));assert(text.includes('+13'));assert(!text.includes('Cold'));assert(!text.includes('Health'));assert(!text.includes('Battery'));
  close();button(/Inventory$/);button(/Water.*tap to drink/);text=summary();assert(text.includes('Water bottles'));assert(text.includes('−1'));assert(!text.includes('Money'));assert(!text.includes('Time'));close();
- Math.random=()=>0.4;fireEvent.click(document.querySelector('.nav-item.home'));button(/Sleep on the ground/);button('Wake up (debug)');text=summary();assert(text.includes('Cold'));assert(text.includes('Started'));close();
+ Math.random=()=>0.4;fireEvent.click(document.querySelector('.nav-item.home'));beginSleep();button('Wake up (debug)');text=summary();assert(text.includes('Cold'));assert(text.includes('Started'));close();
  button(/Inventory$/);button(/Medicine.*treats Cold/);text=summary();assert(text.includes('Ended'));assert(text.includes('−1'));close();cleanup();
- setup();Math.random=()=>0;fireEvent.change(screen.getAllByLabelText('Sleep duration')[0],{target:{value:'2'}});button(/Sleep on the ground/);button('Wake up (debug)');
+ setup();Math.random=()=>0;beginSleep();button('Wake up (debug)');
  assert(!document.querySelector('.event-overlay'));close();assert(document.querySelector('.event-overlay'));button('Get up');assert(summary().includes('A quiet night'));assert(summary().includes('+5'));close();cleanup();
  // Net effect at an upper bound: gain is capped at 100, not the nominal +52.
- setup({energy:98});fireEvent.change(screen.getAllByLabelText('Sleep duration')[0],{target:{value:'2'}});button(/Sleep on the ground/);button('Wake up (debug)');assert(summary().includes('+2'));cleanup();
+ setup({energy:98});beginSleep();button('Wake up (debug)');assert(summary().includes('+2'));cleanup();
  // Natural completion from a persisted sleep, including across midnight.
  localStorage.clear();localStorage.setItem('street-life-effects-v1','[]');localStorage.setItem('street-life-mobile-auto-renew','false');
  localStorage.setItem('street-life-save-v3',JSON.stringify({day:2,minutes:60,money:100,hunger:50,thirst:50,energy:50,health:82,hygiene:50,mood:58,intoxication:0,locationId:'street'}));
