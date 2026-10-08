@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · real, persistent daily action history in Today. Current visible build: `v2026.10.08-78`.
+**Last gameplay sync:** 2026-10-08 · real, persistent daily action history in Today. Current visible build: `v2026.10.08-78`. Documentation reviewed against the v78 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -116,7 +116,7 @@ Walking's small extra Energy cost is also multiplied by the Health multiplier. T
 
 At Health 0 the run ends and a Run Over screen is shown. Starting a new run resets the save.
 
-Food, water and medicine are primarily designed to remove/prevent causes of Health loss; medicine does not directly restore Health. Safe 8-hour indoor sleep can restore Health only when Food and Thirst are both above 20 **at waking**: Night shelter +2 Health, Schronisko +3 Health. Shorter/longer sleep scales these bonuses by hours / 8.
+Food, water and medicine are primarily designed to remove/prevent causes of Health loss; medicine does not directly restore Health. Safe 8-hour indoor sleep can restore Health only when Food and Thirst are both above 20 **at waking**: Night Shelter +2 Health, Schronisko +3 Health. Shorter/longer sleep scales these bonuses by hours / 8.
 
 ## Weather
 
@@ -138,12 +138,12 @@ Rain/Showers also enable the rain-phone street event.
 Implemented locations:
 - Street — 24/7 and the starting location. It represents an exposed city block rather than the Station.
 - Station — 24/7.
-- Cheap shop — 07:00–22:00.
-- Night shelter — 18:00–08:00.
-- Help center — 08:00–16:00.
+- Cheap Shop — 07:00–22:00.
+- Night Shelter — 18:00–08:00.
+- Help Center — 08:00–16:00.
 - Schronisko — 24/7, hidden until referral/unlocked.
-- Job centre — 08:00–15:00.
-- Day work — 07:00–18:00.
+- Job Centre — 08:00–15:00.
+- Day Work — 07:00–18:00.
 - Day Center & Clinic — 08:00–16:00. Capacity is probabilistic and easier to get in earlier in the day.
 - Hospital — regular care 08:00–18:00; emergency care is called from the phone.
 
@@ -151,16 +151,16 @@ The player may travel to a closed location. Actions that require it to be open a
 
 ### Gradual location discovery
 
-A new run initially shows only **Street, Station and Cheap shop**. Other addresses remain hidden until included in the discovered-location list. Existing saves without a discovery list initially migrate to the full location list.
+A new run initially shows only **Street, Station and Cheap Shop**. Other addresses remain hidden until included in the discovered-location list. Existing saves without a discovery list initially migrate to the full location list.
 
 On Street, three initial information actions are offered while their targets remain unknown:
-- Search online for a place to sleep → Night shelter.
-- Search online for quick work → Day work.
-- Search online for free help → Help center.
+- Search online for a place to sleep → Night Shelter.
+- Search online for quick work → Day Work.
+- Search online for free help → Help Center.
 
 Each search requires active mobile service and at least 2% Battery, advances 15 game minutes, consumes 2 percentage points of Battery and saves the discovered address to the map. Its result window also shows the actual need changes caused by those 15 minutes.
 
-Searching for Night shelter at or after 22:00 (checked at the start of the search) says registration is closed tonight and creates a saved goal to be there **next game day at 19:00**. First registration starts at 19:00; reserved-place check-in starts at 18:00.
+Searching for Night Shelter at or after 22:00 (checked at the start of the search) says registration is closed tonight and creates a saved goal to be there **next game day at 19:00**. First registration starts at 19:00; reserved-place check-in starts at 18:00.
 
 Schronisko also requires a referral or current Schronisko housing. Issuing the referral adds its address to discovery; older saves with a referral/housing but missing discovery are repaired on load. Discovery is persistent and resets on a new run. See limitations for services without a connected discovery route.
 
@@ -222,6 +222,26 @@ Using inventory:
 
 Shop purchases respect backpack capacity.
 
+### Clothing cleanliness
+
+The equipped Clothing replaces the Jacket label. Its condition retains the existing saved jacket value and event wear; laundry never repairs wear. Cleanliness starts at 80, decreases by 20 points per game day, ×1.5 while walking and ×3 while sleeping on the ground. Laundry at the day center or collection of Thursday shelter laundry restores cleanliness to 100 after completion; leaving clothes for laundry does not clean them yet. A refused or unavailable laundry action changes no cleanliness beyond elapsed time.
+
+Clothing cleanliness ≥70 allows Hygiene 100; ≥40 allows 80; below 40 allows 60. The cap applies to all Hygiene gains, including showers with gel, wipes, sleep and events, and existing Hygiene falls to the cap when clothing crosses a threshold. Washing raises the limit without instantly filling Hygiene. Legacy saves keep their condition and receive cleanliness at least 80 (or their higher existing Hygiene), preventing an immediate migration penalty. Clothing still occupies no backpack slots.
+
+| Clothing cleanliness | Maximum Hygiene |
+|---|---:|
+| 70–100 | 100 |
+| 40–less than 70 | 80 |
+| Below 40 | 60 |
+
+| Laundry service | Access | Duration | Completion |
+|---|---|---:|---|
+| Day Center & Clinic | Daily 08:00–16:00, subject to capacity | 90 min | Cleanliness 100 |
+| Night Shelter | Thursday drop-off 06:30–08:00; pickup 18:00–22:00; shelter admission required | 10 min each | Cleanliness 100 at pickup |
+| Schronisko | No laundry action implemented yet | — | — |
+
+Equipment display order is Phone, Documents, Transit card, Clothing, then 3-in-1 shower gel when available. Gel is displayed with automatic equipment but still consumes backpack space.
+
 ## Phone
 
 The phone has separate Battery and Condition.
@@ -239,7 +259,7 @@ Examples:
 - Condition 72: about x1.20.
 - Condition 0: x1.70.
 
-The phone can be charged at the Help center and Schronisko while open: 30 minutes gives +25% Battery.
+The phone can be charged at the Help Center and Schronisko while open: 30 minutes gives +25% Battery.
 
 Phone Condition can currently be damaged by street events, especially drops and rain.
 
@@ -250,7 +270,7 @@ Auto-renew is ON by default. It attempts renewal only when the existing paid ser
 
 ## Shop
 
-The Cheap shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
+The Cheap Shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
 
 Product-effect badges use only the width needed by their text. Multiple badges share a row when space permits, wrap to the next row when needed, and wrap long text within the card. This applies to both shelf products and the hot meal.
 
@@ -280,12 +300,12 @@ The hot meal advances 15 minutes, keeps the existing food/thirst/mood bonuses, a
 
 | Shower | Duration | Water-only Hygiene bonus/cap | With gel Hygiene bonus/cap | Other bonuses |
 |---|---:|---|---|---|
-| Night shelter | 35 min | +55, max 70 | +82.5, max 100 | +4 Energy, +4 Mood |
+| Night Shelter | 35 min | +55, max 70 | +82.5, max 100 | +4 Energy, +4 Mood |
 | Day Center & Clinic | 40 min | +50, max 70 | +75, max 100 | +4 Mood |
 
 One gel use is consumed **automatically after shower access succeeds**. If no gel is carried, the water-only rule applies. Gel cannot be used by itself from inventory. A full day center, a closed service or a blocked shelter shower consumes no gel. The shower action describes the rule that will apply before the player starts.
 
-The Hygiene cap limits the shower's positive gain; it does not force an already cleaner character down to 70. Ordinary Hygiene decay during the shower's elapsed time still applies. The result window reports the actual net Hygiene change and −1 gel use when spent.
+The water-only shower cap limits positive gain; it does not force an already cleaner character down to 70. Clothing imposes a separate hard limit of 60/80/100, including on pre-existing Hygiene. All shower bonuses/caps in the table above are subject to that clothing limit. Ordinary Hygiene decay during the shower's elapsed time still applies. The result window reports the actual net Hygiene change and −1 gel use when spent.
 
 Older saves retain existing possessions and start with zero of any missing new item. Current counts and freshness persist across reloads. Older result snapshots with missing new quantities treat them as zero.
 
@@ -310,14 +330,14 @@ Street has its own small survival loop. Its economy is deliberately capped aroun
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
 - Once a bench is found, **Sleep on the bench** becomes available: fatigue-dependent 2/4/6/8 hours. At 8 hours: +66 Energy, -7 Hygiene, -5 Mood, no direct Health recovery, plus elapsed-time needs loss. Street wake-event attempt: min(90%, 65% × hours / 8).
-- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Cheap shop for 0.50 zł each. Time/cost scales with time spent searching.
+- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Cheap Shop for 0.50 zł each. Time/cost scales with time spent searching.
 - The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Variable sleep duration
 
 Clicking any sleep action opens a separate **PLAN YOUR SLEEP** modal. Game time, needs, food ageing and forced exhaustion sleep pause until **Start sleeping** or **Cancel** (also Escape). Four duration buttons (2/4/6/8 hours) are only inside this modal. Every option includes its wake day/time, and a preview shows current time, actual sleep duration and selected wake time. Crossing midnight updates the day; night-shelter previews use the 07:30 cap. Opening/cancelling the chooser consumes nothing and does not mark shelter attendance. A reserved bed records attendance only after confirming sleep. Automatic exhaustion sleep still starts directly without a chooser. The chooser is not saved across reloads.
 
-Sleep duration uses **2, 4, 6 or 8 hours**, depending on awake Energy for ground sleep, bench sleep, Night shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Wake-event chance scales with duration; the separate Cold chance currently does not. Night shelter beds require successful queue registration and an active reserved place; existing bookings skip the registration queue.
+Sleep duration uses **2, 4, 6 or 8 hours**, depending on awake Energy for ground sleep, bench sleep, Night Shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Wake-event chance scales with duration; the separate Cold chance currently does not. Night Shelter beds require successful queue registration and an active reserved place; existing bookings skip the registration queue.
 
 The chooser disables unsuitable durations with an explanation. Higher Energy permits shorter sleep; lower Energy requires longer sleep. Available choices are:
 
@@ -334,7 +354,7 @@ The selected duration is validated again at confirmation. Opening the chooser ke
 | --- | --- |
 | Ground | +52 Energy, -12 Hygiene, -9 Mood; no Health recovery. |
 | Bench | +66 Energy, -7 Hygiene, -5 Mood; no Health recovery. |
-| Night shelter | +100 Energy, +5 Hygiene, +10 Mood; +2 Health only if Food and Thirst are both >20 at waking. |
+| Night Shelter | +100 Energy, +5 Hygiene, +10 Mood; +2 Health only if Food and Thirst are both >20 at waking. |
 | Schronisko | +100 Energy, +3 Hygiene, +8 Mood; +3 Health only if Food and Thirst are both >20 at waking. |
 
 During sleep, the shared time calculation applies Food loss (minutes / 28.8), Thirst loss (minutes / 14.4 plus weather), Hygiene loss (minutes / 180), intoxication decay, active Cold/Well fed modifiers and Health damage from illness, dehydration and starvation. Backpack and stored food continue ageing. Ordinary awake Energy loss is skipped. Actual Energy recovery is still capped by Health and all needs are clamped to 0–100.
@@ -345,20 +365,22 @@ Outdoor sleep independently rolls for a two-day Cold effect at waking. Chance is
 
 Sleep is a blocking game state rather than an instant time skip. In the current test build, the selected 2/4/6/8 game hours advance at **10 game minutes per real second** (`DEBUG_SLEEP_SPEED = 10`): an 8-hour sleep lasts about 48 real seconds. A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. There is no manual Wake Up action: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Sleep starts with Music and Navigation switched off. Sleep state and wall-clock timestamps are saved, and the game catches up to the scheduled waking time after a reload. The sleep result opens after the period finishes; any generated wake event is shown after OK. Sleep cannot start during travel.
 
-At Energy 0, when no trip/event/D20/interview/registration-queue/checkout/sleep-planning/result/sleep/game-over is active, the character automatically falls asleep: 8 hours at Schronisko or an open Night shelter with an active booking and Intoxication ≤10; otherwise 8 hours on the ground, moving to Street if necessary.
+At Energy 0, when no trip/event/D20/interview/registration-queue/checkout/sleep-planning/result/sleep/game-over is active, the character automatically falls asleep: 8 hours at Schronisko or an open Night Shelter with an active booking and Intoxication ≤10; otherwise 8 hours on the ground, moving to Street if necessary.
 
 ## Alcohol / intoxication
-The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/promille). It starts at 0 and currently falls by about 10 points per game hour as time passes. The Night shelter has a strict admission threshold: **Intoxication above 10 blocks shelter sleep until the character sobers up**. This creates a direct survival tradeoff for future alcohol items/events. The Status screen exposes the current Intoxication value. Alcohol sources and individual drink strengths can be added on top of this system.
+The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/promille). It starts at 0 and currently falls by about 10 points per game hour as time passes. The Night Shelter has a strict admission threshold: **Intoxication above 10 blocks shelter sleep until the character sobers up**. This creates a direct survival tradeoff for future alcohol items/events. The Status screen exposes the current Intoxication value. Alcohol sources and individual drink strengths can be added on top of this system.
 
 ## Housing and social support
 
+The 7-day initial booking and daily 0–3 free places are prototype rules informed by the user’s personal experience; they are not presented as universal rules for all Polish shelters.
+
 Life situation tracks:
-- Housing: Street, Night shelter or Schronisko.
-- Employment: Unemployed or Day work.
+- Housing: Street, Night Shelter or Schronisko.
+- Employment: Unemployed or Day Work.
 - Income: None or Irregular.
 - Whether a Schronisko referral has been issued.
 
-Help center actions:
+Help Center actions:
 - Housing: 35 minutes, +3 Mood, issues the Schronisko referral/unlocks it.
 - Documents: if missing, 60 minutes and +3 Mood, restores documents.
 - Transport: 25 minutes and grants Free transport for 3 days.
@@ -366,7 +388,7 @@ Help center actions:
 
 Schronisko is 24/7 and requires the referral to appear on the map. Settling in takes 30 minutes, gives +8 Energy, +4 Hygiene and +8 Mood, and sets Housing to Schronisko.
 
-Night shelter:
+Night Shelter:
 - Before registration/when a booking expires, the only shelter service shown is **Join registration queue**. Bed/sleep, meals, shower, laundry, social-worker appointment and safe storage require an active booking.
 - First registration is open **19:00–22:00**. Each game day has **0–3 vacancies**, sampled uniformly once on the first shelter visit that day and saved. Reloading/returning does not reroll them.
 - Registration requires actually waiting **20 game minutes** (20 visible real seconds at the ordinary timer speed). A blocking queue/progress screen is shown; ordinary needs/time costs apply during the wait. The queue pauses when hidden and persists its remaining time, original vacancy count, position and result snapshot across reloads.
@@ -386,7 +408,7 @@ Night shelter:
 
 ### Safe storage
 
-Night shelter and Schronisko share a persistent safe-storage inventory. Night shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Night shelter cannot store food or water.
+Night Shelter and Schronisko share a persistent safe-storage inventory. Night Shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Night Shelter cannot store food or water.
 
 Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food uses the same average-freshness model as backpack food and continues to spoil at the normal rate. Water is not stored. Night-shelter storage access requires an active booking. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
 
@@ -409,7 +431,7 @@ The city map includes a **Hospital**. Regular medical care is open 08:00–18:00
 
 ## Work
 
-Day work is open 07:00–18:00.
+Day Work is open 07:00–18:00.
 
 A short shift:
 - Requires at least 55 Energy.
@@ -417,13 +439,13 @@ A short shift:
 - Pays 35 zł.
 - Applies -5 Energy and +3 Mood, plus -10 Food, -14 Thirst and -8 Hygiene multiplied by a temperature factor (×1 below 18°C, ×1.2 at 18–24°C, ×1.5 at 25°C or above).
 - Normal elapsed-time decay also applies over all 180 minutes; the physical-work temperature is sampled at the shift midpoint.
-- Sets Employment to Day work and Income to Irregular.
+- Sets Employment to Day Work and Income to Irregular.
 
 The job requirement is intentionally based on Energy rather than directly requiring a Health threshold. Health affects the player's ability to maintain enough Energy.
 
 ## Documents
 
-Documents are a physical essential item/state. Street events can remove carried documents. Documents stored at a shelter are protected. The Help center can restore missing documents.
+Documents are a physical essential item/state. Street events can remove carried documents. Documents stored at a shelter are protected. The Help Center can restore missing documents.
 
 Documents are included in event context and life status. Help-center Transport and Benefits applications currently require carried documents; Housing help and document-restoration remain available without them.
 
@@ -431,7 +453,7 @@ Documents are included in event context and life status. Help-center Transport a
 
 Events are data-driven and can trigger during travel, at a location, or after waking. Each event has a weight, optional eligibility rules and one or more choices/outcomes.
 
-Location actions currently attempt a location event at 20% probability. Night shelter wake attempts a wake event at min(65%, 45% × hours / 8).
+Location actions currently attempt a location event at 20% probability. Night Shelter wake attempts a wake event at min(65%, 45% × hours / 8).
 
 Implemented events:
 1. **The phone slips** — walking only. D20 Reflex option or guaranteed drop/damage.
@@ -498,7 +520,7 @@ Mood:
 
 The current Persuasion example is **Ask for details — DC 12** in the Useful tip event. The player can avoid the roll by simply listening or walking away.
 
-Context is part of the design rule: poor Hygiene should make ordinary negotiation/social impression harder, but should not automatically penalize every interaction. Help centers, shelters and similar services can use different/context-appropriate rules.
+Context is part of the design rule: poor Hygiene should make ordinary negotiation/social impression harder, but should not automatically penalize every interaction. Help Centers, shelters and similar services can use different/context-appropriate rules.
 
 ## Existing location actions
 
@@ -507,7 +529,7 @@ Station:
 - Charge phone: 60 minutes, +60 percentage points Battery (capped at 100), with small Energy/Mood recovery.
 - Sleep on the bench using the fatigue-dependent 2/4/6/8-hour sleep system. Station-specific risk events are not yet implemented.
 
-Night shelter actions are described above. Schronisko settle action is described above.
+Night Shelter actions are described above. Schronisko settle action is described above.
 
 Several older generic shop/support actions still exist in `game.ts`, while the current UI uses newer dedicated shop/help-center interfaces.
 
@@ -541,8 +563,23 @@ The UI includes:
 - Sleep-duration planning modal with paused time, fatigue-dependent 2/4/6/8-hour choices and wake-time previews.
 - Sleep progress overlay.
 - Shelter registration queue and morning checkout reminder/progress.
-- Discovered-address map and active Night shelter arrival goal.
+- Discovered-address map and active Night Shelter arrival goal.
 - Run Over modal.
+
+## Journal goals and Today
+
+Today displays actual completed action/event results at their completion day and time, with the same nonzero resource deltas as the result modal. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed this shared pipeline. Starting an ongoing activity does not log its completion early. The last 500 entries persist across reloads; Today filters them to the current game day. A new run clears history. Older saves start with an empty history because past actions cannot be reconstructed. The fake 08:00 station wake entry has been removed.
+
+Goals now use persistent completion flags instead of static decorations and a fixed 1/4 counter. First morning completes at noon of day 1 (or on a later day alive). Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state. The journal's next-important panel shows the pending shelter appointment or next incomplete goal. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
+
+| Goal | Completion condition |
+|---|---|
+| Get through the morning | Alive at noon on day 1, or alive on a later day |
+| Find a safe place to sleep | Active reserved shelter bed or living in Schronisko |
+| Visit social support | At an open Help Center; existing referral also proves progress |
+| Look for work | Successful online work search, visit to open Job Centre/Day Work, or existing employment |
+
+The counter is calculated from the four saved flags. Completion never rolls back just because a booking expires or a location is left. A reset clears all flags and history. Today uses completion time: an action crossing midnight is recorded on the day it finishes. History records actual nonzero gains/losses, costs, and the result explanation; passive clock ticks and navigation between screens are not individual actions.
 
 ## Known implementation gaps / current limitations
 
@@ -557,17 +594,18 @@ These are current code realities, not planned features:
 - Station bench sleep still shares generic bench wake-event plumbing and should eventually have station-specific risk handling.
 - Shelter social-worker promises/plans are stored but are not yet verified against completed gameplay milestones.
 - Not every custom action currently rolls a location event.
-- Journal goals and the next-important entry are mostly static placeholders; the late-night shelter-search goal is separately dynamic and saved.
+- Today cannot reconstruct actions performed before history was implemented, and currently shows only the current day; browsing previous days is not implemented.
+- Schronisko has no laundry action yet.
 - Benefits support is a placeholder.
 - Documents exist and can be lost/restored, but most formal actions do not yet require them.
 - Schronisko referral is immediate; no application/approval process yet.
 - The temperature day-cycle formula currently uses a 20-hour cosine period despite the comment describing a normal daily cycle.
 - Active effects and some old saves may expose transitional edge cases as schemas evolve.
-- The gradual map has connected online discovery routes for Night shelter, Day work and Help center, plus Schronisko through a referral. Other services still lack a connected discovery route in a new run.
+- The gradual map has connected online discovery routes for Night Shelter, Day Work and Help Center, plus Schronisko through a referral. Other services still lack a connected discovery route in a new run.
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
-## Regression checks (through v71)
+## Regression checks (through v78)
 
 `npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
 
@@ -579,6 +617,9 @@ These are current code realities, not planned features:
 - Gel at 10 zł for 20 uses, one bottle fitting in one free slot, matching theft quantity and no manual inventory-use button.
 - Both shower locations: water-only cap 70 even after repeated showers, gel cap 100 and stronger gain from a dirty baseline, exactly one use consumed, reload persistence, and preservation of higher pre-existing Hygiene without gel.
 - Full/closed shower services preserve gel stock.
+- Clothing: migration of condition/cleanliness, each Hygiene cap, capped item use, successful/refused laundry, Thursday collection and prevention of repeated pickup, outdoor-sleep dirt and unchanged wear after washing.
+- Journal goals: real completion conditions, closed locations and failed registration, persistent progress/counter, new-run reset and shelter appointment rescheduling/attendance.
+- Today: one record per completed action, purchase/item-use costs and gains, reload persistence, current-day filtering, reset and sleep completion across midnight.
 
 GitHub Pages deployment runs `npm test` and `npm run build` before publishing.
 
@@ -588,7 +629,7 @@ GitHub Pages deployment runs `npm test` and `npm run build` before publishing.
 - Health is long-term condition, while Energy is short-term capacity.
 - Work is gated by capacity (Energy); Health influences it indirectly.
 - Items have physical consequences and wear, especially the phone.
-- Food and drink normally belong in the backpack; Schronisko has a small separate food shelf, while Night shelter does not accept food.
+- Food and drink normally belong in the backpack; Schronisko has a small separate food shelf, while Night Shelter does not accept food.
 - Random events should create choices, not just arbitrary punishment.
 - D20 is for explicit uncertain choices, not every action. It is now shared by street events, shop theft and fare dodging.
 - DC describes situational difficulty; modifiers come from the character's actual condition/context.
@@ -596,24 +637,6 @@ GitHub Pages deployment runs `npm test` and `npm run build` before publishing.
 - Prefer safe choice vs risky check vs walk-away when it creates a meaningful decision.
 - Do not add abstract RPG stats unless the existing survival/life stats prove insufficient.
 - Result feedback should show actual changes, hide zero rows and let the player read before time resumes.
-
-
-
-
-### Clothing cleanliness
-
-The equipped Clothing replaces the Jacket label. Its condition retains the existing saved jacket value and event wear; laundry never repairs wear. Cleanliness starts at 80, decreases by 20 points per game day, ×1.5 while walking and ×3 while sleeping on the ground. Laundry at the day center or collection of Thursday shelter laundry restores cleanliness to 100 after completion; leaving clothes for laundry does not clean them yet. A refused or unavailable laundry action changes no cleanliness beyond elapsed time.
-
-Clothing cleanliness ≥70 allows Hygiene 100; ≥40 allows 80; below 40 allows 60. The cap applies to all Hygiene gains, including showers with gel, wipes, sleep and events, and existing Hygiene falls to the cap when clothing crosses a threshold. Washing raises the limit without instantly filling Hygiene. Legacy saves keep their condition and receive cleanliness at least 80 (or their higher existing Hygiene), preventing an immediate migration penalty. Clothing still occupies no backpack slots.
-
-
-
-
-### Journal goals
-
-Today displays actual completed action/event results at their completion day and time, with the same nonzero resource deltas as the result modal. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed this shared pipeline. Starting an ongoing activity does not log its completion early. The last 500 entries persist across reloads; Today filters them to the current game day. A new run clears history. Older saves start with an empty history because past actions cannot be reconstructed. The fake 08:00 station wake entry has been removed.
-
-Goals now use persistent completion flags instead of static decorations and a fixed 1/4 counter. First morning completes at noon of day 1 (or on a later day alive). Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state. The journal's next-important panel shows the pending shelter appointment or next incomplete goal. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
 
 
 
