@@ -1575,12 +1575,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-73</div>
+        <div className="trash-build">Build 2026.10.08-74</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-73</div>
+    <div className="build-badge">v2026.10.08-74</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1768,9 +1768,6 @@ export default function App() {
         {inventory.wipes > 0 && <button className="inventory-item usable" onClick={() => useSupply('wipes')} disabled={game.hygiene >= 60}>
           <span className="item-icon">🧻</span><div><strong>Wet wipes ×{inventory.wipes}</strong><small>{game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean · Hygiene +10, max 60'}</small></div>
         </button>}
-        {inventory.showerGel > 0 && <div className="inventory-item">
-          <span className="item-icon">🧴</span><div><strong>3-in-1 shower gel ×{inventory.showerGel}</strong><small>Uses left · automatic with a shower · Hygiene max 100</small></div>
-        </div>}
         {inventory.bottles > 0 && Array.from({ length: Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) }, (_, stackIndex) => {
           const stackCount = Math.min(BOTTLE_STACK_SIZE, inventory.bottles - stackIndex * BOTTLE_STACK_SIZE)
           return <div className="inventory-item" key={`bottle-stack-${stackIndex}`}><span className="item-icon">♻️</span><div><strong>Returnable bottles</strong><small>×{stackCount} / {BOTTLE_STACK_SIZE} · 0.50 zł each</small></div></div>
@@ -1783,7 +1780,7 @@ export default function App() {
         </button>}
       </div>
 
-      <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>These do not use backpack slots</small></div></div>
+      <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>{inventory.showerGel > 0 ? 'Gel uses backpack space; other equipment is slot-free' : 'These do not use backpack slots'}</small></div></div>
       {phoneOpen && <div className="phone-overlay" onClick={() => setPhoneOpen(false)}><div className="phone-modal" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setPhoneOpen(false)}>×</button><div className="phone-panel">
         <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
@@ -1796,6 +1793,9 @@ export default function App() {
         </AvailableFirst>
       </div></div></div>}
       <div className="inventory-grid essentials-grid">
+        {inventory.showerGel > 0 && <div className="inventory-item">
+          <span className="item-icon">🧴</span><div><strong>3-in-1 shower gel ×{inventory.showerGel}</strong><small>Uses left · automatic with a shower · Hygiene max 100</small></div>
+        </div>}
         <button className="inventory-item usable" onClick={() => setPhoneOpen(true)}>
           <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · tap to open</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
         </button>

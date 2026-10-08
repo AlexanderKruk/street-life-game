@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · title-case location names across the map, location headings and navigation. Current visible build: `v2026.10.08-73`.
+**Last gameplay sync:** 2026-10-08 · automatic shower gel displayed with equipped items. Current visible build: `v2026.10.08-74`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -198,6 +198,7 @@ Stack sizes:
 - Food, bread rolls, canned food: 4 of each type/slot.
 - Wet wipes: 5 uses/slot.
 - 3-in-1 shower gel: 20 uses/slot (one bottle).
+  Its card appears under Equipped & essentials while any uses remain, because showers consume it automatically. It still counts toward backpack capacity.
 - Medicine: 4/slot.
 - Returnable bottles: 8/slot.
 - Cigarettes: 20/slot.
