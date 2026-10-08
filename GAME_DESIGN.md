@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · first-night shock, adjusted initial condition, wandering and rain choices. Current visible build: `v2026.10.08-82`. Documentation reviewed against the v82 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-08 · first-night shock, wandering, rain and long awake waits under cover. Current visible build: `v2026.10.08-83`. Documentation reviewed against the v83 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -122,7 +122,7 @@ Food, water and medicine are primarily designed to remove/prevent causes of Heal
 
 Night wandering takes 30 game minutes, costs 2 additional Energy with walking need drain, and restores 2 Mood. It keeps the player on Street. Clothing gets the normal walking cleanliness loss. On a dry night (20:00–06:00), each walk has a 35% chance of rain beginning halfway through. The resulting rain lasts 180 game minutes from its onset, is saved in game state, and overrides the normal day weather during elapsed-time calculations, including across midnight. Wet walks additionally cost 3 Hygiene and 5 clothing cleanliness.
 
-After the walk result is read, a rainy walk presents a saved, paused choice: wait under an entrance canopy (15 minutes, +2 Energy/+1 Mood), choose a route to Station, or keep walking (another 30 minutes). Route selection itself is free; actual travel uses normal costs. Rain decisions resume after reload and do not roll weather again just from rendering. Cover avoids the walk's wet-clothing penalty but does not end the rain or provide a bed. Reset clears both rain and its pending decision.
+After the walk result is read, a rainy walk presents a saved, paused choice: wait under an entrance canopy (choose 15 minutes, 1, 3 or 4 hours; +1 Mood, no sleep/Energy recovery), choose a route to Station, or keep walking (another 30 minutes). Route selection itself is free; actual travel uses normal costs. Choosing an intention or wait duration pauses time and previews the end clock time. Waiting applies awake Energy and normal needs/ageing over the full chosen duration; a 3–4-hour wait can carry the player through dawn without lying down. Rain decisions resume after reload and do not roll weather again just from rendering. Cover avoids the walk's wet-clothing penalty but does not end the rain or provide a bed. Reset clears both rain and its pending decision.
 
 Weather is deterministic by game day and cycles through Cloudy, Rain, Clear, Windy and Showers.
 
@@ -540,6 +540,8 @@ Several older generic shop/support actions still exist in `game.ts`, while the c
 ## UI/screens
 
 ### Street story prototype (v79)
+
+The opening is informed by the user's first-night experience: walking around, trying to understand available support, and waiting awake under cover for hours rather than immediately accepting sleep on the ground. This is a possible route, not a mandatory reenactment. Night searches save useful addresses but explain that shelter registration is closed until the next 19:00 and Help Center services open at 08:00. The known unbooked shelter route is disabled during the opening night instead of being offered as immediate warmth. Station and temporary cover remain options for the current night; neither guarantees a safe bed.
 
 Street now opens with a narrative scene that responds to time of day, rain/cold, urgent Energy/Water/Food needs and whether a shelter address or reserved bed is known. During the first night (day 1 from 22:00 through day 2 before 06:00, while housing is Street), the three primary choices are understand available help, find warmth, and walk through the night city. The scene acknowledges shock and uncertainty, rather than assuming survival routines. Earning money, bottles and ground sleep remain under Other actions. Later scenes retain the shelter/money/rest intentions. Other actions exposes the full existing street menu. Selecting an intention reveals relevant existing actions and routes; going back is free. Known shelter/work addresses lead to route selection rather than redundant searches. Unavailable actions remain disabled and sort below available actions.
 

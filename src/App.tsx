@@ -266,6 +266,7 @@ export default function App() {
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [storyIntent, setStoryIntent] = useState<'shelter' | 'money' | 'rest' | 'other' | 'understand' | 'warmth' | null>(null)
   const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true' && loadGame().locationId === 'street')
+  const [coverPlanning, setCoverPlanning] = useState(false)
   useEffect(() => { localStorage.setItem('street-life-rain-choice-v1', String(rainChoice)) }, [rainChoice])
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
@@ -1007,6 +1008,8 @@ export default function App() {
     if (kind === 'shelter' && game.minutes >= 22 * 60) {
       setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
       setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.',  })
+    } else if (kind === 'help' && !isOpen(locations.find(location => location.id === 'support')!, game.minutes)) {
+      setInfoModal({ title: 'Help Center found', text: 'You find the Help Center address, but its services are closed now. It opens at 08:00. You save the address for tomorrow; tonight you still need somewhere to stay.' })
     } else {
       setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.`,  })
     }
@@ -1016,6 +1019,7 @@ export default function App() {
     if (current.id !== 'street' || sleeping || trip || activeEvent || infoModal) return
     runWithResult('Walk through the city', () => {
       setRainChoice(false)
+      setCoverPlanning(false)
       const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
       let next = applyGameAction(game, { minutes: 15, energy: -1 }, { effects, walking: true, music: musicOn })
       if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
@@ -1030,11 +1034,13 @@ export default function App() {
     }, resultSnapshot(), true, true)
   }
 
-  function takeRainCover() {
+  function takeRainCover(minutes: number) {
     runWithResult('Shelter from the rain', () => {
       setRainChoice(false)
-      setGame(previous => applyAction(previous, { minutes: 15, energy: 2, mood: 1 }))
-      setMessage('You wait under an entrance canopy for fifteen minutes. You stay out of the rain, but this is not a place to sleep.')
+      setCoverPlanning(false)
+      const next = applyAction(game, { minutes, mood: 1 })
+      setGame(next)
+      setMessage(`You stand under an entrance canopy for ${minutes < 60 ? `${minutes} minutes` : `${minutes / 60} hour${minutes > 60 ? 's' : ''}`}, watching the street. You do not sleep. ${next.minutes >= 360 && next.minutes < 720 ? 'Morning is finally here.' : 'For now, you are out of the rain.'}`)
     }, resultSnapshot(), true, true)
   }
 
@@ -1601,6 +1607,7 @@ export default function App() {
     setScreen('location')
     setStoryIntent(null)
     setRainChoice(false)
+    setCoverPlanning(false)
     setTrip(null)
     setShelterQueue(null)
     setShelterDeparture(null)
@@ -1700,12 +1707,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-82</div>
+        <div className="trash-build">Build 2026.10.08-83</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-82</div>
+    <div className="build-badge">v2026.10.08-83</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1805,8 +1812,8 @@ export default function App() {
           </>}
           {current.id === 'street' && storyIntent !== null && <>
             {(storyIntent === 'rest' || storyIntent === 'other') && <button className="action" onClick={walkCity}><div><strong>Walk through the night city</strong><small>Walk for half an hour and gather your thoughts. Rain may begin at night.</small></div><span>~30 min</span></button>}
-            {storyIntent === 'understand' && discoveredLocations.includes('support') && <p className="muted">You saved the Help Center address. It opens at 08:00; tonight you still need somewhere to stay.</p>}
-            {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'warmth') && discoveredLocations.includes('shelter') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong>Go to Night Shelter</strong><small>{shelterBooked ? 'You have a reserved bed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
+            {storyIntent === 'understand' && discoveredLocations.includes('support') && <p className="muted">{isOpen(locations.find(location => location.id === 'support')!, game.minutes) ? 'The Help Center is open until 16:00. Its address is on your map.' : 'You saved the Help Center address. Its services are closed now; it opens at 08:00. You can make a plan for tomorrow.'}</p>}
+            {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'warmth') && discoveredLocations.includes('shelter') && <button className="action" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong>Go to Night Shelter</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Come tomorrow at 19:00; a place is not guaranteed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
             {storyIntent === 'money' && discoveredLocations.includes('work') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
             {(storyIntent === 'shelter' || storyIntent === 'warmth') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong>Head for the station</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
             {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'other') && !discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
@@ -2012,11 +2019,16 @@ export default function App() {
     </div>}
 
     {!gameOver && rainChoice && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
-      <section className="sleep-card"><p className="eyebrow">RAIN · TIME PAUSED</p><h2>The rain is getting heavier</h2><p>Your clothes are getting wet. Where will you go?</p>
+      <section className="sleep-card"><p className="eyebrow">RAIN · TIME PAUSED</p><h2>{coverPlanning ? 'Wait out the night' : 'The rain is getting heavier'}</h2><p>{coverPlanning ? 'You can stay under the canopy without lying down. You remain awake; hunger, thirst and tiredness keep growing while you wait.' : 'Your clothes are getting wet. Where will you go?'}</p>
         <div className="story-intents">
-          <button onClick={takeRainCover}>Wait under a canopy</button>
+          {coverPlanning ? <>
+            {[15, 60, 180, 240].map(minutes => <button key={minutes} onClick={() => takeRainCover(minutes)}>Wait {minutes < 60 ? `${minutes} min` : `${minutes / 60} h`} · until {formatTime((game.minutes + minutes) % 1440)}</button>)}
+            <button onClick={() => setCoverPlanning(false)}>Choose another option</button>
+          </> : <>
+          <button onClick={() => setCoverPlanning(true)}>Wait under a canopy</button>
           <button onClick={() => { setRainChoice(false); setScreen('map'); chooseDestination('station') }}>Go to the station</button>
           <button onClick={walkCity}>Keep walking</button>
+          </>}
         </div>
       </section>
     </div>}
