@@ -328,4 +328,15 @@ for(let block=1;block<=3;block++) {
 near(advanceTime(full,480,{sleeping:true}).energy,100);
 near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
 assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
-cleanup();dom.window.close();console.log('PASS: review regressions, 24h Water / 48h Food / 36h Energy, shelter queues and morning checkout, paused sleep planning and fatigue gates, schedule/daily limits, available-first lists, sleep and exertion.');
+// Clothing caps every gain, migrates wear, and laundry cleans without repairing it.
+setup({hygiene:90},{[invKey]:{jacket:42}});assert.equal(read(invKey).jacket,42);assert.equal(read(invKey).clothingCleanliness,90);assert.equal(read(stateKey).hygiene,90);
+for(const [cleanliness,cap] of [[80,100],[60,80],[20,60]]) {
+ setup({locationId:'daycenter',hygiene:55},{[invKey]:{clothingCleanliness:cleanliness,showerGel:2}});Math.random=()=>.85;click(/Take a shower/);assert.equal(read(stateKey).hygiene,cap);assert.equal(read(invKey).showerGel,1);ok();cleanup();render(React.createElement(App));assert.equal(read(stateKey).hygiene,cap);
+}
+setup({hygiene:95},{[invKey]:{clothingCleanliness:39,wipes:1}});assert.equal(read(stateKey).hygiene,60);click(/Inventory$/);assert(screen.getByText('Clothing'));assert(screen.getByRole('button',{name:/Wet wipes/}).disabled);
+setup({locationId:'daycenter',hygiene:50},{[invKey]:{clothingCleanliness:10,jacket:42}});Math.random=()=>.85;click(/Do laundry/);assert.equal(read(invKey).clothingCleanliness,100);assert.equal(read(invKey).jacket,42);assert(read(stateKey).hygiene<100);assert(screen.getByRole('dialog').textContent.includes('Clothing cleanliness'));ok();
+setup({locationId:'daycenter'},{[invKey]:{clothingCleanliness:10}});Math.random=()=>.99;click(/Do laundry/);assert(read(invKey).clothingCleanliness<10);
+setup({locationId:'shelter',day:4,minutes:1080},{[invKey]:{clothingCleanliness:10,jacket:42},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7,shelterLaundryDropDay:4}});click(/Collect clean laundry/);assert.equal(read(invKey).clothingCleanliness,100);assert.equal(read(invKey).jacket,42);ok();assert(screen.getByRole('button',{name:/Collect clean laundry/}).disabled);
+setup({locationId:'shelter',day:4,minutes:390},{[invKey]:{clothingCleanliness:10},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}});click(/Leave clothes for laundry/);assert(read(invKey).clothingCleanliness<10);
+setup({energy:68},{[invKey]:{clothingCleanliness:100}});beginSleep(/Sleep on the ground/,4);click('Wake up (debug)');near(read(invKey).clothingCleanliness,90);
+cleanup();dom.window.close();console.log('PASS: review regressions and clothing cleanliness, hygiene caps, laundry, migration and outdoor sleep.');

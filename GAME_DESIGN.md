@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · equipment ordered by importance: Phone, Documents, Transit card, Jacket, then automatic shower gel. Current visible build: `v2026.10.08-75`.
+**Last gameplay sync:** 2026-10-08 · clothing cleanliness, laundry and Hygiene caps. Current visible build: `v2026.10.08-76`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -17,7 +17,7 @@ Initial state:
 - 100 zł before mobile-service auto-renewal. Auto-renew is ON by default and can immediately spend 1 zł.
 - Food 72, Thirst 66, Energy 68, Health 82, Hygiene 55, Mood 58.
 - Housing: Street. Employment: Unemployed. Income: None.
-- Backpack/essentials: 2 water portions, 2 food portions, phone battery 62%, phone condition 72%, jacket 78%, documents, 0 cigarettes, 2 medicines and an active transit card. Bread rolls, canned food, wet wipes and 3-in-1 shower gel start at zero.
+- Backpack/essentials: 2 water portions, 2 food portions, phone battery 62%, phone condition 72%, clothing condition 78%, cleanliness 80%, documents, 0 cigarettes, 2 medicines and an active transit card. Bread rolls, canned food, wet wipes and 3-in-1 shower gel start at zero.
 
 ## Time
 
@@ -33,7 +33,7 @@ Completed actions and resolved event choices use a shared **RESULT** window with
 
 | Section | Contents |
 | --- | --- |
-| Changes & consequences | Actual gains/losses of Food, Water (Thirst), Energy, Health, Hygiene, Mood, Intoxication, inventory items, phone/jacket condition, carried documents and started/ended effects; positive money/battery changes also appear here. |
+| Changes & consequences | Actual gains/losses of Food, Water (Thirst), Energy, Health, Hygiene, Mood, Intoxication, inventory items, phone/clothing condition, carried documents and started/ended effects; positive money/battery changes also appear here. |
 | Spent | Elapsed game time for actions that include it, money spent/lost and phone battery used. |
 
 Rows are calculated from state snapshots **before and after** the completed action, rather than copying configured action bonuses. Caps, money clamping and normal need decay during elapsed action time are therefore reflected in the displayed values. For example, a +38 Water action at Thirst 90 shows +10 Water and −1 Water portion consumed, not +38. Consumable results also show bread rolls, canned food, wet-wipe uses and shower-gel uses actually gained or spent.
@@ -203,7 +203,7 @@ Stack sizes:
 - Returnable bottles: 8/slot.
 - Cigarettes: 20/slot.
 
-Phone, jacket, documents and transit card are essentials/equipped items and use no backpack slots.
+Phone, clothing, documents and transit card are essentials/equipped items and use no backpack slots.
 
 Using inventory:
 - Water: consumes one 0.5 L portion (one drop) and restores +38 Thirst. The shop shows Water ×3 and the 3 zł purchase price; inventory shows Water ×N with the current quantity. Both use a single water icon and omit repeated drops and liters. Purchase/drink results also omit liters.
@@ -435,7 +435,7 @@ Location actions currently attempt a location event at 20% probability. Night sh
 
 Implemented events:
 1. **The phone slips** — walking only. D20 Reflex option or guaranteed drop/damage.
-2. **Caught in the rain** — walking in Rain/Showers. Protect with jacket or keep moving; damages phone/jacket.
+2. **Caught in the rain** — walking in Rain/Showers. Protect with jacket or keep moving; damages phone/clothing.
 3. **Coins on the pavement** — take +6 zł or leave them for +1 Mood.
 4. **Someone offers food** — take one Food and +2 Mood or decline.
 5. **Ticket inspection** — public transport only; currently just show ticket.
@@ -445,7 +445,7 @@ Implemented events:
 9. **A quiet night** — wake event; +5 Mood and +5 Energy.
 10. **Something happened overnight** — Street housing wake event; loses up to 5 zł through clamping, -7 Mood and documents.
 
-Event outcomes can currently change time, money, Mood, Energy, Health, Hygiene, Food, Water, phone condition, jacket condition and document possession. Food/Water gains respect backpack capacity, including free space in existing stacks; excess supplies are left behind with an explanatory result. For an outcome giving both, Food is fitted first, then Water.
+Event outcomes can currently change time, money, Mood, Energy, Health, Hygiene, Food, Water, phone condition, clothing condition and document possession. Food/Water gains respect backpack capacity, including free space in existing stacks; excess supplies are left behind with an explanatory result. For an outcome giving both, Food is fitted first, then Water.
 
 ## D20 checks
 
@@ -596,6 +596,15 @@ GitHub Pages deployment runs `npm test` and `npm run build` before publishing.
 - Prefer safe choice vs risky check vs walk-away when it creates a meaningful decision.
 - Do not add abstract RPG stats unless the existing survival/life stats prove insufficient.
 - Result feedback should show actual changes, hide zero rows and let the player read before time resumes.
+
+
+
+
+### Clothing cleanliness
+
+The equipped Clothing replaces the Jacket label. Its condition retains the existing saved jacket value and event wear; laundry never repairs wear. Cleanliness starts at 80, decreases by 20 points per game day, ×1.5 while walking and ×3 while sleeping on the ground. Laundry at the day center or collection of Thursday shelter laundry restores cleanliness to 100 after completion; leaving clothes for laundry does not clean them yet. A refused or unavailable laundry action changes no cleanliness beyond elapsed time.
+
+Clothing cleanliness ≥70 allows Hygiene 100; ≥40 allows 80; below 40 allows 60. The cap applies to all Hygiene gains, including showers with gel, wipes, sleep and events, and existing Hygiene falls to the cap when clothing crosses a threshold. Washing raises the limit without instantly filling Hygiene. Legacy saves keep their condition and receive cleanliness at least 80 (or their higher existing Hygiene), preventing an immediate migration penalty. Clothing still occupies no backpack slots.
 
 
 

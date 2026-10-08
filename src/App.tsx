@@ -26,7 +26,7 @@ type Trip = { destinationId: string; mode: TravelMode; total: number; remaining:
 type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
 type ShelterQueue = { day: number; remaining: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
 type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
-type Inventory = { showerGel: number; bread: number; breadFreshness: number; cannedFood: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
+type Inventory = { clothingCleanliness: number; showerGel: number; bread: number; breadFreshness: number; cannedFood: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
@@ -35,7 +35,7 @@ type StoredItems = { documents: boolean; medicines: number; cigarettes: number; 
 type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
-const INITIAL_INVENTORY: Inventory = { showerGel: 0, bread: 0, breadFreshness: 100, cannedFood: 0, wipes: 0, water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: true }
+const INITIAL_INVENTORY: Inventory = { clothingCleanliness: 80, showerGel: 0, bread: 0, breadFreshness: 100, cannedFood: 0, wipes: 0, water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0, foodFreshness: 100 }
 const SCHRONISKO_FOOD_CAPACITY = 4
@@ -298,7 +298,9 @@ export default function App() {
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
       const raw = localStorage.getItem('street-life-inventory-v1')
-      return raw ? { ...INITIAL_INVENTORY, ...JSON.parse(raw) } : INITIAL_INVENTORY
+      if (!raw) return INITIAL_INVENTORY
+      const saved = JSON.parse(raw)
+      return { ...INITIAL_INVENTORY, ...saved, clothingCleanliness: typeof saved.clothingCleanliness === 'number' && Number.isFinite(saved.clothingCleanliness) ? Math.max(0, Math.min(100, saved.clothingCleanliness)) : Math.max(80, loadGame().hygiene) }
     } catch {
       return INITIAL_INVENTORY
     }
@@ -347,6 +349,14 @@ export default function App() {
   const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
   const usedStorageSlots = storageSlots(storage)
 
+  const laundryCleanAt = useRef(-1)
+  const groundSleepWindow = useRef<{ start: number; end: number } | null>(sleeping?.kind === 'ground' ? { start: sleeping.startAbsolute, end: sleeping.startAbsolute + sleeping.total } : null)
+  const clothingHygieneCap = (cleanliness: number) => cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60
+  const hygieneLimit = clothingHygieneCap(inventory.clothingCleanliness)
+  useEffect(() => {
+    if (game.hygiene > hygieneLimit) setGame(prev => ({ ...prev, hygiene: Math.min(prev.hygiene, hygieneLimit) }))
+  }, [game.hygiene, hygieneLimit])
+
   function applyAction(state: GameState, result: ActionResult) {
     return applyGameAction(state, result, { effects, walking: trip?.mode === 'walk', music: musicOn })
   }
@@ -364,11 +374,15 @@ export default function App() {
     setInventoryAgedAt(now)
     if (elapsed === 0) return
     setStorage(prev => prev.food > 0 ? { ...prev, foodFreshness: Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * elapsed) } : prev)
+    const groundWindow = groundSleepWindow.current
+    const extraDirt = groundWindow ? Math.max(0, Math.min(now, groundWindow.end) - Math.max(now - elapsed, groundWindow.start)) * (40 / 1440) : 0
+    const wornMinutes = Math.max(0, now - Math.max(now - elapsed, laundryCleanAt.current))
     setInventory(prev => {
       const multiplier = phoneDrainMultiplier(prev.phoneCondition)
       const navigationDrain = trip && navigationOn ? (weather.label === 'Clear' ? 15 : 12) / 60 * multiplier * elapsed : 0
       const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
       return { ...prev,
+        clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1.5 : 1) - extraDirt),
         foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * elapsed) : 100,
         breadFreshness: prev.bread > 0 ? Math.max(0, prev.breadFreshness - BREAD_FRESHNESS_PER_MINUTE * elapsed) : 100,
         phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
@@ -397,7 +411,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game)) return
+    if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit) return
     setPendingResult(null)
     if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
@@ -555,6 +569,7 @@ export default function App() {
     setTrip(null)
     if (safeKind === 'ground' && current.id !== 'street') setGame((prev) => ({ ...prev, locationId: 'street' }))
     const total = safeKind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
+    groundSleepWindow.current = safeKind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
   }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult])
@@ -689,6 +704,7 @@ export default function App() {
     setNavigationOn(false)
     const realStartedAt = Date.now()
     const total = chosenSleepMinutes(hours, kind)
+    groundSleepWindow.current = kind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot() })
     setMessage('You are sleeping.')
   }
@@ -1115,9 +1131,17 @@ export default function App() {
     const result = useGel ? { ...baseResult, hygiene: (baseResult.hygiene ?? 0) * 1.5, hygieneCap: 100,
       message: 'You showered with 3-in-1 gel. Hygiene gain ×1.5, up to 100. One use spent.' } : baseResult
     if (useGel) setInventory(prev => ({ ...prev, showerGel: prev.showerGel - 1 }))
+    const washedClothes = actionId === 'daycenter-laundry' || actionId === 'shelter-laundry-pickup'
     const next = applyAction(game, result)
+    if (washedClothes) {
+      laundryCleanAt.current = absoluteMinutes(next)
+      setInventory(prev => ({ ...prev, clothingCleanliness: 100 }))
+    } else {
+      const endCleanliness = Math.max(0, inventory.clothingCleanliness - result.minutes * (20 / 1440))
+      next.hygiene = Math.min(next.hygiene, clothingHygieneCap(endCleanliness))
+    }
     setGame(next)
-    setMessage(result.message ?? 'Time passes.')
+    setMessage((result.message ?? 'Time passes.') + (isShower && hygieneLimit < 100 ? ` Dirty clothes limit Hygiene to ${hygieneLimit}. Wash your clothes to raise the limit.` : ''))
 
     if (actionId === 'street-sleep') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
@@ -1488,6 +1512,8 @@ export default function App() {
     setNavigationOn(true)
     setActiveEvent(null)
     setDiceCheck(null)
+    laundryCleanAt.current = -1
+    groundSleepWindow.current = null
     setInventory(INITIAL_INVENTORY)
     setStorage(INITIAL_STORAGE)
     setLife(INITIAL_LIFE)
@@ -1575,12 +1601,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-75</div>
+        <div className="trash-build">Build 2026.10.08-76</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-75</div>
+    <div className="build-badge">v2026.10.08-76</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1685,7 +1711,7 @@ export default function App() {
             const unavailableReason = actionUnavailableReason(action)
             const unavailable = unavailableReason !== null
             return <button className="action" key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
-              <div><strong>{registering ? 'Join registration queue' : action.id === 'shelter-rest' ? 'Use your reserved bed' : action.name}</strong><small>{registering ? life.shelterRegistrationAttemptDay === game.day ? 'No places left for you today. Try tomorrow from 19:00.' : 'Registration 19:00–22:00 · wait 20 min. Earlier arrivals have a better chance; places are limited.' : action.id === 'shelter-rest' ? 'Use your reserved bed · arrive 18:00–22:00 and leave by 08:00.' : action.id === 'shelter-shower' || action.id === 'daycenter-shower' ? inventory.showerGel > 0 ? '3-in-1 gel: Hygiene gain ×1.5, max 100 · uses 1 automatically.' : 'Water only: Hygiene max 70. Bring 3-in-1 shower gel for better cleaning.' : action.description}{unavailableReason && <em className="action-unavailable-reason">{unavailableReason}</em>}</small></div>
+              <div><strong>{registering ? 'Join registration queue' : action.id === 'shelter-rest' ? 'Use your reserved bed' : action.name}</strong><small>{registering ? life.shelterRegistrationAttemptDay === game.day ? 'No places left for you today. Try tomorrow from 19:00.' : 'Registration 19:00–22:00 · wait 20 min. Earlier arrivals have a better chance; places are limited.' : action.id === 'shelter-rest' ? 'Use your reserved bed · arrive 18:00–22:00 and leave by 08:00.' : action.id === 'shelter-shower' || action.id === 'daycenter-shower' ? inventory.showerGel > 0 ? `3-in-1 gel: Hygiene gain ×1.5, max ${hygieneLimit} · uses 1 automatically.` : `Water only: Hygiene max ${Math.min(70, hygieneLimit)}. Bring 3-in-1 shower gel for better cleaning.` : action.description}{(action.id === 'shelter-shower' || action.id === 'daycenter-shower') && hygieneLimit < 100 && ` Dirty clothes: Hygiene max ${hygieneLimit}.`}{unavailableReason && <em className="action-unavailable-reason">{unavailableReason}</em>}</small></div>
               <span>{selectableSleep ? 'Choose duration' : <>{action.cost ? `${action.cost} zł · ` : ''}~{registering ? SHELTER_QUEUE_MINUTES : action.minutes} min</>}</span>
             </button>
           }) : <p className="empty">Nothing useful to do here yet.</p>}
@@ -1803,7 +1829,7 @@ export default function App() {
           <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
         </div>
         <div className="inventory-item">
-          <span className="item-icon">🧥</span><div><strong>Jacket</strong><small>Condition {inventory.jacket}%</small><div className="item-meter"><i style={{ width: `${inventory.jacket}%` }} /></div></div>
+          <span className="item-icon">🧥</span><div><strong>Clothing</strong><small>Condition {Math.round(inventory.jacket)}% · Cleanliness {Math.round(inventory.clothingCleanliness)}%</small><div className="item-meter"><i style={{ width: `${inventory.clothingCleanliness}%` }} /></div><small>Hygiene max {hygieneLimit}</small></div>
         </div>
         {inventory.showerGel > 0 && <div className="inventory-item">
           <span className="item-icon">🧴</span><div><strong>3-in-1 shower gel ×{inventory.showerGel}</strong><small>Uses left · automatic with a shower · Hygiene max 100</small></div>
@@ -1816,7 +1842,7 @@ export default function App() {
         <Stat icon="💧" label="Thirst" value={game.thirst} compact />
         <Stat icon="⚡" label={energyCap(game.health) < 100 ? `Energy · max ${energyCap(game.health)}` : 'Energy'} value={game.energy} compact />
         <Stat icon="❤️" label="Health" value={game.health} compact />
-        <Stat icon="🚿" label="Hygiene" value={game.hygiene} compact />
+        <Stat icon="🚿" label={hygieneLimit < 100 ? `Hygiene · max ${hygieneLimit}` : 'Hygiene'} value={game.hygiene} compact />
         <Stat icon="🙂" label="Mood" value={game.mood} compact />
       </div>
       <div className="life-heading"><h3>Life situation</h3><span>Current status</span></div>
