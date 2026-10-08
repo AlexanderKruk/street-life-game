@@ -264,7 +264,9 @@ export default function App() {
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
   })
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
-  const [storyIntent, setStoryIntent] = useState<'shelter' | 'money' | 'rest' | 'other' | null>(null)
+  const [storyIntent, setStoryIntent] = useState<'shelter' | 'money' | 'rest' | 'other' | 'understand' | 'warmth' | null>(null)
+  const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true' && loadGame().locationId === 'street')
+  useEffect(() => { localStorage.setItem('street-life-rain-choice-v1', String(rainChoice)) }, [rainChoice])
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const [musicOn, setMusicOn] = useState(false)
@@ -343,9 +345,9 @@ export default function App() {
   const [effects, setEffects] = useState<ActiveEffect[]>(() => {
     try {
       const raw = localStorage.getItem('street-life-effects-v1')
-      return raw ? JSON.parse(raw) : [{ id: 'cold', expiresAt: 2 * 1440 + 480 }]
+      return raw ? JSON.parse(raw) : []
     } catch {
-      return [{ id: 'cold', expiresAt: 2 * 1440 + 480 }]
+      return []
     }
   })
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
@@ -353,7 +355,7 @@ export default function App() {
   const currentActions = actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest'))
   const open = isOpen(current, game.minutes)
   const overall = overallStatus(game)
-  const weather = WEATHER[(game.day - 1) % WEATHER.length]
+  const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = [
     { id: 'morning' as const, title: 'Get through the morning', description: 'Get through your first night and stay alive until noon tomorrow.' },
@@ -362,8 +364,10 @@ export default function App() {
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
   ]
   const storyDecision = current.id === 'street' && !trip && !sleeping && !shelterQueue && !shelterDeparture && !trashGame
+  const firstNight = (game.day === 1 && game.minutes >= 1320 || game.day === 2 && game.minutes < 360) && life.housing === 'Street'
   const streetScene = [
-    game.minutes >= 1200 || game.minutes < 360 ? 'The street has grown quiet. Light spills from the station entrance, but it is no bed for the night.' : game.minutes >= 1020 ? 'The daylight is fading. People hurry past the station while you decide where to spend the night.' : 'People pass the station, each on their way somewhere. You stop and think about your next step.',
+    firstNight ? 'Tonight you have nowhere to go back to. You stand with your backpack, trying to take in what has happened. Everyone around you seems to have somewhere to be. Your phone might help you understand your options.' : '',
+    !firstNight && (game.minutes >= 1200 || game.minutes < 360) ? 'The street has grown quiet. Light spills from the station entrance, but it is no bed for the night.' : firstNight ? '' : game.minutes >= 1020 ? 'The daylight is fading. People hurry past the station while you decide where to spend the night.' : 'People pass the station, each on their way somewhere. You stop and think about your next step.',
     weather.label === 'Rain' || weather.label === 'Showers' ? 'Rain reaches your clothes; somewhere dry would make a difference.' : temperature < 10 ? 'The air is cold against your face.' : 'For now, the weather gives you a little breathing room.',
     game.energy < 30 ? 'Your legs feel heavy. Rest is becoming urgent.' : game.thirst < 30 ? 'Your mouth is dry. You need something to drink.' : game.hunger < 30 ? 'You have not eaten enough. The thought of food is hard to ignore.' : '',
     shelterBooked ? 'You have a reserved shelter bed, if you can get there in time.' : discoveredLocations.includes('shelter') ? 'You know the shelter address, but a place is not guaranteed.' : 'You do not yet know where you can sleep safely.',
@@ -617,7 +621,7 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
+    if (rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
     const safeKind = current.id === 'residential-shelter'
       ? 'residential'
       : current.id === 'shelter' && shelterBooked && open && game.intoxication <= 10
@@ -633,11 +637,11 @@ export default function App() {
     groundSleepWindow.current = safeKind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult])
+  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if (storyDecision || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
+      if (rainChoice || storyDecision || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
       if (sleeping) {
         const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
         const targetAbsolute = sleeping.startAbsolute + elapsed
@@ -653,7 +657,7 @@ export default function App() {
       setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame, storyDecision])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame, storyDecision, rainChoice])
 
   useEffect(() => {
     if (!trip || trip.remaining > 0) return
@@ -800,7 +804,7 @@ export default function App() {
     let illnessText = ''
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-      const sleepWeather = WEATHER[(wakeState.day - 1) % WEATHER.length]
+      const sleepWeather = (wakeState.rainUntil ?? 0) > absoluteMinutes(wakeState) ? WEATHER[1] : WEATHER[(wakeState.day - 1) % WEATHER.length]
       const sleepTemp = temperatureAt(sleepWeather.temp, wakeState.minutes)
       const illnessChance = Math.min(0.65, Math.max(0.05,
         0.08 +
@@ -1006,6 +1010,32 @@ export default function App() {
     } else {
       setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.`,  })
     }
+  }
+
+  function walkCity() {
+    if (current.id !== 'street' || sleeping || trip || activeEvent || infoModal) return
+    runWithResult('Walk through the city', () => {
+      setRainChoice(false)
+      const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
+      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { effects, walking: true, music: musicOn })
+      if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
+      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2, hygiene: startsRain || weather.label === 'Rain' || weather.label === 'Showers' ? -3 : 0 }, { effects, walking: true, music: musicOn })
+      const wet = (next.rainUntil ?? 0) > absoluteMinutes(next) || weather.label === 'Rain' || weather.label === 'Showers'
+      setInventory(previous => ({ ...previous, clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440) - (wet ? 5 : 0)) }))
+      setGame(next)
+      if (wet) {
+        setRainChoice(true)
+        setMessage(startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. You need to decide where to go.' : 'You walk through the rain. Your clothes are getting wet; somewhere dry would help.')
+      } else setMessage('You walk past lit windows and quiet streets. Moving helps you gather your thoughts, but you still need somewhere to spend the night.')
+    }, resultSnapshot(), true, true)
+  }
+
+  function takeRainCover() {
+    runWithResult('Shelter from the rain', () => {
+      setRainChoice(false)
+      setGame(previous => applyAction(previous, { minutes: 15, energy: 2, mood: 1 }))
+      setMessage('You wait under an entrance canopy for fifteen minutes. You stay out of the rain, but this is not a place to sleep.')
+    }, resultSnapshot(), true, true)
   }
 
   function streetActionImpl(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
@@ -1570,6 +1600,7 @@ export default function App() {
     setInfoModal(null)
     setScreen('location')
     setStoryIntent(null)
+    setRainChoice(false)
     setTrip(null)
     setShelterQueue(null)
     setShelterDeparture(null)
@@ -1585,7 +1616,7 @@ export default function App() {
     setInventory(INITIAL_INVENTORY)
     setStorage(INITIAL_STORAGE)
     setLife(INITIAL_LIFE)
-    setEffects([{ id: 'cold', expiresAt: 2 * 1440 + 480 }])
+    setEffects([])
     setSleeping(null)
     setSleepChoice(null)
     setSleepHours(8)
@@ -1669,12 +1700,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-81</div>
+        <div className="trash-build">Build 2026.10.08-82</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-81</div>
+    <div className="build-badge">v2026.10.08-82</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1760,11 +1791,11 @@ export default function App() {
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         {current.id === 'street' ? <section className="story-choices">
           <p className="eyebrow">YOUR NEXT STEP · TIME PAUSED</p>
-          <h2>{storyIntent === null ? 'What matters most right now?' : storyIntent === 'shelter' ? 'Somewhere to spend the night' : storyIntent === 'money' ? 'A way to get by' : storyIntent === 'rest' ? 'A moment off your feet' : 'What else can you try?'}</h2>
+          <h2>{storyIntent === null ? 'What matters most right now?' : storyIntent === 'understand' ? 'What help is still available?' : storyIntent === 'warmth' ? 'Somewhere out of the cold' : storyIntent === 'shelter' ? 'Somewhere to spend the night' : storyIntent === 'money' ? 'A way to get by' : storyIntent === 'rest' ? 'A moment off your feet' : 'What else can you try?'}</h2>
           {storyIntent === null ? <div className="story-intents">
-            <button onClick={() => setStoryIntent('shelter')}>Find somewhere to sleep</button>
-            <button onClick={() => setStoryIntent('money')}>Earn something for food</button>
-            <button onClick={() => setStoryIntent('rest')}>Stay here and rest</button>
+            {firstNight ? <button onClick={() => setStoryIntent('understand')}>Understand what you can do</button> : <button onClick={() => setStoryIntent('shelter')}>Find somewhere to sleep</button>}
+            {firstNight ? <button onClick={() => setStoryIntent('warmth')}>Find somewhere warm</button> : <button onClick={() => setStoryIntent('money')}>Earn something for food</button>}
+            {firstNight ? <button onClick={walkCity}>Walk through the night city</button> : <button onClick={() => setStoryIntent('rest')}>Stay here and rest</button>}
             <button className="story-secondary" onClick={() => setStoryIntent('other')}>Other actions</button>
           </div> : <button className="story-back" onClick={() => setStoryIntent(null)}>Choose another approach</button>}
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
@@ -1773,12 +1804,14 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && storyIntent !== null && <>
-            {storyIntent === 'shelter' && discoveredLocations.includes('shelter') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong>Go to Night Shelter</strong><small>{shelterBooked ? 'You have a reserved bed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
+            {(storyIntent === 'rest' || storyIntent === 'other') && <button className="action" onClick={walkCity}><div><strong>Walk through the night city</strong><small>Walk for half an hour and gather your thoughts. Rain may begin at night.</small></div><span>~30 min</span></button>}
+            {storyIntent === 'understand' && discoveredLocations.includes('support') && <p className="muted">You saved the Help Center address. It opens at 08:00; tonight you still need somewhere to stay.</p>}
+            {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'warmth') && discoveredLocations.includes('shelter') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong>Go to Night Shelter</strong><small>{shelterBooked ? 'You have a reserved bed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
             {storyIntent === 'money' && discoveredLocations.includes('work') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
-            {storyIntent === 'shelter' && <button className="action" onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong>Head for the station</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
-            {(storyIntent === 'shelter' || storyIntent === 'other') && !discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {(storyIntent === 'shelter' || storyIntent === 'warmth') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong>Head for the station</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
+            {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'other') && !discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             {(storyIntent === 'money' || storyIntent === 'other') && !discoveredLocations.includes('work') && <button className="action" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Search online for quick work</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {storyIntent === 'other' && !discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Search online for free help</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {(storyIntent === 'understand' || storyIntent === 'other') && !discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Search online for free help</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             {(storyIntent === 'money' || storyIntent === 'other') && <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
             {(storyIntent === 'money' || storyIntent === 'other') && <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>}
             {(storyIntent === 'rest' || storyIntent === 'other') && !streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
@@ -1978,6 +2011,15 @@ export default function App() {
       </section>
     </div>}
 
+    {!gameOver && rainChoice && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
+      <section className="sleep-card"><p className="eyebrow">RAIN · TIME PAUSED</p><h2>The rain is getting heavier</h2><p>Your clothes are getting wet. Where will you go?</p>
+        <div className="story-intents">
+          <button onClick={takeRainCover}>Wait under a canopy</button>
+          <button onClick={() => { setRainChoice(false); setScreen('map'); chooseDestination('station') }}>Go to the station</button>
+          <button onClick={walkCity}>Keep walking</button>
+        </div>
+      </section>
+    </div>}
     {!gameOver && diceCheck?.choice.check && <div className="dice-overlay">
       <section className="dice-card">
         <p className="eyebrow">{diceCheck.choice.check.stat.toUpperCase()} CHECK · DC {diceCheck.choice.check.dc}</p>

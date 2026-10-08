@@ -12,6 +12,7 @@ export type GameState = {
   mood: number
   intoxication: number
   locationId: string
+  rainUntil?: number
 }
 
 export type Location = {
@@ -69,9 +70,9 @@ export const initialState: GameState = {
   hunger: 72,
   thirst: 66,
   energy: 68,
-  health: 82,
-  hygiene: 55,
-  mood: 58,
+  health: 90,
+  hygiene: 75,
+  mood: 28,
   intoxication: 0,
   locationId: 'street',
 }
@@ -129,7 +130,7 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const step = Math.min(1, left)
     left -= step
     const now = absoluteMinutes(next)
-    const weather = WEATHER[(next.day - 1) % WEATHER.length]
+    const weather = (next.rainUntil ?? 0) > now ? WEATHER[1] : WEATHER[(next.day - 1) % WEATHER.length]
     const active = (id: string) => context.effects?.some(effect => effect.id === id && effect.expiresAt > now)
     const cold = active('cold')
     const wellFed = active('well-fed')

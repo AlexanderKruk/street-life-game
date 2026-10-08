@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · equipment order: Phone, Clothing, Documents, Transit card, gel. Current visible build: `v2026.10.08-81`. Documentation reviewed against the v81 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-08 · first-night shock, adjusted initial condition, wandering and rain choices. Current visible build: `v2026.10.08-82`. Documentation reviewed against the v82 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -15,7 +15,7 @@ The game persists main game state, inventory, active effects, life situation, sa
 Initial state:
 - Day 1, Monday, 22:00, Street. Existing saves retain their own time. Reset/new run starts at 22:00.
 - 100 zł before mobile-service auto-renewal. Auto-renew is ON by default and can immediately spend 1 zł.
-- Food 72, Thirst 66, Energy 68, Health 82, Hygiene 55, Mood 58.
+- Food 72, Thirst 66, Energy 68, Health 90, Hygiene 75, Mood 28. New runs have no initial Cold; existing saves retain their stats and effects.
 - Housing: Street. Employment: Unemployed. Income: None.
 - Backpack/essentials: 2 water portions, 2 food portions, phone battery 62%, phone condition 72%, clothing condition 78%, cleanliness 80%, documents, 0 cigarettes, 2 medicines and an active transit card. Bread rolls, canned food, wet wipes and 3-in-1 shower gel start at zero.
 
@@ -119,6 +119,10 @@ At Health 0 the run ends and a Run Over screen is shown. Starting a new run rese
 Food, water and medicine are primarily designed to remove/prevent causes of Health loss; medicine does not directly restore Health. Safe 8-hour indoor sleep can restore Health only when Food and Thirst are both above 20 **at waking**: Night Shelter +2 Health, Schronisko +3 Health. Shorter/longer sleep scales these bonuses by hours / 8.
 
 ## Weather
+
+Night wandering takes 30 game minutes, costs 2 additional Energy with walking need drain, and restores 2 Mood. It keeps the player on Street. Clothing gets the normal walking cleanliness loss. On a dry night (20:00–06:00), each walk has a 35% chance of rain beginning halfway through. The resulting rain lasts 180 game minutes from its onset, is saved in game state, and overrides the normal day weather during elapsed-time calculations, including across midnight. Wet walks additionally cost 3 Hygiene and 5 clothing cleanliness.
+
+After the walk result is read, a rainy walk presents a saved, paused choice: wait under an entrance canopy (15 minutes, +2 Energy/+1 Mood), choose a route to Station, or keep walking (another 30 minutes). Route selection itself is free; actual travel uses normal costs. Rain decisions resume after reload and do not roll weather again just from rendering. Cover avoids the walk's wet-clothing penalty but does not end the rain or provide a bed. Reset clears both rain and its pending decision.
 
 Weather is deterministic by game day and cycles through Cloudy, Rain, Clear, Windy and Showers.
 
@@ -316,7 +320,7 @@ Implemented timed effects:
 - Free transport — positive: public transport fare becomes free.
 - Well fed — positive: slows/offsets Food decay.
 
-The default test/new state currently starts with Cold expiring at absolute game minute 3360: Day 3, 08:00.
+New runs start without Cold. Outdoor sleeping and existing events can still cause illness; saved Cold effects are preserved until cured or expired.
 
 Cold additionally drains Energy by 0.045/min and Mood by 0.012/min, on top of its Health damage. Medicine removes Cold.
 
@@ -537,7 +541,7 @@ Several older generic shop/support actions still exist in `game.ts`, while the c
 
 ### Street story prototype (v79)
 
-Street now opens with a narrative scene that responds to time of day, rain/cold, urgent Energy/Water/Food needs and whether a shelter address or reserved bed is known. Three main intentions are shown: find somewhere to sleep, earn something for food, or stay and rest. Other actions exposes the full existing street menu. Selecting an intention reveals relevant existing actions and routes; going back is free. Known shelter/work addresses lead to route selection rather than redundant searches. Unavailable actions remain disabled and sort below available actions.
+Street now opens with a narrative scene that responds to time of day, rain/cold, urgent Energy/Water/Food needs and whether a shelter address or reserved bed is known. During the first night (day 1 from 22:00 through day 2 before 06:00, while housing is Street), the three primary choices are understand available help, find warmth, and walk through the night city. The scene acknowledges shock and uncertainty, rather than assuming survival routines. Earning money, bottles and ground sleep remain under Other actions. Later scenes retain the shelter/money/rest intentions. Other actions exposes the full existing street menu. Selecting an intention reveals relevant existing actions and routes; going back is free. Known shelter/work addresses lead to route selection rather than redundant searches. Unavailable actions remain disabled and sort below available actions.
 
 While deciding on Street, game time and time-based needs/effects/clothing/food ageing are paused, including when consulting Map, Inventory or Journal before departure. Intent selection and changing approach do not spend time. Executing an instant action still applies its full configured elapsed minutes. Confirmed travel, sleep and active shelter queues/departures keep their existing countdowns. Completed street actions return to the intention choices after their result; exhaustion can still force sleep at Energy 0. This is the first street-scene prototype; other locations retain their existing service interfaces and normal clock behavior.
 

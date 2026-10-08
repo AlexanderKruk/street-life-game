@@ -38,10 +38,15 @@ function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 
 
 // Story choices pause the clock and needs, then execute the existing action.
-setup({minutes:1321},{'street-life-discovered-v1':['street','station','shop']});assert(screen.getByText('What matters most right now?'));assert(!screen.queryByRole('button',{name:/Search online for a place to sleep/}));assert(document.querySelector('.story-scene').textContent.includes('street has grown quiet'));
+setup({minutes:1321},{'street-life-discovered-v1':['street','station','shop']});assert(screen.getByText('What matters most right now?'));assert(!screen.queryByRole('button',{name:/Search online for a place to sleep/}));assert(document.querySelector('.story-scene').textContent.includes('nowhere to go back to'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
-fireEvent.click(screen.getByRole('button',{name:'Find somewhere to sleep',exact:true}));assert(screen.getByRole('button',{name:/Search online for a place to sleep/}));assert(!screen.queryByRole('button',{name:/Ask passers-by/}));advance(10000);assert.deepEqual(read(stateKey),storyState);click(/Search online for a place to sleep/);assert.equal(read(stateKey).minutes,1336);ok();assert(screen.getByText('What matters most right now?'));
-fireEvent.click(screen.getByRole('button',{name:'Stay here and rest',exact:true}));assert(screen.getByRole('button',{name:/Sleep on the ground/}));assert(!screen.queryByRole('button',{name:/Search trash/}));fireEvent.click(screen.getByRole('button',{name:'Choose another approach',exact:true}));assert.equal(read(stateKey).minutes,1336);
+fireEvent.click(screen.getByRole('button',{name:'Understand what you can do',exact:true}));assert(screen.getByRole('button',{name:/Search online for a place to sleep/}));assert(!screen.queryByRole('button',{name:/Ask passers-by/}));advance(10000);assert.deepEqual(read(stateKey),storyState);click(/Search online for a place to sleep/);assert.equal(read(stateKey).minutes,1336);ok();assert(screen.getByText('What matters most right now?'));
+fireEvent.click(screen.getByRole('button',{name:'Other actions',exact:true}));assert(screen.getByRole('button',{name:/Sleep on the ground/}));assert(screen.getByRole('button',{name:/Search trash/}));fireEvent.click(screen.getByRole('button',{name:'Choose another approach',exact:true}));assert.equal(read(stateKey).minutes,1336);
+// First-night wandering uses real walking costs; rain choices pause and persist.
+setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop'],[invKey]:{clothingCleanliness:80}});assert(!screen.queryByRole('button',{name:'Earn something for food',exact:true}));assert(screen.getByRole('button',{name:'Find somewhere warm',exact:true}));const dryEnergy=read(stateKey).energy;click('Walk through the night city');assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).energy<dryEnergy);assert(!read(stateKey).rainUntil);assert(Math.abs(read(invKey).clothingCleanliness-(80-30*30/1440))<1e-8);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
+setup({minutes:1320},{[invKey]:{clothingCleanliness:80}});Math.random=()=>0;click('Walk through the night city');assert.equal(read(stateKey).minutes,1350);assert.equal(read(stateKey).rainUntil,1515);assert(read(invKey).clothingCleanliness<75);assert.equal(read('street-life-journal-history-v1').length,1);ok();assert(screen.getByRole('dialog',{name:'Rain on the street'}));const rainyState=read(stateKey),rainyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),rainyState);assert.deepEqual(read(invKey),rainyInventory);cleanup();render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));click('Wait under a canopy');assert.equal(read(stateKey).minutes,1365);assert.equal(localStorage.getItem('street-life-rain-choice-v1'),'false');assert.equal(read(stateKey).rainUntil,1515);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
+setup({minutes:1320,rainUntil:1500});click('Walk through the night city');ok();click('Go to the station');assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));assert.equal(read(stateKey).minutes,1350);assert(screen.getByRole('button',{name:/Public transport/}));
+setup({day:2,minutes:400,rainUntil:1700});advance(1000);assert.equal(read(stateKey).minutes,400); // street decision remains paused after rain expires
 // P1: referral opens map, including migration of a v53 save.
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
 for (const name of ['Cheap Shop','Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.city-map strong')].some(node=>node.textContent===name));
@@ -308,6 +313,10 @@ setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!d
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
 const {advanceTime,initialState}=require('./regression-game.cjs');
+assert.equal(initialState.health,90);assert.equal(initialState.hygiene,75);assert.equal(initialState.mood,28);
+const timedRain=advanceTime({...initialState,minutes:1320,rainUntil:1321,energy:100,health:100},2);
+const oneRainMinute=advanceTime({...initialState,minutes:1320,rainUntil:1321,energy:100,health:100},1);
+assert(Math.abs(timedRain.energy-advanceTime(oneRainMinute,1).energy)<1e-8);
 for(const context of [{},{sleeping:true},{walking:true,music:true}]) {
  const start={...initialState,minutes:1430,hunger:12,thirst:12,health:80};
  const options={...context,effects:[{id:'cold',expiresAt:1450},{id:'well-fed',expiresAt:1460}]};
@@ -352,7 +361,7 @@ setup({locationId:'work',minutes:1200});assert(!read(journalKey).work);
 setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','station','shop']});click(/Search online for quick work/);assert(read(journalKey).work);ok();
 setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click(/Journal$/);assert(document.querySelector('.journal-section-title').textContent.includes('4 / 4'));assert(screen.getByText('All starting goals completed'));
 click('Reset save');assert.deepEqual(read(journalKey),{morning:false,shelter:false,support:false,work:false});
-assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('street has grown quiet'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
+assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('nowhere to go back to'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
 setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);
 setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1140}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
 // Clothing caps every gain, migrates wear, and laundry cleans without repairing it.
