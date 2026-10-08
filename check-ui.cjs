@@ -27,7 +27,7 @@ function summary(){return screen.getByRole('dialog').textContent;}
  setup();button(/Search online for a place to sleep/);
  let text=summary();assert(text.includes('−2%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
  const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
- close();button(/Map$/);assert(screen.getByText('Night shelter',{exact:true}));fireEvent.click(document.querySelector('.nav-item.home'));
+ close();button(/Map$/);assert(screen.getByText('Night Shelter',{exact:true}));fireEvent.click(document.querySelector('.nav-item.home'));
  beginSleep();button('Wake up (debug)');
  text=summary();assert(text.includes('2 hours'));assert(text.includes('+13'));assert(!text.includes('Cold'));assert(!text.includes('Health'));assert(!text.includes('Battery'));
  close();button(/Inventory$/);button(/Water.*tap to drink/);text=summary();assert(text.includes('Water portions'));assert(text.includes('−1'));assert(!text.includes('Money'));assert(!text.includes('Time'));close();

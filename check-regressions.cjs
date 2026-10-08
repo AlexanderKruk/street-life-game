@@ -39,6 +39,7 @@ function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 
 // P1: referral opens map, including migration of a v53 save.
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
+for (const name of ['Cheap Shop','Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.city-map strong')].some(node=>node.textContent===name));
 assert(read(lifeKey).schroniskoReferral);assert(document.querySelector('.city-map').textContent.includes('Schronisko'));
 setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.querySelector('.city-map').textContent.includes('Schronisko'));
 

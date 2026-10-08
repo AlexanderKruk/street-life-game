@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · compact wrapping product-effect badges and Cheap shop naming. Current visible build: `v2026.10.08-72`.
+**Last gameplay sync:** 2026-10-08 · title-case location names across the map, location headings and navigation. Current visible build: `v2026.10.08-73`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
