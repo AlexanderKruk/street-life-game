@@ -90,6 +90,22 @@ click(/Public transport/);assert.equal(read(stateKey).money,95.6);
 setup({money:0},{[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:479}]});click(/Map$/);click(/^.*Station/);
 assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(screen.getByRole('button',{name:/Ride without/}));
 
+// Three zloty buys 1.5 L of water: exactly three drinks of 0.5 L.
+setup({locationId:'shop',thirst:0},{[invKey]:{water:0}});
+assert(screen.getByText('1.5 L · 3 × 0.5 L'));assert(screen.getByText('💧💧💧'));click('Buy Water for 3.00 zł');
+assert.equal(read(stateKey).money,97);assert.equal(read(invKey).water,3);assert(screen.getByRole('dialog').textContent.includes('three 0.5 L portions'));assert(screen.getByRole('dialog').textContent.includes('+3'));ok();click(/Inventory$/);
+assert(screen.getByText('×3 portions · 1.5 L'));assert.equal(document.querySelector('.water-portions').textContent,'💧💧💧');
+for(const [remaining,thirst] of [[2,38],[1,76],[0,100]]) {
+ click(/Water.*tap to drink/);assert.equal(read(invKey).water,remaining);assert.equal(read(stateKey).thirst,thirst);assert(screen.getByRole('dialog').textContent.includes('0.5 L'));ok();
+ if(remaining>0){assert.equal(document.querySelector('.water-portions').textContent,'💧'.repeat(remaining));cleanup();render(React.createElement(App));assert.equal(read(invKey).water,remaining);}
+}
+assert(!screen.queryByRole('button',{name:/Water.*tap to drink/}));
+// A purchase fits only if all three portions fit in the backpack.
+setup({locationId:'shop'},{[invKey]:{water:1,food:4,medicines:24}});assert(!screen.getByRole('button',{name:'Buy Water for 3.00 zł'}).disabled);click('Buy Water for 3.00 zł');assert.equal(read(invKey).water,4);assert.equal(read(stateKey).money,97);
+setup({locationId:'shop'},{[invKey]:{water:2,food:4,medicines:24}});const fullPurchase=screen.getByRole('button',{name:'Buy Water for 3.00 zł'});assert(fullPurchase.disabled);fireEvent.click(fullPurchase);assert.equal(read(invKey).water,2);assert.equal(read(stateKey).money,100);
+// Stealing the same 1.5 L item also adds all three servings.
+setup({locationId:'shop'},{[invKey]:{water:0}});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);click('Roll D20');click('Continue');assert.equal(read(invKey).water,3);assert.equal(read(stateKey).money,100);
+
 // Fresh, stale and spoiled food have different effects; empty stacks reset freshness.
 for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]) {
   setup({hunger:20},{[invKey]:{food:1,foodFreshness:freshness}});click(/Inventory$/);click(/Food.*tap to eat/);

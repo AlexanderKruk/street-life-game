@@ -36,7 +36,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
   add('🍺 Intoxication', after.game.intoxication - before.game.intoxication, '', true)
   for (const [key, label, suffix] of [
     ['phoneBattery', '🔋 Battery', '%'], ['phoneCondition', '📱 Phone condition', '%'],
-    ['jacket', '🧥 Jacket condition', '%'], ['water', '💧 Water bottles', ''],
+    ['jacket', '🧥 Jacket condition', '%'], ['water', '💧 Water portions (0.5 L)', ''],
     ['food', '🥪 Food portions', ''], ['bottles', '♻️ Returnable bottles', ''],
     ['cigarettes', '🚬 Cigarettes', ''], ['medicines', '💊 Medicine', ''],
   ] as const) add(label, after.inventory[key] - before.inventory[key], suffix, false, key === 'phoneBattery')

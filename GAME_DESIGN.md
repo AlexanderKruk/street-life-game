@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · mobile shop buttons with theft icon. Current visible build: `v2026.10.08-65`.
+**Last gameplay sync:** 2026-10-08 · 1.5 L water purchase with three 0.5 L servings. Current visible build: `v2026.10.08-66`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -36,7 +36,7 @@ Completed actions and resolved event choices use a shared **RESULT** window with
 | Changes & consequences | Actual gains/losses of Food, Water (Thirst), Energy, Health, Hygiene, Mood, Intoxication, inventory items, phone/jacket condition, carried documents and started/ended effects; positive money/battery changes also appear here. |
 | Spent | Elapsed game time for actions that include it, money spent/lost and phone battery used. |
 
-Rows are calculated from state snapshots **before and after** the completed action, rather than copying configured action bonuses. Caps, money clamping and normal need decay during elapsed action time are therefore reflected in the displayed values. For example, a +38 Water action at Thirst 90 shows +10 Water and one bottle consumed, not +38.
+Rows are calculated from state snapshots **before and after** the completed action, rather than copying configured action bonuses. Caps, money clamping and normal need decay during elapsed action time are therefore reflected in the displayed values. For example, a +38 Water action at Thirst 90 shows +10 Water and one 0.5 L portion consumed, not +38.
 
 Numeric rows that round to zero are hidden. Most values use one decimal place; money uses two. Empty sections are hidden. A resolved event still opens an outcome window when it has no numeric changes. An ordinary rejected/no-change action generally leaves only its explanatory message.
 
@@ -194,7 +194,7 @@ The event system then uses weighted selection among eligible events.
 Backpack capacity is 8 slots.
 
 Stack sizes:
-- Water: 4/slot.
+- Water: 4 half-liter portions/slot (2 L).
 - Food: 4/slot.
 - Medicine: 4/slot.
 - Returnable bottles: 8/slot.
@@ -203,7 +203,7 @@ Stack sizes:
 Phone, jacket, documents and transit card are essentials/equipped items and use no backpack slots.
 
 Using inventory:
-- Water: consumes 1 and restores +38 Thirst.
+- Water: consumes one 0.5 L portion (one drop) and restores +38 Thirst. Inventory shows portion count, total liters and remaining drops.
 - Food is stored as one stack with an average freshness value, so different ages do not consume extra backpack slots.
 - Freshness falls from 100% to 0% over roughly 48 game hours, including while stored in Schronisko.
 - Freshness labels: Fresh >50%, Stale >20–50%, Spoiled 0–20%.
@@ -247,7 +247,7 @@ The Discount shop accepts returnable bottles for a 0.50 zł deposit refund per b
 Each purchasable backpack item has its actions in one row across the full card width: red **🥷** theft icon on the left (same icon as fare dodging; accessible label STEAL and item tooltip) and green purchase button on the right, displaying only the price (e.g. **3.00 zł**). Labels and prices stay inside their buttons on narrow screens. Full backpack / insufficient money still disable the appropriate actions. Each purchasable backpack item also has a **STEAL** option. Theft uses the shared visible D20 system: **Reflex DC 12**. Success adds the selected item without paying; failure gives no item and hurts Mood. Natural 20 is a faster/clean critical success; natural 1 is a worse failed attempt.
 
 The Discount shop currently sells:
-- Water: 3 zł, one bottle.
+- Water: 3 zł for 1.5 L, adding three 0.5 L portions (💧💧💧). Buying or successfully stealing the water item adds all three portions; one drink consumes one portion. Capacity is checked for all three portions. Existing inventory counts are preserved as portions.
 - Cheap food: 5 zł, one item.
 - Cigarettes: 6 zł for 5.
 - Medicine: 9 zł for 1.
@@ -534,7 +534,7 @@ These are current code realities, not planned features:
 
 ## Regression checks (v54)
 
-`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. GitHub Pages deployment runs these checks before building/publishing.
+`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-drop/volume display, reload persistence, whole-purchase backpack capacity and the matching theft quantity. GitHub Pages deployment runs these checks before building/publishing.
 
 ## Design principles already established by implemented systems
 
