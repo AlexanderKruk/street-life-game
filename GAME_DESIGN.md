@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · 22:00 new-run start and next-day morning goal. Current visible build: `v2026.10.08-80`. Documentation reviewed against the v80 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-08 · equipment order: Phone, Clothing, Documents, Transit card, gel. Current visible build: `v2026.10.08-81`. Documentation reviewed against the v81 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -240,7 +240,7 @@ Clothing cleanliness ≥70 allows Hygiene 100; ≥40 allows 80; below 40 allows 
 | Night Shelter | Thursday drop-off 06:30–08:00; pickup 18:00–22:00; shelter admission required | 10 min each | Cleanliness 100 at pickup |
 | Schronisko | No laundry action implemented yet | — | — |
 
-Equipment display order is Phone, Documents, Transit card, Clothing, then 3-in-1 shower gel when available. Gel is displayed with automatic equipment but still consumes backpack space.
+Equipment display order is Phone, Clothing, Documents, Transit card, then 3-in-1 shower gel when available. Gel is displayed with automatic equipment but still consumes backpack space.
 
 ## Phone
 

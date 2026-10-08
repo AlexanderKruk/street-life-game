@@ -1669,12 +1669,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-80</div>
+        <div className="trash-build">Build 2026.10.08-81</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-80</div>
+    <div className="build-badge">v2026.10.08-81</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1903,13 +1903,13 @@ export default function App() {
           <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · tap to open</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
         </button>
         <div className="inventory-item">
+          <span className="item-icon">🧥</span><div><strong>Clothing</strong><small>Condition {Math.round(inventory.jacket)}% · Cleanliness {Math.round(inventory.clothingCleanliness)}%</small><div className="item-meter"><i style={{ width: `${inventory.clothingCleanliness}%` }} /></div><small>Hygiene max {hygieneLimit}</small></div>
+        </div>
+        <div className="inventory-item">
           <span className="item-icon">🪪</span><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
         </div>
         <div className="inventory-item">
           <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
-        </div>
-        <div className="inventory-item">
-          <span className="item-icon">🧥</span><div><strong>Clothing</strong><small>Condition {Math.round(inventory.jacket)}% · Cleanliness {Math.round(inventory.clothingCleanliness)}%</small><div className="item-meter"><i style={{ width: `${inventory.clothingCleanliness}%` }} /></div><small>Hygiene max {hygieneLimit}</small></div>
         </div>
         {inventory.showerGel > 0 && <div className="inventory-item">
           <span className="item-icon">🧴</span><div><strong>3-in-1 shower gel ×{inventory.showerGel}</strong><small>Uses left · automatic with a shower · Hygiene max 100</small></div>
