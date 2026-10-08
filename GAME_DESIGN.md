@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · 3-in-1 shower gel: 10 zł for 20 automatic shower uses. Current visible build: `v2026.10.08-71`.
+**Last gameplay sync:** 2026-10-08 · current assortment, prices, item consumption, shower rules and regression coverage. Current visible build: `v2026.10.08-71`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -17,7 +17,7 @@ Initial state:
 - 100 zł before mobile-service auto-renewal. Auto-renew is ON by default and can immediately spend 1 zł.
 - Food 72, Thirst 66, Energy 68, Health 82, Hygiene 55, Mood 58.
 - Housing: Street. Employment: Unemployed. Income: None.
-- Backpack/essentials: 2 water, 2 food, phone battery 62%, phone condition 72%, jacket 78%, documents, 0 cigarettes, 2 medicines and an active transit card.
+- Backpack/essentials: 2 water portions, 2 food portions, phone battery 62%, phone condition 72%, jacket 78%, documents, 0 cigarettes, 2 medicines and an active transit card. Bread rolls, canned food, wet wipes and 3-in-1 shower gel start at zero.
 
 ## Time
 
@@ -36,7 +36,7 @@ Completed actions and resolved event choices use a shared **RESULT** window with
 | Changes & consequences | Actual gains/losses of Food, Water (Thirst), Energy, Health, Hygiene, Mood, Intoxication, inventory items, phone/jacket condition, carried documents and started/ended effects; positive money/battery changes also appear here. |
 | Spent | Elapsed game time for actions that include it, money spent/lost and phone battery used. |
 
-Rows are calculated from state snapshots **before and after** the completed action, rather than copying configured action bonuses. Caps, money clamping and normal need decay during elapsed action time are therefore reflected in the displayed values. For example, a +38 Water action at Thirst 90 shows +10 Water and one 0.5 L portion consumed, not +38.
+Rows are calculated from state snapshots **before and after** the completed action, rather than copying configured action bonuses. Caps, money clamping and normal need decay during elapsed action time are therefore reflected in the displayed values. For example, a +38 Water action at Thirst 90 shows +10 Water and −1 Water portion consumed, not +38. Consumable results also show bread rolls, canned food, wet-wipe uses and shower-gel uses actually gained or spent.
 
 Numeric rows that round to zero are hidden. Most values use one decimal place; money uses two. Empty sections are hidden. A resolved event still opens an outcome window when it has no numeric changes. An ordinary rejected/no-change action generally leaves only its explanatory message.
 
@@ -253,18 +253,38 @@ The Discount shop accepts returnable bottles for a 0.50 zł deposit refund per b
 
 Each purchasable backpack item has its actions in one row across the full card width: red **🥷** theft icon on the left (same icon as fare dodging; accessible label STEAL and item tooltip) and green purchase button on the right, displaying only the price (e.g. **3.00 zł**). Labels and prices stay inside their buttons on narrow screens. Full backpack / insufficient money still disable the appropriate actions. Each purchasable backpack item also has a **STEAL** option. Theft uses the shared visible D20 system: **Reflex DC 12**. Success adds the selected item without paying; failure gives no item and hurts Mood. Natural 20 is a faster/clean critical success; natural 1 is a worse failed attempt.
 
-The Discount shop currently sells:
-- Water: 3 zł for 1.5 L, adding three 0.5 L portions (Water ×3). Buying or successfully stealing the water item adds all three portions; one drink consumes one portion. Capacity is checked for all three portions. Existing inventory counts are preserved as portions.
-- Cheap food: 5 zł, one item.
-- Bread roll: 1 zł, one item.
-- Pull-tab canned food: 6 zł, one item.
-- Wet wipes: 5 zł, five uses.
-- 3-in-1 shower gel: 10 zł, twenty showers; backpack quantity is remaining uses.
-- Cigarettes: 6 zł for 5.
-- Medicine: 9 zł for 1.
-- Hot meal: 8 zł, eaten immediately and does not use backpack space.
+The current assortment is implemented as follows. Prices are per purchase; quantities for wipes and gel count **remaining uses**, not individual packets/bottles.
 
-The hot meal advances 15 minutes, restores +48 Food, +8 Thirst and +5 Mood through the action, and activates Well fed for 4 hours. Well fed halves baseline Food decay while active; the walking surcharge still applies. It never passively replenishes Food.
+| Item | Price | Quantity per purchase | Effect per use | Backpack stacking |
+|---|---:|---:|---|---|
+| Water | 3 zł | 3 drinks | +38 Thirst | 4 drinks/slot |
+| Cheap food | 5 zł | 1 portion | Fresh: +28 Food, +2 Mood; freshness rules apply | 4 portions/slot |
+| Bread roll | 1 zł | 1 roll | Fresh +12 Food; stale +8; spoiled +4 Food, −3 Health, −2 Mood | 4 rolls/slot |
+| Pull-tab canned food | 6 zł | 1 can | +32 Food, +1 Mood; no spoilage or opener requirement | 4 cans/slot |
+| Wet wipes | 5 zł | 5 uses | +10 Hygiene, capped at 60 | 5 uses/slot |
+| 3-in-1 shower gel | 10 zł | 20 uses | Automatic shower bonus ×1.5 and Hygiene cap 100 | 20 uses/slot |
+| Cigarettes | 6 zł | 5 cigarettes | +5 Mood, −0.5 Health | 20 cigarettes/slot |
+| Medicine | 9 zł | 1 use | Removes active Cold | 4 uses/slot |
+| Hot meal | 8 zł | Eaten immediately | +48 Food, +8 Thirst, +5 Mood; Well fed for 4 hours | No backpack slot |
+
+Backpack purchases take 3 game minutes. The entire purchase quantity must fit before money is spent or a theft attempt can start. Successful theft grants the same quantity as buying. This includes all three water drinks, five wipe uses or twenty gel uses. New stock mixes freshness with existing food/bread of the same type; bread and sandwich freshness are tracked separately.
+
+Water is displayed as **Water ×3** in the shop and **Water ×N** in inventory. Volume labels and repeated water-drop icons are omitted. Wipes and gel display remaining uses; gel has no standalone use button. Wet wipes are disabled once Hygiene reaches 60 and do not spend a use at that cap.
+
+The hot meal advances 15 minutes, keeps the existing food/thirst/mood bonuses, and activates Well fed for 4 hours. Well fed halves baseline Food decay while active; the walking surcharge still applies. It never passively replenishes Food. The price is 8 zł in the card, affordability check, action deduction and result text.
+
+### Shower and 3-in-1 gel
+
+| Shower | Duration | Water-only Hygiene bonus/cap | With gel Hygiene bonus/cap | Other bonuses |
+|---|---:|---|---|---|
+| Night shelter | 35 min | +55, max 70 | +82.5, max 100 | +4 Energy, +4 Mood |
+| Day Center & Clinic | 40 min | +50, max 70 | +75, max 100 | +4 Mood |
+
+One gel use is consumed **automatically after shower access succeeds**. If no gel is carried, the water-only rule applies. Gel cannot be used by itself from inventory. A full day center, a closed service or a blocked shelter shower consumes no gel. The shower action describes the rule that will apply before the player starts.
+
+The Hygiene cap limits the shower's positive gain; it does not force an already cleaner character down to 70. Ordinary Hygiene decay during the shower's elapsed time still applies. The result window reports the actual net Hygiene change and −1 gel use when spent.
+
+Older saves retain existing possessions and start with zero of any missing new item. Current counts and freshness persist across reloads. Older result snapshots with missing new quantities treat them as zero.
 
 ## Effects
 
@@ -515,7 +535,9 @@ The UI includes:
 - Street-event modal.
 - D20 roll/result modal.
 - Shared RESULT/OK window with Changes & consequences and Spent sections.
+- Sleep-duration planning modal with paused time, fatigue-dependent 2/4/6/8-hour choices and wake-time previews.
 - Sleep progress overlay.
+- Shelter registration queue and morning checkout reminder/progress.
 - Discovered-address map and active Night shelter arrival goal.
 - Run Over modal.
 
@@ -537,15 +559,25 @@ These are current code realities, not planned features:
 - Documents exist and can be lost/restored, but most formal actions do not yet require them.
 - Schronisko referral is immediate; no application/approval process yet.
 - The temperature day-cycle formula currently uses a 20-hour cosine period despite the comment describing a normal daily cycle.
-- The Night shelter timing/check-in rules should be revisited for long sleeps and initial registration versus nightly stays.
 - Active effects and some old saves may expose transitional edge cases as schemas evolve.
 - The gradual map has connected online discovery routes for Night shelter, Day work and Help center, plus Schronisko through a referral. Other services still lack a connected discovery route in a new run.
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
-## Regression checks (v54)
+## Regression checks (through v71)
 
-`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. GitHub Pages deployment runs these checks before building/publishing.
+`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
+
+- Legacy inventory migration without free new items; purchase prices and quantities; saved counts after reload.
+- Bread freshness during sleep, fresh/stale/spoiled effects and reset after the last roll; sealed cans keep their quantity through the same time advance.
+- Canned-food purchase and consumption; wipe purchase, consumption, cap at 60 and disabled behavior at that cap.
+- Backpack capacity for purchases and theft of new goods, with matching successful-theft quantities and result rows.
+- Hot meals available at exactly 8 zł, unavailable below 8 zł, with the correct deduction, 15-minute duration and Well-fed effect.
+- Gel at 10 zł for 20 uses, one bottle fitting in one free slot, matching theft quantity and no manual inventory-use button.
+- Both shower locations: water-only cap 70 even after repeated showers, gel cap 100 and stronger gain from a dirty baseline, exactly one use consumed, reload persistence, and preservation of higher pre-existing Hygiene without gel.
+- Full/closed shower services preserve gel stock.
+
+GitHub Pages deployment runs `npm test` and `npm run build` before publishing.
 
 ## Design principles already established by implemented systems
 
