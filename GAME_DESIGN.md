@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · musical walks and specific questions to AI on the phone, including charging tonight. Current visible build: `v2026.10.08-84`. Documentation reviewed against the v84 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-08 · random starting money. Current visible build: `v2026.10.08-85`. Documentation reviewed against the v85 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -14,7 +14,7 @@ The game persists main game state, inventory, active effects, life situation, sa
 
 Initial state:
 - Day 1, Monday, 22:00, Street. Existing saves retain their own time. Reset/new run starts at 22:00.
-- 100 zł before mobile-service auto-renewal. Auto-renew is ON by default and can immediately spend 1 zł.
+- A uniformly random whole amount from 25 to 50 zł inclusive, chosen once per new run or reset. Reloading keeps the saved amount, including older 100 zł test saves. Auto-renew is ON by default and can immediately spend 1 zł, so the first displayed balance can be 24–49 zł; this is a real service expense, not a lower starting roll.
 - Food 72, Thirst 66, Energy 68, Health 90, Hygiene 75, Mood 28. New runs have no initial Cold; existing saves retain their stats and effects.
 - Housing: Street. Employment: Unemployed. Income: None.
 - Backpack/essentials: 2 water portions, 2 food portions, phone battery 62%, phone condition 72%, clothing condition 78%, cleanliness 80%, documents, 0 cigarettes, 2 medicines and an active transit card. Bread rolls, canned food, wet wipes and 3-in-1 shower gel start at zero.

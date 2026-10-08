@@ -66,7 +66,7 @@ export const locations: Location[] = [
 export const initialState: GameState = {
   day: 1,
   minutes: 22 * 60,
-  money: 100,
+  money: 25,
   hunger: 72,
   thirst: 66,
   energy: 68,
@@ -75,6 +75,10 @@ export const initialState: GameState = {
   mood: 28,
   intoxication: 0,
   locationId: 'street',
+}
+
+export function createInitialState(): GameState {
+  return { ...initialState, money: 25 + Math.floor(Math.random() * 26) }
 }
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value))

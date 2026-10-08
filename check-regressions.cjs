@@ -324,7 +324,11 @@ setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!d
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
-const {advanceTime,initialState}=require('./regression-game.cjs');
+const {advanceTime,initialState,createInitialState}=require('./regression-game.cjs');
+const beforeMoneyRandom=Math.random;
+for(let amount=25;amount<=50;amount++){Math.random=()=>(amount-25+.5)/26;assert.equal(createInitialState().money,amount);}
+Math.random=()=>0;assert.equal(createInitialState().money,25);Math.random=()=>.999999;assert.equal(createInitialState().money,50);Math.random=beforeMoneyRandom;
+cleanup();localStorage.clear();localStorage.setItem('street-life-mobile-auto-renew','false');Math.random=()=>0;render(React.createElement(App));assert.equal(read(stateKey).money,25);cleanup();Math.random=()=>.99;render(React.createElement(App));assert.equal(read(stateKey).money,25);click('Reset save');assert.equal(read(stateKey).money,49);assert.equal(read(stateKey).minutes,1320);cleanup();render(React.createElement(App));assert.equal(read(stateKey).money,49);setup({money:100});assert.equal(read(stateKey).money,100);
 assert.equal(initialState.health,90);assert.equal(initialState.hygiene,75);assert.equal(initialState.mood,28);
 const timedRain=advanceTime({...initialState,minutes:1320,rainUntil:1321,energy:100,health:100},2);
 assert(Math.abs(timedRain.energy-(100-2*100/2160-.025))<1e-8);

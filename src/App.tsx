@@ -1,5 +1,5 @@
 import { Children, Fragment, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, isOpen, locations, type ActionResult, type GameState } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
 
@@ -192,9 +192,9 @@ function loadTrip(): Trip | null {
 function loadGame(): GameState {
   try {
     const raw = localStorage.getItem(SAVE_KEY)
-    return raw ? { ...initialState, ...JSON.parse(raw) } : initialState
+    return raw ? { ...initialState, ...JSON.parse(raw) } : createInitialState()
   } catch {
-    return initialState
+    return createInitialState()
   }
 }
 
@@ -1645,7 +1645,7 @@ export default function App() {
     localStorage.removeItem(JOURNAL_HISTORY_KEY)
     localStorage.removeItem(JOURNAL_GOALS_KEY)
     localStorage.removeItem(GOAL_KEY)
-    setGame(initialState)
+    setGame(createInitialState())
     setMessage('New run started.')
     setInfoModal(null)
     setScreen('location')
@@ -1752,12 +1752,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-84</div>
+        <div className="trash-build">Build 2026.10.08-85</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-84</div>
+    <div className="build-badge">v2026.10.08-85</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
