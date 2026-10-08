@@ -267,6 +267,10 @@ export default function App() {
   const [storyIntent, setStoryIntent] = useState<'shelter' | 'money' | 'rest' | 'other' | 'understand' | 'warmth' | null>(null)
   const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true' && loadGame().locationId === 'street')
   const [coverPlanning, setCoverPlanning] = useState(false)
+  const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => {
+    try { const saved = JSON.parse(localStorage.getItem('street-life-answers-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
+  })
+  useEffect(() => { localStorage.setItem('street-life-answers-v1', JSON.stringify(answeredQuestions)) }, [answeredQuestions])
   useEffect(() => { localStorage.setItem('street-life-rain-choice-v1', String(rainChoice)) }, [rainChoice])
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
@@ -1015,23 +1019,63 @@ export default function App() {
     }
   }
 
-  function walkCity() {
+  const walkMusicCost = 2 * phoneDrainMultiplier(inventory.phoneCondition)
+  const canWalkWithMusic = mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= walkMusicCost
+  function walkCity(withMusic = false) {
     if (current.id !== 'street' || sleeping || trip || activeEvent || infoModal) return
-    runWithResult('Walk through the city', () => {
+    if (withMusic && !canWalkWithMusic) return
+    const playingMusic = withMusic || musicOn
+    runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
       setRainChoice(false)
       setCoverPlanning(false)
       const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
-      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { effects, walking: true, music: musicOn })
+      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { effects, walking: true, music: playingMusic })
       if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
-      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2, hygiene: startsRain || weather.label === 'Rain' || weather.label === 'Showers' ? -3 : 0 }, { effects, walking: true, music: musicOn })
+      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2, hygiene: startsRain || weather.label === 'Rain' || weather.label === 'Showers' ? -3 : 0 }, { effects, walking: true, music: playingMusic })
+      if (withMusic) next.mood += Math.max(0, Math.min(8, 60 - next.mood))
       const wet = (next.rainUntil ?? 0) > absoluteMinutes(next) || weather.label === 'Rain' || weather.label === 'Showers'
-      setInventory(previous => ({ ...previous, clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440) - (wet ? 5 : 0)) }))
+      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440) - (wet ? 5 : 0)) }))
       setGame(next)
+      const musicText = withMusic ? ' You put on familiar music. For a little while, the night feels less overwhelming.' : ''
       if (wet) {
         setRainChoice(true)
-        setMessage(startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. You need to decide where to go.' : 'You walk through the rain. Your clothes are getting wet; somewhere dry would help.')
-      } else setMessage('You walk past lit windows and quiet streets. Moving helps you gather your thoughts, but you still need somewhere to spend the night.')
+        setMessage((startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. You need to decide where to go.' : 'You walk through the rain. Your clothes are getting wet; somewhere dry would help.') + musicText)
+      } else setMessage('You walk past lit windows and quiet streets. Moving helps you gather your thoughts, but you still need somewhere to spend the night.' + musicText)
     }, resultSnapshot(), true, true)
+  }
+
+  const practicalQuestions = [
+    { id: 'morning', title: 'Where can I get help in the morning?', text: 'Help Center opens at 08:00 and closes at 16:00. Ask a social worker about accommodation, documents and benefits. Day Center & Clinic is also open 08:00–16:00: you can stay indoors, ask for a shower or laundry, and charge your phone. Services may be full. Both addresses are saved on your map.', locations: ['support', 'daycenter'] },
+    { id: 'bed', title: 'How can I get a shelter bed?', text: 'First registration at Night Shelter runs 19:00–22:00. Arrive by 19:00, wait the full 20-minute queue, and then find out whether there is a place. There are only 0–3 free places each day; earlier arrivals have a better chance. A successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
+    { id: 'no-place', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about a Schronisko referral; that is a separate housing route. Day Center can offer daytime shelter, but is not an overnight bed. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: ['support', 'daycenter'] },
+    { id: 'supplies', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, and a hot meal 8 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
+    { id: 'charging', title: 'Where can I charge my phone?', text: 'You glance at the battery and remember an outlet in the waiting room at Station. You can go there tonight: it is available around the clock. Charging takes one hour and adds 60% battery, up to 100%. The station address is on your map. You do not need internet to remember this.', locations: ['station'] },
+  ]
+  const visibleQuestions = practicalQuestions.filter(question => answeredQuestions.includes(question.id)
+    || question.id === 'morning'
+    || (question.id === 'bed' && (answeredQuestions.includes('morning') || discoveredLocations.includes('shelter')))
+    || (question.id === 'no-place' && answeredQuestions.includes('bed'))
+    || (question.id === 'supplies' && (game.hunger <= 45 || game.thirst <= 45))
+    || (question.id === 'charging' && inventory.phoneBattery <= 30))
+  function answerPracticalQuestion(id: string) {
+    const question = practicalQuestions.find(entry => entry.id === id)
+    if (!question || current.id !== 'street' || !visibleQuestions.includes(question)) return
+    const memory = id === 'charging'
+    if (answeredQuestions.includes(id)) {
+      setInfoModal({ title: question.title, text: `${memory ? 'A remembered place' : 'AI · Saved answer'}\n\n${question.text}`, costs: [], changes: [] })
+      return
+    }
+    if (!memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)) return
+    runWithResult(question.title, () => {
+      if (!memory) setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - 1) }))
+      const next = applyAction(game, { minutes: memory ? 0 : 5 })
+      next.mood = Math.max(next.mood, Math.min(60, next.mood + 5))
+      setGame(next)
+      setAnsweredQuestions(previous => [...previous, id])
+      setDiscoveredLocations(previous => [...new Set([...previous, ...question.locations])])
+      if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: 1140 })
+      setInfoModal({ title: question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${question.text}` })
+    })
   }
 
   function takeRainCover(minutes: number) {
@@ -1608,6 +1652,7 @@ export default function App() {
     setStoryIntent(null)
     setRainChoice(false)
     setCoverPlanning(false)
+    setAnsweredQuestions([])
     setTrip(null)
     setShelterQueue(null)
     setShelterDeparture(null)
@@ -1707,12 +1752,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-83</div>
+        <div className="trash-build">Build 2026.10.08-84</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-83</div>
+    <div className="build-badge">v2026.10.08-84</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1798,12 +1843,13 @@ export default function App() {
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         {current.id === 'street' ? <section className="story-choices">
           <p className="eyebrow">YOUR NEXT STEP · TIME PAUSED</p>
-          <h2>{storyIntent === null ? 'What matters most right now?' : storyIntent === 'understand' ? 'What help is still available?' : storyIntent === 'warmth' ? 'Somewhere out of the cold' : storyIntent === 'shelter' ? 'Somewhere to spend the night' : storyIntent === 'money' ? 'A way to get by' : storyIntent === 'rest' ? 'A moment off your feet' : 'What else can you try?'}</h2>
+          <h2>{storyIntent === null ? 'What matters most right now?' : storyIntent === 'understand' ? 'Ask AI on your phone' : storyIntent === 'warmth' ? 'Somewhere out of the cold' : storyIntent === 'shelter' ? 'Somewhere to spend the night' : storyIntent === 'money' ? 'A way to get by' : storyIntent === 'rest' ? 'A moment off your feet' : 'What else can you try?'}</h2>
           {storyIntent === null ? <div className="story-intents">
             {firstNight ? <button onClick={() => setStoryIntent('understand')}>Understand what you can do</button> : <button onClick={() => setStoryIntent('shelter')}>Find somewhere to sleep</button>}
             {firstNight ? <button onClick={() => setStoryIntent('warmth')}>Find somewhere warm</button> : <button onClick={() => setStoryIntent('money')}>Earn something for food</button>}
-            {firstNight ? <button onClick={walkCity}>Walk through the night city</button> : <button onClick={() => setStoryIntent('rest')}>Stay here and rest</button>}
+            {firstNight ? <button onClick={() => setStoryIntent('rest')}>Walk and gather your thoughts</button> : <button onClick={() => setStoryIntent('rest')}>Stay here and rest</button>}
             <button className="story-secondary" onClick={() => setStoryIntent('other')}>Other actions</button>
+            {inventory.phoneBattery <= 30 && !answeredQuestions.includes('charging') && <button aria-label="Where can I charge my phone?" onClick={() => answerPracticalQuestion('charging')}>Your phone is down to {Math.round(inventory.phoneBattery)}%. Where can you charge it?</button>}
           </div> : <button className="story-back" onClick={() => setStoryIntent(null)}>Choose another approach</button>}
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
         <AvailableFirst className="actions">
@@ -1811,8 +1857,14 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && storyIntent !== null && <>
-            {(storyIntent === 'rest' || storyIntent === 'other') && <button className="action" onClick={walkCity}><div><strong>Walk through the night city</strong><small>Walk for half an hour and gather your thoughts. Rain may begin at night.</small></div><span>~30 min</span></button>}
-            {storyIntent === 'understand' && discoveredLocations.includes('support') && <p className="muted">{isOpen(locations.find(location => location.id === 'support')!, game.minutes) ? 'The Help Center is open until 16:00. Its address is on your map.' : 'You saved the Help Center address. Its services are closed now; it opens at 08:00. You can make a plan for tomorrow.'}</p>}
+            {storyIntent === 'understand' && visibleQuestions.map(question => {
+              const saved = answeredQuestions.includes(question.id)
+              const memory = question.id === 'charging'
+              return <button className="action" aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)}><div><strong>{question.title}</strong><small>{memory ? 'Low battery brings an old memory back: the station waiting room.' : saved ? 'Read saved AI answer · free' : 'Ask AI · needs mobile service and battery'}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : '~5 min · −1% battery'}</span></button>
+            })}
+            {(storyIntent === 'rest' || storyIntent === 'other') && <button className="action" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong>Walk while listening to music</strong><small>{canWalkWithMusic ? 'Familiar music can lift Mood toward 60. You still spend Energy and time.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
+            {(storyIntent === 'rest' || storyIntent === 'other') && <button className="action" aria-label="Walk through the night city" onClick={() => walkCity()}><div><strong>Walk through the night city</strong><small>Walk for half an hour and gather your thoughts. Rain may begin at night.</small></div><span>~30 min</span></button>}
+            {storyIntent === 'understand' && discoveredLocations.includes('support') && <p className="muted">{isOpen(locations.find(location => location.id === 'support')!, game.minutes) ? 'The Help Center is open until 16:00. Its address is on your map.' : 'You saved the Help Center address. Its services are closed now; it opens at 08:00.'}</p>}
             {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'warmth') && discoveredLocations.includes('shelter') && <button className="action" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong>Go to Night Shelter</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Come tomorrow at 19:00; a place is not guaranteed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
             {storyIntent === 'money' && discoveredLocations.includes('work') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
             {(storyIntent === 'shelter' || storyIntent === 'warmth') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong>Head for the station</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
@@ -1932,6 +1984,7 @@ export default function App() {
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
         <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Renew expired service automatically for 1 zł</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
         <AvailableFirst tag="div" className="phone-actions">
+          {current.id === 'street' && <button onClick={() => { setPhoneOpen(false); setScreen('location'); setStoryIntent('understand') }}><span>💬</span><div><strong>Ask AI</strong><small>Specific questions · saved answers work offline</small></div></button>}
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
           <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
@@ -2027,7 +2080,7 @@ export default function App() {
           </> : <>
           <button onClick={() => setCoverPlanning(true)}>Wait under a canopy</button>
           <button onClick={() => { setRainChoice(false); setScreen('map'); chooseDestination('station') }}>Go to the station</button>
-          <button onClick={walkCity}>Keep walking</button>
+          <button onClick={() => walkCity()}>Keep walking</button>
           </>}
         </div>
       </section>

@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · first-night shock, wandering, rain and long awake waits under cover. Current visible build: `v2026.10.08-83`. Documentation reviewed against the v83 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-08 · musical walks and specific questions to AI on the phone, including charging tonight. Current visible build: `v2026.10.08-84`. Documentation reviewed against the v84 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -540,6 +540,14 @@ Several older generic shop/support actions still exist in `game.ts`, while the c
 ## UI/screens
 
 ### Street story prototype (v79)
+
+On Street, **Understand what you can do** opens a scripted conversation with AI on the phone. **Ask AI** in the phone panel reaches the same questions, including after the opening night. Questions emerge individually: morning help is initially available; shelter registration appears after learning about help or discovering the shelter; the no-bed fallback appears after learning registration rules; food/water appears at Food or Water <=45; charging appears at Battery <=30. Answered questions stay available. Responses reflect implemented game schedules and services; this is authored game dialogue, not a live AI/API connection. Answers save relevant addresses; knowing an address does not grant admission or a bed.
+
+Each first AI question costs five game minutes and 1% Battery, requires active mobile service and a working phone, and grants up to +5 Mood, stopping at 60 without reducing higher Mood. Each question is rewarded once per run. Saved answers persist under `street-life-answers-v1`, can be reread with zero battery or no service, and cost no time, battery or extra Mood. Selection and answer reading pause time. Reset clears saved answers. The shelter answer also creates the next 19:00 registration goal.
+
+Charging is a remembered place rather than an AI lookup: at Battery <=30 an extra story choice notices the low battery. Reading it recalls the waiting-room outlet at Station, usable tonight and available around the clock (+60% Battery in one hour, capped at 100). This memory costs no time or battery, requires no service, works even at zero battery, and grants the same one-time clarity bonus. It saves only Station, without revealing unrelated daytime charging addresses.
+
+**Walk and gather your thoughts** opens normal and musical walk choices. A musical walk lasts 30 minutes, retains ordinary walking/rain costs, and adds up to +8 Mood toward 60, alongside the usual walk +2 and passive music recovery. It lifts the starting Mood of 28 into the yellow zone. Battery cost is 2% multiplied by phone-condition drain; already active Music uses its normal elapsed-time drain instead of being charged twice. No temporary Music toggle stays enabled after the action. The choice requires working phone, paid mobile service and sufficient battery.
 
 The opening is informed by the user's first-night experience: walking around, trying to understand available support, and waiting awake under cover for hours rather than immediately accepting sleep on the ground. This is a possible route, not a mandatory reenactment. Night searches save useful addresses but explain that shelter registration is closed until the next 19:00 and Help Center services open at 08:00. The known unbooked shelter route is disabled during the opening night instead of being offered as immediate warmth. Station and temporary cover remain options for the current night; neither guarantees a safe bed.
 
