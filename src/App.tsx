@@ -6,6 +6,8 @@ import { summarizeResult, type ResultSnapshot, type ResultSummary } from './resu
 const SAVE_KEY = 'street-life-save-v3'
 const DISCOVERY_KEY = 'street-life-discovered-v1'
 const GOAL_KEY = 'street-life-goal-v1'
+const JOURNAL_GOALS_KEY = 'street-life-journal-goals-v1'
+type JournalGoals = { morning: boolean; shelter: boolean; support: boolean; work: boolean }
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
 function weekday(day: number) {
@@ -236,6 +238,12 @@ export default function App() {
       return ['street', 'station', 'shop']
     }
   })
+  const [journalGoals, setJournalGoals] = useState<JournalGoals>(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(JOURNAL_GOALS_KEY) ?? '{}')
+      return { morning: raw.morning === true, shelter: raw.shelter === true, support: raw.support === true, work: raw.work === true }
+    } catch { return { morning: false, shelter: false, support: false, work: false } }
+  })
   const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => {
     try { const raw = localStorage.getItem(GOAL_KEY); return raw ? JSON.parse(raw) : null } catch { return null }
   })
@@ -336,6 +344,35 @@ export default function App() {
   const overall = overallStatus(game)
   const weather = WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
+  const goals = [
+    { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until noon on your first day.' },
+    { id: 'shelter' as const, title: 'Find a safe place to sleep', description: 'Register for a shelter bed or move into Schronisko.' },
+    { id: 'support' as const, title: 'Visit social support', description: 'Visit Help Center during opening hours.' },
+    { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
+  ]
+  const completedGoals = goals.filter(goal => journalGoals[goal.id]).length
+  useEffect(() => {
+    setJournalGoals(previous => {
+      const next = {
+        morning: previous.morning || (game.health > 0 && (game.day > 1 || game.minutes >= 720)),
+        shelter: previous.shelter || life.housing === 'Schronisko' || (life.shelterUntilDay ?? 0) >= game.day,
+        support: previous.support || life.schroniskoReferral === true || (current.id === 'support' && open && !trip),
+        work: previous.work || life.employment === 'Day work' || ((current.id === 'jobcenter' || current.id === 'work') && open && !trip),
+      }
+      return goals.every(goal => previous[goal.id] === next[goal.id]) ? previous : next
+    })
+  }, [game.day, game.minutes, game.health, life.housing, life.shelterUntilDay, life.schroniskoReferral, life.employment, current.id, open, trip])
+  useEffect(() => { localStorage.setItem(JOURNAL_GOALS_KEY, JSON.stringify(journalGoals)) }, [journalGoals])
+  useEffect(() => {
+    if (!activeGoal) return
+    if ((life.shelterUntilDay ?? 0) >= game.day || life.housing === 'Schronisko' ||
+        (current.id === 'shelter' && !trip && game.day >= activeGoal.day && game.minutes >= activeGoal.minute && game.minutes < 1320)) {
+      setActiveGoal(null)
+    } else if (game.day > activeGoal.day || (game.day === activeGoal.day && game.minutes >= 1320)) {
+      setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: 1140 })
+    }
+  }, [activeGoal, game.day, game.minutes, current.id, trip, life.shelterUntilDay, life.housing])
+  const nextJournalGoal = goals.find(goal => !journalGoals[goal.id])
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
   const shelterCheckoutDue = current.id === 'shelter' && !shelterDeparture && !trip &&
@@ -938,6 +975,7 @@ export default function App() {
     setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2) }))
     setGame((prev) => applyAction(prev, { minutes: 15 }))
     setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
+    if (kind === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
     if (kind === 'shelter' && game.minutes >= 22 * 60) {
       setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
       setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.',  })
@@ -1497,6 +1535,8 @@ export default function App() {
     localStorage.removeItem(DISCOVERY_KEY)
     setDiscoveredLocations(['street', 'station', 'shop'])
     setActiveGoal(null)
+    setJournalGoals({ morning: false, shelter: false, support: false, work: false })
+    localStorage.removeItem(JOURNAL_GOALS_KEY)
     localStorage.removeItem(GOAL_KEY)
     setGame(initialState)
     setMessage('New run started.')
@@ -1601,12 +1641,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-76</div>
+        <div className="trash-build">Build 2026.10.08-77</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-76</div>
+    <div className="build-badge">v2026.10.08-77</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1865,16 +1905,15 @@ export default function App() {
 
       <div className="next-event">
         <div className="next-event-icon">⏰</div>
-        <div><p className="eyebrow">NEXT IMPORTANT</p><strong>Social support opens at 08:00</strong><small>Visit the office and ask what help is available.</small></div>
-        <b>08:00</b>
+        <div><p className="eyebrow">NEXT IMPORTANT</p><strong>{activeGoal ? `Night Shelter · Day ${activeGoal.day} at ${formatTime(activeGoal.minute)}` : nextJournalGoal?.title ?? 'All starting goals completed'}</strong><small>{activeGoal ? 'Arrive for registration; a bed is not guaranteed.' : nextJournalGoal?.description ?? 'Keep managing your needs and plan your next day.'}</small></div>
+        {activeGoal && <b>{formatTime(activeGoal.minute)}</b>}
       </div>
 
-      <div className="journal-section-title"><h3>🎯 Goals</h3><span>1 / 4</span></div>
+      <div className="journal-section-title"><h3>🎯 Goals</h3><span>{completedGoals} / {goals.length}</span></div>
       <div className="goal-list">
-        <div className="goal done"><span>✓</span><div><strong>Get through the morning</strong><small>Find your bearings and check what you have.</small></div></div>
-        <div className="goal"><span>○</span><div><strong>Find a safe place to sleep</strong><small>Check the shelter before it fills up.</small></div></div>
-        <div className="goal"><span>○</span><div><strong>Visit social support</strong><small>Ask about documents, benefits and available help.</small></div></div>
-        <div className="goal"><span>○</span><div><strong>Look for work</strong><small>Visit the job centre or find a day job.</small></div></div>
+        {goals.map(goal => <div className={journalGoals[goal.id] ? 'goal done' : 'goal'} key={goal.id}>
+          <span>{journalGoals[goal.id] ? '✓' : '○'}</span><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
+        </div>)}
       </div>
 
       <div className="journal-section-title"><h3>📝 Today</h3><span>Day {game.day}</span></div>
