@@ -42,7 +42,7 @@ function summary(){return screen.getByRole('dialog').textContent;}
  localStorage.setItem('street-life-save-v3',JSON.stringify({day:2,minutes:60,money:100,hunger:50,thirst:50,energy:50,health:82,hygiene:50,mood:58,intoxication:0,locationId:'street'}));
  localStorage.setItem('street-life-sleep-v1',JSON.stringify({kind:'ground',total:120,remaining:0,startAbsolute:1380,realStartedAt:Date.now()-20000,realWakeAt:Date.now()-1000}));
  render(React.createElement(App));assert(summary().includes('2 hours'));assert(!localStorage.getItem('street-life-sleep-v1'));cleanup();
- setup({minutes:600});button(/Map$/);button(/Station/);button(/Public transport/);
+ setup({minutes:600});localStorage.setItem('street-life-inventory-v1',JSON.stringify({...JSON.parse(localStorage.getItem('street-life-inventory-v1')),transitCard:false}));cleanup();render(React.createElement(App));button(/Map$/);button(/Station/);button(/Public transport/);
  for(let tick=0;tick<4;tick++) await act(()=>new Promise(r=>setTimeout(r,1050)));
  assert(summary().includes('Arrival'));assert(summary().includes('33 min'));assert(summary().includes('−4.4 zł'));cleanup();
  console.log('PASS: UI flows, zero hiding, timer pause, shelter discovery, actual/capped sleep gains, illness, medicine and automatic wake.');

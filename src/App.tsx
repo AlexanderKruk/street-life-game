@@ -326,6 +326,7 @@ export default function App() {
     life.shelterCheckoutDay !== game.day && game.minutes >= SHELTER_CHECKOUT_WARNING && game.minutes < 12 * 60 &&
     (game.minutes < 8 * 60 || life.shelterLastStayDay === game.day - 1)
   const shelterDepartureRemaining = shelterDeparture ? Math.max(0, SHELTER_DEPARTURE_MINUTES - (absoluteMinutes(game) - shelterDeparture.startAbsolute)) : 0
+  const freeTransitActive = inventory.transitCard || effects.some(effect => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
   const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
   const mobileServiceMinutesLeft = Math.max(0, mobileServiceUntil - absoluteMinutes(game))
   const dayWorkEnergyRequired = 55
@@ -932,6 +933,7 @@ export default function App() {
   }
 
   function attemptFareDodge() {
+    if (freeTransitActive || sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const choice: StreetEventChoice = {
@@ -952,8 +954,7 @@ export default function App() {
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const total = mode === 'walk' ? destination.travelMinutes : Math.ceil(destination.travelMinutes * 0.5)
-    const freeTransit = effects.some((effect) => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
-    const fare = freeTransit ? 0 : 4.4
+    const fare = freeTransitActive ? 0 : 4.4
     if (mode === 'transit' && game.money < fare) {
       setMessage('You do not have enough money for public transport.')
       return
@@ -1536,12 +1537,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-61</div>
+        <div className="trash-build">Build 2026.10.08-62</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-61</div>
+    <div className="build-badge">v2026.10.08-62</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1698,12 +1699,12 @@ export default function App() {
         <button className="travel-option" onClick={() => startTravel('walk')}>
           <span>🚶</span><div><strong>Walk</strong><small>{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
-        <button className="travel-option" onClick={() => startTravel('transit')} disabled={!effects.some((effect) => effect.id === 'free-transit') && game.money < 4.4}>
-          <span>🚌</span><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {effects.some((effect) => effect.id === 'free-transit') ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
+        <button className="travel-option" onClick={() => startTravel('transit')} disabled={!freeTransitActive && game.money < 4.4}>
+          <span>🚌</span><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
         </button>
-        <button className="travel-option" onClick={attemptFareDodge}>
+        {!freeTransitActive && <button className="travel-option" onClick={attemptFareDodge}>
           <span>🥷</span><div><strong>Ride without ticket</strong><small>{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
-        </button>
+        </button>}
 
       </div>
     })()}

@@ -62,7 +62,7 @@ click(/^.*Station/);click(/Walk/);assert.equal(read(lifeKey).shelterStrikes,1);
 setup({locationId:'shop',energy:.15});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);const frozen=read(stateKey);advance(3000);
 assert.deepEqual(read(stateKey),frozen);assert(document.querySelector('.dice-overlay'));assert(!document.querySelector('.sleep-overlay'));
 click('Roll D20');advance(3000);assert.deepEqual(read(stateKey),frozen);click('Continue');assert(read(stateKey).minutes > frozen.minutes);
-setup({energy:.15});click(/Map$/);click(/^.*Station/);click(/Ride without/);const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
+setup({energy:.15},{[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click(/Ride without/);const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
 
 // Auto renewal keeps prepaid time and money; expired service buys a full day.
 setup({day:2},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'6000'});
@@ -73,9 +73,22 @@ setup({day:2,money:0},{'street-life-mobile-auto-renew':'true','street-life-mobil
 assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6000);
 
 // A paid trip resumes from remaining time with its original result snapshot.
-setup();click(/Map$/);click(/^.*Station/);click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
+setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
 cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);
 advance(3000);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
+
+// A valid transit card or an unexpired free-transit grant removes fare
+// dodging and allows normal public transport without spending money.
+for(const extra of [{[invKey]:{transitCard:true}}, {[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:500}]}]) {
+ setup({money:0},extra);click(/Map$/);click(/^.*Station/);
+ assert(!screen.queryByRole('button',{name:/Ride without/}));const transport=screen.getByRole('button',{name:/Public transport/});assert(!transport.disabled);assert(transport.textContent.includes('FREE'));
+ click(/Public transport/);assert.equal(read(stateKey).money,0);assert.equal(read('street-life-trip-v1').mode,'transit');assert(!document.querySelector('.dice-overlay'));
+}
+setup({}, {[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:481}]});click(/Map$/);click(/^.*Station/);
+assert(!screen.queryByRole('button',{name:/Ride without/}));advance(1000);assert(screen.getByRole('button',{name:/Ride without/}));assert(screen.getByRole('button',{name:/Public transport/}).textContent.includes('4.40 zł'));
+click(/Public transport/);assert.equal(read(stateKey).money,95.6);
+setup({money:0},{[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:479}]});click(/Map$/);click(/^.*Station/);
+assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(screen.getByRole('button',{name:/Ride without/}));
 
 // Fresh, stale and spoiled food have different effects; empty stacks reset freshness.
 for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]) {
