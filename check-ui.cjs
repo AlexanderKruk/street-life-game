@@ -19,7 +19,7 @@ function setup(state={},effects=[]){
  Math.random=()=>0.99;
  render(React.createElement(App));
 }
-function button(name){fireEvent.click(screen.getByRole('button',{name}));}
+function button(name){if(!screen.queryByRole('button',{name}) && screen.queryByRole('button',{name:'Other actions',exact:true}))fireEvent.click(screen.getByRole('button',{name:'Other actions',exact:true}));fireEvent.click(screen.getByRole('button',{name}));}
 function beginSleep(hours=2){button(/Sleep on the ground/);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}

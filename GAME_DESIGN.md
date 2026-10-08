@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · real, persistent daily action history in Today. Current visible build: `v2026.10.08-78`. Documentation reviewed against the v78 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-08 · story-driven street scene and paused decisions. Current visible build: `v2026.10.08-79`. Documentation reviewed against the v79 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -534,6 +534,12 @@ Night Shelter actions are described above. Schronisko settle action is described
 Several older generic shop/support actions still exist in `game.ts`, while the current UI uses newer dedicated shop/help-center interfaces.
 
 ## UI/screens
+
+### Street story prototype (v79)
+
+Street now opens with a narrative scene that responds to time of day, rain/cold, urgent Energy/Water/Food needs and whether a shelter address or reserved bed is known. Three main intentions are shown: find somewhere to sleep, earn something for food, or stay and rest. Other actions exposes the full existing street menu. Selecting an intention reveals relevant existing actions and routes; going back is free. Known shelter/work addresses lead to route selection rather than redundant searches. Unavailable actions remain disabled and sort below available actions.
+
+While deciding on Street, game time and time-based needs/effects/clothing/food ageing are paused, including when consulting Map, Inventory or Journal before departure. Intent selection and changing approach do not spend time. Executing an instant action still applies its full configured elapsed minutes. Confirmed travel, sleep and active shelter queues/departures keep their existing countdowns. Completed street actions return to the intention choices after their result; exhaustion can still force sleep at Energy 0. This is the first street-scene prototype; other locations retain their existing service interfaces and normal clock behavior.
 
 Implemented main screens:
 - Place/location.

@@ -264,6 +264,7 @@ export default function App() {
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
   })
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
+  const [storyIntent, setStoryIntent] = useState<'shelter' | 'money' | 'rest' | 'other' | null>(null)
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const [musicOn, setMusicOn] = useState(false)
@@ -360,6 +361,13 @@ export default function App() {
     { id: 'support' as const, title: 'Visit social support', description: 'Visit Help Center during opening hours.' },
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
   ]
+  const storyDecision = current.id === 'street' && !trip && !sleeping && !shelterQueue && !shelterDeparture && !trashGame
+  const streetScene = [
+    game.minutes >= 1200 || game.minutes < 360 ? 'The street has grown quiet. Light spills from the station entrance, but it is no bed for the night.' : game.minutes >= 1020 ? 'The daylight is fading. People hurry past the station while you decide where to spend the night.' : 'People pass the station, each on their way somewhere. You stop and think about your next step.',
+    weather.label === 'Rain' || weather.label === 'Showers' ? 'Rain reaches your clothes; somewhere dry would make a difference.' : temperature < 10 ? 'The air is cold against your face.' : 'For now, the weather gives you a little breathing room.',
+    game.energy < 30 ? 'Your legs feel heavy. Rest is becoming urgent.' : game.thirst < 30 ? 'Your mouth is dry. You need something to drink.' : game.hunger < 30 ? 'You have not eaten enough. The thought of food is hard to ignore.' : '',
+    shelterBooked ? 'You have a reserved shelter bed, if you can get there in time.' : discoveredLocations.includes('shelter') ? 'You know the shelter address, but a place is not guaranteed.' : 'You do not yet know where you can sleep safely.',
+  ].filter(Boolean).join(' ')
   const completedGoals = goals.filter(goal => journalGoals[goal.id]).length
   useEffect(() => {
     setJournalGoals(previous => {
@@ -461,6 +469,7 @@ export default function App() {
     if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit) return
     setPendingResult(null)
     if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
+    if (current.id === 'street') setStoryIntent(null)
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     if (lastRecordedResult.current !== pendingResult) {
@@ -628,7 +637,7 @@ export default function App() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if ((document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
+      if (storyDecision || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
       if (sleeping) {
         const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
         const targetAbsolute = sleeping.startAbsolute + elapsed
@@ -644,7 +653,7 @@ export default function App() {
       setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame, storyDecision])
 
   useEffect(() => {
     if (!trip || trip.remaining > 0) return
@@ -1560,6 +1569,7 @@ export default function App() {
     setMessage('New run started.')
     setInfoModal(null)
     setScreen('location')
+    setStoryIntent(null)
     setTrip(null)
     setShelterQueue(null)
     setShelterDeparture(null)
@@ -1659,12 +1669,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-78</div>
+        <div className="trash-build">Build 2026.10.08-79</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-78</div>
+    <div className="build-badge">v2026.10.08-79</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1677,9 +1687,9 @@ export default function App() {
     {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <>
-      <section className="current location-summary">
+      <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
         <div className="location-icon">{current.icon}</div>
-        <div><p className="eyebrow">YOU ARE HERE · {open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}</p><h2>{current.name}</h2><p>{current.description}</p></div>
+        <div><p className="eyebrow">{current.id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}`} </p><h2>{current.name}</h2><p>{current.id === 'street' ? streetScene : current.description}</p></div>
       </section>
       {message && <section className="event"><span>●</span><p>{message}</p></section>}
       {shelterInterview && <section className="shop">
@@ -1748,22 +1758,34 @@ export default function App() {
         </button>
       </AvailableFirst>}
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
-        <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>
+        {current.id === 'street' ? <section className="story-choices">
+          <p className="eyebrow">YOUR NEXT STEP · TIME PAUSED</p>
+          <h2>{storyIntent === null ? 'What matters most right now?' : storyIntent === 'shelter' ? 'Somewhere to spend the night' : storyIntent === 'money' ? 'A way to get by' : storyIntent === 'rest' ? 'A moment off your feet' : 'What else can you try?'}</h2>
+          {storyIntent === null ? <div className="story-intents">
+            <button onClick={() => setStoryIntent('shelter')}>Find somewhere to sleep</button>
+            <button onClick={() => setStoryIntent('money')}>Earn something for food</button>
+            <button onClick={() => setStoryIntent('rest')}>Stay here and rest</button>
+            <button className="story-secondary" onClick={() => setStoryIntent('other')}>Other actions</button>
+          </div> : <button className="story-back" onClick={() => setStoryIntent(null)}>Choose another approach</button>}
+        </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
         <AvailableFirst className="actions">
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
-          {current.id === 'street' && <>
-            {!discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {!discoveredLocations.includes('work') && <button className="action" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Search online for quick work</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {!discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Search online for free help</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>
-            <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>
-            {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
-            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
+          {current.id === 'street' && storyIntent !== null && <>
+            {storyIntent === 'shelter' && discoveredLocations.includes('shelter') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong>Go to Night Shelter</strong><small>{shelterBooked ? 'You have a reserved bed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
+            {storyIntent === 'money' && discoveredLocations.includes('work') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
+            {storyIntent === 'shelter' && <button className="action" onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong>Head for the station</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
+            {(storyIntent === 'shelter' || storyIntent === 'other') && !discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 Search online for a place to sleep</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {(storyIntent === 'money' || storyIntent === 'other') && !discoveredLocations.includes('work') && <button className="action" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Search online for quick work</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {storyIntent === 'other' && !discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Search online for free help</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {(storyIntent === 'money' || storyIntent === 'other') && <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask passers-by for money</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
+            {(storyIntent === 'money' || storyIntent === 'other') && <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Search trash for bottles</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>}
+            {(storyIntent === 'rest' || storyIntent === 'other') && !streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Look for a bench</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
+            {(storyIntent === 'rest' || storyIntent === 'other') && streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 Sit on the bench</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Sleep on the bench</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>Choose duration</span></button>}
           </>}
-          {currentActions.length ? currentActions.map((action) => {
+          {currentActions.length ? currentActions.filter(action => current.id !== 'street' || storyIntent === 'rest' || storyIntent === 'other').map((action) => {
             const registering = action.id === 'shelter-rest' && !shelterBooked
             const selectableSleep = action.id === 'street-sleep' || action.id === 'station-sleep' || (action.id === 'shelter-rest' && shelterBooked) || action.id === 'residential-sleep'
             const unavailableReason = actionUnavailableReason(action)

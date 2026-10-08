@@ -162,6 +162,16 @@ footer p { margin:0; }
 .journal-result-change.neutral { color:#aab3be; }
 
 /* Inventory */
+.story-scene p { line-height:1.7; }
+.story-scene { align-items:flex-start; }
+.story-choices { margin:24px 0 16px; }
+.story-choices h2 { font-size:21px; margin:8px 0 16px; }
+.story-intents { display:grid; gap:10px; }
+.story-intents button { appearance:none; width:100%; min-height:54px; padding:14px 18px; border:1px solid #42545d; border-radius:14px; background:#1b2b32; color:#f1f4f5; font:inherit; font-weight:700; text-align:left; cursor:pointer; }
+.story-intents button:hover { background:#263c44; }
+.story-intents .story-secondary { background:transparent; color:#aab8bf; font-weight:400; }
+.story-back { appearance:none; padding:9px 0; border:0; background:transparent; color:#aab8bf; font:inherit; cursor:pointer; }
+
 .inventory-screen { margin-top:20px; }
 .inventory-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:12px; }
 .inventory-heading h2 { margin-bottom:0; font-size:28px; }
