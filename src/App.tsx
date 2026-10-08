@@ -356,7 +356,7 @@ export default function App() {
   const weather = WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = [
-    { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until noon on your first day.' },
+    { id: 'morning' as const, title: 'Get through the morning', description: 'Get through your first night and stay alive until noon tomorrow.' },
     { id: 'shelter' as const, title: 'Find a safe place to sleep', description: 'Register for a shelter bed or move into Schronisko.' },
     { id: 'support' as const, title: 'Visit social support', description: 'Visit Help Center during opening hours.' },
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
@@ -372,7 +372,7 @@ export default function App() {
   useEffect(() => {
     setJournalGoals(previous => {
       const next = {
-        morning: previous.morning || (game.health > 0 && (game.day > 1 || game.minutes >= 720)),
+        morning: previous.morning || (game.health > 0 && (game.day > 2 || (game.day === 2 && game.minutes >= 720))),
         shelter: previous.shelter || life.housing === 'Schronisko' || (life.shelterUntilDay ?? 0) >= game.day,
         support: previous.support || life.schroniskoReferral === true || (current.id === 'support' && open && !trip),
         work: previous.work || life.employment === 'Day work' || ((current.id === 'jobcenter' || current.id === 'work') && open && !trip),
@@ -1669,12 +1669,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-79</div>
+        <div className="trash-build">Build 2026.10.08-80</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-79</div>
+    <div className="build-badge">v2026.10.08-80</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>

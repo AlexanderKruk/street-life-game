@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · story-driven street scene and paused decisions. Current visible build: `v2026.10.08-79`. Documentation reviewed against the v79 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-08 · 22:00 new-run start and next-day morning goal. Current visible build: `v2026.10.08-80`. Documentation reviewed against the v80 implementation on 2026-10-08.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -13,7 +13,7 @@ Street Life is currently a mobile-first location/map survival prototype. The pla
 The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and street-event choices are not persisted.
 
 Initial state:
-- Day 1, Monday, 08:00, Street.
+- Day 1, Monday, 22:00, Street. Existing saves retain their own time. Reset/new run starts at 22:00.
 - 100 zł before mobile-service auto-renewal. Auto-renew is ON by default and can immediately spend 1 zł.
 - Food 72, Thirst 66, Energy 68, Health 82, Hygiene 55, Mood 58.
 - Housing: Street. Employment: Unemployed. Income: None.
@@ -576,11 +576,11 @@ The UI includes:
 
 Today displays actual completed action/event results at their completion day and time, with the same nonzero resource deltas as the result modal. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed this shared pipeline. Starting an ongoing activity does not log its completion early. The last 500 entries persist across reloads; Today filters them to the current game day. A new run clears history. Older saves start with an empty history because past actions cannot be reconstructed. The fake 08:00 station wake entry has been removed.
 
-Goals now use persistent completion flags instead of static decorations and a fixed 1/4 counter. First morning completes at noon of day 1 (or on a later day alive). Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state. The journal's next-important panel shows the pending shelter appointment or next incomplete goal. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
+Goals now use persistent completion flags instead of static decorations and a fixed 1/4 counter. First morning completes at noon of day 2 (or on a later day alive), after the opening night. Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state. The journal's next-important panel shows the pending shelter appointment or next incomplete goal. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
 
 | Goal | Completion condition |
 |---|---|
-| Get through the morning | Alive at noon on day 1, or alive on a later day |
+| Get through the morning | Alive at noon on day 2, or alive on a later day |
 | Find a safe place to sleep | Active reserved shelter bed or living in Schronisko |
 | Visit social support | At an open Help Center; existing referral also proves progress |
 | Look for work | Successful online work search, visit to open Job Centre/Day Work, or existing employment |
