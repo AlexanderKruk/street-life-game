@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · automatic shower gel displayed with equipped items. Current visible build: `v2026.10.08-74`.
+**Last gameplay sync:** 2026-10-08 · equipment ordered by importance: Phone, Documents, Transit card, Jacket, then automatic shower gel. Current visible build: `v2026.10.08-75`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
