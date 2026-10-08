@@ -30,7 +30,7 @@ function summary(){return screen.getByRole('dialog').textContent;}
  close();button(/Map$/);assert(screen.getByText('Night shelter',{exact:true}));fireEvent.click(document.querySelector('.nav-item.home'));
  beginSleep();button('Wake up (debug)');
  text=summary();assert(text.includes('2 hours'));assert(text.includes('+13'));assert(!text.includes('Cold'));assert(!text.includes('Health'));assert(!text.includes('Battery'));
- close();button(/Inventory$/);button(/Water.*tap to drink/);text=summary();assert(text.includes('Water portions (0.5 L)'));assert(text.includes('−1'));assert(!text.includes('Money'));assert(!text.includes('Time'));close();
+ close();button(/Inventory$/);button(/Water.*tap to drink/);text=summary();assert(text.includes('Water drops'));assert(text.includes('−1'));assert(!text.includes('Money'));assert(!text.includes('Time'));close();
  Math.random=()=>0.4;fireEvent.click(document.querySelector('.nav-item.home'));beginSleep();button('Wake up (debug)');text=summary();assert(text.includes('Cold'));assert(text.includes('Started'));close();
  button(/Inventory$/);button(/Medicine.*treats Cold/);text=summary();assert(text.includes('Ended'));assert(text.includes('−1'));close();cleanup();
  setup();Math.random=()=>0;beginSleep();button('Wake up (debug)');

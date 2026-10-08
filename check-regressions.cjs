@@ -92,11 +92,11 @@ assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(scr
 
 // Three zloty buys 1.5 L of water: exactly three drinks of 0.5 L.
 setup({locationId:'shop',thirst:0},{[invKey]:{water:0}});
-assert(screen.getByText('1.5 L · 3 × 0.5 L'));assert(screen.getByText('💧💧💧'));click('Buy Water for 3.00 zł');
-assert.equal(read(stateKey).money,97);assert.equal(read(invKey).water,3);assert(screen.getByRole('dialog').textContent.includes('three 0.5 L portions'));assert(screen.getByRole('dialog').textContent.includes('+3'));ok();click(/Inventory$/);
-assert(screen.getByText('×3 portions · 1.5 L'));assert.equal(document.querySelector('.water-portions').textContent,'💧💧💧');
+assert(!screen.queryByText(/1.5 L|0.5 L/));assert(screen.getByText('💧💧💧'));click('Buy Water for 3.00 zł');
+assert.equal(read(stateKey).money,97);assert.equal(read(invKey).water,3);assert(screen.getByRole('dialog').textContent.includes('💧💧💧'));assert(screen.getByRole('dialog').textContent.includes('+3'));ok();click(/Inventory$/);
+assert(screen.getByText('×3 · tap to drink'));assert.equal(document.querySelector('.water-portions').textContent,'💧💧💧');
 for(const [remaining,thirst] of [[2,38],[1,76],[0,100]]) {
- click(/Water.*tap to drink/);assert.equal(read(invKey).water,remaining);assert.equal(read(stateKey).thirst,thirst);assert(screen.getByRole('dialog').textContent.includes('0.5 L'));ok();
+ click(/Water.*tap to drink/);assert.equal(read(invKey).water,remaining);assert.equal(read(stateKey).thirst,thirst);assert(screen.getByRole('dialog').textContent.includes('You drank water'));ok();
  if(remaining>0){assert.equal(document.querySelector('.water-portions').textContent,'💧'.repeat(remaining));cleanup();render(React.createElement(App));assert.equal(read(invKey).water,remaining);}
 }
 assert(!screen.queryByRole('button',{name:/Water.*tap to drink/}));
