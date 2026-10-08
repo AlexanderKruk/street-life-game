@@ -26,8 +26,8 @@ type Trip = { destinationId: string; mode: TravelMode; total: number; remaining:
 type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
 type ShelterQueue = { day: number; remaining: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
 type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
-type Inventory = { water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
-type ShopItem = { id: 'water' | 'food' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
+type Inventory = { bread: number; breadFreshness: number; cannedFood: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
+type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
@@ -35,11 +35,13 @@ type StoredItems = { documents: boolean; medicines: number; cigarettes: number; 
 type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
-const INITIAL_INVENTORY: Inventory = { water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: true }
+const INITIAL_INVENTORY: Inventory = { bread: 0, breadFreshness: 100, cannedFood: 0, wipes: 0, water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: true }
 const BACKPACK_CAPACITY = 8
 const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0, foodFreshness: 100 }
 const SCHRONISKO_FOOD_CAPACITY = 4
 const FOOD_FRESHNESS_PER_MINUTE = 100 / (48 * 60)
+const BREAD_FRESHNESS_PER_MINUTE = 100 / (24 * 60)
+const WIPES_STACK_SIZE = 5
 const NIGHT_SHELTER_STORAGE = 6
 const SCHRONISKO_STORAGE = 16
 const STACK_SIZE = 4
@@ -61,6 +63,9 @@ const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' |
 const SHOP_ITEMS: ShopItem[] = [
   { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['Thirst +++'] },
   { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food ++', 'Mood +'] },
+  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food +12'] },
+  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 6, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food +32', 'Mood +'] },
+  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene +10 · max 60'] },
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
   { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
 ]
@@ -89,7 +94,7 @@ function storageSlots(storage: StoredItems) {
 }
 
 function backpackSlots(inventory: Inventory) {
-  return stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
+  return stackSlots(inventory.bread) + stackSlots(inventory.cannedFood) + (inventory.wipes > 0 ? Math.ceil(inventory.wipes / WIPES_STACK_SIZE) : 0) + stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
 }
 
 function absoluteMinutes(game: GameState) {
@@ -126,6 +131,13 @@ function remainingEffect(expiresAt: number, game: GameState) {
 function canAddToBackpack(inventory: Inventory, item: ShopItem) {
   const next = { ...inventory, [item.id]: inventory[item.id] + item.quantity }
   return backpackSlots(next) <= BACKPACK_CAPACITY
+}
+
+function addShopItem(inventory: Inventory, item: ShopItem): Inventory {
+  const next = { ...inventory, [item.id]: inventory[item.id] + item.quantity }
+  if (item.id === 'food') next.foodFreshness = mixFreshness(inventory.food, inventory.foodFreshness, item.quantity, 100)
+  if (item.id === 'bread') next.breadFreshness = mixFreshness(inventory.bread, inventory.breadFreshness, item.quantity, 100)
+  return next
 }
 
 function fitEventSupplies(inventory: Inventory, outcome: EventOutcome) {
@@ -356,6 +368,7 @@ export default function App() {
       const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
       return { ...prev,
         foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * elapsed) : 100,
+        breadFreshness: prev.bread > 0 ? Math.max(0, prev.breadFreshness - BREAD_FRESHNESS_PER_MINUTE * elapsed) : 100,
         phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
       }
     })
@@ -410,6 +423,7 @@ export default function App() {
   function socialSupport(...args: Parameters<typeof socialSupportImpl>) { runWithResult('Social support', () => socialSupportImpl(...args)) }
   function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
   function buyItem(...args: Parameters<typeof buyItemImpl>) { runWithResult(`Buy ${args[0].name}`, () => buyItemImpl(...args)) }
+  function useSupply(...args: Parameters<typeof useSupplyImpl>) { runWithResult(args[0] === 'wipes' ? 'Use wet wipes' : 'Eat food', () => useSupplyImpl(...args)) }
   function useMedicine(...args: Parameters<typeof useMedicineImpl>) { runWithResult('Use medicine', () => useMedicineImpl(...args)) }
   function smokeCigarette(...args: Parameters<typeof smokeCigaretteImpl>) { runWithResult('Smoke a cigarette', () => smokeCigaretteImpl(...args)) }
   function useItem(...args: Parameters<typeof useItemImpl>) { runWithResult(args[0] === 'water' ? 'Drink water' : 'Eat food', () => useItemImpl(...args)) }
@@ -1231,9 +1245,7 @@ export default function App() {
     }
     if (diceCheck.stealItemId && success) {
       const item = SHOP_ITEMS.find((entry) => entry.id === diceCheck.stealItemId)
-      if (item) setInventory((prev) => item.id === 'food'
-        ? { ...prev, food: prev.food + item.quantity, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, item.quantity, 100) }
-        : { ...prev, [item.id]: prev[item.id] + item.quantity })
+      if (item) setInventory((prev) => addShopItem(prev, item))
     }
     setDiceCheck(null)
     setActiveEvent(null)
@@ -1366,9 +1378,7 @@ export default function App() {
       setMessage('Backpack full. Use or remove something first.')
       return
     }
-    setInventory((prev) => item.id === 'food'
-      ? { ...prev, food: prev.food + item.quantity, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, item.quantity, 100) }
-      : { ...prev, [item.id]: prev[item.id] + item.quantity })
+    setInventory((prev) => addShopItem(prev, item))
     setGame((prev) => applyAction(prev, { minutes: 3, money: -item.price }))
     setMessage(`Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
   }
@@ -1390,6 +1400,27 @@ export default function App() {
       },
     }
     setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })
+  }
+
+  function useSupplyImpl(item: 'bread' | 'cannedFood' | 'wipes') {
+    if (inventory[item] <= 0) return
+    if (item === 'wipes') {
+      if (game.hygiene >= 60) { setMessage('Wet wipes cannot improve Hygiene above 60. Find a shower.'); return }
+      setInventory(prev => ({ ...prev, wipes: prev.wipes - 1 }))
+      setGame(prev => ({ ...prev, hygiene: Math.min(60, prev.hygiene + 10) }))
+      setMessage('You cleaned up with wet wipes. Hygiene improves, up to 60.')
+      return
+    }
+    const stale = item === 'bread' && inventory.breadFreshness <= 50
+    const spoiled = item === 'bread' && inventory.breadFreshness <= 20
+    setInventory(prev => ({ ...prev, [item]: prev[item] - 1,
+      breadFreshness: item === 'bread' && prev.bread <= 1 ? 100 : prev.breadFreshness }))
+    setGame(prev => applyAction(prev, { minutes: 0,
+      hunger: item === 'cannedFood' ? 32 : spoiled ? 4 : stale ? 8 : 12,
+      mood: item === 'cannedFood' ? 1 : spoiled ? -2 : 0, health: spoiled ? -3 : 0 }))
+    setMessage(item === 'cannedFood' ? 'You opened the pull-tab can and ate the food.' :
+      spoiled ? 'You ate a spoiled bread roll. It damaged your health and mood.' :
+      stale ? 'You ate a stale bread roll. It was less filling.' : 'You ate a bread roll.')
   }
 
   function useMedicineImpl() {
@@ -1537,12 +1568,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-68</div>
+        <div className="trash-build">Build 2026.10.08-69</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-68</div>
+    <div className="build-badge">v2026.10.08-69</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1594,7 +1625,7 @@ export default function App() {
             </div>
           })}
         </div>
-        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 12}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>12.00 zł</b></button>
+        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 8}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>8.00 zł</b></button>
       </section>}
       {current.id === 'support' && <section className="support-menu">
         <div className="section-title"><h2>Talk to a social worker</h2><span>Choose what you need help with</span></div>
@@ -1720,6 +1751,15 @@ export default function App() {
         </button>}
         {inventory.food > 0 && <button className="inventory-item usable" onClick={() => useItem('food')}>
           <span className="item-icon">🥪</span><div><strong>Food</strong><small>×{inventory.food} · tap to eat</small></div>
+        </button>}
+        {inventory.bread > 0 && <button className="inventory-item usable" onClick={() => useSupply('bread')}>
+          <span className="item-icon">🥖</span><div><strong>Bread roll ×{inventory.bread}</strong><small>{foodFreshnessLabel(inventory.breadFreshness)} · tap to eat</small></div>
+        </button>}
+        {inventory.cannedFood > 0 && <button className="inventory-item usable" onClick={() => useSupply('cannedFood')}>
+          <span className="item-icon">🥫</span><div><strong>Canned food ×{inventory.cannedFood}</strong><small>Keeps well · tap to eat</small></div>
+        </button>}
+        {inventory.wipes > 0 && <button className="inventory-item usable" onClick={() => useSupply('wipes')} disabled={game.hygiene >= 60}>
+          <span className="item-icon">🧻</span><div><strong>Wet wipes ×{inventory.wipes}</strong><small>{game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean · Hygiene +10, max 60'}</small></div>
         </button>}
         {inventory.bottles > 0 && Array.from({ length: Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) }, (_, stackIndex) => {
           const stackCount = Math.min(BOTTLE_STACK_SIZE, inventory.bottles - stackIndex * BOTTLE_STACK_SIZE)

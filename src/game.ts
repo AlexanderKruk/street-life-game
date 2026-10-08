@@ -211,8 +211,8 @@ export const actions: GameAction[] = [
   },
   {
     id: 'shop-meal', locationId: 'shop', name: 'Buy a filling meal',
-    description: 'Costs more, but buys you breathing room.', minutes: 15, cost: 12,
-    resolve: () => ({ minutes: 15, money: -12, hunger: 48, thirst: 8, mood: 5, message: 'A proper meal helps. 12 zł gone, but you feel much better.' }),
+    description: 'Costs more, but buys you breathing room.', minutes: 15, cost: 8,
+    resolve: () => ({ minutes: 15, money: -8, hunger: 48, thirst: 8, mood: 5, message: 'A proper meal helps. 8 zł gone, but you feel much better.' }),
   },
   {
     id: 'daycenter-stay', locationId: 'daycenter', name: 'Stay indoors',

@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · water quantity shown beside the item name. Current visible build: `v2026.10.08-68`.
+**Last gameplay sync:** 2026-10-08 · bread rolls, canned food and wet wipes added; hot meal reduced to 8 zł. Current visible build: `v2026.10.08-69`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -195,7 +195,8 @@ Backpack capacity is 8 slots.
 
 Stack sizes:
 - Water: 4 half-liter portions/slot (2 L).
-- Food: 4/slot.
+- Food, bread rolls, canned food: 4 of each type/slot.
+- Wet wipes: 5 uses/slot.
 - Medicine: 4/slot.
 - Returnable bottles: 8/slot.
 - Cigarettes: 20/slot.
@@ -209,6 +210,10 @@ Using inventory:
 - Freshness labels: Fresh >50%, Stale >20–50%, Spoiled 0–20%.
 - Every food use consumes 1 portion. Fresh (>50%): +28 Food, +2 Mood. Stale (>20–50%): +20 Food, no Mood bonus. Spoiled (0–20%): +10 Food, -8 Health, -4 Mood. Values are raw changes before caps. Emptying a stack resets its freshness to 100%.
 - Adding newly obtained food to an existing stack recalculates the stack's weighted average freshness.
+- Bread roll: consumes 1; fresh +12 Food, stale +8 Food, spoiled +4 Food/-3 Health/-2 Mood. Separate weighted freshness declines over 24 hours; labels use the same thresholds as other food. Empty stacks reset freshness.
+- Pull-tab canned food: consumes 1; +32 Food, +1 Mood. Sealed cans do not spoil and need no opener.
+- Wet wipes: consumes 1 use, +10 Hygiene capped at 60; disabled at Hygiene 60+. Show remaining uses beside the name.
+- New item counts default to zero in older saves; no existing inventory is replaced. These goods stay in the backpack and count toward event reward capacity too. Result summaries report actual quantities gained/used; older result snapshots treat missing quantities as zero.
 - Cigarette: consumes 1, +5 Mood, -0.5 Health.
 - Medicine: consumes 1 only when Cold is active and removes Cold.
 
@@ -249,9 +254,12 @@ Each purchasable backpack item has its actions in one row across the full card w
 The Discount shop currently sells:
 - Water: 3 zł for 1.5 L, adding three 0.5 L portions (Water ×3). Buying or successfully stealing the water item adds all three portions; one drink consumes one portion. Capacity is checked for all three portions. Existing inventory counts are preserved as portions.
 - Cheap food: 5 zł, one item.
+- Bread roll: 1 zł, one item.
+- Pull-tab canned food: 6 zł, one item.
+- Wet wipes: 5 zł, five uses.
 - Cigarettes: 6 zł for 5.
 - Medicine: 9 zł for 1.
-- Hot meal: 12 zł, eaten immediately and does not use backpack space.
+- Hot meal: 8 zł, eaten immediately and does not use backpack space.
 
 The hot meal advances 15 minutes, restores +48 Food, +8 Thirst and +5 Mood through the action, and activates Well fed for 4 hours. Well fed halves baseline Food decay while active; the walking surcharge still applies. It never passively replenishes Food.
 

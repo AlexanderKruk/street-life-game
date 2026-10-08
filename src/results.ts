@@ -1,7 +1,7 @@
 import { absoluteMinutes, type GameState } from './game'
 
 export type ResultInventory = {
-  water: number; food: number; bottles: number; phoneBattery: number; phoneCondition: number
+  bread?: number; cannedFood?: number; wipes?: number; water: number; food: number; bottles: number; phoneBattery: number; phoneCondition: number
   jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean
 }
 export type ResultSnapshot = {
@@ -38,8 +38,9 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     ['phoneBattery', '🔋 Battery', '%'], ['phoneCondition', '📱 Phone condition', '%'],
     ['jacket', '🧥 Jacket condition', '%'], ['water', '💧 Water portions', ''],
     ['food', '🥪 Food portions', ''], ['bottles', '♻️ Returnable bottles', ''],
+    ['bread', '🥖 Bread rolls', ''], ['cannedFood', '🥫 Canned food', ''], ['wipes', '🧻 Wet wipes', ''],
     ['cigarettes', '🚬 Cigarettes', ''], ['medicines', '💊 Medicine', ''],
-  ] as const) add(label, after.inventory[key] - before.inventory[key], suffix, false, key === 'phoneBattery')
+  ] as const) add(label, (after.inventory[key] ?? 0) - (before.inventory[key] ?? 0), suffix, false, key === 'phoneBattery')
   if (after.inventory.documents !== before.inventory.documents) changes.push({ label: '📄 Documents', value: after.inventory.documents ? 'Now carried' : 'No longer carried', kind: after.inventory.documents ? 'positive' : 'negative' })
   const names: Record<string, string> = { cold: '🤒 Cold', 'free-transit': '🎫 Free transport', 'well-fed': '🍲 Well fed' }
   const activeBefore = new Set(before.effects.filter(effect => effect.expiresAt > absoluteMinutes(before.game)).map(effect => effect.id))

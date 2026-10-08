@@ -106,6 +106,28 @@ setup({locationId:'shop'},{[invKey]:{water:2,food:4,medicines:24}});const fullPu
 // Stealing the same 1.5 L item also adds all three servings.
 setup({locationId:'shop'},{[invKey]:{water:0}});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);click('Roll D20');click('Continue');assert.equal(read(invKey).water,3);assert.equal(read(stateKey).money,100);
 
+// New supplies migrate old saves, persist, and report actual gains/uses.
+setup({locationId:'shop',hunger:20},{[invKey]:{water:2,food:0}});
+assert.equal(read(invKey).water,2);for(const key of ['bread','cannedFood','wipes'])assert.equal(read(invKey)[key],0);
+click('Buy Bread roll for 1.00 zł');assert.equal(read(stateKey).money,99);assert.equal(read(invKey).bread,1);assert(screen.getByRole('dialog').textContent.includes('Bread rolls'));ok();click(/Inventory$/);
+click(/Bread roll.*tap to eat/);assert.equal(read(invKey).bread,0);assert.equal(read(invKey).breadFreshness,100);assert(screen.getByRole('dialog').textContent.includes('+12'));ok();
+setup({locationId:'shop',hunger:20},{[invKey]:{cannedFood:0}});click('Buy Canned food for 6.00 zł');assert.equal(read(stateKey).money,94);assert.equal(read(invKey).cannedFood,1);ok();cleanup();render(React.createElement(App));assert.equal(read(invKey).cannedFood,1);click(/Inventory$/);click(/Canned food.*tap to eat/);assert.equal(read(invKey).cannedFood,0);assert(screen.getByRole('dialog').textContent.includes('+32'));ok();
+setup({locationId:'shop',hygiene:55},{[invKey]:{wipes:0}});click('Buy Wet wipes for 5.00 zł');assert.equal(read(stateKey).money,95);assert.equal(read(invKey).wipes,5);assert(screen.getByRole('dialog').textContent.includes('+5'));ok();click(/Inventory$/);const hygieneBefore=read(stateKey).hygiene;click(/Wet wipes.*tap to clean/);assert.equal(read(invKey).wipes,4);assert.equal(read(stateKey).hygiene,60);assert(60-hygieneBefore<10);ok();const cappedWipes=screen.getByRole('button',{name:/Wet wipes.*find a shower/});assert(cappedWipes.disabled);fireEvent.click(cappedWipes);assert.equal(read(invKey).wipes,4);cleanup();render(React.createElement(App));assert.equal(read(invKey).wipes,4);
+setup({hygiene:20},{[invKey]:{wipes:1}});click(/Inventory$/);click(/Wet wipes.*tap to clean/);assert.equal(read(stateKey).hygiene,30);assert.equal(read(invKey).wipes,0);ok();assert(!screen.queryByRole('button',{name:/Wet wipes/}));
+// Bread ages separately; sealed canned food survives the same time advance.
+setup({hunger:20,energy:20},{[invKey]:{bread:2,breadFreshness:100,cannedFood:1}});beginSleep(/Sleep on the ground/,8);advance(48000);ok();assert(Math.abs(read(invKey).breadFreshness-(100-100/1440*480))<1e-8);assert.equal(read(invKey).cannedFood,1);
+for(const [freshness,gain,damage,mood] of [[100,12,0,0],[40,8,0,0],[0,4,3,-2]]) {
+ setup({hunger:20},{[invKey]:{bread:1,breadFreshness:freshness}});click(/Inventory$/);click(/Bread roll.*tap to eat/);assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,58+mood);assert.equal(read(invKey).breadFreshness,100);
+}
+// New items occupy backpack slots, for both purchase and theft.
+for(const [name,price,key,quantity] of [['Bread roll','1.00','bread',1],['Canned food','6.00','cannedFood',1],['Wet wipes','5.00','wipes',5]]) {
+ setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:24}});const full=screen.getByRole('button',{name:`Buy ${name} for ${price} zł`});assert(full.disabled);assert(screen.getByTitle(`Steal ${name}`).disabled);fireEvent.click(full);assert.equal(read(invKey)[key],0);assert.equal(read(stateKey).money,100);
+ setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:20}});assert(!screen.getByRole('button',{name:`Buy ${name} for ${price} zł`}).disabled);fireEvent.click(screen.getByTitle(`Steal ${name}`));click('Roll D20');click('Continue');assert.equal(read(invKey)[key],quantity);assert.equal(read(stateKey).money,100);assert(screen.getByRole('dialog').textContent.includes(`+${quantity}`));
+}
+// Hot meals cost exactly 8 zł and keep the original 15-minute/Well-fed effects.
+setup({locationId:'shop',money:8,hunger:20});assert(!screen.getByRole('button',{name:/Hot meal.*8.00 zł/}).disabled);click(/Hot meal.*8.00 zł/);assert.equal(read(stateKey).money,0);assert.equal(read(stateKey).minutes,495);assert(read('street-life-effects-v1').some(e=>e.id==='well-fed'));assert(screen.getByRole('dialog').textContent.includes('−8 zł'));
+setup({locationId:'shop',money:7.99});assert(screen.getByRole('button',{name:/Hot meal.*8.00 zł/}).disabled);
+
 // Fresh, stale and spoiled food have different effects; empty stacks reset freshness.
 for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]) {
   setup({hunger:20},{[invKey]:{food:1,foodFreshness:freshness}});click(/Inventory$/);click(/Food.*tap to eat/);
