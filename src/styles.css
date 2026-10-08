@@ -155,6 +155,12 @@ footer p { margin:0; }
   .status-needs .stat-label { font-size:10px; }
 }
 
+.journal-result-changes { display:flex; flex-wrap:wrap; gap:4px 8px; margin-top:6px; }
+.journal-result-change { font-size:11px; overflow-wrap:anywhere; }
+.journal-result-change.positive { color:#9ad5ad; }
+.journal-result-change.negative { color:#edaaaa; }
+.journal-result-change.neutral { color:#aab3be; }
+
 /* Inventory */
 .inventory-screen { margin-top:20px; }
 .inventory-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:12px; }

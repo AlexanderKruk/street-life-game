@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · persistent journal goals and shelter arrival reminders. Current visible build: `v2026.10.08-77`.
+**Last gameplay sync:** 2026-10-08 · real, persistent daily action history in Today. Current visible build: `v2026.10.08-78`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -610,6 +610,8 @@ Clothing cleanliness ≥70 allows Hygiene 100; ≥40 allows 80; below 40 allows 
 
 
 ### Journal goals
+
+Today displays actual completed action/event results at their completion day and time, with the same nonzero resource deltas as the result modal. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed this shared pipeline. Starting an ongoing activity does not log its completion early. The last 500 entries persist across reloads; Today filters them to the current game day. A new run clears history. Older saves start with an empty history because past actions cannot be reconstructed. The fake 08:00 station wake entry has been removed.
 
 Goals now use persistent completion flags instead of static decorations and a fixed 1/4 counter. First morning completes at noon of day 1 (or on a later day alive). Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state. The journal's next-important panel shows the pending shelter appointment or next incomplete goal. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
 

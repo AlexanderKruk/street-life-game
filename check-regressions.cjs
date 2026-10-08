@@ -328,6 +328,11 @@ for(let block=1;block<=3;block++) {
 near(advanceTime(full,480,{sleeping:true}).energy,100);
 near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
 assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
+// Today records completed actions exactly once, preserves reloads and separates days.
+const historyKey='street-life-journal-history-v1';
+setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});assert.deepEqual(read(historyKey),[]);click('Buy Water for 3.00 zł');assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,603);assert.equal(read(historyKey)[0].day,1);assert.equal(read(historyKey)[0].title,'Buy Water');assert(read(historyKey)[0].summary.costs.some(change=>change.label.includes('Money') && change.value==='−3 zł'));ok();click(/Inventory$/);click(/Water.*tap to drink/);assert.equal(read(historyKey).length,2);ok();click(/Journal$/);assert(document.querySelector('.timeline').textContent.includes('Buy Water'));assert(document.querySelector('.timeline').textContent.includes('Drink water'));assert(!document.querySelector('.timeline').textContent.includes('Woke up at the station'));cleanup();render(React.createElement(App));assert.equal(read(historyKey).length,2);
+const yesterday=read(historyKey);setup({day:2},{[historyKey]:yesterday});click(/Journal$/);assert(!document.querySelector('.timeline').textContent.includes('Buy Water'));assert(screen.getByText('No recorded actions today yet.'));assert.equal(read(historyKey).length,2);click('Reset save');assert.deepEqual(read(historyKey),[]);
+setup({minutes:1380,energy:90});beginSleep(/Sleep on the ground/,2);assert.deepEqual(read(historyKey),[]);click('Wake up (debug)');assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].day,2);assert.equal(read(historyKey)[0].minute,60);assert.equal(read(historyKey)[0].title,'Sleep complete');
 // Journal goals follow real progress, stay completed, and reminders expire sensibly.
 const journalKey='street-life-journal-goals-v1',reminderKey='street-life-goal-v1';
 setup({minutes:600});click(/Journal$/);assert(document.querySelector('.journal-section-title').textContent.includes('0 / 4'));assert(!within(document.querySelector('.goal-list')).getByText('Get through the morning').closest('.goal').classList.contains('done'));

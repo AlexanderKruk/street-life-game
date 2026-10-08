@@ -7,6 +7,8 @@ const SAVE_KEY = 'street-life-save-v3'
 const DISCOVERY_KEY = 'street-life-discovered-v1'
 const GOAL_KEY = 'street-life-goal-v1'
 const JOURNAL_GOALS_KEY = 'street-life-journal-goals-v1'
+const JOURNAL_HISTORY_KEY = 'street-life-journal-history-v1'
+type JournalEntry = { day: number; minute: number; title: string; text: string; summary: ResultSummary }
 type JournalGoals = { morning: boolean; shelter: boolean; support: boolean; work: boolean }
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
@@ -238,6 +240,14 @@ export default function App() {
       return ['street', 'station', 'shop']
     }
   })
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
+      return Array.isArray(saved) ? saved.filter(entry => entry && Number.isInteger(entry.day) && entry.day > 0 && Number.isFinite(entry.minute) && entry.minute >= 0 && entry.minute < 1440 && typeof entry.title === 'string' && typeof entry.text === 'string' && Array.isArray(entry.summary?.costs) && Array.isArray(entry.summary?.changes)).slice(-500) : []
+    } catch { return [] }
+  })
+  const lastRecordedResult = useRef<unknown>(null)
+  useEffect(() => { localStorage.setItem(JOURNAL_HISTORY_KEY, JSON.stringify(journalEntries)) }, [journalEntries])
   const [journalGoals, setJournalGoals] = useState<JournalGoals>(() => {
     try {
       const raw = JSON.parse(localStorage.getItem(JOURNAL_GOALS_KEY) ?? '{}')
@@ -453,6 +463,11 @@ export default function App() {
     if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
+    if (lastRecordedResult.current !== pendingResult) {
+      lastRecordedResult.current = pendingResult
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, title: infoModal?.title ?? pendingResult.title, text: infoModal?.text ?? message, summary }
+      setJournalEntries(previous => [...previous, entry].slice(-500))
+    }
     setInfoModal(previous => ({ title: previous?.title ?? pendingResult.title, text: previous?.text ?? message, ...summary }))
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
@@ -1536,6 +1551,9 @@ export default function App() {
     setDiscoveredLocations(['street', 'station', 'shop'])
     setActiveGoal(null)
     setJournalGoals({ morning: false, shelter: false, support: false, work: false })
+    setJournalEntries([])
+    lastRecordedResult.current = null
+    localStorage.removeItem(JOURNAL_HISTORY_KEY)
     localStorage.removeItem(JOURNAL_GOALS_KEY)
     localStorage.removeItem(GOAL_KEY)
     setGame(initialState)
@@ -1641,12 +1659,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-77</div>
+        <div className="trash-build">Build 2026.10.08-78</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-77</div>
+    <div className="build-badge">v2026.10.08-78</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1918,7 +1936,12 @@ export default function App() {
 
       <div className="journal-section-title"><h3>📝 Today</h3><span>Day {game.day}</span></div>
       <div className="timeline">
-        <div className="timeline-entry"><time>08:00</time><i /><div><strong>Woke up at the station</strong><small>You have a little cash and need to make a plan for the day.</small></div></div>
+        {journalEntries.filter(entry => entry.day === game.day).map((entry, index) => <div className="timeline-entry" key={`${entry.day}-${index}`}>
+          <time>{formatTime(entry.minute)}</time><i /><div><strong>{entry.title}</strong><small>{entry.text}</small>
+            <div className="journal-result-changes">{[...entry.summary.costs, ...entry.summary.changes].map((change, changeIndex) => <span className={`journal-result-change ${change.kind}`} key={changeIndex}>{change.label} {change.value}</span>)}</div>
+          </div>
+        </div>)}
+        {!journalEntries.some(entry => entry.day === game.day) && <p className="empty">No recorded actions today yet.</p>}
         <div className="timeline-entry"><time>{formatTime(game.minutes)}</time><i /><div><strong>Current situation</strong><small>You are at {current.name}. Condition: {overall.label.toLowerCase()}.</small></div></div>
       </div>
     </section>}
