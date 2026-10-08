@@ -59,7 +59,7 @@ const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' |
 }
 
 const SHOP_ITEMS: ShopItem[] = [
-  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['💧💧💧', 'Thirst +++'] },
+  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['Thirst +++'] },
   { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food ++', 'Mood +'] },
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
   { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
@@ -1370,7 +1370,7 @@ export default function App() {
       ? { ...prev, food: prev.food + item.quantity, foodFreshness: mixFreshness(prev.food, prev.foodFreshness, item.quantity, 100) }
       : { ...prev, [item.id]: prev[item.id] + item.quantity })
     setGame((prev) => applyAction(prev, { minutes: 3, money: -item.price }))
-    setMessage(item.id === 'water' ? 'Bought water (💧💧💧) for 3.00 zł.' : `Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
+    setMessage(`Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
   }
 
   function stealItem(item: ShopItem) {
@@ -1537,12 +1537,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-67</div>
+        <div className="trash-build">Build 2026.10.08-68</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-67</div>
+    <div className="build-badge">v2026.10.08-68</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1589,7 +1589,7 @@ export default function App() {
             const fits = canAddToBackpack(inventory, item)
             const affordable = game.money >= item.price
             return <div className="shop-item" key={item.id}>
-              <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 && item.id !== 'water' ? ` ×${item.quantity}` : ''}</strong>{item.description && <small>{item.description}</small>}<div className="shop-impact">{item.impacts.map((impact) => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div></div>
+              <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}</strong>{item.description && <small>{item.description}</small>}<div className="shop-impact">{item.impacts.map((impact) => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div></div>
               <div className="shop-item-actions"><button className="shop-steal" onClick={() => stealItem(item)} disabled={!fits} aria-label="STEAL" title={`Steal ${item.name}`}><span aria-hidden="true">🥷</span></button><button className="shop-buy" onClick={() => buyItem(item)} disabled={!fits || !affordable} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={!fits ? 'Backpack full' : !affordable ? 'Not enough money' : `Buy ${item.name}`}>{item.price.toFixed(2)} zł</button></div>
             </div>
           })}
@@ -1716,7 +1716,7 @@ export default function App() {
       <div className="backpack-capacity"><i style={{ width: `${(usedBackpackSlots / BACKPACK_CAPACITY) * 100}%` }} /></div>
       <div className="inventory-grid backpack-grid">
         {inventory.water > 0 && <button className="inventory-item usable" onClick={() => useItem('water')}>
-          <span className="item-icon">💧</span><div><strong>Water</strong><small>×{inventory.water} · tap to drink</small><div className="water-portions" aria-hidden="true">{'💧'.repeat(Math.min(8, inventory.water))}{inventory.water > 8 && <span>+{inventory.water - 8}</span>}</div></div>
+          <span className="item-icon">💧</span><div><strong>Water ×{inventory.water}</strong><small>tap to drink</small></div>
         </button>}
         {inventory.food > 0 && <button className="inventory-item usable" onClick={() => useItem('food')}>
           <span className="item-icon">🥪</span><div><strong>Food</strong><small>×{inventory.food} · tap to eat</small></div>

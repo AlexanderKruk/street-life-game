@@ -488,5 +488,3 @@ button.inventory-item { width:100%; }
 .sleep-duration-option:disabled{opacity:.4;cursor:not-allowed}
 .sleep-duration-option:focus-visible{outline:2px solid #96cfb5;outline-offset:2px}
 
-.water-portions { display:flex; flex-wrap:wrap; gap:2px; font-size:12px; line-height:1.5; }
-.water-portions span { color:#aab3bc; font-size:11px; }
