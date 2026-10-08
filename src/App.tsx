@@ -1537,12 +1537,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-63</div>
+        <div className="trash-build">Build 2026.10.08-64</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-63</div>
+    <div className="build-badge">v2026.10.08-64</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1590,7 +1590,7 @@ export default function App() {
             const affordable = game.money >= item.price
             return <div className="shop-item" key={item.id}>
               <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}</strong><small>{item.description}</small><div className="shop-impact">{item.impacts.map((impact) => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div></div>
-              <div className="shop-item-actions"><button className="shop-steal" onClick={() => stealItem(item)} disabled={!fits}>STEAL</button><button className="shop-buy" onClick={() => buyItem(item)} disabled={!fits || !affordable} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={!fits ? 'Backpack full' : !affordable ? 'Not enough money' : `Buy ${item.name}`}>{item.price.toFixed(2)} zł</button></div>
+              <div className="shop-item-actions"><button className="shop-steal" onClick={() => stealItem(item)} disabled={!fits} aria-label="STEAL" title={`Steal ${item.name}`}><span aria-hidden="true">🥷</span></button><button className="shop-buy" onClick={() => buyItem(item)} disabled={!fits || !affordable} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={!fits ? 'Backpack full' : !affordable ? 'Not enough money' : `Buy ${item.name}`}>{item.price.toFixed(2)} zł</button></div>
             </div>
           })}
         </div>

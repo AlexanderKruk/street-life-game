@@ -266,7 +266,7 @@ button.inventory-item { width:100%; }
 .shop-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 .shop-item,.shop-item .shop-item-actions { grid-column:1 / -1; align-self:end; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:6px; }
 .shop-item-actions button { min-width:0; min-height:44px; padding:6px 3px; border:1px solid; border-radius:9px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:11px; font-weight:800; line-height:1.2; white-space:nowrap; -webkit-appearance:none; appearance:none; }
-.shop-item-actions .shop-steal { background:#743838; border-color:#bb6262; color:#ffe3e3; }
+.shop-item-actions .shop-steal { font-size:20px; background:#743838; border-color:#bb6262; color:#ffe3e3; }
 .shop-item-actions .shop-buy { background:#255f45; border-color:#438d67; color:#e2ffed; }
 .shop-item-actions button:disabled { opacity:.38; }
 .shop-item-actions button:focus-visible { outline:2px solid currentColor; outline-offset:2px; }
