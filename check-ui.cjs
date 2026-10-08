@@ -10,7 +10,7 @@ const App=require('./qa-app.cjs').default;
 const assert=require('node:assert/strict');
 function setup(state={},effects=[]){
  localStorage.clear();
- localStorage.setItem('street-life-save-v3',JSON.stringify({day:1,minutes:1321,money:100,hunger:72,thirst:66,energy:50,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...state}));
+ localStorage.setItem('street-life-save-v3',JSON.stringify({day:1,minutes:1321,money:100,hunger:72,thirst:66,energy:65,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...state}));
  localStorage.setItem('street-life-effects-v1',JSON.stringify(effects));
  localStorage.setItem('street-life-discovered-v1','["street","station","shop"]');
  localStorage.setItem('street-life-mobile-service-until','5000');
@@ -20,7 +20,7 @@ function setup(state={},effects=[]){
  render(React.createElement(App));
 }
 function button(name){fireEvent.click(screen.getByRole('button',{name}));}
-function beginSleep(hours=2){button(/Sleep on the ground/);fireEvent.change(screen.getByLabelText('Sleep duration'),{target:{value:String(hours)}});button('Start sleeping');}
+function beginSleep(hours=2){button(/Sleep on the ground/);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 (async()=>{

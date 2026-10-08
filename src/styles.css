@@ -463,8 +463,6 @@ button.inventory-item { width:100%; }
 
 .sleep-choice-modal{width:min(460px,100%);padding:22px}
 .sleep-choice-modal h2{margin:8px 0 12px}
-.sleep-choice-label{display:block;margin:18px 0 8px;color:#c9d4df;font-size:14px}
-.sleep-choice-modal select{width:100%;min-height:48px;padding:10px;border:1px solid #3b4855;border-radius:12px;background:#19232d;color:#eef4fa;font:inherit;font-size:14px}
 .sleep-choice-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0;padding:14px;background:#19232d;border-radius:12px}
 .sleep-choice-preview small,.sleep-choice-preview strong{display:block}
 .sleep-choice-preview small{margin-bottom:6px;color:#94a3b2;font-size:12px}
@@ -472,3 +470,14 @@ button.inventory-item { width:100%; }
 .sleep-choice-buttons{display:flex;gap:10px;margin-top:20px}
 .sleep-choice-buttons button{flex:1;min-height:44px;border:1px solid #3b4855;border-radius:12px;background:#19232d;color:#eef4fa;font:inherit}
 .sleep-choice-buttons .trash-stop{background:#376b58;border-color:#50826e;margin:0}
+
+.sleep-choice-energy{font-size:14px;color:#c9d4df;margin:16px 0}
+.sleep-duration-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sleep-duration-option{padding:12px;border:1px solid #3b4855;border-radius:12px;background:#19232d;color:#eef4fa;text-align:left;font:inherit}
+.sleep-duration-option strong,.sleep-duration-option small,.sleep-duration-option em{display:block}
+.sleep-duration-option strong{font-size:20px;margin-bottom:6px}
+.sleep-duration-option small{font-size:12px;line-height:1.5;color:#b9c6d2}
+.sleep-duration-option em{font-size:11px;font-style:normal;line-height:1.4;margin-top:6px;color:#a3adb7}
+.sleep-duration-option.selected{border-color:#76b89b;background:#224636;box-shadow:inset 0 0 0 1px #76b89b}
+.sleep-duration-option:disabled{opacity:.4;cursor:not-allowed}
+.sleep-duration-option:focus-visible{outline:2px solid #96cfb5;outline-offset:2px}

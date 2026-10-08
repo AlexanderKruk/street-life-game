@@ -46,6 +46,7 @@ const STACK_SIZE = 4
 const CIGARETTE_STACK_SIZE = 20
 const BOTTLE_STACK_SIZE = 8
 const BOTTLE_DEPOSIT = 0.5
+const SLEEP_HOURS = [2, 4, 6, 8] as const
 const DEBUG_SLEEP_SPEED = 10
 const SHELTER_CHECKOUT_WARNING = 7 * 60 + 30
 const SHELTER_DEPARTURE_MINUTES = 30
@@ -100,6 +101,19 @@ function shelterSleepMinutes(startAbsolute: number, requested: number) {
   const minute = startAbsolute % 1440
   const untilCheckout = (minute < SHELTER_CHECKOUT_WARNING ? SHELTER_CHECKOUT_WARNING : 1440 + SHELTER_CHECKOUT_WARNING) - minute
   return Math.min(requested, untilCheckout)
+}
+
+function availableSleepHours(energy: number): readonly number[] {
+  if (energy > 75) return [2]
+  if (energy > 50) return [2, 4]
+  if (energy > 25) return [4, 6]
+  return [6, 8]
+}
+
+function sleepDurationUnavailable(hours: number, energy: number) {
+  const available = availableSleepHours(energy)
+  if (available.includes(hours)) return null
+  return hours < available[0] ? 'Too tired for a short sleep.' : 'Not tired enough for a long sleep.'
 }
 
 function remainingEffect(expiresAt: number, game: GameState) {
@@ -517,7 +531,7 @@ export default function App() {
       : current.id === 'shelter' && shelterBooked && open && game.intoxication <= 10
         ? 'shelter'
         : 'ground'
-    const hours = safeKind === 'ground' ? 2 + Math.floor(Math.random() * 3) : 8
+    const hours = 8
     const realStartedAt = Date.now()
     setMusicOn(false)
     setNavigationOn(false)
@@ -625,6 +639,8 @@ export default function App() {
 
   function requestSleep(kind: SleepState['kind']) {
     if (sleepChoice || !canStartSleep(kind)) return
+    const available = availableSleepHours(game.energy)
+    setSleepHours(previous => available.includes(previous) ? previous : available[available.length - 1])
     setSleepChoice(kind)
   }
 
@@ -646,7 +662,7 @@ export default function App() {
   }, [sleepChoice])
 
   function sleep(hours: number, kind: SleepState['kind']) {
-    if (!canStartSleep(kind) || !Number.isInteger(hours) || hours < 1 || hours > 10) return
+    if (!canStartSleep(kind) || sleepDurationUnavailable(hours, game.energy)) return
     setSleepChoice(null)
     if (kind === 'shelter') {
       const stayNightDay = game.minutes < 480 ? game.day - 1 : game.day
@@ -1472,10 +1488,16 @@ export default function App() {
         <p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p>
         <h2 id="sleep-choice-title">How long do you want to sleep?</h2>
         <p className="muted">{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</p>
-        <label className="sleep-choice-label" htmlFor="sleep-duration">Sleep duration</label>
-        <select id="sleep-duration" autoFocus value={sleepHours} onChange={event => setSleepHours(Number(event.target.value))}>
-          {Array.from({ length: 10 }, (_, i) => i + 1).map(hours => <option key={hours} value={hours}>{hours} h · wake {wakeLabel(hours, sleepChoice)}</option>)}
-        </select>
+        <p className="sleep-choice-energy">Energy {Math.round(game.energy)}/100 · {game.energy > 75 ? 'Rested' : game.energy > 50 ? 'Slightly tired' : game.energy > 25 ? 'Tired' : 'Exhausted'}</p>
+        <div className="sleep-duration-options" role="group" aria-label="Sleep duration">
+          {SLEEP_HOURS.map(hours => {
+            const reason = sleepDurationUnavailable(hours, game.energy)
+            return <button key={hours} className={hours === sleepHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === sleepHours} disabled={reason !== null} autoFocus={hours === sleepHours} onClick={() => setSleepHours(hours)}>
+              <strong>{hours} h</strong><small>Wake {wakeLabel(hours, sleepChoice)}</small>
+              {reason && <em>{reason}</em>}
+            </button>
+          })}
+        </div>
         <div className="sleep-choice-preview">
           <div><small>Current time</small><strong>Day {game.day} {weekday(game.day)} · {formatTime(game.minutes)}</strong></div>
           <div><small>Wake up at</small><strong>{wakeLabel(sleepHours, sleepChoice)}</strong></div>
@@ -1484,7 +1506,7 @@ export default function App() {
         {sleepChoice === 'shelter' && <p className="muted">Night shelter sleep ends by 07:30 so you can leave by 08:00. Longer choices are shortened automatically.</p>}
         <div className="sleep-choice-buttons">
           <button onClick={() => setSleepChoice(null)}>Cancel</button>
-          <button className="trash-stop" onClick={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}>Start sleeping</button>
+          <button className="trash-stop" disabled={sleepDurationUnavailable(sleepHours, game.energy) !== null} onClick={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}>Start sleeping</button>
         </div>
       </section>
     </div>}
@@ -1514,12 +1536,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.08-60</div>
+        <div className="trash-build">Build 2026.10.08-61</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.08-60</div>
+    <div className="build-badge">v2026.10.08-61</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
