@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · bread rolls, canned food and wet wipes added; hot meal reduced to 8 zł. Current visible build: `v2026.10.08-69`.
+**Last gameplay sync:** 2026-10-08 · 3-in-1 shower gel and shower cleaning limits. Current visible build: `v2026.10.08-70`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -196,7 +196,7 @@ Backpack capacity is 8 slots.
 Stack sizes:
 - Water: 4 half-liter portions/slot (2 L).
 - Food, bread rolls, canned food: 4 of each type/slot.
-- Wet wipes: 5 uses/slot.
+- Wet wipes and 3-in-1 shower gel: 5 uses of each type/slot.
 - Medicine: 4/slot.
 - Returnable bottles: 8/slot.
 - Cigarettes: 20/slot.
@@ -213,6 +213,7 @@ Using inventory:
 - Bread roll: consumes 1; fresh +12 Food, stale +8 Food, spoiled +4 Food/-3 Health/-2 Mood. Separate weighted freshness declines over 24 hours; labels use the same thresholds as other food. Empty stacks reset freshness.
 - Pull-tab canned food: consumes 1; +32 Food, +1 Mood. Sealed cans do not spoil and need no opener.
 - Wet wipes: consumes 1 use, +10 Hygiene capped at 60; disabled at Hygiene 60+. Show remaining uses beside the name.
+- 3-in-1 shower gel: used automatically only when a shelter/day-center shower succeeds; one use boosts the shower Hygiene gain by 1.5 and raises its cap from 70 to 100. No standalone use. Rejected/closed/full showers spend no gel. Existing Hygiene above 70 is preserved apart from ordinary time decay when showering without gel. Older saves receive zero gel, and missing gel in older result snapshots counts as zero.
 - New item counts default to zero in older saves; no existing inventory is replaced. These goods stay in the backpack and count toward event reward capacity too. Result summaries report actual quantities gained/used; older result snapshots treat missing quantities as zero.
 - Cigarette: consumes 1, +5 Mood, -0.5 Health.
 - Medicine: consumes 1 only when Cold is active and removes Cold.
@@ -257,6 +258,7 @@ The Discount shop currently sells:
 - Bread roll: 1 zł, one item.
 - Pull-tab canned food: 6 zł, one item.
 - Wet wipes: 5 zł, five uses.
+- 3-in-1 shower gel: 8 zł, five showers; backpack quantity is remaining uses.
 - Cigarettes: 6 zł for 5.
 - Medicine: 9 zł for 1.
 - Hot meal: 8 zł, eaten immediately and does not use backpack space.
@@ -351,7 +353,7 @@ Night shelter:
 - Missing 3 required nights within the current 30-day game-month cancels the place and blocks re-registration until the next month.
 - Actually departing after 08:00 and before 18:00 with an active booking creates a shelter rule strike. Selecting/cancelling a route does not count; walking, paid/fare-dodging transit or stepping onto Street does. A rejected unpaid transit attempt does not count; 3 strikes cancel the place and block re-registration until the next month.
 - **Quiet hours are 22:00–06:00.** During that period normal shelter actions are blocked and only sleeping is allowed.
-- Shower: 35 minutes, +55 Hygiene, +4 Energy, +4 Mood.
+- Shower: 35 minutes, +55 Hygiene capped at 70 without gel; with gel +82.5 Hygiene capped at 100 and one gel use spent. +4 Energy, +4 Mood.
 - Intoxication above 10 blocks shelter sleep/admission to bed; the initial registration branch itself does not currently check intoxication.
 - Free dinner is served **19:00–20:30**, once per day: 20 minutes, +34 Food, +10 Thirst, +4 Mood before normal elapsed-time decay.
 - Free breakfast is served **06:30–07:00**, once per day: 15 minutes, +25 Food, +8 Thirst, +3 Mood before normal elapsed-time decay.
@@ -370,7 +372,7 @@ The Day Center & Clinic is open **08:00–16:00** and represents a daytime drop-
 
 Implemented services:
 - Stay indoors: 60 minutes, +10 Energy, +5 Mood.
-- Shower: 40 minutes, +50 Hygiene, +4 Mood.
+- Shower: 40 minutes, +50 Hygiene capped at 70 without gel; with gel +75 Hygiene capped at 100 and one gel use spent. +4 Mood.
 - Laundry: 90 minutes, +18 Hygiene, +5 Mood.
 - Charge phone: 60 minutes and Battery becomes 100%.
 - Clinic: 60 minutes, +12 Health below Health 65 or +4 otherwise, +3 Mood and removes Cold, before any caps.

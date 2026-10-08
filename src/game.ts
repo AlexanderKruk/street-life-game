@@ -32,6 +32,7 @@ export type ActionResult = {
   energy?: number
   health?: number
   hygiene?: number
+  hygieneCap?: number
   mood?: number
   intoxication?: number
   message?: string
@@ -162,7 +163,9 @@ export function applyAction(state: GameState, result: ActionResult, context: Tim
     thirst: clamp(next.thirst + (result.thirst ?? 0)),
     energy: Math.min(energyCap(health), clamp(next.energy + (result.energy ?? 0))),
     health,
-    hygiene: clamp(next.hygiene + (result.hygiene ?? 0)),
+    hygiene: clamp((result.hygiene ?? 0) > 0
+      ? Math.max(next.hygiene, Math.min(result.hygieneCap ?? 100, next.hygiene + (result.hygiene ?? 0)))
+      : next.hygiene + (result.hygiene ?? 0)),
     mood: clamp(next.mood + (result.mood ?? 0)),
     intoxication: clamp(next.intoxication + (result.intoxication ?? 0)),
   }
@@ -222,7 +225,7 @@ export const actions: GameAction[] = [
   {
     id: 'daycenter-shower', locationId: 'daycenter', name: 'Take a shower',
     description: 'Use the free shower. There may be a short wait.', minutes: 40,
-    resolve: () => ({ minutes: 40, hygiene: 50, mood: 4, message: 'You shower and feel much cleaner.' }),
+    resolve: () => ({ minutes: 40, hygiene: 50, hygieneCap: 70, mood: 4, message: 'You showered with water only. Hygiene improves up to 70; gel helps clean more thoroughly.' }),
   },
   {
     id: 'daycenter-laundry', locationId: 'daycenter', name: 'Do laundry',
@@ -262,7 +265,7 @@ export const actions: GameAction[] = [
   {
     id: 'shelter-shower', locationId: 'shelter', name: 'Ask for a shower',
     description: 'There may be a queue, but it restores hygiene.', minutes: 35,
-    resolve: () => ({ minutes: 35, hygiene: 55, energy: 4, mood: 4, message: 'You got a shower after waiting your turn.' }),
+    resolve: () => ({ minutes: 35, hygiene: 55, hygieneCap: 70, energy: 4, mood: 4, message: 'You got a shower with water only. Hygiene improves up to 70; gel helps clean more thoroughly.' }),
   },
   {
     id: 'shelter-dinner', locationId: 'shelter', name: 'Dinner',
