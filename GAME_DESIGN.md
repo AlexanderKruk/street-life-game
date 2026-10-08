@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · current assortment, prices, item consumption, shower rules and regression coverage. Current visible build: `v2026.10.08-71`.
+**Last gameplay sync:** 2026-10-08 · compact wrapping product-effect badges and Cheap shop naming. Current visible build: `v2026.10.08-72`.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -138,7 +138,7 @@ Rain/Showers also enable the rain-phone street event.
 Implemented locations:
 - Street — 24/7 and the starting location. It represents an exposed city block rather than the Station.
 - Station — 24/7.
-- Discount shop — 07:00–22:00.
+- Cheap shop — 07:00–22:00.
 - Night shelter — 18:00–08:00.
 - Help center — 08:00–16:00.
 - Schronisko — 24/7, hidden until referral/unlocked.
@@ -151,7 +151,7 @@ The player may travel to a closed location. Actions that require it to be open a
 
 ### Gradual location discovery
 
-A new run initially shows only **Street, Station and Discount shop**. Other addresses remain hidden until included in the discovered-location list. Existing saves without a discovery list initially migrate to the full location list.
+A new run initially shows only **Street, Station and Cheap shop**. Other addresses remain hidden until included in the discovered-location list. Existing saves without a discovery list initially migrate to the full location list.
 
 On Street, three initial information actions are offered while their targets remain unknown:
 - Search online for a place to sleep → Night shelter.
@@ -249,7 +249,9 @@ Auto-renew is ON by default. It attempts renewal only when the existing paid ser
 
 ## Shop
 
-The Discount shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
+The Cheap shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
+
+Product-effect badges use only the width needed by their text. Multiple badges share a row when space permits, wrap to the next row when needed, and wrap long text within the card. This applies to both shelf products and the hot meal.
 
 Each purchasable backpack item has its actions in one row across the full card width: red **🥷** theft icon on the left (same icon as fare dodging; accessible label STEAL and item tooltip) and green purchase button on the right, displaying only the price (e.g. **3.00 zł**). Labels and prices stay inside their buttons on narrow screens. Full backpack / insufficient money still disable the appropriate actions. Each purchasable backpack item also has a **STEAL** option. Theft uses the shared visible D20 system: **Reflex DC 12**. Success adds the selected item without paying; failure gives no item and hurts Mood. Natural 20 is a faster/clean critical success; natural 1 is a worse failed attempt.
 
@@ -307,7 +309,7 @@ Street has its own small survival loop. Its economy is deliberately capped aroun
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
 - Once a bench is found, **Sleep on the bench** becomes available: fatigue-dependent 2/4/6/8 hours. At 8 hours: +66 Energy, -7 Hygiene, -5 Mood, no direct Health recovery, plus elapsed-time needs loss. Street wake-event attempt: min(90%, 65% × hours / 8).
-- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Discount shop for 0.50 zł each. Time/cost scales with time spent searching.
+- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Cheap shop for 0.50 zł each. Time/cost scales with time spent searching.
 - The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Variable sleep duration

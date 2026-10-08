@@ -52,7 +52,7 @@ export type GameAction = {
 export const locations: Location[] = [
   { id: 'street', name: 'Street', icon: '🌆', description: 'An exposed city block. Free to stay, but there is little safety or real rest.', open: 0, close: 1440, travelMinutes: 60 },
   { id: 'station', name: 'Station', icon: '🚉', description: 'Crowds, benches and small chances to earn.', open: 0, close: 1440, travelMinutes: 65 },
-  { id: 'shop', name: 'Discount shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 75 },
+  { id: 'shop', name: 'Cheap shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 75 },
   { id: 'shelter', name: 'Night shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 90 },
   { id: 'support', name: 'Help center', icon: '🤝', description: 'Social workers can help with documents, benefits, accommodation and other support.', open: 480, close: 960, travelMinutes: 105 },
   { id: 'residential-shelter', name: 'Schronisko', icon: '🏠', description: '24/7 supported accommodation. Access requires a referral from the help center.', open: 0, close: 1440, travelMinutes: 120 },
