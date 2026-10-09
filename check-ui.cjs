@@ -21,7 +21,7 @@ function setup(state={},effects=[]){
 }
 function button(name){
  if(!screen.queryByRole('button',{name})){
-  for(const intent of ['I will check what help is available','I need somewhere warm','I will walk for a while','Find somewhere to sleep','Earn something for food','Stay here and rest']){
+  for(const intent of ['I don’t know where to go… Maybe my phone can help.','Somewhere warm… The station lights are still on.','I’m not ready to sleep out here. I’ll walk a little.','Find somewhere to sleep','Earn something for food','Stay here and rest']){
    const choice=screen.queryByRole('button',{name:intent,exact:true});if(!choice)continue;fireEvent.click(choice);
    if(screen.queryByRole('button',{name}))break;
    const back=screen.queryByRole('button',{name:'Choose another approach',exact:true});if(back)fireEvent.click(back);
@@ -34,11 +34,11 @@ function button(name){
  }
  fireEvent.click(screen.getByRole('button',{name}));
 }
-function beginSleep(hours=2){button(/I will try sleeping on the ground/);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
+function beginSleep(hours=2){button(/Lie down here\? I’m not sure… But I could try./);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 (async()=>{
- setup();button(/I will search online for a place to sleep/);
+ setup();button(/There must be somewhere to sleep… Let me look./);
  let text=summary();assert(text.includes('−2%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
  const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
  close();button(/Map$/);assert(screen.getByText('Night Shelter',{exact:true}));fireEvent.click(document.querySelector('.nav-item.home'));
