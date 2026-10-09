@@ -19,7 +19,21 @@ function setup(state={},effects=[]){
  Math.random=()=>0.99;
  render(React.createElement(App));
 }
-function button(name){if(!screen.queryByRole('button',{name}) && screen.queryByRole('button',{name:'Other actions',exact:true}))fireEvent.click(screen.getByRole('button',{name:'Other actions',exact:true}));fireEvent.click(screen.getByRole('button',{name}));}
+function button(name){
+ if(!screen.queryByRole('button',{name})){
+  for(const intent of ['I will check what help is available','I need somewhere warm','I will walk for a while','Find somewhere to sleep','Earn something for food','Stay here and rest']){
+   const choice=screen.queryByRole('button',{name:intent,exact:true});if(!choice)continue;fireEvent.click(choice);
+   if(screen.queryByRole('button',{name}))break;
+   const back=screen.queryByRole('button',{name:'Choose another approach',exact:true});if(back)fireEvent.click(back);
+  }
+ }
+ if(!screen.queryByRole('button',{name}) && screen.queryByRole('button',{name:/Inventory$/})){
+  fireEvent.click(screen.getByRole('button',{name:/Inventory$/}));
+  const phone=screen.queryByRole('button',{name:/PhoneBattery/});if(phone)fireEvent.click(phone);
+  const ai=screen.queryByRole('button',{name:/Ask AI/});if(ai)fireEvent.click(ai);
+ }
+ fireEvent.click(screen.getByRole('button',{name}));
+}
 function beginSleep(hours=2){button(/I will try sleeping on the ground/);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}

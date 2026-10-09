@@ -29,7 +29,21 @@ function setup(s={},extra={}){
  Math.random=()=>.99;
  render(React.createElement(App));
 }
-function click(name){if(!screen.queryByRole('button',{name}) && screen.queryByRole('button',{name:'Other actions',exact:true}))fireEvent.click(screen.getByRole('button',{name:'Other actions',exact:true}));fireEvent.click(screen.getByRole('button',{name}));}
+function click(name){
+ if(!screen.queryByRole('button',{name})){
+  for(const intent of ['I will check what help is available','I need somewhere warm','I will walk for a while','Find somewhere to sleep','Earn something for food','Stay here and rest']){
+   const choice=screen.queryByRole('button',{name:intent,exact:true});if(!choice)continue;fireEvent.click(choice);
+   if(screen.queryByRole('button',{name}))break;
+   const back=screen.queryByRole('button',{name:'Choose another approach',exact:true});if(back)fireEvent.click(back);
+  }
+ }
+ if(!screen.queryByRole('button',{name}) && screen.queryByRole('button',{name:/Inventory$/})){
+  fireEvent.click(screen.getByRole('button',{name:/Inventory$/}));
+  const phone=screen.queryByRole('button',{name:/PhoneBattery/});if(phone)fireEvent.click(phone);
+  const ai=screen.queryByRole('button',{name:/Ask AI/});if(ai)fireEvent.click(ai);
+ }
+ fireEvent.click(screen.getByRole('button',{name}));
+}
 function chooseHours(hours){fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));}
 function beginSleep(name,hours){click(name);if(hours!==undefined)chooseHours(hours);click('Start sleeping');}
 function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
@@ -41,7 +55,7 @@ function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 setup({minutes:1321},{'street-life-discovered-v1':['street','station','shop']});assert(screen.getByText('What matters most right now?'));assert(!screen.queryByRole('button',{name:/I will search online for a place to sleep/}));assert(document.querySelector('.story-scene').textContent.includes('There is nowhere to go back to'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
 fireEvent.click(screen.getByRole('button',{name:'I will check what help is available',exact:true}));assert(screen.getByRole('button',{name:/I will search online for a place to sleep/}));assert(!screen.queryByRole('button',{name:/Ask passers-by/}));advance(10000);assert.deepEqual(read(stateKey),storyState);click(/I will search online for a place to sleep/);assert.equal(read(stateKey).minutes,1336);ok();assert(screen.getByText('What matters most right now?'));
-fireEvent.click(screen.getByRole('button',{name:'Other actions',exact:true}));assert(screen.getByRole('button',{name:/I will try sleeping on the ground/}));assert(screen.getByRole('button',{name:/I will look for bottles/}));fireEvent.click(screen.getByRole('button',{name:'Choose another approach',exact:true}));assert.equal(read(stateKey).minutes,1336);
+assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));fireEvent.click(screen.getByRole('button',{name:'I will walk for a while',exact:true}));assert(screen.getByRole('button',{name:/I will try sleeping on the ground/}));assert(!screen.queryByRole('button',{name:/I will look for bottles/}));fireEvent.click(screen.getByRole('button',{name:'Choose another approach',exact:true}));assert.equal(read(stateKey).minutes,1336);
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop']});click('I will check what help is available');click(/I will search online for free help/);assert(screen.getByRole('dialog').textContent.includes('services are closed now'));assert(screen.getByRole('dialog').textContent.includes('08:00'));assert(read('street-life-discovered-v1').includes('support'));ok();
 setup({minutes:1320});click('I will check what help is available');assert(screen.getByRole('button',{name:/I will go to Night Shelter/}).disabled);assert(screen.getByRole('button',{name:/I will go to Night Shelter/}).textContent.includes('tomorrow at 19:00'));
 // First-night wandering uses real walking costs; rain choices pause and persist.
@@ -240,7 +254,7 @@ setup({locationId:'shelter',minutes:1380},{[lifeKey]:admitted});beginSleep(/Use 
 setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);beginSleep(/Use your reserved bed/);click('Wake up (debug)');assert.equal(read(lifeKey).shelterLastStayDay,1);
 setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:{...booking,shelterLastStayDay:0}});assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
 // Sorting also spans Street fragments and configured actions, plus support choices.
-setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});click('Other actions');availableFirst();assert(screen.getByRole('button',{name:/I will search online for a place to sleep/}).disabled);
+setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});click('Find somewhere to sleep');availableFirst();assert(screen.getByRole('button',{name:/I will search online for a place to sleep/}).disabled);
 setup({locationId:'support'},{[invKey]:{documents:false}});availableFirst('.support-grid');
 
 // Morning reminder appears at 07:30, freezes the clock, and takes a full

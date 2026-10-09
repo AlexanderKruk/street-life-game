@@ -1757,12 +1757,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.09-86</div>
+        <div className="trash-build">Build 2026.10.09-87</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.09-86</div>
+    <div className="build-badge">v2026.10.09-87</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1779,7 +1779,7 @@ export default function App() {
         <div className="location-icon">{current.icon}</div>
         <div><p className="eyebrow">{current.id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}`} </p><h2>{current.name}</h2><p>{current.id === 'street' ? streetScene : current.description}</p></div>
       </section>
-      {message && <section className="event"><span>●</span><p>{message}</p></section>}
+      {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       {shelterInterview && <section className="shop">
         <div className="shop-heading"><div><p className="eyebrow">SOCIAL WORKER</p><h2>{shelterInterview.step === 'reason' ? 'Why do you still need a place?' : shelterInterview.step === 'action' ? 'What are you doing about your situation?' : 'What will you do next?'}</h2></div></div>
         <div className="shop-grid">
@@ -1853,7 +1853,6 @@ export default function App() {
             {firstNight ? <button onClick={() => setStoryIntent('understand')}>I will check what help is available</button> : <button onClick={() => setStoryIntent('shelter')}>Find somewhere to sleep</button>}
             {firstNight ? <button onClick={() => setStoryIntent('warmth')}>I need somewhere warm</button> : <button onClick={() => setStoryIntent('money')}>Earn something for food</button>}
             {firstNight ? <button onClick={() => setStoryIntent('rest')}>I will walk for a while</button> : <button onClick={() => setStoryIntent('rest')}>Stay here and rest</button>}
-            <button className="story-secondary" onClick={() => setStoryIntent('other')}>Other actions</button>
             {inventory.phoneBattery <= 30 && !answeredQuestions.includes('charging') && <button aria-label="Where can I charge my phone?" onClick={() => answerPracticalQuestion('charging')}>Your phone is down to {Math.round(inventory.phoneBattery)}%. Where can you charge it?</button>}
           </div> : <button className="story-back" onClick={() => setStoryIntent(null)}>Choose another approach</button>}
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
