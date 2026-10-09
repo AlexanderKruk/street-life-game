@@ -20,11 +20,11 @@ function setup(state={},effects=[]){
  render(React.createElement(App));
 }
 function button(name){if(!screen.queryByRole('button',{name}) && screen.queryByRole('button',{name:'Other actions',exact:true}))fireEvent.click(screen.getByRole('button',{name:'Other actions',exact:true}));fireEvent.click(screen.getByRole('button',{name}));}
-function beginSleep(hours=2){button(/Sleep on the ground/);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
+function beginSleep(hours=2){button(/I will try sleeping on the ground/);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 (async()=>{
- setup();button(/Search online for a place to sleep/);
+ setup();button(/I will search online for a place to sleep/);
  let text=summary();assert(text.includes('−2%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
  const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
  close();button(/Map$/);assert(screen.getByText('Night Shelter',{exact:true}));fireEvent.click(document.querySelector('.nav-item.home'));

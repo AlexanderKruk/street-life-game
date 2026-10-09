@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-08 · random starting money. Current visible build: `v2026.10.08-85`. Documentation reviewed against the v85 implementation on 2026-10-08.
+**Last gameplay sync:** 2026-10-09 · narrator/player voice pilot for the opening night. Current visible build: `v2026.10.09-86`. Documentation reviewed against the v86 implementation on 2026-10-09.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -540,6 +540,10 @@ Several older generic shop/support actions still exist in `game.ts`, while the c
 ## UI/screens
 
 ### Street story prototype (v79)
+
+### Narrative voice pilot (v86)
+
+The opening night uses two voices: narrator describes the scene and observable consequences in second person; player choices express intentions in first person (for example, "I need somewhere warm", "I will put on some music and walk"). Narration does not prescribe despair, reassurance or calm. Mood still changes mechanically and appears separately in results. The scene progresses from 22:00 to late evening, after midnight, and pre-dawn rather than repeating the opening paragraph all night. Street walk, rain, cover and search/rest choices use this voice; service interfaces and the wider event catalog have not yet been converted. Question titles already use first person. Time costs, thresholds, payouts, pause rules and sleep behavior are unchanged. Scene illustrations are a future possibility; no images were added for this pilot.
 
 On Street, **Understand what you can do** opens a scripted conversation with AI on the phone. **Ask AI** in the phone panel reaches the same questions, including after the opening night. Questions emerge individually: morning help is initially available; shelter registration appears after learning about help or discovering the shelter; the no-bed fallback appears after learning registration rules; food/water appears at Food or Water <=45; charging appears at Battery <=30. Answered questions stay available. Responses reflect implemented game schedules and services; this is authored game dialogue, not a live AI/API connection. Answers save relevant addresses; knowing an address does not grant admission or a bed.
 
