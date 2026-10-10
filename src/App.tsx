@@ -4,6 +4,7 @@ import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventC
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
 import CityMap from './CityMap'
+import ShopCard from './ShopCard'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
@@ -1820,7 +1821,7 @@ export default function App() {
   const nav = (target: Screen, icon: IconName, label: string) =>
     <button disabled={!!phoneActivity} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
 
-  return <main className={`shell${screen === 'location' && current.id === 'street' ? ' street-screen' : ''}`}>
+  return <main className={`shell${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {sleepChoice && <div className="phone-overlay result-overlay">
       <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
         <p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p>
@@ -1898,10 +1899,10 @@ export default function App() {
         <div className="phone-activity-meta"><span><Icon name="clock" />{phoneActivity.total - phoneActivity.remaining} min spent</span><span>Usually about {PHONE_SEARCH_ESTIMATE} min</span></div>
         <small>Time passes while you search.</small>
       </section> : inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={() => setInfoModal(null)} /> : <>
-      <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
+      {current.id === 'shop' ? <section className="shop-hero" aria-label="Shop"><h2>{current.name}</h2><p>{open ? 'Open' : 'Closed'} · {formatTime(current.open)}–{formatTime(current.close)}</p></section> : <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
         {current.id !== 'street' && <div className="location-icon">{current.icon}</div>}
         <div><p className="eyebrow">{current.id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}`} </p><h2>{current.name}</h2><p>{current.id === 'street' ? streetScene : current.description}</p></div>
-      </section>
+      </section>}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       {shelterInterview && <section className="shop">
         <div className="shop-heading"><div><p className="eyebrow">SOCIAL WORKER</p><h2>{shelterInterview.step === 'reason' ? 'Why do you still need a place?' : shelterInterview.step === 'action' ? 'What are you doing about your situation?' : 'What will you do next?'}</h2></div></div>
@@ -1925,18 +1926,11 @@ export default function App() {
         </div>
       </section>}
       {current.id === 'shop' && open && <section className="shop">
-        <div className="shop-heading"><div><p className="eyebrow">STORE SHELF</p><h2>Buy supplies</h2></div><span>🎒 {usedBackpackSlots}/{BACKPACK_CAPACITY}</span></div>
-        <div className="shop-grid">
-          {inventory.bottles > 0 && <button className="shop-item" onClick={returnBottles}><span>♻️</span><div><strong>Return bottles ×{inventory.bottles}</strong><small>Deposit return · 0.50 zł each</small><div className="shop-impact"><em className="positive">Cash +{(inventory.bottles * BOTTLE_DEPOSIT).toFixed(2)} zł</em></div></div><b>RETURN</b></button>}
-          {SHOP_ITEMS.map((item) => {
-            const fits = canAddToBackpack(inventory, item)
-            const affordable = game.money >= item.price
-            return <div className="shop-item" key={item.id}>
-              <span>{item.icon}</span><div><strong>{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ''}</strong>{item.description && <small>{item.description}</small>}<div className="shop-impact">{item.impacts.map((impact) => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div></div>
-              <div className="shop-item-actions"><button className="shop-steal" onClick={() => stealItem(item)} disabled={!fits} aria-label="STEAL" title={`Steal ${item.name}`}><span aria-hidden="true">🥷</span></button><button className="shop-buy" onClick={() => buyItem(item)} disabled={!fits || !affordable} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={!fits ? 'Backpack full' : !affordable ? 'Not enough money' : `Buy ${item.name}`}>{item.price.toFixed(2)} zł</button></div>
-            </div>
-          })}
-        </div>
+        <div className="shop-capacity"><Icon name="backpack" /><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span><div className="shop-capacity-bar" role="meter" aria-label="Backpack capacity" aria-valuenow={usedBackpackSlots} aria-valuemin={0} aria-valuemax={BACKPACK_CAPACITY}><i style={{ width: `${usedBackpackSlots / BACKPACK_CAPACITY * 100}%` }} /></div></div>
+        {inventory.bottles > 0 && <button className="shop-return" onClick={returnBottles}><Icon name="bottle" /><span><strong>Return bottles ×{inventory.bottles}</strong><small>Deposit return · 0.50 zł each</small></span><b>+{(inventory.bottles * BOTTLE_DEPOSIT).toFixed(2)} zł</b></button>}
+        {[{ title: 'Food & drink', items: SHOP_ITEMS.slice(0, 4) }, { title: 'Care', items: SHOP_ITEMS.slice(4) }].map(group => <section className="shop-category" key={group.title} aria-label={group.title}>
+          <h3>{group.title}</h3><div className="shop-grid supply-grid">{group.items.map(item => <ShopCard key={item.id} item={item} fits={canAddToBackpack(inventory, item)} affordable={game.money >= item.price} onBuy={() => buyItem(item)} onSteal={() => stealItem(item)} />)}</div>
+        </section>)}
         <button className="shop-meal" onClick={() => act('shop-meal')} disabled={game.money < 8}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>8.00 zł</b></button>
       </section>}
       {current.id === 'support' && <section className="support-menu">
@@ -2271,7 +2265,7 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-106</small></footer>
+    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-107</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}

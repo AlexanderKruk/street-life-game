@@ -296,6 +296,47 @@ button.inventory-item { width:100%; }
 .shop-item small { color:#8f9ba5; font-size:10px; }
 .shop-item b { grid-column:2; color:#a9c7b3; font-size:11px; }
 .shop-item:disabled { opacity:.38; }
+/* Compact illustrated shop; other location cards keep their existing layout. */
+.shop-screen .game-header { margin-bottom:0; }
+.shop-hero { min-height:145px; margin:0 -18px 12px; padding:70px 18px 16px; background:linear-gradient(0deg,#0b0f13 0%,#0b0f1350 65%,#0b0f1320),url('/street-life-game/assets/shop-interior.webp') center / cover; }
+.shop-hero h2 { margin:0 0 4px; font-size:27px; color:#f1eee7; }
+.shop-hero p { margin:0; font-size:12px; color:#babec1; }
+.shop-screen .shop { margin-top:10px; }
+.shop-capacity { display:flex; align-items:center; gap:7px; padding:11px 10px; border:1px solid #343d42; border-radius:8px; background:#11171b; font-size:11px; }
+.shop-capacity svg { width:22px; height:25px; color:#d7b58a; flex-shrink:0; }
+.shop-capacity strong { font-weight:600; }
+.shop-capacity > span { color:#a9afb3; white-space:nowrap; }
+.shop-capacity-bar { flex:1; min-width:28px; height:5px; margin-left:5px; border-radius:6px; background:#2c353b; overflow:hidden; }
+.shop-capacity-bar i { display:block; height:100%; border-radius:inherit; background:#d7b58a; }
+.shop-category h3 { display:flex; align-items:center; gap:12px; margin:16px 0 9px; color:#929ca3; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.2em; }
+.shop-category h3::after { content:''; flex:1; height:1px; background:#30393f; }
+.supply-grid { gap:8px; align-items:start; }
+.supply-card { display:grid; grid-template-columns:39% minmax(0,1fr); border:1px solid #343d42; border-radius:8px; background:#10161a; overflow:hidden; min-width:0; }
+.supply-picture { position:relative; align-self:stretch; min-width:0; display:flex; align-items:center; background:#101213; padding-bottom:20px; overflow:hidden; }
+.supply-art { display:block; width:100%; aspect-ratio:1; background-image:url('/street-life-game/assets/shop-products.webp'); background-size:200% 400%; background-repeat:no-repeat; }
+.supply-steal { position:absolute; bottom:0; left:0; width:100%; min-height:26px; padding:4px 2px; background:#121517eb; border:0; border-top:1px solid #35302d; color:#ae9186; font-size:9px; cursor:pointer; }
+.supply-copy { padding:10px 7px 7px; min-width:0; display:flex; flex-direction:column; }
+.supply-copy > strong { min-height:30px; font-size:11px; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
+.supply-copy > small { display:block; min-height:24px; margin:2px 0 5px; font-size:10px; line-height:1.25; color:#99a3a9; }
+.supply-purchase { display:flex; align-items:center; justify-content:space-between; gap:3px; margin-top:auto; border-top:1px solid #303a3f; padding-top:7px; }
+.supply-purchase b { font-size:12px; font-weight:600; color:#eeece6; white-space:nowrap; }
+.supply-purchase .shop-buy { min-height:32px; min-width:38px; padding:5px 7px; border:1px solid #d1b18a; border-radius:5px; background:#d1b18a; color:#141619; font-size:11px; font-weight:650; cursor:pointer; }
+.supply-card button:disabled { opacity:.4; cursor:not-allowed; }
+.supply-copy > .supply-unavailable { min-height:0; margin:6px 0 0; color:#bd9986; font-size:9px; }
+.supply-details { grid-column:1 / -1; padding:0 7px 5px; border-top:1px solid #283036; color:#8f999f; font-size:9px; }
+.supply-details summary { padding:4px 0 0; cursor:pointer; }
+.supply-details p { font-size:10px; line-height:1.4; margin:7px 0 4px; }
+.supply-details .shop-impact { padding-bottom:4px; }
+.supply-card :focus-visible,.shop-return:focus-visible { outline:2px solid #d7b58a; outline-offset:-2px; }
+.shop-return { width:100%; display:flex; align-items:center; gap:9px; padding:10px; margin-top:9px; color:#e8e5df; border:1px solid #343d42; border-radius:8px; background:#11171b; text-align:left; }
+.shop-return svg { width:22px; height:22px; color:#d7b58a; }
+.shop-return span { flex:1; display:flex; flex-direction:column; gap:4px; }
+.shop-return strong { font-size:12px; }
+.shop-return small { font-size:10px; color:#99a3a9; }
+.shop-return b { font-size:12px; color:#d7b58a; }
+.shop-screen .shop-meal { margin-top:15px; border-radius:8px; background:#11171b; }
+@media (max-width:420px) { .shop-hero { margin-left:-12px; margin-right:-12px; padding-left:12px; padding-right:12px; } }
+@media (min-width:600px) { .supply-copy { padding:13px; } .supply-copy > strong { font-size:15px; } .supply-copy > small { font-size:12px; } .supply-purchase b { font-size:15px; } .supply-purchase .shop-buy { min-width:65px; min-height:36px; font-size:13px; } }
 .shop-meal { width:100%; margin-top:8px; padding:13px; display:grid; grid-template-columns:36px 1fr auto; gap:10px; align-items:center; }
 .shop-meal > span { font-size:28px; }
 .shop-meal > div { min-width:0; display:flex; flex-direction:column; gap:3px; }

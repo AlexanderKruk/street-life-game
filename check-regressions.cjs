@@ -201,7 +201,7 @@ assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(scr
 
 // Three zloty buys 1.5 L of water: exactly three drinks of 0.5 L.
 setup({locationId:'shop',thirst:0},{[invKey]:{water:0}});
-assert(!screen.queryByText(/1.5 L|0.5 L/));assert(screen.getByText('Water ×3'));assert(!screen.queryByText('💧💧💧'));click('Buy Water for 3.00 zł');
+assert(!screen.queryByText(/1.5 L|0.5 L/));assert(screen.getByText('Water'));assert(screen.getByText('3 portions'));assert(!screen.queryByText('💧💧💧'));click('Buy Water for 3.00 zł');
 assert.equal(read(stateKey).money,97);assert.equal(read(invKey).water,3);assert(screen.getByRole('dialog').textContent.includes('Water ×3'));assert(screen.getByRole('dialog').textContent.includes('+3'));ok();click(/Inventory$/);
 assert(screen.getByText('Water ×3'));assert(!document.querySelector('.water-portions'));
 for(const [remaining,thirst] of [[2,38],[1,76],[0,100]]) {
