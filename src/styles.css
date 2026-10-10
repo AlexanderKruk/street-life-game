@@ -472,6 +472,7 @@ button.inventory-item { width:100%; }
 .result-overlay { z-index: 100; }
 .result-modal { width: min(480px, 100%); padding: 22px; }
 .result-modal h2 { margin-top: 4px; }
+.result-modal > .muted { white-space:pre-line; }
 .result-modal .muted { font-size: 1rem; line-height: 1.5; }
 .result-section { margin: 20px 0; }
 .result-section h3 { font-size: .875rem; color: #aab7c5; margin: 0 0 8px; }

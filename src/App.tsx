@@ -278,6 +278,10 @@ export default function App() {
     try { const saved = JSON.parse(localStorage.getItem('street-life-answers-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
   })
   useEffect(() => { localStorage.setItem('street-life-answers-v1', JSON.stringify(answeredQuestions)) }, [answeredQuestions])
+  const [seenMemories, setSeenMemories] = useState<string[]>(() => {
+    try { const saved = JSON.parse(localStorage.getItem('street-life-memories-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
+  })
+  useEffect(() => { localStorage.setItem('street-life-memories-v1', JSON.stringify(seenMemories)) }, [seenMemories])
   useEffect(() => { localStorage.setItem('street-life-rain-choice-v1', String(rainChoice)) }, [rainChoice])
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
@@ -492,12 +496,21 @@ export default function App() {
     if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
+    const memories = [
+      { id: 'office-routine', titles: ['Walk through the city', 'Walk with music'], text: 'You used to come home after a day at the office. Now there is no desk to go back to.' },
+      { id: 'redundancy-savings', titles: ['Rest on the bench', 'Sit and recover', 'Shelter from the rain'], text: 'After the redundancy, you expected to find another job in a few weeks. As the search dragged on, rent and ordinary expenses used up what you had put aside.' },
+      { id: 'unanswered-applications', titles: ['Where can I get help in the morning?'], text: 'Your last job application still has no reply. The redundancy email is still in your inbox.' },
+      { id: 'lost-home', titles: ['How can I get a shelter bed?'], text: 'Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning.' },
+    ]
+    const memory = memories.find(fragment => fragment.titles.includes(pendingResult.title) && !seenMemories.includes(fragment.id))
+    const resultText = (infoModal?.text ?? message) + (memory ? `\n\n${memory.text}` : '')
+    if (memory) setSeenMemories(previous => [...new Set([...previous, memory.id])])
     if (lastRecordedResult.current !== pendingResult) {
       lastRecordedResult.current = pendingResult
-      const entry: JournalEntry = { day: game.day, minute: game.minutes, title: infoModal?.title ?? pendingResult.title, text: infoModal?.text ?? message, summary }
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, title: infoModal?.title ?? pendingResult.title, text: resultText, summary }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }
-    setInfoModal(previous => ({ title: previous?.title ?? pendingResult.title, text: previous?.text ?? message, ...summary }))
+    setInfoModal(previous => ({ title: previous?.title ?? pendingResult.title, text: resultText, ...summary }))
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
   function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
@@ -1663,6 +1676,7 @@ export default function App() {
     setRainChoice(false)
     setCoverPlanning(false)
     setAnsweredQuestions([])
+    setSeenMemories([])
     setTrip(null)
     setShelterQueue(null)
     setShelterDeparture(null)
@@ -1762,12 +1776,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.10-92</div>
+        <div className="trash-build">Build 2026.10.10-93</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.10-92</div>
+    <div className="build-badge">v2026.10.10-93</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>

@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-10 · short opening scene. Current visible build: `v2026.10.10-92`. Documentation reviewed against the v92 implementation on 2026-10-10.
+**Last gameplay sync:** 2026-10-10 · biographical fragments in action results. Current visible build: `v2026.10.10-93`. Documentation reviewed against the v93 implementation on 2026-10-10.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -14,7 +14,7 @@ The protagonist knows how to use a phone, search online, prepare a CV and handle
 
 Name, age, gender, exact office profession, family circumstances and the precise length of unemployment remain open. The accepted causal sequence is redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue in v92.
 
-### Gradual disclosure — planned implementation
+### Gradual disclosure — implemented in v93
 
 Keep the first narrator message to two or three short sentences about the present scene. Reveal biography through brief, action-linked fragments of one or two sentences during walking, sitting, waiting or checking the phone. Reveal one fragment at a time, and do not repeat a fragment once seen in the same run. The order should follow the player's actions rather than requiring a fixed sequence.
 
@@ -25,7 +25,7 @@ Keep the first narrator message to two or three short sentences about the presen
 | Checking the phone | Your last application still has no reply. The redundancy email is still in your inbox. |
 | Looking for somewhere to sleep | Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning. |
 
-These are candidate fragments for gradual disclosure, not additional paragraphs to append to the opening. Their triggers, per-run seen flags and insertion into action results are not implemented in v92.
+These examples guide the action-linked fragments implemented in v93. A completed normal/music walk reveals office routine; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications; the shelter-bed question reveals the loss of accommodation. Each fragment is appended to the existing result text, logged in Journal, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
 
 ### Voice and knowledge
 
@@ -654,7 +654,7 @@ These are current code realities, not planned features:
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
-## Regression checks (through v92)
+## Regression checks (through v93)
 
 `npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
 
@@ -717,3 +717,7 @@ Street narrative buttons now show only their leading emoji and thought/question.
 ### Short first message (v92)
 
 At the initial Day 1 22:00 Street moment, the narrator uses only three short sentences: backpack on the street, nowhere to return tonight, and lit station windows. Weather, needs and shelter knowledge are not appended to this first message. Later scenes keep their contextual information, and the early-evening base paragraph is also shortened. This is a copy/presentation change with no changes to game state or outcomes. Regression checks limit the opening text to three sentences and 30 words.
+
+### Two-level narrative experience (v93)
+
+The ordinary narrative loop is main choices → action reaction/result → main choices after OK. Biography fragments appear as a short paragraph in that same reaction, with preserved paragraph breaks. They do not open a third screen or create another result. At most one new fragment is added to any result; fragment order follows actions, and a shared redundancy/savings fragment is not repeated across sitting and waiting. Required route/sleep/wait parameter selection and existing events keep their established flow. Initial scene remains three short sentences. Tests cover one result dialog, action-linked biography, Journal inclusion, persistence across reload, no repetition, and reset.
