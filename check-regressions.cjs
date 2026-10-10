@@ -135,9 +135,9 @@ setup({minutes:1320,thirst:45},{[invKey]:{phoneBattery:31}});assert(screen.getBy
 setup({minutes:1320,mood:28},{[invKey]:{phoneBattery:0},'street-life-mobile-service-until':'0'});const rememberedState=read(stateKey);click('Where can I charge my phone?');assert.equal(read(stateKey).minutes,rememberedState.minutes);assert.equal(read(invKey).phoneBattery,0);assert(screen.getByRole('dialog').textContent.includes('waiting room'));assert(screen.getByRole('dialog').textContent.includes('60%'));const rememberedAfter=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),rememberedAfter);ok();assert(!screen.queryByRole('button',{name:'Where can I get help in the morning?',exact:true}));click('Where can I charge my phone?');assert.deepEqual(read(stateKey),rememberedAfter);ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:30}});click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(screen.getByRole('dialog').textContent.includes('08:00'));assert.equal(read(stateKey).minutes,1335);ok();assert(screen.getByRole('button',{name:'Where can I charge my phone?',exact:true}));
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
-for (const name of ['Cheap Shop','Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.city-map strong')].some(node=>node.textContent===name));
-assert(read(lifeKey).schroniskoReferral);assert(document.querySelector('.city-map').textContent.includes('Schronisko'));
-setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.querySelector('.city-map').textContent.includes('Schronisko'));
+for (const name of ['Cheap Shop','Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.district-scene strong')].some(node=>node.textContent===name));
+assert(read(lifeKey).schroniskoReferral);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
+setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
 
 // Sleep and immediate work must apply disease/dehydration and age both food stores.
 setup({hunger:0,thirst:0,health:90,energy:20},{'street-life-effects-v1':[{id:'cold',expiresAt:10000}], [invKey]:{food:2,foodFreshness:100}, 'street-life-storage-v1':{food:2,foodFreshness:100}});
@@ -148,18 +148,30 @@ assert(Math.abs(read('street-life-storage-v1').foodFreshness - read(invKey).food
 setup({locationId:'work',hunger:0,thirst:0,health:90,energy:75},{'street-life-effects-v1':[{id:'cold',expiresAt:10000}], [invKey]:{food:2,foodFreshness:100}});
 click(/Take a short shift/);assert(Math.abs(read(stateKey).health - (90 - .147 * 180)) < 1e-8);assert(read(invKey).foodFreshness < 94);
 
+// Illustrated map only shows discovered places; selection is read-only until routing.
+setup({minutes:600}, {'street-life-discovered-v1':['street','station','shop']});click(/Map$/);
+const mapBefore=read(stateKey);
+assert(document.querySelector('.district-scene img').getAttribute('src').endsWith('/city-night.webp'));
+assert(!document.querySelector('.district-pin').textContent.includes('Night Shelter'));
+assert(![...document.querySelectorAll('.district-pin')].some(pin=>pin.textContent.includes('Night Shelter')));
+click(/^.*Station/);assert.deepEqual(read(stateKey),mapBefore);assert(!document.querySelector('.travel-sheet'));
+assert(document.querySelector('.district-card').textContent.includes('Station'));
+assert(document.querySelector('.district-route path'));
+click('Choose route');assert(document.querySelector('.travel-sheet'));fireEvent.click(document.querySelector('.sheet-close'));
+assert.deepEqual(read(stateKey),mapBefore);
+
 // Cancelled routes must never count as a departure; actual walking does, once.
 setup({locationId:'shelter',minutes:540},{[lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,shelterStrikes:0}});
-click(/Map$/);for(let i=0;i<3;i++){click(/^.*Station/);fireEvent.click(document.querySelector('.travel-sheet .sheet-close'));}
+click(/Map$/);for(let i=0;i<3;i++){click(/^.*Station/);click("Choose route");fireEvent.click(document.querySelector('.travel-sheet .sheet-close'));}
 assert.equal(read(stateKey).locationId,'shelter');assert.equal(read(lifeKey).shelterStrikes,0);
-click(/^.*Station/);click(/Walk/);assert.equal(read(lifeKey).shelterStrikes,1);
+click(/^.*Station/);click("Choose route");click(/Walk/);assert.equal(read(lifeKey).shelterStrikes,1);
 
 
 // D20 freezes time and prevents exhaustion, both before and after rolling.
 setup({locationId:'shop',energy:.15});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);const frozen=read(stateKey);advance(3000);
 assert.deepEqual(read(stateKey),frozen);assert(document.querySelector('.dice-overlay'));assert(!document.querySelector('.sleep-overlay'));
 click('Roll D20');advance(3000);assert.deepEqual(read(stateKey),frozen);click('Continue');assert(read(stateKey).minutes > frozen.minutes);
-setup({energy:.15},{[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click(/Ride without/);const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
+setup({energy:.15},{[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Choose route");click(/Ride without/);const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
 
 // Auto renewal keeps prepaid time and money; expired service buys a full day.
 setup({day:2},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'6000'});
@@ -170,21 +182,21 @@ setup({day:2,money:0},{'street-life-mobile-auto-renew':'true','street-life-mobil
 assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6000);
 
 // A paid trip resumes from remaining time with its original result snapshot.
-setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
+setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Choose route");click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
 cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);
 advance(3000);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
 
 // A valid transit card or an unexpired free-transit grant removes fare
 // dodging and allows normal public transport without spending money.
 for(const extra of [{[invKey]:{transitCard:true}}, {[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:500}]}]) {
- setup({money:0},extra);click(/Map$/);click(/^.*Station/);
+ setup({money:0},extra);click(/Map$/);click(/^.*Station/);click("Choose route");
  assert(!screen.queryByRole('button',{name:/Ride without/}));const transport=screen.getByRole('button',{name:/Public transport/});assert(!transport.disabled);assert(transport.textContent.includes('FREE'));
  click(/Public transport/);assert.equal(read(stateKey).money,0);assert.equal(read('street-life-trip-v1').mode,'transit');assert(!document.querySelector('.dice-overlay'));
 }
-setup({locationId:'shop'}, {[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:481}]});click(/Map$/);click(/^.*Station/);
+setup({locationId:'shop'}, {[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:481}]});click(/Map$/);click(/^.*Station/);click("Choose route");
 assert(!screen.queryByRole('button',{name:/Ride without/}));advance(1000);assert(screen.getByRole('button',{name:/Ride without/}));assert(screen.getByRole('button',{name:/Public transport/}).textContent.includes('4.40 zł'));
 click(/Public transport/);assert.equal(read(stateKey).money,95.6);
-setup({money:0},{[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:479}]});click(/Map$/);click(/^.*Station/);
+setup({money:0},{[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:479}]});click(/Map$/);click(/^.*Station/);click("Choose route");
 assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(screen.getByRole('button',{name:/Ride without/}));
 
 // Three zloty buys 1.5 L of water: exactly three drinks of 0.5 L.

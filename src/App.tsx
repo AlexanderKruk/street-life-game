@@ -3,6 +3,7 @@ import { actions, applyAction as applyGameAction, applySleepTime as applyGameSle
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
+import CityMap from './CityMap'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
@@ -186,18 +187,6 @@ function fitEventSupplies(inventory: Inventory, outcome: EventOutcome) {
   }
   if (next.food <= 0) next.foodFreshness = 100
   return { inventory: next, rejected }
-}
-
-const mapPositions: Record<string, { left: string; top: string }> = {
-  street: { left: '35%', top: '17%' },
-  station: { left: '13%', top: '18%' },
-  shop: { left: '64%', top: '14%' },
-  support: { left: '40%', top: '38%' },
-  jobcenter: { left: '70%', top: '51%' },
-  hospital: { left: '20%', top: '43%' },
-  shelter: { left: '16%', top: '65%' },
-  work: { left: '53%', top: '76%' },
-  'residential-shelter': { left: '80%', top: '75%' },
 }
 
 function loadTrip(): Trip | null {
@@ -2025,23 +2014,10 @@ export default function App() {
     </>}
 
 
-    {screen === 'map' && <>
-      <div className="section-title map-title"><h2>City map</h2><span>Tap a place to travel</span></div>
-      <section className="city-map">
-        <div className="road road-a" /><div className="road road-b" /><div className="road road-c" />
-        {locations.filter((location) => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko')).map((location) => {
-          const here = location.id === game.locationId
-          const locationOpen = isOpen(location, game.minutes)
-          const pos = mapPositions[location.id] ?? { left: '45%', top: '45%' }
-          return <button key={location.id} className={here ? 'map-pin here' : 'map-pin'} style={pos} onClick={() => chooseDestination(location.id)}>
-            <span className="pin-icon">{location.icon}</span>
-            <strong>{location.name}</strong>
-            <small>{here ? 'You are here' : `${locationOpen ? 'open' : 'closed'}`}</small>
-          </button>
-        })}
-      </section>
-      <section className="map-legend"><span>● Current location</span><span>Walking adds travel time</span></section>
-    </>}
+    {screen === 'map' && <CityMap
+      places={locations.filter(location => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko'))}
+      currentId={game.locationId} minutes={game.minutes} reservedBed={shelterBooked} routeId={selectedDestination} onRoute={chooseDestination}
+    />}
 
     {screen === 'travel' && trip && (() => {
       const destination = locations.find((x) => x.id === trip.destinationId)
@@ -2064,15 +2040,15 @@ export default function App() {
       return <div className="travel-sheet">
         <button className="sheet-close" onClick={() => setSelectedDestination(null)}>×</button>
         <p className="eyebrow">TRAVEL TO</p>
-        <h2>{destination.icon} {destination.name}</h2>
+        <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
         <button className="travel-option" onClick={() => startTravel('walk')}>
-          <span>🚶</span><div><strong>Walk</strong><small>{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
+          <Icon name="walk" /><div><strong>Walk</strong><small>{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
         <button className="travel-option" onClick={() => startTravel('transit')} disabled={!freeTransitActive && game.money < 4.4}>
-          <span>🚌</span><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
+          <Icon name="station" /><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
         </button>
         {!freeTransitActive && <button className="travel-option" onClick={attemptFareDodge}>
-          <span>🥷</span><div><strong>Ride without ticket</strong><small>{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
+          <Icon name="coins" /><div><strong>Ride without ticket</strong><small>{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
         </button>}
 
       </div>
@@ -2295,7 +2271,7 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-100</small></footer>
+    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-101</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
