@@ -23,11 +23,12 @@ function button(name){const dialog=screen.queryByRole('dialog');fireEvent.click(
 function beginSleep(hours=2){button(/Lie down here\? I’m not sure… But I could try./);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
+function checkBattery(){const charge=Math.round(JSON.parse(localStorage.getItem('street-life-inventory-v1')).phoneBattery);assert(screen.getByLabelText(`Phone battery: ${charge}%`).textContent.includes(`${charge}%`));return charge;}
 (async()=>{
- setup();button('Where can I get help in the morning?');close();button('How can I get a shelter bed?');
+ setup();const startingCharge=checkBattery();button('Where can I get help in the morning?');assert(checkBattery()<startingCharge);close();button('How can I get a shelter bed?');
  let text=summary();assert(text.includes('−1%'));assert(!text.includes('0 zł'));assert(text.includes('5 min'));
  const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
- close();button(/Map$/);assert(screen.getByText('Night Shelter',{exact:true}));cleanup();setup();
+ close();button(/Map$/);checkBattery();assert(screen.getByText('Night Shelter',{exact:true}));assert(!document.querySelector('.street-art'));cleanup();setup();
  beginSleep();button('Wake up (debug)');
  text=summary();assert(text.includes('2 hours'));assert(text.includes('+13'));assert(!text.includes('Cold'));assert(!text.includes('Health'));assert(!text.includes('Battery'));
  close();button(/Inventory$/);button(/Water.*tap to drink/);text=summary();assert(text.includes('Water portions'));assert(text.includes('−1'));assert(!text.includes('Money'));assert(!text.includes('Time'));close();

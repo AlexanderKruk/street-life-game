@@ -507,3 +507,80 @@ button.inventory-item { width:100%; }
 .sleep-duration-option:disabled{opacity:.4;cursor:not-allowed}
 .sleep-duration-option:focus-visible{outline:2px solid #96cfb5;outline-offset:2px}
 
+/* v97: shared pinned chrome; the new illustration and choice styling is Street-only. */
+.shell { padding-top:0; padding-bottom:calc(110px + env(safe-area-inset-bottom, 0px)); min-height:100dvh; }
+.game-header { position:sticky; top:0; z-index:25; display:block; margin:0 -18px 18px; padding:calc(12px + env(safe-area-inset-top, 0px)) 18px 12px; color:#ece9e3; background:#13171a; border-bottom:1px solid #343a3e; }
+.header-brand-row,.header-state-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.header-brand-row { padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #303639; }
+.game-brand { margin:0; color:#b0b3b5; font-size:10px; font-weight:600; letter-spacing:.25em; }
+.phone-charge { display:flex; align-items:center; gap:7px; font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.phone-charge > svg:first-child { width:15px; height:20px; color:#aeb2b5; }
+.phone-charge .battery-icon { width:25px; height:16px; color:#c3c6c4; }
+.phone-charge.low .battery-icon { color:#c28b7e; }
+.phone-charge strong { font-weight:500; }
+.game-header h1 { display:flex; align-items:baseline; flex-wrap:wrap; gap:10px; margin:0; font-size:18px; line-height:1.2; font-variant-numeric:tabular-nums; }
+.game-header .game-day { color:#ece9e3; font-weight:650; white-space:nowrap; }
+.game-header .weekday { margin:0 0 0 4px; color:#9a9fa3; font-weight:400; }
+.game-header time { font-size:24px; font-weight:600; white-space:nowrap; }
+.game-header .header-info { display:flex; flex-direction:row; align-items:center; gap:0; border:1px solid #343c42; border-radius:18px; }
+.game-header .money,.game-header .weather { border:0; border-radius:0; background:transparent; padding:8px 10px; font-size:12px; font-weight:500; font-variant-numeric:tabular-nums; }
+.game-header .weather { display:flex; align-items:center; gap:6px; border-left:1px solid #343c42; }
+.game-header .weather svg { width:19px; height:19px; color:#b2b8bd; }
+.bottom-nav { position:fixed; z-index:20; bottom:0; left:50%; transform:translateX(-50%); width:min(760px,100%); padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); border:0; border-top:1px solid #343a3e; border-radius:0; background:#13171a; box-shadow:none; }
+.bottom-nav .nav-item { position:relative; min-height:52px; padding:4px 2px 9px; gap:5px; color:#9da2a6; border-radius:0; cursor:pointer; }
+.bottom-nav .nav-item svg { width:23px; height:23px; flex-shrink:0; }
+.bottom-nav .nav-item small { font-size:10px; line-height:1.2; }
+.bottom-nav .nav-item.home { margin:0; border:0; background:transparent; }
+.bottom-nav .nav-item.home small { max-width:100%; min-height:0; line-height:1.2; font-size:10px; }
+.bottom-nav .nav-item.active { color:#d7b58a; background:transparent; }
+.bottom-nav .nav-item.active::after { content:""; position:absolute; bottom:0; left:25%; right:25%; height:2px; border-radius:2px; background:#d7b58a; }
+.nav-condition { position:absolute; width:5px; height:5px; right:calc(50% - 18px); top:3px; border-radius:50%; }
+.nav-condition.fair { background:#b89b70; }
+.nav-condition.bad { background:#c28b7e; }
+.game-header + .event { margin-top:0; }
+.build-version { color:#7e8c9c; font-size:10px; font-variant-numeric:tabular-nums; }
+.street-screen { background:#101416; color:#ece9e3; }
+.street-screen .game-header { margin-bottom:0; }
+.street-art { position:relative; height:clamp(160px,30svh,260px); margin:0 -18px; overflow:hidden; background:#192026; }
+.street-art img { display:block; width:100%; height:100%; object-fit:cover; object-position:40% 45%; }
+.street-art.night img { filter:brightness(.72) saturate(.8); }
+.street-art::after { content:""; position:absolute; inset:55% 0 0; background:linear-gradient(transparent,#101416); pointer-events:none; }
+.street-screen .story-scene { display:block; margin:0 0 10px; padding:0 2px; }
+.street-screen .story-scene .eyebrow { display:none; }
+.street-screen .story-scene h2 { font-size:26px; font-weight:650; margin:0 0 8px; }
+.street-screen .story-scene p:last-child { font-size:15px; line-height:1.5; color:#c1c2c0; }
+.street-screen .story-choices { margin:18px 0 12px; padding-top:14px; border-top:1px solid #343a3e; }
+.street-screen .story-choices .eyebrow { display:flex; align-items:center; gap:8px; margin:0 0 10px; font-weight:500; color:#969d9f; font-size:10px; letter-spacing:.18em; }
+.story-choices .eyebrow svg { width:17px; height:17px; }
+.street-screen .story-choices h2 { font-size:20px; line-height:1.3; font-weight:600; margin:0; }
+.street-screen .story-actions { gap:8px; }
+.street-screen .story-actions .action { position:relative; min-height:64px; padding:13px 30px 13px 14px; border-radius:12px; border-color:#3a4145; background:#191e21; color:#ece9e3; cursor:pointer; }
+.street-screen .story-actions .action > div { display:grid; width:100%; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:12px; }
+.street-screen .story-action-icon { width:24px; height:24px; color:#aeb4b5; }
+.street-screen .story-actions strong { font-size:15px; line-height:1.4; font-weight:500; }
+.street-screen .story-actions .action::after { content:""; position:absolute; right:14px; top:calc(50% - 3px); width:6px; height:6px; border-top:1px solid #969d9f; border-right:1px solid #969d9f; transform:rotate(45deg); }
+.street-screen .story-actions .action:disabled { cursor:not-allowed; }
+.game-header :focus-visible,.bottom-nav :focus-visible,.street-screen .action:focus-visible { outline:2px solid #d7b58a; outline-offset:3px; }
+@media (hover:hover) { .street-screen .story-actions .action:hover:not(:disabled) { border-color:#7d7e78; background:#202527; } }
+@media (max-width:520px) {
+  .shell { padding-top:0; }
+  .game-header { margin-left:-12px; margin-right:-12px; padding-left:14px; padding-right:14px; }
+  .street-art { margin-left:-12px; margin-right:-12px; }
+  .game-header .header-state-row { gap:8px; }
+  .game-header h1 { font-size:16px; gap:8px; }
+  .game-header time { font-size:22px; }
+  .game-header .money,.game-header .weather { padding:7px 8px; }
+  .street-screen .story-scene { padding:0 4px; }
+  .bottom-nav { width:100%; }
+}
+@media (max-width:360px) {
+  .game-header h1 { font-size:14px; gap:7px; }
+  .game-header time { font-size:20px; }
+  .game-header .money,.game-header .weather { font-size:11px; padding:7px; }
+}
+@media (max-height:720px) and (max-width:520px) {
+  .street-art { height:140px; }
+  .street-screen .story-choices { margin-top:14px; padding-top:10px; }
+  .street-screen .story-actions .action { min-height:60px; padding-top:10px; padding-bottom:10px; }
+}
+

@@ -57,7 +57,7 @@ setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','s
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
 assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,0);
-assert.equal(phoneThought.querySelector('.choice-emoji').textContent,'📱');assert.equal(phoneThought.querySelector('.choice-emoji').getAttribute('aria-hidden'),'true');
+assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
 click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1325);assert.equal(read(stateKey).mood,33);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));

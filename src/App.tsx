@@ -2,6 +2,7 @@ import { Children, Fragment, cloneElement, isValidElement, useEffect, useMemo, u
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
+import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
 
 const SAVE_KEY = 'street-life-save-v3'
 const DISCOVERY_KEY = 'street-life-discovered-v1'
@@ -206,11 +207,18 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment ? flatten(node.props.children) : [node])
   }
   function thoughtOnly(node: ReactNode): ReactNode {
-    if (!isValidElement<{ children?: ReactNode }>(node) || node.type !== 'button') return node
+    if (!isValidElement<{ children?: ReactNode; 'data-choice'?: string }>(node) || node.type !== 'button') return node
+    const icon = choiceIcon(node.props['data-choice'] ?? '')
     return cloneElement(node, {}, Children.toArray(node.props.children)
       .filter(part => !isValidElement(part) || part.type !== 'span')
       .map(part => isValidElement<{ children?: ReactNode }>(part) && part.type === 'div'
-        ? cloneElement(part, {}, Children.toArray(part.props.children).filter(detail => !isValidElement(detail) || detail.type !== 'small'))
+        ? cloneElement(part, {}, <Icon name={icon} className="story-action-icon" />, Children.toArray(part.props.children)
+          .filter(detail => !isValidElement(detail) || detail.type !== 'small')
+          .map(detail => isValidElement<{ children?: ReactNode }>(detail) && detail.type === 'strong'
+            ? cloneElement(detail, {}, Children.toArray(detail.props.children)
+              .filter(text => !isValidElement(text) || text.type !== 'span')
+              .map(text => typeof text === 'string' ? text.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '') : text))
+            : detail))
         : part))
   }
   const nodes = flatten(children).map(node => thoughtsOnly ? thoughtOnly(node) : node)
@@ -1752,10 +1760,10 @@ export default function App() {
     setScreen('map')
   }
 
-  const nav = (target: Screen, icon: string, label: string) =>
-    <button className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)}><span>{icon}</span><small>{label}</small></button>
+  const nav = (target: Screen, icon: IconName, label: string) =>
+    <button className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
 
-  return <main className="shell">
+  return <main className={`shell${screen === 'location' && current.id === 'street' ? ' street-screen' : ''}`}>
     {sleepChoice && <div className="phone-overlay result-overlay">
       <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
         <p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p>
@@ -1814,21 +1822,28 @@ export default function App() {
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.10-96</div>
-
-    <header>
-      <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
-      <div className="header-info">
-        <div className="weather" title={weather.label}><span>{weather.icon}</span>{temperature}°C</div>
-        <div className="money">{game.money.toFixed(2)} zł</div>
+    <header className="game-header">
+      <div className="header-brand-row">
+        <p className="game-brand">STREET LIFE</p>
+        <div className={`phone-charge${inventory.phoneBattery <= 20 ? ' low' : ''}`} aria-label={`Phone battery: ${Math.round(inventory.phoneBattery)}%`} title="Your phone battery">
+          <Icon name="phone" /><BatteryIcon charge={inventory.phoneBattery} /><strong>{Math.round(inventory.phoneBattery)}%</strong>
+        </div>
+      </div>
+      <div className="header-state-row">
+        <h1><span className="game-day">Day {game.day} <span className="weekday">{weekday(game.day)}</span></span><time>{formatTime(game.minutes)}</time></h1>
+        <div className="header-info">
+          <div className="money">{game.money.toFixed(2)} zł</div>
+          <div className="weather" title={weather.label} aria-label={`${weather.label}, ${temperature}°C`}><Icon name={weather.label === 'Rain' || weather.label === 'Showers' ? 'rain' : weather.label === 'Clear' ? game.minutes >= 360 && game.minutes < 1200 ? 'sun' : 'moon' : 'cloud'} />{temperature}°C</div>
+        </div>
       </div>
     </header>
 
     {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <>
+      {current.id === 'street' && <div className={`street-art${game.minutes >= 1200 || game.minutes < 360 ? ' night' : ''}`} aria-hidden="true"><img src="/street-life-game/assets/street-hero.webp" alt="" width="1536" height="1024" fetchPriority="high" /></div>}
       <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
-        <div className="location-icon">{current.icon}</div>
+        {current.id !== 'street' && <div className="location-icon">{current.icon}</div>}
         <div><p className="eyebrow">{current.id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}`} </p><h2>{current.name}</h2><p>{current.id === 'street' ? streetScene : current.description}</p></div>
       </section>
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
@@ -1899,7 +1914,7 @@ export default function App() {
       </AvailableFirst>}
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         {current.id === 'street' ? <section className="story-choices">
-          <p className="eyebrow">YOUR NEXT STEP · TIME PAUSED</p>
+          <p className="eyebrow"><Icon name="pause" />TIME PAUSED</p>
           <h2>What matters most right now?</h2>
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
         <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'} choiceGroups={streetChoiceGroups}>
@@ -2212,13 +2227,13 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button></footer>
-    <nav className={screen === 'travel' ? 'bottom-nav travelling' : 'bottom-nav'}>
-      {nav('map', '🗺️', 'Map')}
-      {nav('inventory', '🎒', 'Inventory')}
-      <button className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} onClick={() => setScreen('location')}><span>{current.icon}</span><small>{current.name}</small></button>
-      <button className={screen === 'status' ? 'nav-item active' : 'nav-item'} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><span>{overall.icon}</span><small>Status</small></button>
-      {nav('journal', '📓', 'Journal')}
+    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-97</small></footer>
+    <nav className={screen === 'travel' ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
+      {nav('map', 'map', 'Map')}
+      {nav('inventory', 'backpack', 'Inventory')}
+      <button className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
+      <button className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
+      {nav('journal', 'journal', 'Journal')}
     </nav>
   </main>
 }
