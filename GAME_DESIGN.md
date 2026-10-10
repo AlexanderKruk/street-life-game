@@ -2,17 +2,17 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-10 · Three distinct narrative choices. Current visible build: `v2026.10.10-95`. Documentation reviewed against the v95 implementation on 2026-10-10.
+**Last gameplay sync:** 2026-10-10 · Neutral office-worker protagonist. Current visible build: `v2026.10.10-96`. Documentation reviewed against the v96 implementation on 2026-10-10.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
 ## Protagonist biography — agreed narrative foundation
 
-The protagonist is a man aged 35–40 who, until recently, had a good, stable IT job and a familiar daily routine. His employer replaced his work with an AI system and made him redundant. He expected to find another position. Applications and attempts to contact employers did not lead to a new job. The search took longer than expected; savings went toward ordinary living expenses until keeping a place to live became impossible. At the start of the game, the protagonist has just found themselves on the street for the first time, with their backpack, phone and a small amount of money.
+The protagonist is a man aged 35–40 who, until recently, had a stable office job and a familiar daily routine. He was made redundant; the exact reason for the redundancy is left unspecified. He expected to find another position. Applications and attempts to contact employers did not lead to a new job. The search took longer than expected; savings went toward ordinary living expenses until keeping a place to live became impossible. At the start of the game, the protagonist has just found themselves on the street for the first time, with their backpack, phone and a small amount of money.
 
 The protagonist knows how to use a phone, search online, prepare a CV and handle professional tasks. He is unfamiliar with spending a night outside, accessing shelters and navigating social assistance. The player learns these practical possibilities alongside him. The experience is intended for people who have never lived on the street: each discovery should arise from a concrete need, observation or attempt.
 
-Age range (35–40), male gender and an IT profession are established. Name, precise age, IT specialization, family circumstances and the exact length of unemployment remain open. The accepted causal sequence is AI replaces his work → redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue in v92.
+Age range (35–40), male gender and an office job are established. Name, precise age, profession, industry, reason for redundancy, family circumstances and the exact length of unemployment remain open. The accepted causal sequence is redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue in v92.
 
 ### Gradual disclosure — implemented in v93
 
@@ -20,9 +20,9 @@ Keep the first narrator message to two or three short sentences about the presen
 
 | Moment | Possible biographical fragment |
 |---|---|
-| Walking | In your late thirties, you had a good job in IT and a desk in a warm office. Then the company handed your work to an AI system. |
+| Walking | In your late thirties, you had a steady office job and a desk by the window. Then came the redundancy notice. |
 | Sitting on a station bench | After the redundancy, you expected to find another job within a few weeks. Those weeks used up the money you had put aside. |
-| Checking the phone | Your last application for an IT job still has no reply. The redundancy email about the new AI system is still in your inbox. |
+| Checking the phone | Your last job application still has no reply. The redundancy email is still in your inbox. |
 | Looking for somewhere to sleep | Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning. |
 
 These examples guide the action-linked fragments implemented in v93. A completed normal/music walk reveals office routine; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications; the shelter-bed question reveals the loss of accommodation. Each fragment is appended to the existing result text, logged in Journal, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
@@ -722,7 +722,7 @@ At the initial Day 1 22:00 Street moment, the narrator uses only three short sen
 
 The ordinary narrative loop is main choices → action reaction/result → main choices after OK. Biography fragments appear as a short paragraph in that same reaction, with preserved paragraph breaks. They do not open a third screen or create another result. At most one new fragment is added to any result; fragment order follows actions, and a shared redundancy/savings fragment is not repeated across sitting and waiting. Required route/sleep/wait parameter selection and existing events keep their established flow. Initial scene remains three short sentences. Tests cover one result dialog, action-linked biography, Journal inclusion, persistence across reload, no repetition, and reset.
 
-### IT and AI protagonist refinement (v94)
+### Earlier IT and AI protagonist variant (v94; superseded by v96)
 
 The accepted protagonist is male, aged 35–40, formerly in a good IT job; his employer recently replaced his work with AI. The walk fragment now establishes his age range, IT office routine and AI replacement in two sentences. The first help-answer fragment recalls an unanswered IT application and the redundancy email about the AI system. Before asking for help, his selectable thought is "AI again… All right. I need to know where to go." Saved-answer reading uses a neutral recall thought. This hesitation belongs to a selectable player thought; narration does not prescribe a universal emotional response to AI. The redundancy, depleted savings and lost-home fragments retain their gradual disclosure triggers. Existing seen-memory IDs are preserved, so revised fragments are not replayed automatically in old runs; a reset allows the whole updated biography to unfold. The first scene, mechanics, costs and two-level narrative flow are unchanged.
 
@@ -734,3 +734,8 @@ Street displays at most three choices, with one candidate selected from each dir
 Low Mood prioritizes music when usable, and ordinary walking replaces it when the phone cannot support it. Energy at 40 or below prioritizes sleep. After learning about shelter, a bench thought can appear; after resting or walking, that thought yields to another response. Continuing a walk does not force a bedtime merely because 23:00 passed. A reserved bed takes priority in the practical slot; the opening night offers Station; later there may be a work search or ways to collect money. Unavailable candidates are skipped in favor of usable ones within their direction, with a disabled thought retained only when none is usable. Selected disabled thoughts sort last and count toward the limit.
 
 Selection is deterministic from current needs, discoveries, answered questions and the last completed action. There is no random reshuffle while reading, on render or on reload; optional random variety is not implemented. Covered-wait planning also has three choices (15, 60 or 240 minutes). The established four sleep-duration parameters remain 2/4/6/8 hours with fatigue restrictions. Regression tests cover the three distinct directions, question dependencies, need-based priority, pause/reload stability and existing action behavior under the curated scenarios.
+
+
+### Neutral office-worker protagonist (v96)
+
+The current protagonist is a man aged 35–40 who previously had a stable office job. Redundancy, an unsuccessful job search, depleted savings and loss of accommodation remain the causal sequence. His profession and the reason for redundancy are unspecified: the story does not establish IT work or replacement by AI. This keeps the premise relatable to more players and avoids tying it to a particular technology moment. The walk recalls his office desk and redundancy notice; the phone recalls an unanswered application and the redundancy email. The opening phone thought is “Maybe my phone can help… I need somewhere to start.” AI remains a tool for asking practical questions, with the established costs and saved answers. Existing memory IDs are preserved, so already-seen fragments do not replay; newly encountered fragments use the revised wording. Biography is still disclosed gradually in action results, and the opening narrator text, three-choice limit and gameplay mechanics are unchanged.
