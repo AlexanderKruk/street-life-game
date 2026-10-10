@@ -2,17 +2,17 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-10 · biographical fragments in action results. Current visible build: `v2026.10.10-93`. Documentation reviewed against the v93 implementation on 2026-10-10.
+**Last gameplay sync:** 2026-10-10 · IT worker replaced by AI. Current visible build: `v2026.10.10-94`. Documentation reviewed against the v94 implementation on 2026-10-10.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
 ## Protagonist biography — agreed narrative foundation
 
-Until recently, the protagonist had a good, stable office job and a familiar daily routine. After a redundancy, they expected to find another position. Applications and attempts to contact employers did not lead to a new job. The search took longer than expected; savings went toward ordinary living expenses until keeping a place to live became impossible. At the start of the game, the protagonist has just found themselves on the street for the first time, with their backpack, phone and a small amount of money.
+The protagonist is a man aged 35–40 who, until recently, had a good, stable IT job and a familiar daily routine. His employer replaced his work with an AI system and made him redundant. He expected to find another position. Applications and attempts to contact employers did not lead to a new job. The search took longer than expected; savings went toward ordinary living expenses until keeping a place to live became impossible. At the start of the game, the protagonist has just found themselves on the street for the first time, with their backpack, phone and a small amount of money.
 
-The protagonist knows how to use a phone, search online, prepare a CV and handle professional tasks. They are unfamiliar with spending a night outside, accessing shelters and navigating social assistance. The player learns these practical possibilities alongside them. The experience is intended for people who have never lived on the street: each discovery should arise from a concrete need, observation or attempt.
+The protagonist knows how to use a phone, search online, prepare a CV and handle professional tasks. He is unfamiliar with spending a night outside, accessing shelters and navigating social assistance. The player learns these practical possibilities alongside him. The experience is intended for people who have never lived on the street: each discovery should arise from a concrete need, observation or attempt.
 
-Name, age, gender, exact office profession, family circumstances and the precise length of unemployment remain open. The accepted causal sequence is redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue in v92.
+Age range (35–40), male gender and an IT profession are established. Name, precise age, IT specialization, family circumstances and the exact length of unemployment remain open. The accepted causal sequence is AI replaces his work → redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue in v92.
 
 ### Gradual disclosure — implemented in v93
 
@@ -20,9 +20,9 @@ Keep the first narrator message to two or three short sentences about the presen
 
 | Moment | Possible biographical fragment |
 |---|---|
-| Walking past lit office windows | At this hour, you would normally be home. Tomorrow there is no office to get to by nine. |
+| Walking | In your late thirties, you had a good job in IT and a desk in a warm office. Then the company handed your work to an AI system. |
 | Sitting on a station bench | After the redundancy, you expected to find another job within a few weeks. Those weeks used up the money you had put aside. |
-| Checking the phone | Your last application still has no reply. The redundancy email is still in your inbox. |
+| Checking the phone | Your last application for an IT job still has no reply. The redundancy email about the new AI system is still in your inbox. |
 | Looking for somewhere to sleep | Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning. |
 
 These examples guide the action-linked fragments implemented in v93. A completed normal/music walk reveals office routine; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications; the shelter-bed question reveals the loss of accommodation. Each fragment is appended to the existing result text, logged in Journal, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
@@ -654,7 +654,7 @@ These are current code realities, not planned features:
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
-## Regression checks (through v93)
+## Regression checks (through v94)
 
 `npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
 
@@ -721,3 +721,7 @@ At the initial Day 1 22:00 Street moment, the narrator uses only three short sen
 ### Two-level narrative experience (v93)
 
 The ordinary narrative loop is main choices → action reaction/result → main choices after OK. Biography fragments appear as a short paragraph in that same reaction, with preserved paragraph breaks. They do not open a third screen or create another result. At most one new fragment is added to any result; fragment order follows actions, and a shared redundancy/savings fragment is not repeated across sitting and waiting. Required route/sleep/wait parameter selection and existing events keep their established flow. Initial scene remains three short sentences. Tests cover one result dialog, action-linked biography, Journal inclusion, persistence across reload, no repetition, and reset.
+
+### IT and AI protagonist refinement (v94)
+
+The accepted protagonist is male, aged 35–40, formerly in a good IT job; his employer recently replaced his work with AI. The walk fragment now establishes his age range, IT office routine and AI replacement in two sentences. The first help-answer fragment recalls an unanswered IT application and the redundancy email about the AI system. Before asking for help, his selectable thought is "AI again… All right. I need to know where to go." Saved-answer reading uses a neutral recall thought. This hesitation belongs to a selectable player thought; narration does not prescribe a universal emotional response to AI. The redundancy, depleted savings and lost-home fragments retain their gradual disclosure triggers. Existing seen-memory IDs are preserved, so revised fragments are not replayed automatically in old runs; a reset allows the whole updated biography to unfold. The first scene, mechanics, costs and two-level narrative flow are unchanged.

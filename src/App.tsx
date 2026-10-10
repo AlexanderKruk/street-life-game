@@ -497,9 +497,9 @@ export default function App() {
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     const memories = [
-      { id: 'office-routine', titles: ['Walk through the city', 'Walk with music'], text: 'You used to come home after a day at the office. Now there is no desk to go back to.' },
+      { id: 'office-routine', titles: ['Walk through the city', 'Walk with music'], text: 'In your late thirties, you had a good job in IT and a desk in a warm office. Then the company handed your work to an AI system.' },
       { id: 'redundancy-savings', titles: ['Rest on the bench', 'Sit and recover', 'Shelter from the rain'], text: 'After the redundancy, you expected to find another job in a few weeks. As the search dragged on, rent and ordinary expenses used up what you had put aside.' },
-      { id: 'unanswered-applications', titles: ['Where can I get help in the morning?'], text: 'Your last job application still has no reply. The redundancy email is still in your inbox.' },
+      { id: 'unanswered-applications', titles: ['Where can I get help in the morning?'], text: 'Your last application for an IT job still has no reply. The redundancy email about the new AI system is still in your inbox.' },
       { id: 'lost-home', titles: ['How can I get a shelter bed?'], text: 'Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning.' },
     ]
     const memory = memories.find(fragment => fragment.titles.includes(pendingResult.title) && !seenMemories.includes(fragment.id))
@@ -1776,12 +1776,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.10-93</div>
+        <div className="trash-build">Build 2026.10.10-94</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.10-93</div>
+    <div className="build-badge">v2026.10.10-94</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1874,7 +1874,7 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
-            <button className="action" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>I don’t know where to go… Maybe my phone can help.</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : '~5 min · −1% battery'}</span></button>
+            <button className="action" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'AI again… All right. I need to know where to go.'}</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : '~5 min · −1% battery'}</span></button>
             {visibleQuestions.filter(question => question.id !== 'morning').map(question => {
               const saved = answeredQuestions.includes(question.id)
               const memory = question.id === 'charging'
