@@ -1,10 +1,35 @@
 # Street Life — Game Design & Implemented Mechanics
 
-This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
+This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
 **Last gameplay sync:** 2026-10-10 · short opening scene. Current visible build: `v2026.10.10-92`. Documentation reviewed against the v92 implementation on 2026-10-10.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
+
+## Protagonist biography — agreed narrative foundation
+
+Until recently, the protagonist had a good, stable office job and a familiar daily routine. After a redundancy, they expected to find another position. Applications and attempts to contact employers did not lead to a new job. The search took longer than expected; savings went toward ordinary living expenses until keeping a place to live became impossible. At the start of the game, the protagonist has just found themselves on the street for the first time, with their backpack, phone and a small amount of money.
+
+The protagonist knows how to use a phone, search online, prepare a CV and handle professional tasks. They are unfamiliar with spending a night outside, accessing shelters and navigating social assistance. The player learns these practical possibilities alongside them. The experience is intended for people who have never lived on the street: each discovery should arise from a concrete need, observation or attempt.
+
+Name, age, gender, exact office profession, family circumstances and the precise length of unemployment remain open. The accepted causal sequence is redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue in v92.
+
+### Gradual disclosure — planned implementation
+
+Keep the first narrator message to two or three short sentences about the present scene. Reveal biography through brief, action-linked fragments of one or two sentences during walking, sitting, waiting or checking the phone. Reveal one fragment at a time, and do not repeat a fragment once seen in the same run. The order should follow the player's actions rather than requiring a fixed sequence.
+
+| Moment | Possible biographical fragment |
+|---|---|
+| Walking past lit office windows | At this hour, you would normally be home. Tomorrow there is no office to get to by nine. |
+| Sitting on a station bench | After the redundancy, you expected to find another job within a few weeks. Those weeks used up the money you had put aside. |
+| Checking the phone | Your last application still has no reply. The redundancy email is still in your inbox. |
+| Looking for somewhere to sleep | Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning. |
+
+These are candidate fragments for gradual disclosure, not additional paragraphs to append to the opening. Their triggers, per-run seen flags and insertion into action results are not implemented in v92.
+
+### Voice and knowledge
+
+The narrator describes the surroundings, established memories and observable consequences. Choice text carries the player's possible emotions, hesitation or resolve. Early thoughts come from unfamiliarity: "Can I just sit at the station all night?", "Where do people ask for help in this situation?", "Am I really going to sleep here?" Practical knowledge about shelters, charging and assistance arrives through the existing discovery and question flows. Use small ordinary details to connect the former office routine to the current night, while leaving room for the player to choose their response.
 
 ## Core loop and save
 
