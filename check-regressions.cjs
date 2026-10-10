@@ -12,7 +12,7 @@ require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup,configure}=require('@testing-library/react');
 configure({getElementError:message=>new Error(message)});
-process.on('uncaughtException',error=>{console.error(error.message);cleanup();dom.window.close();process.exit(1)});
+process.on('uncaughtException',error=>{console.error(error.message.split('Here are')[0]);console.error(error.stack.split('\n').filter(line=>line.includes('check-regressions')).join('\n'));cleanup();dom.window.close();process.exit(1)});
 const assert=require('node:assert/strict');
 const App=require('./regression-app.cjs').default;
 const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
@@ -36,9 +36,22 @@ function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('butt
 function advance(ms){for(let t=0;t<ms;t+=1000){now+=1000;act(()=>{for(const{fn}of [...callbacks.values()])fn()})}}
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 
+// Three distinct directions, stable during a paused decision and after reload.
+function storyIds(){return [...document.querySelectorAll('.story-actions > button')].map(button=>button.dataset.choice);}
+setup({minutes:1320});assert.deepEqual(storyIds(),['question-morning','walk','station-route']);
+const initialChoices=storyIds();advance(10000);assert.deepEqual(storyIds(),initialChoices);cleanup();render(React.createElement(App));assert.deepEqual(storyIds(),initialChoices);
+click('Where can I get help in the morning?');ok();assert.deepEqual(storyIds(),['question-bed','walk','station-route']);
+click('How can I get a shelter bed?');ok();assert.deepEqual(storyIds(),['question-no-place','find-bench','station-route']);
+for(const [state,extra,expected] of [
+ [{minutes:1320,mood:28},{},['question-morning','music-walk','station-route']],
+ [{minutes:1320,energy:20},{},['question-morning','street-sleep','station-route']],
+ [{minutes:1320,thirst:20},{[invKey]:{phoneBattery:30}},['question-charging','walk','station-route']],
+ [{minutes:1320,thirst:20},{[invKey]:{phoneBattery:31}},['question-supplies','walk','station-route']],
+ [{minutes:600,money:0},{},['question-morning','street-sleep','beg']],
+]){setup(state,extra);assert.deepEqual(storyIds(),expected);assert.equal(storyIds().filter(id=>id.startsWith('question-')).length,1);}
 
 // One-level choices react immediately, while reading and deciding remain paused.
-setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('AI again'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('new AI system'));ok();assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('What did it say'));
+setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('AI again'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('new AI system'));ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
 setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a good job in IT'));assert(read('street-life-journal-history-v1')[0].text.includes('a good job in IT'));assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a good job in IT'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();click('Reset save');assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
@@ -48,7 +61,7 @@ assert.equal(phoneThought.querySelector('.choice-emoji').textContent,'📱');ass
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
 click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1325);assert.equal(read(stateKey).mood,33);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));
-setup({minutes:1320});assert(screen.getByRole('button',{name:/What about Night Shelter\? Maybe there is a place./}).disabled);
+setup({minutes:1320});assert(!screen.queryByRole('button',{name:/What about Night Shelter\? Maybe there is a place./}));
 setup({minutes:1320});click(/Maybe the station\? At least I could sit down./);assert(screen.getByRole('button',{name:/Public transport/}));assert.equal(read(stateKey).minutes,1320);
 // First-night wandering uses real walking costs; rain choices pause and persist.
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop'],[invKey]:{clothingCleanliness:80}});assert(!screen.queryByRole('button',{name:'Earn something for food',exact:true}));assert(screen.getByRole('button',{name:'Maybe the station? At least I could sit down.',exact:true}));const dryEnergy=read(stateKey).energy;click('Just one more street. I’m not ready to lie down.');assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).energy<dryEnergy);assert(!read(stateKey).rainUntil);assert(Math.abs(read(invKey).clothingCleanliness-(80-30*30/1440))<1e-8);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
@@ -59,13 +72,13 @@ setup({day:2,minutes:240,rainUntil:2000});click('Just one more street. I’m not
 // Music and concrete answers lift opening Mood, with real phone/time costs.
 setup({day:2,minutes:240});assert(document.querySelector('.story-scene').textContent.includes('Delivery vans'));assert(!document.querySelector('.story-scene').textContent.includes('It is past ten'));assert(screen.getByRole('button',{name:'Maybe the station? At least I could sit down.',exact:true}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.',exact:true}));
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Something familiar to listen to… I don’t want this silence./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).mood>30 && read(stateKey).mood<=60);assert(read(invKey).phoneBattery<musicBattery);assert(screen.getByRole('dialog').textContent.includes('familiar music'));ok();
-setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(screen.getByRole('button',{name:/Something familiar to listen to… I don’t want this silence./}).disabled);
-setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1325);assert.equal(read(stateKey).mood,33);assert.equal(read(invKey).phoneBattery,questionBattery-1);assert(read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Where can I get help in the morning/);assert.deepEqual(read(stateKey),rereadState);assert.deepEqual(read(invKey),rereadInventory);ok();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1140);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
+setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(!screen.queryByRole('button',{name:/Something familiar to listen to… I don’t want this silence./}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.'}));
+setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1325);assert.equal(read(stateKey).mood,33);assert.equal(read(invKey).phoneBattery,questionBattery-1);assert(read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.deepEqual(read(stateKey),rereadState);assert.deepEqual(read(invKey),rereadInventory);ok();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1140);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
 // P1: referral opens map, including migration of a v53 save.
 // Questions emerge from needs; remembering a station outlet does not need a charged phone.
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'What if the shelter has no places?',exact:true}));click('Where can I get help in the morning?');ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));
 setup({minutes:1320,thirst:45},{[invKey]:{phoneBattery:31}});assert(screen.getByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));
-setup({minutes:1320,mood:28},{[invKey]:{phoneBattery:0},'street-life-mobile-service-until':'0'});const rememberedState=read(stateKey);click('Where can I charge my phone?');assert.equal(read(stateKey).minutes,rememberedState.minutes);assert.equal(read(invKey).phoneBattery,0);assert(screen.getByRole('dialog').textContent.includes('waiting room'));assert(screen.getByRole('dialog').textContent.includes('60%'));const rememberedAfter=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),rememberedAfter);ok();assert(screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true}).disabled);click('Where can I charge my phone?');assert.deepEqual(read(stateKey),rememberedAfter);ok();
+setup({minutes:1320,mood:28},{[invKey]:{phoneBattery:0},'street-life-mobile-service-until':'0'});const rememberedState=read(stateKey);click('Where can I charge my phone?');assert.equal(read(stateKey).minutes,rememberedState.minutes);assert.equal(read(invKey).phoneBattery,0);assert(screen.getByRole('dialog').textContent.includes('waiting room'));assert(screen.getByRole('dialog').textContent.includes('60%'));const rememberedAfter=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),rememberedAfter);ok();assert(!screen.queryByRole('button',{name:'Where can I get help in the morning?',exact:true}));click('Where can I charge my phone?');assert.deepEqual(read(stateKey),rememberedAfter);ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:30}});click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(screen.getByRole('dialog').textContent.includes('08:00'));assert.equal(read(stateKey).minutes,1325);ok();assert(screen.getByRole('button',{name:'Where can I charge my phone?',exact:true}));
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
 for (const name of ['Cheap Shop','Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.city-map strong')].some(node=>node.textContent===name));
@@ -193,9 +206,9 @@ setup({locationId:'station'},{[invKey]:{food:4,water:4,medicines:24,cigarettes:0
 setup({locationId:'station'},{[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);
 
 // Daily begging allowance survives reload and resets only on the next game day.
-setup();for(let i=0;i<3;i++){click(/Ask someone for change\? It’s hard, but I could try./);ok();}assert(screen.getByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}).disabled);
-cleanup();render(React.createElement(App));assert(screen.getByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}).disabled);
-setup({day:2},{'street-life-begging-v1':{day:1,attempts:3}});assert(!screen.getByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}).disabled);click(/Ask someone for change\? It’s hard, but I could try./);assert.deepEqual(read('street-life-begging-v1'),{day:2,attempts:1});
+setup({money:0});for(let i=0;i<3;i++){click(/Ask someone for change\? It’s hard, but I could try./);ok();}assert(!screen.queryByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}));
+cleanup();render(React.createElement(App));assert(!screen.queryByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}));
+setup({day:2,money:0},{'street-life-begging-v1':{day:1,attempts:3}});assert(!screen.getByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}).disabled);click(/Ask someone for change\? It’s hard, but I could try./);assert.deepEqual(read('street-life-begging-v1'),{day:2,attempts:1});
 
 // Unregistered visitors only have registration, and must finish the full queue.
 const vacancyKey=(slots)=>({shelterVacancyDay:1,shelterVacancies:slots});
@@ -246,7 +259,7 @@ setup({locationId:'shelter',minutes:1380},{[lifeKey]:admitted});beginSleep(/Use 
 setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);beginSleep(/Use your reserved bed/);click('Wake up (debug)');assert.equal(read(lifeKey).shelterLastStayDay,1);
 setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:{...booking,shelterLastStayDay:0}});assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
 // Sorting also spans Street fragments and configured actions, plus support choices.
-setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});availableFirst();assert(screen.getByRole('button',{name:/There must be somewhere to sleep… Let me look./}).disabled);
+setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});availableFirst();assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).disabled);
 setup({locationId:'support'},{[invKey]:{documents:false}});availableFirst('.support-grid');
 
 // Morning reminder appears at 07:30, freezes the clock, and takes a full
@@ -313,18 +326,18 @@ click(/Use your reserved bed/);click('Start sleeping');assert.equal(read(lifeKey
 
 // Station, street bench and Schronisko all use the same paused chooser.
 setup({locationId:'station',minutes:1380});beginSleep(/Try to sleep/,2);assert.equal(read('street-life-sleep-v1').kind,'bench');assert.equal(read('street-life-sleep-v1').total,120);
-setup();Math.random=()=>0;click(/Is there a bench nearby\? My legs could use a break./);ok();Math.random=()=>.99;click(/Could I sleep here\? What about my backpack…/);assert(screen.getByLabelText('Sleep duration'));click('Start sleeping');assert.equal(read('street-life-sleep-v1').kind,'bench');
+setup({}, {'street-life-answers-v1':['morning','bed']});Math.random=()=>0;click(/Is there a bench nearby\? My legs could use a break./);ok();Math.random=()=>.99;click(/Could I sleep here\? What about my backpack…/);assert(screen.getByLabelText('Sleep duration'));click('Start sleeping');assert.equal(read('street-life-sleep-v1').kind,'bench');
 setup({locationId:'residential-shelter',minutes:449});click(/Sleep safely/);chooseHours(2);assert(document.querySelector('.sleep-choice-preview').textContent.includes('09:29'));click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,120);
 
 // Fatigue gates both short and long choices, including exact thresholds.
 for(const [energy,allowed] of [[100,[2]],[75.01,[2]],[75,[2,4]],[50.01,[2,4]],[50,[4,6]],[25.01,[4,6]],[25,[6,8]],[1,[6,8]]]) {
- setup({energy,minutes:1200});click(/Lie down here\? I’m not sure… But I could try./);
+ setup({energy,minutes:1380});click(/Lie down here\? I’m not sure… But I could try./);
  const group=screen.getByRole('group',{name:'Sleep duration'});const options=within(group).getAllByRole('button');assert.equal(options.length,4);
  const enabled=options.filter(button=>!button.disabled).map(button=>Number(button.querySelector('strong').textContent.split(' ')[0]));assert.deepEqual(enabled,allowed);
  const selected=options.find(button=>button.getAttribute('aria-pressed')==='true');assert(allowed.includes(Number(selected.querySelector('strong').textContent.split(' ')[0])));
  const disabled=options.find(button=>button.disabled);assert(disabled.querySelector('em').textContent.includes(energy>50?'Not tired enough':'Too tired'));
  fireEvent.click(disabled);assert.equal(group.querySelector('[aria-pressed="true"]'),selected);assert(!localStorage.getItem('street-life-sleep-v1'));
- chooseHours(allowed[0]);advance(3000);assert.equal(read(stateKey).minutes,1200);click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,allowed[0]*60);
+ chooseHours(allowed[0]);advance(3000);assert.equal(read(stateKey).minutes,1380);click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,allowed[0]*60);
 }
 setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!document.querySelector('.sleep-choice-modal'));
 

@@ -10,7 +10,7 @@ const App=require('./qa-app.cjs').default;
 const assert=require('node:assert/strict');
 function setup(state={},effects=[]){
  localStorage.clear();
- localStorage.setItem('street-life-save-v3',JSON.stringify({day:1,minutes:1321,money:100,hunger:72,thirst:66,energy:65,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...state}));
+ localStorage.setItem('street-life-save-v3',JSON.stringify({day:1,minutes:1410,money:100,hunger:72,thirst:66,energy:65,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...state}));
  localStorage.setItem('street-life-effects-v1',JSON.stringify(effects));
  localStorage.setItem('street-life-discovered-v1','["street","station","shop"]');
  localStorage.setItem('street-life-mobile-service-until','5000');
@@ -24,14 +24,14 @@ function beginSleep(hours=2){button(/Lie down here\? I’m not sure… But I cou
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 (async()=>{
- setup();button(/There must be somewhere to sleep… Let me look./);
- let text=summary();assert(text.includes('−2%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
+ setup();button('Where can I get help in the morning?');close();button('How can I get a shelter bed?');
+ let text=summary();assert(text.includes('−1%'));assert(!text.includes('0 zł'));assert(text.includes('5 min'));
  const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
- close();button(/Map$/);assert(screen.getByText('Night Shelter',{exact:true}));fireEvent.click(document.querySelector('.nav-item.home'));
+ close();button(/Map$/);assert(screen.getByText('Night Shelter',{exact:true}));cleanup();setup();
  beginSleep();button('Wake up (debug)');
  text=summary();assert(text.includes('2 hours'));assert(text.includes('+13'));assert(!text.includes('Cold'));assert(!text.includes('Health'));assert(!text.includes('Battery'));
  close();button(/Inventory$/);button(/Water.*tap to drink/);text=summary();assert(text.includes('Water portions'));assert(text.includes('−1'));assert(!text.includes('Money'));assert(!text.includes('Time'));close();
- Math.random=()=>0.4;fireEvent.click(document.querySelector('.nav-item.home'));beginSleep();button('Wake up (debug)');text=summary();assert(text.includes('Cold'));assert(text.includes('Started'));close();
+ cleanup();const secondSleepState=JSON.parse(localStorage.getItem('street-life-save-v3'));localStorage.setItem('street-life-save-v3',JSON.stringify({...secondSleepState,day:1,minutes:1410}));render(React.createElement(App));fireEvent.click(document.querySelector('.nav-item.home'));Math.random=()=>0.4;beginSleep();button('Wake up (debug)');text=summary();assert(text.includes('Cold'));assert(text.includes('Started'));close();
  button(/Inventory$/);button(/Medicine.*treats Cold/);text=summary();assert(text.includes('Ended'));assert(text.includes('−1'));close();cleanup();
  setup();Math.random=()=>0;beginSleep();button('Wake up (debug)');
  assert(!document.querySelector('.event-overlay'));close();assert(document.querySelector('.event-overlay'));button('Get up');assert(summary().includes('A quiet night'));assert(summary().includes('+5'));close();cleanup();
