@@ -40,6 +40,7 @@ function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 // One-level choices react immediately, while reading and deciding remain paused.
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
+assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,0);
 assert.equal(phoneThought.querySelector('.choice-emoji').textContent,'📱');assert.equal(phoneThought.querySelector('.choice-emoji').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);

@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-10 · single-level Street choices. Current visible build: `v2026.10.10-90`. Documentation reviewed against the v90 implementation on 2026-10-10.
+**Last gameplay sync:** 2026-10-10 · consequences after choice instead of previews. Current visible build: `v2026.10.10-91`. Documentation reviewed against the v91 implementation on 2026-10-10.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -629,7 +629,7 @@ These are current code realities, not planned features:
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
-## Regression checks (through v90)
+## Regression checks (through v91)
 
 `npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
 
@@ -684,3 +684,7 @@ Narrative choice buttons now have one leading emoji: phone/help, warmth, walking
 ### Single-level choices (v90)
 
 Removed the Street intention state and all category navigation. Choices now execute or open necessary parameter selection immediately. The first help answer costs five game minutes and 1% Battery once; rereading remains free. Closing its result reveals newly relevant questions in the same Street list. Music is a separate button, not a second click after selecting walking. Phone Ask AI also opens the first answer directly and is disabled when a new answer cannot be obtained. Time remains paused while deciding and reading. Regression helpers now click real actions directly rather than traversing category menus; checks cover immediate first help, one-time cost, paused reading, direct station route planning and contextual follow-up questions.
+
+### Consequences after choosing (v91)
+
+Street narrative buttons now show only their leading emoji and thought/question. Secondary descriptive hints and advance previews of time, battery, bonuses and costs are removed from the rendered buttons, rather than merely hidden with CSS. The repeated Help Center schedule note below choices is also removed; its details remain in the AI answer. After an action, the result window and Journal still show the actual elapsed time, resources spent, changes and explanation. Availability rules and enabled-first ordering remain unchanged, and unavailable actions stay disabled. Other location/service interfaces and necessary route/sleep/wait parameter selection retain their existing information. No resource amounts, time costs or outcomes changed. Regression checks verify no secondary hint/cost nodes in Street buttons and preserve the direct help and result flows.

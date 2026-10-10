@@ -1,4 +1,4 @@
-import { Children, Fragment, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Children, Fragment, cloneElement, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
@@ -200,12 +200,20 @@ function loadGame(): GameState {
 
 // Flatten conditional fragments before sorting, so custom and configured
 // actions share one available-first ordering and keep their order within a group.
-function AvailableFirst({ children, className, tag = 'section' }: { children: ReactNode; className: string; tag?: 'section' | 'div' }) {
+function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = false }: { children: ReactNode; className: string; tag?: 'section' | 'div'; thoughtsOnly?: boolean }) {
   function flatten(nodes: ReactNode): ReactNode[] {
     return Children.toArray(nodes).flatMap(node =>
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment ? flatten(node.props.children) : [node])
   }
-  const nodes = flatten(children)
+  function thoughtOnly(node: ReactNode): ReactNode {
+    if (!isValidElement<{ children?: ReactNode }>(node) || node.type !== 'button') return node
+    return cloneElement(node, {}, Children.toArray(node.props.children)
+      .filter(part => !isValidElement(part) || part.type !== 'span')
+      .map(part => isValidElement<{ children?: ReactNode }>(part) && part.type === 'div'
+        ? cloneElement(part, {}, Children.toArray(part.props.children).filter(detail => !isValidElement(detail) || detail.type !== 'small'))
+        : part))
+  }
+  const nodes = flatten(children).map(node => thoughtsOnly ? thoughtOnly(node) : node)
   const disabled = (node: ReactNode) => isValidElement<{ disabled?: boolean }>(node) && !!node.props.disabled
   const available = nodes.filter(node => !disabled(node))
   const unavailable = nodes.filter(disabled)
@@ -1754,12 +1762,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.10-90</div>
+        <div className="trash-build">Build 2026.10.10-91</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.10-90</div>
+    <div className="build-badge">v2026.10.10-91</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1847,7 +1855,7 @@ export default function App() {
           <p className="eyebrow">YOUR NEXT STEP · TIME PAUSED</p>
           <h2>What matters most right now?</h2>
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
-        <AvailableFirst className="actions">
+        <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'}>
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
@@ -1860,7 +1868,6 @@ export default function App() {
             })}
             {<button className="action" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
-            {discoveredLocations.includes('support') && <p className="muted">{isOpen(locations.find(location => location.id === 'support')!, game.minutes) ? 'The Help Center is open until 16:00. Its address is on your map.' : 'You saved the Help Center address. Its services are closed now; it opens at 08:00.'}</p>}
             {discoveredLocations.includes('shelter') && <button className="action" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Come tomorrow at 19:00; a place is not guaranteed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
             {!firstNight && discoveredLocations.includes('work') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
             {<button className="action" aria-label="Maybe the station? At least I could sit down." onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Maybe the station? At least I could sit down.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}

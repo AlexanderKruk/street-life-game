@@ -168,6 +168,7 @@ footer p { margin:0; }
 .story-choices h2 { font-size:21px; margin:8px 0 16px; }
 .story-intents { display:grid; gap:10px; }
 .choice-emoji { display:inline-block; margin-inline-end:.45em; font-weight:400; vertical-align:baseline; }
+.story-actions .action { min-height:54px; }
 .story-intents button { appearance:none; width:100%; min-height:54px; padding:14px 18px; border:1px solid #42545d; border-radius:14px; background:#1b2b32; color:#f1f4f5; font:inherit; font-weight:700; text-align:left; cursor:pointer; }
 .story-intents button:hover { background:#263c44; }
 .story-intents .story-secondary { background:transparent; color:#aab8bf; font-weight:400; }
