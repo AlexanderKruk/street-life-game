@@ -2271,7 +2271,7 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-102</small></footer>
+    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-103</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
