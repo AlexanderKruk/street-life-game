@@ -8,6 +8,8 @@ import ShopCard from './ShopCard'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
+const BUILD_VERSION = 'v2026.10.10-108'
+
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
 const PHONE_SEARCH_MIN = 10
@@ -1873,7 +1875,7 @@ export default function App() {
 
     <header className="game-header">
       <div className="header-brand-row">
-        <p className="game-brand">STREET LIFE</p>
+        <p className="game-brand"><span>STREET LIFE</span><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></p>
         <div className={`phone-charge${inventory.phoneBattery <= 20 ? ' low' : ''}`} aria-label={`Phone battery: ${Math.round(inventory.phoneBattery)}%`} title="Your phone battery">
           <Icon name="phone" /><BatteryIcon charge={inventory.phoneBattery} /><strong>{Math.round(inventory.phoneBattery)}%</strong>
         </div>
@@ -2265,7 +2267,7 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-107</small></footer>
+    <footer><button className="reset" onClick={reset}>Reset save</button></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
