@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause'
+export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins'
 
 const paths: Record<IconName, ReactNode> = {
   map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z" /><path d="M9 3v15m6-12v15" /></>,
@@ -24,6 +24,8 @@ const paths: Record<IconName, ReactNode> = {
   hospital: <><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z" /></>,
   shop: <><path d="M3 10 5 3h14l2 7M4 10v11h16V10M9 21v-7h6v7" /><path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" /></>,
   pause: <><circle cx="12" cy="12" r="9" /><path d="M9 8v8m6-8v8" /></>,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  coins: <><ellipse cx="10" cy="5" rx="7" ry="3" /><path d="M3 5v5c0 1.7 3.1 3 7 3m-7-3v5c0 1.7 3.1 3 7 3m7-13v5" /><ellipse cx="17" cy="14" rx="4" ry="2" /><path d="M13 14v5c0 1.1 1.8 2 4 2s4-.9 4-2v-5" /></>,
 }
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {

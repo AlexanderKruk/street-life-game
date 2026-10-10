@@ -3,6 +3,20 @@ import { actions, applyAction as applyGameAction, applySleepTime as applyGameSle
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
+import ResultCard, { type ResultCardData } from './ResultCard'
+import { questionPresentation } from './resultPresentation'
+
+const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
+const PHONE_SEARCH_MINUTES = 30
+const PHONE_SEARCH_DRAIN = 6
+type PhoneActivity = { questionId: string; remaining: number; before: ResultSnapshot }
+
+function loadPhoneActivity(): PhoneActivity | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PHONE_ACTIVITY_KEY) ?? 'null')
+    return saved && ['morning', 'bed', 'no-place', 'supplies'].includes(saved.questionId) && Number.isInteger(saved.remaining) && saved.remaining >= 0 && saved.remaining <= PHONE_SEARCH_MINUTES && saved.before?.game && saved.before?.inventory && Array.isArray(saved.before?.effects) && loadGame().locationId === 'street' ? saved : null
+  } catch { return null }
+}
 
 const SAVE_KEY = 'street-life-save-v3'
 const DISCOVERY_KEY = 'street-life-discovered-v1'
@@ -254,8 +268,13 @@ function overallStatus(game: GameState) {
 
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
+  const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(loadPhoneActivity)
+  useEffect(() => {
+    if (phoneActivity) localStorage.setItem(PHONE_ACTIVITY_KEY, JSON.stringify(phoneActivity))
+    else localStorage.removeItem(PHONE_ACTIVITY_KEY)
+  }, [phoneActivity])
   const [message, setMessage] = useState('')
-  const [infoModal, setInfoModal] = useState<({ title: string; text: string } & Partial<ResultSummary>) | null>(null)
+  const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
   const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean } | null>(null)
   const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
     try {
@@ -285,6 +304,7 @@ export default function App() {
   })
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>(() => {
+    if (loadPhoneActivity()) return 'location'
     if (loadTrip()) return 'travel'
     const saved = localStorage.getItem('street-life-screen')
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
@@ -388,6 +408,7 @@ export default function App() {
   const shelterBooked = (life.shelterUntilDay ?? 0) >= game.day
   const currentActions = actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest'))
   const open = isOpen(current, game.minutes)
+  const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation
   const overall = overallStatus(game)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
@@ -528,7 +549,7 @@ export default function App() {
       const entry: JournalEntry = { day: game.day, minute: game.minutes, title: infoModal?.title ?? pendingResult.title, text: resultText, summary }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }
-    setInfoModal(previous => ({ title: previous?.title ?? pendingResult.title, text: resultText, ...summary }))
+    setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, ...summary }))
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
   function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
@@ -668,7 +689,7 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
+    if (phoneActivity || rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
     const safeKind = current.id === 'residential-shelter'
       ? 'residential'
       : current.id === 'shelter' && shelterBooked && open && game.intoxication <= 10
@@ -684,11 +705,11 @@ export default function App() {
     groundSleepWindow.current = safeKind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice])
+  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if (rainChoice || storyDecision || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
+      if (phoneActivity || rainChoice || storyDecision || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
       if (sleeping) {
         const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
         const targetAbsolute = sleeping.startAbsolute + elapsed
@@ -704,7 +725,7 @@ export default function App() {
       setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame, storyDecision, rainChoice])
+  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame, storyDecision, rainChoice, phoneActivity])
 
   useEffect(() => {
     if (!trip || trip.remaining > 0) return
@@ -1087,7 +1108,7 @@ export default function App() {
   }
 
   const practicalQuestions = [
-    { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: 'Help Center opens at 08:00 and closes at 16:00. Ask a social worker about accommodation, documents and benefits. Day Center & Clinic is also open 08:00–16:00: you can stay indoors, ask for a shower or laundry, and charge your phone. Services may be full. Both addresses are saved on your map.', locations: ['support', 'daycenter'] },
+    { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: 'Help Center opens at 08:00 and closes at 16:00. Ask a social worker about accommodation, documents and benefits. Day Center & Clinic is also open 08:00–16:00: you can stay indoors, ask for a shower or laundry, and charge your phone. Services may be full. The addresses are saved on your map.', locations: ['support', 'daycenter'] },
     { id: 'bed', icon: '🛏️', title: 'How can I get a shelter bed?', text: 'First registration at Night Shelter runs 19:00–22:00. Arrive by 19:00, wait the full 20-minute queue, and then find out whether there is a place. There are only 0–3 free places each day; earlier arrivals have a better chance. A successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
     { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about a Schronisko referral; that is a separate housing route. Day Center can offer daytime shelter, but is not an overnight bed. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: ['support', 'daycenter'] },
     { id: 'supplies', icon: '🥪', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, and a hot meal 8 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
@@ -1122,26 +1143,62 @@ export default function App() {
     bodyChoices,
     practicalChoices,
   ]
-  function answerPracticalQuestion(id: string) {
+  const phoneSearchCost = PHONE_SEARCH_DRAIN * phoneDrainMultiplier(inventory.phoneCondition)
+
+  function finishPracticalQuestion(id: string, before = resultSnapshot()) {
     const question = practicalQuestions.find(entry => entry.id === id)
-    if (!question || current.id !== 'street' || !visibleQuestions.includes(question)) return
+    if (!question) return
     const memory = id === 'charging'
-    if (answeredQuestions.includes(id)) {
-      setInfoModal({ title: question.title, text: `${memory ? 'A remembered place' : 'AI · Saved answer'}\n\n${question.text}`, costs: [], changes: [] })
-      return
-    }
-    if (!memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)) return
     runWithResult(question.title, () => {
-      if (!memory) setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - 1) }))
-      const next = applyAction(game, { minutes: memory ? 0 : 5 })
+      const next = { ...game }
       next.mood = Math.max(next.mood, Math.min(60, next.mood + 5))
       setGame(next)
-      setAnsweredQuestions(previous => [...previous, id])
+      setAnsweredQuestions(previous => [...new Set([...previous, id])])
       setDiscoveredLocations(previous => [...new Set([...previous, ...question.locations])])
       if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: 1140 })
-      setInfoModal({ title: question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${question.text}` })
-    })
+      setInfoModal({ title: question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${question.text}`, presentation: questionPresentation(id, question.locations) })
+    }, before)
   }
+
+  function answerPracticalQuestion(id: string) {
+    const question = practicalQuestions.find(entry => entry.id === id)
+    if (!question || phoneActivity || current.id !== 'street' || !visibleQuestions.includes(question)) return
+    if (answeredQuestions.includes(id)) {
+      setInfoModal({ title: question.title, text: `${id === 'charging' ? 'A remembered place' : 'AI · Saved answer'}\n\n${question.text}`, presentation: questionPresentation(id, question.locations, true), costs: [], changes: [] })
+      return
+    }
+    if (id === 'charging') { finishPracticalQuestion(id); return }
+    if (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost) return
+    setPhoneOpen(false)
+    setScreen('location')
+    setPhoneActivity({ questionId: id, remaining: PHONE_SEARCH_MINUTES, before: resultSnapshot() })
+  }
+
+  useEffect(() => {
+    if (phoneActivity?.remaining === PHONE_SEARCH_MINUTES) window.scrollTo?.({ top: 0, behavior: 'instant' })
+  }, [phoneActivity?.questionId])
+
+  useEffect(() => {
+    if (!phoneActivity || phoneActivity.remaining === 0 || gameOver) return
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return
+      setGame(previous => applyAction(previous, { minutes: 1 }))
+      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - PHONE_SEARCH_DRAIN / PHONE_SEARCH_MINUTES * phoneDrainMultiplier(previous.phoneCondition)) }))
+      setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [phoneActivity, gameOver, effects, musicOn])
+
+  useEffect(() => {
+    if (!phoneActivity || inventoryAgedAt !== absoluteMinutes(game)) return
+    if (phoneActivity.remaining === 0) {
+      setPhoneActivity(null)
+      finishPracticalQuestion(phoneActivity.questionId, phoneActivity.before)
+    } else if (inventory.phoneBattery <= 0 || !mobileServiceActive || gameOver) {
+      setPhoneActivity(null)
+      runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text: gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.' }), phoneActivity.before, true, true)
+    }
+  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver])
 
   function takeRainCover(minutes: number) {
     runWithResult('Shelter from the rain', () => {
@@ -1713,6 +1770,8 @@ export default function App() {
     setGame(createInitialState())
     setMessage('New run started.')
     setInfoModal(null)
+    setPhoneActivity(null)
+    setPendingResult(null)
     setScreen('location')
     setRainChoice(false)
     setCoverPlanning(false)
@@ -1761,7 +1820,7 @@ export default function App() {
   }
 
   const nav = (target: Screen, icon: IconName, label: string) =>
-    <button className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
+    <button disabled={!!phoneActivity} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
 
   return <main className={`shell${screen === 'location' && current.id === 'street' ? ' street-screen' : ''}`}>
     {sleepChoice && <div className="phone-overlay result-overlay">
@@ -1791,16 +1850,7 @@ export default function App() {
         </div>
       </section>
     </div>}
-    {infoModal && <div className="phone-overlay result-overlay">
-      <section className="phone-modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title">
-        <p className="eyebrow">RESULT</p>
-        <h2 id="result-title">{infoModal.title}</h2>
-        <p className="muted">{infoModal.text}</p>
-        {infoModal.changes?.length ? <div className="result-section"><h3>Changes & consequences</h3><div className="result-rows">{infoModal.changes.map(change => <div key={change.label} className={`result-row ${change.kind}`}><span>{change.label}</span><strong>{change.value}</strong></div>)}</div></div> : null}
-        {infoModal.costs?.length ? <div className="result-section"><h3>Spent</h3><div className="result-rows">{infoModal.costs.map(cost => <div key={cost.label} className={`result-row ${cost.kind}`}><span>{cost.label}</span><strong>{cost.value}</strong></div>)}</div></div> : null}
-        <button className="trash-stop" autoFocus onClick={() => setInfoModal(null)}>OK</button>
-      </section>
-    </div>}
+    {infoModal && !inlineResult && <ResultCard result={infoModal} onClose={() => setInfoModal(null)} />}
     {trashGame && <div className="trash-overlay">
       <section className="trash-card">
         <div className="trash-head"><div><p className="eyebrow">SEARCHING TRASH</p><h2>Dig for bottles</h2></div><div><strong>♻️ {trashGame.found}</strong><small> kept</small></div></div>
@@ -1841,7 +1891,15 @@ export default function App() {
     {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <>
-      {current.id === 'street' && <div className={`street-art${game.minutes >= 1200 || game.minutes < 360 ? ' night' : ''}`} aria-hidden="true"><img src="/street-life-game/assets/street-hero.webp" alt="" width="1536" height="1024" fetchPriority="high" /></div>}
+      {current.id === 'street' && <div className={`street-art${phoneActivity || inlineResult ? ' phone-art' : !infoModal?.presentation?.illustration && (game.minutes >= 1200 || game.minutes < 360) ? ' night' : ''}`} aria-hidden="true"><img src={phoneActivity ? '/street-life-game/assets/phone-search.webp' : infoModal?.presentation?.illustration ?? (inlineResult ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp')} alt="" width="1400" height={phoneActivity || inlineResult ? 1050 : 788} fetchPriority="high" />{infoModal?.presentation?.illustration && <span className="result-art-caption">Looking ahead</span>}</div>}
+      {phoneActivity ? <section className="phone-activity" aria-labelledby="phone-activity-title" aria-busy="true">
+        <div className="phone-activity-heading"><p className="eyebrow">USING YOUR PHONE</p><div className="phone-activity-symbol" aria-hidden="true"><span /><span /><span /></div></div>
+        <h2 id="phone-activity-title">{phoneActivity.remaining > 20 ? 'Looking for information' : phoneActivity.remaining > 10 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
+        <p>{practicalQuestions.find(question => question.id === phoneActivity.questionId)?.title}<br />Checking addresses and opening hours.</p>
+        <div className="phone-activity-progress" role="progressbar" aria-label="Phone search" aria-valuemin={0} aria-valuemax={PHONE_SEARCH_MINUTES} aria-valuenow={PHONE_SEARCH_MINUTES - phoneActivity.remaining}><i style={{ width: `${(PHONE_SEARCH_MINUTES - phoneActivity.remaining) / PHONE_SEARCH_MINUTES * 100}%` }} /></div>
+        <div className="phone-activity-meta"><span><Icon name="clock" />{PHONE_SEARCH_MINUTES - phoneActivity.remaining} / {PHONE_SEARCH_MINUTES} min</span><span>{phoneActivity.remaining} min left</span></div>
+        <small>Time passes while you search.</small>
+      </section> : inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={() => setInfoModal(null)} /> : <>
       <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
         {current.id !== 'street' && <div className="location-icon">{current.icon}</div>}
         <div><p className="eyebrow">{current.id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}`} </p><h2>{current.name}</h2><p>{current.id === 'street' ? streetScene : current.description}</p></div>
@@ -1922,11 +1980,11 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
-            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : '~5 min · −1% battery'}</span></button>
+            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `~30 min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
             {visibleQuestions.filter(question => question.id !== 'morning').map(question => {
               const saved = answeredQuestions.includes(question.id)
               const memory = question.id === 'charging'
-              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small>{memory ? 'Low battery brings an old memory back: the station waiting room.' : saved ? 'Read saved AI answer · free' : 'Ask AI · needs mobile service and battery'}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : '~5 min · −1% battery'}</span></button>
+              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small>{memory ? 'Low battery brings an old memory back: the station waiting room.' : saved ? 'Read saved AI answer · free' : 'Ask AI · needs mobile service and battery'}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : `~30 min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
             })}
             {<button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
@@ -1953,6 +2011,7 @@ export default function App() {
             </button>
           }) : <p className="empty">Nothing useful to do here yet.</p>}
         </AvailableFirst>
+      </>}
       </>}
     </>}
 
@@ -2049,7 +2108,7 @@ export default function App() {
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
         <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Renew expired service automatically for 1 zł</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
         <AvailableFirst tag="div" className="phone-actions">
-          {current.id === 'street' && <button disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Specific questions · saved answers work offline</small></div></button>}
+          {current.id === 'street' && <button disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Specific questions · saved answers work offline</small></div></button>}
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
           <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
@@ -2227,12 +2286,12 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-97</small></footer>
-    <nav className={screen === 'travel' ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
+    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-98</small></footer>
+    <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
-      <button className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
-      <button className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
+      <button disabled={!!phoneActivity} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
+      <button disabled={!!phoneActivity} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
       {nav('journal', 'journal', 'Journal')}
     </nav>
   </main>
