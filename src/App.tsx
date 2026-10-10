@@ -378,11 +378,11 @@ export default function App() {
   const storyDecision = current.id === 'street' && !trip && !sleeping && !shelterQueue && !shelterDeparture && !trashGame
   const firstNight = (game.day === 1 && game.minutes >= 1320 || game.day === 2 && game.minutes < 360) && life.housing === 'Street'
   const openingScene = game.day === 1 && game.minutes < 1380
-    ? 'It is past ten. There is nowhere to go back to tonight. You stand outside the station with your backpack. The shops are closed; light spills through the waiting-room windows. Your phone still has a signal.'
+    ? 'You stand on the street with your backpack. There is nowhere to go back to tonight. The station windows are still lit.'
     : game.day === 1 ? 'The shops have lowered their shutters. Fewer people pass the station now. You are outside with your backpack; the waiting room is still lit.'
     : game.minutes < 240 ? 'Most windows above the shops are dark. A bus passes without stopping. The station waiting room is still lit. Morning is several hours away.'
     : 'The street is almost empty. Delivery vans have begun to pass the closed shops. The station lights are still on; the help centers will not open until eight.'
-  const streetScene = [
+  const streetScene = firstNight && game.day === 1 && game.minutes === 1320 ? openingScene : [
     firstNight ? openingScene : '',
     !firstNight && (game.minutes >= 1200 || game.minutes < 360) ? 'The street has grown quiet. Light spills from the station entrance, but it is no bed for the night.' : firstNight ? '' : game.minutes >= 1020 ? 'The daylight is fading. People hurry past the station while you decide where to spend the night.' : 'People pass the station, each on their way somewhere. You stop and think about your next step.',
     weather.label === 'Rain' || weather.label === 'Showers' ? 'Rain reaches your clothes; somewhere dry would make a difference.' : temperature < 10 ? 'The air is cold against your face.' : 'The pavement is dry for now.',
@@ -1762,12 +1762,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.10-91</div>
+        <div className="trash-build">Build 2026.10.10-92</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.10-91</div>
+    <div className="build-badge">v2026.10.10-92</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>

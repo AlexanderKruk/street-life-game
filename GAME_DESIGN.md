@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-10 · consequences after choice instead of previews. Current visible build: `v2026.10.10-91`. Documentation reviewed against the v91 implementation on 2026-10-10.
+**Last gameplay sync:** 2026-10-10 · short opening scene. Current visible build: `v2026.10.10-92`. Documentation reviewed against the v92 implementation on 2026-10-10.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -629,7 +629,7 @@ These are current code realities, not planned features:
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
-## Regression checks (through v91)
+## Regression checks (through v92)
 
 `npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
 
@@ -688,3 +688,7 @@ Removed the Street intention state and all category navigation. Choices now exec
 ### Consequences after choosing (v91)
 
 Street narrative buttons now show only their leading emoji and thought/question. Secondary descriptive hints and advance previews of time, battery, bonuses and costs are removed from the rendered buttons, rather than merely hidden with CSS. The repeated Help Center schedule note below choices is also removed; its details remain in the AI answer. After an action, the result window and Journal still show the actual elapsed time, resources spent, changes and explanation. Availability rules and enabled-first ordering remain unchanged, and unavailable actions stay disabled. Other location/service interfaces and necessary route/sleep/wait parameter selection retain their existing information. No resource amounts, time costs or outcomes changed. Regression checks verify no secondary hint/cost nodes in Street buttons and preserve the direct help and result flows.
+
+### Short first message (v92)
+
+At the initial Day 1 22:00 Street moment, the narrator uses only three short sentences: backpack on the street, nowhere to return tonight, and lit station windows. Weather, needs and shelter knowledge are not appended to this first message. Later scenes keep their contextual information, and the early-evening base paragraph is also shortened. This is a copy/presentation change with no changes to game state or outcomes. Regression checks limit the opening text to three sentences and 30 words.
