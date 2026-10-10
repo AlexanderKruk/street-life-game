@@ -654,3 +654,8 @@ button.inventory-item { width:100%; }
 @keyframes phone-pulse { 0%,100% { opacity:.25; } 50% { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .phone-activity-symbol span { animation:none; } .phone-activity-progress i { transition:none; } }
 @media (max-height:650px) { .street-art.phone-art { height:190px; } .phone-activity h2 { font-size:20px; } }
+
+.street-screen .story-actions .choice-estimate { grid-column:2; font-size:11px; line-height:1.3; color:#99a3a6; margin-top:-5px; }
+.phone-activity-progress.uncertain i { width:35%; animation:phone-search-sweep 2.6s ease-in-out infinite; }
+@keyframes phone-search-sweep { 0% { transform:translateX(-105%); } 100% { transform:translateX(390%); } }
+@media (prefers-reduced-motion:reduce) { .phone-activity-progress.uncertain i { animation:none; transform:translateX(80%); } }

@@ -7,18 +7,22 @@ import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
-const PHONE_SEARCH_MINUTES = 10
-const PHONE_SEARCH_DRAIN = 2
-type PhoneActivity = { questionId: string; remaining: number; before: ResultSnapshot }
+const PHONE_SEARCH_ESTIMATE = 15
+const PHONE_SEARCH_MIN = 10
+const PHONE_SEARCH_MAX = 25
+const PHONE_SEARCH_DRAIN_PER_MINUTE = 0.2
+type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot }
 
 function loadPhoneActivity(): PhoneActivity | null {
   try {
     const saved = JSON.parse(localStorage.getItem(PHONE_ACTIVITY_KEY) ?? 'null')
     if (!saved || !['morning', 'bed', 'no-place', 'supplies'].includes(saved.questionId) || !Number.isInteger(saved.remaining) || saved.remaining < 0 || saved.remaining > 30 || !saved.before?.game || !saved.before?.inventory || !Array.isArray(saved.before?.effects) || loadGame().locationId !== 'street') return null
-    // Shorten a search already started in v98 without charging or restarting it.
+    // Older fixed searches retain the ten-minute migration; new searches keep
+    // their originally selected duration across reloads.
     const elapsed = absoluteMinutes(loadGame()) - absoluteMinutes(saved.before.game)
     if (!Number.isFinite(elapsed) || elapsed < 0) return null
-    return { ...saved, remaining: Math.min(saved.remaining, Math.max(0, PHONE_SEARCH_MINUTES - elapsed)) }
+    const total = Number.isInteger(saved.total) && saved.total >= PHONE_SEARCH_MIN && saved.total <= PHONE_SEARCH_MAX ? saved.total : 10
+    return { ...saved, total, remaining: Math.min(saved.remaining, Math.max(0, total - elapsed)) }
   } catch { return null }
 }
 
@@ -231,7 +235,7 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
       .filter(part => !isValidElement(part) || part.type !== 'span')
       .map(part => isValidElement<{ children?: ReactNode }>(part) && part.type === 'div'
         ? cloneElement(part, {}, <Icon name={icon} className="story-action-icon" />, Children.toArray(part.props.children)
-          .filter(detail => !isValidElement(detail) || detail.type !== 'small')
+          .filter(detail => !isValidElement<{ className?: string }>(detail) || detail.type !== 'small' || detail.props.className === 'choice-estimate')
           .map(detail => isValidElement<{ children?: ReactNode }>(detail) && detail.type === 'strong'
             ? cloneElement(detail, {}, Children.toArray(detail.props.children)
               .filter(text => !isValidElement(text) || text.type !== 'span')
@@ -1147,7 +1151,7 @@ export default function App() {
     bodyChoices,
     practicalChoices,
   ]
-  const phoneSearchCost = PHONE_SEARCH_DRAIN * phoneDrainMultiplier(inventory.phoneCondition)
+  const phoneSearchCost = PHONE_SEARCH_MIN * PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
 
   function finishPracticalQuestion(id: string, before = resultSnapshot()) {
     const question = practicalQuestions.find(entry => entry.id === id)
@@ -1175,11 +1179,12 @@ export default function App() {
     if (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost) return
     setPhoneOpen(false)
     setScreen('location')
-    setPhoneActivity({ questionId: id, remaining: PHONE_SEARCH_MINUTES, before: resultSnapshot() })
+    const total = PHONE_SEARCH_MIN + Math.floor(Math.random() * (PHONE_SEARCH_MAX - PHONE_SEARCH_MIN + 1))
+    setPhoneActivity({ questionId: id, total, remaining: total, before: resultSnapshot() })
   }
 
   useEffect(() => {
-    if (phoneActivity?.remaining === PHONE_SEARCH_MINUTES) window.scrollTo?.({ top: 0, behavior: 'instant' })
+    if (phoneActivity && phoneActivity.remaining === phoneActivity.total) window.scrollTo?.({ top: 0, behavior: 'instant' })
   }, [phoneActivity?.questionId])
 
   useEffect(() => {
@@ -1187,7 +1192,7 @@ export default function App() {
     const timer = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return
       setGame(previous => applyAction(previous, { minutes: 1 }))
-      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - PHONE_SEARCH_DRAIN / PHONE_SEARCH_MINUTES * phoneDrainMultiplier(previous.phoneCondition)) }))
+      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(previous.phoneCondition)) }))
       setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
     }, 1000)
     return () => window.clearInterval(timer)
@@ -1898,10 +1903,10 @@ export default function App() {
       {current.id === 'street' && <div className={`street-art${phoneActivity || inlineResult ? ' phone-art' : !infoModal?.presentation?.illustration && (game.minutes >= 1200 || game.minutes < 360) ? ' night' : ''}`} aria-hidden="true"><img src={phoneActivity ? '/street-life-game/assets/phone-search.webp' : infoModal?.presentation?.illustration ?? (inlineResult ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp')} alt="" width="1400" height={phoneActivity || inlineResult ? 1050 : 788} fetchPriority="high" />{infoModal?.presentation?.illustration && <span className="result-art-caption">Looking ahead</span>}</div>}
       {phoneActivity ? <section className="phone-activity" aria-labelledby="phone-activity-title" aria-busy="true">
         <div className="phone-activity-heading"><p className="eyebrow">USING YOUR PHONE</p><div className="phone-activity-symbol" aria-hidden="true"><span /><span /><span /></div></div>
-        <h2 id="phone-activity-title">{phoneActivity.remaining > PHONE_SEARCH_MINUTES * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > PHONE_SEARCH_MINUTES / 3 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
+        <h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
         <p>{practicalQuestions.find(question => question.id === phoneActivity.questionId)?.title}<br />Checking addresses and opening hours.</p>
-        <div className="phone-activity-progress" role="progressbar" aria-label="Phone search" aria-valuemin={0} aria-valuemax={PHONE_SEARCH_MINUTES} aria-valuenow={PHONE_SEARCH_MINUTES - phoneActivity.remaining}><i style={{ width: `${(PHONE_SEARCH_MINUTES - phoneActivity.remaining) / PHONE_SEARCH_MINUTES * 100}%` }} /></div>
-        <div className="phone-activity-meta"><span><Icon name="clock" />{PHONE_SEARCH_MINUTES - phoneActivity.remaining} / {PHONE_SEARCH_MINUTES} min</span><span>{phoneActivity.remaining} min left</span></div>
+        <div className="phone-activity-progress uncertain" role="progressbar" aria-label="Phone search in progress"><i /></div>
+        <div className="phone-activity-meta"><span><Icon name="clock" />{phoneActivity.total - phoneActivity.remaining} min spent</span><span>Usually about {PHONE_SEARCH_ESTIMATE} min</span></div>
         <small>Time passes while you search.</small>
       </section> : inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={() => setInfoModal(null)} /> : <>
       <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
@@ -1984,11 +1989,11 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
-            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `~${PHONE_SEARCH_MINUTES} min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
+            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small className="choice-estimate">{answeredQuestions.includes('morning') ? 'Saved answer · free' : `Approx. ${PHONE_SEARCH_ESTIMATE} min`}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
             {visibleQuestions.filter(question => question.id !== 'morning').map(question => {
               const saved = answeredQuestions.includes(question.id)
               const memory = question.id === 'charging'
-              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small>{memory ? 'Low battery brings an old memory back: the station waiting room.' : saved ? 'Read saved AI answer · free' : 'Ask AI · needs mobile service and battery'}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : `~${PHONE_SEARCH_MINUTES} min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
+              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small className="choice-estimate">{memory ? 'Remember · free' : saved ? 'Saved answer · free' : `Approx. ${PHONE_SEARCH_ESTIMATE} min`}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : `Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
             })}
             {<button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
@@ -2112,7 +2117,7 @@ export default function App() {
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
         <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Renew expired service automatically for 1 zł</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
         <AvailableFirst tag="div" className="phone-actions">
-          {current.id === 'street' && <button disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Specific questions · saved answers work offline</small></div></button>}
+          {current.id === 'street' && <button disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Approx. 15 min for a new answer · saved answers free</small></div></button>}
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
           <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
@@ -2290,7 +2295,7 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-99</small></footer>
+    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-100</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}

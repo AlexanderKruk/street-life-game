@@ -20,15 +20,15 @@ function setup(state={},effects=[]){
  Math.random=()=>0.99;
  render(React.createElement(App));
 }
-function button(name){const dialog=screen.queryByRole('dialog');fireEvent.click(dialog ? within(dialog).getByRole('button',{name}) : screen.getByRole('button',{name}));}
+function button(name){const dialog=screen.queryByRole('dialog');const target=dialog ? within(dialog).getByRole('button',{name}) : screen.getByRole('button',{name});const previousRandom=Math.random;if(target.dataset.choice?.startsWith('question-')||/Ask AI/.test(target.textContent))Math.random=()=>.34;fireEvent.click(target);Math.random=previousRandom;}
 function beginSleep(hours=2){button(/Lie down here\? I’m not sure… But I could try./);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Got it',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 function checkBattery(){const charge=Math.round(JSON.parse(localStorage.getItem('street-life-inventory-v1')).phoneBattery);assert(screen.getByLabelText(`Phone battery: ${charge}%`).textContent.includes(`${charge}%`));return charge;}
-async function finishPhone(){for(let tick=0;tick<10;tick++)await act(()=>new Promise(r=>setTimeout(r,1020)));}
+async function finishPhone(){for(let tick=0;tick<15;tick++)await act(()=>new Promise(r=>setTimeout(r,1020)));}
 (async()=>{
  setup();const startingCharge=checkBattery();button('Where can I get help in the morning?');await finishPhone();assert(checkBattery()<startingCharge);close();button('How can I get a shelter bed?');await finishPhone();
- let text=summary();assert(text.includes('−2.4%'));assert(!text.includes('0 zł'));assert(text.includes('10 min'));
+ let text=summary();assert(text.includes('−3.6%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
  const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
  close();button(/Map$/);checkBattery();assert(screen.getByText('Night Shelter',{exact:true}));assert(!document.querySelector('.street-art'));cleanup();setup();
  beginSleep();button('Wake up (debug)');
