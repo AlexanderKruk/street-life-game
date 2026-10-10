@@ -2,7 +2,7 @@
 
 This document describes what is implemented in the current codebase. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-09 · cleaner Street story choices. Current visible build: `v2026.10.09-88`. Documentation reviewed against the v88 implementation on 2026-10-09.
+**Last gameplay sync:** 2026-10-10 · emoji cues for narrative choices. Current visible build: `v2026.10.10-89`. Documentation reviewed against the v89 implementation on 2026-10-10.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -629,7 +629,7 @@ These are current code realities, not planned features:
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
-## Regression checks (through v88)
+## Regression checks (through v89)
 
 `npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
 
@@ -676,3 +676,7 @@ Latest regression additions cover opening-night scene progression, paused choice
 ### Player thoughts refinement (v88)
 
 Opening-night choices now read as thoughts rather than a sequence of commands beginning with "I will". They vary between uncertainty, wanting warmth, reluctance to sleep outside, seeking familiar music, hesitant rest, and decisive movement. Rain and canopy duration choices follow the same voice; low battery prompts a tentative memory of the station outlet. Narrator descriptions remain restrained. Action intent remains identifiable, with schedules, requirements, duration and costs shown separately. All action handlers, probabilities, rewards, resource costs and pause rules are unchanged. UI text remains in English, matching the existing game language. This supersedes the more mechanical v86 choice wording; other service and event text remains outside the pilot.
+
+### Choice emoji cues (v89)
+
+Narrative choice buttons now have one leading emoji: phone/help, warmth, walking, music, station, sleep, charging, and rain cover. Specific phone questions and covered-wait durations have matching cues; later Street intent choices use them too. Existing icons on bottle/search/bench actions are retained, without adding duplicates. Newly added emoji spans are decorative (`aria-hidden`), so accessible names remain the full thought text. A small inline gap keeps the icon separate from the text. No action behavior or costs changed; utility buttons such as choosing another approach remain text-only.

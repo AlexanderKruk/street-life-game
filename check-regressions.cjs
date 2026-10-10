@@ -52,6 +52,7 @@ function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 
 
 // Story choices pause the clock and needs, then execute the existing action.
+setup({minutes:1320});const phoneThought=screen.getByRole('button',{name:'I don’t know where to go… Maybe my phone can help.',exact:true});assert.equal(phoneThought.querySelector('.choice-emoji').textContent,'📱');assert.equal(phoneThought.querySelector('.choice-emoji').getAttribute('aria-hidden'),'true');assert.equal(phoneThought.querySelectorAll('.choice-emoji').length,1);
 setup({minutes:1321},{'street-life-discovered-v1':['street','station','shop']});assert(screen.getByText('What matters most right now?'));assert(!screen.queryByRole('button',{name:/There must be somewhere to sleep… Let me look./}));assert(document.querySelector('.story-scene').textContent.includes('There is nowhere to go back to'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
 fireEvent.click(screen.getByRole('button',{name:'I don’t know where to go… Maybe my phone can help.',exact:true}));assert(screen.getByRole('button',{name:/There must be somewhere to sleep… Let me look./}));assert(!screen.queryByRole('button',{name:/Ask passers-by/}));advance(10000);assert.deepEqual(read(stateKey),storyState);click(/There must be somewhere to sleep… Let me look./);assert.equal(read(stateKey).minutes,1336);ok();assert(screen.getByText('What matters most right now?'));
