@@ -264,7 +264,6 @@ export default function App() {
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
   })
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
-  const [storyIntent, setStoryIntent] = useState<'shelter' | 'money' | 'rest' | 'other' | 'understand' | 'warmth' | null>(null)
   const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true' && loadGame().locationId === 'street')
   const [coverPlanning, setCoverPlanning] = useState(false)
   const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => {
@@ -483,7 +482,6 @@ export default function App() {
     if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit) return
     setPendingResult(null)
     if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
-    if (current.id === 'street') setStoryIntent(null)
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     if (lastRecordedResult.current !== pendingResult) {
@@ -1654,7 +1652,6 @@ export default function App() {
     setMessage('New run started.')
     setInfoModal(null)
     setScreen('location')
-    setStoryIntent(null)
     setRainChoice(false)
     setCoverPlanning(false)
     setAnsweredQuestions([])
@@ -1757,12 +1754,12 @@ export default function App() {
           >{item.icon}</button>)}
         </div>
         <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.10-89</div>
+        <div className="trash-build">Build 2026.10.10-90</div>
         <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
       </section>
     </div>}
 
-    <div className="build-badge">v2026.10.10-89</div>
+    <div className="build-badge">v2026.10.10-90</div>
 
     <header>
       <div><p className="eyebrow">STREET LIFE</p><h1>Day {game.day} <span className="weekday">{weekday(game.day)}</span> <span>{formatTime(game.minutes)}</span></h1></div>
@@ -1848,40 +1845,35 @@ export default function App() {
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         {current.id === 'street' ? <section className="story-choices">
           <p className="eyebrow">YOUR NEXT STEP · TIME PAUSED</p>
-          <h2>{storyIntent === null ? 'What matters most right now?' : storyIntent === 'understand' ? 'Ask AI on your phone' : storyIntent === 'warmth' ? 'Somewhere out of the cold' : storyIntent === 'shelter' ? 'Somewhere to spend the night' : storyIntent === 'money' ? 'A way to get by' : storyIntent === 'rest' ? 'A moment off your feet' : 'What else can you try?'}</h2>
-          {storyIntent === null ? <div className="story-intents">
-            {firstNight ? <button onClick={() => setStoryIntent('understand')}><span className="choice-emoji" aria-hidden="true">📱</span>I don’t know where to go… Maybe my phone can help.</button> : <button onClick={() => setStoryIntent('shelter')}><span className="choice-emoji" aria-hidden="true">🛏️</span>Find somewhere to sleep</button>}
-            {firstNight ? <button onClick={() => setStoryIntent('warmth')}><span className="choice-emoji" aria-hidden="true">🧣</span>Somewhere warm… The station lights are still on.</button> : <button onClick={() => setStoryIntent('money')}><span className="choice-emoji" aria-hidden="true">💰</span>Earn something for food</button>}
-            {firstNight ? <button onClick={() => setStoryIntent('rest')}><span className="choice-emoji" aria-hidden="true">🚶</span>I’m not ready to sleep out here. I’ll walk a little.</button> : <button onClick={() => setStoryIntent('rest')}><span className="choice-emoji" aria-hidden="true">🪑</span>Stay here and rest</button>}
-            {inventory.phoneBattery <= 30 && !answeredQuestions.includes('charging') && <button aria-label="Where can I charge my phone?" onClick={() => answerPracticalQuestion('charging')}><span className="choice-emoji" aria-hidden="true">🔋</span>Already {Math.round(inventory.phoneBattery)}%… Wasn’t there an outlet in the station waiting room?</button>}
-          </div> : <button className="story-back" onClick={() => setStoryIntent(null)}>Choose another approach</button>}
+          <h2>What matters most right now?</h2>
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
         <AvailableFirst className="actions">
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
-          {current.id === 'street' && storyIntent !== null && <>
-            {storyIntent === 'understand' && visibleQuestions.map(question => {
+          {current.id === 'street' && <>
+            <button className="action" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>I don’t know where to go… Maybe my phone can help.</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : '~5 min · −1% battery'}</span></button>
+            {visibleQuestions.filter(question => question.id !== 'morning').map(question => {
               const saved = answeredQuestions.includes(question.id)
               const memory = question.id === 'charging'
               return <button className="action" aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small>{memory ? 'Low battery brings an old memory back: the station waiting room.' : saved ? 'Read saved AI answer · free' : 'Ask AI · needs mobile service and battery'}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : '~5 min · −1% battery'}</span></button>
             })}
-            {(storyIntent === 'rest' || storyIntent === 'other') && <button className="action" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
-            {(storyIntent === 'rest' || storyIntent === 'other') && <button className="action" aria-label="Just one more street. I’m not ready to lie down." onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
-            {storyIntent === 'understand' && discoveredLocations.includes('support') && <p className="muted">{isOpen(locations.find(location => location.id === 'support')!, game.minutes) ? 'The Help Center is open until 16:00. Its address is on your map.' : 'You saved the Help Center address. Its services are closed now; it opens at 08:00.'}</p>}
-            {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'warmth') && discoveredLocations.includes('shelter') && <button className="action" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Come tomorrow at 19:00; a place is not guaranteed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
-            {storyIntent === 'money' && discoveredLocations.includes('work') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
-            {(storyIntent === 'shelter' || storyIntent === 'warmth') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Maybe the station? At least I could sit down.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
-            {(storyIntent === 'shelter' || storyIntent === 'understand' || storyIntent === 'other') && !discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 There must be somewhere to sleep… Let me look.</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {(storyIntent === 'money' || storyIntent === 'other') && !discoveredLocations.includes('work') && <button className="action" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Could I find a little work? I need to keep some money.</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {(storyIntent === 'understand' || storyIntent === 'other') && !discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Someone must know what I can do tomorrow.</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {(storyIntent === 'money' || storyIntent === 'other') && <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask someone for change? It’s hard, but I could try.</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
-            {(storyIntent === 'money' || storyIntent === 'other') && <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Maybe there are bottles I could return for a little money.</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>}
-            {(storyIntent === 'rest' || storyIntent === 'other') && !streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Is there a bench nearby? My legs could use a break.</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
-            {(storyIntent === 'rest' || storyIntent === 'other') && streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 I’ll sit for a bit. Just get off my feet.</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
+            {<button className="action" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
+            {<button className="action" aria-label="Just one more street. I’m not ready to lie down." onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
+            {discoveredLocations.includes('support') && <p className="muted">{isOpen(locations.find(location => location.id === 'support')!, game.minutes) ? 'The Help Center is open until 16:00. Its address is on your map.' : 'You saved the Help Center address. Its services are closed now; it opens at 08:00.'}</p>}
+            {discoveredLocations.includes('shelter') && <button className="action" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Come tomorrow at 19:00; a place is not guaranteed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
+            {!firstNight && discoveredLocations.includes('work') && <button className="action" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
+            {<button className="action" aria-label="Maybe the station? At least I could sit down." onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Maybe the station? At least I could sit down.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
+            {!discoveredLocations.includes('shelter') && <button className="action" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 There must be somewhere to sleep… Let me look.</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!firstNight && !discoveredLocations.includes('work') && <button className="action" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Could I find a little work? I need to keep some money.</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!discoveredLocations.includes('support') && <button className="action" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Someone must know what I can do tomorrow.</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!firstNight && <button className="action" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask someone for change? It’s hard, but I could try.</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
+            {!firstNight && <button className="action" onClick={searchStreetBottles}><div><strong>♻️ Maybe there are bottles I could return for a little money.</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>}
+            {!streetBenchFound && <button className="action" onClick={() => streetAction('find-bench')}><div><strong>🪑 Is there a bench nearby? My legs could use a break.</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
+            {streetBenchFound && <button className="action" onClick={() => streetAction('bench-rest')}><div><strong>🪑 I’ll sit for a bit. Just get off my feet.</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
             {streetBenchFound && <button className="action" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Could I sleep here? What about my backpack…</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>Choose duration</span></button>}
           </>}
-          {currentActions.length ? currentActions.filter(action => current.id !== 'street' || storyIntent === 'rest' || storyIntent === 'other').map((action) => {
+          {currentActions.length ? currentActions.map((action) => {
             const registering = action.id === 'shelter-rest' && !shelterBooked
             const selectableSleep = action.id === 'street-sleep' || action.id === 'station-sleep' || (action.id === 'shelter-rest' && shelterBooked) || action.id === 'residential-sleep'
             const unavailableReason = actionUnavailableReason(action)
@@ -1988,7 +1980,7 @@ export default function App() {
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
         <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Renew expired service automatically for 1 zł</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
         <AvailableFirst tag="div" className="phone-actions">
-          {current.id === 'street' && <button onClick={() => { setPhoneOpen(false); setScreen('location'); setStoryIntent('understand') }}><span>💬</span><div><strong>Ask AI</strong><small>Specific questions · saved answers work offline</small></div></button>}
+          {current.id === 'street' && <button disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < 1)} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Specific questions · saved answers work offline</small></div></button>}
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
           <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>

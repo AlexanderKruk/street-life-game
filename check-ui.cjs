@@ -19,21 +19,7 @@ function setup(state={},effects=[]){
  Math.random=()=>0.99;
  render(React.createElement(App));
 }
-function button(name){
- if(!screen.queryByRole('button',{name})){
-  for(const intent of ['I don’t know where to go… Maybe my phone can help.','Somewhere warm… The station lights are still on.','I’m not ready to sleep out here. I’ll walk a little.','Find somewhere to sleep','Earn something for food','Stay here and rest']){
-   const choice=screen.queryByRole('button',{name:intent,exact:true});if(!choice)continue;fireEvent.click(choice);
-   if(screen.queryByRole('button',{name}))break;
-   const back=screen.queryByRole('button',{name:'Choose another approach',exact:true});if(back)fireEvent.click(back);
-  }
- }
- if(!screen.queryByRole('button',{name}) && screen.queryByRole('button',{name:/Inventory$/})){
-  fireEvent.click(screen.getByRole('button',{name:/Inventory$/}));
-  const phone=screen.queryByRole('button',{name:/PhoneBattery/});if(phone)fireEvent.click(phone);
-  const ai=screen.queryByRole('button',{name:/Ask AI/});if(ai)fireEvent.click(ai);
- }
- fireEvent.click(screen.getByRole('button',{name}));
-}
+function button(name){const dialog=screen.queryByRole('dialog');fireEvent.click(dialog ? within(dialog).getByRole('button',{name}) : screen.getByRole('button',{name}));}
 function beginSleep(hours=2){button(/Lie down here\? I’m not sure… But I could try./);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'OK',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
