@@ -585,7 +585,7 @@ button.inventory-item { width:100%; }
 }
 
 /* v98: results are compact bottom cards, with the scene still visible behind. */
-.result-overlay { align-items:flex-end; padding:calc(105px + env(safe-area-inset-top, 0px)) 12px calc(82px + env(safe-area-inset-bottom, 0px)); background:rgba(4,7,10,.18); backdrop-filter:none; -webkit-backdrop-filter:none; }
+.result-overlay { align-items:flex-end; padding:calc(105px + env(safe-area-inset-top, 0px)) 12px calc(82px + env(safe-area-inset-bottom, 0px)); background:rgba(4,7,10,.62); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); }
 .result-modal { display:flex; flex-direction:column; width:min(480px,100%); max-height:min(58dvh,570px); overflow:hidden; padding:14px 16px; border:1px solid #4a5155; border-radius:18px; background:#191e21; color:#e8e5de; box-shadow:0 8px 30px rgba(0,0,0,.24); }
 .result-card-heading { flex-shrink:0; margin-bottom:9px; }
 .result-card-label { font-size:10px; font-weight:500; letter-spacing:.16em; color:#a6adaf; margin:0 0 5px; }
