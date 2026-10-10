@@ -710,3 +710,7 @@ button.inventory-item { width:100%; }
 .district-card { position:fixed; z-index:21; left:50%; bottom:calc(90px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); width:min(736px,calc(100% - 24px)); margin:0; box-shadow:0 8px 28px #0008; }
 .district-place-copy small { max-height:72px; overflow:auto; }
 @media (max-height:600px) { .district-card { padding-top:10px; padding-bottom:10px; } .district-place-copy small { max-height:40px; } }
+
+/* Keep scroll gestures inside an open result. */
+.result-overlay { overscroll-behavior:none; }
+.result-card-content { overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }

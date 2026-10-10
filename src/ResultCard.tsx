@@ -44,6 +44,31 @@ export default function ResultCard({ result, onClose, inline = false }: { result
     return () => { document.removeEventListener('keydown', onKey); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
   }, [inline])
 
+  useEffect(() => {
+    if (inline) return
+    // Fixed body also prevents background touch scrolling in mobile Safari.
+    const body = document.body
+    const root = document.documentElement
+    const x = window.scrollX
+    const y = window.scrollY
+    const saved = { position: body.style.position, top: body.style.top, left: body.style.left, width: body.style.width, overflow: body.style.overflow, rootOverflow: root.style.overflow }
+    body.style.position = 'fixed'
+    body.style.top = `${-y}px`
+    body.style.left = `${-x}px`
+    body.style.width = '100%'
+    body.style.overflow = 'hidden'
+    root.style.overflow = 'hidden'
+    return () => {
+      body.style.position = saved.position
+      body.style.top = saved.top
+      body.style.left = saved.left
+      body.style.width = saved.width
+      body.style.overflow = saved.overflow
+      root.style.overflow = saved.rootOverflow
+      window.scrollTo(x, y)
+    }
+  }, [inline])
+
   const presentation = result.presentation
   const changes = result.changes ?? []
   const gains = changes.filter(change => change.kind === 'positive')
