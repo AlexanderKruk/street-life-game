@@ -7,14 +7,18 @@ import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
-const PHONE_SEARCH_MINUTES = 30
-const PHONE_SEARCH_DRAIN = 6
+const PHONE_SEARCH_MINUTES = 10
+const PHONE_SEARCH_DRAIN = 2
 type PhoneActivity = { questionId: string; remaining: number; before: ResultSnapshot }
 
 function loadPhoneActivity(): PhoneActivity | null {
   try {
     const saved = JSON.parse(localStorage.getItem(PHONE_ACTIVITY_KEY) ?? 'null')
-    return saved && ['morning', 'bed', 'no-place', 'supplies'].includes(saved.questionId) && Number.isInteger(saved.remaining) && saved.remaining >= 0 && saved.remaining <= PHONE_SEARCH_MINUTES && saved.before?.game && saved.before?.inventory && Array.isArray(saved.before?.effects) && loadGame().locationId === 'street' ? saved : null
+    if (!saved || !['morning', 'bed', 'no-place', 'supplies'].includes(saved.questionId) || !Number.isInteger(saved.remaining) || saved.remaining < 0 || saved.remaining > 30 || !saved.before?.game || !saved.before?.inventory || !Array.isArray(saved.before?.effects) || loadGame().locationId !== 'street') return null
+    // Shorten a search already started in v98 without charging or restarting it.
+    const elapsed = absoluteMinutes(loadGame()) - absoluteMinutes(saved.before.game)
+    if (!Number.isFinite(elapsed) || elapsed < 0) return null
+    return { ...saved, remaining: Math.min(saved.remaining, Math.max(0, PHONE_SEARCH_MINUTES - elapsed)) }
   } catch { return null }
 }
 
@@ -1894,7 +1898,7 @@ export default function App() {
       {current.id === 'street' && <div className={`street-art${phoneActivity || inlineResult ? ' phone-art' : !infoModal?.presentation?.illustration && (game.minutes >= 1200 || game.minutes < 360) ? ' night' : ''}`} aria-hidden="true"><img src={phoneActivity ? '/street-life-game/assets/phone-search.webp' : infoModal?.presentation?.illustration ?? (inlineResult ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp')} alt="" width="1400" height={phoneActivity || inlineResult ? 1050 : 788} fetchPriority="high" />{infoModal?.presentation?.illustration && <span className="result-art-caption">Looking ahead</span>}</div>}
       {phoneActivity ? <section className="phone-activity" aria-labelledby="phone-activity-title" aria-busy="true">
         <div className="phone-activity-heading"><p className="eyebrow">USING YOUR PHONE</p><div className="phone-activity-symbol" aria-hidden="true"><span /><span /><span /></div></div>
-        <h2 id="phone-activity-title">{phoneActivity.remaining > 20 ? 'Looking for information' : phoneActivity.remaining > 10 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
+        <h2 id="phone-activity-title">{phoneActivity.remaining > PHONE_SEARCH_MINUTES * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > PHONE_SEARCH_MINUTES / 3 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
         <p>{practicalQuestions.find(question => question.id === phoneActivity.questionId)?.title}<br />Checking addresses and opening hours.</p>
         <div className="phone-activity-progress" role="progressbar" aria-label="Phone search" aria-valuemin={0} aria-valuemax={PHONE_SEARCH_MINUTES} aria-valuenow={PHONE_SEARCH_MINUTES - phoneActivity.remaining}><i style={{ width: `${(PHONE_SEARCH_MINUTES - phoneActivity.remaining) / PHONE_SEARCH_MINUTES * 100}%` }} /></div>
         <div className="phone-activity-meta"><span><Icon name="clock" />{PHONE_SEARCH_MINUTES - phoneActivity.remaining} / {PHONE_SEARCH_MINUTES} min</span><span>{phoneActivity.remaining} min left</span></div>
@@ -1980,11 +1984,11 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
-            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `~30 min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
+            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small>{answeredQuestions.includes('morning') ? 'Read saved answer · free' : 'Ask about help in the morning'}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `~${PHONE_SEARCH_MINUTES} min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
             {visibleQuestions.filter(question => question.id !== 'morning').map(question => {
               const saved = answeredQuestions.includes(question.id)
               const memory = question.id === 'charging'
-              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small>{memory ? 'Low battery brings an old memory back: the station waiting room.' : saved ? 'Read saved AI answer · free' : 'Ask AI · needs mobile service and battery'}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : `~30 min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
+              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small>{memory ? 'Low battery brings an old memory back: the station waiting room.' : saved ? 'Read saved AI answer · free' : 'Ask AI · needs mobile service and battery'}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : `~${PHONE_SEARCH_MINUTES} min · −${phoneSearchCost.toFixed(1)}% battery`}</span></button>
             })}
             {<button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
@@ -2286,7 +2290,7 @@ export default function App() {
       </section>
     </div>}
 
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-98</small></footer>
+    <footer><button className="reset" onClick={reset}>Reset save</button><small className="build-version">v2026.10.10-99</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
