@@ -310,23 +310,22 @@ button.inventory-item { width:100%; }
 .shop-capacity-bar i { display:block; height:100%; border-radius:inherit; background:#d7b58a; }
 .shop-category h3 { display:flex; align-items:center; gap:12px; margin:16px 0 9px; color:#929ca3; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.2em; }
 .shop-category h3::after { content:''; flex:1; height:1px; background:#30393f; }
-.supply-grid { gap:8px; align-items:start; }
-.supply-card { display:grid; grid-template-columns:39% minmax(0,1fr); border:1px solid #343d42; border-radius:8px; background:#10161a; overflow:hidden; min-width:0; }
-.supply-picture { position:relative; align-self:stretch; min-width:0; display:flex; align-items:center; background:#101213; padding-bottom:20px; overflow:hidden; }
+.supply-grid { gap:8px; align-items:stretch; }
+.supply-card { display:grid; grid-template-columns:39% minmax(0,1fr); grid-template-rows:1fr auto; border:1px solid #343d42; border-radius:8px; background:#10161a; overflow:hidden; min-width:0; }
+.supply-picture { min-width:0; display:flex; align-items:center; background:#101213; overflow:hidden; }
 .supply-art { display:block; width:100%; aspect-ratio:1; background-image:url('/street-life-game/assets/shop-products.webp'); background-size:200% 400%; background-repeat:no-repeat; }
-.supply-steal { position:absolute; bottom:0; left:0; width:100%; min-height:26px; padding:4px 2px; background:#121517eb; border:0; border-top:1px solid #35302d; color:#ae9186; font-size:9px; cursor:pointer; }
-.supply-copy { padding:10px 7px 7px; min-width:0; display:flex; flex-direction:column; }
-.supply-copy > strong { min-height:30px; font-size:11px; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
-.supply-copy > small { display:block; min-height:24px; margin:2px 0 5px; font-size:10px; line-height:1.25; color:#99a3a9; }
-.supply-purchase { display:flex; align-items:center; justify-content:space-between; gap:3px; margin-top:auto; border-top:1px solid #303a3f; padding-top:7px; }
-.supply-purchase b { font-size:12px; font-weight:600; color:#eeece6; white-space:nowrap; }
-.supply-purchase .shop-buy { min-height:32px; min-width:38px; padding:5px 7px; border:1px solid #d1b18a; border-radius:5px; background:#d1b18a; color:#141619; font-size:11px; font-weight:650; cursor:pointer; }
+.supply-copy { padding:9px 6px 8px; min-width:0; display:flex; flex-direction:column; }
+.supply-copy > strong { font-size:11px; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
+.supply-copy > small { display:block; margin:4px 0 7px; font-size:10px; line-height:1.25; color:#99a3a9; }
+.supply-effects.shop-impact { margin-top:auto; gap:3px; }
+.supply-effects.shop-impact em { padding:3px 4px; font-size:9px; font-weight:600; line-height:1.25; }
+.supply-actions { grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); gap:6px; padding:6px; border-top:1px solid #303a3f; }
+.supply-actions button { min-width:0; min-height:44px; display:flex; align-items:center; justify-content:center; padding:7px 4px; border:1px solid transparent; border-radius:6px; cursor:pointer; }
+.supply-actions .supply-steal { background:#532d2d; border-color:#6c3e3c; color:#e3aca2; }
+.supply-steal svg { width:24px; height:24px; }
+.supply-actions .shop-buy { border-color:#d1b18a; background:#d1b18a; color:#141619; font-size:15px; font-weight:650; white-space:nowrap; }
 .supply-card button:disabled { opacity:.4; cursor:not-allowed; }
-.supply-copy > .supply-unavailable { min-height:0; margin:6px 0 0; color:#bd9986; font-size:9px; }
-.supply-details { grid-column:1 / -1; padding:0 7px 5px; border-top:1px solid #283036; color:#8f999f; font-size:9px; }
-.supply-details summary { padding:4px 0 0; cursor:pointer; }
-.supply-details p { font-size:10px; line-height:1.4; margin:7px 0 4px; }
-.supply-details .shop-impact { padding-bottom:4px; }
+.supply-unavailable { grid-column:1 / -1; padding:0 7px 6px; color:#bd9986; font-size:9px; }
 .supply-card :focus-visible,.shop-return:focus-visible { outline:2px solid #d7b58a; outline-offset:-2px; }
 .shop-return { width:100%; display:flex; align-items:center; gap:9px; padding:10px; margin-top:9px; color:#e8e5df; border:1px solid #343d42; border-radius:8px; background:#11171b; text-align:left; }
 .shop-return svg { width:22px; height:22px; color:#d7b58a; }
@@ -336,7 +335,7 @@ button.inventory-item { width:100%; }
 .shop-return b { font-size:12px; color:#d7b58a; }
 .shop-screen .shop-meal { margin-top:15px; border-radius:8px; background:#11171b; }
 @media (max-width:420px) { .shop-hero { margin-left:-12px; margin-right:-12px; padding-left:12px; padding-right:12px; } }
-@media (min-width:600px) { .supply-copy { padding:13px; } .supply-copy > strong { font-size:15px; } .supply-copy > small { font-size:12px; } .supply-purchase b { font-size:15px; } .supply-purchase .shop-buy { min-width:65px; min-height:36px; font-size:13px; } }
+@media (min-width:600px) { .supply-copy { padding:13px; } .supply-copy > strong { font-size:15px; } .supply-copy > small { font-size:12px; } .supply-effects.shop-impact em { font-size:11px; } }
 .shop-meal { width:100%; margin-top:8px; padding:13px; display:grid; grid-template-columns:36px 1fr auto; gap:10px; align-items:center; }
 .shop-meal > span { font-size:28px; }
 .shop-meal > div { min-width:0; display:flex; flex-direction:column; gap:3px; }

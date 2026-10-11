@@ -20,13 +20,15 @@ export default function ShopCard({ item, fits, affordable, onBuy, onSteal }: Pro
   return <article className="supply-card">
     <div className="supply-picture">
       <span className="supply-art" style={{ backgroundPosition: artPositions[item.id] }} aria-hidden="true" />
-      <button className="supply-steal" onClick={onSteal} disabled={!fits} aria-label="STEAL" title={`Steal ${item.name}`}>Steal</button>
     </div>
     <div className="supply-copy">
-      <strong>{item.name}</strong><small>{captions[item.id]}</small>
-      <div className="supply-purchase"><b>{item.price} zł</b><button className="shop-buy" onClick={onBuy} disabled={!!reason} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={reason || `Buy ${item.name}`}>Buy</button></div>
-      {reason && <small className="supply-unavailable">{reason}</small>}
+      <strong>{item.name}</strong><small title={item.description || undefined}>{captions[item.id]}</small>
+      <div className="shop-impact supply-effects" aria-label="Effects">{item.impacts.map(impact => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div>
     </div>
-    <details className="supply-details"><summary>Effects</summary><p>{item.description}</p><div className="shop-impact">{item.impacts.map(impact => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div></details>
+    <div className="supply-actions">
+      <button className="supply-steal" onClick={onSteal} disabled={!fits} aria-label="STEAL" title={`Steal ${item.name}`}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 21v-8l5-5a2 2 0 0 1 3 3l-2 2h7a2 2 0 0 1 2 2l-1 4a3 3 0 0 1-3 2H3Z"/><path d="m12 7 2-3 3 2 1 3-3 2M19 3l2 2m-2 6h3M13 2V1"/></svg></button>
+      <button className="shop-buy" onClick={onBuy} disabled={!!reason} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={reason || `Buy ${item.name}`}>{item.price} zł</button>
+    </div>
+    {reason && <small className="supply-unavailable">{reason}</small>}
   </article>
 }
