@@ -894,6 +894,6 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .inventory-screen .essentials-grid .inventory-art { min-height:80px; }
 .inventory-screen .essentials-grid .inventory-item > div { justify-content:center; padding:8px 7px 8px 0; gap:5px; }
 .inventory-screen .essentials-grid strong { font-size:12px; line-height:1.25; }
-.inventory-screen .essentials-grid small { font-size:10px; line-height:1.4; color:#aab0b4; }
+.inventory-screen .essentials-grid small { font-size:12px; line-height:1.4; color:#aab0b4; }
 .inventory-slot:focus-visible { outline:2px solid #d7b58a; outline-offset:2px; }
 @media(min-width:600px) { .inventory-slot-copy strong { font-size:14px; } .inventory-effects em { font-size:12px; } .inventory-screen .essentials-grid strong { font-size:15px; } .inventory-screen .essentials-grid small { font-size:12px; } }
