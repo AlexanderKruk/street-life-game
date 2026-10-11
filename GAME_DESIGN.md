@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-133`. Current v128–v133 clinic, mood, condition and inventory rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-134`. Current v128–v134 clinic, mood, condition and inventory rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -801,7 +801,9 @@ Validation for v115: `npm run build` and `npm test` passed locally, and its GitH
 - The header describes overall condition, separately from Mood: 60% of the physical-stat average plus 40% Mood. Any physical stat at 20 or lower caps the score at 40; Health at 10 or lower, Food or Thirst at 5 or lower caps it at 20, so comfortable averages cannot hide an emergency.
 - Five monochrome outline faces: Very bad (≤20), Bad (≤40), Fair (≤60), Good (≤80), Very good (>80). The Mood card uses these same five faces based on Mood itself. Overall header, status notification dot and journal condition text use the combined score.
 
-## Inventory slot presentation (v131–v133)
+## Inventory slot presentation (v131–v134)
+
+v134 gives effect tags the full available copy width so they share a line when they fit and wrap otherwise. The phone's “tap to open” hint starts on a new line below its battery percentage.
 
 v132 arranges backpack slots in two columns. Each occupied card has the item image on the left and its name and effect tags on the right. v133 removes empty placeholder cards to avoid unnecessary vertical space; an empty backpack shows a short message. The compact occupancy count remains, with no progress bar.
 

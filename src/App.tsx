@@ -11,7 +11,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-133'
+const BUILD_VERSION = 'v2026.10.11-134'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -2087,7 +2087,7 @@ export default function App() {
       </div></div></div>}
       <div className="inventory-grid essentials-grid">
         <button className="inventory-item usable" onClick={() => setPhoneOpen(true)}>
-          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · tap to open</small></div>
+          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />tap to open</small></div>
         </button>
         <div className="inventory-item">
           <ItemArt id="clothing" /><div><strong>Clothing</strong><small>{Math.round(inventory.jacket)}% condition</small><small>{Math.round(inventory.clothingCleanliness)}% clean · Hygiene max {hygieneLimit}</small></div>
