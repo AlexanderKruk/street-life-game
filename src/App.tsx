@@ -5,11 +5,13 @@ import { summarizeResult, type ResultSnapshot, type ResultSummary } from './resu
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
 import CityMap from './CityMap'
 import ShopCard from './ShopCard'
+import ItemArt, { type ItemArtId } from './ItemArt'
+import InventorySlot from './InventorySlot'
 import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-130'
+const BUILD_VERSION = 'v2026.10.11-131'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -1825,6 +1827,18 @@ export default function App() {
   const nav = (target: Screen, icon: IconName, label: string) =>
     <button disabled={!!phoneActivity} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
 
+  const backpackItems: { art: ItemArtId; name: string; count: number; stackSize: number; effects: string[]; hint: string; onUse?: () => void; disabled?: boolean }[] = [
+    { art: 'water', name: 'Water', count: inventory.water, stackSize: STACK_SIZE, effects: ['Thirst+++'], hint: 'tap to drink', onUse: () => useItem('water') },
+    { art: 'food', name: 'Food', count: inventory.food, stackSize: STACK_SIZE, effects: inventory.foodFreshness > 50 ? ['Food++', 'Mood+'] : inventory.foodFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled', 'Health−'], hint: `${foodFreshnessLabel(inventory.foodFreshness)} · tap to eat`, onUse: () => useItem('food') },
+    { art: 'bread', name: 'Bread roll', count: inventory.bread, stackSize: STACK_SIZE, effects: ['Food+', ...(inventory.breadFreshness <= 50 ? [foodFreshnessLabel(inventory.breadFreshness)] : [])], hint: `${foodFreshnessLabel(inventory.breadFreshness)} · tap to eat`, onUse: () => useSupply('bread') },
+    { art: 'cannedFood', name: 'Canned food', count: inventory.cannedFood, stackSize: STACK_SIZE, effects: ['Food++', 'Mood+'], hint: 'Keeps well · tap to eat', onUse: () => useSupply('cannedFood') },
+    { art: 'wipes', name: 'Wet wipes', count: inventory.wipes, stackSize: WIPES_STACK_SIZE, effects: ['Hygiene+'], hint: game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean', onUse: () => useSupply('wipes'), disabled: game.hygiene >= 60 },
+    { art: 'bottles', name: 'Returnable bottles', count: inventory.bottles, stackSize: BOTTLE_STACK_SIZE, effects: ['0.50 zł'], hint: '0.50 zł each · return at shop' },
+    { art: 'cigarettes', name: 'Cigarettes', count: inventory.cigarettes, stackSize: CIGARETTE_STACK_SIZE, effects: ['Mood+', 'Health−'], hint: 'tap to smoke', onUse: smokeCigarette },
+    { art: 'medicines', name: 'Medicine', count: inventory.medicines, stackSize: STACK_SIZE, effects: ['Removes Cold'], hint: 'treats Cold', onUse: useMedicine },
+    { art: 'showerGel', name: '3-in-1 shower gel', count: inventory.showerGel, stackSize: SHOWER_GEL_USES_PER_SLOT, effects: ['Hygiene+++'], hint: 'Uses left · automatic with a shower · Hygiene max 100' },
+  ]
+
   return <main className={`shell${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {sleepChoice && <div className="phone-overlay result-overlay">
       <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
@@ -2050,39 +2064,16 @@ export default function App() {
     })()}
 
     {screen === 'inventory' && <section className="inventory-screen">
-      <div className="inventory-heading"><div><p className="eyebrow">INVENTORY</p><h2>Your things</h2></div></div>
-
-      <div className="inventory-section-heading"><div><strong>🎒 Backpack</strong><small>Consumables use slots</small></div><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
-      <div className="backpack-capacity"><i style={{ width: `${(usedBackpackSlots / BACKPACK_CAPACITY) * 100}%` }} /></div>
-      <div className="inventory-grid backpack-grid">
-        {inventory.water > 0 && <button className="inventory-item usable" onClick={() => useItem('water')}>
-          <span className="item-icon">💧</span><div><strong>Water ×{inventory.water}</strong><small>tap to drink</small></div>
-        </button>}
-        {inventory.food > 0 && <button className="inventory-item usable" onClick={() => useItem('food')}>
-          <span className="item-icon">🥪</span><div><strong>Food</strong><small>×{inventory.food} · tap to eat</small></div>
-        </button>}
-        {inventory.bread > 0 && <button className="inventory-item usable" onClick={() => useSupply('bread')}>
-          <span className="item-icon">🥖</span><div><strong>Bread roll ×{inventory.bread}</strong><small>{foodFreshnessLabel(inventory.breadFreshness)} · tap to eat</small></div>
-        </button>}
-        {inventory.cannedFood > 0 && <button className="inventory-item usable" onClick={() => useSupply('cannedFood')}>
-          <span className="item-icon">🥫</span><div><strong>Canned food ×{inventory.cannedFood}</strong><small>Keeps well · tap to eat</small></div>
-        </button>}
-        {inventory.wipes > 0 && <button className="inventory-item usable" onClick={() => useSupply('wipes')} disabled={game.hygiene >= 60}>
-          <span className="item-icon">🧻</span><div><strong>Wet wipes ×{inventory.wipes}</strong><small>{game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean · Hygiene+'}</small></div>
-        </button>}
-        {inventory.bottles > 0 && Array.from({ length: Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) }, (_, stackIndex) => {
-          const stackCount = Math.min(BOTTLE_STACK_SIZE, inventory.bottles - stackIndex * BOTTLE_STACK_SIZE)
-          return <div className="inventory-item" key={`bottle-stack-${stackIndex}`}><span className="item-icon">♻️</span><div><strong>Returnable bottles</strong><small>×{stackCount} / {BOTTLE_STACK_SIZE} · 0.50 zł each</small></div></div>
-        })}
-        {inventory.cigarettes > 0 && <button className="inventory-item usable" onClick={smokeCigarette}>
-          <span className="item-icon">🚬</span><div><strong>Cigarettes</strong><small>×{inventory.cigarettes} · tap to smoke</small></div>
-        </button>}
-        {inventory.medicines > 0 && <button className="inventory-item usable" onClick={useMedicine}>
-          <span className="item-icon">💊</span><div><strong>Medicine</strong><small>×{inventory.medicines} · treats Cold</small></div>
-        </button>}
+      <div className="inventory-heading"><h2>Inventory</h2></div>
+      <div className="inventory-section-heading"><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
+      <div className="inventory-grid backpack-grid" role="group" aria-label="Backpack slots">
+        {backpackItems.flatMap(item => Array.from({ length: Math.ceil(item.count / item.stackSize) }, (_, index) =>
+          <InventorySlot key={`${item.art}-${index}`} art={item.art} name={item.name} quantity={Math.min(item.stackSize, item.count - index * item.stackSize)} effects={item.effects} hint={item.hint} onUse={item.onUse} disabled={item.disabled} />))}
+        {Array.from({ length: Math.max(0, BACKPACK_CAPACITY - usedBackpackSlots) }, (_, index) =>
+          <div className="inventory-slot empty-slot" key={`empty-${index}`} role="img" aria-label="Empty backpack slot"><ItemArt id="empty" /><span className="empty-slot-outline" aria-hidden="true"><span>+</span></span></div>)}
       </div>
 
-      <div className="inventory-section-heading essentials-heading"><div><strong>👤 Equipped & essentials</strong><small>{inventory.showerGel > 0 ? 'Gel uses backpack space; other equipment is slot-free' : 'These do not use backpack slots'}</small></div></div>
+      <div className="inventory-section-heading essentials-heading"><div><strong>Essentials</strong><small>No backpack slots</small></div></div>
       {phoneOpen && <div className="phone-overlay" onClick={() => setPhoneOpen(false)}><div className="phone-modal" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setPhoneOpen(false)}>×</button><div className="phone-panel">
         <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
@@ -2097,20 +2088,17 @@ export default function App() {
       </div></div></div>}
       <div className="inventory-grid essentials-grid">
         <button className="inventory-item usable" onClick={() => setPhoneOpen(true)}>
-          <span className="item-icon">📱</span><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · tap to open</small><div className="item-meter"><i style={{ width: `${inventory.phoneBattery}%` }} /></div></div>
+          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}% · tap to open</small></div>
         </button>
         <div className="inventory-item">
-          <span className="item-icon">🧥</span><div><strong>Clothing</strong><small>Condition {Math.round(inventory.jacket)}% · Cleanliness {Math.round(inventory.clothingCleanliness)}%</small><div className="item-meter"><i style={{ width: `${inventory.clothingCleanliness}%` }} /></div><small>Hygiene max {hygieneLimit}</small></div>
+          <ItemArt id="clothing" /><div><strong>Clothing</strong><small>{Math.round(inventory.jacket)}% condition</small><small>{Math.round(inventory.clothingCleanliness)}% clean · Hygiene max {hygieneLimit}</small></div>
         </div>
         <div className="inventory-item">
-          <span className="item-icon">🪪</span><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
+          <ItemArt id="documents" /><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
         </div>
         <div className="inventory-item">
-          <span className="item-icon">🎫</span><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
+          <ItemArt id="transitCard" /><div><strong>Transit card</strong><small>{inventory.transitCard ? 'Active' : 'Missing'}</small></div>
         </div>
-        {inventory.showerGel > 0 && <div className="inventory-item">
-          <span className="item-icon">🧴</span><div><strong>3-in-1 shower gel ×{inventory.showerGel}</strong><small>Uses left · automatic with a shower · Hygiene max 100</small></div>
-        </div>}
       </div>
     </section>}
     {screen === 'status' && <section className="status-screen">

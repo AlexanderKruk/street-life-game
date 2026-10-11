@@ -1,12 +1,9 @@
 import { Icon } from './Icon'
+import ItemArt, { type ItemArtId } from './ItemArt'
 
 const captions: Record<string, string> = {
   water: '3 portions', food: 'Sandwich', bread: '1 roll', cannedFood: 'Keeps well',
   wipes: '5 uses', showerGel: '20 showers', cigarettes: 'Pack of 5', medicines: 'Basic medicine',
-}
-const artPositions: Record<string, string> = {
-  water: '0% 0%', food: '100% 0%', bread: '0% 33.333333%', cannedFood: '100% 33.333333%',
-  wipes: '0% 66.666667%', showerGel: '100% 66.666667%', cigarettes: '0% 100%', medicines: '100% 100%',
 }
 
 type Props = {
@@ -22,7 +19,7 @@ export default function ShopCard({ item, open, fits, affordable, onBuy, onSteal 
   const reason = !open ? 'Shop closed' : !fits ? 'Backpack full' : !affordable ? 'Not enough money' : ''
   return <article className="supply-card">
     <div className="supply-picture">
-      <span className="supply-art" style={{ backgroundPosition: artPositions[item.id] }} aria-hidden="true" />
+      <ItemArt id={item.id as ItemArtId} className="supply-art" />
     </div>
     <div className="supply-copy">
       <strong>{item.name}</strong><small title={item.description || undefined}>{captions[item.id]}</small>

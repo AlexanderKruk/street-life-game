@@ -216,10 +216,10 @@ setup({locationId:'support',minutes:420});assert(screen.getByRole('status').text
 setup({locationId:'shop',thirst:0},{[invKey]:{water:0}});
 assert(!screen.queryByText(/1.5 L|0.5 L/));assert(screen.getByText('Water'));assert(screen.getByText('3 portions'));assert(!screen.queryByText('💧💧💧'));click('Buy Water for 3.00 zł');
 assert.equal(read(stateKey).money,97);assert.equal(read(invKey).water,3);assert(screen.getByRole('dialog').textContent.includes('Water ×3'));assert(screen.getByRole('dialog').textContent.includes('+3'));ok();click(/Inventory$/);
-assert(screen.getByText('Water ×3'));assert(!document.querySelector('.water-portions'));
+assert(screen.getByRole('button',{name:/Water ×3.*tap to drink/}));assert(!document.querySelector('.water-portions'));
 for(const [remaining,thirst] of [[2,38],[1,76],[0,100]]) {
  click(/Water.*tap to drink/);assert.equal(read(invKey).water,remaining);assert.equal(read(stateKey).thirst,thirst);assert(screen.getByRole('dialog').textContent.includes('You drank water'));ok();
- if(remaining>0){assert(screen.getByText(`Water ×${remaining}`));cleanup();render(React.createElement(App));assert.equal(read(invKey).water,remaining);}
+ if(remaining>0){assert(screen.getByRole('button',{name:new RegExp(`Water ×${remaining}.*tap to drink`)}));cleanup();render(React.createElement(App));assert.equal(read(invKey).water,remaining);}
 }
 assert(!screen.queryByRole('button',{name:/Water.*tap to drink/}));
 // A purchase fits only if all three portions fit in the backpack.
@@ -247,7 +247,7 @@ for(const [name,price,key,quantity] of [['Bread roll','1.00','bread',1],['Canned
  setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:20}});assert(!screen.getByRole('button',{name:`Buy ${name} for ${price} zł`}).disabled);fireEvent.click(screen.getByTitle(`Steal ${name}`));click('Roll D20');click('Continue');assert.equal(read(invKey)[key],quantity);assert.equal(read(stateKey).money,100);assert(screen.getByRole('dialog').textContent.includes(`+${quantity}`));
 }
 // Gel is twenty shower uses per bottle; older inventories acquire no free gel.
-setup({locationId:'shop'},{[invKey]:{water:2}});assert.equal(read(invKey).showerGel,0);click('Buy 3-in-1 shower gel for 10.00 zł');assert.equal(read(stateKey).money,90);assert.equal(read(invKey).showerGel,20);assert(screen.getByRole('dialog').textContent.includes('+20'));ok();click(/Inventory$/);assert(screen.getByText('3-in-1 shower gel ×20').closest('.essentials-grid'));assert(!document.querySelector('.backpack-grid').textContent.includes('3-in-1 shower gel'));assert(!screen.queryByRole('button',{name:/3-in-1 shower gel/}));cleanup();render(React.createElement(App));assert.equal(read(invKey).showerGel,20);
+setup({locationId:'shop'},{[invKey]:{water:2}});assert.equal(read(invKey).showerGel,0);click('Buy 3-in-1 shower gel for 10.00 zł');assert.equal(read(stateKey).money,90);assert.equal(read(invKey).showerGel,20);assert(screen.getByRole('dialog').textContent.includes('+20'));ok();click(/Inventory$/);assert(screen.getByText('3-in-1 shower gel').closest('.backpack-grid'));assert(!document.querySelector('.essentials-grid').textContent.includes('3-in-1 shower gel'));assert(!screen.queryByRole('button',{name:/3-in-1 shower gel/}));cleanup();render(React.createElement(App));assert.equal(read(invKey).showerGel,20);
 setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:24}});assert(screen.getByRole('button',{name:'Buy 3-in-1 shower gel for 10.00 zł'}).disabled);assert(screen.getByTitle('Steal 3-in-1 shower gel').disabled);
 setup({locationId:'shop'},{[invKey]:{showerGel:0}});fireEvent.click(screen.getByTitle('Steal 3-in-1 shower gel'));click('Roll D20');click('Continue');assert.equal(read(invKey).showerGel,20);assert.equal(read(stateKey).money,100);
 setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:20,showerGel:0}});click('Buy 3-in-1 shower gel for 10.00 zł');assert.equal(read(invKey).showerGel,20);ok();assert(screen.getByRole('button',{name:'Buy 3-in-1 shower gel for 10.00 zł'}).disabled);assert.equal(read(stateKey).money,90);
@@ -517,6 +517,26 @@ setup({locationId:'daycenter'},{[invKey]:{clothingCleanliness:10}});Math.random=
 setup({locationId:'shelter',day:4,minutes:1080},{[invKey]:{clothingCleanliness:10,jacket:42},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7,shelterLaundryDropDay:4}});click(/Collect clean laundry/);assert.equal(read(invKey).clothingCleanliness,100);assert.equal(read(invKey).jacket,42);ok();assert(screen.getByRole('button',{name:/Collect clean laundry/}).disabled);
 setup({locationId:'shelter',day:4,minutes:390},{[invKey]:{clothingCleanliness:10},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}});click(/Leave clothes for laundry/);assert(read(invKey).clothingCleanliness<10);
 setup({energy:68},{[invKey]:{clothingCleanliness:100}});beginSleep(/Lie down here\? I’m not sure… But I could try./,4);click('Wake up (debug)');near(read(invKey).clothingCleanliness,90);
+// Inventory slots reflect actual stack occupancy, including passive supplies.
+const emptyBag={water:0,food:0,medicines:0,bread:0,cannedFood:0,wipes:0,showerGel:0,cigarettes:0,bottles:0};
+setup({}, {[invKey]:emptyBag});click(/^Inventory$/);
+assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,8);
+assert.equal(document.querySelectorAll('.empty-slot').length,8);
+assert(!document.querySelector('.backpack-capacity'));
+setup({}, {[invKey]:{...emptyBag,water:5,showerGel:21,bottles:9}});click(/^Inventory$/);
+assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,8);
+assert.equal(document.querySelectorAll('.empty-slot').length,2);
+assert.equal(screen.getAllByRole('button',{name:/Water.*tap to drink/}).length,2);
+assert(screen.getByRole('group',{name:/3-in-1 shower gel ×20/}));
+assert(screen.getByRole('group',{name:/3-in-1 shower gel ×1 ·/}));
+assert(screen.getByRole('group',{name:/Returnable bottles ×8/}));
+assert(screen.getByRole('group',{name:/Returnable bottles ×1 ·/}));
+click(/Water ×1 · tap to drink/);ok();
+assert.equal(read(invKey).water,4);assert.equal(document.querySelectorAll('.empty-slot').length,3);
+setup({}, {[invKey]:{water:4,food:4,medicines:4,bread:4,cannedFood:4,wipes:5,showerGel:20,cigarettes:20,bottles:0}});click(/^Inventory$/);
+assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,8);
+assert.equal(document.querySelectorAll('.empty-slot').length,0);
+assert.equal(document.querySelectorAll('.essentials-grid > .inventory-item').length,4);
 // Splitting the combined center preserves known addresses and moves medical care.
 setup({locationId:'daycenter'},{'street-life-discovered-v1':['street','daycenter']});
 assert(read('street-life-discovered-v1').includes('free-clinic'));

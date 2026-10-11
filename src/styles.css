@@ -865,3 +865,39 @@ footer .header-version { margin-left:auto; align-self:center; }
 .district-place-heading p { font-size:16px; font-weight:600; line-height:1.3; white-space:nowrap; }
 .district-route-button { min-width:64px; white-space:nowrap; }
 @media(max-width:360px) { .district-card { grid-template-columns:40px minmax(0,1fr) auto; } .district-place-icon,.district-place-icon svg { width:40px; height:40px; } }
+
+/* v131: actual backpack stacks with tangible empty slots. */
+.inventory-screen .inventory-heading h2 { font-size:26px; margin:4px 0 20px; }
+.inventory-screen .inventory-section-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 12px; }
+.inventory-screen .inventory-section-heading strong { font-size:17px; font-weight:600; }
+.inventory-screen .inventory-section-heading > span { font-size:12px; font-weight:400; color:#aab0b4; }
+.inventory-screen .backpack-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0; }
+.inventory-slot { position:relative; min-width:0; padding:0; border:1px solid #343d42; border-radius:9px; background:#141b1f; color:#eceeed; overflow:hidden; text-align:center; font-family:inherit; display:flex; flex-direction:column; }
+button.inventory-slot { cursor:pointer; width:100%; }
+.inventory-slot-picture { position:relative; width:100%; aspect-ratio:1; flex-shrink:0; }
+.inventory-art { display:block; width:100%; height:100%; background-repeat:no-repeat; }
+.inventory-slot-picture .inventory-art { position:absolute; inset:0; }
+.inventory-quantity { position:absolute; z-index:1; right:4px; top:4px; padding:2px 5px; border:1px solid #485158; border-radius:5px; background:#101619db; color:#e7e8e4; font-size:12px; line-height:1.3; }
+.inventory-slot-copy { display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 4px; flex:1; }
+.inventory-slot-copy strong { font-size:12px; line-height:1.3; font-weight:600; overflow-wrap:anywhere; }
+.inventory-effects { display:flex; flex-wrap:wrap; justify-content:center; gap:3px; margin-top:auto; }
+.inventory-effects em { font-size:10px; line-height:1.3; font-style:normal; font-weight:600; padding:3px 4px; border-radius:5px; overflow-wrap:anywhere; }
+.inventory-effects .positive { color:#9fcbac; background:#1c3327; }
+.inventory-effects .negative { color:#dc9b98; background:#392323; }
+.inventory-effects .warning { color:#d7b58a; background:#3a3024; }
+.inventory-slot:disabled { opacity:.55; cursor:default; }
+.empty-slot { min-height:138px; }
+.empty-slot > .inventory-art { position:absolute; inset:0; opacity:.22; }
+.empty-slot::after { content:''; position:absolute; inset:0; background:linear-gradient(145deg,#111a2070,#0c1119b8); pointer-events:none; }
+.empty-slot-outline { position:absolute; z-index:1; inset:9px; border:1px dashed #465056; border-radius:7px; display:grid; place-items:center; color:#566167; }
+.empty-slot-outline > span { font-size:24px; font-weight:300; opacity:.6; }
+.inventory-screen .essentials-heading { padding-top:20px; margin-top:20px; border-top:1px solid #30383e; }
+.inventory-screen .essentials-heading small { display:block; font-size:11px; color:#8f9ba3; margin-top:4px; }
+.inventory-screen .essentials-grid { gap:8px; margin-top:0; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.inventory-screen .essentials-grid .inventory-item { display:grid; grid-template-columns:42% minmax(0,1fr); gap:8px; min-height:90px; padding:0; border-radius:9px; border-color:#343d42; background:#141b1f; align-items:stretch; overflow:hidden; }
+.inventory-screen .essentials-grid .inventory-art { min-height:90px; }
+.inventory-screen .essentials-grid .inventory-item > div { justify-content:center; padding:8px 7px 8px 0; gap:5px; }
+.inventory-screen .essentials-grid strong { font-size:12px; line-height:1.25; }
+.inventory-screen .essentials-grid small { font-size:10px; line-height:1.4; color:#aab0b4; }
+.inventory-slot:focus-visible { outline:2px solid #d7b58a; outline-offset:2px; }
+@media(min-width:600px) { .inventory-slot-copy strong { font-size:14px; } .inventory-effects em { font-size:12px; } .inventory-screen .essentials-grid strong { font-size:15px; } .inventory-screen .essentials-grid small { font-size:12px; } }

@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-129`. Current v128–v129 clinic, mood and overall-condition rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-131`. Current v128–v131 clinic, mood, condition and inventory rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -800,3 +800,11 @@ Validation for v115: `npm run build` and `npm test` passed locally, and its GitH
 - Action/event bonuses and penalties, music and Cold still apply. Physical influence runs through the same time progression for actions, travel, phone work and sleep, with no change while time is paused. Refreshing does not add a recovery bonus.
 - The header describes overall condition, separately from Mood: 60% of the physical-stat average plus 40% Mood. Any physical stat at 20 or lower caps the score at 40; Health at 10 or lower, Food or Thirst at 5 or lower caps it at 20, so comfortable averages cannot hide an emergency.
 - Five monochrome outline faces: Very bad (≤20), Bad (≤40), Fair (≤60), Good (≤80), Very good (>80). The Mood card uses these same five faces based on Mood itself. Overall header, status notification dot and journal condition text use the combined score.
+
+## Inventory slot presentation (v131)
+
+- The selected backpack-slot mockup is implemented as a four-column grid of eight actual storage slots. Filled slots show realistic item artwork, a per-stack quantity badge and qualitative effect tags. Each stack consumes a separate visible slot, using the existing four-item, eight-bottle, twenty-cigarette, five-wipe and twenty-gel-use limits. The occupancy progress bar is removed; the compact `used / 8 slots` label remains.
+- Empty slots show photographed worn backpack lining under a muted overlay, an inset dashed border and a subdued plus sign. They are passive placeholders, not buttons. Slot occupancy updates after use, purchase, theft, storage and reload. Over-capacity legacy inventory remains visible rather than losing items.
+- Shower gel now appears in the backpack, consistent with its existing storage cost. It is automatically used when showering; the passive card does not add a direct-use action. Phone, clothing, documents and transit card remain in a separate, slot-free two-column Essentials section.
+- Consumable artwork reuses `public/assets/shop-products.webp`. Shared `ItemArt` serves the shop and inventory. `public/assets/inventory-equipment.webp` contains phone, jacket, generic papers, blue transit card, returnable bottles and empty lining in a two-column/three-row sheet. Generated with the built-in imagegen tool: six equal photographic square tiles, dark charcoal fabric/tabletop, dim amber light, worn realistic objects, no text/UI/branding. It is optimized as WebP from the generated source.
+- Existing item handlers, freshness, medicine, wipes caps, phone controls and all gameplay values are unchanged. Freshness warnings appear on stale/spoiled food slots; use hints are included in accessible item labels.
