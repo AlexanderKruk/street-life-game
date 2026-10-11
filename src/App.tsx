@@ -11,7 +11,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-142'
+const BUILD_VERSION = 'v2026.10.11-143'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -230,7 +230,19 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
   }
   function thoughtOnly(node: ReactNode): ReactNode {
     if (!isValidElement<{ children?: ReactNode; 'data-choice'?: string }>(node) || node.type !== 'button') return node
-    const icon = choiceIcon(node.props['data-choice'] ?? '')
+    const id = node.props['data-choice'] ?? ''
+    const icon = choiceIcon(id)
+    const route = { 'station-route': 'station', 'shelter-route': 'shelter', 'work-route': 'work' }[id as 'station-route' | 'shelter-route' | 'work-route']
+    function textOf(children: ReactNode): string {
+      return Children.toArray(children).map(child => isValidElement<{ children?: ReactNode }>(child) ? textOf(child.props.children) : String(child)).join('')
+    }
+    const metadata = Children.toArray(node.props.children).find(part => isValidElement(part) && part.type === 'span')
+    const text = isValidElement<{ children?: ReactNode }>(metadata) ? textOf(metadata.props.children) : ''
+    const minutes = text.match(/~(\d+)(?:[–-](\d+))? min/)
+    const destination = route ? locations.find(place => place.id === route) : undefined
+    const duration = destination ? `${approximateDuration(Math.ceil(destination.travelMinutes * 0.5)).slice(1)}+`
+      : text === 'Choose duration' ? `${approximateDuration(SLEEP_HOURS[0] * 60).slice(1)}+`
+      : minutes ? minutes[2] ? `≈${minutes[1]}–${minutes[2]}m` : approximateDuration(Number(minutes[1])) : null
     return cloneElement(node, {}, Children.toArray(node.props.children)
       .filter(part => !isValidElement(part) || part.type !== 'span')
       .map(part => isValidElement<{ children?: ReactNode }>(part) && part.type === 'div'
@@ -240,7 +252,8 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
             ? cloneElement(detail, {}, Children.toArray(detail.props.children)
               .filter(text => !isValidElement(text) || text.type !== 'span')
               .map(text => typeof text === 'string' ? text.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '') : text))
-            : detail))
+            : detail), duration && !Children.toArray(part.props.children).some(detail => isValidElement<{ className?: string }>(detail) && detail.props.className?.split(' ').includes('choice-estimate'))
+              ? <small className="choice-estimate choice-duration">{duration}</small> : null)
         : part))
   }
   const nodes = flatten(children).map(node => thoughtsOnly ? thoughtOnly(node) : node)
