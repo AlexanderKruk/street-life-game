@@ -9,7 +9,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-112'
+const BUILD_VERSION = 'v2026.10.11-113'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -88,19 +88,19 @@ const SHELTER_DEPARTURE_MINUTES = 30
 const SHELTER_QUEUE_MINUTES = 20
 const SHELTER_REGISTRATION_OPEN = 19 * 60
 const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
-  cold: { icon: '🤒', name: 'Cold', kind: 'negative', impacts: ['Energy −−', 'Mood −'] },
-  'free-transit': { icon: '🎫', name: 'Free transport', kind: 'positive', impacts: ['Travel +++'] },
-  'well-fed': { icon: '🍲', name: 'Well fed', kind: 'positive', impacts: ['Food +++', 'Mood +'] },
+  cold: { icon: '🤒', name: 'Cold', kind: 'negative', impacts: ['Energy−−', 'Mood−'] },
+  'free-transit': { icon: '🎫', name: 'Free transport', kind: 'positive', impacts: ['Travel+++'] },
+  'well-fed': { icon: '🍲', name: 'Well fed', kind: 'positive', impacts: ['Food+++', 'Mood+'] },
 }
 
 const SHOP_ITEMS: ShopItem[] = [
-  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['Thirst +++'] },
-  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food ++', 'Mood +'] },
-  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food +'] },
-  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 6, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food ++', 'Mood +'] },
-  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene +'] },
-  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Hygiene +++'] },
-  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
+  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['Thirst+++'] },
+  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food++', 'Mood+'] },
+  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food+'] },
+  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 6, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food++', 'Mood+'] },
+  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene+'] },
+  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Hygiene+++'] },
+  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood+', 'Health−'] },
   { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
 ]
 
@@ -1736,7 +1736,7 @@ export default function App() {
     if (inventory.cigarettes <= 0) return
     setInventory((prev) => ({ ...prev, cigarettes: prev.cigarettes - 1 }))
     setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 5), health: Math.max(0, prev.health - 0.5) }))
-    setMessage('You smoked a cigarette. Mood +, health slightly worse.')
+    setMessage('You smoked a cigarette. Mood+, health slightly worse.')
   }
 
   function useItemImpl(item: 'water' | 'food') {
@@ -1935,7 +1935,7 @@ export default function App() {
         {[{ title: 'Food & drink', items: SHOP_ITEMS.slice(0, 4) }, { title: 'Care', items: SHOP_ITEMS.slice(4) }].map(group => <section className="shop-category" key={group.title} aria-label={group.title}>
           <h3>{group.title}</h3><div className="shop-grid supply-grid">{group.items.map(item => <ShopCard key={item.id} item={item} open={open} fits={canAddToBackpack(inventory, item)} affordable={game.money >= item.price} onBuy={() => buyItem(item)} onSteal={() => stealItem(item)} />)}</div>
         </section>)}
-        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={!open || game.money < 8}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food +++</em><em className="positive">Thirst +</em><em className="positive">Mood +</em><em className="positive">Well fed · 4h</em></div></div><b>8.00 zł</b></button>
+        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={!open || game.money < 8}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food+++</em><em className="positive">Thirst+</em><em className="positive">Mood+</em><em className="positive">Well fed · 4h</em></div></div><b>8.00 zł</b></button>
       </section>}
       {current.id === 'support' && <section className="support-menu">
         <div className="section-title"><h2>Talk to a social worker</h2><span>Choose what you need help with</span></div>
@@ -2072,7 +2072,7 @@ export default function App() {
           <span className="item-icon">🥫</span><div><strong>Canned food ×{inventory.cannedFood}</strong><small>Keeps well · tap to eat</small></div>
         </button>}
         {inventory.wipes > 0 && <button className="inventory-item usable" onClick={() => useSupply('wipes')} disabled={game.hygiene >= 60}>
-          <span className="item-icon">🧻</span><div><strong>Wet wipes ×{inventory.wipes}</strong><small>{game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean · Hygiene +'}</small></div>
+          <span className="item-icon">🧻</span><div><strong>Wet wipes ×{inventory.wipes}</strong><small>{game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean · Hygiene+'}</small></div>
         </button>}
         {inventory.bottles > 0 && Array.from({ length: Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) }, (_, stackIndex) => {
           const stackCount = Math.min(BOTTLE_STACK_SIZE, inventory.bottles - stackIndex * BOTTLE_STACK_SIZE)
@@ -2095,7 +2095,7 @@ export default function App() {
           {current.id === 'street' && <button disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Approx. 15 min for a new answer · saved answers free</small></div></button>}
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
-          <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood +</small></div></button>
+          <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood+</small></div></button>
           <button onClick={callAmbulance} disabled={game.health > 20 || inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0}><span>🚑</span><div><strong>Call ambulance</strong><small>{game.health <= 20 ? 'Emergency · no documents required' : 'Available at Health 20 or lower'}</small></div></button>
         </AvailableFirst>
       </div></div></div>}
