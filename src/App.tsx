@@ -12,7 +12,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-145'
+const BUILD_VERSION = 'v2026.10.11-146'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -439,8 +439,8 @@ export default function App() {
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = [
-    { id: 'morning' as const, title: 'Get through the morning', description: 'Get through your first night and stay alive until noon tomorrow.' },
-    { id: 'shelter' as const, title: 'Find a safe place to sleep', description: 'Register for a shelter bed or move into Schronisko.' },
+    { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until Day 2, 12:00.' },
+    { id: 'shelter' as const, title: 'Find a safe place to sleep', description: activeGoal ? `Be at Night Shelter on Day ${activeGoal.day} at ${formatTime(activeGoal.minute)} for registration. A bed is not guaranteed.` : 'Register for a shelter bed or move into Schronisko.' },
     { id: 'support' as const, title: 'Visit social support', description: 'Visit Help Center during opening hours.' },
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
   ]
@@ -458,7 +458,9 @@ export default function App() {
     game.energy < 30 ? 'Your legs feel heavy. Rest is becoming urgent.' : game.thirst < 30 ? 'Your mouth is dry. You need something to drink.' : game.hunger < 30 ? 'You have not eaten enough. Your stomach is empty.' : '',
     shelterBooked ? 'You have a reserved shelter bed, if you can get there in time.' : discoveredLocations.includes('shelter') ? 'You know the shelter address, but a place is not guaranteed.' : 'You do not yet know where you can sleep safely.',
   ].filter(Boolean).join(' ')
-  const completedGoals = goals.filter(goal => journalGoals[goal.id]).length
+  const completedGoals = goals.filter(goal => journalGoals[goal.id])
+  const pendingGoals = goals.filter(goal => !journalGoals[goal.id])
+    .sort((a, b) => Number(!!activeGoal && b.id === 'shelter') - Number(!!activeGoal && a.id === 'shelter'))
   useEffect(() => {
     setJournalGoals(previous => {
       const next = {
@@ -480,7 +482,6 @@ export default function App() {
       setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: 1140 })
     }
   }, [activeGoal, game.day, game.minutes, current.id, trip, life.shelterUntilDay, life.housing])
-  const nextJournalGoal = goals.find(goal => !journalGoals[goal.id])
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
   const shelterCheckoutDue = current.id === 'shelter' && !shelterDeparture && !trip &&
@@ -2152,18 +2153,23 @@ export default function App() {
     {screen === 'journal' && <section className="journal-screen">
       <div className="journal-heading"><h2>Journal</h2></div>
 
-      <div className="next-event">
-        <div className="next-event-icon">⏰</div>
-        <div><p className="eyebrow">NEXT IMPORTANT</p><strong>{activeGoal ? `Night Shelter · Day ${activeGoal.day} at ${formatTime(activeGoal.minute)}` : nextJournalGoal?.title ?? 'All starting goals completed'}</strong><small>{activeGoal ? 'Arrive for registration; a bed is not guaranteed.' : nextJournalGoal?.description ?? 'Keep managing your needs and plan your next day.'}</small></div>
-        {activeGoal && <b>{formatTime(activeGoal.minute)}</b>}
-      </div>
-
-      <div className="journal-section-title"><h3>🎯 Goals</h3><span>{completedGoals} / {goals.length}</span></div>
-      <div className="goal-list">
-        {goals.map(goal => <div className={journalGoals[goal.id] ? 'goal done' : 'goal'} key={goal.id}>
-          <span>{journalGoals[goal.id] ? '✓' : '○'}</span><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
-        </div>)}
-      </div>
+      <section className="journal-goals" aria-labelledby="journal-goals-heading">
+        <div className="journal-section-title"><h3 id="journal-goals-heading">Goals</h3><span aria-label={`${pendingGoals.length} incomplete goals`}>{pendingGoals.length}</span></div>
+        <ul className="goal-list" aria-label="Goals ordered by priority">
+          {pendingGoals.map((goal, index) => <li className={index === 0 ? 'goal main-goal' : 'goal'} key={goal.id}>
+            <span className="goal-marker" aria-label={index === 0 ? 'Main goal, not completed' : 'Not completed'} /><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
+          </li>)}
+        </ul>
+        {!pendingGoals.length && <p className="empty">All starting goals completed.</p>}
+        {!!completedGoals.length && <details className="completed-goals">
+          <summary><h3>Completed</h3><span aria-label={`${completedGoals.length} completed goals`}>{completedGoals.length}</span><Icon name="chevron-down" /></summary>
+          <ul className="goal-list" aria-label="Completed goals">
+            {completedGoals.map(goal => <li className="goal done" key={goal.id}>
+              <span className="goal-marker" aria-label="Completed"><Icon name="check" /></span><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
+            </li>)}
+          </ul>
+        </details>}
+      </section>
 
       <section className="journal-history" aria-labelledby="journal-day-heading">
         <div className="journal-day-switch" role="group" aria-label="Journal day">

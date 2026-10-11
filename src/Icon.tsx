@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 
-export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right'
+export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check'
 
 const paths: Record<IconName, ReactNode> = {
+  'chevron-down': <path d="m5 9 7 7 7-7" />,
+  check: <path d="m5 12 4 4L19 6" />,
   'chevron-left': <path d="m15 5-7 7 7 7" />,
   'chevron-right': <path d="m9 5 7 7-7 7" />,
   thief: <><path d="M3 22v-1c0-3 3-5 6-6M21 22v-1c0-3-3-5-6-6M6 10V8a6 6 0 0 1 12 0v2M6 10c-1 2-1 4 1 5l5 3 5-3c2-1 2-3 1-5Z" /><path d="M6 10c3-2 9-2 12 0l-1 3-5-1-5 1Z" /><path d="M9 10.5h.01m6 0h.01" /></>,

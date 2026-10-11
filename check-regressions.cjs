@@ -528,20 +528,20 @@ assert.notEqual(refused.text,admittedReflection.text);assert(!refused.text.inclu
 assert(!/\d|[+−]/.test(refused.text+admittedReflection.text));
 // Journal goals follow real progress, stay completed, and reminders expire sensibly.
 const journalKey='street-life-journal-goals-v1',reminderKey='street-life-goal-v1';
-setup({minutes:600});click(/Journal$/);assert(document.querySelector('.journal-section-title').textContent.includes('0 / 4'));assert(!within(document.querySelector('.goal-list')).getByText('Get through the morning').closest('.goal').classList.contains('done'));
+setup({minutes:600});click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'4');assert(!document.querySelector('.completed-goals'));assert.equal(document.querySelector('.main-goal strong').textContent,'Get through the morning');assert(!document.querySelector('.next-event'));
 setup({day:1,minutes:1320});assert(!read(journalKey).morning);
 setup({day:2,minutes:719});assert(!read(journalKey).morning);
 setup({day:2,minutes:720});assert(read(journalKey).morning);
 setup({locationId:'shelter',minutes:1140},{[lifeKey]:{housing:'Street',shelterRegistrationAttemptDay:1,shelterVacancies:0}});assert(!read(journalKey).shelter);
 setup({locationId:'street'},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}});assert(read(journalKey).shelter);
 setup({locationId:'support',minutes:1000});assert(!read(journalKey).support);
-setup({locationId:'support',minutes:600});assert(read(journalKey).support);click(/Journal$/);assert(within(document.querySelector('.goal-list')).getByText('Visit social support').closest('.goal').classList.contains('done'));cleanup();render(React.createElement(App));assert(read(journalKey).support);
+setup({locationId:'support',minutes:600});assert(read(journalKey).support);click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'3');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'1');assert(!document.querySelector('.completed-goals').open);assert(!within(document.querySelector('.journal-goals > .goal-list')).queryByText('Visit social support'));assert(within(document.querySelector('.completed-goals')).getByText('Visit social support').closest('.goal').classList.contains('done'));cleanup();render(React.createElement(App));assert(read(journalKey).support);
 setup({locationId:'work',minutes:1200});assert(!read(journalKey).work);
 setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','station','shop']});click(/Could I find a little work\? I need to keep some money./);assert(read(journalKey).work);ok();
-setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click(/Journal$/);assert(document.querySelector('.journal-section-title').textContent.includes('4 / 4'));assert(screen.getByText('All starting goals completed'));
+setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'0');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'4');assert(!document.querySelector('.main-goal'));assert(screen.getByText('All starting goals completed.'));
 click('Reset save');assert.deepEqual(read(journalKey),{morning:false,shelter:false,support:false,work:false});
 assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('There is nowhere to go back to'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
-setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);
+setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click(/Journal$/);assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 2 at 19:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
 setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1140}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
 // Clothing caps every gain, migrates wear, and laundry cleans without repairing it.
 setup({hygiene:90},{[invKey]:{jacket:42}});assert.equal(read(invKey).jacket,42);assert.equal(read(invKey).clothingCleanliness,90);assert.equal(read(stateKey).hygiene,90);
