@@ -1,7 +1,8 @@
 import { Children, Fragment, cloneElement, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, overallCondition, conditionBand, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
-import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
+import { summarizeResult, type ResultSnapshot } from './results'
+import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
 import CityMap from './CityMap'
 import ShopCard from './ShopCard'
@@ -11,7 +12,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-144'
+const BUILD_VERSION = 'v2026.10.11-145'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -43,7 +44,6 @@ const DISCOVERY_KEY = 'street-life-discovered-v1'
 const GOAL_KEY = 'street-life-goal-v1'
 const JOURNAL_GOALS_KEY = 'street-life-journal-goals-v1'
 const JOURNAL_HISTORY_KEY = 'street-life-journal-history-v1'
-type JournalEntry = { day: number; minute: number; title: string; text: string; summary: ResultSummary }
 type JournalGoals = { morning: boolean; shelter: boolean; support: boolean; work: boolean }
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
@@ -310,7 +310,7 @@ export default function App() {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
-      return Array.isArray(saved) ? saved.filter(entry => entry && Number.isInteger(entry.day) && entry.day > 0 && Number.isFinite(entry.minute) && entry.minute >= 0 && entry.minute < 1440 && typeof entry.title === 'string' && typeof entry.text === 'string' && Array.isArray(entry.summary?.costs) && Array.isArray(entry.summary?.changes)).slice(-500) : []
+      return loadJournalEntries(saved)
     } catch { return [] }
   })
   const lastRecordedResult = useRef<unknown>(null)
@@ -332,6 +332,10 @@ export default function App() {
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
   })
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
+  const [selectedJournalDay, setSelectedJournalDay] = useState<number | null>(null)
+  const journalDay = Math.max(1, Math.min(selectedJournalDay ?? game.day, game.day))
+  const visibleJournalEntries = journalEntries.filter(entry => entry.day === journalDay).slice().reverse()
+  useEffect(() => { if (screen !== 'journal') setSelectedJournalDay(null) }, [screen])
   const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true' && loadGame().locationId === 'street')
   const [coverPlanning, setCoverPlanning] = useState(false)
   const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => {
@@ -568,7 +572,9 @@ export default function App() {
     if (memory) setSeenMemories(previous => [...new Set([...previous, memory.id])])
     if (lastRecordedResult.current !== pendingResult) {
       lastRecordedResult.current = pendingResult
-      const entry: JournalEntry = { day: game.day, minute: game.minutes, title: infoModal?.title ?? pendingResult.title, text: resultText, summary }
+      const actionTitle = pendingResult.title
+      const reflection = journalReflection(infoModal?.title ?? actionTitle, resultText, summary, memory?.id)
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, actionTitle, reflection: true, ...reflection }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }
     setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, ...summary }))
@@ -1148,7 +1154,7 @@ export default function App() {
     : game.hunger <= 45 || game.thirst <= 45 ? 'supplies'
     : ['morning', 'bed', 'no-place'].find(id => !answeredQuestions.includes(id)) ?? 'morning'
   const exhausted = game.energy <= 40
-  const lastAction = journalEntries.at(-1)?.title
+  const lastAction = journalEntries.at(-1)?.actionTitle
   const justWalked = lastAction === 'Walk through the city' || lastAction === 'Walk with music'
   const wantsBench = answeredQuestions.includes('bed') && !exhausted && lastAction !== 'Rest on the bench' && !justWalked
   const bodyChoices = exhausted ? ['bench-sleep', 'street-sleep', 'bench-rest', 'find-bench']
@@ -1786,6 +1792,7 @@ export default function App() {
     setActiveGoal(null)
     setJournalGoals({ morning: false, shelter: false, support: false, work: false })
     setJournalEntries([])
+    setSelectedJournalDay(null)
     lastRecordedResult.current = null
     localStorage.removeItem(JOURNAL_HISTORY_KEY)
     localStorage.removeItem(JOURNAL_GOALS_KEY)
@@ -2143,7 +2150,7 @@ export default function App() {
       </div>
     </section>}
     {screen === 'journal' && <section className="journal-screen">
-      <div className="journal-heading"><div><p className="eyebrow">DAY {game.day} · {weekday(game.day)}</p><h2>Journal</h2></div><span>📓</span></div>
+      <div className="journal-heading"><h2>Journal</h2></div>
 
       <div className="next-event">
         <div className="next-event-icon">⏰</div>
@@ -2158,16 +2165,20 @@ export default function App() {
         </div>)}
       </div>
 
-      <div className="journal-section-title"><h3>📝 Today</h3><span>Day {game.day}</span></div>
-      <div className="timeline">
-        {journalEntries.filter(entry => entry.day === game.day).map((entry, index) => <div className="timeline-entry" key={`${entry.day}-${index}`}>
-          <time>{formatTime(entry.minute)}</time><i /><div><strong>{entry.title}</strong><small>{entry.text}</small>
-            <div className="journal-result-changes">{[...entry.summary.costs, ...entry.summary.changes].map((change, changeIndex) => <span className={`journal-result-change ${change.kind}`} key={changeIndex}>{change.label} {change.value}</span>)}</div>
-          </div>
-        </div>)}
-        {!journalEntries.some(entry => entry.day === game.day) && <p className="empty">No recorded actions today yet.</p>}
-        <div className="timeline-entry"><time>{formatTime(game.minutes)}</time><i /><div><strong>Current situation</strong><small>You are at {current.name}. Condition: {overall.label.toLowerCase()}.</small></div></div>
-      </div>
+      <section className="journal-history" aria-labelledby="journal-day-heading">
+        <div className="journal-day-switch" role="group" aria-label="Journal day">
+          <button type="button" aria-label="Previous day" disabled={journalDay <= 1} onClick={() => setSelectedJournalDay(journalDay - 1)}><Icon name="chevron-left" /></button>
+          <h3 id="journal-day-heading" aria-live="polite">Day {journalDay} · {weekday(journalDay)}</h3>
+          <button type="button" aria-label="Next day" disabled={journalDay >= game.day} onClick={() => setSelectedJournalDay(journalDay + 1 === game.day ? null : journalDay + 1)}><Icon name="chevron-right" /></button>
+        </div>
+        <ol className="timeline" aria-label={`Day ${journalDay} history`}>
+          {visibleJournalEntries.map((entry, index) => <li className="timeline-entry" key={`${entry.day}-${entry.minute}-${index}`}>
+            <time dateTime={formatTime(entry.minute)}>{formatTime(entry.minute)}</time><span className="timeline-marker" aria-hidden="true" />
+            <div><strong>{entry.title}</strong>{entry.text && <p className="journal-thought">{entry.text}</p>}</div>
+          </li>)}
+        </ol>
+        {!visibleJournalEntries.length && <p className="empty">{journalDay === game.day ? 'No recorded actions today yet.' : 'No recorded actions on this day.'}</p>}
+      </section>
     </section>}
 
     {gameOver && <div className="game-over-overlay">
