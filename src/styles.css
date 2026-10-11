@@ -792,3 +792,32 @@ footer .header-version { margin-left:auto; align-self:center; }
   .game-header .header-info { gap:7px; padding-left:8px; }
   .game-header .phone-charge .battery-icon { width:21px; }
 }
+
+/* v117: date/weather left, condition and money centered, battery right. */
+.game-header .header-state-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; }
+.header-date-weather { display:flex; align-items:center; gap:12px; white-space:nowrap; }
+.game-header .header-info { justify-self:center; display:flex; flex-direction:row; align-items:center; gap:10px; padding:0; border:0; }
+.header-condition { display:flex; align-items:center; padding-right:10px; border-right:1px solid #454c50; }
+.header-condition svg { width:22px; height:22px; }
+.header-condition.ok { color:#8dc5a2; }
+.header-condition.fair { color:#d7b58a; }
+.header-condition.bad { color:#c98585; }
+@media(max-width:420px) {
+ .game-header .header-state-row { gap:7px; }
+ .header-date-weather { gap:8px; }
+ .game-header .header-info { gap:7px; padding:0; }
+ .header-condition { padding-right:7px; }
+ .header-condition svg { width:20px; height:20px; }
+ .game-header .weather svg { width:16px; height:16px; }
+}
+@media(max-width:360px) {
+ .game-header .header-state-row { gap:5px; }
+ .header-date-weather { gap:5px; }
+ .game-header h1 { gap:5px; font-size:10px; }
+ .game-header time { font-size:21px; }
+ .game-header .money,.game-header .weather,.game-header .phone-charge { font-size:10px; gap:3px; }
+ .game-header .header-info { gap:5px; }
+ .header-condition { padding-right:5px; }
+ .header-condition svg { width:18px; height:18px; }
+ .game-header .money svg,.game-header .weather svg { width:14px; height:14px; }
+}

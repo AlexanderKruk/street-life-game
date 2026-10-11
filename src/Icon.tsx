@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react'
 
-export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote'
+export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad'
 
 const paths: Record<IconName, ReactNode> = {
+  thief: <><path d="M3 22v-1c0-3 3-5 6-6M21 22v-1c0-3-3-5-6-6M6 10V8a6 6 0 0 1 12 0v2M6 10c-1 2-1 4 1 5l5 3 5-3c2-1 2-3 1-5Z" /><path d="M6 10c3-2 9-2 12 0l-1 3-5-1-5 1Z" /><path d="M9 10.5h.01m6 0h.01" /></>,
+  'face-ok': <><circle cx="12" cy="12" r="9" /><path d="M8 9h.01M16 9h.01M8 14a4.5 4.5 0 0 0 8 0" /></>,
+  'face-fair': <><circle cx="12" cy="12" r="9" /><path d="M8 9h.01M16 9h.01M8 15h8" /></>,
+  'face-bad': <><circle cx="12" cy="12" r="9" /><path d="M8 9h.01M16 9h.01M8 16a4.5 4.5 0 0 1 8 0" /></>,
   banknote: <><rect x="2" y="5" width="20" height="14" rx="2" /><circle cx="12" cy="12" r="3" /><path d="M5 9h.01M19 15h.01" /></>,
   map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z" /><path d="M9 3v15m6-12v15" /></>,
   backpack: <><rect x="5" y="6" width="14" height="15" rx="3" /><path d="M9 6V4a3 3 0 0 1 6 0v2M8 12h8v6H8zM3 10v7m18-7v7" /></>,
