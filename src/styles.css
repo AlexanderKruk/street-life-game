@@ -851,9 +851,9 @@ footer .header-version { margin-left:auto; align-self:center; }
 @media(max-width:360px) { .district-card { gap:8px; padding:10px; } .district-route-button { padding:10px; } }
 
 /* v123: shared compact destination presentation for every map point. */
-.district-pin .district-hours.open { color:#99d5ad; }
-.district-pin .district-hours.closed { color:#e59b98; }
-.district-pin .district-hours { background:transparent; border:0; border-radius:0; padding:0; box-shadow:none; text-shadow:none; }
+.district-hours.open { color:#99d5ad; }
+.district-hours.closed { color:#e59b98; }
+.district-hours { background:transparent; border:0; border-radius:0; padding:0; box-shadow:none; text-shadow:none; }
 .district-card { grid-template-columns:44px minmax(0,1fr) auto; }
 .district-place-icon { width:44px; height:44px; border:0; border-radius:0; background:transparent; }
 .district-place-icon svg { width:44px; height:44px; }
