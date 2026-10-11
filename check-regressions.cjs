@@ -106,7 +106,7 @@ for(const [state,extra,expected] of [
 
 // One-level choices react immediately, while reading and deciding remain paused.
 setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Maybe my phone can help'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
-setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('a steady office job'));assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();click('Reset save');assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
+setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();click('Reset save');assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
@@ -486,11 +486,46 @@ for(let block=1;block<=3;block++) {
 near(advanceTime(full,480,{sleeping:true}).energy,100);
 near(advanceTime(full,60,{walking:true}).energy,100-100/36-.6);
 assert(advanceTime(full,60,{effects:[{id:'cold',expiresAt:1000}]}).energy < advanceTime(full,60).energy);
-// Today records completed actions exactly once, preserves reloads and separates days.
+// Journal stores reflections once, preserves completion timestamps and browses days.
 const historyKey='street-life-journal-history-v1';
-setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});assert.deepEqual(read(historyKey),[]);click('Buy Water for 3.00 zł');assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,603);assert.equal(read(historyKey)[0].day,1);assert.equal(read(historyKey)[0].title,'Buy Water');assert(read(historyKey)[0].summary.costs.some(change=>change.label.includes('Money') && change.value==='−3 zł'));ok();click(/Inventory$/);click(/Water.*tap to drink/);assert.equal(read(historyKey).length,2);ok();click(/Journal$/);assert(document.querySelector('.timeline').textContent.includes('Buy Water'));assert(document.querySelector('.timeline').textContent.includes('Drink water'));assert(!document.querySelector('.timeline').textContent.includes('Woke up at the station'));cleanup();render(React.createElement(App));assert.equal(read(historyKey).length,2);
-const yesterday=read(historyKey);setup({day:2},{[historyKey]:yesterday});click(/Journal$/);assert(!document.querySelector('.timeline').textContent.includes('Buy Water'));assert(screen.getByText('No recorded actions today yet.'));assert.equal(read(historyKey).length,2);click('Reset save');assert.deepEqual(read(historyKey),[]);
-setup({minutes:1380,energy:90});beginSleep(/Lie down here\? I’m not sure… But I could try./,2);assert.deepEqual(read(historyKey),[]);click('Wake up (debug)');assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].day,2);assert.equal(read(historyKey)[0].minute,60);assert.equal(read(historyKey)[0].title,'Sleep complete');
+setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});
+assert.deepEqual(read(historyKey),[]);click('Buy Water for 3.00 zł');
+assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,603);assert.equal(read(historyKey)[0].day,1);
+assert.equal(read(historyKey)[0].title,'Bought Water');assert.equal(read(historyKey)[0].actionTitle,'Buy Water');
+assert.equal(read(historyKey)[0].summary,undefined);assert(!read(historyKey)[0].text.includes('3 zł'));
+assert(screen.getByRole('dialog').textContent.includes('−3 zł'));
+ok();click(/Inventory$/);click(/Water.*tap to drink/);assert.equal(read(historyKey).length,2);ok();click(/Journal$/);
+assert.deepEqual([...document.querySelectorAll('.timeline-entry strong')].map(node=>node.textContent),['Drank water','Bought Water']);
+assert(document.querySelector('.timeline').textContent.includes('I didn’t realise how thirsty I was.'));
+assert(!document.querySelector('.timeline').textContent.includes('You drank water'));
+assert(!document.querySelector('.timeline').textContent.includes('Current situation'));
+assert(!document.querySelector('.journal-result-changes'));assert(!document.querySelector('.journal-heading > span'));
+assert(screen.getByRole('button',{name:'Previous day'}).disabled);assert(screen.getByRole('button',{name:'Next day'}).disabled);
+cleanup();render(React.createElement(App));assert.equal(read(historyKey).length,2);
+const yesterday=read(historyKey);
+setup({day:3},{[historyKey]:yesterday});click(/Journal$/);
+assert(screen.getByRole('heading',{name:'Day 3 · We'}));assert(screen.getByText('No recorded actions today yet.'));
+assert(screen.getByRole('button',{name:'Next day'}).disabled);
+click('Previous day');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert(screen.getByText('No recorded actions on this day.'));
+click('Previous day');assert(screen.getByRole('heading',{name:'Day 1 · Mo'}));assert(document.querySelector('.timeline').textContent.includes('Bought Water'));
+assert(screen.getByRole('button',{name:'Previous day'}).disabled);assert(!screen.getByRole('button',{name:'Next day'}).disabled);
+click('Next day');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));click('Next day');assert(screen.getByRole('heading',{name:'Day 3 · We'}));
+click('Previous day');click(/Inventory$/);click(/Journal$/);assert(screen.getByRole('heading',{name:'Day 3 · We'}));
+assert.equal(read(historyKey).length,2);click('Reset save');assert.deepEqual(read(historyKey),[]);
+setup({minutes:1380,energy:90});beginSleep(/Lie down here\? I’m not sure… But I could try./,2);assert.deepEqual(read(historyKey),[]);
+click('Wake up (debug)');assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].day,2);assert.equal(read(historyKey)[0].minute,60);assert.equal(read(historyKey)[0].title,'Woke up');
+// Existing reports migrate in place; malformed rows cannot erase valid history.
+const oldReport={day:1,minute:600,title:'Drink water',text:'You drank water.',summary:{costs:[],changes:[{label:'💧 Water',value:'+34',kind:'positive'},null]}};
+setup({day:2},{[historyKey]:[oldReport,{day:0,minute:20,title:'Bad',text:'Bad'}]});click(/Journal$/);click('Previous day');
+assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,600);assert.equal(read(historyKey)[0].summary,undefined);
+assert.equal(read(historyKey)[0].actionTitle,'Drink water');assert(document.querySelector('.journal-thought').textContent.startsWith('I'));
+cleanup();render(React.createElement(App));assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert.equal(read(historyKey).length,1);
+require('esbuild').buildSync({entryPoints:['src/journal.ts'],bundle:true,platform:'node',format:'cjs',outfile:'journal-app.cjs'});
+const {journalReflection}=require('./journal-app.cjs');
+const refused=journalReflection('Shelter registration','No free places today.',{costs:[],changes:[{label:'🙂 Mood',value:'−5',kind:'negative'}]});
+const admittedReflection=journalReflection('Shelter registration','A place is available.',{costs:[],changes:[{label:'🙂 Mood',value:'+3',kind:'positive'}]});
+assert.notEqual(refused.text,admittedReflection.text);assert(!refused.text.includes('let my shoulders drop'));
+assert(!/\d|[+−]/.test(refused.text+admittedReflection.text));
 // Journal goals follow real progress, stay completed, and reminders expire sensibly.
 const journalKey='street-life-journal-goals-v1',reminderKey='street-life-goal-v1';
 setup({minutes:600});click(/Journal$/);assert(document.querySelector('.journal-section-title').textContent.includes('0 / 4'));assert(!within(document.querySelector('.goal-list')).getByText('Get through the morning').closest('.goal').classList.contains('done'));
