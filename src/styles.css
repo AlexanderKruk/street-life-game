@@ -843,3 +843,9 @@ footer .header-version { margin-left:auto; align-self:center; }
 
 /* v121: consistent 14px header labels across screen sizes. */
 .game-header h1,.game-header .money,.game-header .weather,.game-header .phone-charge { font-size:14px; }
+
+/* v122: compact map destination card with its action on the right. */
+.district-card { grid-template-columns:36px minmax(0,1fr) auto; gap:10px; padding:12px; }
+.district-route-button { grid-column:3; grid-row:1; justify-self:end; min-height:44px; padding:10px 12px; max-width:90px; }
+.district-place-icon { width:36px; }
+@media(max-width:360px) { .district-card { gap:8px; padding:10px; } .district-route-button { padding:10px; } }

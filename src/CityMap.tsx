@@ -39,7 +39,7 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
     <div className="district-card" aria-live="polite">
       <div className="district-place-icon"><Icon name={locationIcon(selected.id)} /></div>
       <div className="district-place-copy"><h3>{selected.name}</h3><p>{status(selected)}</p><small>{selected.id === 'shelter' ? reservedBed ? 'Use your reserved bed during admission hours.' : 'A place is not guaranteed.' : selected.description}</small></div>
-      <button className="district-route-button" onClick={() => onRoute(selected.id)}>{selected.id === currentId ? 'Open location' : selected.id === 'street' ? 'Step outside' : 'Choose route'}</button>
+      <button className="district-route-button" onClick={() => onRoute(selected.id)}>{selected.id === currentId ? 'Open location' : selected.id === 'street' ? 'Step outside' : 'Go →'}</button>
     </div>
   </section>
 }
