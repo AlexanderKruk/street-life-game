@@ -601,7 +601,7 @@ button.inventory-item { width:100%; }
 .street-screen .story-actions .action > div { display:grid; width:100%; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:12px; }
 .street-screen .story-action-icon { width:24px; height:24px; color:#aeb4b5; }
 .street-screen .story-actions strong { font-size:15px; line-height:1.4; font-weight:500; }
-.street-screen .story-actions .action::after { content:""; position:absolute; right:14px; top:calc(50% - 3px); width:6px; height:6px; border-top:1px solid #969d9f; border-right:1px solid #969d9f; transform:rotate(45deg); }
+.street-screen .story-actions .action::after { content:none; }
 .street-screen .story-actions .action:disabled { cursor:not-allowed; }
 .game-header :focus-visible,.bottom-nav :focus-visible,.street-screen .action:focus-visible { outline:2px solid #d7b58a; outline-offset:3px; }
 @media (hover:hover) { .street-screen .story-actions .action:hover:not(:disabled) { border-color:#7d7e78; background:#202527; } }
@@ -699,7 +699,7 @@ button.inventory-item { width:100%; }
 @media (max-height:650px) { .street-art.phone-art { height:190px; } .phone-activity h2 { font-size:20px; } }
 
 .street-screen .story-actions .choice-estimate { grid-column:2; font-size:11px; line-height:1.3; color:#99a3a6; margin-top:-5px; }
-.street-screen .story-actions .choice-duration { position:absolute; top:10px; right:14px; margin:0; font-size:12px; white-space:nowrap; }
+.street-screen .story-actions .choice-duration { position:absolute; top:50%; right:14px; transform:translateY(-50%); margin:0; font-size:12px; white-space:nowrap; }
 .street-screen .story-actions .action:has(.choice-duration) strong { padding-right:45px; }
 .phone-activity-progress.uncertain i { width:35%; animation:phone-search-sweep 2.6s ease-in-out infinite; }
 @keyframes phone-search-sweep { 0% { transform:translateX(-105%); } 100% { transform:translateX(390%); } }
