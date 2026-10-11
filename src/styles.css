@@ -886,11 +886,7 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .inventory-effects .negative { color:#dc9b98; background:#392323; }
 .inventory-effects .warning { color:#d7b58a; background:#3a3024; }
 .inventory-slot:disabled { opacity:.55; cursor:default; }
-.empty-slot { min-height:100px; }
-.empty-slot > .inventory-art { position:absolute; inset:0; opacity:.22; }
-.empty-slot::after { content:''; position:absolute; inset:0; background:linear-gradient(145deg,#111a2070,#0c1119b8); pointer-events:none; }
-.empty-slot-outline { position:absolute; z-index:1; inset:9px; border:1px dashed #465056; border-radius:7px; display:grid; place-items:center; color:#566167; }
-.empty-slot-outline > span { font-size:24px; font-weight:300; opacity:.6; }
+.backpack-empty-message { color:#8f9ba3; font-size:13px; margin:12px 0; }
 .inventory-screen .essentials-heading { padding-top:20px; margin-top:20px; border-top:1px solid #30383e; }
 .inventory-screen .essentials-heading small { display:block; font-size:11px; color:#8f9ba3; margin-top:4px; }
 .inventory-screen .essentials-grid { gap:8px; margin-top:0; grid-template-columns:repeat(2,minmax(0,1fr)); }

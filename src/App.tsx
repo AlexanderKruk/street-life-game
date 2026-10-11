@@ -11,7 +11,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-132'
+const BUILD_VERSION = 'v2026.10.11-133'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -2069,9 +2069,8 @@ export default function App() {
       <div className="inventory-grid backpack-grid" role="group" aria-label="Backpack slots">
         {backpackItems.flatMap(item => Array.from({ length: Math.ceil(item.count / item.stackSize) }, (_, index) =>
           <InventorySlot key={`${item.art}-${index}`} art={item.art} name={item.name} quantity={Math.min(item.stackSize, item.count - index * item.stackSize)} effects={item.effects} hint={item.hint} onUse={item.onUse} disabled={item.disabled} />))}
-        {Array.from({ length: Math.max(0, BACKPACK_CAPACITY - usedBackpackSlots) }, (_, index) =>
-          <div className="inventory-slot empty-slot" key={`empty-${index}`} role="img" aria-label="Empty backpack slot"><ItemArt id="empty" /><span className="empty-slot-outline" aria-hidden="true"><span>+</span></span></div>)}
       </div>
+      {usedBackpackSlots === 0 && <p className="backpack-empty-message">Your backpack is empty.</p>}
 
       <div className="inventory-section-heading essentials-heading"><div><strong>Essentials</strong><small>No backpack slots</small></div></div>
       {phoneOpen && <div className="phone-overlay" onClick={() => setPhoneOpen(false)}><div className="phone-modal" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setPhoneOpen(false)}>×</button><div className="phone-panel">

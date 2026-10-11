@@ -520,19 +520,19 @@ setup({energy:68},{[invKey]:{clothingCleanliness:100}});beginSleep(/Lie down her
 // Inventory slots reflect actual stack occupancy, including passive supplies.
 const emptyBag={water:0,food:0,medicines:0,bread:0,cannedFood:0,wipes:0,showerGel:0,cigarettes:0,bottles:0};
 setup({}, {[invKey]:emptyBag});click(/^Inventory$/);
-assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,8);
-assert.equal(document.querySelectorAll('.empty-slot').length,8);
+assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,0);
+assert(screen.getByText('Your backpack is empty.'));
 assert(!document.querySelector('.backpack-capacity'));
 setup({}, {[invKey]:{...emptyBag,water:5,showerGel:21,bottles:9}});click(/^Inventory$/);
-assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,8);
-assert.equal(document.querySelectorAll('.empty-slot').length,2);
+assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,6);
+assert.equal(document.querySelectorAll('.empty-slot').length,0);
 assert.equal(screen.getAllByRole('button',{name:/Water.*tap to drink/}).length,2);
 assert(screen.getByRole('group',{name:/3-in-1 shower gel ×20/}));
 assert(screen.getByRole('group',{name:/3-in-1 shower gel ×1 ·/}));
 assert(screen.getByRole('group',{name:/Returnable bottles ×8/}));
 assert(screen.getByRole('group',{name:/Returnable bottles ×1 ·/}));
 click(/Water ×1 · tap to drink/);ok();
-assert.equal(read(invKey).water,4);assert.equal(document.querySelectorAll('.empty-slot').length,3);
+assert.equal(read(invKey).water,4);assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,5);
 setup({}, {[invKey]:{water:4,food:4,medicines:4,bread:4,cannedFood:4,wipes:5,showerGel:20,cigarettes:20,bottles:0}});click(/^Inventory$/);
 assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,8);
 assert.equal(document.querySelectorAll('.empty-slot').length,0);
