@@ -263,9 +263,8 @@ setup({locationId:'daycenter',hygiene:10},{[invKey]:{showerGel:1}});Math.random=
 setup({locationId:'daycenter',hygiene:55},{[invKey]:{showerGel:2}});Math.random=()=>.99;click(/Take a shower/);assert.equal(read(invKey).showerGel,2);assert.equal(read(stateKey).minutes,495);assert(read(stateKey).hygiene<55);assert(screen.getByRole('dialog').textContent.includes('full right now'));
 setup({locationId:'shelter',minutes:1320},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7},[invKey]:{showerGel:2}});const closedShower=screen.getByRole('button',{name:/Ask for a shower/});assert(closedShower.disabled);fireEvent.click(closedShower);assert.equal(read(invKey).showerGel,2);
 
-// Hot meals cost exactly 8 zł and keep the original 15-minute/Well-fed effects.
-setup({locationId:'shop',money:8,hunger:20});assert(!screen.getByRole('button',{name:/Hot meal.*8.00 zł/}).disabled);click(/Hot meal.*8.00 zł/);assert.equal(read(stateKey).money,0);assert.equal(read(stateKey).minutes,495);assert(read('street-life-effects-v1').some(e=>e.id==='well-fed'));assert(screen.getByRole('dialog').textContent.includes('−8 zł'));
-setup({locationId:'shop',money:7.99});assert(screen.getByRole('button',{name:/Hot meal.*8.00 zł/}).disabled);
+// Hot meal is temporarily hidden from the shop catalogue.
+setup({locationId:'shop',money:8,hunger:20});assert.equal(screen.queryByRole('button',{name:/Hot meal/}),null);
 
 // Fresh, stale and spoiled food have different effects; empty stacks reset freshness.
 for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]) {
