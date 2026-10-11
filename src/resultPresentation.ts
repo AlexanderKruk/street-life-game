@@ -4,6 +4,7 @@ import type { ResultPresentation } from './ResultCard'
 const services: Record<string, string> = {
   support: 'Accommodation, documents and benefits',
   daycenter: 'A place indoors, shower, laundry and phone charging',
+  'free-clinic': 'Free basic medical care · no insurance needed',
   shelter: 'Registration · wait 20 minutes · limited beds',
   shop: 'Water 3 zł · roll 1 zł · sandwich 5 zł · hot meal 8 zł',
   station: 'Waiting-room outlet · +60% charge in one hour, capped at 100%',

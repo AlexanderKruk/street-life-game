@@ -3,7 +3,7 @@ import { isOpen, type Location } from './game'
 import { Icon, locationIcon } from './Icon'
 
 const positions: Record<string, [number, number]> = {
-  support: [18, 30], daycenter: [64, 38], hospital: [85, 19], jobcenter: [16, 9],
+  support: [18, 30], daycenter: [64, 38], 'free-clinic': [53, 17], hospital: [85, 19], jobcenter: [16, 9],
   shop: [26, 51], shelter: [80, 62], street: [13, 73], work: [85, 46],
   station: [49, 91], 'residential-shelter': [83, 80],
 }

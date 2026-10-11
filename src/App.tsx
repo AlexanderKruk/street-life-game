@@ -9,7 +9,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-127'
+const BUILD_VERSION = 'v2026.10.11-128'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -280,7 +280,12 @@ export default function App() {
   const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(DISCOVERY_KEY)
-      if (raw) return [...new Set((JSON.parse(raw) as string[]).map(id => id === 'night-shelter' ? 'shelter' : id))]
+      if (raw) {
+        const known = (JSON.parse(raw) as string[]).map(id => id === 'night-shelter' ? 'shelter' : id)
+        // The former combined center now has two separate addresses.
+        if (known.includes('daycenter')) known.push('free-clinic')
+        return [...new Set(known)]
+      }
       return localStorage.getItem(SAVE_KEY) ? locations.map((location) => location.id) : ['street', 'station', 'shop']
     } catch {
       return ['street', 'station', 'shop']
@@ -1109,9 +1114,9 @@ export default function App() {
   }
 
   const practicalQuestions = [
-    { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: 'Help Center opens at 08:00 and closes at 16:00. Ask a social worker about accommodation, documents and benefits. Day Center & Clinic is also open 08:00–16:00: you can stay indoors, ask for a shower or laundry, and charge your phone. Services may be full. The addresses are saved on your map.', locations: ['support', 'daycenter'] },
+    { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: 'Help Center opens at 08:00 and closes at 16:00. Ask a social worker about accommodation, documents and benefits. Day Center is also open 08:00–16:00: you can stay indoors, ask for a shower or laundry, and charge your phone. Free Clinic offers basic medical care from 08:00 to 16:00, with no insurance needed. Services may be full. The addresses are saved on your map.', locations: ['support', 'daycenter', 'free-clinic'] },
     { id: 'bed', icon: '🛏️', title: 'How can I get a shelter bed?', text: 'First registration at Night Shelter runs 19:00–22:00. Arrive by 19:00, wait the full 20-minute queue, and then find out whether there is a place. There are only 0–3 free places each day; earlier arrivals have a better chance. A successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
-    { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about a Schronisko referral; that is a separate housing route. Day Center can offer daytime shelter, but is not an overnight bed. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: ['support', 'daycenter'] },
+    { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about a Schronisko referral; that is a separate housing route. Day Center can offer daytime shelter, but is not an overnight bed. Free Clinic offers basic medical care without insurance. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: ['support', 'daycenter', 'free-clinic'] },
     { id: 'supplies', icon: '🥪', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, and a hot meal 8 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
     { id: 'charging', icon: '🔋', title: 'Where can I charge my phone?', text: 'You glance at the battery and remember an outlet in the waiting room at Station. You can go there tonight: it is available around the clock. Charging takes one hour and adds 60% battery, up to 100%. The station address is on your map. You do not need internet to remember this.', locations: ['station'] },
   ]
@@ -1337,12 +1342,12 @@ export default function App() {
       return
     }
     if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
-    if (current.id === 'daycenter' && actionId.startsWith('daycenter-')) {
+    if ((current.id === 'daycenter' || current.id === 'free-clinic') && actionId.startsWith('daycenter-')) {
       const hour = game.minutes / 60
       const chance = hour < 10 ? 0.9 : hour < 12 ? 0.75 : hour < 14 ? 0.55 : 0.35
       if (Math.random() > chance) {
         setGame((prev) => applyAction(prev, { minutes: 15, mood: -2 }))
-        setMessage('The day center is full right now. You wait for a while, but no place opens up.')
+        setMessage(current.id === 'free-clinic' ? 'The free clinic is full right now. You wait for a while, but no appointment opens up.' : 'The day center is full right now. You wait for a while, but no place opens up.')
         return
       }
     }

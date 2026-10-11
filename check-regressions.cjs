@@ -63,7 +63,7 @@ assert(read('street-life-discovered-v1').includes('support'));assert.equal(read(
 assert(document.querySelector('.result-inline'));assert(!document.querySelector('.result-overlay'));
 assert(!document.querySelector('.story-actions'));assert.equal(screen.getByRole('dialog').getAttribute('aria-modal'),'false');
 assert(!document.querySelector('.result-consequences'));
-assert.equal(document.querySelectorAll('.result-place').length,2);assert(!document.querySelector('.result-details').open);
+assert.equal(document.querySelectorAll('.result-place').length,3);assert(read('street-life-discovered-v1').includes('free-clinic'));assert(!document.querySelector('.result-details').open);
 assert(document.querySelector('.street-art img').src.endsWith('help-morning.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
 ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero.webp'));
@@ -488,4 +488,22 @@ setup({locationId:'daycenter'},{[invKey]:{clothingCleanliness:10}});Math.random=
 setup({locationId:'shelter',day:4,minutes:1080},{[invKey]:{clothingCleanliness:10,jacket:42},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7,shelterLaundryDropDay:4}});click(/Collect clean laundry/);assert.equal(read(invKey).clothingCleanliness,100);assert.equal(read(invKey).jacket,42);ok();assert(screen.getByRole('button',{name:/Collect clean laundry/}).disabled);
 setup({locationId:'shelter',day:4,minutes:390},{[invKey]:{clothingCleanliness:10},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}});click(/Leave clothes for laundry/);assert(read(invKey).clothingCleanliness<10);
 setup({energy:68},{[invKey]:{clothingCleanliness:100}});beginSleep(/Lie down here\? I’m not sure… But I could try./,4);click('Wake up (debug)');near(read(invKey).clothingCleanliness,90);
-cleanup();dom.window.close();console.log('PASS: review regressions and clothing cleanliness, hygiene caps, laundry, migration and outdoor sleep.');
+// Splitting the combined center preserves known addresses and moves medical care.
+setup({locationId:'daycenter'},{'street-life-discovered-v1':['street','daycenter']});
+assert(read('street-life-discovered-v1').includes('free-clinic'));
+assert(!screen.queryByRole('button',{name:/See a doctor/}));
+assert(screen.getByRole('button',{name:/Take a shower/}));
+click(/^Map$/);
+assert(screen.getByRole('button',{name:/^Free Clinic /}));
+assert(!document.querySelector('.district-label').textContent.includes('You are here'));
+setup({locationId:'free-clinic',health:40},{[invKey]:{documents:false},'street-life-effects-v1':[{id:'cold',remaining:240}]});
+const clinicMoney=read(stateKey).money;Math.random=()=>.85;
+click(/See a doctor/);
+assert.equal(read(stateKey).money,clinicMoney);
+assert(read(stateKey).health>40);
+assert(!read('street-life-effects-v1').some(effect=>effect.id==='cold'));
+ok();assert(!screen.queryByRole('button',{name:/Take a shower/}));
+setup({locationId:'free-clinic',minutes:1020});
+assert(document.querySelector('.closed-content-notice'));
+assert([...document.querySelectorAll('.closed-content-body button')].find(button=>button.textContent.includes('See a doctor')).disabled);
+cleanup();dom.window.close();console.log('PASS: review regressions and clothing cleanliness, hygiene caps, laundry, migration, outdoor sleep and separate free clinic.');

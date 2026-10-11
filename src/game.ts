@@ -57,7 +57,8 @@ export const locations: Location[] = [
   { id: 'shelter', name: 'Night Shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 90 },
   { id: 'support', name: 'Help Center', icon: '🤝', description: 'Social workers can help with documents, benefits, accommodation and other support.', open: 480, close: 960, travelMinutes: 105 },
   { id: 'residential-shelter', name: 'Schronisko', icon: '🏠', description: '24/7 supported accommodation. Access requires a referral from the help center.', open: 0, close: 1440, travelMinutes: 120 },
-  { id: 'daycenter', name: 'Day Center & Clinic', icon: '🧼', description: 'A daytime drop-in center with showers, laundry, phone charging, a warm indoor space and basic medical help.', open: 480, close: 960, travelMinutes: 90 },
+  { id: 'daycenter', name: 'Day Center', icon: '🧼', description: 'A warm place indoors with free showers, laundry and phone charging.', open: 480, close: 960, travelMinutes: 90 },
+  { id: 'free-clinic', name: 'Free Clinic', icon: '🩺', description: 'Free basic medical care. No insurance needed.', open: 480, close: 960, travelMinutes: 90 },
   { id: 'hospital', name: 'Hospital', icon: '🏥', description: 'Regular medical care requires documents. Emergency care is available for critical conditions.', open: 480, close: 1080, travelMinutes: 105 },
   { id: 'jobcenter', name: 'Job Centre', icon: '📋', description: 'Vacancies and appointments.', open: 480, close: 900, travelMinutes: 105 },
   { id: 'work', name: 'Day Work', icon: '📦', description: 'Short shifts. Pay is not guaranteed.', open: 420, close: 1080, travelMinutes: 120 },
@@ -243,8 +244,8 @@ export const actions: GameAction[] = [
     resolve: () => ({ minutes: 60, energy: 4, message: 'You spend an hour by a power outlet.' }),
   },
   {
-    id: 'daycenter-doctor', locationId: 'daycenter', name: 'See the clinic',
-    description: 'Ask for basic medical help at the free clinic.', minutes: 60,
+    id: 'daycenter-doctor', locationId: 'free-clinic', name: 'See a doctor',
+    description: 'Free basic medical care. No insurance or documents needed.', minutes: 60,
     resolve: (state) => ({ minutes: 60, health: state.health < 65 ? 12 : 4, mood: 3, message: 'You are seen at the clinic and receive basic medical care.' }),
   },
   {

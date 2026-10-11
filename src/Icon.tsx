@@ -55,5 +55,5 @@ export function choiceIcon(id: string): IconName {
 }
 
 export function locationIcon(id: string): IconName {
-  return ({ street: 'street', station: 'station', shop: 'shop', shelter: 'bed', 'residential-shelter': 'bed', support: 'help', jobcenter: 'work', work: 'work', hospital: 'hospital', daycenter: 'hospital' } as Record<string, IconName>)[id] ?? 'street'
+  return ({ street: 'street', station: 'station', shop: 'shop', shelter: 'bed', 'residential-shelter': 'bed', support: 'help', jobcenter: 'work', work: 'work', hospital: 'hospital', 'free-clinic': 'hospital', daycenter: 'help' } as Record<string, IconName>)[id] ?? 'street'
 }
