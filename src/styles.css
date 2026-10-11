@@ -890,9 +890,9 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .inventory-screen .essentials-heading { padding-top:14px; margin-top:14px; border-top:1px solid #30383e; }
 .inventory-screen .essentials-heading small { display:block; font-size:11px; color:#8f9ba3; margin-top:4px; }
 .inventory-screen .essentials-grid { gap:8px; margin-top:0; grid-template-columns:repeat(2,minmax(0,1fr)); }
-.inventory-screen .essentials-grid .inventory-item { display:grid; grid-template-columns:38% minmax(0,1fr); gap:8px; min-height:80px; padding:0; border-radius:9px; border-color:#343d42; background:#141b1f; align-items:stretch; overflow:hidden; }
-.inventory-screen .essentials-grid .inventory-art { min-height:80px; }
-.inventory-screen .essentials-grid .inventory-item > div { justify-content:center; padding:8px 7px 8px 0; gap:5px; }
+.inventory-screen .essentials-grid .inventory-item { display:grid; grid-template-columns:68px minmax(0,1fr); gap:8px; min-height:84px; padding:6px; border-radius:9px; border-color:#343d42; background:#141b1f; align-items:center; overflow:hidden; }
+.inventory-screen .essentials-grid .inventory-art { width:68px; height:68px; min-height:0; border-radius:6px; }
+.inventory-screen .essentials-grid .inventory-item > div { justify-content:center; padding:0; gap:3px; }
 .inventory-screen .essentials-grid strong { font-size:12px; line-height:1.25; }
 .inventory-screen .essentials-grid small { font-size:12px; line-height:1.4; color:#aab0b4; }
 .inventory-slot:focus-visible { outline:2px solid #d7b58a; outline-offset:2px; }

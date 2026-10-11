@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-136`. Current v128–v136 clinic, mood, condition and inventory rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-139`. Current v128–v139 clinic, mood, condition and inventory rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -801,7 +801,9 @@ Validation for v115: `npm run build` and `npm test` passed locally, and its GitH
 - The header describes overall condition, separately from Mood: 60% of the physical-stat average plus 40% Mood. Any physical stat at 20 or lower caps the score at 40; Health at 10 or lower, Food or Thirst at 5 or lower caps it at 20, so comfortable averages cannot hide an emergency.
 - Five monochrome outline faces: Very bad (≤20), Bad (≤40), Fair (≤60), Good (≤80), Very good (>80). The Mood card uses these same five faces based on Mood itself. Overall header, status notification dot and journal condition text use the combined score.
 
-## Inventory slot presentation (v131–v136)
+## Inventory slot presentation (v131–v139)
+
+v137 matched Essentials artwork width to backpack cards; v138 removed the slot-free subtitle and increased Essentials details to 12px. v139 replaces stretchable Essentials artwork with identical 68px square photos, inset and vertically centered in cards. Clothing shows Clean first, then Condition; tapping it opens read-only details including the hygiene limit. These changes do not alter cleanliness, durability or time.
 
 v135 narrows backpack artwork to 38% and reduces copy padding so short effect tags fit side by side on phone screens. v136 reduces backpack and Essentials cards to an 80px minimum height, moves stack quantities inline after item names and reduces the Essentials divider spacing to 14px. Longer text can still grow cards rather than being clipped; item handlers and accessible labels remain unchanged.
 
