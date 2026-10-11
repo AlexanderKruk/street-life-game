@@ -756,3 +756,13 @@ button.inventory-item { width:100%; }
 .result-card-content { overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
 
 .header-version { color:#77828a; font-size:9px; font-weight:400; letter-spacing:0; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+/* Closed locations: keep their content visible beneath an in-page scrim. */
+.closed-content.is-closed { position:relative; height:clamp(300px,calc(100dvh - 280px),540px); overflow:hidden; isolation:isolate; }
+.is-closed > .closed-content-body { filter:blur(4px); opacity:.62; pointer-events:none; user-select:none; }
+.is-closed::after { content:''; position:absolute; inset:0; z-index:1; background:linear-gradient(180deg,#0b0e1240,#0b0e128c 35%,#0b0e12b8 100%); }
+.closed-content-notice { position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:25px 15px; color:#f0eee8; text-align:center; }
+.closed-content-notice svg { width:52px; height:52px; margin-bottom:16px; color:#d7b58a; }
+.closed-content-notice h2 { margin:0 0 8px; font-size:26px; font-weight:600; }
+.closed-content-notice p { margin:0; font-size:14px; color:#c4c8ca; }
+.shop-return:disabled,.shop-screen .shop-meal:disabled { opacity:.4; }

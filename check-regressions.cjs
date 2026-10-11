@@ -199,6 +199,19 @@ click(/Public transport/);assert.equal(read(stateKey).money,95.6);
 setup({money:0},{[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:479}]});click(/Map$/);click(/^.*Station/);click("Choose route");
 assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(screen.getByRole('button',{name:/Ride without/}));
 
+// Closed shops retain the catalogue, block transactions, and unlock at opening.
+setup({locationId:'shop',minutes:419},{[invKey]:{water:0,bottles:2}});
+assert(screen.getByRole('status').textContent.includes('Closed'));
+assert(screen.getByRole('status').textContent.includes('Opens at 07:00'));
+assert.equal(document.querySelectorAll('.supply-card').length,8);
+assert(document.querySelector('.closed-content-body').hasAttribute('inert'));
+const closedMoney=read(stateKey).money, closedWater=read(invKey).water;
+for(const control of document.querySelectorAll('.shop button')) { assert(control.disabled); fireEvent.click(control); }
+assert.equal(read(stateKey).money,closedMoney); assert.equal(read(invKey).water,closedWater); assert.equal(read(invKey).bottles,2);
+advance(1000); assert(!document.querySelector('.closed-content-notice'));
+assert(!screen.getByRole('button',{name:'Buy Water for 3.00 zł'}).disabled);
+setup({locationId:'support',minutes:420});assert(screen.getByRole('status').textContent.includes('Opens at 08:00'));
+
 // Three zloty buys 1.5 L of water: exactly three drinks of 0.5 L.
 setup({locationId:'shop',thirst:0},{[invKey]:{water:0}});
 assert(!screen.queryByText(/1.5 L|0.5 L/));assert(screen.getByText('Water'));assert(screen.getByText('3 portions'));assert(!screen.queryByText('💧💧💧'));click('Buy Water for 3.00 zł');
