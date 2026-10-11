@@ -9,7 +9,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-111'
+const BUILD_VERSION = 'v2026.10.11-112'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -96,10 +96,10 @@ const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' |
 const SHOP_ITEMS: ShopItem[] = [
   { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['Thirst +++'] },
   { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food ++', 'Mood +'] },
-  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food +12'] },
-  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 6, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food +32', 'Mood +'] },
-  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene +10 · max 60'] },
-  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Shower ×1.5', 'Hygiene max 100'] },
+  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food +'] },
+  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 6, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food ++', 'Mood +'] },
+  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene +'] },
+  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Hygiene +++'] },
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood +', 'Health −'] },
   { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
 ]
@@ -2072,7 +2072,7 @@ export default function App() {
           <span className="item-icon">🥫</span><div><strong>Canned food ×{inventory.cannedFood}</strong><small>Keeps well · tap to eat</small></div>
         </button>}
         {inventory.wipes > 0 && <button className="inventory-item usable" onClick={() => useSupply('wipes')} disabled={game.hygiene >= 60}>
-          <span className="item-icon">🧻</span><div><strong>Wet wipes ×{inventory.wipes}</strong><small>{game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean · Hygiene +10, max 60'}</small></div>
+          <span className="item-icon">🧻</span><div><strong>Wet wipes ×{inventory.wipes}</strong><small>{game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean · Hygiene +'}</small></div>
         </button>}
         {inventory.bottles > 0 && Array.from({ length: Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) }, (_, stackIndex) => {
           const stackCount = Math.min(BOTTLE_STACK_SIZE, inventory.bottles - stackIndex * BOTTLE_STACK_SIZE)
