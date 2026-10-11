@@ -840,3 +840,12 @@ footer .header-version { margin-left:auto; align-self:center; }
  .game-header .money svg,.game-header .weather svg { width:18px; height:18px; }
  .game-header .phone-charge .battery-icon { width:24px; height:16px; }
 }
+
+/* v120: slightly larger header labels. */
+.game-header h1 { font-size:13px; }
+.game-header .money,.game-header .weather,.game-header .phone-charge { font-size:13px; }
+@media(max-width:420px) { .game-header .money,.game-header .weather,.game-header .phone-charge { font-size:12px; } }
+@media(max-width:360px) {
+ .game-header h1 { font-size:11px; }
+ .game-header .money,.game-header .weather,.game-header .phone-charge { font-size:11px; }
+}
