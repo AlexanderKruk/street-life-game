@@ -11,10 +11,15 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-140'
+const BUILD_VERSION = 'v2026.10.11-141'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
+function approximateDuration(minutes: number) {
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return `≈${hours ? `${hours}h` : ''}${remainder || !hours ? `${remainder}m` : ''}`
+}
 const PHONE_SEARCH_MIN = 10
 const PHONE_SEARCH_MAX = 25
 const PHONE_SEARCH_DRAIN_PER_MINUTE = 0.2
@@ -230,7 +235,7 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
       .filter(part => !isValidElement(part) || part.type !== 'span')
       .map(part => isValidElement<{ children?: ReactNode }>(part) && part.type === 'div'
         ? cloneElement(part, {}, <Icon name={icon} className="story-action-icon" />, Children.toArray(part.props.children)
-          .filter(detail => !isValidElement<{ className?: string }>(detail) || detail.type !== 'small' || detail.props.className === 'choice-estimate')
+          .filter(detail => !isValidElement<{ className?: string }>(detail) || detail.type !== 'small' || detail.props.className?.split(' ').includes('choice-estimate'))
           .map(detail => isValidElement<{ children?: ReactNode }>(detail) && detail.type === 'strong'
             ? cloneElement(detail, {}, Children.toArray(detail.props.children)
               .filter(text => !isValidElement(text) || text.type !== 'span')
@@ -1986,11 +1991,11 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
-            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small className="choice-estimate">{answeredQuestions.includes('morning') ? 'Saved answer · free' : `Approx. ${PHONE_SEARCH_ESTIMATE} min`}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
+            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small className={`choice-estimate${answeredQuestions.includes('morning') ? '' : ' choice-duration'}`}>{answeredQuestions.includes('morning') ? 'Saved answer · free' : approximateDuration(PHONE_SEARCH_ESTIMATE)}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
             {visibleQuestions.filter(question => question.id !== 'morning').map(question => {
               const saved = answeredQuestions.includes(question.id)
               const memory = question.id === 'charging'
-              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small className="choice-estimate">{memory ? 'Remember · free' : saved ? 'Saved answer · free' : `Approx. ${PHONE_SEARCH_ESTIMATE} min`}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : `Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
+              return <button className="action" data-choice={`question-${question.id}`} aria-label={question.title} key={question.id} onClick={() => answerPracticalQuestion(question.id)} disabled={!saved && !memory && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">{question.icon}</span>{question.title}</strong><small className={`choice-estimate${saved || memory ? '' : ' choice-duration'}`}>{memory ? 'Remember · free' : saved ? 'Saved answer · free' : approximateDuration(PHONE_SEARCH_ESTIMATE)}</small></div><span>{saved ? 'Notes' : memory ? 'Remember · free' : `Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
             })}
             {<button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
