@@ -11,7 +11,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-139'
+const BUILD_VERSION = 'v2026.10.11-140'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -2090,7 +2090,7 @@ export default function App() {
           <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />tap to open</small></div>
         </button>
         <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit.` })}>
-          <ItemArt id="clothing" /><div><strong>Clothing</strong><small>Clean {Math.round(inventory.clothingCleanliness)}%</small><small>Condition {Math.round(inventory.jacket)}%</small></div>
+          <ItemArt id="clothing" /><div><strong>Clothing</strong><small>Clean {Math.round(inventory.clothingCleanliness)}%<br />Condition {Math.round(inventory.jacket)}%</small></div>
         </button>
         <div className="inventory-item">
           <ItemArt id="documents" /><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
