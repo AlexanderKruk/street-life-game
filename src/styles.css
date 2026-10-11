@@ -869,8 +869,10 @@ footer .header-version { margin-left:auto; align-self:center; }
 @media(max-width:360px) { .district-card { grid-template-columns:40px minmax(0,1fr) auto; } .district-place-icon,.district-place-icon svg { width:40px; height:40px; } }
 
 /* v131: actual backpack stacks with tangible empty slots. */
-.inventory-screen .inventory-heading h2 { font-size:26px; margin:4px 0 20px; }
-.inventory-screen .inventory-section-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 12px; }
+.inventory-screen { --inventory-section-space:16px; --inventory-heading-space:12px; margin-top:var(--inventory-section-space); }
+.inventory-screen .inventory-heading { margin:0 0 var(--inventory-section-space); }
+.inventory-screen .inventory-heading h2 { font-size:26px; margin:0; }
+.inventory-screen .inventory-section-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 var(--inventory-heading-space); }
 .inventory-screen .inventory-section-heading strong { font-size:17px; font-weight:600; }
 .inventory-screen .inventory-section-heading > span { font-size:12px; font-weight:400; color:#aab0b4; }
 .inventory-screen .backpack-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0; }
@@ -888,8 +890,9 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .inventory-effects .negative { color:#dc9b98; background:#392323; }
 .inventory-effects .warning { color:#d7b58a; background:#3a3024; }
 .inventory-slot:disabled { opacity:.55; cursor:default; }
-.backpack-empty-message { color:#8f9ba3; font-size:13px; margin:12px 0; }
-.inventory-screen .essentials-heading { padding-top:14px; margin-top:14px; border-top:1px solid #30383e; }
+.backpack-empty-message { color:#8f9ba3; font-size:13px; margin:0; }
+.inventory-screen .essentials-heading { padding-top:var(--inventory-section-space); margin-top:var(--inventory-section-space); border-top:1px solid #30383e; }
+.inventory-screen + footer { margin-top:var(--inventory-section-space,16px); padding-top:var(--inventory-section-space,16px); }
 .inventory-screen .essentials-heading small { display:block; font-size:11px; color:#8f9ba3; margin-top:4px; }
 .inventory-screen .essentials-grid { gap:8px; margin-top:0; grid-template-columns:repeat(2,minmax(0,1fr)); }
 .inventory-screen .essentials-grid .inventory-item { display:grid; grid-template-columns:68px minmax(0,1fr); gap:8px; min-height:84px; padding:6px; border-radius:9px; border-color:#343d42; background:#141b1f; align-items:center; overflow:hidden; }
