@@ -821,3 +821,9 @@ footer .header-version { margin-left:auto; align-self:center; }
  .header-condition svg { width:18px; height:18px; }
  .game-header .money svg,.game-header .weather svg { width:14px; height:14px; }
 }
+
+/* v118: four independent header blocks with equal space between them. */
+.game-header .header-state-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.game-header .header-state-row > * { flex:0 0 auto; }
+@media(max-width:420px) { .game-header .header-state-row { gap:7px; } }
+@media(max-width:360px) { .game-header .header-state-row { gap:5px; } }
