@@ -72,7 +72,7 @@ assert.equal(document.querySelectorAll('.result-cost-line').length,0);ok();click
 // Estimates stay the same; durations vary within bounds and never reroll.
 for(const [draw,duration] of [[0,10],[.999,25]]) {
  setup({minutes:1320});Math.random=()=>draw;
- assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Approx. 15 min'));
+ assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('≈15m'));
  fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));
  assert.equal(read('street-life-phone-activity-v1').total,duration);
  assert(!document.querySelector('[role="progressbar"]').hasAttribute('aria-valuenow'));
@@ -110,7 +110,7 @@ setup({minutes:1320});click('Just one more street. I’m not ready to lie down.'
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
-assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,1);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'Approx. 15 min');
+assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,1);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
