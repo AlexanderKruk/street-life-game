@@ -13,10 +13,8 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
 }) {
   const [focusedId, setFocusedId] = useState(currentId)
   const selected = places.find(place => place.id === (routeId ?? focusedId)) ?? places.find(place => place.id === currentId) ?? places[0]
-  function status(place: Location) {
-    if (place.id === currentId) return 'You are here'
-    if (place.id === 'shelter') return reservedBed ? 'Bed reserved' : 'Registration 19:00–22:00'
-    return isOpen(place, minutes) ? 'Open' : `Closed · ${formatTime(place.open)}`
+  function hours(place: Location) {
+    return place.open === 0 && place.close === 1440 ? '24/7' : `${formatTime(place.open)}–${formatTime(place.close)}`
   }
   if (!selected) return null
   const origin = positions[currentId]
@@ -30,15 +28,16 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
         const [x, y] = positions[place.id] ?? [50, 50]
         const here = place.id === currentId
         const active = place.id === selected.id
-        return <button key={place.id} className={`district-pin${x > 55 ? ' label-left' : ''}${here ? ' here' : ''}${active ? ' selected' : ''}`} style={{ left: `${x}%`, top: `${y}%` }} onClick={() => setFocusedId(place.id)} aria-pressed={active} aria-label={`${place.name} ${status(place)}`}>
-          <span className="district-marker" aria-hidden="true" /><span className="district-label"><strong>{place.name}</strong>{(here || active) && <small>{status(place)}</small>}</span>
+        const open = isOpen(place, minutes)
+        return <button key={place.id} className={`district-pin${x > 55 ? ' label-left' : ''}${here ? ' here' : ''}${active ? ' selected' : ''}`} style={{ left: `${x}%`, top: `${y}%` }} onClick={() => setFocusedId(place.id)} aria-pressed={active} aria-label={`${place.name} ${open ? 'Open' : 'Closed'} ${hours(place)}${here ? ' You are here' : ''}`}>
+          <span className="district-marker" aria-hidden="true" /><span className="district-label"><strong>{place.name}</strong><small className={`district-hours ${open ? 'open' : 'closed'}`}>{hours(place)}</small>{here && <small>You are here</small>}</span>
         </button>
       })}
       <small className="district-note">District overview · route illustration</small>
     </div>
     <div className="district-card" aria-live="polite">
       <div className="district-place-icon"><Icon name={locationIcon(selected.id)} /></div>
-      <div className="district-place-copy"><div className="district-place-heading"><h3>{selected.name}</h3><p>{status(selected)}</p></div><small>{selected.id === 'shelter' ? reservedBed ? 'Use your reserved bed during admission hours.' : 'A place is not guaranteed.' : selected.description}</small></div>
+      <div className="district-place-copy"><div className="district-place-heading"><h3>{selected.name}</h3></div><small>{selected.id === 'shelter' ? reservedBed ? 'Use your reserved bed during admission hours.' : 'A place is not guaranteed.' : selected.description}</small></div>
       <button className="district-route-button" onClick={() => onRoute(selected.id)}>Go →</button>
     </div>
   </section>
