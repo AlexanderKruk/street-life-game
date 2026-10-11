@@ -9,7 +9,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-115'
+const BUILD_VERSION = 'v2026.10.11-116'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -1930,7 +1930,6 @@ export default function App() {
         {[{ title: 'Food & drink', items: SHOP_ITEMS.slice(0, 4) }, { title: 'Care', items: SHOP_ITEMS.slice(4) }].map(group => <section className="shop-category" key={group.title} aria-label={group.title}>
           <h3>{group.title}</h3><div className="shop-grid supply-grid">{group.items.map(item => <ShopCard key={item.id} item={item} open={open} fits={canAddToBackpack(inventory, item)} affordable={game.money >= item.price} onBuy={() => buyItem(item)} onSteal={() => stealItem(item)} />)}</div>
         </section>)}
-        <button className="shop-meal" onClick={() => act('shop-meal')} disabled={!open || game.money < 8}><span>🍲</span><div><strong>Hot meal · eat now</strong><small>Does not use backpack space · ~15 min</small><div className="shop-impact"><em className="positive">Food+++</em><em className="positive">Thirst+</em><em className="positive">Mood+</em></div></div><b>8.00 zł</b></button>
       </section>}
       {current.id === 'support' && <section className="support-menu">
         <div className="section-title"><h2>Talk to a social worker</h2><span>Choose what you need help with</span></div>
