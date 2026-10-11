@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-115`. Recent presentation updates through v115 are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-129`. Current v128–v129 clinic, mood and overall-condition rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -782,8 +782,21 @@ Validation for v115: `npm run build` and `npm test` passed locally, and its GitH
 ## Repository access and hosting — checked 2026-10-11
 
 - Repository: `AlexanderKruk/street-life-game`, default branch `main`.
-- Visibility: **private**, confirmed through authenticated GitHub metadata after the owner changed it.
+- Visibility: **public**, confirmed through GitHub metadata after the owner restored it.
 - The connected GitHub integration retains repository read and push permissions. Private repository metadata, the main branch and `GAME_DESIGN.md` can still be read. Documentation changes are written through the authenticated integration.
-- Latest application build remains **v115**; this documentation-only update does not bump the application version.
-- GitHub currently reports `has_pages: false`. The previous game URL, `https://alexanderkruk.github.io/street-life-game/`, returned **HTTP 404** during this check. The successful v115 deployment predates the visibility change and does not establish current hosting availability.
-- Hosting needs to be restored or moved before the game link can be used again. This check does not change visibility, hosting configuration or repository permissions.
+- GitHub reports `has_pages: true`. The game is served at `https://alexanderkruk.github.io/street-life-game/` through the existing GitHub Actions workflow; deployment was restored after the repository became public again.
+
+## Current clinic and map presentation (v128)
+
+- Help Center handles accommodation, documents and benefits. The former Day Center & Clinic is now two separate points: Day Center (indoor rest, shower, laundry and charging) and Free Clinic (free basic medical care, no insurance or documents required), both open 08:00–16:00.
+- The existing clinic action retains its 60-minute duration, Health/Mood bonuses, Cold removal and time-of-day capacity checks. Its internal `daycenter-doctor` action ID remains stable, but it is available only at `free-clinic`.
+- Previously discovered combined centers migrate to both addresses without resetting a save. Morning-help and no-bed answers discover both points.
+- Map markers display names only. The fixed destination card shows opening hours after the name, using the same 16 px semibold type, compact `08-16` format, green when open and muted red when closed. No hours background or visible “You are here” text.
+
+## Mood and five overall-condition faces (v129)
+
+- Mood remains a saved independent value. Initial Mood 28 represents the protagonist's emotional shock; loading a save does not replace it with physical-stat averages.
+- Every elapsed game minute, Food, Thirst, Energy, Health and Hygiene influence Mood. The comfort target is the smaller of their average and their lowest value plus 30. Mood approaches this target by `(target - mood) / 360` per minute, capped at +0.08 or −0.12 per minute. Thus one hour of comfortable conditions can restore up to 4.8 Mood; sustained deprivation can reduce it by up to 7.2 before other effects.
+- Action/event bonuses and penalties, music and Cold still apply. Physical influence runs through the same time progression for actions, travel, phone work and sleep, with no change while time is paused. Refreshing does not add a recovery bonus.
+- The header describes overall condition, separately from Mood: 60% of the physical-stat average plus 40% Mood. Any physical stat at 20 or lower caps the score at 40; Health at 10 or lower, Food or Thirst at 5 or lower caps it at 20, so comfortable averages cannot hide an emergency.
+- Five monochrome outline faces: Very bad (≤20), Bad (≤40), Fair (≤60), Good (≤80), Very good (>80). The Mood card uses these same five faces based on Mood itself. Overall header, status notification dot and journal condition text use the combined score.

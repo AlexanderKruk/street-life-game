@@ -84,6 +84,37 @@ export function createInitialState(): GameState {
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value))
 
+export function conditionBand(value: number) {
+  if (value <= 20) return { label: 'VERY BAD', level: 'very-bad' as const }
+  if (value <= 40) return { label: 'BAD', level: 'bad' as const }
+  if (value <= 60) return { label: 'FAIR', level: 'fair' as const }
+  if (value <= 80) return { label: 'GOOD', level: 'ok' as const }
+  return { label: 'VERY GOOD', level: 'very-good' as const }
+}
+
+function physicalNeeds(state: GameState) {
+  return [state.hunger, state.thirst, state.energy, state.health, state.hygiene]
+}
+
+export function overallCondition(state: GameState) {
+  const needs = physicalNeeds(state)
+  const average = needs.reduce((total, value) => total + value, 0) / needs.length
+  let score = average * 0.6 + state.mood * 0.4
+  // Good averages must not hide dangerous deprivation or exhaustion.
+  if (Math.min(...needs) <= 20) score = Math.min(score, 40)
+  if (state.health <= 10 || state.hunger <= 5 || state.thirst <= 5) score = Math.min(score, 20)
+  return conditionBand(score)
+}
+
+// Physical comfort changes morale gradually; it does not erase an event's
+// emotional impact or replace saved Mood with an average of the other meters.
+function physicalMoodChange(state: GameState) {
+  const needs = physicalNeeds(state)
+  const average = needs.reduce((total, value) => total + value, 0) / needs.length
+  const target = Math.min(average, Math.min(...needs) + 30)
+  return Math.max(-0.12, Math.min(0.08, (target - state.mood) / 360))
+}
+
 export function energyCap(health: number) {
   if (health < 20) return 60
   if (health < 40) return 75
@@ -149,11 +180,13 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const energyDrain = context.sleeping ? 0 :
       NEED_DRAIN.energy * step * healthEnergyMultiplier(next.health) + weather.energyDrain * step +
       (context.walking ? 0.01 * step * healthEnergyMultiplier(health) : 0) + (cold ? 0.045 * step : 0)
+    const energy = Math.min(energyCap(health), clamp(next.energy - energyDrain))
+    const hygiene = clamp(next.hygiene - step / 180 - walkingHygiene * step)
     const total = next.minutes + step
     next = { ...next, day: next.day + Math.floor(total / 1440), minutes: total % 1440,
-      hunger, thirst, health, energy: Math.min(energyCap(health), clamp(next.energy - energyDrain)),
-      hygiene: clamp(next.hygiene - step / 180 - walkingHygiene * step),
-      mood: clamp(next.mood - (cold ? 0.012 * step : 0) + (context.music ? 0.012 * step : 0)),
+      hunger, thirst, health, energy, hygiene,
+      mood: clamp(next.mood + physicalMoodChange({ ...next, hunger, thirst, health, energy, hygiene }) * step
+        - (cold ? 0.012 * step : 0) + (context.music ? 0.012 * step : 0)),
       intoxication: clamp(next.intoxication - step / 6),
     }
   }

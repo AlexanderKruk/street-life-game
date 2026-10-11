@@ -47,7 +47,7 @@ assert(document.querySelector('.street-art img').src.endsWith('phone-search.webp
 assert.equal(read(stateKey).minutes,1436);assert.equal(read(invKey).phoneBattery,batteryBefore);
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 advance(4000);assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,0);
-assert(read(invKey).phoneBattery<batteryBefore);assert.equal(read(stateKey).mood,28);
+assert(read(invKey).phoneBattery<batteryBefore);assert(read(stateKey).mood > 28 && read(stateKey).mood < 29);
 assert(!read('street-life-discovered-v1').includes('support'));assert(!read('street-life-answers-v1').includes('morning'));
 const partialState=read(stateKey),partialInventory=read(invKey);
 Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});advance(5000);
@@ -57,7 +57,7 @@ Object.defineProperty(document,'visibilityState',{value:'visible',configurable:t
 const oldPhoneSession=read('street-life-phone-activity-v1');localStorage.setItem('street-life-phone-activity-v1',JSON.stringify({...oldPhoneSession,remaining:26,total:undefined}));
 cleanup();render(React.createElement(App));assert(document.querySelector('.phone-activity'));assert.deepEqual(read(stateKey),partialState);assert.deepEqual(read(invKey),partialInventory);
 assert.equal(read('street-life-phone-activity-v1').remaining,6);advance(5000);assert(!screen.queryByRole('dialog'));
-advance(1000);assert.equal(read(stateKey).minutes,6);assert.equal(read(stateKey).mood,33);
+advance(1000);assert.equal(read(stateKey).minutes,6);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);
 assert(!localStorage.getItem('street-life-phone-activity-v1'));
 assert(read('street-life-discovered-v1').includes('support'));assert.equal(read('street-life-journal-history-v1').length,1);
 assert(document.querySelector('.result-inline'));assert(!document.querySelector('.result-overlay'));
@@ -114,7 +114,7 @@ assert.equal(document.querySelectorAll('.story-actions .action small, .story-act
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
-click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1335);assert.equal(read(stateKey).mood,33);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));
+click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1335);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));
 setup({minutes:1320});assert(!screen.queryByRole('button',{name:/What about Night Shelter\? Maybe there is a place./}));
 setup({minutes:1320});click(/Maybe the station\? At least I could sit down./);assert(screen.getByRole('button',{name:/Public transport/}));assert.equal(read(stateKey).minutes,1320);
 // First-night wandering uses real walking costs; rain choices pause and persist.
@@ -127,7 +127,7 @@ setup({day:2,minutes:240,rainUntil:2000});click('Just one more street. I’m not
 setup({day:2,minutes:240});assert(document.querySelector('.story-scene').textContent.includes('Delivery vans'));assert(!document.querySelector('.story-scene').textContent.includes('It is past ten'));assert(screen.getByRole('button',{name:'Maybe the station? At least I could sit down.',exact:true}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.',exact:true}));
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Something familiar to listen to… I don’t want this silence./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).mood>30 && read(stateKey).mood<=60);assert(read(invKey).phoneBattery<musicBattery);assert(screen.getByRole('dialog').textContent.includes('familiar music'));ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(!screen.queryByRole('button',{name:/Something familiar to listen to… I don’t want this silence./}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.'}));
-setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert.equal(read(stateKey).mood,33);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-3*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.deepEqual(read(stateKey),rereadState);assert.deepEqual(read(invKey),rereadInventory);ok();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1140);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
+setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-3*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.deepEqual(read(stateKey),rereadState);assert.deepEqual(read(invKey),rereadInventory);ok();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1140);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
 // P1: referral opens map, including migration of a v53 save.
 // Questions emerge from needs; remembering a station outlet does not need a charged phone.
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'What if the shelter has no places?',exact:true}));click('Where can I get help in the morning?');ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));
@@ -422,7 +422,36 @@ setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!d
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
-const {advanceTime,initialState,createInitialState}=require('./regression-game.cjs');
+const {advanceTime,initialState,createInitialState,overallCondition,conditionBand}=require('./regression-game.cjs');
+// Five distinct faces, with the header describing the whole condition.
+assert.deepEqual([0,21,41,61,81].map(value=>conditionBand(value).level),['very-bad','bad','fair','ok','very-good']);
+for(const [boundary,below,above] of [[20,'very-bad','bad'],[40,'bad','fair'],[60,'fair','ok'],[80,'ok','very-good']]) {
+ assert.equal(conditionBand(boundary).level,below);assert.equal(conditionBand(boundary+.01).level,above);
+}
+const healthyBody={...initialState,hunger:80,thirst:80,energy:80,health:80,hygiene:80,mood:28};
+for(const [value,label] of [[10,'VERY BAD'],[30,'BAD'],[50,'FAIR'],[70,'GOOD'],[90,'VERY GOOD']]) {
+ setup({hunger:value,thirst:value,energy:value,health:value,hygiene:value,mood:value});
+ assert(screen.getByRole('img',{name:'Overall condition: '+label}));
+ click(/^Status$/);
+ assert([...document.querySelectorAll('.stat')].find(stat=>stat.textContent.includes('Mood')).querySelector('svg'));
+}
+assert.equal(overallCondition(healthyBody).level,'fair');
+assert.equal(overallCondition({...healthyBody,mood:100,health:5}).level,'very-bad');
+assert.equal(overallCondition({...healthyBody,mood:100,energy:10}).level,'bad');
+const recoveredMood=advanceTime(healthyBody,60).mood;
+assert(recoveredMood>healthyBody.mood && recoveredMood<=healthyBody.mood+4.8+1e-8);
+for(const need of ['hunger','thirst','energy','health','hygiene']) {
+ const comfortable={...healthyBody,mood:70};
+ const deprived={...comfortable,[need]:5};
+ const lowMood=advanceTime(deprived,60).mood;
+ assert(lowMood<70 && lowMood<advanceTime(comfortable,60).mood,need+' must affect Mood');
+}
+const emotionalShock={...healthyBody,mood:10};
+assert.equal(advanceTime(emotionalShock,0).mood,10);
+assert(advanceTime(emotionalShock,60).mood<30); // Recovery is gradual, not a reset.
+const baselineMood=advanceTime(healthyBody,60).mood;
+assert(advanceTime(healthyBody,60,{music:true}).mood>baselineMood);
+assert(advanceTime(healthyBody,60,{effects:[{id:'cold',expiresAt:99999}]}).mood<baselineMood);
 const beforeMoneyRandom=Math.random;
 for(let amount=25;amount<=50;amount++){Math.random=()=>(amount-25+.5)/26;assert.equal(createInitialState().money,amount);}
 Math.random=()=>0;assert.equal(createInitialState().money,25);Math.random=()=>.999999;assert.equal(createInitialState().money,50);Math.random=beforeMoneyRandom;

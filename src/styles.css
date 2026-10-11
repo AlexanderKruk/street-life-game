@@ -577,6 +577,9 @@ button.inventory-item { width:100%; }
 .nav-condition { position:absolute; width:5px; height:5px; right:calc(50% - 18px); top:3px; border-radius:50%; }
 .nav-condition.fair { background:#b89b70; }
 .nav-condition.bad { background:#c28b7e; }
+.nav-condition.very-bad { background:#cf7474; }
+.nav-condition.very-good { background:#8dc5a2; }
+.stat > span svg { width:24px; height:24px; color:#b2b8bd; }
 .game-header + .event { margin-top:0; }
 .build-version { color:#7e8c9c; font-size:10px; font-variant-numeric:tabular-nums; }
 .street-screen { background:#101416; color:#ece9e3; }

@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, type ActionResult, type GameState } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, overallCondition, conditionBand, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot, type ResultSummary } from './results'
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
@@ -9,7 +9,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-128'
+const BUILD_VERSION = 'v2026.10.11-129'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -254,17 +254,13 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
   return <Tag className={className}>{available}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable}</Tag>
 }
 
-function Stat({ label, value, icon, compact = false }: { label: string; value: number; icon: string; compact?: boolean }) {
+function Stat({ label, value, icon, compact = false }: { label: string; value: number; icon: ReactNode; compact?: boolean }) {
   const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
   return <div className={compact ? 'stat compact' : 'stat'}><span>{icon}</span><div><div className="stat-label"><span>{label}</span>{!compact && <b>{Math.round(value)}</b>}</div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
 }
 
 function overallStatus(game: GameState) {
-  const values = [game.hunger, game.thirst, game.energy, game.health, game.hygiene, game.mood]
-  const lowest = Math.min(...values)
-  if (lowest <= 30) return { label: 'BAD', icon: '☹️', level: 'bad' }
-  if (lowest <= 60) return { label: 'FAIR', icon: '😐', level: 'fair' }
-  return { label: 'OK', icon: '🙂', level: 'ok' }
+  return overallCondition(game)
 }
 
 export default function App() {
@@ -1884,7 +1880,7 @@ export default function App() {
         <h1 aria-label={`Day ${game.day} ${weekday(game.day)} ${formatTime(game.minutes)}`}><time>{formatTime(game.minutes)}</time><span className="game-day">D{game.day} <span className="weekday">{weekday(game.day)}</span></span></h1>
         <div className="weather" title={weather.label} aria-label={`${weather.label}, ${temperature}°C`}><Icon name={weather.label === 'Rain' || weather.label === 'Showers' ? 'rain' : weather.label === 'Clear' ? game.minutes >= 360 && game.minutes < 1200 ? 'sun' : 'moon' : 'cloud'} />{temperature}°</div>
         <div className="header-info">
-          <span className={`header-condition ${overall.level}`} role="img" aria-label={`Overall condition: ${overall.label}`} title={`Overall condition: ${overall.label}`}><Icon name={overall.level === 'ok' ? 'face-ok' : overall.level === 'bad' ? 'face-bad' : 'face-fair'} /></span>
+          <span className={`header-condition ${overall.level}`} role="img" aria-label={`Overall condition: ${overall.label}`} title={`Overall condition: ${overall.label}`}><Icon name={`face-${overall.level}`} /></span>
           <div className="money" aria-label={`Money: ${game.money.toFixed(2)} zł`}><Icon name="banknote" />{Number(game.money.toFixed(2))} zł</div>
         </div>
         <div className={`phone-charge${inventory.phoneBattery <= 20 ? ' low' : ''}`} aria-label={`Phone battery: ${Math.round(inventory.phoneBattery)}%`} title="Your phone battery"><BatteryIcon charge={inventory.phoneBattery} /><strong>{Math.round(inventory.phoneBattery)}%</strong></div>
@@ -2124,7 +2120,7 @@ export default function App() {
         <Stat icon="⚡" label={energyCap(game.health) < 100 ? `Energy · max ${energyCap(game.health)}` : 'Energy'} value={game.energy} compact />
         <Stat icon="❤️" label="Health" value={game.health} compact />
         <Stat icon="🚿" label={hygieneLimit < 100 ? `Hygiene · max ${hygieneLimit}` : 'Hygiene'} value={game.hygiene} compact />
-        <Stat icon="🙂" label="Mood" value={game.mood} compact />
+        <Stat icon={<Icon name={`face-${conditionBand(game.mood).level}`} />} label="Mood" value={game.mood} compact />
       </div>
       <div className="life-heading"><h3>Life situation</h3><span>Current status</span></div>
       <div className="life-situation">
