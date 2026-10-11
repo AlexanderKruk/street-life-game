@@ -12,7 +12,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-147'
+const BUILD_VERSION = 'v2026.10.11-148'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -276,11 +276,16 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
 
 function Stat({ label, value, icon, cap = 100, focus = false }: { label: string; value: number; icon: ReactNode; cap?: number; focus?: boolean }) {
   const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
+  const blocked = label === 'Hygiene' && cap < 100
   return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}`} data-stat={label}>
     {focus && <p className="status-focus-label">{level === 'critical' ? 'Needs attention' : level === 'warning' ? 'Keep an eye on this' : 'Lowest indicator'}</p>}
     <span className="status-stat-icon">{icon}</span>
     <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && <small>Max {cap}%</small>}</div>
-    <div className="bar" role="meter" aria-label={`${label}: ${conditionBand(value).label}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}><i className={level} style={{ width: `${value}%` }} /></div>
+    <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={`${label}: ${conditionBand(value).label}${blocked ? `, maximum ${cap}% due to dirty clothes` : ''}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
+      {blocked && <span className="bar-blocked" style={{ left: `${cap}%` }} aria-hidden="true" />}
+      <i className={level} style={{ width: `${value}%` }} />
+      {blocked && <span className="bar-cap-marker" style={{ left: `${cap}%` }} aria-hidden="true" />}
+    </div>
     <b className="status-stat-value">{Math.round(value)}%</b>
   </div>
 }
@@ -2146,6 +2151,16 @@ export default function App() {
     </section>}
     {screen === 'status' && <section className="status-screen">
       <h2 className="status-title">Status</h2>
+      {!!effects.length && <section className="status-effects" aria-labelledby="status-effects-heading">
+        <div className="effects-heading"><h3 id="status-effects-heading">Effects</h3><span>{effects.length}</span></div>
+        <div className="effects-list">
+          {effects.map((active) => {
+            const effect = EFFECTS[active.id]
+            return <div className={`effect ${effect.kind}${active.id === 'cold' ? ' illness' : ''}`} key={active.id}><span><Icon name={effect.icon} /></span><div className="effect-body"><strong>{effect.name}</strong><div className="effect-impact">{effect.impacts.map((impact) => <b key={impact}>{impact}</b>)}</div></div>{active.id !== 'cold' && <small className="effect-time">{remainingEffect(active.expiresAt, game)}</small>}</div>
+          })}
+        </div>
+      </section>}
+      <div className="condition-heading"><h3>Condition</h3></div>
       <Stat label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} focus />
       <div className="status-needs" aria-label="Other condition indicators">
         {statusNeeds.filter(need => need.id !== focusedNeed.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} />)}
@@ -2156,13 +2171,6 @@ export default function App() {
         <div className="life-card"><Icon name="work" /><span>Employment</span><strong>{life.employment}</strong></div>
         <div className="life-card"><Icon name="banknote" /><span>Income</span><strong>{life.income}</strong></div>
         <div className="life-card"><Icon name="documents" /><span>Documents</span><strong>{inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'}</strong></div>
-      </div>
-      <div className="effects-heading"><h3>Effects</h3><span>{effects.length}</span></div>
-      <div className="effects-list">
-        {effects.length ? effects.map((active) => {
-          const effect = EFFECTS[active.id]
-          return <div className={`effect ${effect.kind}`} key={active.id}><span><Icon name={effect.icon} /></span><div className="effect-body"><strong>{effect.name}</strong><div className="effect-impact">{effect.impacts.map((impact) => <b key={impact}>{impact}</b>)}</div></div><small className="effect-time">{remainingEffect(active.expiresAt, game)}</small></div>
-        }) : <p className="empty">No active effects.</p>}
       </div>
     </section>}
     {screen === 'journal' && <section className="journal-screen">

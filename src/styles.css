@@ -142,6 +142,10 @@ footer p { margin:0; }
 .status-screen .status-stat-icon svg { width:21px; height:21px; color:#aab0b4; }
 .status-screen .status-stat-value { font-size:13px; font-weight:400; white-space:nowrap; text-align:right; font-variant-numeric:tabular-nums; }
 .status-screen .status-stat .bar { min-width:0; height:6px; margin:0; }
+.status-screen .status-stat .capped-bar { position:relative; height:8px; overflow:visible; }
+.status-screen .capped-bar i { position:relative; }
+.status-screen .bar-blocked { position:absolute; right:0; top:0; bottom:0; border-radius:0 8px 8px 0; background:repeating-linear-gradient(135deg,#583039 0,#583039 2px,#292127 2px,#292127 5px); }
+.status-screen .bar-cap-marker { position:absolute; top:-3px; bottom:-3px; border-left:1px dashed #d9959b; }
 .status-screen .status-stat .bar i.good { background:#64bb82; }
 .status-screen .status-stat .bar i.warning { background:#d5a642; }
 .status-screen .status-stat .bar i.critical { background:#d96a71; }
@@ -391,10 +395,15 @@ button.inventory-item { width:100%; }
 .life-card > span { font-size:14px; color:#aab0b4; }
 .life-card strong { font-size:14px; font-weight:600; line-height:1.4; text-align:right; min-width:0; overflow-wrap:anywhere; padding:8px 0; }
 .status-screen .effects-heading { margin:24px 0 12px; }
+.status-screen .status-effects .effects-heading { margin-top:0; }
+.status-effects { margin-bottom:24px; }
+.condition-heading { margin:0 0 12px; }
+.condition-heading h3 { margin:0; font-size:18px; font-weight:650; line-height:1.35; }
 .status-screen .effects-heading h3 { font-size:18px; font-weight:650; line-height:1.35; }
 .status-screen .effects-heading > span { font-size:13px; color:#aab0b4; font-variant-numeric:tabular-nums; }
 .status-screen .effects-list { gap:8px; }
 .status-screen .effect { grid-template-columns:22px minmax(0,1fr) auto; border-radius:9px; padding:14px; background:#141b1f; }
+.status-screen .effect.illness { grid-template-columns:22px minmax(0,1fr); }
 .status-screen .effect > span { display:flex; }
 .status-screen .effect > span svg { width:21px; height:21px; color:#aab0b4; }
 .status-screen .effect strong { font-size:15px; font-weight:600; }
