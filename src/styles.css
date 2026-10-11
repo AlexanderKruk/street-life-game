@@ -827,3 +827,16 @@ footer .header-version { margin-left:auto; align-self:center; }
 .game-header .header-state-row > * { flex:0 0 auto; }
 @media(max-width:420px) { .game-header .header-state-row { gap:7px; } }
 @media(max-width:360px) { .game-header .header-state-row { gap:5px; } }
+
+/* v119: consistent header icon scale and neutral condition color. */
+.game-header .header-condition { color:#b2b8bd; }
+.game-header .money svg,.game-header .weather svg { width:22px; height:22px; }
+.game-header .phone-charge .battery-icon { width:28px; height:18px; }
+@media(max-width:420px) {
+ .game-header .money svg,.game-header .weather svg { width:20px; height:20px; }
+ .game-header .phone-charge .battery-icon { width:26px; height:17px; }
+}
+@media(max-width:360px) {
+ .game-header .money svg,.game-header .weather svg { width:18px; height:18px; }
+ .game-header .phone-charge .battery-icon { width:24px; height:16px; }
+}
