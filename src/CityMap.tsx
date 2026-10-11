@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatTime, isOpen, type Location } from './game'
+import { isOpen, type Location } from './game'
 import { Icon, locationIcon } from './Icon'
 
 const positions: Record<string, [number, number]> = {
@@ -14,7 +14,8 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
   const [focusedId, setFocusedId] = useState(currentId)
   const selected = places.find(place => place.id === (routeId ?? focusedId)) ?? places.find(place => place.id === currentId) ?? places[0]
   function hours(place: Location) {
-    return place.open === 0 && place.close === 1440 ? '24/7' : `${formatTime(place.open)}–${formatTime(place.close)}`
+    const shortTime = (minutes: number) => `${Math.floor(minutes / 60)}${minutes % 60 ? `:${String(minutes % 60).padStart(2, '0')}` : ''}`
+    return place.open === 0 && place.close === 1440 ? '24/7' : `${shortTime(place.open)}-${shortTime(place.close)}`
   }
   if (!selected) return null
   const origin = positions[currentId]
