@@ -12,7 +12,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-148'
+const BUILD_VERSION = 'v2026.10.11-149'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -280,7 +280,7 @@ function Stat({ label, value, icon, cap = 100, focus = false }: { label: string;
   return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}`} data-stat={label}>
     {focus && <p className="status-focus-label">{level === 'critical' ? 'Needs attention' : level === 'warning' ? 'Keep an eye on this' : 'Lowest indicator'}</p>}
     <span className="status-stat-icon">{icon}</span>
-    <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && <small>Max {cap}%</small>}</div>
+    <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && !blocked && <small>Max {cap}%</small>}</div>
     <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={`${label}: ${conditionBand(value).label}${blocked ? `, maximum ${cap}% due to dirty clothes` : ''}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
       {blocked && <span className="bar-blocked" style={{ left: `${cap}%` }} aria-hidden="true" />}
       <i className={level} style={{ width: `${value}%` }} />
