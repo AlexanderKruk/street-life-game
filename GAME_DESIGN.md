@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last gameplay sync:** 2026-10-10 · Neutral office-worker protagonist. Current visible build: `v2026.10.10-96`. Documentation reviewed against the v96 implementation on 2026-10-10.
+**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-115`. Recent presentation updates through v115 are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -693,7 +693,7 @@ GitHub Pages deployment runs `npm test` and `npm run build` before publishing.
 ## Agreed next steps — not implemented
 
 - **Hostel:** discover it through phone search before showing its address on the map. Show the nightly price before payment and let the player decline. The discussed cheapest game option is 40 zł for a shared-room bed, separate from free Night Shelter registration. With starting money 25–50 zł, this can be unaffordable or consume most/all of the balance. No hostel location, booking, payment, bed or checkout flow exists in v87; these rules still need implementation.
-- **Scene illustrations:** consider one image per narrative scene (night station street, wandering, rain, canopy, morning), rather than illustrations on every action button. No illustrations have been generated or integrated.
+- **Additional scene illustrations:** extend the implemented Street, phone-search, map and shop artwork to further narrative scenes such as wandering, rain and waiting under cover. These additional scenes still need dedicated artwork.
 - **Wider narrative conversion:** try the opening-night narrator/first-person-choice style before extending it to daytime services and the full street-event catalog. Do not prescribe the player's emotions in the narrator's voice.
 
 Latest regression additions cover opening-night scene progression, paused choices and rain decisions, awake waits under cover, music walking costs and Mood, contextual AI questions and offline memory, all 26 starting-money outcomes and save/reset behavior, removal of Other actions and the duplicate Street message panel, and navigation using the new v88 thought wording. Both test suites and the v88 build passed before publication.
@@ -764,3 +764,26 @@ New practical information searches take 10 game minutes / 10 real seconds. Batte
 ## v100 — estimated phone search time
 
 New information searches preview Approx. 15 min; the actual duration is drawn once from 10–25 minutes and saved with the ongoing activity. Reload never rerolls it. The activity shows elapsed minutes, a moving indeterminate bar and reading stages, without a precise countdown. Final result and Journal report actual time and battery spent. Battery drain remains 0.2 percentage points per actual minute before condition/music adjustments. Starting needs charge for at least the minimum search; if a longer search drains it, the existing interruption preserves spent resources without granting the answer. Saved answers remain immediate and free.
+
+
+## Current presentation — v101–v115
+
+These changes supersede earlier presentation descriptions while retaining gameplay values, saved state and availability rules.
+
+- **City map (v101–v103):** illustrated city with selectable location markers, showing discovered locations only. The selected-location card and route button remain fixed above the bottom navigation so they stay reachable.
+- **Action-result dialogs (v104–v106):** darkened, blurred background; page scrolling locked while a modal is open and restored on dismissal. The modal opens vertically centered, with safe-area padding and scrollable content when necessary. Inline phone answers remain in the main screen beneath the illustration and preserve the shared header/navigation.
+- **Shop (v107–v109):** cinematic shop banner and realistic product artwork; compact two-column product cards with picture on the left and name, quantity/description and effects on the right. Effects are immediately visible without opening a disclosure. The action row has a narrow theft-icon button and a price-as-purchase button twice as wide; quantities, prices, backpack checks and transaction mechanics remain unchanged.
+- **Closed locations (v110–v111):** retain their contents beneath local blur/darkening with an 80 px clock icon, `Closed` and a single `Opens at HH:MM` line. There is no additional opening-hours line inside this notice. Header, location banner and bottom navigation remain sharp. Closed-shop transactions are disabled; opening automatically removes the notice and re-enables available controls. Independently available actions, such as a booked shelter social-worker appointment, and hospital emergency access are not covered by the closed notice.
+- **Effect labels (v112–v114):** qualitative strength uses `+`, `++`, `+++` without a space after the stat name; negative effects use `−`. Bread: `Food+`; sandwich and canned food: `Food++`; water: `Thirst+++`; wipes: `Hygiene+`; shower gel: `Hygiene+++`; cigarettes: `Mood+`, `Health−`. Medicine retains `Removes Cold`. Hot meal shows `Food+++`, `Thirst+`, `Mood+`; its `Well fed · 4h` card tag was removed, while the actual timed Well-fed effect remains implemented. Exact result changes and underlying bonuses remain unchanged.
+- **Shared header (v115):** one sticky row with prominent time first, compact day number (`D2`) and weekday, then one vertical separator before money, weather and phone battery. Resources use monochrome outline banknote/weather/battery icons and plain values, without pill outlines or button-like surfaces. Whole-zloty balances omit `.00` in the visual label; money keeps its existing precision. The game name and separate branding row are removed. Phone battery still reflects the real inventory value and turns muted red at 20% or lower. The build version is in the page footer beside Reset save. Bottom navigation remains fixed.
+
+Validation for v115: `npm run build` and `npm test` passed locally, and its GitHub Actions deployment completed successfully before the repository visibility change.
+
+## Repository access and hosting — checked 2026-10-11
+
+- Repository: `AlexanderKruk/street-life-game`, default branch `main`.
+- Visibility: **private**, confirmed through authenticated GitHub metadata after the owner changed it.
+- The connected GitHub integration retains repository read and push permissions. Private repository metadata, the main branch and `GAME_DESIGN.md` can still be read. Documentation changes are written through the authenticated integration.
+- Latest application build remains **v115**; this documentation-only update does not bump the application version.
+- GitHub currently reports `has_pages: false`. The previous game URL, `https://alexanderkruk.github.io/street-life-game/`, returned **HTTP 404** during this check. The successful v115 deployment predates the visibility change and does not establish current hosting availability.
+- Hosting needs to be restored or moved before the game link can be used again. This check does not change visibility, hosting configuration or repository permissions.
