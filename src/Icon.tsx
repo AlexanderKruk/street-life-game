@@ -7,7 +7,7 @@ const paths: Record<IconName, ReactNode> = {
   'face-ok': <><circle cx="12" cy="12" r="9" /><path d="M8 9h.01M16 9h.01M8 14a4.5 4.5 0 0 0 8 0" /></>,
   'face-fair': <><circle cx="12" cy="12" r="9" /><path d="M8 9h.01M16 9h.01M8 15h8" /></>,
   'face-bad': <><circle cx="12" cy="12" r="9" /><path d="M8 9h.01M16 9h.01M8 16a4.5 4.5 0 0 1 8 0" /></>,
-  'face-very-bad': <><circle cx="12" cy="12" r="9" /><path d="m6.5 7 3 3m0-3-3 3m8-3 3 3m0-3-3 3M7.5 17a4.5 4.5 0 0 1 9 0Z" /></>,
+  'face-very-bad': <><circle cx="12" cy="12" r="9" /><path d="m6.5 8 3 3m0-3-3 3m8-3 3 3m0-3-3 3M7.5 17a4.5 4.5 0 0 1 9 0Z" /></>,
   'face-very-good': <><circle cx="12" cy="12" r="9" /><path d="m6.5 10 2-2 2 2m3 0 2-2 2 2M7 13.5h10a5 5 0 0 1-10 0Z" /></>,
   banknote: <><rect x="2" y="5" width="20" height="14" rx="2" /><circle cx="12" cy="12" r="3" /><path d="M5 9h.01M19 15h.01" /></>,
   map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z" /><path d="M9 3v15m6-12v15" /></>,
