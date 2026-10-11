@@ -12,7 +12,7 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 
-const BUILD_VERSION = 'v2026.10.11-146'
+const BUILD_VERSION = 'v2026.10.11-147'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -94,10 +94,10 @@ const SHELTER_CHECKOUT_WARNING = 7 * 60 + 30
 const SHELTER_DEPARTURE_MINUTES = 30
 const SHELTER_QUEUE_MINUTES = 20
 const SHELTER_REGISTRATION_OPEN = 19 * 60
-const EFFECTS: Record<EffectId, { icon: string; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
-  cold: { icon: '🤒', name: 'Cold', kind: 'negative', impacts: ['Energy−−', 'Mood−'] },
-  'free-transit': { icon: '🎫', name: 'Free transport', kind: 'positive', impacts: ['Travel+++'] },
-  'well-fed': { icon: '🍲', name: 'Well fed', kind: 'positive', impacts: ['Food+++', 'Mood+'] },
+const EFFECTS: Record<EffectId, { icon: IconName; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
+  cold: { icon: 'thermometer', name: 'Cold', kind: 'negative', impacts: ['Energy−−', 'Mood−'] },
+  'free-transit': { icon: 'ticket', name: 'Free transport', kind: 'positive', impacts: ['Travel+++'] },
+  'well-fed': { icon: 'food', name: 'Well fed', kind: 'positive', impacts: ['Food+++', 'Mood+'] },
 }
 
 const SHOP_ITEMS: ShopItem[] = [
@@ -274,9 +274,15 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
   return <Tag className={className}>{available}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable}</Tag>
 }
 
-function Stat({ label, value, icon, compact = false }: { label: string; value: number; icon: ReactNode; compact?: boolean }) {
+function Stat({ label, value, icon, cap = 100, focus = false }: { label: string; value: number; icon: ReactNode; cap?: number; focus?: boolean }) {
   const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
-  return <div className={compact ? 'stat compact' : 'stat'}><span>{icon}</span><div><div className="stat-label"><span>{label}</span>{!compact && <b>{Math.round(value)}</b>}</div><div className="bar"><i className={level} style={{ width: `${value}%` }} /></div></div></div>
+  return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}`} data-stat={label}>
+    {focus && <p className="status-focus-label">{level === 'critical' ? 'Needs attention' : level === 'warning' ? 'Keep an eye on this' : 'Lowest indicator'}</p>}
+    <span className="status-stat-icon">{icon}</span>
+    <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && <small>Max {cap}%</small>}</div>
+    <div className="bar" role="meter" aria-label={`${label}: ${conditionBand(value).label}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}><i className={level} style={{ width: `${value}%` }} /></div>
+    <b className="status-stat-value">{Math.round(value)}%</b>
+  </div>
 }
 
 function overallStatus(game: GameState) {
@@ -499,6 +505,18 @@ export default function App() {
   const groundSleepWindow = useRef<{ start: number; end: number } | null>(sleeping?.kind === 'ground' ? { start: sleeping.startAbsolute, end: sleeping.startAbsolute + sleeping.total } : null)
   const clothingHygieneCap = (cleanliness: number) => cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60
   const hygieneLimit = clothingHygieneCap(inventory.clothingCleanliness)
+  const statusNeeds = [
+    { id: 'hunger', label: 'Food', value: game.hunger, icon: 'food' as IconName },
+    { id: 'thirst', label: 'Thirst', value: game.thirst, icon: 'water' as IconName },
+    { id: 'energy', label: 'Energy', value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
+    { id: 'health', label: 'Health', value: game.health, icon: 'heart' as IconName },
+    { id: 'hygiene', label: 'Hygiene', value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
+    { id: 'mood', label: 'Mood', value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName },
+  ]
+  // Dangerous physical needs take precedence over a lower mood score.
+  const dangerousNeeds = statusNeeds.filter(need => need.id !== 'mood' && need.value <= 20)
+  const focusedNeed = (dangerousNeeds.length ? dangerousNeeds : statusNeeds)
+    .reduce((lowest, need) => need.value < lowest.value ? need : lowest)
   useEffect(() => {
     if (game.hygiene > hygieneLimit) setGame(prev => ({ ...prev, hygiene: Math.min(prev.hygiene, hygieneLimit) }))
   }, [game.hygiene, hygieneLimit])
@@ -2127,26 +2145,23 @@ export default function App() {
       </div>
     </section>}
     {screen === 'status' && <section className="status-screen">
-      <div className="status-needs">
-        <Stat icon="🍞" label="Food" value={game.hunger} compact />
-        <Stat icon="💧" label="Thirst" value={game.thirst} compact />
-        <Stat icon="⚡" label={energyCap(game.health) < 100 ? `Energy · max ${energyCap(game.health)}` : 'Energy'} value={game.energy} compact />
-        <Stat icon="❤️" label="Health" value={game.health} compact />
-        <Stat icon="🚿" label={hygieneLimit < 100 ? `Hygiene · max ${hygieneLimit}` : 'Hygiene'} value={game.hygiene} compact />
-        <Stat icon={<Icon name={`face-${conditionBand(game.mood).level}`} />} label="Mood" value={game.mood} compact />
+      <h2 className="status-title">Status</h2>
+      <Stat label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} focus />
+      <div className="status-needs" aria-label="Other condition indicators">
+        {statusNeeds.filter(need => need.id !== focusedNeed.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} />)}
       </div>
-      <div className="life-heading"><h3>Life situation</h3><span>Current status</span></div>
+      <div className="life-heading"><h3>Life situation</h3></div>
       <div className="life-situation">
-        <div className="life-card"><span>🏠</span><div><small>Housing</small><strong>{life.housing}</strong></div></div>
-        <div className="life-card"><span>💼</span><div><small>Employment</small><strong>{life.employment}</strong></div></div>
-        <div className="life-card"><span>💰</span><div><small>Income</small><strong>{life.income}</strong></div></div>
-        <div className="life-card"><span>📄</span><div><small>Documents</small><strong>{inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'}</strong></div></div>
+        <div className="life-card"><Icon name="house" /><span>Housing</span><strong>{life.housing}</strong></div>
+        <div className="life-card"><Icon name="work" /><span>Employment</span><strong>{life.employment}</strong></div>
+        <div className="life-card"><Icon name="banknote" /><span>Income</span><strong>{life.income}</strong></div>
+        <div className="life-card"><Icon name="documents" /><span>Documents</span><strong>{inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'}</strong></div>
       </div>
-      <div className="effects-heading"><h3>Effects</h3><span>{effects.length} active</span></div>
+      <div className="effects-heading"><h3>Effects</h3><span>{effects.length}</span></div>
       <div className="effects-list">
         {effects.length ? effects.map((active) => {
           const effect = EFFECTS[active.id]
-          return <div className={`effect ${effect.kind}`} key={active.id}><span>{effect.icon}</span><div className="effect-body"><strong>{effect.name}</strong><div className="effect-impact">{effect.impacts.map((impact) => <b key={impact}>{impact}</b>)}</div></div><small className="effect-time">{remainingEffect(active.expiresAt, game)}</small></div>
+          return <div className={`effect ${effect.kind}`} key={active.id}><span><Icon name={effect.icon} /></span><div className="effect-body"><strong>{effect.name}</strong><div className="effect-impact">{effect.impacts.map((impact) => <b key={impact}>{impact}</b>)}</div></div><small className="effect-time">{remainingEffect(active.expiresAt, game)}</small></div>
         }) : <p className="empty">No active effects.</p>}
       </div>
     </section>}

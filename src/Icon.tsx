@@ -1,8 +1,17 @@
 import type { ReactNode } from 'react'
 
-export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check'
+export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket'
 
 const paths: Record<IconName, ReactNode> = {
+  food: <><path d="M5 3v5a3 3 0 0 0 6 0V3M8 3v18M19 21V3c-3 2-4 5-4 9h4" /></>,
+  water: <path d="M12 2c-2 4-7 8-7 13a7 7 0 0 0 14 0c0-5-5-9-7-13Z" />,
+  energy: <path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z" />,
+  heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0l-1 1-1-1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />,
+  shower: <><path d="M3 3h3l4 4m-3 3 6-6 4 4-6 6-4-4Zm7 6 1 1m3-5 1 1m-6 7 1 1m3-5 1 1m3-5 1 1m-4 7 1 1m3-5 1 1" /></>,
+  house: <><path d="m3 10 9-8 9 8M5 8v13h14V8M9 21v-8h6v8" /></>,
+  documents: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6ZM14 2v6h6M8 12h8m-8 4h6" /></>,
+  thermometer: <><path d="M9 15V5a3 3 0 0 1 6 0v10a5 5 0 1 1-6 0Z" /><path d="M12 8v10" /><circle cx="12" cy="18" r="1" /></>,
+  ticket: <><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7Z" /><path d="M15 5v2m0 3v1m0 3v1m0 2v2" /></>,
   'chevron-down': <path d="m5 9 7 7 7-7" />,
   check: <path d="m5 12 4 4L19 6" />,
   'chevron-left': <path d="m15 5-7 7 7 7" />,

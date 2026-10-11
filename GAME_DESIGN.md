@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-139`. Current v128–v139 clinic, mood, condition and inventory rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-147`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
@@ -94,6 +94,10 @@ Six needs are tracked from 0 to 100:
 - Health
 - Hygiene
 - Mood
+
+### Status screen (v147)
+
+Status highlights one need in a large top card, with the other five in compact rows underneath. It chooses the lowest physical need at 20 or below ahead of Mood; otherwise it chooses the lowest of all six. Ties retain the normal Food, Thirst, Energy, Health, Hygiene, Mood order. The highlighted need does not repeat in the list. Every indicator displays its percentage and uses a red fill at 0–30, yellow above 30 through 60, and green above 60. The highlighted card uses the same three states; a healthy minimum is labeled Lowest indicator rather than Needs attention. Reduced Energy/Hygiene caps remain visible beneath their labels. Life situation uses one panel with Housing, Employment, Income and Documents rows. Needs, life situation and active effects use the shared contour icon system. Effects still show their impacts and remaining duration, with a count in the section heading.
 
 All elapsed time uses `advanceTime`: ordinary ticks, travel, sleep and immediate actions. It evaluates minute by minute, including midnight/weather changes and expiry of Cold/Well fed. Bonuses are applied after elapsed time. Backpack/stored food ages for every elapsed minute; background Music/Navigation battery costs follow elapsed time too. Sleep skips awake Energy costs, while Food, Thirst, Hygiene, intoxication, weather Thirst drain and illness/dehydration/starvation Health damage continue.
 

@@ -440,6 +440,25 @@ for(const [value,label] of [[10,'VERY BAD'],[30,'BAD'],[50,'FAIR'],[70,'GOOD'],[
 assert.equal(overallCondition(healthyBody).level,'fair');
 assert.equal(overallCondition({...healthyBody,mood:100,health:5}).level,'very-bad');
 assert.equal(overallCondition({...healthyBody,mood:100,energy:10}).level,'bad');
+// Status promotes one need, never duplicates it, and keeps all six visible.
+setup({hunger:72,thirst:66,energy:45,health:90,hygiene:75,mood:28});click(/^Status$/);
+assert.equal(document.querySelector('.status-focus').dataset.stat,'Mood');
+assert.equal(document.querySelectorAll('.status-needs .status-stat').length,5);
+assert.equal(new Set([...document.querySelectorAll('.status-stat')].map(stat=>stat.dataset.stat)).size,6);
+assert.equal(document.querySelector('.status-stat[data-stat="Mood"] .status-stat-value').textContent,'28%');
+assert(document.querySelector('.status-stat[data-stat="Mood"] .bar i.critical'));
+assert(document.querySelector('.status-stat[data-stat="Energy"] .bar i.warning'));
+assert(document.querySelector('.status-stat[data-stat="Food"] .bar i.good'));
+assert.equal(screen.getAllByRole('meter').length,6);
+setup({hunger:80,thirst:80,energy:80,health:15,hygiene:80,mood:1});click(/^Status$/);
+assert.equal(document.querySelector('.status-focus').dataset.stat,'Health');
+assert(document.querySelector('.status-needs [data-stat="Mood"]'));
+assert(document.querySelector('[data-stat="Energy"] small').textContent.startsWith('Max '));
+for(const [value,color] of [[30,'critical'],[30.1,'warning'],[60,'warning'],[60.1,'good']]) {
+ setup({hunger:80,thirst:80,energy:80,health:90,hygiene:80,mood:value});click(/^Status$/);
+ assert(document.querySelector(`.status-focus .bar i.${color}`));
+ if(color==='good')assert.equal(document.querySelector('.status-focus-label').textContent,'Lowest indicator');
+}
 const recoveredMood=advanceTime(healthyBody,60).mood;
 assert(recoveredMood>healthyBody.mood && recoveredMood<=healthyBody.mood+4.8+1e-8);
 for(const need of ['hunger','thirst','energy','health','hygiene']) {
