@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 
 export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket'
 
@@ -48,14 +48,14 @@ const paths: Record<IconName, ReactNode> = {
   coins: <><ellipse cx="10" cy="5" rx="7" ry="3" /><path d="M3 5v5c0 1.7 3.1 3 7 3m-7-3v5c0 1.7 3.1 3 7 3m7-13v5" /><ellipse cx="17" cy="14" rx="4" ry="2" /><path d="M13 14v5c0 1.1 1.8 2 4 2s4-.9 4-2v-5" /></>,
 }
 
-export function Icon({ name, className }: { name: IconName; className?: string }) {
+export const Icon = memo(function Icon({ name, className }: { name: IconName; className?: string }) {
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{paths[name]}</svg>
-}
+})
 
-export function BatteryIcon({ charge }: { charge: number }) {
+export const BatteryIcon = memo(function BatteryIcon({ charge }: { charge: number }) {
   const value = Math.max(0, Math.min(100, charge))
   return <svg className="battery-icon" viewBox="0 0 28 16" aria-hidden="true" focusable="false"><rect x="1" y="2" width="23" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M26 6v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><rect x="3.5" y="4.5" width={18 * value / 100} height="7" rx=".5" fill="currentColor" /></svg>
-}
+})
 
 export function choiceIcon(id: string): IconName {
   if (id === 'music-walk') return 'headphones'

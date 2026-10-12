@@ -1,0 +1,44 @@
+import { memo } from 'react'
+import { formatTime } from './game'
+import { responsiveImageProps } from './responsiveImages'
+
+type ArtProps = { phone: boolean; inline: boolean; illustration?: string; night: boolean }
+export const StreetArt = memo(function StreetArt({ phone, inline, illustration, night }: ArtProps) {
+  const source = phone ? '/street-life-game/assets/phone-search.webp' : illustration ?? (inline ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp')
+  return <div className={`street-art${phone || inline ? ' phone-art' : !illustration && night ? ' night' : ''}`} aria-hidden="true">
+    <img {...responsiveImageProps(source)} alt="" width="1400" height={phone || inline ? 1050 : 788} fetchPriority="high" />
+    {illustration && <span className="result-art-caption">Looking ahead</span>}
+  </div>
+})
+
+type SummaryProps = { id: string; name: string; icon: string; description: string; open: boolean; opensAt: number }
+export const LocationSummary = memo(function LocationSummary({ id, name, icon, description, open, opensAt }: SummaryProps) {
+  return <section className={id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
+    {id !== 'street' && <div className="location-icon">{icon}</div>}
+    <div><p className="eyebrow">{id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(opensAt)}`}`} </p><h2>{name}</h2><p>{description}</p></div>
+  </section>
+})
+
+type ShopHeroProps = { name: string; open: boolean; opensAt: number; closesAt: number }
+export const ShopHero = memo(function ShopHero({ name, open, opensAt, closesAt }: ShopHeroProps) {
+  return <section className="shop-hero" aria-label="Shop"><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{name}</h2><p>{open ? 'Open' : 'Closed'} · {formatTime(opensAt)}–{formatTime(closesAt)}</p></section>
+})
+
+type TravelHeadingProps = { from: string; to?: string; walking: boolean }
+export const TravelHeading = memo(function TravelHeading({ from, to, walking }: TravelHeadingProps) {
+  return <>
+    <div className="travel-icon">{walking ? '🚶' : '🚌'}</div>
+    <p className="eyebrow">ON THE WAY</p>
+    <h2>{from} → {to}</h2>
+    <p>{walking ? 'Walking costs more energy and a little extra water.' : 'Public transport is faster and saves your energy.'}</p>
+  </>
+})
+
+type SleepHeadingProps = { kind: 'ground' | 'bench' | 'shelter' | 'residential' }
+export const SleepHeading = memo(function SleepHeading({ kind }: SleepHeadingProps) {
+  return <>
+    <div className="sleep-icon">😴</div>
+    <p className="eyebrow">SLEEPING</p>
+    <h2>{kind === 'ground' ? 'On the ground' : kind === 'bench' ? 'On the bench' : kind === 'shelter' ? 'Night shelter' : 'Schronisko'}</h2>
+  </>
+})

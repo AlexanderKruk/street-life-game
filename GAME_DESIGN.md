@@ -2,13 +2,17 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-152`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-153`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
 
-### Interface rendering (v152)
+### Interface rendering (v153)
 
 Journal goals, journal timeline, life-situation rows, item illustrations and the illustrated map scene use shallow React memo boundaries with stable inputs. Goal ordering and visible map places are memoized by their actual source data; timeline filtering only runs when history or the selected day changes. Map scene inputs include opening-state flags instead of the ticking minute, so open/closed labels still update at boundaries while unchanged pins and the illustration skip renders. Selection uses the stable state setter; the route card keeps the current action callback. Clocks, needs, action availability and gameplay continue updating normally. Saving and timer behavior are unchanged.
 
 check-rendering.cjs counts component invocations during ten simulated game ticks, comparing the same code with these memo boundaries enabled and disabled. With unchanged relevant data, goals/timeline/map scene/life situation each skip 20 invocations, while seven item illustrations skip 140 combined invocations. Tests also verify the clock advances and map closing, map selection, goal completion and journal-day switching still update. These counts demonstrate avoided React work, not a measured FPS or whole-application speedup.
+
+The v153 audit extends to all eleven locations, open/closed shops, travel, phone searches, sleeping and the current overlays: results, sleep planning, rain, game over, travel choices, dice checks, phone panel, street events, shelter interviews, registration queue, morning checkout/departure and trash search/drag. Location summaries, street/shop illustrations, shop cards, travel/sleep headings, result cards and shared SVG icons now skip renders when their inputs are unchanged. Shop actions use stable callbacks backed by the latest committed game state; callback changes are never ignored in a custom comparator. In ten unchanged shop ticks, eight cards skip 160 combined invocations and the hero skips 20. Travel headings skip 20 while progress still advances. Phone/sleep checks use three ticks and their stable art/headings skip six invocations.
+
+Tests verify shop closing, updated money/backpack data after purchases, action Energy thresholds, condition-icon changes and all changing progress indicators. Paused result/event/planning windows have zero periodic background App renders. Phone and travel-choice panels intentionally keep time running; queue and checkout departure keep their clocks/progress live. Trash drag remains user-driven and does not rerender the unchanged street illustration. This audit uses instrumented React/DOM tests; browser visual checks, real-device FPS and battery usage are not measured.
 
 ### Responsive images and caching (v151)
 

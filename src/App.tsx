@@ -1,4 +1,4 @@
-import { Children, Fragment, cloneElement, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, overallCondition, conditionBand, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot } from './results'
@@ -11,11 +11,12 @@ import InventorySlot from './InventorySlot'
 import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
-import { responsiveImageProps } from './responsiveImages'
+import { StreetArt, LocationSummary, ShopHero, TravelHeading, SleepHeading } from './LocationPresentation'
+import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 
-const BUILD_VERSION = 'v2026.10.12-152'
+const BUILD_VERSION = 'v2026.10.12-153'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -307,6 +308,9 @@ export default function App() {
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
   const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean } | null>(null)
+  const closeResult = useCallback(() => setInfoModal(null), [])
+  const buyShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) buyItem(item) })
+  const stealShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) stealItem(item) })
   const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(DISCOVERY_KEY)
@@ -1919,7 +1923,7 @@ export default function App() {
         </div>
       </section>
     </div>}
-    {infoModal && !inlineResult && <ResultCard result={infoModal} onClose={() => setInfoModal(null)} />}
+    {infoModal && !inlineResult && <ResultCard result={infoModal} onClose={closeResult} />}
     {trashGame && <div className="trash-overlay">
       <section className="trash-card">
         <div className="trash-head"><div><p className="eyebrow">SEARCHING TRASH</p><h2>Dig for bottles</h2></div><div><strong>♻️ {trashGame.found}</strong><small> kept</small></div></div>
@@ -1956,7 +1960,7 @@ export default function App() {
     {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <>
-      {current.id === 'street' && <div className={`street-art${phoneActivity || inlineResult ? ' phone-art' : !infoModal?.presentation?.illustration && (game.minutes >= 1200 || game.minutes < 360) ? ' night' : ''}`} aria-hidden="true"><img {...responsiveImageProps(phoneActivity ? '/street-life-game/assets/phone-search.webp' : infoModal?.presentation?.illustration ?? (inlineResult ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp'))} alt="" width="1400" height={phoneActivity || inlineResult ? 1050 : 788} fetchPriority="high" />{infoModal?.presentation?.illustration && <span className="result-art-caption">Looking ahead</span>}</div>}
+      {current.id === 'street' && <StreetArt phone={!!phoneActivity} inline={inlineResult} illustration={infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
       {phoneActivity ? <section className="phone-activity" aria-labelledby="phone-activity-title" aria-busy="true">
         <div className="phone-activity-heading"><p className="eyebrow">USING YOUR PHONE</p><div className="phone-activity-symbol" aria-hidden="true"><span /><span /><span /></div></div>
         <h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
@@ -1964,11 +1968,8 @@ export default function App() {
         <div className="phone-activity-progress uncertain" role="progressbar" aria-label="Phone search in progress"><i /></div>
         <div className="phone-activity-meta"><span><Icon name="clock" />{phoneActivity.total - phoneActivity.remaining} min spent</span><span>Usually about {PHONE_SEARCH_ESTIMATE} min</span></div>
         <small>Time passes while you search.</small>
-      </section> : inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={() => setInfoModal(null)} /> : <>
-      {current.id === 'shop' ? <section className="shop-hero" aria-label="Shop"><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{current.name}</h2><p>{open ? 'Open' : 'Closed'} · {formatTime(current.open)}–{formatTime(current.close)}</p></section> : <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
-        {current.id !== 'street' && <div className="location-icon">{current.icon}</div>}
-        <div><p className="eyebrow">{current.id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}`} </p><h2>{current.name}</h2><p>{current.id === 'street' ? streetScene : current.description}</p></div>
-      </section>}
+      </section> : inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={closeResult} /> : <>
+      {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} icon={current.icon} description={current.id === 'street' ? streetScene : current.description} open={open} opensAt={current.open} />}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       <ClosedContent closed={!open && current.id !== 'hospital' && !currentActions.some(action => actionUnavailableReason(action) === null)} opensAt={formatTime(current.open)}>
       {shelterInterview && <section className="shop">
@@ -1996,7 +1997,7 @@ export default function App() {
         <div className="shop-capacity"><Icon name="backpack" /><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span><div className="shop-capacity-bar" role="meter" aria-label="Backpack capacity" aria-valuenow={usedBackpackSlots} aria-valuemin={0} aria-valuemax={BACKPACK_CAPACITY}><i style={{ width: `${usedBackpackSlots / BACKPACK_CAPACITY * 100}%` }} /></div></div>
         {inventory.bottles > 0 && <button className="shop-return" onClick={returnBottles} disabled={!open}><Icon name="bottle" /><span><strong>Return bottles ×{inventory.bottles}</strong><small>Deposit return · 0.50 zł each</small></span><b>+{(inventory.bottles * BOTTLE_DEPOSIT).toFixed(2)} zł</b></button>}
         {[{ title: 'Food & drink', items: SHOP_ITEMS.slice(0, 4) }, { title: 'Care', items: SHOP_ITEMS.slice(4) }].map(group => <section className="shop-category" key={group.title} aria-label={group.title}>
-          <h3>{group.title}</h3><div className="shop-grid supply-grid">{group.items.map(item => <ShopCard key={item.id} item={item} open={open} fits={canAddToBackpack(inventory, item)} affordable={game.money >= item.price} onBuy={() => buyItem(item)} onSteal={() => stealItem(item)} />)}</div>
+          <h3>{group.title}</h3><div className="shop-grid supply-grid">{group.items.map(item => <ShopCard key={item.id} item={item} open={open} fits={canAddToBackpack(inventory, item)} affordable={game.money >= item.price} onBuy={buyShopItem} onSteal={stealShopItem} />)}</div>
         </section>)}
       </section>}
       {current.id === 'support' && <section className="support-menu">
@@ -2084,10 +2085,7 @@ export default function App() {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const progress = ((trip.total - trip.remaining) / trip.total) * 100
       return <section className="travel-screen">
-        <div className="travel-icon">{trip.mode === 'walk' ? '🚶' : '🚌'}</div>
-        <p className="eyebrow">ON THE WAY</p>
-        <h2>{current.name} → {destination?.name}</h2>
-        <p>{trip.mode === 'walk' ? 'Walking costs more energy and a little extra water.' : 'Public transport is faster and saves your energy.'}</p>
+        <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} />
         <div className="travel-progress"><i style={{ width: `${progress}%` }} /></div>
         <strong>{formatTravelTime(trip.remaining)} remaining</strong>
         <small>{trip.remaining} real seconds</small>
@@ -2257,9 +2255,7 @@ export default function App() {
 
     {sleeping && <div className="sleep-overlay">
       <section className="sleep-card">
-        <div className="sleep-icon">😴</div>
-        <p className="eyebrow">SLEEPING</p>
-        <h2>{sleeping.kind === 'ground' ? 'On the ground' : sleeping.kind === 'bench' ? 'On the bench' : sleeping.kind === 'shelter' ? 'Night shelter' : 'Schronisko'}</h2>
+        <SleepHeading kind={sleeping.kind} />
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>Wake at {formatTime((sleeping.startAbsolute + sleeping.total) % 1440)}</span></div>
         {(() => {
           const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))

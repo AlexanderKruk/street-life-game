@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { Icon } from './Icon'
 import type { ResultChange, ResultSummary } from './results'
 
@@ -24,7 +24,7 @@ function ChangeRows({ changes }: { changes: ResultChange[] }) {
   return <div className="result-change-list">{changes.map(change => <div key={change.label} className={`result-change ${change.kind}`}><span>{resultLabel(change.label)}</span><strong>{change.value}</strong></div>)}</div>
 }
 
-export default function ResultCard({ result, onClose, inline = false }: { result: ResultCardData; onClose: () => void; inline?: boolean }) {
+export default memo(function ResultCard({ result, onClose, inline = false }: { result: ResultCardData; onClose: () => void; inline?: boolean }) {
   const dialog = useRef<HTMLElement>(null)
   const confirm = useRef<HTMLButtonElement>(null)
   const close = useRef(onClose)
@@ -104,4 +104,4 @@ export default function ResultCard({ result, onClose, inline = false }: { result
       <button className="result-confirm" ref={confirm} onClick={onClose}>Got it</button>
     </section>
   </div>
-}
+})

@@ -1,5 +1,6 @@
 import { Icon } from './Icon'
 import ItemArt, { type ItemArtId } from './ItemArt'
+import { memo } from 'react'
 
 const captions: Record<string, string> = {
   water: '3 portions', food: 'Sandwich', bread: '1 roll', cannedFood: 'Keeps well',
@@ -11,11 +12,11 @@ type Props = {
   open: boolean
   fits: boolean
   affordable: boolean
-  onBuy: () => void
-  onSteal: () => void
+  onBuy: (id: string) => void
+  onSteal: (id: string) => void
 }
 
-export default function ShopCard({ item, open, fits, affordable, onBuy, onSteal }: Props) {
+export default memo(function ShopCard({ item, open, fits, affordable, onBuy, onSteal }: Props) {
   const reason = !open ? 'Shop closed' : !fits ? 'Backpack full' : !affordable ? 'Not enough money' : ''
   return <article className="supply-card">
     <div className="supply-picture">
@@ -26,9 +27,9 @@ export default function ShopCard({ item, open, fits, affordable, onBuy, onSteal 
       <div className="shop-impact supply-effects" aria-label="Effects">{item.impacts.map(impact => <em className={impact.includes('−') ? 'negative' : 'positive'} key={impact}>{impact}</em>)}</div>
     </div>
     <div className="supply-actions">
-      <button className="supply-steal" onClick={onSteal} disabled={!open || !fits} aria-label="STEAL" title={`Steal ${item.name}`}><Icon name="thief" /></button>
-      <button className="shop-buy" onClick={onBuy} disabled={!!reason} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={reason || `Buy ${item.name}`}>{item.price} zł</button>
+      <button className="supply-steal" onClick={() => onSteal(item.id)} disabled={!open || !fits} aria-label="STEAL" title={`Steal ${item.name}`}><Icon name="thief" /></button>
+      <button className="shop-buy" onClick={() => onBuy(item.id)} disabled={!!reason} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={reason || `Buy ${item.name}`}>{item.price} zł</button>
     </div>
     {open && reason && <small className="supply-unavailable">{reason}</small>}
   </article>
-}
+})
