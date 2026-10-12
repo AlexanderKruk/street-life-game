@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-11 · Neutral office-worker protagonist. Latest application build: `v2026.10.11-149`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-150`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+
+### Image caching (v150)
+
+Production builds generate an image-only service worker with SHA-256 content revisions for public assets. Registration starts after page load; installation warms all game images in the background. Reopening or switching screens serves cached images without network requests while the browser retains the cache. Changed images are fetched on worker update; identical images are reused, and obsolete game-image caches are removed only after a successful installation. Worker update checks bypass the HTTP cache. HTML, JavaScript, CSS, and saves are not cached or modified by this worker. Unsupported browsers or unavailable storage fall back to normal loading. This is image caching, not a guarantee that the full game opens offline; browsers may evict stored caches.
 
 The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
 
