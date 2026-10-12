@@ -1,0 +1,278 @@
+{
+  "timestamp": "2026-10-12T08:27:15.720Z",
+  "url": "https://alexanderkruk.github.io/street-life-game/",
+  "browser": "153.0.8010.0",
+  "method": "Live production site; fresh isolated contexts; three cold/warm runs per profile; CSS viewport and DPR emulation; CDP CPU/network throttle; headless software rendering; rAF intervals are not physical device FPS.",
+  "profiles": [
+    {
+      "profile": {
+        "name": "desktop",
+        "width": 1365,
+        "height": 900,
+        "dpr": 1,
+        "cpu": 1,
+        "latency": 40,
+        "downloadMbps": 10,
+        "uploadMbps": 5
+      },
+      "loads": [
+        {
+          "cold": {
+            "build": "v155",
+            "firstPaintMs": 15628,
+            "uiReadyMs": 15408.800000000745,
+            "lcpMs": 15700,
+            "cls": 0.003978993411960445,
+            "ttfbMs": 15086.100000000559,
+            "blockingMs": 0,
+            "jsTransferBytes": 120939
+          },
+          "warm": {
+            "build": "v155",
+            "firstPaintMs": 104,
+            "uiReadyMs": 84.5,
+            "lcpMs": 104,
+            "cls": 0,
+            "ttfbMs": 62.5,
+            "blockingMs": 0,
+            "jsTransferBytes": 0
+          }
+        },
+        {
+          "cold": {
+            "build": "v155",
+            "firstPaintMs": 9384,
+            "uiReadyMs": 9354.700000000186,
+            "lcpMs": 9540,
+            "cls": 0.003978993411960445,
+            "ttfbMs": 9009,
+            "blockingMs": 0,
+            "jsTransferBytes": 120939
+          },
+          "warm": {
+            "build": "v155",
+            "firstPaintMs": 100,
+            "uiReadyMs": 81.29999999981374,
+            "lcpMs": 100,
+            "cls": 0,
+            "ttfbMs": 62.89999999944121,
+            "blockingMs": 0,
+            "jsTransferBytes": 0
+          }
+        },
+        {
+          "cold": {
+            "build": "v155",
+            "firstPaintMs": 9384,
+            "uiReadyMs": 9354.799999999814,
+            "lcpMs": 9580,
+            "cls": 0.003978993411960445,
+            "ttfbMs": 9002.199999999255,
+            "blockingMs": 0,
+            "jsTransferBytes": 120939
+          },
+          "warm": {
+            "build": "v155",
+            "firstPaintMs": 96,
+            "uiReadyMs": 84.79999999981374,
+            "lcpMs": 96,
+            "cls": 0,
+            "ttfbMs": 64.19999999925494,
+            "blockingMs": 0,
+            "jsTransferBytes": 0
+          }
+        }
+      ],
+      "runtime": {
+        "ticking": {
+          "durationSeconds": 10,
+          "mainThreadBusyPercent": 2.2,
+          "frameIntervals": {
+            "samples": 596,
+            "medianMs": 16.7,
+            "p95Ms": 16.7,
+            "over50ms": 1
+          },
+          "longTasks": 0,
+          "finalTime": "08:30"
+        },
+        "navigation": {
+          "samples": 15,
+          "medianToSecondFrameMs": 28.1,
+          "maxToSecondFrameMs": 32.4,
+          "frameIntervals": {
+            "samples": 201,
+            "medianMs": 16.7,
+            "p95Ms": 16.8,
+            "over50ms": 0
+          },
+          "longTasks": 0,
+          "cachedImageRequests": 3,
+          "horizontalOverflow": false,
+          "imageFailures": []
+        }
+      },
+      "errors": [],
+      "medians": {
+        "cold": {
+          "firstPaintMs": 9384,
+          "uiReadyMs": 9354.8,
+          "lcpMs": 9580,
+          "blockingMs": 0,
+          "cls": 0.003978993411960445,
+          "ttfbMs": 9009,
+          "jsTransferBytes": 120939,
+          "uiReadyAfterFirstByteMs": 345.7
+        },
+        "warm": {
+          "firstPaintMs": 100,
+          "uiReadyMs": 84.5,
+          "lcpMs": 100,
+          "blockingMs": 0,
+          "cls": 0,
+          "ttfbMs": 62.9,
+          "jsTransferBytes": 0,
+          "uiReadyAfterFirstByteMs": 20.6
+        }
+      }
+    },
+    {
+      "profile": {
+        "name": "mobile lab",
+        "width": 390,
+        "height": 844,
+        "dpr": 2,
+        "cpu": 4,
+        "latency": 100,
+        "downloadMbps": 1.5,
+        "uploadMbps": 0.75
+      },
+      "loads": [
+        {
+          "cold": {
+            "build": "v155",
+            "firstPaintMs": 19632,
+            "uiReadyMs": 19562.299999999814,
+            "lcpMs": 20184,
+            "cls": 0.014386469306619349,
+            "ttfbMs": 18537.799999999814,
+            "blockingMs": 44,
+            "jsTransferBytes": 120939
+          },
+          "warm": {
+            "build": "v155",
+            "firstPaintMs": 220,
+            "uiReadyMs": 197.09999999962747,
+            "lcpMs": 220,
+            "cls": 0,
+            "ttfbMs": 71.5,
+            "blockingMs": 0,
+            "jsTransferBytes": 0
+          }
+        },
+        {
+          "cold": {
+            "build": "v155",
+            "firstPaintMs": 9192,
+            "uiReadyMs": 9136.5,
+            "lcpMs": 9736,
+            "cls": 0.014386469306619349,
+            "ttfbMs": 8141.600000000559,
+            "blockingMs": 6,
+            "jsTransferBytes": 120939
+          },
+          "warm": {
+            "build": "v155",
+            "firstPaintMs": 220,
+            "uiReadyMs": 201.70000000018626,
+            "lcpMs": 220,
+            "cls": 0,
+            "ttfbMs": 67.1000000005588,
+            "blockingMs": 0,
+            "jsTransferBytes": 0
+          }
+        },
+        {
+          "cold": {
+            "build": "v155",
+            "firstPaintMs": 11216,
+            "uiReadyMs": 11166.100000000559,
+            "lcpMs": 11800,
+            "cls": 0.014386469306619349,
+            "ttfbMs": 10174.800000000745,
+            "blockingMs": 32,
+            "jsTransferBytes": 120939
+          },
+          "warm": {
+            "build": "v155",
+            "firstPaintMs": 292,
+            "uiReadyMs": 269,
+            "lcpMs": 292,
+            "cls": 0,
+            "ttfbMs": 73.20000000018626,
+            "blockingMs": 10,
+            "jsTransferBytes": 0
+          }
+        }
+      ],
+      "runtime": {
+        "ticking": {
+          "durationSeconds": 10,
+          "mainThreadBusyPercent": 4.5,
+          "frameIntervals": {
+            "samples": 596,
+            "medianMs": 16.7,
+            "p95Ms": 16.8,
+            "over50ms": 1
+          },
+          "longTasks": 0,
+          "finalTime": "08:30"
+        },
+        "navigation": {
+          "samples": 15,
+          "medianToSecondFrameMs": 25.5,
+          "maxToSecondFrameMs": 42.4,
+          "frameIntervals": {
+            "samples": 236,
+            "medianMs": 16.7,
+            "p95Ms": 16.8,
+            "over50ms": 0
+          },
+          "longTasks": 0,
+          "cachedImageRequests": 3,
+          "horizontalOverflow": false,
+          "imageFailures": []
+        }
+      },
+      "errors": [],
+      "medians": {
+        "cold": {
+          "firstPaintMs": 11216,
+          "uiReadyMs": 11166.1,
+          "lcpMs": 11800,
+          "blockingMs": 32,
+          "cls": 0.014386469306619349,
+          "ttfbMs": 10174.8,
+          "jsTransferBytes": 120939,
+          "uiReadyAfterFirstByteMs": 994.9
+        },
+        "warm": {
+          "firstPaintMs": 220,
+          "uiReadyMs": 201.7,
+          "lcpMs": 220,
+          "blockingMs": 0,
+          "cls": 0,
+          "ttfbMs": 71.5,
+          "jsTransferBytes": 0,
+          "uiReadyAfterFirstByteMs": 134.6
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Single lab host with a network proxy; cold response times are dominated by the transport route and do not represent normal user loading times.",
+    "No before/after baseline: this measures the current build, not a quantified improvement.",
+    "Navigation timing is click to second requestAnimationFrame, not INP or verified fully rendered content.",
+    "One 10-second ticking sample and 15 navigation clicks per profile; not a long-session or physical phone battery test."
+  ]
+}
