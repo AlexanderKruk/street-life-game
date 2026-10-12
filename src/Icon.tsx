@@ -1,6 +1,6 @@
 import { memo, type ReactNode } from 'react'
 
-export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket'
+export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket'
 
 const paths: Record<IconName, ReactNode> = {
   food: <><path d="M5 3v5a3 3 0 0 0 6 0V3M8 3v18M19 21V3c-3 2-4 5-4 9h4" /></>,
@@ -38,6 +38,7 @@ const paths: Record<IconName, ReactNode> = {
   walk: <><circle cx="14" cy="4" r="2" /><path d="m7 21 4-7 3 3v4M9 12l2-5 4 1 2 4h3M4 12l4-2m3-3 1 7" /></>,
   bed: <><path d="M3 5v16m18-9v9M3 17h18M3 12h15a3 3 0 0 1 3 3v2H3z" /><path d="M6 9h5v3H6z" /></>,
   station: <><rect x="5" y="2" width="14" height="16" rx="3" /><path d="M5 7h14m-9-5v5m4-5v5M8 21l2-3m6 3-2-3M8 13h1m6 0h1" /></>,
+  bus: <><path d="M8 6v6m8-6v6M2 12h20M7 18h10M4 18v3m16-3v3" /><rect x="2" y="3" width="20" height="15" rx="3" /><path d="M5 15h.01M19 15h.01" /></>,
   headphones: <><path d="M4 14v-3a8 8 0 0 1 16 0v3" /><rect x="3" y="12" width="4" height="8" rx="2" /><rect x="17" y="12" width="4" height="8" rx="2" /></>,
   work: <><rect x="3" y="7" width="18" height="14" rx="2" /><path d="M8 7V3h8v4M3 13a24 24 0 0 0 18 0m-9 0v3" /></>,
   help: <><circle cx="12" cy="12" r="9" /><path d="M9.5 8.5a2.5 2.5 0 1 1 4 2c-1.5 1-1.5 1-1.5 3M12 17h.01" /></>,

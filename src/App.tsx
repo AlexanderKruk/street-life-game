@@ -17,7 +17,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.12-156'
+const BUILD_VERSION = 'v2026.10.12-157'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -2082,12 +2082,10 @@ export default function App() {
 
     {screen === 'travel' && trip && (() => {
       const destination = locations.find((x) => x.id === trip.destinationId)
-      const progress = ((trip.total - trip.remaining) / trip.total) * 100
-      return <section className="travel-screen">
+      const elapsed = Math.max(0, trip.total - trip.remaining)
+      return <section className="travel-screen" aria-label="Time on the way">
         <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} />
-        <div className="travel-progress"><i style={{ width: `${progress}%` }} /></div>
-        <strong>{formatTravelTime(trip.remaining)} remaining</strong>
-        <small>{trip.remaining} real seconds</small>
+        <div className="travel-elapsed" aria-label="Elapsed travel time"><Icon name="clock" /><strong>{formatTravelTime(elapsed)}</strong></div>
       </section>
     })()}
 

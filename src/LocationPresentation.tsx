@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { formatTime } from './game'
 import { responsiveImageProps } from './responsiveImages'
+import { Icon } from './Icon'
 
 type ArtProps = { phone: boolean; inline: boolean; illustration?: string; night: boolean }
 export const StreetArt = memo(function StreetArt({ phone, inline, illustration, night }: ArtProps) {
@@ -27,10 +28,13 @@ export const ShopHero = memo(function ShopHero({ name, open, opensAt, closesAt }
 type TravelHeadingProps = { from: string; to?: string; walking: boolean }
 export const TravelHeading = memo(function TravelHeading({ from, to, walking }: TravelHeadingProps) {
   return <>
-    <div className="travel-icon">{walking ? '🚶' : '🚌'}</div>
-    <p className="eyebrow">ON THE WAY</p>
-    <h2>{from} → {to}</h2>
-    <p>{walking ? 'Walking costs more energy and a little extra water.' : 'Public transport is faster and saves your energy.'}</p>
+    <div className={`travel-visual ${walking ? 'walking' : 'transit'}`} aria-hidden="true">
+      <span className={walking ? 'travel-path' : 'travel-trail'}><b /><b /><b />{walking && <b />}</span>
+      {walking
+        ? <img className="travel-walker" src="/street-life-game/assets/travel-walker.webp" width="90" height="90" alt="" />
+        : <Icon name="bus" className="travel-bus" />}
+    </div>
+    <div className="travel-route-heading"><p>{walking ? 'Walking' : 'Public transport'}</p><h2>{from} <span>→</span> {to}</h2></div>
   </>
 })
 

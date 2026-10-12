@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-156`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-157`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Compact travel card (v157)
+
+Walking and public transport share a compact graphite card. A large sand-colored icon sits to the left of the mode and route. The clock and elapsed in-game time sit directly below the route; there is no ON THE WAY heading, lower timer panel, progress bar, remaining-time estimate or real-seconds label. Elapsed time derives from the existing trip state and resumes correctly after reload. Travel duration, costs, events, hidden-tab pause and arrival behavior retain their existing rules.
+
+Walking uses the approved transparent silhouette with a slight whole-body bounce and four horizontal path marks arranged in two rows of two. Public transport, including fare dodging, uses a large outline bus with a slight vertical rocking motion and three thick trails moving backward from near its middle. Neither icon has a background tile or horizontal back-and-forth movement. Reduced-motion preferences disable these animations. The walker is a 270px transparent WebP for the 90px display and participates in the existing content-versioned image cache. The static route and illustration remain memoized separately from the ticking elapsed time.
+
+Validation: the existing rendering checks now verify the advancing elapsed timer and its restoration from a saved trip. Browser visual QA for this revision was unavailable; the approved mockup supplies the layout reference.
 
 ### Journal batches (v156)
 

@@ -61,9 +61,11 @@ function measure(App) {
   setup(App, 'location'); advance(10); output.location = counts();
   setup(App, 'location', { locationId: 'shop' }); advance(10); output.shop = counts();
   setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 } });
-  const initialProgress = document.querySelector('.travel-progress i').style.width;
+  const initialElapsed = document.querySelector('.travel-elapsed').textContent;
   advance(10); output.travel = counts();
-  assert.notEqual(document.querySelector('.travel-progress i').style.width, initialProgress);
+  assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '1h 40m');
+  assert(!document.querySelector('.travel-progress'));
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
   clearCounts(); advance(3); output.phoneSearch = counts();
@@ -280,6 +282,7 @@ function measure(App) {
   cleanup(); render(React.createElement(App));
   assert(document.querySelector('.travel-screen'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 210, 'travel resumes from lifecycle save');
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '30m', 'elapsed time survives reload');
   advance(1, false); fireEvent(window, new window.Event('beforeunload'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 200);
   fireEvent.click(screen.getByRole('button', { name: 'Reset save' }));
