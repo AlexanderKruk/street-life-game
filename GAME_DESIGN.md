@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-160`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-161`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Mobile route spacing (v161)
+
+On phone screens, active travel cards reserve less space around the unchanged 90px icon: a 90px icon column, 10px gap and 14px side padding. Route text uses 20px type and removes the extra arrow margins, giving ordinary routes such as Cheap Shop → Station more room on one line. At widths up to 360px, side padding is 12px and route type is 18px; longer routes may still wrap naturally without clipping or truncation. Timer sizing and modal centering remain unchanged.
 
 ### Consistent walking silhouette (v160)
 
