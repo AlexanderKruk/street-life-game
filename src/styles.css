@@ -753,7 +753,7 @@ button.inventory-item { width:100%; }
 .street-art.phone-art img { object-position:45% 55%; }
 .phone-search-icon .phone-search-outline { width:90px; height:90px; stroke-width:1.35; }
 .phone-search-icon .phone-search-globe { position:absolute; left:calc(50% - 12px); top:34px; width:24px; height:24px; stroke-width:1.6; }
-.phone-activity-symbol { position:absolute; left:calc(50% - 12px); top:68px; display:flex; align-items:center; gap:5px; }
+.phone-activity-symbol { position:absolute; left:50%; top:62px; transform:translateX(-50%); display:flex; align-items:center; gap:5px; }
 .phone-activity-symbol span { width:4px; height:4px; border-radius:50%; background:currentColor; animation:phone-pulse 1.2s ease-in-out infinite; }
 .phone-activity-symbol span:nth-child(2) { animation-delay:.2s; }
 .phone-activity-symbol span:nth-child(3) { animation-delay:.4s; }
