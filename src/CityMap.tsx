@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { isOpen, type Location } from './game'
 import { Icon, locationIcon } from './Icon'
+import { responsiveImageProps } from './responsiveImages'
 
 const positions: Record<string, [number, number]> = {
   support: [18, 30], daycenter: [64, 38], 'free-clinic': [82, 29], hospital: [85, 19], jobcenter: [16, 9],
@@ -23,7 +24,7 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
   return <section className="district-map" aria-label="City map">
     <div className="district-map-heading"><h2>City map</h2><span>Tap a place to explore</span></div>
     <div className="district-scene">
-      <img src="/street-life-game/assets/city-night.webp" alt="Rainy city rooftops, warm windows and a railway station beside the river at night" />
+      <img {...responsiveImageProps('/street-life-game/assets/city-night.webp')} width="1024" height="1536" alt="Rainy city rooftops, warm windows and a railway station beside the river at night" />
       {origin && target && selected.id !== currentId && <svg className="district-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={`M ${origin[0]} ${origin[1]} C ${origin[0] + (target[0] - origin[0]) * .55} ${origin[1]}, ${origin[0] + (target[0] - origin[0]) * .2} ${target[1]}, ${target[0]} ${target[1]}`} /></svg>}
       {places.map(place => {
         const [x, y] = positions[place.id] ?? [50, 50]

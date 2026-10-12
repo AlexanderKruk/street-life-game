@@ -1,3 +1,5 @@
+import { spriteImageSet } from './responsiveImages'
+
 const positions = {
   water: '0% 0%', food: '100% 0%', bread: '0% 33.333333%', cannedFood: '100% 33.333333%',
   wipes: '0% 66.666667%', showerGel: '100% 66.666667%', cigarettes: '0% 100%', medicines: '100% 100%',
@@ -10,7 +12,7 @@ const equipment = new Set<ItemArtId>(['phone', 'clothing', 'documents', 'transit
 export default function ItemArt({ id, className = 'inventory-art' }: { id: ItemArtId; className?: string }) {
   const essentials = equipment.has(id)
   return <span className={className} aria-hidden="true" style={{
-    backgroundImage: `url(/street-life-game/assets/${essentials ? 'inventory-equipment' : 'shop-products'}.webp)`,
+    backgroundImage: spriteImageSet(essentials ? 'inventory-equipment' : 'shop-products'),
     backgroundPosition: positions[id], backgroundSize: essentials ? '200% 300%' : '200% 400%',
   }} />
 }

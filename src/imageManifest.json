@@ -1,0 +1,169 @@
+{
+  "city-night.webp": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 480,
+        "height": 720,
+        "file": "city-night-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 1152,
+        "file": "city-night-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 1536,
+        "file": "city-night-1024.webp"
+      }
+    ]
+  },
+  "street-hero.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "street-hero-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "street-hero-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "street-hero-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "street-hero-1400.webp"
+      }
+    ]
+  },
+  "phone-search.webp": {
+    "width": 1400,
+    "height": 1050,
+    "variants": [
+      {
+        "width": 480,
+        "height": 360,
+        "file": "phone-search-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 576,
+        "file": "phone-search-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 768,
+        "file": "phone-search-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 1050,
+        "file": "phone-search-1400.webp"
+      }
+    ]
+  },
+  "help-morning.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "help-morning-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "help-morning-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "help-morning-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "help-morning-1400.webp"
+      }
+    ]
+  },
+  "shop-interior.webp": {
+    "width": 2172,
+    "height": 724,
+    "variants": [
+      {
+        "width": 480,
+        "height": 160,
+        "file": "shop-interior-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 256,
+        "file": "shop-interior-768.webp"
+      },
+      {
+        "width": 1440,
+        "height": 480,
+        "file": "shop-interior-1440.webp"
+      },
+      {
+        "width": 2172,
+        "height": 724,
+        "file": "shop-interior-2172.webp"
+      }
+    ]
+  },
+  "inventory-equipment.webp": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 256,
+        "height": 384,
+        "file": "inventory-equipment-256.webp"
+      },
+      {
+        "width": 512,
+        "height": 768,
+        "file": "inventory-equipment-512.webp"
+      },
+      {
+        "width": 768,
+        "height": 1152,
+        "file": "inventory-equipment-768.webp"
+      }
+    ]
+  },
+  "shop-products.webp": {
+    "width": 887,
+    "height": 1774,
+    "variants": [
+      {
+        "width": 256,
+        "height": 512,
+        "file": "shop-products-256.webp"
+      },
+      {
+        "width": 512,
+        "height": 1024,
+        "file": "shop-products-512.webp"
+      },
+      {
+        "width": 768,
+        "height": 1536,
+        "file": "shop-products-768.webp"
+      }
+    ]
+  }
+}

@@ -11,8 +11,9 @@ import InventorySlot from './InventorySlot'
 import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
+import { responsiveImageProps } from './responsiveImages'
 
-const BUILD_VERSION = 'v2026.10.12-150'
+const BUILD_VERSION = 'v2026.10.12-151'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -1953,7 +1954,7 @@ export default function App() {
     {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <>
-      {current.id === 'street' && <div className={`street-art${phoneActivity || inlineResult ? ' phone-art' : !infoModal?.presentation?.illustration && (game.minutes >= 1200 || game.minutes < 360) ? ' night' : ''}`} aria-hidden="true"><img src={phoneActivity ? '/street-life-game/assets/phone-search.webp' : infoModal?.presentation?.illustration ?? (inlineResult ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp')} alt="" width="1400" height={phoneActivity || inlineResult ? 1050 : 788} fetchPriority="high" />{infoModal?.presentation?.illustration && <span className="result-art-caption">Looking ahead</span>}</div>}
+      {current.id === 'street' && <div className={`street-art${phoneActivity || inlineResult ? ' phone-art' : !infoModal?.presentation?.illustration && (game.minutes >= 1200 || game.minutes < 360) ? ' night' : ''}`} aria-hidden="true"><img {...responsiveImageProps(phoneActivity ? '/street-life-game/assets/phone-search.webp' : infoModal?.presentation?.illustration ?? (inlineResult ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp'))} alt="" width="1400" height={phoneActivity || inlineResult ? 1050 : 788} fetchPriority="high" />{infoModal?.presentation?.illustration && <span className="result-art-caption">Looking ahead</span>}</div>}
       {phoneActivity ? <section className="phone-activity" aria-labelledby="phone-activity-title" aria-busy="true">
         <div className="phone-activity-heading"><p className="eyebrow">USING YOUR PHONE</p><div className="phone-activity-symbol" aria-hidden="true"><span /><span /><span /></div></div>
         <h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
@@ -1962,7 +1963,7 @@ export default function App() {
         <div className="phone-activity-meta"><span><Icon name="clock" />{phoneActivity.total - phoneActivity.remaining} min spent</span><span>Usually about {PHONE_SEARCH_ESTIMATE} min</span></div>
         <small>Time passes while you search.</small>
       </section> : inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={() => setInfoModal(null)} /> : <>
-      {current.id === 'shop' ? <section className="shop-hero" aria-label="Shop"><h2>{current.name}</h2><p>{open ? 'Open' : 'Closed'} · {formatTime(current.open)}–{formatTime(current.close)}</p></section> : <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
+      {current.id === 'shop' ? <section className="shop-hero" aria-label="Shop"><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{current.name}</h2><p>{open ? 'Open' : 'Closed'} · {formatTime(current.open)}–{formatTime(current.close)}</p></section> : <section className={current.id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
         {current.id !== 'street' && <div className="location-icon">{current.icon}</div>}
         <div><p className="eyebrow">{current.id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(current.open)}`}`} </p><h2>{current.name}</h2><p>{current.id === 'street' ? streetScene : current.description}</p></div>
       </section>}

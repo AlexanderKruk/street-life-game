@@ -43,7 +43,8 @@ setup({minutes:1436,mood:28},{'street-life-discovered-v1':['street','station','s
 const phoneBefore=read(stateKey), batteryBefore=read(invKey).phoneBattery;Math.random=()=>0;
 fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));
 assert(document.querySelector('.phone-activity'));assert(!screen.queryByRole('dialog'));
-assert(document.querySelector('.street-art img').src.endsWith('phone-search.webp'));
+assert(document.querySelector('.street-art img').src.endsWith('phone-search-480.webp'));
+assert(document.querySelector('.street-art img').srcset.includes('phone-search-1400.webp 1400w'));
 assert.equal(read(stateKey).minutes,1436);assert.equal(read(invKey).phoneBattery,batteryBefore);
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 advance(4000);assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,0);
@@ -64,9 +65,9 @@ assert(document.querySelector('.result-inline'));assert(!document.querySelector(
 assert(!document.querySelector('.story-actions'));assert.equal(screen.getByRole('dialog').getAttribute('aria-modal'),'false');
 assert(!document.querySelector('.result-consequences'));
 assert.equal(document.querySelectorAll('.result-place').length,3);assert(read('street-life-discovered-v1').includes('free-clinic'));assert(!document.querySelector('.result-details').open);
-assert(document.querySelector('.street-art img').src.endsWith('help-morning.webp'));
+assert(document.querySelector('.street-art img').src.endsWith('help-morning-480.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
-ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero.webp'));
+ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));
 click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(!document.querySelector('.phone-activity'));assert.deepEqual(read(stateKey),completed);
 assert.equal(document.querySelectorAll('.result-cost-line').length,0);ok();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.result-place').length,1);ok();
 // Estimates stay the same; durations vary within bounds and never reroll.
@@ -153,7 +154,8 @@ click(/Take a short shift/);assert(Math.abs(read(stateKey).health - (90 - .147 *
 // Illustrated map only shows discovered places; selection is read-only until routing.
 setup({minutes:600}, {'street-life-discovered-v1':['street','station','shop']});click(/Map$/);
 const mapBefore=read(stateKey);
-assert(document.querySelector('.district-scene img').getAttribute('src').endsWith('/city-night.webp'));
+assert(document.querySelector('.district-scene img').getAttribute('src').endsWith('/city-night-480.webp'));
+assert(document.querySelector('.district-scene img').srcset.includes('city-night-1024.webp 1024w'));
 assert(!document.querySelector('.district-pin').textContent.includes('Night Shelter'));
 assert(![...document.querySelectorAll('.district-pin')].some(pin=>pin.textContent.includes('Night Shelter')));
 click(/^.*Station/);assert.deepEqual(read(stateKey),mapBefore);assert(!document.querySelector('.travel-sheet'));

@@ -34,7 +34,20 @@ async function loadImage(image) {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(Promise.all(IMAGES.map(loadImage)).then(() => self.skipWaiting()));
+  // Carry over matching cached files without downloading every size on installation.
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    for (const name of await caches.keys()) {
+      if (!name.startsWith(PREFIX) || name === CACHE) continue;
+      const previous = await caches.open(name);
+      for (const image of IMAGES) {
+        const key = keyFor(image);
+        const response = await previous.match(key);
+        if (response) await cache.put(key, response.clone());
+      }
+    }
+    await self.skipWaiting();
+  })());
 });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
@@ -49,6 +62,11 @@ self.addEventListener('fetch', event => {
   const image = entries.get(event.request.url);
   if (!image) return;
   event.respondWith(loadImage(image).catch(() => fetch(event.request)));
+});
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'WARM_IMAGES' || !Array.isArray(event.data.urls)) return;
+  const selected = [...new Set(event.data.urls)].map(url => entries.get(new URL(url, self.location.origin).href)).filter(Boolean);
+  event.waitUntil(Promise.allSettled(selected.map(loadImage)));
 });
 `
 }

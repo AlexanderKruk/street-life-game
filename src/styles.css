@@ -319,7 +319,9 @@ button.inventory-item { width:100%; }
 .shop-item:disabled { opacity:.38; }
 /* Compact illustrated shop; other location cards keep their existing layout. */
 .shop-screen .game-header { margin-bottom:0; }
-.shop-hero { min-height:145px; margin:0 -18px 12px; padding:70px 18px 16px; background:linear-gradient(0deg,#0b0f13 0%,#0b0f1350 65%,#0b0f1320),url('/street-life-game/assets/shop-interior.webp') center / cover; }
+.shop-hero { position:relative; isolation:isolate; min-height:145px; margin:0 -18px 12px; padding:70px 18px 16px; background:#0b0f13; overflow:hidden; }
+.shop-hero-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2; }
+.shop-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(0deg,#0b0f13 0%,#0b0f1350 65%,#0b0f1320); }
 .shop-hero h2 { margin:0 0 4px; font-size:27px; color:#f1eee7; }
 .shop-hero p { margin:0; font-size:12px; color:#babec1; }
 .shop-screen .shop { margin-top:10px; }
@@ -334,7 +336,7 @@ button.inventory-item { width:100%; }
 .supply-grid { gap:8px; align-items:stretch; }
 .supply-card { display:grid; grid-template-columns:39% minmax(0,1fr); grid-template-rows:1fr auto; border:1px solid #343d42; border-radius:8px; background:#10161a; overflow:hidden; min-width:0; }
 .supply-picture { min-width:0; display:flex; align-items:center; background:#101213; overflow:hidden; }
-.supply-art { display:block; width:100%; aspect-ratio:1; background-image:url('/street-life-game/assets/shop-products.webp'); background-size:200% 400%; background-repeat:no-repeat; }
+.supply-art { display:block; width:100%; aspect-ratio:1; background-size:200% 400%; background-repeat:no-repeat; }
 .supply-copy { padding:9px 6px 8px; min-width:0; display:flex; flex-direction:column; }
 .supply-copy > strong { font-size:11px; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
 .supply-copy > small { display:block; margin:4px 0 7px; font-size:10px; line-height:1.25; color:#99a3a9; }
