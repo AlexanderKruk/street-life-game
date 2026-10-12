@@ -4,6 +4,11 @@ for (const key of ['window','document','localStorage','HTMLElement','Node','Even
 Object.defineProperty(global,'navigator',{value:dom.window.navigator});
 global.IS_REACT_ACT_ENVIRONMENT=true;
 window.scrollTo=()=>{};
+let now=1800000000000,nextTimerId=1;
+Date.now=()=>now;
+const timers=new Map();
+window.setInterval=(fn)=>{const id=nextTimerId++;timers.set(id,fn);return id;};
+window.clearInterval=id=>timers.delete(id);
 require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'qa-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup}=require('@testing-library/react');
@@ -25,11 +30,12 @@ function beginSleep(hours=2){button(/Lie down here\? I’m not sure… But I cou
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Got it',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 function checkBattery(){fireEvent(window,new window.Event('pagehide'));const charge=Math.round(JSON.parse(localStorage.getItem('street-life-inventory-v1')).phoneBattery);assert(screen.getByLabelText(`Phone battery: ${charge}%`).textContent.includes(`${charge}%`));return charge;}
-async function finishPhone(){for(let tick=0;tick<15;tick++)await act(()=>new Promise(r=>setTimeout(r,1020)));}
+function advance(ticks){for(let tick=0;tick<ticks;tick++){now+=1000;act(()=>{for(const fn of [...timers.values()])fn();});}fireEvent(window,new window.Event('pagehide'));}
+async function finishPhone(){advance(15);}
 (async()=>{
  setup();const startingCharge=checkBattery();button('Where can I get help in the morning?');await finishPhone();assert(checkBattery()<startingCharge);close();button('How can I get a shelter bed?');await finishPhone();
  let text=summary();assert(text.includes('−3.6%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
- const before=localStorage.getItem('street-life-save-v3');await act(()=>new Promise(r=>setTimeout(r,1100)));assert.equal(localStorage.getItem('street-life-save-v3'),before);
+ const before=localStorage.getItem('street-life-save-v3');advance(1);assert.equal(localStorage.getItem('street-life-save-v3'),before);
  close();button(/Map$/);checkBattery();assert(screen.getByText('Night Shelter',{exact:true}));assert(!document.querySelector('.street-art'));cleanup();setup();
  beginSleep();button('Wake up (debug)');
  text=summary();assert(text.includes('2 hours'));assert(text.includes('+13'));assert(!text.includes('Cold'));assert(!text.includes('Health'));assert(!text.includes('Battery'));
@@ -46,7 +52,7 @@ async function finishPhone(){for(let tick=0;tick<15;tick++)await act(()=>new Pro
  localStorage.setItem('street-life-sleep-v1',JSON.stringify({kind:'ground',total:120,remaining:0,startAbsolute:1380,realStartedAt:Date.now()-20000,realWakeAt:Date.now()-1000}));
  render(React.createElement(App));assert(summary().includes('2 hours'));assert(!localStorage.getItem('street-life-sleep-v1'));cleanup();
  setup({minutes:600});localStorage.setItem('street-life-inventory-v1',JSON.stringify({...JSON.parse(localStorage.getItem('street-life-inventory-v1')),transitCard:false}));cleanup();render(React.createElement(App));button(/Map$/);button(/Station/);button("Go →");button(/Public transport/);
- for(let tick=0;tick<4;tick++) await act(()=>new Promise(r=>setTimeout(r,1050)));
+ advance(4);
  assert(summary().includes('Arrival'));assert(summary().includes('33 min'));assert(summary().includes('−4.4 zł'));cleanup();
  console.log('PASS: UI flows, zero hiding, timer pause, shelter discovery, actual/capped sleep gains, illness, medicine and automatic wake.');
 })().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{cleanup();dom.window.close()});
