@@ -2,7 +2,29 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-155`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-155`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; the application remains on v155.
+
+### Measured performance and extended-session QA (v155 · 2026-10-12)
+
+The live build was measured in isolated Chromium 153 test profiles. Startup tests used three cold/cached loads per desktop and mobile-lab profile. The extended session used a 390×844 viewport, DPR 2 and CPU slowed 4×, with 500 current-day journal entries and all eight backpack slots occupied.
+
+| Measurement | Result |
+|---|---|
+| Cached interface ready, median | Desktop 84.5 ms; mobile lab 201.7 ms |
+| Ordinary five-screen navigation, click to second animation frame | Desktop median 28.1 ms / max 32.4 ms; mobile lab median 25.5 ms / max 42.4 ms |
+| Extended session | 600.4 real seconds; 300 screen switches, plus setup/measurement clicks; no JavaScript errors or progressive slowdown observed |
+| JS heap after explicit GC on Station | Initially 4.1 MiB; peak 5.0 MiB; last five minutes 4.8–4.9 MiB; final 4.9 MiB |
+| Station DOM/listeners after navigation | Nodes settled at 157; 187 listeners throughout; no accumulating documents |
+| Extreme journal: all 500 entries in one day | Opening around 200 ms; navigation p95 193–227 ms, max 242.5 ms; long tasks occurred during heavy journal rendering |
+| Distributed journal: 500 entries over 20 days, 25 shown today | 155 navigation clicks: median 25.3 ms, p95 31.1 ms, max 34.3 ms |
+
+Separate test profiles verified 30 cycles of Clothing result and Phone panels with scroll-lock cleanup, 27 supply actions with the 500-entry retention cap, an offline water action and navigation in an already-open app, restoration after reconnect/reload and tab close/reopen, synthetic hidden/visible save-and-pause signals, and recovery from a simulated storage quota error. All repository regression checks (`npm test`) passed.
+
+These are lab observations, not physical iPhone/Safari, battery, INP or real-device FPS measurements. Heap values exclude total browser/GPU memory; ten minutes cannot prove the absence of every leak. Cold response times were dominated by the lab proxy route, so they are not representative user startup times. Lifecycle signals and quota failures were simulated; abrupt OS process termination and full offline reopening were not verified. The image worker still caches images only.
+
+**Next performance candidate, not implemented:** render recent records of the selected journal day first and load older records on demand. Preserve newest-first order, day navigation, reflections and the saved 500-entry cap. This addresses the measured heavy-day cost; the current measurements do not justify prioritizing application JS splitting. Real iPhone/Safari validation remains outstanding. No gameplay or journal presentation changed during QA.
+
+Detailed methods, samples and coverage limits: [startup/navigation report](PERFORMANCE_REPORT.md), [extended-session report](SESSION_REPORT.md), `performance-report.json` and `session-report.json`. Reproduction tools are `scripts/benchmark.cjs`, `scripts/soak.cjs` and `scripts/lifecycle-lab.cjs`.
 
 ### Stable game clock (v155)
 
@@ -666,7 +688,7 @@ Journal displays incomplete goals in priority order: morning, safe sleep, social
 | Visit social support | At an open Help Center; existing referral also proves progress |
 | Look for work | Successful online work search, visit to open Job Centre/Day Work, or existing employment |
 
-The counter is calculated from the four saved flags. Completion never rolls back just because a booking expires or a location is left. A reset clears all flags and history. Today uses completion time: an action crossing midnight is recorded on the day it finishes. History records actual nonzero gains/losses, costs, and the result explanation; passive clock ticks and navigation between screens are not individual actions.
+The counter is calculated from the four saved flags. Completion never rolls back just because a booking expires or a location is left. A reset clears all flags and history. History uses completion time: an action crossing midnight is recorded on the day it finishes. Entries contain compact reflections; exact resource deltas and the detailed explanation remain in the action result. Passive clock ticks and navigation between screens are not individual actions.
 
 ## Known implementation gaps / current limitations
 
@@ -681,7 +703,7 @@ These are current code realities, not planned features:
 - Station bench sleep still shares generic bench wake-event plumbing and should eventually have station-specific risk handling.
 - Shelter social-worker promises/plans are stored but are not yet verified against completed gameplay milestones.
 - Not every custom action currently rolls a location event.
-- Today cannot reconstruct actions performed before history was implemented, and currently shows only the current day; browsing previous days is not implemented.
+- Journal cannot reconstruct actions performed before history was implemented and retains only the latest 500 entries across all days. Previous-day browsing is implemented; loading older entries of a selected day in batches is not yet implemented.
 - Schronisko has no laundry action yet.
 - Benefits support is a placeholder.
 - Documents exist and can be lost/restored, but most formal actions do not yet require them.
