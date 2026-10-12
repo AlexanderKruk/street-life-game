@@ -40,7 +40,7 @@ async function loadApp(disableMemo) {
         let source = fs.readFileSync(path, 'utf8').replace(/memo\(function (\w+)\(([\s\S]*?)\) \{/g,
           (match, name) => `${match} globalThis.__uiRenders['${name}'] = (globalThis.__uiRenders['${name}'] ?? 0) + 1;`);
         source = source.replace('export default function App() {', "export default function App() { globalThis.__uiRenders.App = (globalThis.__uiRenders.App ?? 0) + 1;");
-        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview, setGame, searchStreetBottles };\n  return <main className=');
+        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview, setGame, searchStreetBottles, setTrashGame };\n  return <main className=');
         if (disableMemo) source = source.replace(/memo\(function /g, '((component) => component)(function ');
         return { contents: source, loader: 'tsx' };
       });
@@ -165,6 +165,8 @@ function measure(App) {
   modalAudit.push({ name: 'shelter departure (progress updates)', renders: counts() });
   setup(App, 'location', { locationId: 'street', day: 2, minutes: 1000 }, { 'street-life-answers-v1': ['morning', 'bed'] });
   act(() => global.__auditSetters.searchStreetBottles()); pauseAudit('trash search', '.trash-overlay');
+  const trashTimerIds = [...timers.keys()];
+  assert.equal(trashTimerIds.length, 3, 'only game clock, autosave and one trash deadline timer are active');
   // Moving rubbish is user-driven; the surrounding street image remains cached.
   const piece = document.querySelector('.trash-piece:last-child');
   const bounds = { left: 0, top: 0, width: 400, height: 400 };
@@ -173,7 +175,49 @@ function measure(App) {
   const pointer = (type, x, y) => { const event = new window.Event(type, { bubbles: true }); Object.assign(event, { clientX: x, clientY: y, pointerId: 1 }); fireEvent(piece, event); };
   clearCounts(); pointer('pointerdown', 120, 120); pointer('pointermove', 220, 220); pointer('pointerup', 220, 220);
   assert.equal(count('StreetArt'), 0);
+  assert.deepEqual([...timers.keys()], trashTimerIds, 'dragging does not restart the trash deadline');
   modalAudit.push({ name: 'trash drag', renders: counts() });
+  act(() => global.__auditSetters.setTrashGame(previous => ({ ...previous, found: 2 })));
+  assert.deepEqual([...timers.keys()], trashTimerIds, 'new bottle count does not restart timers');
+  advance(57);
+  assert(!document.querySelector('.trash-overlay'));
+  assert(document.querySelector('.result-modal').textContent.includes('2 returnable bottles'), 'deadline uses the latest collected count');
+  assert.equal(timers.size, 2, 'trash timer is cleaned up after completion');
+  const timerAudit = [];
+  setup(App, 'location');
+  const clockIds = [...timers.keys()], clockCreations = nextId;
+  assert.equal(clockIds.length, 2, 'one game clock and one independent autosave timer');
+  advance(20); assert.deepEqual([...timers.keys()], clockIds);
+  assert.equal(nextId, clockCreations, 'ticks never recreate intervals');
+  fireEvent.click(screen.getByRole('button', { name: 'Inventory', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Journal', exact: true }));
+  assert.deepEqual([...timers.keys()], clockIds, 'screen changes retain the clock');
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  const frozenMinute = JSON.parse(localStorage.getItem('street-life-save-v3')).minutes;
+  advance(3); assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).minutes, frozenMinute);
+  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  advance(1); assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).minutes, frozenMinute + 1);
+  assert.deepEqual([...timers.keys()], clockIds);
+  timerAudit.push({ mode: 'ordinary ticks, tabs, background/foreground', intervalRestarts: nextId - clockCreations });
+  setup(App, 'location', { locationId: 'street', minutes: 1320 });
+  const phoneClockIds = [...timers.keys()];
+  fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
+  assert.deepEqual([...timers.keys()], phoneClockIds, 'phone searches use the existing clock');
+  advance(3); assert(document.querySelector('.phone-activity-meta').textContent.includes('3 min spent'));
+  assert.deepEqual([...timers.keys()], phoneClockIds);
+  timerAudit.push({ mode: 'phone search', activeIntervals: timers.size });
+  setup(App, 'location', { minutes: 1380, energy: 20 });
+  const sleepClockIds = [...timers.keys()];
+  fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ })); advance(3);
+  assert.deepEqual([...timers.keys()], sleepClockIds, 'planning pauses without restarting the clock');
+  fireEvent.click(screen.getByRole('button', { name: /^2 h/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Start sleeping', exact: true }));
+  const beforeSleepMinute = JSON.parse(localStorage.getItem('street-life-save-v3')).minutes;
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  advance(3); assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).minutes, beforeSleepMinute + 30, 'sleep keeps its wall-clock behavior while hidden');
+  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  assert.deepEqual([...timers.keys()], sleepClockIds);
+  timerAudit.push({ mode: 'sleep planning and sleep', activeIntervals: timers.size });
   // Measure actual App storage writes without forcing a checkpoint after every tick.
   setup(App, 'inventory', {}, { 'street-life-mobile-auto-renew': false });
   const nativeSet = window.Storage.prototype.setItem;
@@ -216,4 +260,5 @@ function measure(App) {
   console.log('PASS: static blocks skip tick renders; clock, map closing/selection, goal completion and journal day changes remain live.');
   console.log(JSON.stringify({ locationAudit, modalAudit }));
   console.log(`PASS: actual App used ${periodicWrites} writes in twenty idle ticks; hidden/pagehide/beforeunload flush, travel reload, reset and storage-error retry.`);
+  console.log(JSON.stringify({ timerAudit }));
 })().catch(error => { console.error(error); cleanup(); dom.window.close(); process.exitCode = 1; });

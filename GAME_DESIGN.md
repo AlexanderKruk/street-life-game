@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-154`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-155`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+
+### Stable game clock (v155)
+
+One persistent one-second interval serves ordinary time, travel, shelter queue/departure, sleep and phone searches. Its stable callback reads the latest committed game state through useLatestAction; changing screens, progress, effects or pause conditions does not recreate the interval. Phone searches no longer start a separate competing interval. Existing pause rules remain: ordinary activity and phone searches pause while hidden, sleeping uses wall-clock elapsed time even while hidden, and result/event/planning windows pause their existing activities. All actions remain discrete one-second ticks; starting a new mode uses the next clock tick instead of resetting the interval phase. The independent autosave timer remains unchanged.
+
+Trash search retains its separate 250ms deadline check, but its timer depends only on the search start time. Dragging rubbish and collecting bottles do not restart it; its callback sees current collection state. Completion/unmount removes the deadline timer. Instrumented tests verify unchanged interval IDs across twenty ticks, navigation, hide/resume, phone search and sleep; they also verify the fixed 60-second trash deadline uses the latest found count and cleans up. Existing travel, sleep, disease, battery, pause, completion and restoration regression tests remain required. These checks confirm scheduling behavior, not real-device FPS or battery improvements.
 
 ### Batched autosave (v154)
 

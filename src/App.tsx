@@ -17,7 +17,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.12-154'
+const BUILD_VERSION = 'v2026.10.12-155'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -733,25 +733,33 @@ export default function App() {
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
   }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity])
 
+  const tickGameClock = useLatestAction(() => {
+    if (phoneActivity) {
+      if (phoneActivity.remaining <= 0 || gameOver || document.visibilityState !== 'visible') return
+      setGame(previous => applyAction(previous, { minutes: 1 }))
+      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(previous.phoneCondition)) }))
+      setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
+      return
+    }
+    if (rainChoice || storyDecision || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
+    if (sleeping) {
+      const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
+      const targetAbsolute = sleeping.startAbsolute + elapsed
+      setGame((prev) => {
+        const delta = Math.max(0, targetAbsolute - absoluteMinutes(prev))
+        return delta > 0 ? applySleepTime(prev, delta) : prev
+      })
+    }
+    if (sleeping) return
+    const tickMinutes = trip ? Math.min(10, trip.remaining) : 1
+    if (shelterQueue) setShelterQueue(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
+    setGame(prev => applyAction(prev, { minutes: tickMinutes }))
+    setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
+  })
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (phoneActivity || rainChoice || storyDecision || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
-      if (sleeping) {
-        const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
-        const targetAbsolute = sleeping.startAbsolute + elapsed
-        setGame((prev) => {
-          const delta = Math.max(0, targetAbsolute - absoluteMinutes(prev))
-          return delta > 0 ? applySleepTime(prev, delta) : prev
-        })
-      }
-      if (sleeping) return
-      const tickMinutes = trip ? Math.min(10, trip.remaining) : 1
-      if (shelterQueue) setShelterQueue(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
-      setGame(prev => applyAction(prev, { minutes: tickMinutes }))
-      setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
-    }, 1000)
+    const timer = window.setInterval(tickGameClock, 1000)
     return () => window.clearInterval(timer)
-  }, [trip, effects, musicOn, navigationOn, activeEvent, diceCheck, shelterInterview, gameOver, sleeping, sleepChoice, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterDepartureRemaining, infoModal, pendingResult, trashGame, storyDecision, rainChoice, phoneActivity])
+  }, [tickGameClock])
 
   useEffect(() => {
     if (!trip || trip.remaining > 0) return
@@ -1066,13 +1074,17 @@ export default function App() {
     setMessage(found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable bottle${found === 1 ? '' : 's'}.` : rejected > 0 ? `You searched for ${minutes} minutes. The bottles you found were not returnable.` : `You searched for ${minutes} minutes and found nothing useful.`)
   }
 
+  const checkTrashDeadline = useLatestAction(() => {
+    if (trashGame && Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
+  })
+  const trashStartedAt = trashGame?.startedAt
   useEffect(() => {
-    if (!trashGame) return
+    if (trashStartedAt === undefined) return
     const timer = window.setInterval(() => {
-      if (Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
+      checkTrashDeadline()
     }, 250)
     return () => window.clearInterval(timer)
-  }, [trashGame])
+  }, [trashStartedAt, checkTrashDeadline])
 
   function returnBottlesImpl() {
     if (!open || current.id !== 'shop' || inventory.bottles <= 0) return
@@ -1204,17 +1216,6 @@ export default function App() {
   useEffect(() => {
     if (phoneActivity && phoneActivity.remaining === phoneActivity.total) window.scrollTo?.({ top: 0, behavior: 'instant' })
   }, [phoneActivity?.questionId])
-
-  useEffect(() => {
-    if (!phoneActivity || phoneActivity.remaining === 0 || gameOver) return
-    const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return
-      setGame(previous => applyAction(previous, { minutes: 1 }))
-      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(previous.phoneCondition)) }))
-      setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
-    }, 1000)
-    return () => window.clearInterval(timer)
-  }, [phoneActivity, gameOver, effects, musicOn])
 
   useEffect(() => {
     if (!phoneActivity || inventoryAgedAt !== absoluteMinutes(game)) return
