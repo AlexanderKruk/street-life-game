@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-153`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-154`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+
+### Batched autosave (v154)
+
+One save controller stages a coherent snapshot after inventory aging, Hygiene-cap repair and action-result processing have settled. Existing localStorage keys and JSON/raw formats remain unchanged, including older-save migrations; this is batching across legacy keys, not a new atomic database format. Ordinary ticks checkpoint approximately every five real seconds. User interactions, results, day/goal/discovery/life/effect milestones and the start/end of travel, sleep, phone searches and shelter sessions request immediate checkpoints. Screen changes are persisted immediately, with the pre-travel screen key retained during travel as before. Hidden visibility, pagehide, beforeunload and React cleanup synchronously flush the latest staged data.
+
+Only changed values are serialized, and equal serialized content is not rewritten. Unexpired effect arrays retain their reference. Reset cancels staged old-run data before deleting old keys; it then saves the new run normally. Failed writes stay pending and retry; an actual storage failure displays a warning that clears after a successful retry. Healthy checkpoints do not introduce additional state renders.
+
+Tests show two frequently changing keys use eight writes instead of forty over twenty ticks, while unchanged history is not serialized again. The integrated App also uses eight writes over twenty idle ticks. Tests cover background/exit flushes, travel reload, pending-reset cancellation, failure/retry, and existing sleep/phone/shelter restoration scenarios. Tests that inspect deferred progress first trigger a lifecycle flush rather than assume every tick reaches localStorage immediately. Browser/process termination without an exit event can lose roughly the last five real seconds of ordinary progress; storage failures can prolong this window. No real-device lifecycle or FPS claim is made.
 
 ### Interface rendering (v153)
 

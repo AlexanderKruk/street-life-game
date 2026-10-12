@@ -15,8 +15,9 @@ import { StreetArt, LocationSummary, ShopHero, TravelHeading, SleepHeading } fro
 import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
+import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.12-153'
+const BUILD_VERSION = 'v2026.10.12-154'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -301,10 +302,6 @@ function overallStatus(game: GameState) {
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame)
   const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(loadPhoneActivity)
-  useEffect(() => {
-    if (phoneActivity) localStorage.setItem(PHONE_ACTIVITY_KEY, JSON.stringify(phoneActivity))
-    else localStorage.removeItem(PHONE_ACTIVITY_KEY)
-  }, [phoneActivity])
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
   const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean } | null>(null)
@@ -332,7 +329,6 @@ export default function App() {
     } catch { return [] }
   })
   const lastRecordedResult = useRef<unknown>(null)
-  useEffect(() => { localStorage.setItem(JOURNAL_HISTORY_KEY, JSON.stringify(journalEntries)) }, [journalEntries])
   const [journalGoals, setJournalGoals] = useState<JournalGoals>(() => {
     try {
       const raw = JSON.parse(localStorage.getItem(JOURNAL_GOALS_KEY) ?? '{}')
@@ -358,12 +354,9 @@ export default function App() {
   const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => {
     try { const saved = JSON.parse(localStorage.getItem('street-life-answers-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
   })
-  useEffect(() => { localStorage.setItem('street-life-answers-v1', JSON.stringify(answeredQuestions)) }, [answeredQuestions])
   const [seenMemories, setSeenMemories] = useState<string[]>(() => {
     try { const saved = JSON.parse(localStorage.getItem('street-life-memories-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
   })
-  useEffect(() => { localStorage.setItem('street-life-memories-v1', JSON.stringify(seenMemories)) }, [seenMemories])
-  useEffect(() => { localStorage.setItem('street-life-rain-choice-v1', String(rainChoice)) }, [rainChoice])
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const [musicOn, setMusicOn] = useState(false)
@@ -490,7 +483,6 @@ export default function App() {
       return goals.every(goal => previous[goal.id] === next[goal.id]) ? previous : next
     })
   }, [game.day, game.minutes, game.health, life.housing, life.shelterUntilDay, life.schroniskoReferral, life.employment, current.id, open, trip])
-  useEffect(() => { localStorage.setItem(JOURNAL_GOALS_KEY, JSON.stringify(journalGoals)) }, [journalGoals])
   useEffect(() => {
     if (!activeGoal) return
     if ((life.shelterUntilDay ?? 0) >= game.day || life.housing === 'Schronisko' ||
@@ -636,18 +628,6 @@ export default function App() {
   function smokeCigarette(...args: Parameters<typeof smokeCigaretteImpl>) { runWithResult('Smoke a cigarette', () => smokeCigaretteImpl(...args)) }
   function useItem(...args: Parameters<typeof useItemImpl>) { runWithResult(args[0] === 'water' ? 'Drink water' : 'Eat food', () => useItemImpl(...args)) }
 
-  useEffect(() => { localStorage.setItem('street-life-begging-v1', JSON.stringify(begging)) }, [begging])
-  useEffect(() => { localStorage.setItem(SAVE_KEY, JSON.stringify(game)) }, [game])
-  useEffect(() => { localStorage.setItem(DISCOVERY_KEY, JSON.stringify(discoveredLocations)) }, [discoveredLocations])
-  useEffect(() => { if (activeGoal) localStorage.setItem(GOAL_KEY, JSON.stringify(activeGoal)); else localStorage.removeItem(GOAL_KEY) }, [activeGoal])
-  useEffect(() => { localStorage.setItem('street-life-inventory-v1', JSON.stringify(inventory)) }, [inventory])
-  useEffect(() => {
-    if (screen !== 'travel') localStorage.setItem('street-life-screen', screen)
-  }, [screen])
-
-  useEffect(() => { localStorage.setItem('street-life-mobile-service-until', String(mobileServiceUntil)) }, [mobileServiceUntil])
-  useEffect(() => { localStorage.setItem('street-life-mobile-auto-renew', String(mobileAutoRenew)) }, [mobileAutoRenew])
-  useEffect(() => { localStorage.setItem('street-life-mobile-renewed-day', String(mobileRenewedDay)) }, [mobileRenewedDay])
   useEffect(() => {
     if (!mobileAutoRenew || mobileServiceUntil > absoluteMinutes(game) || mobileRenewedDay >= game.day) return
     setMobileRenewedDay(game.day)
@@ -659,21 +639,10 @@ export default function App() {
     setMobileServiceUntil(until => Math.max(until, absoluteMinutes(game)) + 1440)
   }, [game.day, game.minutes, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
   useEffect(() => { if (!mobileServiceActive) { setMusicOn(false); setNavigationOn(false) } }, [mobileServiceActive])
-  useEffect(() => { localStorage.setItem('street-life-storage-v1', JSON.stringify(storage)) }, [storage])
-  useEffect(() => { localStorage.setItem('street-life-effects-v1', JSON.stringify(effects)) }, [effects])
-  useEffect(() => { localStorage.setItem('street-life-situation-v1', JSON.stringify(life)) }, [life])
   useEffect(() => {
     if (current.id !== 'shelter' || life.shelterVacancyDay === game.day) return
     setLife(status => ({ ...status, shelterVacancyDay: game.day, shelterVacancies: Math.floor(Math.random() * 4) }))
   }, [current.id, game.day, life.shelterVacancyDay])
-  useEffect(() => {
-    if (shelterQueue) localStorage.setItem('street-life-shelter-queue-v1', JSON.stringify(shelterQueue))
-    else localStorage.removeItem('street-life-shelter-queue-v1')
-  }, [shelterQueue])
-  useEffect(() => {
-    if (shelterDeparture) localStorage.setItem('street-life-shelter-departure-v1', JSON.stringify(shelterDeparture))
-    else localStorage.removeItem('street-life-shelter-departure-v1')
-  }, [shelterDeparture])
 
   useEffect(() => {
     if (!shelterDeparture || shelterDepartureRemaining > 0 || gameOver) return
@@ -718,8 +687,6 @@ export default function App() {
       setScreen('location')
     }, queued.before, true, true)
   }, [shelterQueue, gameOver])
-  useEffect(() => { if (trip) localStorage.setItem('street-life-trip-v1', JSON.stringify(trip)); else localStorage.removeItem('street-life-trip-v1') }, [trip])
-  useEffect(() => { if (sleeping) localStorage.setItem('street-life-sleep-v1', JSON.stringify(sleeping)); else localStorage.removeItem('street-life-sleep-v1') }, [sleeping])
   useEffect(() => {
     if (life.housing === 'Night shelter' && life.housingUntil !== undefined && absoluteMinutes(game) >= life.housingUntil) {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
@@ -727,7 +694,7 @@ export default function App() {
   }, [game.day, game.minutes, life.housing, life.housingUntil])
   useEffect(() => {
     const now = absoluteMinutes(game)
-    setEffects((prev) => prev.filter((effect) => effect.expiresAt > now))
+    setEffects((prev) => { const next = prev.filter((effect) => effect.expiresAt > now); return next.length === prev.length ? prev : next })
   }, [game.day, game.minutes])
   useEffect(() => {
     if (!life.shelterRegisteredDay || !life.shelterUntilDay) return
@@ -1817,6 +1784,7 @@ export default function App() {
   }
 
   function reset() {
+    autosave.resetPending()
     localStorage.removeItem(SAVE_KEY)
     localStorage.removeItem(DISCOVERY_KEY)
     setDiscoveredLocations(['street', 'station', 'shop'])
@@ -1882,6 +1850,36 @@ export default function App() {
 
   const nav = (target: Screen, icon: IconName, label: string) =>
     <button disabled={!!phoneActivity} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
+
+  const autosave = useGameAutosave({
+    [SAVE_KEY]: game,
+    [DISCOVERY_KEY]: discoveredLocations,
+    [GOAL_KEY]: activeGoal,
+    [JOURNAL_GOALS_KEY]: journalGoals,
+    [JOURNAL_HISTORY_KEY]: journalEntries,
+    [PHONE_ACTIVITY_KEY]: phoneActivity,
+    'street-life-inventory-v1': inventory,
+    'street-life-storage-v1': storage,
+    'street-life-effects-v1': effects,
+    'street-life-situation-v1': life,
+    'street-life-begging-v1': begging,
+    'street-life-answers-v1': answeredQuestions,
+    'street-life-memories-v1': seenMemories,
+    'street-life-rain-choice-v1': rainChoice,
+    'street-life-screen': screen === 'travel' ? undefined : screen,
+    'street-life-mobile-service-until': mobileServiceUntil,
+    'street-life-mobile-auto-renew': mobileAutoRenew,
+    'street-life-mobile-renewed-day': mobileRenewedDay,
+    'street-life-trip-v1': trip,
+    'street-life-sleep-v1': sleeping,
+    'street-life-shelter-queue-v1': shelterQueue,
+    'street-life-shelter-departure-v1': shelterDeparture,
+  }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
+    discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories,
+    rainChoice, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
+    game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture,
+    phoneActivity?.questionId ?? null, infoModal,
+  ])
 
   const backpackItems: { art: ItemArtId; name: string; count: number; stackSize: number; effects: string[]; hint: string; onUse?: () => void; disabled?: boolean }[] = [
     { art: 'water', name: 'Water', count: inventory.water, stackSize: STACK_SIZE, effects: ['Thirst+++'], hint: 'tap to drink', onUse: () => useItem('water') },
@@ -2282,6 +2280,7 @@ export default function App() {
       </section>
     </div>}
 
+    {autosave.saveFailed && <p role="alert" className="save-warning">Progress could not be saved on this device. Keep the game open and try again.</p>}
     <footer><button className="reset" onClick={reset}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}

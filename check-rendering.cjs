@@ -28,8 +28,9 @@ function setup(App, screenName, state = {}, extras = {}) {
   for (const [key, value] of Object.entries(extras)) localStorage.setItem(key, JSON.stringify(value));
   render(React.createElement(App)); clearCounts();
 }
-function advance(ticks) {
+function advance(ticks, flush = true) {
   for (let i = 0; i < ticks; i++) { now += 1000; act(() => { for (const fn of [...timers.values()]) fn(); }); }
+  if (flush) fireEvent(window, new window.Event('pagehide'));
 }
 async function loadApp(disableMemo) {
   const result = await build({
@@ -173,8 +174,46 @@ function measure(App) {
   clearCounts(); pointer('pointerdown', 120, 120); pointer('pointermove', 220, 220); pointer('pointerup', 220, 220);
   assert.equal(count('StreetArt'), 0);
   modalAudit.push({ name: 'trash drag', renders: counts() });
+  // Measure actual App storage writes without forcing a checkpoint after every tick.
+  setup(App, 'inventory', {}, { 'street-life-mobile-auto-renew': false });
+  const nativeSet = window.Storage.prototype.setItem;
+  const storageWrites = [];
+  window.Storage.prototype.setItem = function (key, value) { storageWrites.push(key); return nativeSet.call(this, key, value); };
+  advance(20, false);
+  const periodicWrites = storageWrites.length;
+  assert(periodicWrites <= 10, 'actual game ticks batch frequent writes');
+  assert(!storageWrites.includes('street-life-journal-history-v1'), 'unchanged history is not rewritten');
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  fireEvent(document, new window.Event('visibilitychange'));
+  assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).minutes, 520, 'backgrounding flushes the latest game state');
+  assert(JSON.parse(localStorage.getItem('street-life-inventory-v1')).clothingCleanliness < 80, 'inventory aging is saved with the game');
+  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  fireEvent(document, new window.Event('visibilitychange'));
+  window.Storage.prototype.setItem = nativeSet;
+  setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 } });
+  advance(3, false); fireEvent(window, new window.Event('pagehide'));
+  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 210);
+  cleanup(); render(React.createElement(App));
+  assert(document.querySelector('.travel-screen'));
+  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 210, 'travel resumes from lifecycle save');
+  advance(1, false); fireEvent(window, new window.Event('beforeunload'));
+  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 200);
+  fireEvent.click(screen.getByRole('button', { name: 'Reset save' }));
+  advance(10, false); fireEvent(window, new window.Event('pagehide'));
+  assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).locationId, 'street');
+  assert(!localStorage.getItem('street-life-trip-v1'), 'pending old travel never returns after reset');
+  setup(App, 'inventory');
+  act(() => global.__auditSetters.setGame(previous => ({ ...previous, money: 71 })));
+  window.Storage.prototype.setItem = function () { throw new Error('Quota'); };
+  fireEvent(window, new window.Event('pagehide'));
+  assert(document.querySelector('.save-warning'), 'storage failure is visible');
+  window.Storage.prototype.setItem = nativeSet;
+  advance(5, false); fireEvent(window, new window.Event('pagehide'));
+  assert(!document.querySelector('.save-warning'), 'successful retry clears the warning');
+  assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).money, 71);
   cleanup(); dom.window.close();
   console.log(JSON.stringify({ renderComparison: { ticks: { mainScreens: 10, phoneSearch: 3, sleep: 3 }, withoutMemo: before, withMemo: after } }));
   console.log('PASS: static blocks skip tick renders; clock, map closing/selection, goal completion and journal day changes remain live.');
   console.log(JSON.stringify({ locationAudit, modalAudit }));
+  console.log(`PASS: actual App used ${periodicWrites} writes in twenty idle ticks; hidden/pagehide/beforeunload flush, travel reload, reset and storage-error retry.`);
 })().catch(error => { console.error(error); cleanup(); dom.window.close(); process.exitCode = 1; });

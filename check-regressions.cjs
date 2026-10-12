@@ -34,7 +34,7 @@ function click(name){const dialog=screen.queryByRole('dialog');const target=dial
 function chooseHours(hours){fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));}
 function beginSleep(name,hours){click(name);if(hours!==undefined)chooseHours(hours);click('Start sleeping');}
 function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Got it',exact:true}));}
-function advance(ms){for(let t=0;t<ms;t+=1000){now+=1000;act(()=>{for(const{fn}of [...callbacks.values()])fn()})}}
+function advance(ms){for(let t=0;t<ms;t+=1000){now+=1000;act(()=>{for(const{fn}of [...callbacks.values()])fn()})}fireEvent(window,new window.Event('pagehide'))}
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 
 // Phone work consumes one game minute per second, resumes, pauses in background,
