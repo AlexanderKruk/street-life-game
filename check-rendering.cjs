@@ -61,6 +61,11 @@ function measure(App) {
   setup(App, 'location'); advance(10); output.location = counts();
   setup(App, 'location', { locationId: 'shop' }); advance(10); output.shop = counts();
   setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 } });
+  assert(screen.getByRole('dialog', { name: 'Time on the way' }).contains(document.querySelector('.travel-walker')));
+  assert(document.querySelector('.map-surface[inert] .district-map'), 'walking keeps the map underneath');
+  assert(!screen.queryByRole('region', { name: 'City map' }), 'background map is hidden from assistive technology');
+  assert([...document.querySelectorAll('.bottom-nav button')].every(button => button.disabled));
+  assert.equal(document.body.style.overflow, 'hidden');
   const initialElapsed = document.querySelector('.travel-elapsed').textContent;
   advance(10); output.travel = counts();
   assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
@@ -283,6 +288,7 @@ function measure(App) {
   assert(document.querySelector('.travel-screen'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 210, 'travel resumes from lifecycle save');
   assert.equal(document.querySelector('.travel-elapsed').textContent, '30m', 'elapsed time survives reload');
+  assert(document.querySelector('.map-surface[inert] .district-map'), 'reload restores the map behind the travel dialog');
   advance(1, false); fireEvent(window, new window.Event('beforeunload'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 200);
   fireEvent.click(screen.getByRole('button', { name: 'Reset save' }));

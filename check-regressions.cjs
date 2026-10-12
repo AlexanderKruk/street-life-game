@@ -188,7 +188,9 @@ assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),60
 // A paid trip resumes from remaining time with its original result snapshot.
 setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
 cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);
+assert(screen.getByRole('dialog',{name:'Time on the way'}).contains(document.querySelector('.travel-bus')));assert(document.querySelector('.map-surface[inert] .district-map'));
 advance(3000);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
+assert(!document.querySelector('.travel-overlay'));assert(!document.querySelector('.map-surface'));assert.equal(localStorage.getItem('street-life-screen'),'location');ok();assert.equal(document.body.style.overflow,'');
 
 // A valid transit card or an unexpired free-transit grant removes fare
 // dodging and allows normal public transport without spending money.

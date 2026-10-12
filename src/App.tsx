@@ -17,7 +17,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.12-157'
+const BUILD_VERSION = 'v2026.10.12-158'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -359,6 +359,14 @@ export default function App() {
   })
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
+  const travelModalRef = useRef<HTMLElement>(null)
+  const travelling = screen === 'travel' && !!trip
+  useEffect(() => {
+    if (!travelling) return
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = overflow }
+  }, [travelling])
   const [musicOn, setMusicOn] = useState(false)
   const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
   const [mobileAutoRenew, setMobileAutoRenew] = useState<boolean>(() => localStorage.getItem('street-life-mobile-auto-renew') !== 'false')
@@ -494,6 +502,8 @@ export default function App() {
   }, [activeGoal, game.day, game.minutes, current.id, trip, life.shelterUntilDay, life.housing])
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
+  const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
+  useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
   const shelterCheckoutDue = current.id === 'shelter' && !shelterDeparture && !trip &&
     life.shelterCheckoutDay !== game.day && game.minutes >= SHELTER_CHECKOUT_WARNING && game.minutes < 12 * 60 &&
     (game.minutes < 8 * 60 || life.shelterLastStayDay === game.day - 1)
@@ -1850,7 +1860,7 @@ export default function App() {
   }
 
   const nav = (target: Screen, icon: IconName, label: string) =>
-    <button disabled={!!phoneActivity} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
+    <button disabled={!!phoneActivity || travelling} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
 
   const autosave = useGameAutosave({
     [SAVE_KEY]: game,
@@ -2075,18 +2085,18 @@ export default function App() {
     </>}
 
 
-    {screen === 'map' && <CityMap
+    {(screen === 'map' || travelling) && <div className="map-surface" inert={travelling} aria-hidden={travelling || undefined}><CityMap
       places={mapPlaces}
-      currentId={game.locationId} minutes={game.minutes} reservedBed={shelterBooked} routeId={selectedDestination} onRoute={chooseDestination}
-    />}
+      currentId={game.locationId} minutes={game.minutes} reservedBed={shelterBooked} routeId={travelling ? trip!.destinationId : selectedDestination} onRoute={chooseDestination}
+    /></div>}
 
     {screen === 'travel' && trip && (() => {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const elapsed = Math.max(0, trip.total - trip.remaining)
-      return <section className="travel-screen" aria-label="Time on the way">
+      return <div className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><section className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
         <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} />
         <div className="travel-elapsed" aria-label="Elapsed travel time"><Icon name="clock" /><strong>{formatTravelTime(elapsed)}</strong></div>
-      </section>
+      </section></div>
     })()}
 
     {selectedDestination && screen === 'map' && (() => {
@@ -2280,12 +2290,12 @@ export default function App() {
     </div>}
 
     {autosave.saveFailed && <p role="alert" className="save-warning">Progress could not be saved on this device. Keep the game open and try again.</p>}
-    <footer><button className="reset" onClick={reset}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
+    <footer inert={travelling}><button className="reset" onClick={reset}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
-      <button disabled={!!phoneActivity} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
-      <button disabled={!!phoneActivity} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
+      <button disabled={!!phoneActivity || travelling} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
+      <button disabled={!!phoneActivity || travelling} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
       {nav('journal', 'journal', 'Journal')}
     </nav>
   </main>

@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-157`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-158`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Travel over the map (v158)
+
+Active walking and bus trips now display the v157 card as a fixed dialog centered horizontally and vertically in the viewport over the city map. The backdrop dims and blurs the map, with the destination route still selected beneath it. The background map and footer are inert, all navigation buttons are disabled, and page scrolling is locked until the trip ends. Reloading a trip restores the same map/dialog composition and elapsed time. Existing result, dice and street-event overlays appear above the travel dialog; it is hidden from assistive technology while these interruptions are present. Arrival removes the travel overlay and map, opens the destination's location screen, and retains the existing arrival result.
+
+Validation covers walking and paid bus map/dialog composition, disabled navigation, hidden background semantics, elapsed-time restoration, arrival cleanup and scroll unlocking. Production build passed; browser visual QA remains unavailable for this revision.
 
 ### Compact travel card (v157)
 
