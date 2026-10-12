@@ -17,7 +17,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.12-158'
+const BUILD_VERSION = 'v2026.10.12-159'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -2111,7 +2111,7 @@ export default function App() {
           <Icon name="walk" /><div><strong>Walk</strong><small>{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
         <button className="travel-option" onClick={() => startTravel('transit')} disabled={!freeTransitActive && game.money < 4.4}>
-          <Icon name="station" /><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
+          <Icon name="bus" /><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
         </button>
         {!freeTransitActive && <button className="travel-option" onClick={attemptFareDodge}>
           <Icon name="coins" /><div><strong>Ride without ticket</strong><small>{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
