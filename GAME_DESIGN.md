@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-161`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-162`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Compact phone browsing dialog (v162)
+
+Phone information searches now use the approved compact travel-style card, centered over the dimmed and blurred original location screen. The card shows a large sand-colored phone with a globe and three pulsing dots, a Browsing label, the current search phase, and a clock with elapsed game time directly below the phase. The old illustration-specific browsing screen, progress strip, expected-duration label and explanatory lower panel are removed from active browsing. The original location illustration and actions remain underneath, inert and hidden from assistive technology. Navigation and the debug footer remain unavailable during the activity; background scrolling is locked and the current scroll position is retained at search start.
+
+The search duration draw, battery consumption, hidden-tab pause, saved-session migration/resume, interruptions, completion and resulting answer remain unchanged. On completion the browsing dialog disappears and the existing result is shown. Higher-priority result/event/game-over overlays keep precedence. Static phone art remains memoized; reduced-motion preferences disable the dots. Updated regression checks cover the dialog, original background, elapsed-only display, resumed phases and cleanup.
 
 ### Mobile route spacing (v161)
 

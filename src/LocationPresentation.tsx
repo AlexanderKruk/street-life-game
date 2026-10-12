@@ -38,6 +38,14 @@ export const TravelHeading = memo(function TravelHeading({ from, to, walking }: 
   </>
 })
 
+export const PhoneSearchIcon = memo(function PhoneSearchIcon() {
+  return <div className="travel-visual phone-search-icon" aria-hidden="true">
+    <Icon name="phone" className="phone-search-outline" />
+    <Icon name="globe" className="phone-search-globe" />
+    <span className="phone-activity-symbol"><span /><span /><span /></span>
+  </div>
+})
+
 type SleepHeadingProps = { kind: 'ground' | 'bench' | 'shelter' | 'residential' }
 export const SleepHeading = memo(function SleepHeading({ kind }: SleepHeadingProps) {
   return <>

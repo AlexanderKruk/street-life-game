@@ -42,9 +42,9 @@ function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 setup({minutes:1436,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const phoneBefore=read(stateKey), batteryBefore=read(invKey).phoneBattery;Math.random=()=>0;
 fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));
-assert(document.querySelector('.phone-activity'));assert(!screen.queryByRole('dialog'));
-assert(document.querySelector('.street-art img').src.endsWith('phone-search-480.webp'));
-assert(document.querySelector('.street-art img').srcset.includes('phone-search-1400.webp 1400w'));
+assert(document.querySelector('.phone-activity'));assert(screen.getByRole('dialog',{name:'Looking for information'}));assert(document.querySelector('.location-surface[inert]'));assert.equal(document.body.style.overflow,'hidden');
+assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));
+assert(document.querySelector('.street-art img').srcset.includes('street-hero-1400.webp 1400w'));
 assert.equal(read(stateKey).minutes,1436);assert.equal(read(invKey).phoneBattery,batteryBefore);
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 advance(4000);assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,0);
@@ -57,7 +57,7 @@ Object.defineProperty(document,'visibilityState',{value:'visible',configurable:t
 // Emulate the old 30-minute save after four minutes of work.
 const oldPhoneSession=read('street-life-phone-activity-v1');localStorage.setItem('street-life-phone-activity-v1',JSON.stringify({...oldPhoneSession,remaining:26,total:undefined}));
 cleanup();render(React.createElement(App));assert(document.querySelector('.phone-activity'));assert.deepEqual(read(stateKey),partialState);assert.deepEqual(read(invKey),partialInventory);
-assert.equal(read('street-life-phone-activity-v1').remaining,6);advance(5000);assert(!screen.queryByRole('dialog'));
+assert.equal(read('street-life-phone-activity-v1').remaining,6);advance(5000);assert(screen.getByRole('dialog',{name:'Saving useful addresses'}));
 advance(1000);assert.equal(read(stateKey).minutes,6);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);
 assert(!localStorage.getItem('street-life-phone-activity-v1'));
 assert(read('street-life-discovered-v1').includes('support'));assert.equal(read('street-life-journal-history-v1').length,1);
@@ -67,7 +67,7 @@ assert(!document.querySelector('.result-consequences'));
 assert.equal(document.querySelectorAll('.result-place').length,3);assert(read('street-life-discovered-v1').includes('free-clinic'));assert(!document.querySelector('.result-details').open);
 assert(document.querySelector('.street-art img').src.endsWith('help-morning-480.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
-ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));
+ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));assert(!document.querySelector('.phone-activity-overlay'));assert.equal(document.body.style.overflow,'');
 click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(!document.querySelector('.phone-activity'));assert.deepEqual(read(stateKey),completed);
 assert.equal(document.querySelectorAll('.result-cost-line').length,0);ok();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.result-place').length,1);ok();
 // Estimates stay the same; durations vary within bounds and never reroll.
@@ -76,7 +76,7 @@ for(const [draw,duration] of [[0,10],[.999,25]]) {
  assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('≈15m'));
  fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));
  assert.equal(read('street-life-phone-activity-v1').total,duration);
- assert(!document.querySelector('[role="progressbar"]').hasAttribute('aria-valuenow'));
+ assert(!document.querySelector('[role="progressbar"]'));assert.equal(document.querySelector('.phone-activity-meta strong').textContent,'0m');
  assert(!document.querySelector('.phone-activity-meta').textContent.includes('min left'));
  const initialBattery=read(invKey).phoneBattery;advance(3000);
  cleanup();Math.random=()=>.5;render(React.createElement(App));

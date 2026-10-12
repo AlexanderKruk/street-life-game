@@ -74,7 +74,7 @@ function measure(App) {
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
   clearCounts(); advance(3); output.phoneSearch = counts();
-  assert(document.querySelector('.phone-activity-meta').textContent.includes('3 min spent'));
+  assert.equal(document.querySelector('.phone-activity-meta strong').textContent, '3m');
   setup(App, 'location', { locationId: 'station', minutes: 1380, energy: 20 });
   fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ }));
   fireEvent.click(screen.getByRole('button', { name: /^2 h/ }));
@@ -250,7 +250,7 @@ function measure(App) {
   const phoneClockIds = [...timers.keys()];
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
   assert.deepEqual([...timers.keys()], phoneClockIds, 'phone searches use the existing clock');
-  advance(3); assert(document.querySelector('.phone-activity-meta').textContent.includes('3 min spent'));
+  advance(3); assert.equal(document.querySelector('.phone-activity-meta strong').textContent, '3m');
   assert.deepEqual([...timers.keys()], phoneClockIds);
   timerAudit.push({ mode: 'phone search', activeIntervals: timers.size });
   setup(App, 'location', { minutes: 1380, energy: 20 });

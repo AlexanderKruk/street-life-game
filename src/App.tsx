@@ -11,13 +11,13 @@ import InventorySlot from './InventorySlot'
 import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
-import { StreetArt, LocationSummary, ShopHero, TravelHeading, SleepHeading } from './LocationPresentation'
+import { StreetArt, LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
 import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.12-161'
+const BUILD_VERSION = 'v2026.10.12-162'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -360,13 +360,15 @@ export default function App() {
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const travelModalRef = useRef<HTMLElement>(null)
+  const phoneSearchModalRef = useRef<HTMLElement>(null)
   const travelling = screen === 'travel' && !!trip
+  const activityOverlay = travelling || !!phoneActivity
   useEffect(() => {
-    if (!travelling) return
+    if (!activityOverlay) return
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = overflow }
-  }, [travelling])
+  }, [activityOverlay])
   const [musicOn, setMusicOn] = useState(false)
   const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
   const [mobileAutoRenew, setMobileAutoRenew] = useState<boolean>(() => localStorage.getItem('street-life-mobile-auto-renew') !== 'false')
@@ -504,6 +506,8 @@ export default function App() {
   const gameOver = game.health <= 0
   const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
   useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
+  const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
+  useEffect(() => { if (phoneSearchVisible) phoneSearchModalRef.current?.focus({ preventScroll: true }) }, [phoneSearchVisible])
   const shelterCheckoutDue = current.id === 'shelter' && !shelterDeparture && !trip &&
     life.shelterCheckoutDay !== game.day && game.minutes >= SHELTER_CHECKOUT_WARNING && game.minutes < 12 * 60 &&
     (game.minutes < 8 * 60 || life.shelterLastStayDay === game.day - 1)
@@ -1222,10 +1226,6 @@ export default function App() {
     const total = PHONE_SEARCH_MIN + Math.floor(Math.random() * (PHONE_SEARCH_MAX - PHONE_SEARCH_MIN + 1))
     setPhoneActivity({ questionId: id, total, remaining: total, before: resultSnapshot() })
   }
-
-  useEffect(() => {
-    if (phoneActivity && phoneActivity.remaining === phoneActivity.total) window.scrollTo?.({ top: 0, behavior: 'instant' })
-  }, [phoneActivity?.questionId])
 
   useEffect(() => {
     if (!phoneActivity || inventoryAgedAt !== absoluteMinutes(game)) return
@@ -1968,16 +1968,9 @@ export default function App() {
 
     {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
-    {screen === 'location' && <>
-      {current.id === 'street' && <StreetArt phone={!!phoneActivity} inline={inlineResult} illustration={infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
-      {phoneActivity ? <section className="phone-activity" aria-labelledby="phone-activity-title" aria-busy="true">
-        <div className="phone-activity-heading"><p className="eyebrow">USING YOUR PHONE</p><div className="phone-activity-symbol" aria-hidden="true"><span /><span /><span /></div></div>
-        <h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through the options' : 'Saving useful addresses'}</h2>
-        <p>{practicalQuestions.find(question => question.id === phoneActivity.questionId)?.title}<br />Checking addresses and opening hours.</p>
-        <div className="phone-activity-progress uncertain" role="progressbar" aria-label="Phone search in progress"><i /></div>
-        <div className="phone-activity-meta"><span><Icon name="clock" />{phoneActivity.total - phoneActivity.remaining} min spent</span><span>Usually about {PHONE_SEARCH_ESTIMATE} min</span></div>
-        <small>Time passes while you search.</small>
-      </section> : inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={closeResult} /> : <>
+    {screen === 'location' && <div className="location-surface" inert={!!phoneActivity} aria-hidden={!!phoneActivity || undefined}>
+      {current.id === 'street' && <StreetArt phone={false} inline={inlineResult} illustration={infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
+      {inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={closeResult} /> : <>
       {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} icon={current.icon} description={current.id === 'street' ? streetScene : current.description} open={open} opensAt={current.open} />}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       <ClosedContent closed={!open && current.id !== 'hospital' && !currentActions.some(action => actionUnavailableReason(action) === null)} opensAt={formatTime(current.open)}>
@@ -2082,7 +2075,15 @@ export default function App() {
       </>}
       </ClosedContent>
       </>}
-    </>}
+    </div>}
+
+    {phoneActivity && <div className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>
+      <section className="travel-screen phone-activity" role="dialog" aria-modal="true" aria-labelledby="phone-activity-title" aria-busy="true" tabIndex={-1} ref={phoneSearchModalRef}>
+        <PhoneSearchIcon />
+        <div className="travel-route-heading"><p>Browsing</p><h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through options' : 'Saving useful addresses'}</h2></div>
+        <div className="travel-elapsed phone-activity-meta" aria-label="Elapsed browsing time"><Icon name="clock" /><strong>{formatTravelTime(Math.max(0, phoneActivity.total - phoneActivity.remaining))}</strong></div>
+      </section>
+    </div>}
 
 
     {(screen === 'map' || travelling) && <div className="map-surface" inert={travelling} aria-hidden={travelling || undefined}><CityMap
@@ -2290,7 +2291,7 @@ export default function App() {
     </div>}
 
     {autosave.saveFailed && <p role="alert" className="save-warning">Progress could not be saved on this device. Keep the game open and try again.</p>}
-    <footer inert={travelling}><button className="reset" onClick={reset}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
+    <footer inert={activityOverlay}><button className="reset" onClick={reset}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
     <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
