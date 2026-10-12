@@ -1,0 +1,822 @@
+{
+  "longSession": {
+    "date": "2026-10-12T09:34:26.987Z",
+    "url": "https://alexanderkruk.github.io/street-life-game/",
+    "method": "Live Chromium, mobile viewport 390x844 DPR2, CPU4x. Seeded valid maximum journal (500 current-day records) and 8 occupied backpack slots. Ten real minutes, normal game clock, repeated five-screen navigation. Comparable heap/DOM samples on Station after explicit garbage collection. Not physical iPhone, battery test, or proof against all leaks.",
+    "samples": [
+      {
+        "elapsedSeconds": 0,
+        "heapUsedMiB": 4.1,
+        "dom": {
+          "documents": 1,
+          "nodes": 152,
+          "jsEventListeners": 187
+        },
+        "time": "08:02",
+        "nav": {
+          "count": 3,
+          "medianMs": 42.5,
+          "p95Ms": 221.9,
+          "maxMs": 221.9
+        },
+        "tasks": [
+          {
+            "start": 1831.6999999999534,
+            "duration": 206
+          }
+        ],
+        "writes": 8,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 61.1,
+        "heapUsedMiB": 4.5,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "09:04",
+        "nav": {
+          "count": 36,
+          "medianMs": 26.2,
+          "p95Ms": 213.9,
+          "maxMs": 222.3
+        },
+        "tasks": [
+          {
+            "start": 3332.5,
+            "duration": 194
+          },
+          {
+            "start": 13296.100000000093,
+            "duration": 210
+          },
+          {
+            "start": 23284.40000000014,
+            "duration": 201
+          },
+          {
+            "start": 33312,
+            "duration": 190
+          },
+          {
+            "start": 43277.80000000005,
+            "duration": 166
+          },
+          {
+            "start": 53280.5,
+            "duration": 165
+          },
+          {
+            "start": 63277,
+            "duration": 171
+          }
+        ],
+        "writes": 83,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 121.1,
+        "heapUsedMiB": 4.6,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "10:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 27.8,
+          "p95Ms": 223.7,
+          "maxMs": 239
+        },
+        "tasks": [
+          {
+            "start": 73293.19999999995,
+            "duration": 205
+          },
+          {
+            "start": 83277.40000000014,
+            "duration": 181
+          },
+          {
+            "start": 93308.30000000005,
+            "duration": 202
+          },
+          {
+            "start": 103341.5,
+            "duration": 220
+          },
+          {
+            "start": 113310,
+            "duration": 180
+          },
+          {
+            "start": 123290.90000000014,
+            "duration": 182
+          }
+        ],
+        "writes": 151,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 181.1,
+        "heapUsedMiB": 4.7,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "11:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 27,
+          "p95Ms": 211.1,
+          "maxMs": 212.4
+        },
+        "tasks": [
+          {
+            "start": 133311.5,
+            "duration": 196
+          },
+          {
+            "start": 143308.40000000014,
+            "duration": 188
+          },
+          {
+            "start": 153308.30000000005,
+            "duration": 181
+          },
+          {
+            "start": 163306.6000000001,
+            "duration": 165
+          },
+          {
+            "start": 173324.40000000014,
+            "duration": 191
+          },
+          {
+            "start": 183321.6000000001,
+            "duration": 178
+          }
+        ],
+        "writes": 219,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 241.2,
+        "heapUsedMiB": 5,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "12:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 27.6,
+          "p95Ms": 201.5,
+          "maxMs": 213
+        },
+        "tasks": [
+          {
+            "start": 193371.19999999995,
+            "duration": 182
+          },
+          {
+            "start": 203321.5,
+            "duration": 169
+          },
+          {
+            "start": 213337.6000000001,
+            "duration": 167
+          },
+          {
+            "start": 223354.40000000014,
+            "duration": 177
+          },
+          {
+            "start": 233352.80000000005,
+            "duration": 145
+          },
+          {
+            "start": 243370.30000000005,
+            "duration": 199
+          }
+        ],
+        "writes": 287,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 301.2,
+        "heapUsedMiB": 5,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "13:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 27.4,
+          "p95Ms": 201.2,
+          "maxMs": 204.5
+        },
+        "tasks": [
+          {
+            "start": 253387.6000000001,
+            "duration": 169
+          },
+          {
+            "start": 263368,
+            "duration": 191
+          },
+          {
+            "start": 273402.69999999995,
+            "duration": 174
+          },
+          {
+            "start": 283420.1000000001,
+            "duration": 160
+          },
+          {
+            "start": 293417.30000000005,
+            "duration": 188
+          },
+          {
+            "start": 303436.90000000014,
+            "duration": 155
+          }
+        ],
+        "writes": 355,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 361.3,
+        "heapUsedMiB": 4.8,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "14:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 27.2,
+          "p95Ms": 193,
+          "maxMs": 204.7
+        },
+        "tasks": [
+          {
+            "start": 313417.80000000005,
+            "duration": 190
+          },
+          {
+            "start": 323432.69999999995,
+            "duration": 150
+          },
+          {
+            "start": 333431.40000000014,
+            "duration": 149
+          },
+          {
+            "start": 343450.19999999995,
+            "duration": 180
+          },
+          {
+            "start": 353465.69999999995,
+            "duration": 161
+          },
+          {
+            "start": 363482,
+            "duration": 174
+          }
+        ],
+        "writes": 423,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 421.3,
+        "heapUsedMiB": 4.8,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "15:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 26.9,
+          "p95Ms": 226.7,
+          "maxMs": 242.5
+        },
+        "tasks": [
+          {
+            "start": 373550.80000000005,
+            "duration": 224
+          },
+          {
+            "start": 383481.1000000001,
+            "duration": 199
+          },
+          {
+            "start": 393513.80000000005,
+            "duration": 205
+          },
+          {
+            "start": 403513.19999999995,
+            "duration": 175
+          },
+          {
+            "start": 413514,
+            "duration": 209
+          },
+          {
+            "start": 423529.69999999995,
+            "duration": 174
+          }
+        ],
+        "writes": 489,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 481.4,
+        "heapUsedMiB": 4.8,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "16:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 26.3,
+          "p95Ms": 196.4,
+          "maxMs": 227.4
+        },
+        "tasks": [
+          {
+            "start": 433545,
+            "duration": 174
+          },
+          {
+            "start": 443546,
+            "duration": 214
+          },
+          {
+            "start": 453545.80000000005,
+            "duration": 179
+          },
+          {
+            "start": 463561.19999999995,
+            "duration": 180
+          },
+          {
+            "start": 473622.80000000005,
+            "duration": 178
+          },
+          {
+            "start": 483593.90000000014,
+            "duration": 164
+          }
+        ],
+        "writes": 551,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 541.4,
+        "heapUsedMiB": 4.9,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "17:04",
+        "nav": {
+          "count": 31,
+          "medianMs": 26.8,
+          "p95Ms": 201.1,
+          "maxMs": 204.4
+        },
+        "tasks": [
+          {
+            "start": 493626.30000000005,
+            "duration": 186
+          },
+          {
+            "start": 503593,
+            "duration": 177
+          },
+          {
+            "start": 513628.30000000005,
+            "duration": 183
+          },
+          {
+            "start": 523610.1000000001,
+            "duration": 190
+          },
+          {
+            "start": 533608,
+            "duration": 157
+          },
+          {
+            "start": 543608.8,
+            "duration": 175
+          }
+        ],
+        "writes": 607,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 600.4,
+        "heapUsedMiB": 4.9,
+        "dom": {
+          "documents": 1,
+          "nodes": 157,
+          "jsEventListeners": 187
+        },
+        "time": "18:03",
+        "nav": {
+          "count": 26,
+          "medianMs": 26.7,
+          "p95Ms": 192.9,
+          "maxMs": 196.5
+        },
+        "tasks": [
+          {
+            "start": 553640.4000000001,
+            "duration": 176
+          },
+          {
+            "start": 563642.5,
+            "duration": 178
+          },
+          {
+            "start": 573656.9000000001,
+            "duration": 168
+          },
+          {
+            "start": 583641,
+            "duration": 168
+          },
+          {
+            "start": 593689.4000000001,
+            "duration": 178
+          }
+        ],
+        "writes": 658,
+        "history": 500,
+        "scrollLocked": false
+      }
+    ],
+    "errors": [],
+    "checks": [
+      "500 displayed history records and 8/8 occupied backpack slots confirmed"
+    ],
+    "browser": "153.0.8010.0",
+    "status": "performance phase completed; follow-up selector failed in harness",
+    "failure": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.backpack-grid button').filter({ has: getByText('Water', { exact: true }) })\u001b[22m\n",
+    "performanceDurationSeconds": 600.4
+  },
+  "offlineAndReopen": {
+    "date": "2026-10-12T09:45:45.670Z",
+    "url": "https://alexanderkruk.github.io/street-life-game/",
+    "method": "Live Chromium, mobile viewport 390x844 DPR2, CPU4x. Seeded valid maximum journal (500 current-day records) and 8 occupied backpack slots. Ten real minutes, normal game clock, repeated five-screen navigation. Comparable heap/DOM samples on Station after explicit garbage collection. Not physical iPhone, battery test, or proof against all leaks.",
+    "samples": [
+      {
+        "elapsedSeconds": 0,
+        "heapUsedMiB": 4.1,
+        "dom": {
+          "documents": 1,
+          "nodes": 152,
+          "jsEventListeners": 187
+        },
+        "time": "08:02",
+        "nav": {
+          "count": 3,
+          "medianMs": 37.9,
+          "p95Ms": 226.5,
+          "maxMs": 226.5
+        },
+        "tasks": [
+          {
+            "start": 1875.8000000002794,
+            "duration": 214
+          }
+        ],
+        "writes": 8,
+        "history": 500,
+        "scrollLocked": false
+      },
+      {
+        "elapsedSeconds": 0,
+        "heapUsedMiB": 4.1,
+        "dom": {
+          "documents": 1,
+          "nodes": 153,
+          "jsEventListeners": 187
+        },
+        "time": "08:03",
+        "nav": {
+          "count": 1,
+          "medianMs": 24.6,
+          "p95Ms": 24.6,
+          "maxMs": 24.6
+        },
+        "tasks": [],
+        "writes": 10,
+        "history": 500,
+        "scrollLocked": false
+      }
+    ],
+    "errors": [],
+    "checks": [
+      "500 displayed history records and 8/8 occupied backpack slots confirmed",
+      "Offline open-app navigation and water action succeeded; action saved immediately; history retained 500 newest entries",
+      "Offline action restored after reconnect and reload",
+      "pagehide handler plus tab close/reopen restored game day/time/location"
+    ],
+    "browser": "153.0.8010.0",
+    "durationSeconds": 2.5,
+    "status": "passed"
+  },
+  "distributedHistoryAndModals": {
+    "date": "2026-10-12T09:46:27.671Z",
+    "errors": [],
+    "checks": [
+      "30 cycles of navigation, Clothing result and Phone sheet: body scroll restored; current day shows 25 of 500 records distributed over 20 days",
+      "Synthetic hidden/visible signals: latest state flushed, ordinary clock paused while hidden and resumed when visible",
+      "Simulated quota error displayed save warning; restoring storage allowed retry to save the action and clear the warning"
+    ],
+    "memory": [
+      {
+        "round": 0,
+        "heapUsedMiB": 3.3251914978027344,
+        "dom": {
+          "documents": 1,
+          "nodes": 153,
+          "jsEventListeners": 188
+        }
+      },
+      {
+        "round": 1,
+        "heapUsedMiB": 4.631130218505859,
+        "dom": {
+          "documents": 1,
+          "nodes": 159,
+          "jsEventListeners": 188
+        }
+      },
+      {
+        "round": 2,
+        "heapUsedMiB": 4.726276397705078,
+        "dom": {
+          "documents": 1,
+          "nodes": 159,
+          "jsEventListeners": 188
+        }
+      },
+      {
+        "round": 3,
+        "heapUsedMiB": 4.794193267822266,
+        "dom": {
+          "documents": 1,
+          "nodes": 159,
+          "jsEventListeners": 188
+        }
+      }
+    ],
+    "navigationMs": [
+      14.299999999813735,
+      28.40000000037253,
+      24.899999999906868,
+      34.299999999813735,
+      33.1999999997206,
+      21.299999999813735,
+      22.200000000186265,
+      20.299999999813735,
+      31.799999999813735,
+      28.199999999720603,
+      31.100000000093132,
+      31.40000000037253,
+      18,
+      26.300000000279397,
+      26,
+      21.799999999813735,
+      27.5,
+      26.600000000093132,
+      29.5,
+      25.899999999906868,
+      24.899999999906868,
+      24.299999999813735,
+      23.199999999720603,
+      25.699999999720603,
+      25.100000000093132,
+      29.5,
+      25.399999999906868,
+      26,
+      30.5,
+      25.800000000279397,
+      22.5,
+      22.700000000186265,
+      26.199999999720603,
+      24.799999999813735,
+      27.799999999813735,
+      22.699999999720603,
+      25.399999999906868,
+      25.300000000279397,
+      25.100000000093132,
+      23.199999999720603,
+      23.100000000093132,
+      26,
+      31.100000000093132,
+      26,
+      22,
+      26.100000000093132,
+      26,
+      22.600000000093132,
+      24.5,
+      24.59999999962747,
+      23.100000000093132,
+      24.799999999813735,
+      26.899999999906868,
+      23.700000000186265,
+      26,
+      21.299999999813735,
+      16.399999999906868,
+      20.5,
+      26.09999999962747,
+      24.90000000037253,
+      25,
+      25.600000000093132,
+      26,
+      27.800000000279397,
+      23.200000000186265,
+      23.300000000279397,
+      23.200000000186265,
+      25.5,
+      26.59999999962747,
+      26.40000000037253,
+      25.600000000093132,
+      24.700000000186265,
+      26.899999999906868,
+      28.700000000186265,
+      23.799999999813735,
+      25,
+      23.100000000093132,
+      26,
+      26.399999999906868,
+      25.40000000037253,
+      26.600000000093132,
+      25.699999999720603,
+      23.299999999813735,
+      19.799999999813735,
+      24,
+      26.399999999906868,
+      25.100000000093132,
+      25.399999999906868,
+      24,
+      25.5,
+      27,
+      24.899999999906868,
+      19.399999999906868,
+      28.100000000093132,
+      26.600000000093132,
+      24.899999999906868,
+      16.800000000279397,
+      24.5,
+      24.899999999906868,
+      27.399999999906868,
+      31.700000000186265,
+      24.799999999813735,
+      27.800000000279397,
+      24.700000000186265,
+      26.59999999962747,
+      26.5,
+      26.700000000186265,
+      24.100000000093132,
+      25,
+      26.200000000186265,
+      26.399999999906868,
+      26,
+      26.200000000186265,
+      26.5,
+      25.600000000093132,
+      25.399999999906868,
+      22.300000000279397,
+      19.700000000186265,
+      26.399999999906868,
+      21.5,
+      26.100000000093132,
+      25.899999999906868,
+      24.399999999906868,
+      28.399999999906868,
+      17,
+      25.899999999906868,
+      27.5,
+      17.100000000093132,
+      24.800000000279397,
+      22.700000000186265,
+      24.40000000037253,
+      25.300000000279397,
+      24,
+      24,
+      21.299999999813735,
+      31.100000000093132,
+      25.600000000093132,
+      20.100000000093132,
+      24.5,
+      23.700000000186265,
+      25.100000000093132,
+      23.700000000186265,
+      21.899999999906868,
+      24.199999999720603,
+      24.699999999720603,
+      32.89999999990687,
+      19.5,
+      25.700000000186265,
+      26.300000000279397,
+      24.5,
+      26.699999999720603,
+      22.899999999906868,
+      25.600000000093132,
+      24.100000000093132,
+      25.800000000279397
+    ],
+    "status": "passed"
+  },
+  "supplyActionsAndLifecycle": {
+    "date": "2026-10-12T09:49:18.090Z",
+    "errors": [],
+    "checks": [
+      "0 cycles of navigation, Clothing result and Phone sheet: body scroll restored; current day shows 25 of 500 records distributed over 20 days",
+      "27 real supply actions completed and saved; history stayed capped at 500 records and retained all new actions; result scroll locks cleaned up",
+      "Synthetic hidden/visible signals: latest state flushed, ordinary clock paused while hidden and resumed when visible",
+      "Simulated quota error displayed save warning; restoring storage allowed retry to save the action and clear the warning"
+    ],
+    "memory": [
+      {
+        "round": 0,
+        "heapUsedMiB": 3.3251914978027344,
+        "dom": {
+          "documents": 1,
+          "nodes": 153,
+          "jsEventListeners": 188
+        }
+      },
+      {
+        "round": 1,
+        "heapUsedMiB": 3.328632354736328,
+        "dom": {
+          "documents": 1,
+          "nodes": 153,
+          "jsEventListeners": 188
+        }
+      },
+      {
+        "round": 2,
+        "heapUsedMiB": 3.4495620727539062,
+        "dom": {
+          "documents": 1,
+          "nodes": 153,
+          "jsEventListeners": 206
+        }
+      },
+      {
+        "round": 3,
+        "heapUsedMiB": 3.3831748962402344,
+        "dom": {
+          "documents": 1,
+          "nodes": 153,
+          "jsEventListeners": 188
+        }
+      }
+    ],
+    "navigationMs": [
+      10.899999999906868,
+      24.200000000186265,
+      413.79999999981374,
+      23.100000000093132,
+      32.39999999990687
+    ],
+    "status": "passed"
+  },
+  "limitations": [
+    "Chromium mobile emulation with CPU4x, not real iPhone/Safari.",
+    "The long-session, offline/reopen and modal/action tests used separate isolated browser contexts.",
+    "Ten-minute observation does not prove absence of long-term leaks; heap values are JS heap after explicit GC, not total browser memory.",
+    "Visibility signals and storage failures were simulated; OS force-kill and hardware battery usage were not tested.",
+    "27-action pass was a correctness run alongside regression tests; its five navigation timing samples are not used for performance conclusions."
+  ]
+}
