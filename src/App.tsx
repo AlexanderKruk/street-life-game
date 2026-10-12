@@ -12,8 +12,10 @@ import ClosedContent from './ClosedContent'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 import { responsiveImageProps } from './responsiveImages'
+import { JournalGoals, JournalTimeline } from './JournalSections'
+import LifeSituation from './LifeSituation'
 
-const BUILD_VERSION = 'v2026.10.12-151'
+const BUILD_VERSION = 'v2026.10.12-152'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -346,7 +348,6 @@ export default function App() {
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [selectedJournalDay, setSelectedJournalDay] = useState<number | null>(null)
   const journalDay = Math.max(1, Math.min(selectedJournalDay ?? game.day, game.day))
-  const visibleJournalEntries = journalEntries.filter(entry => entry.day === journalDay).slice().reverse()
   useEffect(() => { if (screen !== 'journal') setSelectedJournalDay(null) }, [screen])
   const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true' && loadGame().locationId === 'street')
   const [coverPlanning, setCoverPlanning] = useState(false)
@@ -444,18 +445,19 @@ export default function App() {
   })
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const shelterBooked = (life.shelterUntilDay ?? 0) >= game.day
-  const currentActions = actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest'))
+  const currentActions = useMemo(() => actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest')), [current.id, shelterBooked])
+  const mapPlaces = useMemo(() => locations.filter(location => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko')), [discoveredLocations, life.schroniskoReferral, life.housing])
   const open = isOpen(current, game.minutes)
   const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation
   const overall = overallStatus(game)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
-  const goals = [
+  const goals = useMemo(() => [
     { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until Day 2, 12:00.' },
     { id: 'shelter' as const, title: 'Find a safe place to sleep', description: activeGoal ? `Be at Night Shelter on Day ${activeGoal.day} at ${formatTime(activeGoal.minute)} for registration. A bed is not guaranteed.` : 'Register for a shelter bed or move into Schronisko.' },
     { id: 'support' as const, title: 'Visit social support', description: 'Visit Help Center during opening hours.' },
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
-  ]
+  ], [activeGoal])
   const storyDecision = current.id === 'street' && !trip && !sleeping && !shelterQueue && !shelterDeparture && !trashGame
   const firstNight = (game.day === 1 && game.minutes >= 1320 || game.day === 2 && game.minutes < 360) && life.housing === 'Street'
   const openingScene = game.day === 1 && game.minutes < 1380
@@ -470,9 +472,9 @@ export default function App() {
     game.energy < 30 ? 'Your legs feel heavy. Rest is becoming urgent.' : game.thirst < 30 ? 'Your mouth is dry. You need something to drink.' : game.hunger < 30 ? 'You have not eaten enough. Your stomach is empty.' : '',
     shelterBooked ? 'You have a reserved shelter bed, if you can get there in time.' : discoveredLocations.includes('shelter') ? 'You know the shelter address, but a place is not guaranteed.' : 'You do not yet know where you can sleep safely.',
   ].filter(Boolean).join(' ')
-  const completedGoals = goals.filter(goal => journalGoals[goal.id])
-  const pendingGoals = goals.filter(goal => !journalGoals[goal.id])
-    .sort((a, b) => Number(!!activeGoal && b.id === 'shelter') - Number(!!activeGoal && a.id === 'shelter'))
+  const completedGoals = useMemo(() => goals.filter(goal => journalGoals[goal.id]), [goals, journalGoals])
+  const pendingGoals = useMemo(() => goals.filter(goal => !journalGoals[goal.id])
+    .sort((a, b) => Number(!!activeGoal && b.id === 'shelter') - Number(!!activeGoal && a.id === 'shelter')), [goals, journalGoals, activeGoal])
   useEffect(() => {
     setJournalGoals(previous => {
       const next = {
@@ -2074,7 +2076,7 @@ export default function App() {
 
 
     {screen === 'map' && <CityMap
-      places={locations.filter(location => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko'))}
+      places={mapPlaces}
       currentId={game.locationId} minutes={game.minutes} reservedBed={shelterBooked} routeId={selectedDestination} onRoute={chooseDestination}
     />}
 
@@ -2166,34 +2168,12 @@ export default function App() {
       <div className="status-needs" aria-label="Other condition indicators">
         {statusNeeds.filter(need => need.id !== focusedNeed.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} />)}
       </div>
-      <div className="life-heading"><h3>Life situation</h3></div>
-      <div className="life-situation">
-        <div className="life-card"><Icon name="house" /><span>Housing</span><strong>{life.housing}</strong></div>
-        <div className="life-card"><Icon name="work" /><span>Employment</span><strong>{life.employment}</strong></div>
-        <div className="life-card"><Icon name="banknote" /><span>Income</span><strong>{life.income}</strong></div>
-        <div className="life-card"><Icon name="documents" /><span>Documents</span><strong>{inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'}</strong></div>
-      </div>
+      <LifeSituation housing={life.housing} employment={life.employment} income={life.income} documents={inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'} />
     </section>}
     {screen === 'journal' && <section className="journal-screen">
       <div className="journal-heading"><h2>Journal</h2></div>
 
-      <section className="journal-goals" aria-labelledby="journal-goals-heading">
-        <div className="journal-section-title"><h3 id="journal-goals-heading">Goals</h3><span aria-label={`${pendingGoals.length} incomplete goals`}>{pendingGoals.length}</span></div>
-        <ul className="goal-list" aria-label="Goals ordered by priority">
-          {pendingGoals.map((goal, index) => <li className={index === 0 ? 'goal main-goal' : 'goal'} key={goal.id}>
-            <span className="goal-marker" aria-label={index === 0 ? 'Main goal, not completed' : 'Not completed'} /><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
-          </li>)}
-        </ul>
-        {!pendingGoals.length && <p className="empty">All starting goals completed.</p>}
-        {!!completedGoals.length && <details className="completed-goals">
-          <summary><h3>Completed</h3><span aria-label={`${completedGoals.length} completed goals`}>{completedGoals.length}</span><Icon name="chevron-down" /></summary>
-          <ul className="goal-list" aria-label="Completed goals">
-            {completedGoals.map(goal => <li className="goal done" key={goal.id}>
-              <span className="goal-marker" aria-label="Completed"><Icon name="check" /></span><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
-            </li>)}
-          </ul>
-        </details>}
-      </section>
+      <JournalGoals pending={pendingGoals} completed={completedGoals} />
 
       <section className="journal-history" aria-labelledby="journal-day-heading">
         <div className="journal-day-switch" role="group" aria-label="Journal day">
@@ -2201,13 +2181,7 @@ export default function App() {
           <h3 id="journal-day-heading" aria-live="polite">Day {journalDay} · {weekday(journalDay)}</h3>
           <button type="button" aria-label="Next day" disabled={journalDay >= game.day} onClick={() => setSelectedJournalDay(journalDay + 1 === game.day ? null : journalDay + 1)}><Icon name="chevron-right" /></button>
         </div>
-        <ol className="timeline" aria-label={`Day ${journalDay} history`}>
-          {visibleJournalEntries.map((entry, index) => <li className="timeline-entry" key={`${entry.day}-${entry.minute}-${index}`}>
-            <time dateTime={formatTime(entry.minute)}>{formatTime(entry.minute)}</time><span className="timeline-marker" aria-hidden="true" />
-            <div><strong>{entry.title}</strong>{entry.text && <p className="journal-thought">{entry.text}</p>}</div>
-          </li>)}
-        </ol>
-        {!visibleJournalEntries.length && <p className="empty">{journalDay === game.day ? 'No recorded actions today yet.' : 'No recorded actions on this day.'}</p>}
+        <JournalTimeline entries={journalEntries} day={journalDay} today={journalDay === game.day} />
       </section>
     </section>}
 

@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-151`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-152`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting.
+
+### Interface rendering (v152)
+
+Journal goals, journal timeline, life-situation rows, item illustrations and the illustrated map scene use shallow React memo boundaries with stable inputs. Goal ordering and visible map places are memoized by their actual source data; timeline filtering only runs when history or the selected day changes. Map scene inputs include opening-state flags instead of the ticking minute, so open/closed labels still update at boundaries while unchanged pins and the illustration skip renders. Selection uses the stable state setter; the route card keeps the current action callback. Clocks, needs, action availability and gameplay continue updating normally. Saving and timer behavior are unchanged.
+
+check-rendering.cjs counts component invocations during ten simulated game ticks, comparing the same code with these memo boundaries enabled and disabled. With unchanged relevant data, goals/timeline/map scene/life situation each skip 20 invocations, while seven item illustrations skip 140 combined invocations. Tests also verify the clock advances and map closing, map selection, goal completion and journal-day switching still update. These counts demonstrate avoided React work, not a measured FPS or whole-application speedup.
 
 ### Responsive images and caching (v151)
 

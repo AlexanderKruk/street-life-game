@@ -1,4 +1,5 @@
 import { spriteImageSet } from './responsiveImages'
+import { memo } from 'react'
 
 const positions = {
   water: '0% 0%', food: '100% 0%', bread: '0% 33.333333%', cannedFood: '100% 33.333333%',
@@ -9,10 +10,10 @@ const positions = {
 export type ItemArtId = keyof typeof positions
 const equipment = new Set<ItemArtId>(['phone', 'clothing', 'documents', 'transitCard', 'bottles', 'empty'])
 
-export default function ItemArt({ id, className = 'inventory-art' }: { id: ItemArtId; className?: string }) {
+export default memo(function ItemArt({ id, className = 'inventory-art' }: { id: ItemArtId; className?: string }) {
   const essentials = equipment.has(id)
   return <span className={className} aria-hidden="true" style={{
     backgroundImage: spriteImageSet(essentials ? 'inventory-equipment' : 'shop-products'),
     backgroundPosition: positions[id], backgroundSize: essentials ? '200% 300%' : '200% 400%',
   }} />
-}
+})
