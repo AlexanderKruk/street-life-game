@@ -253,6 +253,12 @@ button.inventory-item { width:100%; }
 .timeline-entry:last-child > div { padding-bottom:0; }
 .timeline-entry strong { display:block; font-size:17px; font-weight:650; line-height:1.35; overflow-wrap:anywhere; }
 .journal-thought { margin:6px 0 0; color:#969fa9; font-size:16px; line-height:1.5; overflow-wrap:anywhere; }
+.journal-load-more { margin-top:24px; text-align:center; overflow-anchor:none; }
+.journal-load-more button { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:48px; padding:12px 16px; border:1.5px solid #59616a; border-radius:12px; background:#171d23; color:#d4b48d; font:inherit; font-size:15px; font-weight:650; cursor:pointer; }
+.journal-load-more button:hover { background:#242c34; border-color:#d4b48d; }
+.journal-load-more button:focus-visible { outline:2px solid #d4b48d; outline-offset:3px; }
+.journal-load-more svg { width:20px; height:20px; flex-shrink:0; }
+.journal-load-more p { margin:10px 0 0; color:#969fa9; font-size:13px; line-height:1.5; }
 @media(max-width:360px) { .timeline-entry { grid-template-columns:38px 12px minmax(0,1fr); gap:9px; } }
 /* Temporary status effects */
 .effects-heading { display:flex; justify-content:space-between; align-items:center; margin:20px 2px 9px; }

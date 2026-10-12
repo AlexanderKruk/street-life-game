@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-12T10:08:32.583Z",
+  "method": "Two local production builds, isolated profiles, 390x844 DPR2, CPU4x; five Journal openings per build. Click to second animation frame, not INP. Local asset delivery excludes internet loading time.",
+  "results": [
+    {
+      "name": "before",
+      "build": "v155",
+      "samplesMs": [
+        309.70000000018626,
+        321.3000000002794,
+        228.89999999990687,
+        287.6999999997206,
+        176.8000000002794
+      ],
+      "medianMs": 287.6999999997206,
+      "maxMs": 321.3000000002794,
+      "longTasks": [
+        [
+          285
+        ],
+        [
+          295
+        ],
+        [
+          212
+        ],
+        [
+          277
+        ],
+        [
+          165
+        ]
+      ],
+      "stationHeapMiB": 3.8215789794921875
+    },
+    {
+      "name": "after",
+      "build": "v156",
+      "samplesMs": [
+        39.39999999990687,
+        26,
+        24.5,
+        34.799999999813735,
+        28.700000000186265
+      ],
+      "medianMs": 28.700000000186265,
+      "maxMs": 39.39999999990687,
+      "longTasks": [
+        [],
+        [],
+        [],
+        [],
+        []
+      ],
+      "stationHeapMiB": 3.772907257080078,
+      "appendScrollDeltaPx": 0,
+      "checks": [
+        "30 initial rows; 60 after first batch; all 500 accessible in correct order without duplicates",
+        "Day switching resets batches, empty day has no load button",
+        "Saved history stays 500; no desktop overflow; append preserves mobile scroll"
+      ]
+    }
+  ],
+  "errors": [],
+  "browser": "153.0.8010.0",
+  "status": "passed"
+}

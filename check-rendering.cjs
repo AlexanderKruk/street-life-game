@@ -99,6 +99,46 @@ function measure(App) {
   ] });
   fireEvent.click(screen.getByRole('button', { name: 'Previous day' }));
   assert.equal(count('JournalTimeline'), 1); assert(screen.getByText('First thought')); assert(!screen.queryByText('Second thought'));
+  // Large histories load in batches without changing saved records or day navigation.
+  const history = [1, 2].flatMap(day => Array.from({ length: 250 }, (_, index) => ({
+    day, minute: index, title: `History ${day}-${index}`, text: `Thought ${day}-${index}`, reflection: true,
+  })));
+  setup(App, 'journal', { day: 2 }, { 'street-life-journal-history-v1': history });
+  const historyTitles = () => [...document.querySelectorAll('.timeline-entry strong')].map(node => node.textContent);
+  assert.equal(historyTitles().length, 30);
+  assert.equal(historyTitles()[0], 'History 2-249');
+  assert.equal(historyTitles().at(-1), 'History 2-220');
+  const savedHistory = localStorage.getItem('street-life-journal-history-v1');
+  fireEvent.click(screen.getByRole('button', { name: 'Show older entries' }));
+  assert.equal(historyTitles().length, 60);
+  assert.equal(historyTitles().at(-1), 'History 2-190');
+  advance(3);
+  assert.equal(historyTitles().length, 60, 'clock ticks preserve expanded history');
+  for (let i = 0; i < 7; i++) fireEvent.click(screen.getByRole('button', { name: 'Show older entries' }));
+  assert.deepEqual(historyTitles(), Array.from({ length: 250 }, (_, i) => `History 2-${249 - i}`));
+  assert(!screen.queryByRole('button', { name: 'Show older entries' }));
+  assert(screen.getByText('Showing 250 of 250 entries'));
+  assert.equal(localStorage.getItem('street-life-journal-history-v1'), savedHistory, 'reading does not modify saved history');
+  fireEvent.click(screen.getByRole('button', { name: 'Previous day' }));
+  assert.equal(historyTitles().length, 30); assert.equal(historyTitles()[0], 'History 1-249');
+  fireEvent.click(screen.getByRole('button', { name: 'Show older entries' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
+  assert.equal(historyTitles().length, 30); assert.equal(historyTitles()[0], 'History 2-249');
+  fireEvent.click(screen.getByRole('button', { name: 'Show older entries' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Inventory', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: /^Water ×/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Journal', exact: true }));
+  assert.equal(historyTitles().length, 30, 'reopening starts with recent entries');
+  assert.equal(historyTitles()[0], 'Drank water', 'new action appears first');
+  assert.equal(JSON.parse(localStorage.getItem('street-life-journal-history-v1')).length, 500);
+  setup(App, 'journal', { day: 2, minutes: 1439 }, { 'street-life-journal-history-v1': history });
+  fireEvent.click(screen.getByRole('button', { name: 'Show older entries' }));
+  advance(1);
+  assert.equal(historyTitles().length, 0);
+  assert(screen.getByText('No recorded actions today yet.'));
+  assert(!screen.queryByRole('button', { name: 'Show older entries' }));
+  console.log('PASS: journal batches, complete order without duplicates, tick/day/reopen reset rules, new actions and unchanged 500-entry save.');
   // All locations, including closed locations, preserve live action availability.
   const locationAudit = [];
   for (const id of ['street', 'station', 'shop', 'shelter', 'support', 'daycenter', 'free-clinic', 'hospital', 'jobcenter', 'work', 'residential-shelter']) {

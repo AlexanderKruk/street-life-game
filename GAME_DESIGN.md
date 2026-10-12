@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-155`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; the application remains on v155.
+**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-156`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Journal batches (v156)
+
+The selected day's timeline renders its 30 most recent entries first. A framed `Show older entries` button appends up to 30 older entries, with a subdued `Showing N of M entries` status. The button disappears when all entries are shown; days with at most 30 entries have no extra control. Appending preserves the reader's scroll position. Newest-first order, reflections, all saved records and the 500-entry retention cap are unchanged.
+
+Switching the selected day or reopening Journal starts with that day's latest 30 entries. Ordinary game ticks preserve the expanded count, and unchanged history continues to skip timeline renders. A keyed day-view component owns transient display state; it does not add save keys or change migrations. Regression checks cover complete ordering without duplicate/missing entries, short and empty days, day/reopen/tick behavior, new actions and unchanged saved history.
+
+Two local production builds (v155 and v156) were compared in isolated Chromium profiles at 390×844, DPR 2 and CPU slowed 4×, with five Journal openings per build and 500 entries for the selected day. Median click-to-second-frame time changed from 287.7 ms to 28.7 ms; maximum from 321.3 ms to 39.4 ms. Long tasks were observed on all five baseline openings and none on the five new openings. This is a lab navigation measurement, not internet startup, INP or an iPhone/Safari result. Browser checks also verified all 500 entries remain reachable, day switching, mobile append scroll delta of 0 px and desktop layout. Full `npm test` and production build passed. Detailed comparison: [journal optimization report](JOURNAL_OPTIMIZATION.md) and `journal-performance.json`.
 
 ### Measured performance and extended-session QA (v155 · 2026-10-12)
 
@@ -22,7 +30,7 @@ Separate test profiles verified 30 cycles of Clothing result and Phone panels wi
 
 These are lab observations, not physical iPhone/Safari, battery, INP or real-device FPS measurements. Heap values exclude total browser/GPU memory; ten minutes cannot prove the absence of every leak. Cold response times were dominated by the lab proxy route, so they are not representative user startup times. Lifecycle signals and quota failures were simulated; abrupt OS process termination and full offline reopening were not verified. The image worker still caches images only.
 
-**Next performance candidate, not implemented:** render recent records of the selected journal day first and load older records on demand. Preserve newest-first order, day navigation, reflections and the saved 500-entry cap. This addresses the measured heavy-day cost; the current measurements do not justify prioritizing application JS splitting. Real iPhone/Safari validation remains outstanding. No gameplay or journal presentation changed during QA.
+**Follow-up implemented in v156:** selected-day records now render in batches of 30, as described above. The v155 QA results remain a historical baseline; the separate v156 comparison measures the improvement. Real iPhone/Safari validation remains outstanding, and application JS splitting is still deferred.
 
 Detailed methods, samples and coverage limits: [startup/navigation report](PERFORMANCE_REPORT.md), [extended-session report](SESSION_REPORT.md), `performance-report.json` and `session-report.json`. Reproduction tools are `scripts/benchmark.cjs`, `scripts/soak.cjs` and `scripts/lifecycle-lab.cjs`.
 
@@ -675,7 +683,7 @@ The UI includes:
 
 Daily history displays completed actions/events at their completion day and time, newest first. Each entry has an action heading and one or two short first-person sentences about the character's thoughts, feelings or physical sensations. Reflections respond to actual outcomes and can incorporate an action-linked memory. They do not repeat the action report or resource numbers; an entry can omit its description when there is no useful reflection. Full narrative and actual resource deltas remain in the action result. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed the shared completion pipeline. Starting an ongoing activity does not log its completion early.
 
-The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Journal opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on Day 1 and forward on the current day. Reopening Journal returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals and their progression retain their existing behavior.
+The selected day initially shows its latest 30 entries; `Show older entries` appends another 30 without jumping the reading position. Switching days or reopening Journal resets the display count; ordinary ticks preserve expanded entries. The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Journal opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on Day 1 and forward on the current day. Reopening Journal returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals and their progression retain their existing behavior.
 
 Goals use persistent completion flags. First morning completes at noon of day 2 (or on a later day alive), after the opening night. Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state.
 
@@ -703,7 +711,7 @@ These are current code realities, not planned features:
 - Station bench sleep still shares generic bench wake-event plumbing and should eventually have station-specific risk handling.
 - Shelter social-worker promises/plans are stored but are not yet verified against completed gameplay milestones.
 - Not every custom action currently rolls a location event.
-- Journal cannot reconstruct actions performed before history was implemented and retains only the latest 500 entries across all days. Previous-day browsing is implemented; loading older entries of a selected day in batches is not yet implemented.
+- Journal cannot reconstruct actions performed before history was implemented and retains only the latest 500 entries across all days. Previous-day browsing and loading older selected-day entries in batches of 30 are implemented.
 - Schronisko has no laundry action yet.
 - Benefits support is a placeholder.
 - Documents exist and can be lost/restored, but most formal actions do not yet require them.

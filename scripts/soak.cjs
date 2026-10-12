@@ -42,8 +42,8 @@ async function sample(page,cdp,elapsed){
  await page.waitForFunction(async()=>navigator.serviceWorker.controller&&(await caches.keys()).some(x=>x.startsWith('street-life-images-v1-')),null,{timeout:60000});await wait(1500);
  const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});
  await nav(page,'Inventory');assert.match(await page.locator('.inventory-section-heading').first().innerText(),/8 \/ 8/);
- await nav(page,'Journal');assert.equal(await page.locator('.timeline-entry').count(),500);
- report.checks.push('500 displayed history records and 8/8 occupied backpack slots confirmed');
+ await nav(page,'Journal');assert.equal(await page.locator('.timeline-entry').count(),30);assert.equal(await page.locator('.journal-load-more [role=status]').innerText(),'Showing 30 of 500 entries');
+ report.checks.push('500 saved history records, 30 initially displayed, and 8/8 occupied backpack slots confirmed');
  await sample(page,cdp,0);const start=Date.now();let next=60000;
  const duration=Number(process.env.STREET_SOAK_SECONDS||600)*1000;
  while(Date.now()-start<duration){

@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useId, useMemo, useState } from 'react'
 import { Icon } from './Icon'
 import { formatTime } from './game'
 import type { JournalEntry } from './journal'
@@ -28,14 +28,29 @@ export const JournalGoals = memo(function JournalGoals({ pending, completed }: G
 
 type TimelineProps = { entries: JournalEntry[]; day: number; today: boolean }
 export const JournalTimeline = memo(function JournalTimeline({ entries, day, today }: TimelineProps) {
-  const visible = useMemo(() => entries.filter(entry => entry.day === day).reverse(), [entries, day])
+  const dayEntries = useMemo(() => entries.filter(entry => entry.day === day).reverse(), [entries, day])
+  // A new selected day starts with its latest entries; ordinary ticks do not reset reading.
+  return <DayTimeline key={day} entries={dayEntries} day={day} today={today} />
+})
+
+const HISTORY_BATCH_SIZE = 30
+function DayTimeline({ entries, day, today }: TimelineProps) {
+  const [limit, setLimit] = useState(HISTORY_BATCH_SIZE)
+  const listId = useId()
+  const visible = entries.slice(0, limit)
   return <>
-    <ol className="timeline" aria-label={`Day ${day} history`}>
+    <ol id={listId} className="timeline" aria-label={`Day ${day} history`}>
       {visible.map((entry, index) => <li className="timeline-entry" key={`${entry.day}-${entry.minute}-${index}`}>
         <time dateTime={formatTime(entry.minute)}>{formatTime(entry.minute)}</time><span className="timeline-marker" aria-hidden="true" />
         <div><strong>{entry.title}</strong>{entry.text && <p className="journal-thought">{entry.text}</p>}</div>
       </li>)}
     </ol>
     {!visible.length && <p className="empty">{today ? 'No recorded actions today yet.' : 'No recorded actions on this day.'}</p>}
+    {entries.length > HISTORY_BATCH_SIZE && <div className="journal-load-more">
+      {visible.length < entries.length && <button type="button" aria-controls={listId} onClick={() => setLimit(previous => Math.min(previous + HISTORY_BATCH_SIZE, entries.length))}>
+        <Icon name="chevron-down" />Show older entries
+      </button>}
+      <p role="status">Showing {visible.length} of {entries.length} entries</p>
+    </div>}
   </>
-})
+}
