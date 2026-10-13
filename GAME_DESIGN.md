@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-169`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-170`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Raised central location button (v170)
+
+Only the central current-location navigation button is restyled. Its icon grows from 23px to 38px and caption from 10px to 13px. The existing panel color extends upward as a rectangular cap with gently rounded upper corners, rather than a detached circular button. The negative top margin offsets the added height, preserving the bar geometry and all four peer buttons, grid widths, icons, labels and active indicators. The central item retains its usual gray inactive and sand-colored active states, location-specific icon/name, navigation behavior and event/travel/search blocking.
 
 ### Event background lock (v169)
 
