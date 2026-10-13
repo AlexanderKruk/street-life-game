@@ -318,7 +318,8 @@ export default function App() {
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
   const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean } | null>(null)
-  const closeResult = useCallback(() => setInfoModal(null), [])
+  const [eventResultOpen, setEventResultOpen] = useState(false)
+  const closeResult = useCallback(() => { setInfoModal(null); setEventResultOpen(false) }, [])
   const buyShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) buyItem(item) })
   const stealShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) stealItem(item) })
   const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
@@ -523,7 +524,7 @@ export default function App() {
   useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
-  const eventInteractionBlocked = !!activeEvent || !!diceCheck || rainChoice || !!pendingResult || (!!infoModal && !inlineResult)
+  const eventInteractionBlocked = !!activeEvent || !!diceCheck || rainChoice || eventResultOpen
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null
@@ -675,7 +676,7 @@ export default function App() {
   function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
   function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args)) }
   function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
-  function applyEventOutcome(...args: Parameters<typeof applyEventOutcomeImpl>) { runWithResult(activeEvent?.title ?? 'Event result', () => applyEventOutcomeImpl(...args), resultSnapshot(), true, true) }
+  function applyEventOutcome(...args: Parameters<typeof applyEventOutcomeImpl>) { runWithResult(activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(...args) }, resultSnapshot(), true, true) }
   function storeItem(...args: Parameters<typeof storeItemImpl>) { runWithResult('Store belongings', () => storeItemImpl(...args)) }
   function takeStoredItem(...args: Parameters<typeof takeStoredItemImpl>) { runWithResult('Collect belongings', () => takeStoredItemImpl(...args)) }
   function storeFood(...args: Parameters<typeof storeFoodImpl>) { runWithResult('Store food', () => storeFoodImpl(...args)) }
@@ -1897,6 +1898,7 @@ export default function App() {
     setGame(createInitialState())
     setMessage('New run started.')
     setInfoModal(null)
+    setEventResultOpen(false)
     setPhoneActivity(null)
     setPendingResult(null)
     setScreen('location')

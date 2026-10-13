@@ -6,7 +6,7 @@ This document describes the current implementation and separately marked agreed 
 
 ### Event background lock (v169)
 
-Street events, rain decisions, dice checks, pending results and modal outcomes now make the entire underlying game surface inert and hidden from assistive technology. Lower navigation and reset are explicitly disabled and blurred along with the background; background click capture also prevents action handlers from running while locked. The event choices and subsequent result confirmation remain outside the inert surface, focused and usable. Closing the final modal restores normal navigation and actions. Inline phone-answer results retain their existing behavior. Regression coverage checks blocked navigation/reset/location clicks, paused resources, result focus and unlock, plus rain-event navigation blocking.
+Street events, rain decisions, dice checks and their outcome results now make the entire underlying game surface inert and hidden from assistive technology. Lower navigation and reset are explicitly disabled and blurred along with the background; background click capture also prevents action handlers from running while locked. The event choices and subsequent result confirmation remain outside the inert surface, focused and usable. Closing the final modal restores normal navigation and actions. Inline phone-answer results retain their existing behavior. Regression coverage checks blocked navigation/reset/location clicks, paused resources, result focus and unlock, plus rain-event navigation blocking.
 
 ### Complete first-night answer illustrations (v168)
 
