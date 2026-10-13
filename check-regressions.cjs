@@ -737,7 +737,9 @@ assert(document.querySelector('.bottom-nav[inert][aria-hidden="true"].event-back
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 assert(document.querySelector('footer[inert] .reset').disabled);
 for(const button of document.querySelectorAll('.bottom-nav button, footer .reset'))fireEvent.click(button);
-fireEvent.click(document.querySelector('.game-background [data-choice="walk"]'));
+const backgroundAction=document.querySelector('.game-background .story-actions button:not(:disabled)');
+assert(backgroundAction,'there must be a background action to test');fireEvent.click(backgroundAction);
+assert(!document.querySelector('.phone-activity'));
 advance(3000);assert.deepEqual(read(stateKey),lockedGame);assert.deepEqual(read(invKey),lockedInventory);
 assert(document.querySelector('.event-illustration').src.endsWith('event-first-night-door-480.webp'));
 click('Think of someone I could call');
