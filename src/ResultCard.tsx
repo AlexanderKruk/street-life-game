@@ -1,10 +1,11 @@
 import { memo, useEffect, useRef } from 'react'
+import { responsiveImageProps } from './responsiveImages'
 import { Icon } from './Icon'
 import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string }
-export type ResultCardData = { title: string; text: string; presentation?: ResultPresentation } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -77,7 +78,8 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   const costs = result.costs ?? []
 
   return <div className={inline ? "result-inline" : "phone-overlay result-overlay"}>
-    <section className="phone-modal result-modal" role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
+    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
+      {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} />}
       <div className="result-card-heading">
         <p className="result-card-label">{presentation?.label ?? 'AFTER THE ACTION'}</p>
         <h2 id="result-title">{presentation?.heading ?? result.title}</h2>

@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-166`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-167`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Illustrated events and outcomes (v167)
+
+The four first-night events have individual cinematic night illustrations. Their cards show the image above the description and three choices, with the choice duration beside the label. The bench scene has three distinct continuation images: asking about the night, watching quietly, and giving the person space. Its outcome replaces the opening image with the selected continuation; the other three events retain their scene image in their results. Existing actual changes, costs, expandable minor changes and Got it behavior remain intact. Illustrated results are modal over the blurred location, not inline phone-search results.
+
+Seven new WebP illustrations have 480, 768 and 1024px responsive variants plus retained 1400px sources. The existing empty 1024px phone-search variant was regenerated during the asset pass, and variant checks now reject empty files. New event art is excluded from startup image warmup and loads when a scene or result is shown; the existing content-revision image cache covers these assets. Cards reserve image aspect ratio, have viewport height limits and scrollable text/choices on small screens. Event choices receive initial keyboard focus and trap Tab while the page scroll is locked. Reloaded unresolved first-night choices retain their matching scene image.
 
 ### First-night observations (v166)
 

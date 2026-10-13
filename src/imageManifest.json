@@ -1,4 +1,151 @@
 {
+  "event-first-night-door.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-first-night-door-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-first-night-door-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-first-night-door-1024.webp"
+      }
+    ]
+  },
+  "event-first-night-bench.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-first-night-bench-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-first-night-bench-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-first-night-bench-1024.webp"
+      }
+    ]
+  },
+  "event-first-night-station.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-first-night-station-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-first-night-station-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-first-night-station-1024.webp"
+      }
+    ]
+  },
+  "event-first-night-bench-wake.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-first-night-bench-wake-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-first-night-bench-wake-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-first-night-bench-wake-1024.webp"
+      }
+    ]
+  },
+  "event-bench-conversation.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-bench-conversation-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-bench-conversation-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-bench-conversation-1024.webp"
+      }
+    ]
+  },
+  "event-bench-watch.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-bench-watch-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-bench-watch-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-bench-watch-1024.webp"
+      }
+    ]
+  },
+  "event-bench-space.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-bench-space-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-bench-space-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-bench-space-1024.webp"
+      }
+    ]
+  },
   "city-night.webp": {
     "width": 1024,
     "height": 1536,

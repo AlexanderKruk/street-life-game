@@ -9,6 +9,7 @@ import ShopCard from './ShopCard'
 import ItemArt, { type ItemArtId } from './ItemArt'
 import InventorySlot from './InventorySlot'
 import ClosedContent from './ClosedContent'
+import { responsiveImageProps } from './responsiveImages'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { questionPresentation } from './resultPresentation'
 import { StreetArt, LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
@@ -17,7 +18,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.13-166'
+const BUILD_VERSION = 'v2026.10.13-167'
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
 type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
@@ -426,6 +427,7 @@ export default function App() {
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
+  const eventModalRef = useRef<HTMLElement>(null)
   const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(loadFirstNightEvents)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(() => STREET_EVENTS.find(event => event.id === loadFirstNightEvents().pendingId) ?? null)
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(null)
@@ -468,7 +470,7 @@ export default function App() {
   const currentActions = useMemo(() => actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest')), [current.id, shelterBooked])
   const mapPlaces = useMemo(() => locations.filter(location => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko')), [discoveredLocations, life.schroniskoReferral, life.housing])
   const open = isOpen(current, game.minutes)
-  const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation
+  const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation && !infoModal.illustration
   const overall = overallStatus(game)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
@@ -520,6 +522,24 @@ export default function App() {
   const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
   useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
+  const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
+  useEffect(() => {
+    if (!streetEventVisible) return
+    const previous = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    eventModalRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true })
+    function trap(event: KeyboardEvent) {
+      if (event.key !== 'Tab') return
+      const buttons = Array.from(eventModalRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
+      if (!buttons.length) return
+      event.preventDefault()
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
+      buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length].focus()
+    }
+    document.addEventListener('keydown', trap)
+    return () => { document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected && !document.querySelector('.result-modal')) previous.focus({ preventScroll: true }) }
+  }, [streetEventVisible])
   useEffect(() => { if (phoneSearchVisible) phoneSearchModalRef.current?.focus({ preventScroll: true }) }, [phoneSearchVisible])
   const shelterCheckoutDue = current.id === 'shelter' && !shelterDeparture && !trip &&
     life.shelterCheckoutDay !== game.day && game.minutes >= SHELTER_CHECKOUT_WARNING && game.minutes < 12 * 60 &&
@@ -1544,6 +1564,15 @@ export default function App() {
   }
 
   function applyEventOutcomeImpl(outcome: EventOutcome) {
+    if (activeEvent?.illustration) {
+      const place = locations.find(location => location.id === outcome.discoverLocation)
+      const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
+      const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
+      setInfoModal({ title: activeEvent.title, text: outcome.message, illustration: outcome.illustration ?? activeEvent.illustration, illustrationAlt: outcome.message,
+        ...(place ? { presentation: { label: 'AFTER THE CONVERSATION', heading: 'A place to try next evening', lead: outcome.message,
+          places: [{ id: place.id, name: place.name, hours: '19:00–22:00', detail: 'Registration · Address saved on your map' }],
+          notice: `Come on Day ${goalDay} at 19:00 to request a bed.` } } : {}) })
+    }
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
     const foundPlace = locations.find(place => place.id === outcome.discoverLocation)
     if (foundPlace) {
@@ -2030,7 +2059,7 @@ export default function App() {
     {activeGoal?.type === 'night-shelter' && <section className="event"><span>🎯</span><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <div className="location-surface" inert={!!phoneActivity} aria-hidden={!!phoneActivity || undefined}>
-      {current.id === 'street' && <StreetArt phone={false} inline={inlineResult} illustration={infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
+      {current.id === 'street' && <StreetArt phone={false} inline={inlineResult} illustration={infoModal?.illustration ? undefined : infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
       {inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={closeResult} /> : <>
       {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} icon={current.icon} description={current.id === 'street' ? streetScene : current.description} open={open} opensAt={current.open} />}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
@@ -2339,15 +2368,18 @@ export default function App() {
     </div>}
 
     {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="street-event-title">
-      <section className="event-card">
-        <div className="event-card-icon">{activeEvent.icon}</div>
+      <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ''}`}>
+        {activeEvent.illustration && <img className="event-illustration" {...responsiveImageProps(activeEvent.illustration)} alt={activeEvent.text} />}
+        <div className="event-body">
+        {!activeEvent.illustration && <div className="event-card-icon">{activeEvent.icon}</div>}
         <p className="eyebrow">STREET EVENT</p>
         <h2 id="street-event-title">{activeEvent.title}</h2>
         <p>{activeEvent.text}</p>
         <div className="event-choices">{activeEvent.choices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
-          return <button key={choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable}><span>{choice.label}</span>{unavailable && <small>{unavailable}</small>}</button>
+          return <button key={choice.label} aria-label={choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable}><span>{choice.label}</span>{unavailable ? <small>{unavailable}</small> : !!choice.outcome?.minutes && <small className="event-choice-time">≈{choice.outcome.minutes}m</small>}</button>
         })}</div>
+        </div>
       </section>
     </div>}
 

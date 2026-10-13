@@ -11,6 +11,7 @@ for (const [original, group] of Object.entries(manifest)) {
   for (const image of group.variants) {
     assert(image.width > previous); previous = image.width
     assert(existsSync(`public/assets/${image.file}`))
+    assert(readFileSync(`public/assets/${image.file}`).length > 0, 'responsive image must not be empty')
     assert(readFileSync(`public/assets/${image.file}`).length < originalBytes)
     assert(Math.abs(image.height / image.width - group.height / group.width) < .003)
   }
@@ -21,9 +22,13 @@ assert(street.sizes.includes('svh'), 'cover cropping accounted for')
 assert.match(responsiveImageProps('/street-life-game/assets/city-night.webp').sizes, /520px/)
 assert.match(spriteImageSet('inventory-equipment'), /256.webp.*1x.*512.webp.*2x.*768.webp.*3x/)
 assert.deepEqual(responsiveImageProps('/unknown.webp'), { src: '/unknown.webp' })
+const eventArt = responsiveImageProps('/street-life-game/assets/event-first-night-bench.webp')
+assert.match(eventArt.srcSet, /480w.*768w.*1024w/)
+assert(eventArt.sizes.includes('480px'))
 const small = warmImageUrls(390, 844, 1)
 const retina = warmImageUrls(390, 844, 3)
 const desktop = warmImageUrls(1440, 900, 1)
+assert(!small.some(url => url.includes('event-')), 'event illustrations load on demand')
 assert.equal(small.length, 7); assert.equal(new Set(small).size, 7)
 assert(small.every(url => url.includes('-480.webp') || url.includes('-256.webp')))
 assert(retina.includes('/street-life-game/assets/city-night-1024.webp'))

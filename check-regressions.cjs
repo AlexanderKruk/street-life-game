@@ -701,6 +701,27 @@ assert.equal(read(firstNightKey).pendingId,'first-night-bench-wake');ok();
 assert(screen.getByRole('dialog').textContent.includes('Someone needs the bench'));
 click('Sit up and gather my things');assert.equal(read(firstNightKey).pendingId,null);ok();
 
+// Scene art survives restoration and each bench answer has its own result art.
+for(const [label,asset] of [['Ask how they get through the night','conversation'],['Watch quietly','watch'],['Give them some space','space']]) {
+ setup({minutes:1385},{[firstNightKey]:{seen:['first-night-bench'],lastAt:1385,pendingId:'first-night-bench'}});
+ const scene=document.querySelector('.event-illustration');assert(scene.src.endsWith('event-first-night-bench-480.webp'));assert.match(scene.srcset,/480w.*768w.*1024w/);
+ assert(document.querySelector('.illustrated-event'));assert.equal(document.body.style.overflow,'hidden');
+ assert.equal(document.activeElement.textContent.includes('Ask how they get through the night'),true);
+ fireEvent.keyDown(document,{key:'Tab'});assert(document.activeElement.textContent.includes('Watch quietly'));
+ click(label);
+ assert(document.querySelector('.result-illustration').src.endsWith(`event-bench-${asset}-480.webp`));
+ assert(document.querySelector('.result-overlay .illustrated-result'));assert(!document.querySelector('.result-inline'));
+ assert(screen.getByRole('dialog').contains(document.activeElement),'result retains keyboard focus');
+ if(asset==='conversation') assert(document.querySelector('.result-place').textContent.includes('19:00–22:00'));
+ assert(read(firstNightKey).pendingId===null);ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
+}
+for(const id of ['door','station','bench-wake']) {
+ setup({minutes:1385},{[firstNightKey]:{seen:[`first-night-${id}`],lastAt:1385,pendingId:`first-night-${id}`}});
+ assert(document.querySelector('.event-illustration').src.endsWith(`event-first-night-${id}-480.webp`));
+ fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button')[0]);
+ assert(document.querySelector('.result-illustration').src.endsWith(`event-first-night-${id}-480.webp`));ok();
+}
+
 // First-night boundaries and awake/bench-sleep eligibility are explicit.
 setup({day:2,minutes:60},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20}});Math.random=()=>.4;advance(2000);ok();
 assert(screen.getByRole('dialog').textContent.includes('The last departures'));

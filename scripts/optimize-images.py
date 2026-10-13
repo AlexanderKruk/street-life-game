@@ -6,6 +6,13 @@ from PIL import Image
 root = Path(__file__).resolve().parents[1]
 assets = root / 'public' / 'assets'
 widths = {
+    'event-first-night-door': [480, 768, 1024],
+    'event-first-night-bench': [480, 768, 1024],
+    'event-first-night-station': [480, 768, 1024],
+    'event-first-night-bench-wake': [480, 768, 1024],
+    'event-bench-conversation': [480, 768, 1024],
+    'event-bench-watch': [480, 768, 1024],
+    'event-bench-space': [480, 768, 1024],
     'city-night': [480, 768, 1024],
     'street-hero': [480, 768, 1024, 1400],
     'phone-search': [480, 768, 1024, 1400],
