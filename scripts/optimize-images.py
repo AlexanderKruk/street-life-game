@@ -1,11 +1,22 @@
 """Regenerate responsive WebP assets from retained originals (requires Pillow)."""
 import json
+from io import BytesIO
 from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parents[1]
 assets = root / 'public' / 'assets'
 widths = {
+    'event-door-walk': [480, 768, 1024],
+    'event-door-stay': [480, 768, 1024],
+    'event-door-think-call': [480, 768, 1024],
+    'event-station-seat': [480, 768, 1024],
+    'event-station-night': [480, 768, 1024],
+    'event-station-quiet': [480, 768, 1024],
+    'event-wake-sit': [480, 768, 1024],
+    'event-wake-move': [480, 768, 1024],
+    'event-wake-moment': [480, 768, 1024],
+
     'event-first-night-door': [480, 768, 1024],
     'event-first-night-bench': [480, 768, 1024],
     'event-first-night-station': [480, 768, 1024],
@@ -30,7 +41,11 @@ for name, sizes in widths.items():
         height = round(original.height * width / original.width)
         image = original.resize((width, height), Image.Resampling.LANCZOS)
         target = assets / f'{name}-{width}.webp'
-        image.save(target, 'WEBP', quality=80, method=6)
+        encoded = BytesIO()
+        image.save(encoded, 'WEBP', quality=80, method=6)
+        temporary = target.with_suffix('.webp.tmp')
+        temporary.write_bytes(encoded.getvalue())
+        temporary.replace(target)
         variants.append({'width': width, 'height': height, 'file': target.name})
         print(f'{target.name}: {width}x{height}, {target.stat().st_size // 1024} KB')
     manifest[source.name] = {'width': original.width, 'height': original.height, 'variants': variants}

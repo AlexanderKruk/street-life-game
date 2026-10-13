@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-167`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-168`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Complete first-night answer illustrations (v168)
+
+All twelve choices across the four first-night scenes now have distinct continuation images. Nine new frames complete the door scene (walk, stay by the dark entrance, consider a call), station scene (ask for a seat, ask about a night shelter, choose a quiet seat), and bench-wake scene (sit up with belongings, move away, ask for a moment to wake). The three bench-observation answers from v167 remain. The selected outcome image replaces the opening scene in the existing result modal; costs, actual stat changes, discovery, journal, persistence and closing behavior are unchanged. All new images have responsive 480/768/1024px WebP variants and retained 1400px sources, load on demand and participate in image-revision caching. Startup warmup still covers only the original seven image groups. Automated checks cover all twelve choice-to-image mappings, choice durations, result close and restoration of each original scene.
 
 ### Illustrated events and outcomes (v167)
 

@@ -715,11 +715,18 @@ for(const [label,asset] of [['Ask how they get through the night','conversation'
  if(asset==='conversation') assert(document.querySelector('.result-place').textContent.includes('19:00–22:00'));
  assert(read(firstNightKey).pendingId===null);ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
-for(const id of ['door','station','bench-wake']) {
+for(const [id,assets,durations] of [
+ ['door',['door-walk','door-stay','door-think-call'],[0,5,5]],
+ ['station',['station-seat','station-night','station-quiet'],[5,10,5]],
+ ['bench-wake',['wake-sit','wake-move','wake-moment'],[5,10,5]],
+]) for(let index=0;index<assets.length;index++) {
  setup({minutes:1385},{[firstNightKey]:{seen:[`first-night-${id}`],lastAt:1385,pendingId:`first-night-${id}`}});
  assert(document.querySelector('.event-illustration').src.endsWith(`event-first-night-${id}-480.webp`));
- fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button')[0]);
- assert(document.querySelector('.result-illustration').src.endsWith(`event-first-night-${id}-480.webp`));ok();
+ fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button')[index]);
+ assert(document.querySelector('.result-illustration').src.endsWith(`event-${assets[index]}-480.webp`));
+ assert.match(document.querySelector('.result-illustration').srcset,/480w.*768w.*1024w/);
+ assert.equal(read(stateKey).minutes,1385+durations[index]);assert.equal(read(firstNightKey).pendingId,null);
+ ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
 
 // First-night boundaries and awake/bench-sleep eligibility are explicit.
