@@ -36,6 +36,7 @@ function beginSleep(name,hours){click(name);if(hours!==undefined)chooseHours(hou
 function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Got it',exact:true}));}
 function advance(ms){for(let t=0;t<ms;t+=1000){now+=1000;act(()=>{for(const{fn}of [...callbacks.values()])fn()})}fireEvent(window,new window.Event('pagehide'))}
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
+function discoverHelp(){for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
 
 // Phone work consumes one game minute per second, resumes, pauses in background,
 // and only unlocks knowledge/rewards when the full search has finished.
@@ -64,12 +65,37 @@ assert(read('street-life-discovered-v1').includes('support'));assert.equal(read(
 assert(document.querySelector('.result-inline'));assert(!document.querySelector('.result-overlay'));
 assert(!document.querySelector('.story-actions'));assert.equal(screen.getByRole('dialog').getAttribute('aria-modal'),'false');
 assert(!document.querySelector('.result-consequences'));
-assert.equal(document.querySelectorAll('.result-place').length,3);assert(read('street-life-discovered-v1').includes('free-clinic'));assert(!document.querySelector('.result-details').open);
+assert.equal(document.querySelectorAll('.result-place').length,1);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details').open);
 assert(document.querySelector('.street-art img').src.endsWith('help-morning-480.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
 ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));assert(!document.querySelector('.phone-activity-overlay'));assert.equal(document.body.style.overflow,'');
-click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(!document.querySelector('.phone-activity'));assert.deepEqual(read(stateKey),completed);
-assert.equal(document.querySelectorAll('.result-cost-line').length,0);ok();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.result-place').length,1);ok();
+click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(!document.querySelector('.phone-activity'));assert.equal(read(stateKey).minutes,completed.minutes+15);assert(read('street-life-discovered-v1').includes('daycenter'));
+assert.equal(document.querySelectorAll('.result-cost-line').length,1);ok();discoverHelp();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.result-place').length,1);ok();
+// Each repeat finds exactly one new place, and reload cannot reveal the next one early.
+setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop']});
+for(const [index,id] of ['support','daycenter','free-clinic'].entries()){
+ click('Where can I get help in the morning?');
+ assert.equal(document.querySelectorAll('.result-place').length,1);
+ assert.equal(read('street-life-discovered-v1').length,4+index);
+ assert(read('street-life-discovered-v1').includes(id));
+ if(index<2)assert(!read('street-life-discovered-v1').includes('free-clinic'));
+ assert(!screen.getByRole('dialog').textContent.includes('referral'));
+ ok();cleanup();render(React.createElement(App));
+ assert.equal(read('street-life-discovered-v1').length,4+index,'reload retains just the completed discoveries');
+}
+const noNewBefore=read(stateKey),noNewBattery=read(invKey).phoneBattery,noNewPlaces=read('street-life-discovered-v1');
+click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);
+assert(screen.getByRole('dialog').textContent.includes('No new information'));
+assert.equal(document.querySelectorAll('.result-place').length,0);
+assert.deepEqual(read('street-life-discovered-v1'),noNewPlaces);
+assert.equal(read(stateKey).minutes,noNewBefore.minutes+15);
+assert(read(invKey).phoneBattery<noNewBattery);
+assert(read(stateKey).mood<noNewBefore.mood+1,'empty searches do not farm a mood reward');
+assert(read('street-life-journal-history-v1').at(-1).text.includes('same places'));
+ok();
+// Existing fully discovered saves do not receive duplicate finds or a free search.
+cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-discovered-v1'),noNewPlaces);
+
 // Estimates stay the same; durations vary within bounds and never reroll.
 for(const [draw,duration] of [[0,10],[.999,25]]) {
  setup({minutes:1320});Math.random=()=>draw;
@@ -95,7 +121,7 @@ assert(!document.querySelector('.phone-activity'));assert(!localStorage.getItem(
 function storyIds(){return [...document.querySelectorAll('.story-actions > button')].map(button=>button.dataset.choice);}
 setup({minutes:1320});assert.deepEqual(storyIds(),['question-morning','walk','station-route']);
 const initialChoices=storyIds();advance(10000);assert.deepEqual(storyIds(),initialChoices);cleanup();render(React.createElement(App));assert.deepEqual(storyIds(),initialChoices);
-click('Where can I get help in the morning?');ok();assert.deepEqual(storyIds(),['question-bed','walk','station-route']);
+click('Where can I get help in the morning?');ok();assert.deepEqual(storyIds(),['question-morning','walk','station-route']);discoverHelp();assert.deepEqual(storyIds(),['question-bed','walk','station-route']);
 click('How can I get a shelter bed?');ok();assert.deepEqual(storyIds(),['question-no-place','find-bench','station-route']);
 for(const [state,extra,expected] of [
  [{minutes:1320,mood:28},{},['question-morning','music-walk','station-route']],
@@ -106,8 +132,8 @@ for(const [state,extra,expected] of [
 ]){setup(state,extra);assert.deepEqual(storyIds(),expected);assert.equal(storyIds().filter(id=>id.startsWith('question-')).length,1);}
 
 // One-level choices react immediately, while reading and deciding remain paused.
-setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Maybe my phone can help'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
-setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();click('Reset save');assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
+setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Maybe my phone can help'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
+setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();discoverHelp();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();click('Reset save');assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
@@ -117,7 +143,7 @@ assert.equal(document.querySelector('[data-choice="station-route"] .choice-durat
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
-click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1335);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));
+click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1335);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));
 setup({minutes:1320});assert(!screen.queryByRole('button',{name:/What about Night Shelter\? Maybe there is a place./}));
 setup({minutes:1320});click(/Maybe the station\? At least I could sit down./);assert(screen.getByRole('button',{name:/Public transport/}));assert.equal(read(stateKey).minutes,1320);
 // First-night wandering uses real walking costs; rain choices pause and persist.
@@ -130,10 +156,10 @@ setup({day:2,minutes:240,rainUntil:2000});click('Just one more street. I’m not
 setup({day:2,minutes:240});assert(document.querySelector('.story-scene').textContent.includes('Delivery vans'));assert(!document.querySelector('.story-scene').textContent.includes('It is past ten'));assert(screen.getByRole('button',{name:'Maybe the station? At least I could sit down.',exact:true}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.',exact:true}));
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Something familiar to listen to… I don’t want this silence./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).mood>30 && read(stateKey).mood<=60);assert(read(invKey).phoneBattery<musicBattery);assert(screen.getByRole('dialog').textContent.includes('familiar music'));ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(!screen.queryByRole('button',{name:/Something familiar to listen to… I don’t want this silence./}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.'}));
-setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-3*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.deepEqual(read(stateKey),rereadState);assert.deepEqual(read(invKey),rereadInventory);ok();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1140);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
+setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(read(stateKey).mood > 33 && read(stateKey).mood < 35);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-3*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('support'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.equal(read(stateKey).minutes,rereadState.minutes+15);assert(read(invKey).phoneBattery<rereadInventory.phoneBattery);ok();discoverHelp();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1140);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
 // P1: referral opens map, including migration of a v53 save.
 // Questions emerge from needs; remembering a station outlet does not need a charged phone.
-setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'What if the shelter has no places?',exact:true}));click('Where can I get help in the morning?');ok();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));
+setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'What if the shelter has no places?',exact:true}));click('Where can I get help in the morning?');ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));
 setup({minutes:1320,thirst:45},{[invKey]:{phoneBattery:31}});assert(screen.getByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));
 setup({minutes:1320,mood:28},{[invKey]:{phoneBattery:0},'street-life-mobile-service-until':'0'});const rememberedState=read(stateKey);click('Where can I charge my phone?');assert.equal(read(stateKey).minutes,rememberedState.minutes);assert.equal(read(invKey).phoneBattery,0);assert(screen.getByRole('dialog').textContent.includes('waiting room'));assert(screen.getByRole('dialog').textContent.includes('60%'));const rememberedAfter=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),rememberedAfter);ok();assert(!screen.queryByRole('button',{name:'Where can I get help in the morning?',exact:true}));click('Where can I charge my phone?');assert.deepEqual(read(stateKey),rememberedAfter);ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:30}});click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(screen.getByRole('dialog').textContent.includes('08:00'));assert.equal(read(stateKey).minutes,1335);ok();assert(screen.getByRole('button',{name:'Where can I charge my phone?',exact:true}));

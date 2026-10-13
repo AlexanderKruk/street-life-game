@@ -33,7 +33,7 @@ function checkBattery(){fireEvent(window,new window.Event('pagehide'));const cha
 function advance(ticks){for(let tick=0;tick<ticks;tick++){now+=1000;act(()=>{for(const fn of [...timers.values()])fn();});}fireEvent(window,new window.Event('pagehide'));}
 async function finishPhone(){advance(15);}
 (async()=>{
- setup();const startingCharge=checkBattery();button('Where can I get help in the morning?');await finishPhone();assert(checkBattery()<startingCharge);close();button('How can I get a shelter bed?');await finishPhone();
+ setup();const startingCharge=checkBattery();button('Where can I get help in the morning?');await finishPhone();assert(checkBattery()<startingCharge);close();button('Where can I get help in the morning?');await finishPhone();close();button('Where can I get help in the morning?');await finishPhone();close();button('How can I get a shelter bed?');await finishPhone();
  let text=summary();assert(text.includes('−3.6%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));
  const before=localStorage.getItem('street-life-save-v3');advance(1);assert.equal(localStorage.getItem('street-life-save-v3'),before);
  close();button(/Map$/);checkBattery();assert(screen.getByText('Night Shelter',{exact:true}));assert(!document.querySelector('.street-art'));cleanup();setup();

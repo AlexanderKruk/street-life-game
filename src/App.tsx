@@ -17,7 +17,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.12-163'
+const BUILD_VERSION = 'v2026.10.13-164'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -314,7 +314,7 @@ export default function App() {
       if (raw) {
         const known = (JSON.parse(raw) as string[]).map(id => id === 'night-shelter' ? 'shelter' : id)
         // The former combined center now has two separate addresses.
-        if (known.includes('daycenter')) known.push('free-clinic')
+        if (localStorage.getItem('street-life-discovery-version') !== '2' && known.includes('daycenter')) known.push('free-clinic')
         return [...new Set(known)]
       }
       return localStorage.getItem(SAVE_KEY) ? locations.map((location) => location.id) : ['street', 'station', 'shop']
@@ -1160,9 +1160,9 @@ export default function App() {
   }
 
   const practicalQuestions = [
-    { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: 'Help Center opens at 08:00 and closes at 16:00. Ask a social worker about accommodation, documents and benefits. Day Center is also open 08:00–16:00: you can stay indoors, ask for a shower or laundry, and charge your phone. Free Clinic offers basic medical care from 08:00 to 16:00, with no insurance needed. Services may be full. The addresses are saved on your map.', locations: ['support', 'daycenter', 'free-clinic'] },
+    { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: '', locations: ['support', 'daycenter', 'free-clinic'] },
     { id: 'bed', icon: '🛏️', title: 'How can I get a shelter bed?', text: 'First registration at Night Shelter runs 19:00–22:00. Arrive by 19:00, wait the full 20-minute queue, and then find out whether there is a place. There are only 0–3 free places each day; earlier arrivals have a better chance. A successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
-    { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about a Schronisko referral; that is a separate housing route. Day Center can offer daytime shelter, but is not an overnight bed. Free Clinic offers basic medical care without insurance. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: ['support', 'daycenter', 'free-clinic'] },
+    { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about accommodation. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: [] },
     { id: 'supplies', icon: '🥪', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, and a hot meal 8 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
     { id: 'charging', icon: '🔋', title: 'Where can I charge my phone?', text: 'You glance at the battery and remember an outlet in the waiting room at Station. You can go there tonight: it is available around the clock. Charging takes one hour and adds 60% battery, up to 100%. The station address is on your map. You do not need internet to remember this.', locations: ['station'] },
   ]
@@ -1174,8 +1174,10 @@ export default function App() {
     || (question.id === 'charging' && inventory.phoneBattery <= 30))
   // One thought per direction. Urgent needs interrupt the ordered questions.
   // No random draws or reshuffling while the player is deciding.
+  const remainingHelpPlaces = practicalQuestions[0].locations.filter(id => !discoveredLocations.includes(id))
   const nextQuestion = inventory.phoneBattery <= 30 ? 'charging'
     : game.hunger <= 45 || game.thirst <= 45 ? 'supplies'
+    : remainingHelpPlaces.length ? 'morning'
     : ['morning', 'bed', 'no-place'].find(id => !answeredQuestions.includes(id)) ?? 'morning'
   const exhausted = game.energy <= 40
   const lastAction = journalEntries.at(-1)?.actionTitle
@@ -1201,21 +1203,29 @@ export default function App() {
     const question = practicalQuestions.find(entry => entry.id === id)
     if (!question) return
     const memory = id === 'charging'
-    runWithResult(question.title, () => {
+    const foundPlace = id === 'morning' ? remainingHelpPlaces[0] : undefined
+    const foundPlaces = id === 'morning' ? foundPlace ? [foundPlace] : [] : question.locations
+    const presentation = questionPresentation(id, foundPlaces)
+    const answerText = id === 'morning'
+      ? foundPlace && presentation?.places?.[0]
+        ? `${presentation.places[0].name} · ${presentation.places[0].hours}. ${presentation.places[0].detail}. The address is saved on your map.`
+        : 'You checked the available information again, but found no new places.'
+      : question.text
+    runWithResult(id === 'morning' && !foundPlace ? 'Searched for more help' : question.title, () => {
       const next = { ...game }
-      next.mood = Math.max(next.mood, Math.min(60, next.mood + 5))
+      if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(60, next.mood + 5))
       setGame(next)
       setAnsweredQuestions(previous => [...new Set([...previous, id])])
-      setDiscoveredLocations(previous => [...new Set([...previous, ...question.locations])])
+      setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
       if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: 1140 })
-      setInfoModal({ title: question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${question.text}`, presentation: questionPresentation(id, question.locations) })
+      setInfoModal({ title: id === 'morning' && !foundPlace ? 'No new information' : question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${answerText}`, presentation })
     }, before)
   }
 
   function answerPracticalQuestion(id: string) {
     const question = practicalQuestions.find(entry => entry.id === id)
     if (!question || phoneActivity || current.id !== 'street' || !visibleQuestions.includes(question)) return
-    if (answeredQuestions.includes(id)) {
+    if (id !== 'morning' && answeredQuestions.includes(id)) {
       setInfoModal({ title: question.title, text: `${id === 'charging' ? 'A remembered place' : 'AI · Saved answer'}\n\n${question.text}`, presentation: questionPresentation(id, question.locations, true), costs: [], changes: [] })
       return
     }
@@ -1798,6 +1808,7 @@ export default function App() {
     autosave.resetPending()
     localStorage.removeItem(SAVE_KEY)
     localStorage.removeItem(DISCOVERY_KEY)
+    localStorage.removeItem('street-life-discovery-version')
     setDiscoveredLocations(['street', 'station', 'shop'])
     setActiveGoal(null)
     setJournalGoals({ morning: false, shelter: false, support: false, work: false })
@@ -1865,6 +1876,7 @@ export default function App() {
   const autosave = useGameAutosave({
     [SAVE_KEY]: game,
     [DISCOVERY_KEY]: discoveredLocations,
+    'street-life-discovery-version': 2,
     [GOAL_KEY]: activeGoal,
     [JOURNAL_GOALS_KEY]: journalGoals,
     [JOURNAL_HISTORY_KEY]: journalEntries,
@@ -2041,7 +2053,7 @@ export default function App() {
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong>🩺 Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
-            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? 'What did it say about getting help in the morning?' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small className={`choice-estimate${answeredQuestions.includes('morning') ? '' : ' choice-duration'}`}>{answeredQuestions.includes('morning') ? 'Saved answer · free' : approximateDuration(PHONE_SEARCH_ESTIMATE)}</small></div><span>{answeredQuestions.includes('morning') ? 'Notes' : `Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
+            <button className="action" data-choice="question-morning" aria-label="Where can I get help in the morning?" onClick={() => answerPracticalQuestion('morning')} disabled={!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost}><div><strong><span className="choice-emoji" aria-hidden="true">📱</span>{answeredQuestions.includes('morning') ? remainingHelpPlaces.length ? 'What other help can I find?' : 'Try searching for more help.' : 'Maybe my phone can help… I need somewhere to start.'}</strong><small className="choice-estimate choice-duration">{approximateDuration(PHONE_SEARCH_ESTIMATE)}</small></div><span>{`Approx. ${PHONE_SEARCH_ESTIMATE} min · uses battery`}</span></button>
             {visibleQuestions.filter(question => question.id !== 'morning').map(question => {
               const saved = answeredQuestions.includes(question.id)
               const memory = question.id === 'charging'
@@ -2136,7 +2148,7 @@ export default function App() {
         <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
         <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Renew expired service automatically for 1 zł</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
         <AvailableFirst tag="div" className="phone-actions">
-          {current.id === 'street' && <button disabled={!answeredQuestions.includes('morning') && (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost)} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Approx. 15 min for a new answer · saved answers free</small></div></button>}
+          {current.id === 'street' && <button disabled={!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Approx. 15 min · searches for one new place</small></div></button>}
           <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
           <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
           <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood+</small></div></button>

@@ -77,6 +77,8 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = failed ? 'I was hoping for a little relief. I’m not sure where to try next.' : 'My legs feel less heavy. It helps to stop for a while.'
   } else if (actionTitle === 'Shelter from the rain') {
     text = 'It feels better to be dry. I’m still uneasy about where I’ll spend the night.'
+  } else if (actionTitle === 'Searched for more help' || actionTitle === 'No new information') {
+    text = 'I keep seeing the same places. I need to decide what to do with what I already know.'
   } else if (/morning|help center found/.test(actionTitle.toLowerCase())) {
     text = 'I feel less lost with somewhere to turn. Waiting until morning still worries me.'
   } else if (/shelter bed|night shelter found/.test(actionTitle.toLowerCase())) {

@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-12 · Neutral office-worker protagonist. Latest application build: `v2026.10.12-163`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-164`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### One place per information search (v164)
+
+The repeatable morning-help search now reveals one unknown place per completed search: Help Center, then Day Center, then Free Clinic. Known addresses are skipped. Each find gives only its name, opening hours, basic services and a saved map address; detailed admission/support rules remain for later questions and visits. The Street search option stays prioritized while any of these three addresses is unknown. Ask AI in the phone panel also runs a fresh search, rather than returning the original cached bundle.
+
+Each attempt retains the existing 10–25 minute duration, phone/battery requirements, browsing dialog, background pause, result costs and reload restoration. Finding a new place grants the existing capped Mood bonus. Once all three are known, searches still take time and battery but return No new information without opening a place or granting an extra Mood reward. The journal records this as an unsuccessful repeat search. Other saved questions remain free to reread. No-place advice no longer unlocks multiple addresses as a side effect.
+
+Discovery version 2 is persisted with the existing save checkpoint. It distinguishes new separate Day Center discoveries from legacy combined-center saves: new saves do not auto-unlock Free Clinic after reload, while legacy combined-center migration is retained. Existing discovered locations remain known and are not reset. Interrupted searches do not consume the next find. Regression coverage includes sequential single-place results, reload after each find, paid phone-panel repeats, exhausted searches, interruption, duration/cost persistence, reset and legacy migration.
 
 ### Browsing dot alignment (v163)
 
@@ -670,7 +678,7 @@ The opening night uses two voices: narrator describes the scene and observable c
 
 On Street, **I don’t know where to go… Maybe my phone can help.** immediately obtains the first scripted AI answer about morning help. **Ask AI** in the phone panel obtains the same answer directly, including after the opening night. Questions emerge individually: morning help is initially available; shelter registration appears after learning about help or discovering the shelter; the no-bed fallback appears after learning registration rules; food/water appears at Food or Water <=45; charging appears at Battery <=30. Answered questions stay available. Responses reflect implemented game schedules and services; this is authored game dialogue, not a live AI/API connection. Answers save relevant addresses; knowing an address does not grant admission or a bed.
 
-Each first AI question displays an estimate of about 15 minutes, takes a randomly selected 10–25 game minutes at one game minute per real second, and consumes 0.2% Battery per actual minute adjusted for phone condition, requires active mobile service and a working phone, and grants up to +5 Mood, stopping at 60 without reducing higher Mood. Each question is rewarded once per run. Saved answers persist under `street-life-answers-v1`, can be reread with zero battery or no service, and cost no time, battery or extra Mood. Selection and answer reading pause time. Reset clears saved answers. The shelter answer also creates the next 19:00 registration goal.
+Each first AI question displays an estimate of about 15 minutes, takes a randomly selected 10–25 game minutes at one game minute per real second, and consumes 0.2% Battery per actual minute adjusted for phone condition, requires active mobile service and a working phone, and grants up to +5 Mood, stopping at 60 without reducing higher Mood. Other questions are rewarded once per run; the repeatable morning-help search grants the reward only for a newly discovered place. Other saved answers persist under `street-life-answers-v1`, can be reread with zero battery or no service, and cost no time, battery or extra Mood. Selection and answer reading pause time. Reset clears saved answers. The shelter answer also creates the next 19:00 registration goal.
 
 Charging is a remembered place rather than an AI lookup: at Battery <=30 an extra story choice notices the low battery. Reading it recalls the waiting-room outlet at Station, usable tonight and available around the clock (+60% Battery in one hour, capped at 100). This memory costs no time or battery, requires no service, works even at zero battery, and grants the same one-time clarity bonus. It saves only Station, without revealing unrelated daytime charging addresses.
 
@@ -754,7 +762,7 @@ These are current code realities, not planned features:
 - Schronisko referral is immediate; no application/approval process yet.
 - The temperature day-cycle formula currently uses a 20-hour cosine period despite the comment describing a normal daily cycle.
 - Active effects and some old saves may expose transitional edge cases as schemas evolve.
-- The gradual map has connected online discovery routes for Night Shelter, Day Work and Help Center, plus Schronisko through a referral. Day Center is also revealed by the morning-help and no-bed AI answers. Remaining services still lack a connected discovery route in a new run.
+- The gradual map has connected online discovery routes for Night Shelter, Day Work and Help Center, plus Schronisko through a referral. Day Center and Free Clinic are revealed separately by successive morning-help searches. Remaining services still lack a connected discovery route in a new run.
 - Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
 - Result windows and pending event choices are not saved across reloads.
 
@@ -894,7 +902,7 @@ Validation for v115: `npm run build` and `npm test` passed locally, and its GitH
 
 - Help Center handles accommodation, documents and benefits. The former Day Center & Clinic is now two separate points: Day Center (indoor rest, shower, laundry and charging) and Free Clinic (free basic medical care, no insurance or documents required), both open 08:00–16:00.
 - The existing clinic action retains its 60-minute duration, Health/Mood bonuses, Cold removal and time-of-day capacity checks. Its internal `daycenter-doctor` action ID remains stable, but it is available only at `free-clinic`.
-- Previously discovered combined centers migrate to both addresses without resetting a save. Morning-help and no-bed answers discover both points.
+- Previously discovered combined centers migrate to both addresses without resetting a save. Since v164, successive morning-help searches discover these points separately; no-bed advice does not reveal addresses.
 - Map markers display names only. The fixed destination card shows opening hours after the name, using the same 16 px semibold type, compact `08-16` format, green when open and muted red when closed. No hours background or visible “You are here” text.
 
 ## Mood and five overall-condition faces (v129)

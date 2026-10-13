@@ -21,8 +21,10 @@ const answers: Record<string, Pick<ResultPresentation, 'heading' | 'lead' | 'not
 export function questionPresentation(id: string, placeIds: string[], saved = false): ResultPresentation | undefined {
   const answer = answers[id]
   if (!answer) return undefined
+  const morningPlace = id === 'morning' ? locations.find(place => place.id === placeIds[0]) : undefined
   return {
     ...answer,
+    ...(id === 'morning' ? { heading: morningPlace?.name ?? 'No new information', lead: morningPlace ? 'Address saved on your map.' : 'You found no new places.', notice: undefined } : {}),
     label: saved ? 'SAVED INFORMATION' : id === 'charging' ? 'A REMEMBERED PLACE' : 'FOUND INFORMATION',
     places: placeIds.flatMap(placeId => {
       const place = locations.find(location => location.id === placeId)
