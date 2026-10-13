@@ -10,6 +10,8 @@ export type JournalEntry = {
 }
 
 const titles: Record<string, string> = {
+  'The door closes': 'Watched someone return home', 'Making a bed on a bench': 'Noticed someone settling in',
+  'The last departures': 'Looked around the station', 'Someone needs the bench': 'Woken on a bench',
   'Drink water': 'Drank water', 'Eat food': 'Ate food',
   'Walk with music': 'Walked with music', 'Walk through the city': 'Walked through the city',
   'Rest on the bench': 'Rested on a bench', 'Sit and recover': 'Rested at the station',
@@ -48,7 +50,15 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
   let title = titles[actionTitle] ?? (actionTitle.startsWith('Buy ') ? `Bought ${actionTitle.slice(4)}` : actionTitle)
   let text = ''
 
-  if (actionTitle === 'Something happened overnight') {
+  if (actionTitle === 'The door closes') {
+    text = 'For everyone else, the evening still ends at a front door. I keep walking.'
+  } else if (actionTitle === 'Making a bed on a bench') {
+    text = 'I notice how carefully they keep their things close. I’m starting to understand why.'
+  } else if (actionTitle === 'The last departures') {
+    text = 'I used to look at the departures. Tonight I’m looking for somewhere to stay.'
+  } else if (actionTitle === 'Someone needs the bench') {
+    text = 'Waking up in front of a stranger makes me feel exposed. They only wanted a seat.'
+  } else if (actionTitle === 'Something happened overnight') {
     title = 'Belongings stolen overnight'
     text = 'My stomach sank when I checked my bag. I don’t feel safe here anymore.'
   } else if (actionTitle === 'Search interrupted') {

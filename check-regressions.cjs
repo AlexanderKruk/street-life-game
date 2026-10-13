@@ -133,7 +133,7 @@ for(const [state,extra,expected] of [
 
 // One-level choices react immediately, while reading and deciding remain paused.
 setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Maybe my phone can help'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
-setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();discoverHelp();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();click('Reset save');assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
+setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();discoverHelp();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();fireEvent.click(screen.getByRole('button',{name:'Reset save'}));assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
@@ -656,4 +656,65 @@ ok();assert(!screen.queryByRole('button',{name:/Take a shower/}));
 setup({locationId:'free-clinic',minutes:1020});
 assert(document.querySelector('.closed-content-notice'));
 assert([...document.querySelectorAll('.closed-content-body button')].find(button=>button.textContent.includes('See a doctor')).disabled);
-cleanup();dom.window.close();console.log('PASS: review regressions and clothing cleanliness, hygiene caps, laundry, migration, outdoor sleep and separate free clinic.');
+// First-night observations follow actions, survive reload and do not repeat.
+const firstNightKey='street-life-first-night-events-v1';
+setup({minutes:1320,energy:100});Math.random=()=>.4;
+click('Just one more street. I’m not ready to lie down.');
+assert(!document.querySelector('.event-overlay'),'read the action result before the observation');
+assert.equal(read(firstNightKey).pendingId,'first-night-door');ok();
+assert(screen.getByRole('dialog').textContent.includes('The door closes'));
+const observingState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),observingState);
+cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('The door closes'));
+click('Think of someone I could call');assert.equal(read(firstNightKey).pendingId,null);ok();
+Math.random=()=>.4;click('Just one more street. I’m not ready to lie down.');ok();assert(!document.querySelector('.event-overlay'));
+Math.random=()=>.4;click('Just one more street. I’m not ready to lie down.');ok();assert(!document.querySelector('.event-overlay'));
+assert.deepEqual(read(firstNightKey).seen,['first-night-door']);
+click('Reset save');assert.deepEqual(read(firstNightKey).seen,[]);assert.equal(read(firstNightKey).pendingId,null);
+
+// Sitting awake does not make a stranger assume the hero has no home.
+setup({minutes:1320,energy:100},{'street-life-answers-v1':['morning','bed'],'street-life-discovered-v1':['street','station','shop','support','daycenter','free-clinic'],'street-life-discovery-version':'2'});
+Math.random=()=>.4;click(/Is there a bench nearby/);ok();Math.random=()=>.4;click(/I’ll sit for a bit/);ok();
+assert(screen.getByRole('dialog').textContent.includes('Making a bed on a bench'));
+assert(!read('street-life-discovered-v1').includes('shelter'));
+click('Ask how they get through the night');
+assert(screen.getByRole('dialog').textContent.includes('You tell them you have nowhere'));
+assert(read('street-life-discovered-v1').includes('shelter'));
+assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:2,minute:1140});ok();
+
+// A shorter interval suppresses a different observation, including after reload.
+setup({minutes:1320},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20},[firstNightKey]:{seen:['first-night-door'],lastAt:1320,pendingId:null}});
+cleanup();render(React.createElement(App));Math.random=()=>.4;advance(2000);ok();
+assert(!document.querySelector('.event-overlay'));
+assert.deepEqual(read(firstNightKey).seen,['first-night-door']);
+
+// Arrival provides a neutral station observation; declining conversation discovers nothing.
+setup({minutes:1330},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20},'street-life-discovered-v1':['street','station','shop']});
+Math.random=()=>.4;advance(2000);assert.equal(read(stateKey).locationId,'station');ok();
+assert(screen.getByRole('dialog').textContent.includes('The last departures'));
+assert(screen.getByRole('dialog').textContent.includes('another traveller with a bag'));
+click('Find a quiet seat on my own');assert(!read('street-life-discovered-v1').includes('shelter'));ok();
+
+// A real bench sleep can draw the new wake scene, even after midnight.
+setup({locationId:'station',minutes:1380});beginSleep(/Try to sleep/,2);assert.equal(read('street-life-sleep-v1').total,120);
+advance(11000);const wakeRolls=[.99,0,.9];Math.random=()=>wakeRolls.shift()??.99;advance(1000);
+assert.equal(read(firstNightKey).pendingId,'first-night-bench-wake');ok();
+assert(screen.getByRole('dialog').textContent.includes('Someone needs the bench'));
+click('Sit up and gather my things');assert.equal(read(firstNightKey).pendingId,null);ok();
+
+// First-night boundaries and awake/bench-sleep eligibility are explicit.
+setup({day:2,minutes:60},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20}});Math.random=()=>.4;advance(2000);ok();
+assert(screen.getByRole('dialog').textContent.includes('The last departures'));
+const eventModule={exports:{}};
+new Function('module','exports',require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text)(eventModule,eventModule.exports);
+const observationEvents=eventModule.exports.STREET_EVENTS;
+for(const state of [{day:1,minutes:1250},{day:2,minutes:360},{day:3,minutes:1320}])assert(!eventModule.exports.firstNightTime(state));
+assert(eventModule.exports.firstNightTime({day:1,minutes:1320}));assert(eventModule.exports.firstNightTime({day:2,minutes:359}));
+const context={locationId:'station',weather:'Clouds',housing:'Street',documents:true,firstNight:true};
+assert(!observationEvents.find(e=>e.id==='free-snack').eligible(context));
+assert(!observationEvents.find(e=>e.id==='station-food').eligible(context));
+assert(!observationEvents.find(e=>e.id==='useful-tip').eligible(context));
+const benchWake=observationEvents.find(e=>e.id==='first-night-bench-wake');
+assert(benchWake.eligible({...context,sleepKind:'bench'}));
+assert(!benchWake.eligible({...context,sleepKind:'ground'}));
+assert(!benchWake.eligible({...context,firstNight:false,sleepKind:'bench'}));
+cleanup();dom.window.close();console.log('PASS: review regressions, first-night observations, pause/reload, cooldown, neutral contacts and bench-sleep eligibility.');

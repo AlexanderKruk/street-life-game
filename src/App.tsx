@@ -1,6 +1,6 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, overallCondition, conditionBand, type ActionResult, type GameState } from './game'
-import { pickStreetEvent, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
+import { pickStreetEvent, firstNightTime, STREET_EVENTS, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
@@ -17,7 +17,19 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.13-165'
+const BUILD_VERSION = 'v2026.10.13-166'
+
+const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
+type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
+function loadFirstNightEvents(): FirstNightEvents {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FIRST_NIGHT_EVENTS_KEY) ?? 'null')
+    const ids = new Set(STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id))
+    const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId) ? saved.pendingId : null
+    const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
+    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId }
+  } catch { return { seen: [], lastAt: null, pendingId: null } }
+}
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -414,7 +426,8 @@ export default function App() {
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
-  const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(null)
+  const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(loadFirstNightEvents)
+  const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(() => STREET_EVENTS.find(event => event.id === loadFirstNightEvents().pendingId) ?? null)
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(null)
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
@@ -466,7 +479,7 @@ export default function App() {
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
   ], [activeGoal])
   const storyDecision = current.id === 'street' && !trip && !sleeping && !shelterQueue && !shelterDeparture && !trashGame
-  const firstNight = (game.day === 1 && game.minutes >= 1320 || game.day === 2 && game.minutes < 360) && life.housing === 'Street'
+  const firstNight = firstNightTime(game) && life.housing === 'Street'
   const openingScene = game.day === 1 && game.minutes < 1380
     ? 'You stand on the street with your backpack. There is nowhere to go back to tonight. The station windows are still lit.'
     : game.day === 1 ? 'The shops have lowered their shutters. Fewer people pass the station now. You are outside with your backpack; the waiting room is still lit.'
@@ -581,6 +594,18 @@ export default function App() {
 
   function resultSnapshot(): ResultSnapshot {
     return { game: { ...game }, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
+  }
+
+  function rememberFirstNightEvent(event: StreetEvent, state = game) {
+    setFirstNightEvents(previous => ({ seen: [...new Set([...previous.seen, event.id])], lastAt: absoluteMinutes(state), pendingId: event.id }))
+    setActiveEvent(event)
+  }
+
+  function observeFirstNight(trigger: Extract<EventTrigger, 'walk' | 'bench' | 'location'>, state: GameState, locationId = state.locationId) {
+    if (!firstNightTime(state) || life.housing !== 'Street' || activeEvent || infoModal || firstNightEvents.pendingId) return
+    if (firstNightEvents.lastAt !== null && absoluteMinutes(state) - firstNightEvents.lastAt < 45) return
+    const event = pickStreetEvent(trigger, { locationId, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: true, seenEventIds: [...firstNightEvents.seen, ...STREET_EVENTS.filter(event => !event.id.startsWith('first-night-')).map(event => event.id)] }, 0.55)
+    if (event?.id.startsWith('first-night-')) rememberFirstNightEvent(event, state)
   }
 
   function runWithResult(title: string, action: () => void, before = resultSnapshot(), includeTime = true, always = false) {
@@ -784,6 +809,7 @@ export default function App() {
       setMessage(`You arrived at ${destination.name} by ${trip.mode === 'walk' ? 'walking' : 'public transport'}.`)
       setScreen('location')
       setTrip(null)
+      if (destination.id === 'station') observeFirstNight('location', { ...game, locationId: destination.id })
     }, trip.before ?? resultSnapshot(), true, true)
   }, [trip])
 
@@ -935,8 +961,10 @@ export default function App() {
         if (!effects.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))) illnessText = ` You woke up with a cold after sleeping outside in ${sleepWeather.label.toLowerCase()} weather.`
       }
       const baseChance = sleep.kind === 'ground' ? 0.75 : 0.65
-      const wakeEvent = pickStreetEvent('wake', { locationId: 'street', weather: weather.label, housing: 'Street', documents: inventory.documents }, Math.min(0.9, baseChance * scale))
-      if (wakeEvent) setActiveEvent(wakeEvent)
+      const sleepStart = { day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 }
+      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: sleepWeather.label, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: firstNightEvents.seen }, Math.min(0.9, baseChance * scale))
+      if (wakeEvent?.id.startsWith('first-night-')) rememberFirstNightEvent(wakeEvent, wakeState)
+      else if (wakeEvent) setActiveEvent(wakeEvent)
     } else if (sleep.kind === 'shelter') {
       const sleepStartDay = Math.floor(sleep.startAbsolute / 1440) + 1
       const stayNightDay = sleep.startAbsolute % 1440 < 480 ? sleepStartDay - 1 : sleepStartDay
@@ -1155,7 +1183,10 @@ export default function App() {
       if (wet) {
         setRainChoice(true)
         setMessage((startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.') + musicText)
-      } else setMessage('You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.' + musicText)
+      } else {
+        setMessage('You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.' + musicText)
+        observeFirstNight('walk', next)
+      }
     }, resultSnapshot(), true, true)
   }
 
@@ -1269,8 +1300,10 @@ export default function App() {
     }
     if (!streetBenchFound) return
     if (kind === 'bench-rest') {
-      setGame((prev) => applyAction(prev, { minutes: 45, energy: 18, mood: 2 }))
+      const next = applyAction(game, { minutes: 45, energy: 18, mood: 2 })
+      setGame(next)
       setMessage('You sit on the bench and get off your feet for a while.')
+      observeFirstNight('bench', next)
       return
     }
     requestSleep('bench')
@@ -1310,7 +1343,7 @@ export default function App() {
     setSelectedDestination(null)
     setScreen('travel')
     if (!activeEvent) {
-      const event = pickStreetEvent('travel', { locationId: game.locationId, travelMode: mode, weather: weather.label, housing: life.housing, documents: inventory.documents }, mode === 'walk' ? 0.30 : 0.18)
+      const event = pickStreetEvent('travel', { locationId: game.locationId, travelMode: mode, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight }, mode === 'walk' ? 0.30 : 0.18)
       if (event) setActiveEvent(event)
     }
   }
@@ -1464,8 +1497,11 @@ export default function App() {
       const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, 0.45)
       if (wakeEvent) setActiveEvent(wakeEvent)
     } else {
-      const locationEvent = pickStreetEvent('location', { locationId: current.id, weather: weather.label, housing: life.housing, documents: inventory.documents }, 0.20)
-      if (locationEvent) setActiveEvent(locationEvent)
+      if (firstNight) observeFirstNight('location', next)
+      else {
+        const locationEvent = pickStreetEvent('location', { locationId: current.id, weather: weather.label, housing: life.housing, documents: inventory.documents }, 0.20)
+        if (locationEvent) setActiveEvent(locationEvent)
+      }
     }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     if (actionId === 'shop-meal') {
@@ -1508,6 +1544,16 @@ export default function App() {
   }
 
   function applyEventOutcomeImpl(outcome: EventOutcome) {
+    if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
+    const foundPlace = locations.find(place => place.id === outcome.discoverLocation)
+    if (foundPlace) {
+      setDiscoveredLocations(previous => [...new Set([...previous, foundPlace.id])])
+      if (foundPlace.id === 'shelter' && !shelterBooked) {
+        const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
+        const day = Math.floor(end / 1440) + 1
+        setActiveGoal({ type: 'night-shelter', day: end % 1440 >= 1320 ? day + 1 : day, minute: 1140 })
+      }
+    }
     setGame((prev) => applyAction(prev, {
       minutes: outcome.minutes ?? 0,
       money: outcome.money,
@@ -1837,6 +1883,8 @@ export default function App() {
     setBegging({ day: 1, attempts: 0 })
     setNavigationOn(true)
     setActiveEvent(null)
+    setFirstNightEvents({ seen: [], lastAt: null, pendingId: null })
+    localStorage.removeItem(FIRST_NIGHT_EVENTS_KEY)
     setDiceCheck(null)
     laundryCleanAt.current = -1
     groundSleepWindow.current = null
@@ -1888,6 +1936,7 @@ export default function App() {
     'street-life-begging-v1': begging,
     'street-life-answers-v1': answeredQuestions,
     'street-life-memories-v1': seenMemories,
+    [FIRST_NIGHT_EVENTS_KEY]: firstNightEvents,
     'street-life-rain-choice-v1': rainChoice,
     'street-life-screen': screen === 'travel' ? undefined : screen,
     'street-life-mobile-service-until': mobileServiceUntil,
@@ -1898,7 +1947,7 @@ export default function App() {
     'street-life-shelter-queue-v1': shelterQueue,
     'street-life-shelter-departure-v1': shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
-    discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories,
+    discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents,
     rainChoice, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture,
     phoneActivity?.questionId ?? null, infoModal,
@@ -2289,11 +2338,11 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <div className="event-overlay">
+    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="street-event-title">
       <section className="event-card">
         <div className="event-card-icon">{activeEvent.icon}</div>
         <p className="eyebrow">STREET EVENT</p>
-        <h2>{activeEvent.title}</h2>
+        <h2 id="street-event-title">{activeEvent.title}</h2>
         <p>{activeEvent.text}</p>
         <div className="event-choices">{activeEvent.choices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)

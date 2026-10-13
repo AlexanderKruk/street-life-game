@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-165`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-166`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### First-night observations (v166)
+
+Between Day 1 22:00 and Day 2 06:00, a protagonist living on the Street can observe people returning home after a dry city walk, someone preparing a bed on a nearby bench after resting, or people remaining at the station after arrival or an ordinary station action. Each completed eligible action has a 55% event roll. Awake observations have a 45-game-minute cooldown and each scene appears once per run. The action result is read first, then the scene and its three choices. Time pauses during the choice.
+
+Strangers treat the awake hero as an ordinary passerby or traveller. They do not infer homelessness or spontaneously offer homeless-specific assistance. Existing unsolicited food/help events are excluded during this first night. In the bench/station scenes, the player can choose to disclose the need for somewhere to stay; only this choice reveals Night Shelter and its basic registration hours, with a goal for the next registration evening. Quiet observation or ordinary conversation reveals no address.
+
+Sleeping on a bench during the first night adds a possible wake event: someone asks the lying hero to sit up and make room. Ground sleep cannot draw this scene. First-night eligibility for waking uses the sleep start time; existing quiet-night and theft outcomes remain possible. The four scene IDs, awake cooldown timestamp and unresolved choice are saved and restored, and reset clears them. Choices create distinct journal reflections. Automated regression checks cover action/result order, reload, no repeats, cooldown, neutral contact, discovery, time boundaries and sleep-kind eligibility.
 
 ### Information Mood reward (v165)
 
@@ -143,7 +151,7 @@ The narrator describes the surroundings, established memories and observable con
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and ordinary street-event choices are not persisted. The first-night rain decision, answered phone questions, journal goal flags and journal history are persisted; reset clears them.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and ordinary street-event choices are not persisted; unresolved first-night observation choices are persisted. The first-night rain decision, answered phone questions, journal goal flags and journal history are persisted; reset clears them.
 
 Initial state:
 - Day 1, Monday, 22:00, Street. Existing saves retain their own time. Reset/new run starts at 22:00.
