@@ -17,7 +17,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.13-164'
+const BUILD_VERSION = 'v2026.10.13-165'
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
@@ -1213,7 +1213,7 @@ export default function App() {
       : question.text
     runWithResult(id === 'morning' && !foundPlace ? 'Searched for more help' : question.title, () => {
       const next = { ...game }
-      if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(60, next.mood + 5))
+      if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(60, before.game.mood + 3))
       setGame(next)
       setAnsweredQuestions(previous => [...new Set([...previous, id])])
       setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
