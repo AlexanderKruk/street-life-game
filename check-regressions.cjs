@@ -133,7 +133,7 @@ for(const [state,extra,expected] of [
 
 // One-level choices react immediately, while reading and deciding remain paused.
 setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Maybe my phone can help'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
-setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();discoverHelp();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();fireEvent.click(screen.getByRole('button',{name:'Reset save'}));assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
+setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();discoverHelp();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();if(document.querySelector('.event-overlay')){fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button')[0]);ok();}fireEvent.click(screen.getByRole('button',{name:'Reset save'}));assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
@@ -728,6 +728,29 @@ for(const [id,assets,durations] of [
  assert.equal(read(stateKey).minutes,1385+durations[index]);assert.equal(read(firstNightKey).pendingId,null);
  ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
+
+// Every event and its result block all background interaction, not just the clock.
+setup({minutes:1385},{[firstNightKey]:{seen:['first-night-door'],lastAt:1385,pendingId:'first-night-door'}});
+const lockedGame=read(stateKey), lockedInventory=read(invKey);
+assert(document.querySelector('.game-background[inert][aria-hidden="true"]'));
+assert(document.querySelector('.bottom-nav[inert][aria-hidden="true"].event-background-blocked'));
+assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+assert(document.querySelector('footer[inert] .reset').disabled);
+for(const button of document.querySelectorAll('.bottom-nav button, footer .reset'))fireEvent.click(button);
+fireEvent.click(document.querySelector('.game-background [data-choice="walk"]'));
+advance(3000);assert.deepEqual(read(stateKey),lockedGame);assert.deepEqual(read(invKey),lockedInventory);
+assert(document.querySelector('.event-illustration').src.endsWith('event-first-night-door-480.webp'));
+click('Think of someone I could call');
+assert(document.querySelector('.result-overlay'));
+assert(document.querySelector('.game-background[inert]'));
+assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+assert(screen.getByRole('dialog').contains(document.activeElement));
+ok();assert(!document.querySelector('.game-background[inert]'));assert(!document.querySelector('.bottom-nav[inert]'));
+assert([...document.querySelectorAll('.bottom-nav button')].every(button=>!button.disabled));
+click('Map');assert(document.querySelector('.map-surface'));
+setup({minutes:1320});Math.random=()=>0;click('Just one more street. I’m not ready to lie down.');ok();
+assert(screen.getByRole('dialog',{name:'Rain on the street'}));assert(document.querySelector('.bottom-nav[inert]'));
+assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 
 // First-night boundaries and awake/bench-sleep eligibility are explicit.
 setup({day:2,minutes:60},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20}});Math.random=()=>.4;advance(2000);ok();

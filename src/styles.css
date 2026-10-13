@@ -975,3 +975,6 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .result-illustration { display:block; width:calc(100% + 32px); max-width:none; margin:0 -16px 15px; aspect-ratio:16/9; object-fit:cover; flex-shrink:0; max-height:240px; }
 @media (max-height:650px) { .event-illustration,.result-illustration { max-height:150px; } }
 @media (max-width:360px) { .event-overlay { padding:12px; } .illustrated-event .event-body { padding:14px; } .illustrated-event h2 { font-size:21px; } }
+
+/* Modal events and outcomes block every background action, including navigation. */
+.game-background.event-background-blocked, footer.event-background-blocked, .bottom-nav.event-background-blocked { filter:blur(5px); pointer-events:none; user-select:none; }

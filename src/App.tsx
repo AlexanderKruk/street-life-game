@@ -18,7 +18,7 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 
-const BUILD_VERSION = 'v2026.10.13-168'
+const BUILD_VERSION = 'v2026.10.13-169'
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
 type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
@@ -523,6 +523,7 @@ export default function App() {
   useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
+  const eventInteractionBlocked = !!activeEvent || !!diceCheck || rainChoice || !!pendingResult || (!!infoModal && !inlineResult)
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null
@@ -1948,7 +1949,7 @@ export default function App() {
   }
 
   const nav = (target: Screen, icon: IconName, label: string) =>
-    <button disabled={!!phoneActivity || travelling} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
+    <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === target ? 'nav-item active' : 'nav-item'} aria-current={screen === target ? 'page' : undefined} onClick={() => setScreen(target)}><Icon name={icon} /><small>{label}</small></button>
 
   const autosave = useGameAutosave({
     [SAVE_KEY]: game,
@@ -2044,6 +2045,7 @@ export default function App() {
       </section>
     </div>}
 
+    <div className={`game-background${eventInteractionBlocked ? ' event-background-blocked' : ''}`} inert={eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} onClickCapture={event => { if (eventInteractionBlocked) { event.preventDefault(); event.stopPropagation() } }}>
     <header className="game-header">
       <div className="header-state-row">
         <h1 aria-label={`Day ${game.day} ${weekday(game.day)} ${formatTime(game.minutes)}`}><time>{formatTime(game.minutes)}</time><span className="game-day">D{game.day} <span className="weekday">{weekday(game.day)}</span></span></h1>
@@ -2281,6 +2283,8 @@ export default function App() {
       </section>
     </section>}
 
+    </div>
+
     {gameOver && <div className="game-over-overlay">
       <section className="game-over-card">
         <div className="game-over-icon">❤️‍🩹</div>
@@ -2384,12 +2388,12 @@ export default function App() {
     </div>}
 
     {autosave.saveFailed && <p role="alert" className="save-warning">Progress could not be saved on this device. Keep the game open and try again.</p>}
-    <footer inert={activityOverlay}><button className="reset" onClick={reset}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
-    <nav className={screen === 'travel' || phoneActivity ? 'bottom-nav travelling' : 'bottom-nav'} aria-label="Main navigation">
+    <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
+    <nav inert={eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={`bottom-nav${screen === 'travel' || phoneActivity ? ' travelling' : ''}${eventInteractionBlocked ? ' event-background-blocked' : ''}`} aria-label="Main navigation">
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
-      <button disabled={!!phoneActivity || travelling} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
-      <button disabled={!!phoneActivity || travelling} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
+      <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
+      <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
       {nav('journal', 'journal', 'Journal')}
     </nav>
   </main>

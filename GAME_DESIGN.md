@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-168`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-13 · Neutral office-worker protagonist. Latest application build: `v2026.10.13-169`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Event background lock (v169)
+
+Street events, rain decisions, dice checks, pending results and modal outcomes now make the entire underlying game surface inert and hidden from assistive technology. Lower navigation and reset are explicitly disabled and blurred along with the background; background click capture also prevents action handlers from running while locked. The event choices and subsequent result confirmation remain outside the inert surface, focused and usable. Closing the final modal restores normal navigation and actions. Inline phone-answer results retain their existing behavior. Regression coverage checks blocked navigation/reset/location clicks, paused resources, result focus and unlock, plus rain-event navigation blocking.
 
 ### Complete first-night answer illustrations (v168)
 
