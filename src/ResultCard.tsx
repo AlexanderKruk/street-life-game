@@ -1,6 +1,8 @@
 import { memo, useEffect, useRef } from 'react'
 import { responsiveImageProps } from './responsiveImages'
-import { Icon } from './Icon'
+import { Icon, type IconName } from './Icon'
+import Stat from './Stat'
+import { conditionBand } from './game'
 import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
@@ -11,14 +13,20 @@ export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
 }
 
-// Gains, meaningful losses and persistent consequences stay in the first view.
-// Small passive losses remain available in the expandable, complete summary.
+// Keep gains and meaningful consequences; omit small ongoing stat drain entirely.
 export function isMajorChange(change: ResultChange) {
   if (change.kind !== 'negative') return true
-  if (resultLabel(change.label) === 'Health') return true
   const amount = Number(change.value.replace('−', '-').match(/^[+-]?\d+(?:\.\d+)?/)?.[0])
-  const passiveNeeds = ['Food', 'Water', 'Energy', 'Hygiene', 'Clothing cleanliness'].includes(resultLabel(change.label))
-  return !Number.isFinite(amount) || Math.abs(amount) >= (passiveNeeds ? 5 : 1)
+  const passiveNeeds = ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Mood', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition'].includes(resultLabel(change.label))
+  return !passiveNeeds || !Number.isFinite(amount) || Math.abs(amount) >= 5
+}
+
+function ResultStat({ change }: { change: ResultChange }) {
+  const label = resultLabel(change.label)
+  const meter = change.meter!
+  const icons: Record<string, IconName> = { Food: 'food', Water: 'water', Energy: 'energy', Health: 'heart', Hygiene: 'shower', Battery: 'phone', 'Phone condition': 'phone', 'Clothing cleanliness': 'shower', 'Clothing condition': 'person' }
+  const icon = label === 'Mood' ? `face-${conditionBand(meter.after).level}` as IconName : icons[label] ?? 'person'
+  return <Stat label={label === 'Water' ? 'Thirst' : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} change={{ from: meter.before, value: change.value, kind: change.kind }} />
 }
 
 function ChangeRows({ changes }: { changes: ResultChange[] }) {
@@ -71,11 +79,14 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   }, [inline])
 
   const presentation = result.presentation
-  const changes = result.changes ?? []
+  const changes = (result.changes ?? []).filter(isMajorChange)
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive' && isMajorChange(change))
-  const minor = changes.filter(change => !isMajorChange(change))
-  const costs = result.costs ?? []
+  const costs = (result.costs ?? []).filter(isMajorChange)
+  const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
+  const gainRows = gains.filter(change => !change.meter)
+  const consequenceRows = consequences.filter(change => !change.meter)
+  const costRows = costs.filter(change => !change.meter)
 
   return <div className={inline ? "result-inline" : "phone-overlay result-overlay"}>
     <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
@@ -93,14 +104,13 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
         </> : <p className="result-description">{result.text}</p>}
-        {gains.length > 0 && <div className="result-gains"><ChangeRows changes={gains} /></div>}
-        {consequences.length > 0 && <div className="result-consequences"><ChangeRows changes={consequences} /></div>}
-        {costs.length > 0 && <div className="result-cost-line" aria-label="Spent">{costs.map(cost => <span key={cost.label} title={resultLabel(cost.label)}><Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : resultLabel(cost.label) === 'Battery' ? 'phone' : 'coins'} /><span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}</div>}
-        {(presentation || minor.length > 0) && <details className="result-details">
-          <summary>{presentation ? 'Full answer & details' : 'All changes'}</summary>
-          {presentation && <p className="result-description">{result.text}</p>}
-          <ChangeRows changes={changes} />
-          {costs.length > 0 && <ChangeRows changes={costs} />}
+        {meters.length > 0 && <div className="status-needs result-stat-panel">{meters.map(change => <ResultStat key={change.label} change={change} />)}</div>}
+        {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
+        {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
+        {costRows.length > 0 && <div className="result-cost-line" aria-label="Spent">{costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}><Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} /><span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}</div>}
+        {presentation && <details className="result-details">
+          <summary>Full answer & details</summary>
+          <p className="result-description">{result.text}</p>
         </details>}
       </div>
       <button className="result-confirm" ref={confirm} onClick={onClose}>Got it</button>

@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-174`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-175`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Animated result indicators (v175)
+
+Result dialogs reuse the same `Stat` component, icons, colors, thin bars and percentage layout as Status. Only changed percentage indicators are included: Food, Thirst, Energy, Health, Hygiene, Mood, Battery, phone condition and clothing indicators. Their bars and displayed numbers animate for 1.2 seconds from the actual before-action value to the actual net after-action value; the signed change stays below the percentage. Hygiene retains the clothes-imposed hatched cap, and Energy retains its health-dependent cap. Animation honors reduced motion, cancels on unmount and never advances game time or applies bonuses again. Existing saved activity snapshots continue to work.
+
+Positive changes are shown even when small. Ongoing percentage losses below **5 points** are omitted completely, including from expanded answers; losses of 5 or more remain visible. This rule also applies to Health, Mood, Battery and clothing/phone wear. Explicit money/time expenses, consumed item quantities, documents and effects such as Cold starting/ending remain visible. Non-stat results retain text rows. Expanded practical answers contain the full answer text without repeating hidden drain or listing all resource changes. Numeric metadata is presentation-only; action effects and save schemas are unchanged.
 
 ### Travel clock at ×4 (v174)
 

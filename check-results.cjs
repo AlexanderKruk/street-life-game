@@ -1,0 +1,78 @@
+const assert = require('node:assert/strict');
+const { JSDOM } = require('jsdom');
+const { buildSync } = require('esbuild');
+const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/street-life-game/', pretendToBeVisual: true });
+for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event', 'KeyboardEvent']) global[key] = dom.window[key];
+Object.defineProperty(global, 'navigator', { value: dom.window.navigator });
+global.IS_REACT_ACT_ENVIRONMENT = true;
+window.scrollTo = () => {};
+let reduced = false, nextId = 1;
+window.matchMedia = () => ({ matches: reduced });
+const frames = new Map();
+window.requestAnimationFrame = fn => { const id = nextId++; frames.set(id, fn); return id; };
+window.cancelAnimationFrame = id => frames.delete(id);
+function bundled(path) {
+  const code = buildSync({ entryPoints: [path], bundle: true, platform: 'node', format: 'cjs', write: false, external: ['react', 'react-dom', 'react/jsx-runtime'] }).outputFiles[0].text;
+  const module = { exports: {} };
+  new Function('require', 'module', 'exports', code)(require, module, module.exports);
+  return module.exports;
+}
+const React = require('react');
+const { render, screen, fireEvent, act, cleanup } = require('@testing-library/react');
+const { default: ResultCard, isMajorChange } = bundled('src/ResultCard.tsx');
+const { summarizeResult } = bundled('src/results.ts');
+const before = {
+  game: { day: 2, minutes: 600, locationId: 'shelter', money: 57, hunger: 73, thirst: 50, energy: 34, health: 90, hygiene: 50, mood: 60.2, intoxication: 0 },
+  inventory: { clothingCleanliness: 50, phoneBattery: 43, phoneCondition: 72, jacket: 78, water: 2, food: 2, medicines: 2, documents: true, cigarettes: 0, bottles: 0, transitCard: false },
+  effects: [],
+};
+const after = { game: { ...before.game, minutes: 620, money: 52.6, hunger: 72.8, thirst: 49.9, energy: 47, health: 84, hygiene: 69, mood: 60.7 }, inventory: { ...before.inventory, phoneBattery: 40, medicines: 1 }, effects: [{ id: 'cold', expiresAt: 10000 }] };
+function frame(now) { act(() => { const callbacks = [...frames]; frames.clear(); callbacks.forEach(([, fn]) => fn(now)); }); }
+function row(label) { return document.querySelector(`[data-stat="${label}"]`); }
+try {
+  const summary = summarizeResult(before, after);
+  assert.equal(summary.changes.find(change => change.label.includes('Energy')).meter.before, 34);
+  assert.equal(summary.changes.find(change => change.label.includes('Hygiene')).meter.cap, 80);
+  assert(!summary.changes.some(change => change.value === '+0' || change.value === '−0'));
+  for (const label of ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Mood', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition']) {
+    assert(!isMajorChange({ label, value: '−4.9', kind: 'negative' }));
+    assert(isMajorChange({ label, value: '−5', kind: 'negative' }));
+    assert(isMajorChange({ label, value: '+0.1', kind: 'positive' }));
+  }
+  assert(isMajorChange({ label: 'Money', value: '−0.2 zł', kind: 'negative' }));
+  let closed = 0;
+  const result = { title: 'Result', text: 'You rested.', ...summary, presentation: { heading: 'You rested', label: 'REST', lead: 'A short break.', places: [] } };
+  render(React.createElement(ResultCard, { result, onClose: () => { closed++; } }));
+  assert.deepEqual([...document.querySelectorAll('[data-stat]')].map(node => node.dataset.stat), ['Energy', 'Hygiene', 'Mood', 'Health']);
+  assert.equal(row('Energy').querySelector('.bar i').style.width, '34%');
+  assert.equal(row('Energy').querySelector('.result-stat-delta').textContent, '+13');
+  assert.equal(row('Health').querySelector('.result-stat-delta').textContent, '−6');
+  assert(row('Hygiene').querySelector('.bar-blocked'));
+  assert.equal(row('Hygiene').querySelector('.bar-cap-marker').style.left, '80%');
+  assert(!row('Hygiene').textContent.includes('Max'));
+  assert(screen.getByRole('dialog').textContent.includes('Medicine'));
+  assert(screen.getByRole('dialog').textContent.includes('Cold'));
+  assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
+  fireEvent.click(screen.getByText('Full answer & details'));
+  for (const hidden of ['−0.2', '−0.1', '−3%', 'Food', 'Battery']) assert(!screen.getByRole('dialog').textContent.includes(hidden));
+  frame(0); frame(600);
+  const midpoint = parseFloat(row('Energy').querySelector('.bar i').style.width);
+  assert(midpoint > 34 && midpoint < 47);
+  frame(1200);
+  assert.equal(row('Energy').querySelector('.bar i').style.width, '47%');
+  assert.equal(row('Energy').querySelector('.status-stat-value > span').textContent, '47%');
+  assert(row('Energy').querySelector('.bar i.warning'));
+  assert(row('Hygiene').querySelector('.bar i.good'));
+  assert.equal(frames.size, 0);
+  fireEvent.click(screen.getByRole('button', { name: 'Got it' })); assert.equal(closed, 1);
+  cleanup();
+  reduced = true;
+  render(React.createElement(ResultCard, { result, onClose: () => {} }));
+  assert.equal(row('Energy').querySelector('.bar i').style.width, '47%'); assert.equal(frames.size, 0);
+  cleanup(); reduced = false;
+  const batteryLoss = summarizeResult(before, { ...before, inventory: { ...before.inventory, phoneBattery: 37 } });
+  render(React.createElement(ResultCard, { result: { title: 'Phone use', text: 'Phone use.', ...batteryLoss }, onClose: () => {} }));
+  assert.equal(row('Battery').querySelector('.result-stat-delta').textContent, '−6%');
+  assert(frames.size > 0); cleanup(); assert.equal(frames.size, 0, 'unmount cancels every animation frame');
+  console.log('PASS: shared Status result bars, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
+} finally { cleanup(); dom.window.close(); }

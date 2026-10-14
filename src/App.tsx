@@ -16,10 +16,11 @@ import { StreetArt, LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, S
 import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
+import Stat from './Stat'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.14-174'
+const BUILD_VERSION = 'v2026.10.14-175'
 const TRAVEL_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -287,21 +288,6 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
   return <Tag className={className}>{available}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable}</Tag>
 }
 
-function Stat({ label, value, icon, cap = 100, focus = false }: { label: string; value: number; icon: ReactNode; cap?: number; focus?: boolean }) {
-  const level = value > 60 ? 'good' : value > 30 ? 'warning' : 'critical'
-  const blocked = label === 'Hygiene' && cap < 100
-  return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}`} data-stat={label}>
-    {focus && <p className="status-focus-label">{level === 'critical' ? 'Needs attention' : level === 'warning' ? 'Keep an eye on this' : 'Lowest indicator'}</p>}
-    <span className="status-stat-icon">{icon}</span>
-    <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && !blocked && <small>Max {cap}%</small>}</div>
-    <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={`${label}: ${conditionBand(value).label}${blocked ? `, maximum ${cap}% due to dirty clothes` : ''}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
-      {blocked && <span className="bar-blocked" style={{ left: `${cap}%` }} aria-hidden="true" />}
-      <i className={level} style={{ width: `${value}%` }} />
-      {blocked && <span className="bar-cap-marker" style={{ left: `${cap}%` }} aria-hidden="true" />}
-    </div>
-    <b className="status-stat-value">{Math.round(value)}%</b>
-  </div>
-}
 
 function overallStatus(game: GameState) {
   return overallCondition(game)

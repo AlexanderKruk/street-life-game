@@ -1,4 +1,4 @@
-import { absoluteMinutes, type GameState } from './game'
+import { absoluteMinutes, energyCap, type GameState } from './game'
 
 export type ResultInventory = {
   clothingCleanliness?: number; showerGel?: number; bread?: number; cannedFood?: number; wipes?: number; water: number; food: number; bottles: number; phoneBattery: number; phoneCondition: number
@@ -9,7 +9,7 @@ export type ResultSnapshot = {
   inventory: ResultInventory
   effects: { id: string; expiresAt: number }[]
 }
-export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral' }
+export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral'; meter?: { before: number; after: number; cap?: number } }
 export type ResultSummary = { costs: ResultChange[]; changes: ResultChange[] }
 
 function number(value: number, precision = 1) {
@@ -21,18 +21,22 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
   const changes: ResultChange[] = []
   const minutes = absoluteMinutes(after.game) - absoluteMinutes(before.game)
   if (includeTime && minutes > 0) costs.push({ label: '⏱ Time', value: `${Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)} h ` : ''}${minutes % 60 ? `${minutes % 60} min` : ''}`.trim(), kind: 'neutral' })
-  function add(label: string, delta: number, suffix = '', negativeIsGood = false, cost = false, precision = 1) {
+  function add(label: string, delta: number, suffix = '', negativeIsGood = false, cost = false, precision = 1, meter?: ResultChange['meter']) {
     const rounded = Number(delta.toFixed(precision))
     if (rounded === 0) return
     const kind = (rounded > 0) !== negativeIsGood ? 'positive' : 'negative'
-    const row: ResultChange = { label, value: `${rounded > 0 ? '+' : '−'}${number(Math.abs(rounded), precision)}${suffix}`, kind }
+    const row: ResultChange = { label, value: `${rounded > 0 ? '+' : '−'}${number(Math.abs(rounded), precision)}${suffix}`, kind, ...(meter ? { meter } : {}) }
     ;(cost && rounded < 0 ? costs : changes).push(row)
   }
   add('💰 Money', after.game.money - before.game.money, ' zł', false, true, 2)
   for (const [key, label] of [
     ['hunger', '🍽 Food'], ['thirst', '💧 Water'], ['energy', '⚡ Energy'],
     ['health', '❤️ Health'], ['hygiene', '🧼 Hygiene'], ['mood', '🙂 Mood'],
-  ] as const) add(label, after.game[key] - before.game[key])
+  ] as const) {
+    const cleanliness = after.inventory.clothingCleanliness ?? 100
+    const cap = key === 'energy' ? energyCap(after.game.health) : key === 'hygiene' ? cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60 : undefined
+    add(label, after.game[key] - before.game[key], '', false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}) })
+  }
   add('🍺 Intoxication', after.game.intoxication - before.game.intoxication, '', true)
   for (const [key, label, suffix] of [
     ['phoneBattery', '🔋 Battery', '%'], ['phoneCondition', '📱 Phone condition', '%'],
@@ -40,7 +44,12 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     ['food', '🥪 Food portions', ''], ['bottles', '♻️ Returnable bottles', ''],
     ['bread', '🥖 Bread rolls', ''], ['cannedFood', '🥫 Canned food', ''], ['wipes', '🧻 Wet wipes', ''], ['showerGel', '🧴 3-in-1 gel uses', ''],
     ['cigarettes', '🚬 Cigarettes', ''], ['medicines', '💊 Medicine', ''],
-  ] as const) add(label, (after.inventory[key] ?? 0) - (before.inventory[key] ?? (key === 'clothingCleanliness' ? after.inventory[key] ?? 0 : 0)), suffix, false, key === 'phoneBattery')
+  ] as const) {
+    const previous = before.inventory[key] ?? (key === 'clothingCleanliness' ? after.inventory[key] ?? 0 : 0)
+    const current = after.inventory[key] ?? 0
+    const meter = ['phoneBattery', 'phoneCondition', 'clothingCleanliness', 'jacket'].includes(key) ? { before: previous, after: current } : undefined
+    add(label, current - previous, suffix, false, key === 'phoneBattery', 1, meter)
+  }
   if (after.inventory.documents !== before.inventory.documents) changes.push({ label: '📄 Documents', value: after.inventory.documents ? 'Now carried' : 'No longer carried', kind: after.inventory.documents ? 'positive' : 'negative' })
   const names: Record<string, string> = { cold: '🤒 Cold', 'free-transit': '🎫 Free transport', 'well-fed': '🍲 Well fed' }
   const activeBefore = new Set(before.effects.filter(effect => effect.expiresAt > absoluteMinutes(before.game)).map(effect => effect.id))
