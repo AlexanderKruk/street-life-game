@@ -52,7 +52,7 @@ async function finishPhone(){advance(15);}
  localStorage.setItem('street-life-sleep-v1',JSON.stringify({kind:'ground',total:120,remaining:0,startAbsolute:1380,realStartedAt:Date.now()-20000,realWakeAt:Date.now()-1000}));
  render(React.createElement(App));assert(summary().includes('2 hours'));assert(!localStorage.getItem('street-life-sleep-v1'));cleanup();
  setup({minutes:600});localStorage.setItem('street-life-inventory-v1',JSON.stringify({...JSON.parse(localStorage.getItem('street-life-inventory-v1')),transitCard:false}));cleanup();render(React.createElement(App));button(/Map$/);button(/Station/);button("Go →");button(/Public transport/);
- advance(8.25);
- assert(summary().includes('Arrival'));assert(summary().includes('33 min'));assert(summary().includes('−4.4 zł'));cleanup();
+ const tripMinutes=JSON.parse(localStorage.getItem('street-life-trip-v1')).total;assert(tripMinutes>=32&&tripMinutes<=39);advance(tripMinutes/4);
+ assert(summary().includes('Arrival'));assert(summary().includes(`${tripMinutes} min`));assert(summary().includes('−4.4 zł'));cleanup();
  console.log('PASS: UI flows, zero hiding, timer pause, shelter discovery, actual/capped sleep gains, illness, medicine and automatic wake.');
 })().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{cleanup();dom.window.close()});

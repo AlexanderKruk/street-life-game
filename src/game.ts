@@ -25,6 +25,17 @@ export type Location = {
   travelMinutes: number
 }
 
+export function travelTimeRange(baseMinutes: number) {
+  const min = Math.max(1, Math.ceil(baseMinutes * 0.95))
+  return { min, max: Math.max(min, Math.floor(baseMinutes * 1.2)) }
+}
+
+// Whole-minute durations stay inside -5% / +20%; sample only when a trip starts.
+export function randomTravelMinutes(baseMinutes: number, random = Math.random) {
+  const { min, max } = travelTimeRange(baseMinutes)
+  return min + Math.floor(random() * (max - min + 1))
+}
+
 export type ActionResult = {
   minutes: number
   money?: number

@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-177`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-178`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Variable travel duration (v178)
+
+Every new walk and public-transport trip samples a uniform whole-minute duration between −5% and +20% of its base time. Lower bounds round up and upper bounds round down so integer minutes remain within the agreed limits. Walking uses the destination’s walking base; paid transit, free transit and fare-dodging use its existing half-duration base, rounded up. Example: a 45-minute base can take 43–54 minutes, and a 65-minute walk can take 62–78 minutes.
+
+The choice sheet shows the unchanged base estimate with ≈, and narrative route buttons show the shortest possible transit duration followed by +. A duration is sampled only when travel actually starts, then saved in the existing total/remaining fields. Reloading or rendering never samples again; older active trips retain their recorded durations. Fares, event probabilities and the ×4 cadence remain unchanged. Events may separately consume additional game time. Regression coverage tests both bounds, all possible integer samples, all four travel/payment paths, minute ticks, reload without randomness, fare retention and exact arrival time.
 
 ### Phone dialog: compact list (v177)
 

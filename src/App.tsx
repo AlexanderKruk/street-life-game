@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, createInitialState, isOpen, locations, overallCondition, conditionBand, type ActionResult, type GameState } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, createInitialState, isOpen, locations, overallCondition, conditionBand, travelTimeRange, randomTravelMinutes, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, firstNightTime, STREET_EVENTS, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ConsumedItem, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
@@ -21,7 +21,7 @@ import PhoneDialog from './PhoneDialog'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.14-177'
+const BUILD_VERSION = 'v2026.10.14-178'
 const TRAVEL_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -255,7 +255,7 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
     const text = isValidElement<{ children?: ReactNode }>(metadata) ? textOf(metadata.props.children) : ''
     const minutes = text.match(/~(\d+)(?:[–-](\d+))? min/)
     const destination = route ? locations.find(place => place.id === route) : undefined
-    const duration = destination ? `${approximateDuration(Math.ceil(destination.travelMinutes * 0.5)).slice(1)}+`
+    const duration = destination ? `${approximateDuration(travelTimeRange(Math.ceil(destination.travelMinutes * 0.5)).min).slice(1)}+`
       : text === 'Choose duration' ? `${approximateDuration(SLEEP_HOURS[0] * 60).slice(1)}+`
       : minutes ? minutes[2] ? `≈${minutes[1]}–${minutes[2]}m` : approximateDuration(Number(minutes[1])) : null
     return cloneElement(node, {}, Children.toArray(node.props.children)
@@ -1322,12 +1322,13 @@ export default function App() {
     if (sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
-    const total = mode === 'walk' ? destination.travelMinutes : Math.ceil(destination.travelMinutes * 0.5)
+    const baseMinutes = mode === 'walk' ? destination.travelMinutes : Math.ceil(destination.travelMinutes * 0.5)
     const fare = freeTransitActive ? 0 : 4.4
     if (mode === 'transit' && game.money < fare) {
       setMessage('You do not have enough money for public transport.')
       return
     }
+    const total = randomTravelMinutes(baseMinutes)
     recordShelterDeparture(destination.id)
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
@@ -1625,7 +1626,7 @@ export default function App() {
     if (diceCheck.fareDodgeDestinationId) {
       const destination = locations.find((entry) => entry.id === diceCheck.fareDodgeDestinationId)
       if (destination) {
-        const total = Math.ceil(destination.travelMinutes * 0.5)
+        const total = randomTravelMinutes(Math.ceil(destination.travelMinutes * 0.5))
         recordShelterDeparture(destination.id)
         setStreetBenchFound(false)
         setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } })
@@ -2173,13 +2174,13 @@ export default function App() {
         <p className="eyebrow">TRAVEL TO</p>
         <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
         <button className="travel-option" onClick={() => startTravel('walk')}>
-          <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
+          <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>≈{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
         <button className="travel-option" onClick={() => startTravel('transit')} disabled={!freeTransitActive && game.money < 4.4}>
-          <Icon name="bus" /><div><strong>Public transport</strong><small>{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
+          <Icon name="bus" /><div><strong>Public transport</strong><small>≈{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
         </button>
         {!freeTransitActive && <button className="travel-option" onClick={attemptFareDodge}>
-          <Icon name="coins" /><div><strong>Ride without ticket</strong><small>{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
+          <Icon name="coins" /><div><strong>Ride without ticket</strong><small>≈{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
         </button>}
 
       </div>

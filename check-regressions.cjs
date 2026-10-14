@@ -139,7 +139,7 @@ const openingText=document.querySelector('.story-scene div > p:last-child').text
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
 assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,3);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
 assert.equal(document.querySelector('[data-choice="music-walk"] .choice-duration').textContent,'≈30m');
-assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'33m+');
+assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'32m+');
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
@@ -236,6 +236,28 @@ setup({locationId:'shop',money:0},{[invKey]:{phoneBattery:0,phoneCondition:0},'s
 assert(screen.getByRole('button',{name:'Add 24 hours of mobile service for 1 zł'}).disabled);assert(screen.getByRole('switch',{name:'Navigation'}).disabled);assert(screen.getByRole('switch',{name:'Music'}).disabled);assert(screen.getByRole('button',{name:'Watch video'}).disabled);assert(screen.getByRole('button',{name:'Call ambulance'}).disabled);assert(screen.getByText('No active service'));
 setup({locationId:'shop',health:20},{[invKey]:{phoneBattery:43,phoneCondition:72}});click('Inventory');click(/PhoneBattery/);assert(!screen.getByRole('button',{name:'Call ambulance'}).disabled);click('Call ambulance');assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);assert.equal(read(stateKey).locationId,'hospital');ok();assert.equal(document.body.style.position,'');
 
+// New trips sample -5% / +20% once; previews stay approximate and reloading
+// preserves the chosen duration and fare for walking, paid/free transit and fare-dodging.
+for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.999999]) {
+ setup({}, {[invKey]:{transitCard:false},...(mode==='free'?{'street-life-effects-v1':[{id:'free-transit',expiresAt:5000}]}:{})});
+ click('Map');click(/^.*Station/);click('Go →');
+ assert(screen.getByRole('button',{name:/Public transport/}).textContent.includes('≈33m'));
+ assert(screen.getByRole('button',{name:/Walk/}).textContent.includes('≈1h 5m'));
+ if(mode==='fare-dodge') {
+  click(/Ride without/);Math.random=()=>.99;click('Roll D20');Math.random=()=>draw;click('Continue');
+  if(screen.queryByRole('button',{name:'Got it',exact:true}))ok();
+ } else {
+  let draws=0;Math.random=()=>draws++===0?draw:.99;click(mode==='walk'?/Walk/:/Public transport/);
+ }
+ const chosenTrip=read('street-life-trip-v1'),expected=mode==='walk'?(draw===0?62:78):(draw===0?32:39);
+ assert.equal(chosenTrip.total,expected);assert.equal(chosenTrip.remaining,expected);
+ assert.equal(read(stateKey).money,mode==='transit'?95.6:100);
+ advance(250);const partialTrip=read('street-life-trip-v1');let reloadDraws=0;Math.random=()=>{reloadDraws++;return .5};
+ cleanup();render(React.createElement(App));assert.equal(reloadDraws,0,'loading a trip never samples again');assert.deepEqual(read('street-life-trip-v1'),partialTrip);
+ advance(250);assert.equal(read('street-life-trip-v1').remaining,expected-2);
+ Math.random=()=>.99;advance((expected-2)*250);assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,480+expected);assert(!localStorage.getItem('street-life-trip-v1'));ok();
+}
+
 // All travel modes display every minute at x4, preserve partial progress,
 // pause while hidden, cross midnight and restore the x1 clock after arrival.
 for(const mode of ['walk','transit','fare-dodge']) {
@@ -260,7 +282,7 @@ for(const mode of ['walk','transit','fare-dodge']) {
 setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
 cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);
 assert(screen.getByRole('dialog',{name:'Time on the way'}).contains(document.querySelector('.travel-bus')));assert(document.querySelector('.map-surface[inert] .district-map'));
-advance(7250);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
+advance(remaining*250);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
 assert(!document.querySelector('.travel-overlay'));assert(!document.querySelector('.map-surface'));assert.equal(localStorage.getItem('street-life-screen'),'location');ok();assert.equal(document.body.style.overflow,'');
 
 // A valid transit card or an unexpired free-transit grant removes fare
@@ -499,7 +521,13 @@ setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!d
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
-const {advanceTime,initialState,createInitialState,overallCondition,conditionBand}=require('./regression-game.cjs');
+const {advanceTime,initialState,createInitialState,overallCondition,conditionBand,locations,travelTimeRange,randomTravelMinutes}=require('./regression-game.cjs');
+for(const base of [1,33,40,45,65,...locations.flatMap(location=>[location.travelMinutes,Math.ceil(location.travelMinutes*.5)])]) {
+ const {min,max}=travelTimeRange(base);assert.equal(min,Math.ceil(base*.95));assert.equal(max,Math.floor(base*1.2));
+ assert.equal(randomTravelMinutes(base,()=>0),min);assert.equal(randomTravelMinutes(base,()=>.999999),max);
+ for(let value=min;value<=max;value++)assert.equal(randomTravelMinutes(base,()=>(value-min+.5)/(max-min+1)),value);
+ assert(min>=base*.95&&max<=base*1.2);
+}
 // Five distinct faces, with the header describing the whole condition.
 assert.deepEqual([0,21,41,61,81].map(value=>conditionBand(value).level),['very-bad','bad','fair','ok','very-good']);
 for(const [boundary,below,above] of [[20,'very-bad','bad'],[40,'bad','fair'],[60,'fair','ok'],[80,'ok','very-good']]) {
