@@ -962,3 +962,13 @@ v132 arranges backpack slots in two columns. Each occupied card has the item ima
 ### Street action duration labels (v143)
 
 Street choices keep duration visible at the right center of the card, replacing chevrons. Estimates use compact notation such as `≈15m` and `≈1h15m`; variable searches keep their range. Destination choices show the existing public-transport duration (half the walking time, rounded up) followed by `+`, since walking takes longer. Sleep choices show the minimum selectable duration, `2h+`. Saved answers keep their free-answer hint. Gameplay durations are unchanged.
+
+### Persistent save compatibility (v171)
+
+Browser localStorage survives game updates. Storage schema versions (`street-life-save-v1/v2/v3`) are independent of the visible build number. Keep compatibility readers and their tests when cleaning up old release-specific code; the passage of time or a successful fresh-game test does not establish that older saves are gone.
+
+- `src/saveCompatibility.ts` reads valid core saves in order v3, v2, v1. The original v1/v2 seven-field schema keeps its day, time, cash, existing needs and location; missing Thirst, Health, Mood and intoxication use current defaults. Zero values remain zero. A malformed entry does not block a valid older one. Old `night-shelter` IDs normalize to `shelter`.
+- Loading never clears localStorage or deletes original v1/v2 records. The existing autosave writes the upgraded run to v3. Later launches prefer v3, so obsolete records cannot overwrite current progress. Explicit **Reset save** removes all three core save keys to prevent an older run returning after reset; unrelated applications' keys remain untouched.
+- Discovery schema 2 retains the existing combined Day Center/Clinic migration, deduplicates known addresses and filters invalid rows individually. Pre-discovery saves keep their map access. Migration repeats safely on reload without revealing additional addresses once schema 2 has been saved.
+- Inventory defaults, cleanliness migration, journal conversion and unfinished phone/travel/sleep loaders remain supported. Over-capacity stacks are retained. New supplies default to zero; saved empty stacks and missing documents are not replaced with starter items.
+- `check-save-compatibility.cjs` tests the historical v1/v2 schema, v3 precedence, missing/zero fields, damaged entries, discovery migration and the actual App/autosave upgrade followed by two reloads **without clearing localStorage**. It also checks inventory preservation and explicit reset. Existing regressions retain interrupted phone-search, travel and sleep reload coverage.

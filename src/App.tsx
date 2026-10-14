@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, initialState, createInitialState, isOpen, locations, overallCondition, conditionBand, type ActionResult, type GameState } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, createInitialState, isOpen, locations, overallCondition, conditionBand, type ActionResult, type GameState } from './game'
 import { pickStreetEvent, firstNightTime, STREET_EVENTS, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
@@ -17,8 +17,9 @@ import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
+import { SAVE_KEY, GAME_SAVE_KEYS, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.13-170'
+const BUILD_VERSION = 'v2026.10.14-171'
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
 type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
@@ -57,8 +58,6 @@ function loadPhoneActivity(): PhoneActivity | null {
   } catch { return null }
 }
 
-const SAVE_KEY = 'street-life-save-v3'
-const DISCOVERY_KEY = 'street-life-discovered-v1'
 const GOAL_KEY = 'street-life-goal-v1'
 const JOURNAL_GOALS_KEY = 'street-life-journal-goals-v1'
 const JOURNAL_HISTORY_KEY = 'street-life-journal-history-v1'
@@ -231,12 +230,7 @@ function loadTrip(): Trip | null {
 }
 
 function loadGame(): GameState {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY)
-    return raw ? { ...initialState, ...JSON.parse(raw) } : createInitialState()
-  } catch {
-    return createInitialState()
-  }
+  return readSavedGame(localStorage) ?? createInitialState()
 }
 
 // Flatten conditional fragments before sorting, so custom and configured
@@ -322,20 +316,7 @@ export default function App() {
   const closeResult = useCallback(() => { setInfoModal(null); setEventResultOpen(false) }, [])
   const buyShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) buyItem(item) })
   const stealShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) stealItem(item) })
-  const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(DISCOVERY_KEY)
-      if (raw) {
-        const known = (JSON.parse(raw) as string[]).map(id => id === 'night-shelter' ? 'shelter' : id)
-        // The former combined center now has two separate addresses.
-        if (localStorage.getItem('street-life-discovery-version') !== '2' && known.includes('daycenter')) known.push('free-clinic')
-        return [...new Set(known)]
-      }
-      return localStorage.getItem(SAVE_KEY) ? locations.map((location) => location.id) : ['street', 'station', 'shop']
-    } catch {
-      return ['street', 'station', 'shop']
-    }
-  })
+  const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => loadDiscoveredLocations(localStorage))
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
@@ -1883,7 +1864,7 @@ export default function App() {
 
   function reset() {
     autosave.resetPending()
-    localStorage.removeItem(SAVE_KEY)
+    for (const key of GAME_SAVE_KEYS) localStorage.removeItem(key)
     localStorage.removeItem(DISCOVERY_KEY)
     localStorage.removeItem('street-life-discovery-version')
     setDiscoveredLocations(['street', 'station', 'shop'])
