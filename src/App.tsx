@@ -17,9 +17,9 @@ import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
-import { SAVE_KEY, GAME_SAVE_KEYS, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
+import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.14-171'
+const BUILD_VERSION = 'v2026.10.14-172'
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
 type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
@@ -1864,7 +1864,7 @@ export default function App() {
 
   function reset() {
     autosave.resetPending()
-    for (const key of GAME_SAVE_KEYS) localStorage.removeItem(key)
+    localStorage.removeItem(SAVE_KEY)
     localStorage.removeItem(DISCOVERY_KEY)
     localStorage.removeItem('street-life-discovery-version')
     setDiscoveredLocations(['street', 'station', 'shop'])

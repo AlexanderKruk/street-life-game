@@ -1,33 +1,30 @@
 import { initialState, locations, type GameState } from './game'
 
-// These are storage schema versions, not build versions. Browser saves do not
-// expire when we publish a release; keep their readers and regression fixtures.
+// The last ten published builds share this storage schema. Build numbers and
+// storage versions are independent; updates must not clear this shared key.
 export const SAVE_KEY = 'street-life-save-v3'
-export const GAME_SAVE_KEYS = [SAVE_KEY, 'street-life-save-v2', 'street-life-save-v1'] as const
 export const DISCOVERY_KEY = 'street-life-discovered-v1'
 type SaveReader = Pick<Storage, 'getItem'>
 
 export function readSavedGame(storage: SaveReader): GameState | null {
-  for (const key of GAME_SAVE_KEYS) {
-    try {
-      const raw = storage.getItem(key)
-      if (!raw) continue
-      const saved = JSON.parse(raw)
-      if (!saved || typeof saved !== 'object' || Array.isArray(saved)
-        || !Number.isInteger(saved.day) || saved.day < 1
-        || !Number.isFinite(saved.minutes) || saved.minutes < 0 || saved.minutes >= 1440) continue
-      const next: GameState = { ...initialState, ...saved }
-      for (const field of ['money', 'hunger', 'thirst', 'energy', 'health', 'hygiene', 'mood', 'intoxication'] as const) {
-        const value = saved[field]
-        next[field] = typeof value === 'number' && Number.isFinite(value)
-          ? Math.max(0, field === 'money' ? value : Math.min(100, value)) : initialState[field]
-      }
-      const locationId = saved.locationId === 'night-shelter' ? 'shelter' : saved.locationId
-      next.locationId = locations.some(location => location.id === locationId) ? locationId : initialState.locationId
-      if (!Number.isFinite(next.rainUntil) || next.rainUntil! < 0) delete next.rainUntil
-      return next
-    } catch { /* A damaged entry must not prevent another valid save loading. */ }
-  }
+  try {
+    const raw = storage.getItem(SAVE_KEY)
+    if (!raw) return null
+    const saved = JSON.parse(raw)
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)
+      || !Number.isInteger(saved.day) || saved.day < 1
+      || !Number.isFinite(saved.minutes) || saved.minutes < 0 || saved.minutes >= 1440) return null
+    const next: GameState = { ...initialState, ...saved }
+    for (const field of ['money', 'hunger', 'thirst', 'energy', 'health', 'hygiene', 'mood', 'intoxication'] as const) {
+      const value = saved[field]
+      next[field] = typeof value === 'number' && Number.isFinite(value)
+        ? Math.max(0, field === 'money' ? value : Math.min(100, value)) : initialState[field]
+    }
+    const locationId = saved.locationId
+    next.locationId = locations.some(location => location.id === locationId) ? locationId : initialState.locationId
+    if (!Number.isFinite(next.rainUntil) || next.rainUntil! < 0) delete next.rainUntil
+    return next
+  } catch { /* Unreadable saves use the existing new-game fallback. */ }
   return null
 }
 
