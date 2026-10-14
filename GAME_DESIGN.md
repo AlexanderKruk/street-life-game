@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-176`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-177`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Phone dialog: compact list (v177)
+
+The accepted List design replaces the old nested phone panel with one result-style modal frame. The header has separate Phone, battery and close-button positions. Mobile service shows active remaining time and a compact +24h / 1 zł top-up button. Auto-renew, Navigation and Music use full-row accessible switches; the remaining actions use line icons, compact explanatory text and duration labels. Ask AI remains available on the Street; unavailable actions are grouped last with their requirements. Original fares, service duration, drain, rewards and eligibility remain unchanged.
+
+Top-up, Watch video and Call ambulance close the phone before opening their normal action result; Ask AI continues into its existing search/answer flow. The phone retains the ordinary running game clock. It traps keyboard focus, supports Escape and backdrop closing, restores trigger focus and locks background scrolling on mobile. Regression checks cover toggle states, service extension/cost, video duration/drain, emergency eligibility, one result dialog at a time and scroll-lock cleanup.
 
 ### Hide consumed-item rows (v176)
 

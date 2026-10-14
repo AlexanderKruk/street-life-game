@@ -211,6 +211,31 @@ assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),33
 setup({day:2,money:0},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'6000'});
 assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6000);
 
+// The phone is one accessible list dialog; switches retain state while open,
+// service/video results replace it, and closing releases the mobile scroll lock.
+setup({locationId:'shop',minutes:600},{[invKey]:{phoneBattery:43,phoneCondition:72},'street-life-mobile-service-until':'5000'});
+click('Inventory');const phoneTrigger=screen.getByRole('button',{name:/PhoneBattery/});fireEvent.click(phoneTrigger);
+assert(screen.getByRole('dialog',{name:'Phone'}));assert(!document.querySelector('.phone-panel'));
+assert(document.activeElement===screen.getByRole('button',{name:'Close phone'}),'close button receives focus');assert.equal(document.body.style.position,'fixed');
+const healthyAmbulance=screen.getByRole('button',{name:'Call ambulance'});assert(healthyAmbulance.disabled);
+const phoneMinute=read(stateKey).minutes;advance(1000);assert.equal(read(stateKey).minutes,phoneMinute+1);
+fireEvent.click(screen.getByRole('switch',{name:'Music'}));assert.equal(screen.getByRole('switch',{name:'Music'}).getAttribute('aria-checked'),'true');
+fireEvent.click(screen.getByRole('switch',{name:'Navigation'}));assert.equal(screen.getByRole('switch',{name:'Navigation'}).getAttribute('aria-checked'),'false');
+fireEvent.click(screen.getByRole('switch',{name:'Auto-renew'}));fireEvent(window,new window.Event('pagehide'));assert.equal(localStorage.getItem('street-life-mobile-auto-renew'),'true');
+fireEvent(document,new window.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true}));assert(document.activeElement===screen.getByRole('button',{name:'Watch video'}),'backward Tab wraps to video');
+fireEvent(document,new window.KeyboardEvent('keydown',{key:'Tab',bubbles:true}));assert(document.activeElement===screen.getByRole('button',{name:'Close phone'}),'close button receives focus');
+fireEvent(document,new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert(!screen.queryByRole('dialog'));assert(document.activeElement===phoneTrigger,'closing restores phone trigger focus');assert.equal(document.body.style.position,'');
+fireEvent.click(phoneTrigger);assert.equal(screen.getByRole('switch',{name:'Music'}).getAttribute('aria-checked'),'true');
+const beforeTopup=read(stateKey);click('Add 24 hours of mobile service for 1 zł');assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);
+assert.equal(read(stateKey).money,beforeTopup.money-1);assert.equal(read(stateKey).minutes,beforeTopup.minutes);assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6440);
+assert(screen.getByRole('dialog').textContent.includes('−1 zł'));ok();assert.equal(document.body.style.position,'');
+fireEvent.click(phoneTrigger);const beforeVideo=read(stateKey),batteryBeforeVideo=read(invKey).phoneBattery;click('Watch video');
+assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);assert.equal(read(stateKey).minutes,beforeVideo.minutes+30);assert(read(invKey).phoneBattery<batteryBeforeVideo);ok();
+fireEvent.click(phoneTrigger);fireEvent.click(document.querySelector('.phone-list-overlay'));assert(!screen.queryByRole('dialog'));assert.equal(document.body.style.position,'');
+setup({locationId:'shop',money:0},{[invKey]:{phoneBattery:0,phoneCondition:0},'street-life-mobile-service-until':'0'});click('Inventory');click(/PhoneBattery/);
+assert(screen.getByRole('button',{name:'Add 24 hours of mobile service for 1 zł'}).disabled);assert(screen.getByRole('switch',{name:'Navigation'}).disabled);assert(screen.getByRole('switch',{name:'Music'}).disabled);assert(screen.getByRole('button',{name:'Watch video'}).disabled);assert(screen.getByRole('button',{name:'Call ambulance'}).disabled);assert(screen.getByText('No active service'));
+setup({locationId:'shop',health:20},{[invKey]:{phoneBattery:43,phoneCondition:72}});click('Inventory');click(/PhoneBattery/);assert(!screen.getByRole('button',{name:'Call ambulance'}).disabled);click('Call ambulance');assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);assert.equal(read(stateKey).locationId,'hospital');ok();assert.equal(document.body.style.position,'');
+
 // All travel modes display every minute at x4, preserve partial progress,
 // pause while hidden, cross midnight and restore the x1 clock after arrival.
 for(const mode of ['walk','transit','fare-dodge']) {

@@ -17,10 +17,11 @@ import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import Stat from './Stat'
+import PhoneDialog from './PhoneDialog'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.14-176'
+const BUILD_VERSION = 'v2026.10.14-177'
 const TRAVEL_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2194,20 +2195,21 @@ export default function App() {
       {usedBackpackSlots === 0 && <p className="backpack-empty-message">Your backpack is empty.</p>}
 
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
-      {phoneOpen && <div className="phone-overlay" onClick={() => setPhoneOpen(false)}><div className="phone-modal" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setPhoneOpen(false)}>×</button><div className="phone-panel">
-        <div className="phone-panel-heading"><strong>📱 Phone use</strong><span>{Math.round(inventory.phoneBattery)}%</span></div>
-        <button className="action" onClick={buyMobileService} disabled={game.money < 1}><div><strong>📶 Mobile service</strong><small>{mobileServiceActive ? `Active · ${mobileServiceMinutesLeft >= 60 ? Math.ceil(mobileServiceMinutesLeft / 60) + 'h left' : mobileServiceMinutesLeft + 'm left'}` : 'No active service'} · Navigation, Music & Video</small></div><span>1 zł · +24h</span></button>
-        <button className="action" onClick={() => setMobileAutoRenew((value) => !value)}><div><strong>⚙️ Auto-renew mobile service</strong><small>Renew expired service automatically for 1 zł</small></div><span>{mobileAutoRenew ? 'ON' : 'OFF'}</span></button>
-        <AvailableFirst tag="div" className="phone-actions">
-          {current.id === 'street' && <button disabled={!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost} onClick={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}><span>💬</span><div><strong>Ask AI</strong><small>Approx. 15 min · searches for one new place</small></div></button>}
-          <button onClick={() => setNavigationOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🧭</span><div><strong>Navigation {navigationOn ? 'ON' : 'OFF'}</strong><small>{weather.label === 'Clear' ? '15%/h in bright sun' : '12%/h while travelling'}</small></div></button>
-          <button onClick={() => setMusicOn((value) => !value)} disabled={inventory.phoneBattery <= 0 || !mobileServiceActive}><span>🎵</span><div><strong>Music {musicOn ? 'ON' : 'OFF'}</strong><small>4%/h · slowly improves Mood</small></div></button>
-          <button onClick={watchVideo} disabled={!mobileServiceActive || inventory.phoneBattery < 9 * phoneDrainMultiplier(inventory.phoneCondition)}><span>🎬</span><div><strong>Watch video</strong><small>30 min · ~−{Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}% · Mood+</small></div></button>
-          <button onClick={callAmbulance} disabled={game.health > 20 || inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0}><span>🚑</span><div><strong>Call ambulance</strong><small>{game.health <= 20 ? 'Emergency · no documents required' : 'Available at Health 20 or lower'}</small></div></button>
-        </AvailableFirst>
-      </div></div></div>}
+      {phoneOpen && <PhoneDialog
+        battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
+        autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={weather.label === 'Clear' ? 15 : 12}
+        videoDrain={Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}
+        showAi={current.id === 'street'} canAskAi={mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= phoneSearchCost}
+        canNavigate={inventory.phoneBattery > 0 && mobileServiceActive} canWatchVideo={mobileServiceActive && inventory.phoneBattery >= 9 * phoneDrainMultiplier(inventory.phoneCondition)}
+        canCallAmbulance={game.health <= 20 && inventory.phoneBattery > 0 && inventory.phoneCondition > 0} lowHealth={game.health <= 20}
+        blocked={eventInteractionBlocked || !!infoModal || !!sleeping || !!sleepChoice || !!gameOver}
+        onClose={() => setPhoneOpen(false)} onBuyService={() => { setPhoneOpen(false); buyMobileService() }}
+        onAutoRenew={() => setMobileAutoRenew(value => !value)} onNavigation={() => setNavigationOn(value => !value)} onMusic={() => setMusicOn(value => !value)}
+        onAskAi={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}
+        onWatchVideo={() => { setPhoneOpen(false); watchVideo() }} onCallAmbulance={() => { setPhoneOpen(false); callAmbulance() }}
+      />}
       <div className="inventory-grid essentials-grid">
-        <button className="inventory-item usable" onClick={() => setPhoneOpen(true)}>
+        <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); setPhoneOpen(true) }}>
           <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />tap to open</small></div>
         </button>
         <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit.` })}>

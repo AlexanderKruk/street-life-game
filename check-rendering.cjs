@@ -197,7 +197,7 @@ function measure(App) {
   modalAudit.push({ name: 'travel choices (time continues)', renders: counts() });
   fireEvent.click(screen.getByRole('button', { name: /Ride without ticket/ })); pauseAudit('dice check', '.dice-overlay');
   setup(App, 'inventory'); fireEvent.click(screen.getByRole('button', { name: /PhoneBattery/ }));
-  assert(document.querySelector('.phone-panel')); clearCounts(); advance(3);
+  assert(document.querySelector('.phone-list-modal')); clearCounts(); advance(3);
   assert(count('App') > 0, 'phone panel intentionally keeps time running');
   modalAudit.push({ name: 'phone panel (time continues)', renders: counts() });
   setup(App, 'location');

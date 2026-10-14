@@ -1,8 +1,15 @@
 import { memo, type ReactNode } from 'react'
 
-export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket'
+export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close'
 
 const paths: Record<IconName, ReactNode> = {
+  signal: <><path d="M5 20v-4m5 4v-8m5 8V8m5 12V4" /></>,
+  renew: <><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5M4 16a8 8 0 0 0 14 3l3-3m0 5v-5h-5" /></>,
+  navigation: <><circle cx="12" cy="12" r="9" /><path d="m16 8-2.5 5.5L8 16l2.5-5.5L16 8Z" /></>,
+  music: <><path d="M9 18V5l12-2v13M9 8l12-2" /><ellipse cx="6" cy="18" rx="3" ry="3" /><ellipse cx="18" cy="16" rx="3" ry="3" /></>,
+  video: <><path d="m3 8 17-5 1 5H3v12h18V8M7 7l2-3m4 2 2-3m2 2 2-3" /><path d="m10 12 5 3-5 3v-6Z" /></>,
+  ambulance: <><path d="M3 17V6h11v11M14 9h4l3 4v4H3M17 10v4h4M8 9v5m-2.5-2.5h5" /><circle cx="7" cy="18" r="2" /><circle cx="18" cy="18" r="2" /></>,
+  close: <path d="m6 6 12 12M18 6 6 18" />,
   food: <><path d="M5 3v5a3 3 0 0 0 6 0V3M8 3v18M19 21V3c-3 2-4 5-4 9h4" /></>,
   water: <path d="M12 2c-2 4-7 8-7 13a7 7 0 0 0 14 0c0-5-5-9-7-13Z" />,
   energy: <path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z" />,

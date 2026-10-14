@@ -24,7 +24,7 @@ const report={date:new Date().toISOString(),errors:[],checks:[],memory:[]};let b
    assert.equal(await page.locator('.timeline-entry').count(),0);
    await page.getByRole('button',{name:/Clothing Clean/}).click();await page.locator('.result-modal').waitFor();await page.keyboard.press('Escape');await page.locator('.result-modal').waitFor({state:'hidden'});
    assert.equal(await page.evaluate(()=>document.body.style.position),'');
-   await page.getByRole('button',{name:/Phone Battery/}).click();await page.locator('.phone-panel').waitFor();await page.locator('.phone-modal .sheet-close').click();await nav('Station');
+   await page.getByRole('button',{name:/Phone Battery/}).click();await page.locator('.phone-list-modal').waitFor();await page.locator('.phone-modal .sheet-close').click();await nav('Station');
   }
   await sample(round);
  }
