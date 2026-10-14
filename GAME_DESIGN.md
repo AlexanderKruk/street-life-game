@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-179`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-180`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Coin event accent presentation (v180)
+
+The coin encounter uses the selected centered accent layout: one dark frame, a 72 px gold circle with a larger 56 px coin icon, a short description and sand-colored Pick it up button alongside Leave it. The result repeats the same emblem, displays the actual cash gain once as a large green amount and closes with Got it. Leaving the coin uses the same result frame and the shared animated Mood bar. Other event and result layouts are unchanged. Weighted rewards, one-time resolution, Journal identity and paused travel behavior remain as specified below.
 
 ### Found Polish coin rewards (v179)
 

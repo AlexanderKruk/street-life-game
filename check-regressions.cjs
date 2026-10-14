@@ -262,16 +262,24 @@ for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.9
 // and retains it through result reading and reload without another draw.
 for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,100],[.975,200],[.995,500]]) {
  setup();click('Map');click(/^.*Station/);click('Go →');const eventDraws=[.2,0,0];Math.random=()=>eventDraws.shift()??.99;click(/Public transport/);
- assert(screen.getByRole('dialog').textContent.includes('Coin on the pavement'));
+ assert(screen.getByRole('dialog').textContent.includes('A small lucky find'));
+ assert.equal(document.querySelectorAll('.coin-event .coin-emblem svg').length,1);
  const beforeCoin=read(stateKey),beforeCoinTrip=read('street-life-trip-v1');advance(2000);assert.deepEqual(read(stateKey),beforeCoin);
  let awardDraws=0;Math.random=()=>{awardDraws++;return draw};click('Pick it up');assert.equal(awardDraws,1);
  const awarded=read(stateKey);assert.equal(awarded.money,beforeCoin.money+grosz/100);assert.equal(awarded.minutes,beforeCoin.minutes);assert.deepEqual(read('street-life-trip-v1'),beforeCoinTrip);
  const denomination=grosz<100?`${grosz} gr`:`${grosz/100} zł`;assert(screen.getByRole('dialog').textContent.includes(`${denomination} coin`));
- assert(screen.getByRole('dialog').textContent.includes(`+${grosz/100} zł`));advance(1000);assert.equal(awardDraws,1);assert.deepEqual(read(stateKey),awarded);
+ assert(screen.getByRole('dialog').textContent.includes('You found a coin'));
+ assert.equal(document.querySelectorAll('.coin-result .coin-emblem svg').length,1);
+ assert.equal(document.querySelector('.coin-reward').textContent,`Money +${grosz/100} zł`);
+ assert(!document.querySelector('.coin-result .result-gains'),'money is shown once as the central reward');
+ assert(!document.querySelector('.coin-result .result-details'),'the short result has no duplicate description');
+ advance(1000);assert.equal(awardDraws,1);assert.deepEqual(read(stateKey),awarded);
  ok();cleanup();render(React.createElement(App));assert.equal(awardDraws,1);assert.equal(read(stateKey).money,awarded.money);assert(!document.querySelector('.event-overlay'));
 }
 setup();click('Map');click(/^.*Station/);click('Go →');const leaveCoinDraws=[.2,0,0];Math.random=()=>leaveCoinDraws.shift()??.99;click(/Public transport/);
-const leaveCoinBefore=read(stateKey);Math.random=()=>{throw new Error('Leaving a coin must not roll a reward')};click('Leave it');assert.equal(read(stateKey).money,leaveCoinBefore.money);assert.equal(read(stateKey).mood,leaveCoinBefore.mood+1);ok();
+const leaveCoinBefore=read(stateKey);Math.random=()=>{throw new Error('Leaving a coin must not roll a reward')};click('Leave it');assert.equal(read(stateKey).money,leaveCoinBefore.money);assert.equal(read(stateKey).mood,leaveCoinBefore.mood+1);
+assert(screen.getByRole('dialog').textContent.includes('You leave the coin'));
+assert(!document.querySelector('.coin-reward'));assert(document.querySelector('.coin-result .result-stat-panel').textContent.includes('Mood'));ok();
 
 // All travel modes display every minute at x4, preserve partial progress,
 // pause while hidden, cross midnight and restore the x1 clock after arrival.

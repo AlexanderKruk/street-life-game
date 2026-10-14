@@ -1016,3 +1016,22 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .phone-list-row:disabled,.phone-list-pay:disabled { opacity:.5; cursor:not-allowed; }
 @media(max-width:360px) { .phone-list-modal { padding:16px; } .phone-list-header { gap:8px; } .phone-list-toggle > span { display:none; } }
 @media(prefers-reduced-motion:reduce) { .phone-switch::after { transition:none; } }
+
+/* Coin encounter and result share one frame and a larger coin emblem. */
+.coin-event, .coin-result { width:min(100%,420px); padding:20px; border:1px solid #4a5155; border-radius:18px; background:#191e21; color:#e8e5de; text-align:center; }
+.coin-emblem { display:flex; align-items:center; justify-content:center; width:72px; height:72px; margin:16px auto; border-radius:50%; background:#2e2c24; color:#d7b58a; flex-shrink:0; }
+.coin-emblem svg { width:56px; height:56px; }
+.coin-event .eyebrow, .coin-result .result-card-label { margin:0; color:#a6adaf; font-size:11px; line-height:1.4; letter-spacing:.14em; }
+.coin-event h2, .coin-result .result-card-heading h2 { margin:0 0 10px; font-size:21px; font-weight:600; line-height:1.3; }
+.coin-event .event-body > p:not(.eyebrow), .coin-result .result-lead { margin:0; color:#b9bfc0; font-size:14px; line-height:1.5; }
+.coin-event .event-choices { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:22px; }
+.coin-event .event-choices button { min-height:48px; padding:11px 14px; border:1px solid #414b50; border-radius:10px; background:#232b30; color:#c9cecf; align-items:center; text-align:center; font-weight:600; }
+.coin-event .event-choices button:first-child { border-color:#998a77; background:#b8a68a; color:#171b1e; }
+.coin-event .event-choices button:first-child:active { background:#ab967b; }
+.coin-event :focus-visible { outline:2px solid #dcc2a2; outline-offset:2px; }
+.coin-result { max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); }
+.coin-result .result-card-heading { flex-shrink:0; }
+.coin-result .coin-reward { margin:0 0 10px; color:#a6c7b2; font-size:34px; font-weight:600; line-height:1.2; font-variant-numeric:tabular-nums; }
+.coin-result .result-confirm { min-height:48px; margin-top:22px; background:#b8a68a; }
+.coin-result .result-stat-panel { text-align:left; margin-top:16px; }
+@media(max-width:360px) { .coin-event .event-choices { grid-template-columns:1fr; } }

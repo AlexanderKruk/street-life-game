@@ -2,12 +2,13 @@ import { memo, useEffect, useRef } from 'react'
 import { responsiveImageProps } from './responsiveImages'
 import { Icon, type IconName } from './Icon'
 import Stat from './Stat'
+import CoinEmblem from './CoinEmblem'
 import { conditionBand } from './game'
 import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string }
-export type ResultCardData = { title: string; text: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; variant?: 'coin' } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -80,23 +81,27 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   }, [inline])
 
   const presentation = result.presentation
+  const coin = result.variant === 'coin'
   const changes = (result.changes ?? []).filter(isMajorChange)
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive' && isMajorChange(change))
   const costs = (result.costs ?? []).filter(isMajorChange)
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
-  const gainRows = gains.filter(change => !change.meter)
+  const coinReward = coin ? gains.find(change => resultLabel(change.label) === 'Money') : undefined
+  const gainRows = gains.filter(change => !change.meter && change !== coinReward)
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter)
 
   return <div className={inline ? "result-inline" : "phone-overlay result-overlay"}>
-    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
+    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${coin ? ' coin-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
       {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} />}
       <div className="result-card-heading">
         <p className="result-card-label">{presentation?.label ?? 'AFTER THE ACTION'}</p>
+        {coin && <CoinEmblem />}
         <h2 id="result-title">{presentation?.heading ?? result.title}</h2>
       </div>
       <div className="result-card-content">
+        {coinReward && <p className="coin-reward"><span className="sr-only">Money </span>{coinReward.value}</p>}
         {presentation ? <>
           <p className="result-lead">{presentation.lead}</p>
           {!!presentation.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
@@ -109,7 +114,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
         {costRows.length > 0 && <div className="result-cost-line" aria-label="Spent">{costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}><Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} /><span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}</div>}
-        {presentation && <details className="result-details">
+        {presentation && !coin && <details className="result-details">
           <summary>Full answer & details</summary>
           <p className="result-description">{result.text}</p>
         </details>}
