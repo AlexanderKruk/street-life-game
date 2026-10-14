@@ -980,7 +980,7 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .game-background.event-background-blocked, footer.event-background-blocked, .bottom-nav.event-background-blocked { filter:blur(5px); pointer-events:none; user-select:none; }
 
 /* Only the location button grows upward; peer buttons and bar geometry stay unchanged. */
-.bottom-nav .nav-item.home { margin:-32px 0 0; height:84px; min-height:84px; padding:0 2px 9px; justify-content:flex-end; background:#13171a; border-radius:7px 7px 0 0; }
+.bottom-nav .nav-item.home { margin:-32px 0 0; height:84px; min-height:84px; padding:0 2px; gap:0; justify-content:space-evenly; background:#13171a; border-radius:7px 7px 0 0; }
 .bottom-nav .nav-item.home::before { content:""; position:absolute; top:0; left:0; right:0; height:25px; border:1px solid #343a3e; border-bottom:0; border-radius:7px 7px 0 0; pointer-events:none; }
 .bottom-nav .nav-item.home svg { position:relative; width:38px; height:38px; }
 .bottom-nav .nav-item.home small { position:relative; font-size:13px; font-weight:600; }
