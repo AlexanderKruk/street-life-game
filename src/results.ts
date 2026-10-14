@@ -9,23 +9,24 @@ export type ResultSnapshot = {
   inventory: ResultInventory
   effects: { id: string; expiresAt: number }[]
 }
-export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral'; meter?: { before: number; after: number; cap?: number } }
+export type ConsumedItem = 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'
+export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral'; consumed?: boolean; meter?: { before: number; after: number; cap?: number } }
 export type ResultSummary = { costs: ResultChange[]; changes: ResultChange[] }
 
 function number(value: number, precision = 1) {
   return Number(value.toFixed(precision)).toString()
 }
 
-export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, includeTime = true): ResultSummary {
+export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, includeTime = true, consumedItems: readonly ConsumedItem[] = []): ResultSummary {
   const costs: ResultChange[] = []
   const changes: ResultChange[] = []
   const minutes = absoluteMinutes(after.game) - absoluteMinutes(before.game)
   if (includeTime && minutes > 0) costs.push({ label: '⏱ Time', value: `${Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)} h ` : ''}${minutes % 60 ? `${minutes % 60} min` : ''}`.trim(), kind: 'neutral' })
-  function add(label: string, delta: number, suffix = '', negativeIsGood = false, cost = false, precision = 1, meter?: ResultChange['meter']) {
+  function add(label: string, delta: number, suffix = '', negativeIsGood = false, cost = false, precision = 1, meter?: ResultChange['meter'], consumed = false) {
     const rounded = Number(delta.toFixed(precision))
     if (rounded === 0) return
     const kind = (rounded > 0) !== negativeIsGood ? 'positive' : 'negative'
-    const row: ResultChange = { label, value: `${rounded > 0 ? '+' : '−'}${number(Math.abs(rounded), precision)}${suffix}`, kind, ...(meter ? { meter } : {}) }
+    const row: ResultChange = { label, value: `${rounded > 0 ? '+' : '−'}${number(Math.abs(rounded), precision)}${suffix}`, kind, ...(meter ? { meter } : {}), ...(consumed && rounded < 0 ? { consumed: true } : {}) }
     ;(cost && rounded < 0 ? costs : changes).push(row)
   }
   add('💰 Money', after.game.money - before.game.money, ' zł', false, true, 2)
@@ -38,6 +39,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     add(label, after.game[key] - before.game[key], '', false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}) })
   }
   add('🍺 Intoxication', after.game.intoxication - before.game.intoxication, '', true)
+  const consumedKeys = new Set<string>(consumedItems)
   for (const [key, label, suffix] of [
     ['phoneBattery', '🔋 Battery', '%'], ['phoneCondition', '📱 Phone condition', '%'],
     ['clothingCleanliness', '🧥 Clothing cleanliness', '%'], ['jacket', '🧥 Clothing condition', '%'], ['water', '💧 Water portions', ''],
@@ -48,7 +50,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     const previous = before.inventory[key] ?? (key === 'clothingCleanliness' ? after.inventory[key] ?? 0 : 0)
     const current = after.inventory[key] ?? 0
     const meter = ['phoneBattery', 'phoneCondition', 'clothingCleanliness', 'jacket'].includes(key) ? { before: previous, after: current } : undefined
-    add(label, current - previous, suffix, false, key === 'phoneBattery', 1, meter)
+    add(label, current - previous, suffix, false, key === 'phoneBattery', 1, meter, consumedKeys.has(key))
   }
   if (after.inventory.documents !== before.inventory.documents) changes.push({ label: '📄 Documents', value: after.inventory.documents ? 'Now carried' : 'No longer carried', kind: after.inventory.documents ? 'positive' : 'negative' })
   const names: Record<string, string> = { cold: '🤒 Cold', 'free-transit': '🎫 Free transport', 'well-fed': '🍲 Well fed' }

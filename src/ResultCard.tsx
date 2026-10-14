@@ -15,6 +15,7 @@ export function resultLabel(label: string) {
 
 // Keep gains and meaningful consequences; omit small ongoing stat drain entirely.
 export function isMajorChange(change: ResultChange) {
+  if (change.kind === 'negative' && change.consumed) return false
   if (change.kind !== 'negative') return true
   const amount = Number(change.value.replace('−', '-').match(/^[+-]?\d+(?:\.\d+)?/)?.[0])
   const passiveNeeds = ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Mood', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition'].includes(resultLabel(change.label))

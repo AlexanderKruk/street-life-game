@@ -40,6 +40,15 @@ try {
     assert(isMajorChange({ label, value: '+0.1', kind: 'positive' }));
   }
   assert(isMajorChange({ label: 'Money', value: '−0.2 zł', kind: 'negative' }));
+  for (const [key,label] of [['water','Water portions'],['food','Food portions'],['bread','Bread rolls'],['cannedFood','Canned food'],['wipes','Wet wipes'],['showerGel','3-in-1 gel uses'],['cigarettes','Cigarettes'],['medicines','Medicine']]) {
+    const starting = { ...before, inventory: { ...before.inventory, [key]: 2 } };
+    const consumed = { ...starting, inventory: { ...starting.inventory, [key]: 1 } };
+    const usedRow = summarizeResult(starting, consumed, true, [key]).changes.find(change => change.label.includes(label));
+    assert(usedRow.consumed); assert(!isMajorChange(usedRow));
+    assert(isMajorChange(summarizeResult(starting, consumed).changes.find(change => change.label.includes(label))), 'other item losses remain visible');
+    const received = { ...starting, inventory: { ...starting.inventory, [key]: 3 } };
+    assert(isMajorChange(summarizeResult(starting, received, true, [key]).changes.find(change => change.label.includes(label))), 'received items remain visible');
+  }
   let closed = 0;
   const result = { title: 'Result', text: 'You rested.', ...summary, presentation: { heading: 'You rested', label: 'REST', lead: 'A short break.', places: [] } };
   render(React.createElement(ResultCard, { result, onClose: () => { closed++; } }));

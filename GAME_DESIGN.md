@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-175`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-176`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Hide consumed-item rows (v176)
+
+Result dialogs omit negative item-count rows caused by using water, food, bread, canned food, wet wipes, medicine, cigarettes or shower gel. These actions explicitly tag their consumed item when preparing the summary; the real inventory decrement still happens and is saved. The result retains stat bars, effect changes and time/money expenses. Received items and losses from other causes, including theft and storage transfers, retain their quantity rows. This supersedes the v175 rule that displayed consumed-item quantities. No save format or gameplay amounts change.
 
 ### Animated result indicators (v175)
 
