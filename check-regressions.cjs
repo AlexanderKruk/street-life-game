@@ -258,6 +258,21 @@ for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.9
  Math.random=()=>.99;advance((expected-2)*250);assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,480+expected);assert(!localStorage.getItem('street-life-trip-v1'));ok();
 }
 
+// Found money uses one Polish coin, awards the actual grosz amount once,
+// and retains it through result reading and reload without another draw.
+for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,100],[.975,200],[.995,500]]) {
+ setup();click('Map');click(/^.*Station/);click('Go →');const eventDraws=[.2,0,0];Math.random=()=>eventDraws.shift()??.99;click(/Public transport/);
+ assert(screen.getByRole('dialog').textContent.includes('Coin on the pavement'));
+ const beforeCoin=read(stateKey),beforeCoinTrip=read('street-life-trip-v1');advance(2000);assert.deepEqual(read(stateKey),beforeCoin);
+ let awardDraws=0;Math.random=()=>{awardDraws++;return draw};click('Pick it up');assert.equal(awardDraws,1);
+ const awarded=read(stateKey);assert.equal(awarded.money,beforeCoin.money+grosz/100);assert.equal(awarded.minutes,beforeCoin.minutes);assert.deepEqual(read('street-life-trip-v1'),beforeCoinTrip);
+ const denomination=grosz<100?`${grosz} gr`:`${grosz/100} zł`;assert(screen.getByRole('dialog').textContent.includes(`${denomination} coin`));
+ assert(screen.getByRole('dialog').textContent.includes(`+${grosz/100} zł`));advance(1000);assert.equal(awardDraws,1);assert.deepEqual(read(stateKey),awarded);
+ ok();cleanup();render(React.createElement(App));assert.equal(awardDraws,1);assert.equal(read(stateKey).money,awarded.money);assert(!document.querySelector('.event-overlay'));
+}
+setup();click('Map');click(/^.*Station/);click('Go →');const leaveCoinDraws=[.2,0,0];Math.random=()=>leaveCoinDraws.shift()??.99;click(/Public transport/);
+const leaveCoinBefore=read(stateKey);Math.random=()=>{throw new Error('Leaving a coin must not roll a reward')};click('Leave it');assert.equal(read(stateKey).money,leaveCoinBefore.money);assert.equal(read(stateKey).mood,leaveCoinBefore.mood+1);ok();
+
 // All travel modes display every minute at x4, preserve partial progress,
 // pause while hidden, cross midnight and restore the x1 clock after arrival.
 for(const mode of ['walk','transit','fare-dodge']) {
@@ -839,6 +854,16 @@ assert(screen.getByRole('dialog').textContent.includes('The last departures'));
 const eventModule={exports:{}};
 new Function('module','exports',require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text)(eventModule,eventModule.exports);
 const observationEvents=eventModule.exports.STREET_EVENTS;
+const foundCoinOutcome=observationEvents.find(event=>event.id==='found-coins').choices[0].outcome;
+const coinFrequencies=new Map();
+for(let draw=0;draw<10000;draw++) {
+ const resolved=eventModule.exports.resolveEventOutcome(foundCoinOutcome,()=>(draw+.5)/10000);
+ const grosz=Math.round(resolved.money*100);coinFrequencies.set(grosz,(coinFrequencies.get(grosz)??0)+1);
+ assert(resolved.money>0&&resolved.money<=5);assert.equal(eventModule.exports.resolveEventOutcome(resolved,()=>{throw new Error('Resolved reward cannot reroll')}),resolved);
+}
+assert.deepEqual([...coinFrequencies.keys()],[1,2,5,10,20,50,100,200,500]);
+for(const coin of eventModule.exports.FOUND_COIN_DENOMINATIONS)assert.equal(coinFrequencies.get(coin.grosz),coin.weight*100);
+assert.equal(coinFrequencies.get(500),100);assert.equal([...coinFrequencies].filter(([grosz])=>grosz<=50).reduce((sum,[,count])=>sum+count,0),9200);
 for(const state of [{day:1,minutes:1250},{day:2,minutes:360},{day:3,minutes:1320}])assert(!eventModule.exports.firstNightTime(state));
 assert(eventModule.exports.firstNightTime({day:1,minutes:1320}));assert(eventModule.exports.firstNightTime({day:2,minutes:359}));
 const context={locationId:'station',weather:'Clouds',housing:'Street',documents:true,firstNight:true};

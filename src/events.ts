@@ -18,6 +18,7 @@ export type EventContext = {
 
 export type EventOutcome = {
   message: string
+  randomCoin?: boolean
   minutes?: number
   money?: number
   mood?: number
@@ -31,6 +32,25 @@ export type EventOutcome = {
   loseDocuments?: boolean
   illustration?: string
   discoverLocation?: string
+}
+
+export const FOUND_COIN_DENOMINATIONS = [
+  { grosz: 1, weight: 10 }, { grosz: 2, weight: 15 }, { grosz: 5, weight: 20 },
+  { grosz: 10, weight: 20 }, { grosz: 20, weight: 15 }, { grosz: 50, weight: 12 },
+  { grosz: 100, weight: 5 }, { grosz: 200, weight: 2 }, { grosz: 500, weight: 1 },
+] as const
+
+export function resolveEventOutcome(outcome: EventOutcome, random = Math.random): EventOutcome {
+  if (!outcome.randomCoin) return outcome
+  let roll = random() * 100
+  for (const coin of FOUND_COIN_DENOMINATIONS) {
+    if (roll < coin.weight) {
+      const denomination = coin.grosz < 100 ? `${coin.grosz} gr` : `${coin.grosz / 100} zł`
+      return { ...outcome, randomCoin: false, money: coin.grosz / 100, message: `You pick up a ${denomination} coin.` }
+    }
+    roll -= coin.weight
+  }
+  return { ...outcome, randomCoin: false, money: 5, message: 'You pick up a 5 zł coin.' }
 }
 
 export type DiceCheck = {
@@ -75,9 +95,9 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Hide it under the jacket', outcome:{ jacketCondition:-2, phoneCondition:-3, mood:-2, message:'You protected it as best you could, but some moisture got inside.' } },
     { label:'Keep moving', outcome:{ phoneCondition:-10, mood:-1, message:'You save time, but the wet phone starts behaving strangely.' } }
   ]},
-  { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coins on the pavement', text:'Something glints beside the curb.', weight:4, choices:[
-    { label:'Pick them up', outcome:{ money:6, message:'A few coins. +6 zł.' } },
-    { label:'Leave them', outcome:{ mood:1, message:'You leave them for someone who may need them more.' } }
+  { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the curb.', weight:4, choices:[
+    { label:'Pick it up', outcome:{ randomCoin:true, message:'You pick up the coin.' } },
+    { label:'Leave it', outcome:{ mood:1, message:'You leave it for someone who may need it more.' } }
   ]},
   { id:'free-snack', trigger:'travel', icon:'🥪', title:'Someone offers food', text:'A passer-by offers you a packaged sandwich.', weight:3, eligible:c=>!c.firstNight, choices:[
     { label:'Take it', outcome:{ food:1, mood:2, message:'You put the sandwich in your backpack.' } },

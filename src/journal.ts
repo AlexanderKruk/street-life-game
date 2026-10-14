@@ -119,7 +119,7 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = 'I still feel tense. I just want to be left in peace.'
   } else if (/offers food|food before closing/.test(actionTitle.toLowerCase())) {
     text = /decline|left it behind|no backpack room/.test(source) ? 'It was kind of them to ask. Being noticed still feels strange.' : 'I feel grateful. It means something that someone noticed me.'
-  } else if (actionTitle === 'Coins on the pavement') {
+  } else if (actionTitle === 'Coin on the pavement' || actionTitle === 'Coins on the pavement') {
     text = changed('Money', 'positive') ? 'I feel lucky for once. I needed a small break.' : 'I hope they help someone else. That thought feels good.'
   } else if (actionTitle === 'A useful tip') {
     text = failed || negative ? 'I feel awkward about how that went. Asking isn’t getting easier.' : /not to stop/.test(source) ? 'I wasn’t ready to speak. I wonder if I missed a chance.' : 'I feel less alone. Maybe there’s still a way forward.'

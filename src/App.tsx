@@ -1,6 +1,6 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, createInitialState, isOpen, locations, overallCondition, conditionBand, travelTimeRange, randomTravelMinutes, type ActionResult, type GameState } from './game'
-import { pickStreetEvent, firstNightTime, STREET_EVENTS, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
+import { pickStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ConsumedItem, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
@@ -21,7 +21,7 @@ import PhoneDialog from './PhoneDialog'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.14-178'
+const BUILD_VERSION = 'v2026.10.14-179'
 const TRAVEL_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -645,7 +645,7 @@ export default function App() {
   function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
   function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(args[0]) ? ['showerGel'] : []) }
   function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
-  function applyEventOutcome(...args: Parameters<typeof applyEventOutcomeImpl>) { runWithResult(activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(...args) }, resultSnapshot(), true, true) }
+  function applyEventOutcome(outcome: EventOutcome) { const resolved = resolveEventOutcome(outcome); runWithResult(activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true) }
   function storeItem(...args: Parameters<typeof storeItemImpl>) { runWithResult('Store belongings', () => storeItemImpl(...args)) }
   function takeStoredItem(...args: Parameters<typeof takeStoredItemImpl>) { runWithResult('Collect belongings', () => takeStoredItemImpl(...args)) }
   function storeFood(...args: Parameters<typeof storeFoodImpl>) { runWithResult('Store food', () => storeFoodImpl(...args)) }

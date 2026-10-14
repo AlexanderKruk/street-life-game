@@ -2,7 +2,25 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-178`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-179`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Found Polish coin rewards (v179)
+
+The found-money event now offers one Polish coin instead of a fixed 6 zł. Pick it up resolves one weighted denomination and applies that amount once; the result identifies the coin and shows the actual money gained, including 1 grosz. Reading or rendering the result does not sample again, and saved cash remains unchanged after reload. Leaving the coin still gives +1 Mood without sampling or adding money. The event keeps its existing appearance weight and event ID; Journal recognizes both its previous and current title.
+
+| Coin | Reward probability |
+|---|---:|
+| 1 gr | 10% |
+| 2 gr | 15% |
+| 5 gr | 20% |
+| 10 gr | 20% |
+| 20 gr | 15% |
+| 50 gr | 12% |
+| 1 zł | 5% |
+| 2 zł | 2% |
+| 5 zł | 1% |
+
+The maximum is 5 zł. Coins worth 1–50 groszy account for 92% of rewards. Regression coverage checks all nine real event outcomes, the exact weighted distribution, the upper bound, correct cash/result text, leaving the coin and no repeated draw or award during reading/reload.
 
 ### Variable travel duration (v178)
 
@@ -655,7 +673,7 @@ Location actions currently attempt a location event at 20% probability. Night Sh
 Implemented events:
 1. **The phone slips** — walking only. D20 Reflex option or guaranteed drop/damage.
 2. **Caught in the rain** — walking in Rain/Showers. Protect with jacket or keep moving; damages phone/clothing.
-3. **Coins on the pavement** — take +6 zł or leave them for +1 Mood.
+3. **Coin on the pavement** — pick up one weighted Polish coin, from 1 gr to 5 zł (5 zł: 1%; 1–50 gr: 92%), or leave it for +1 Mood.
 4. **Someone offers food** — take one Food and +2 Mood or decline.
 5. **Ticket inspection** — public transport only; currently just show ticket.
 6. **Food before closing** — Station only; accept one Food and +3 Mood or decline.
