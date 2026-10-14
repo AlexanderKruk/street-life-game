@@ -11,7 +11,7 @@ window.scrollTo = () => {};
 let now = 1800000000000, nextId = 1;
 Date.now = () => now;
 const timers = new Map();
-window.setInterval = (fn) => { const id = nextId++; timers.set(id, fn); return id; };
+window.setInterval = (fn, delay) => { const id = nextId++; timers.set(id, { fn, delay, nextAt: now + delay }); return id; };
 window.clearInterval = id => timers.delete(id);
 const React = require('react');
 const { render, screen, fireEvent, act, cleanup, configure } = require('@testing-library/react');
@@ -29,7 +29,14 @@ function setup(App, screenName, state = {}, extras = {}) {
   render(React.createElement(App)); clearCounts();
 }
 function advance(ticks, flush = true) {
-  for (let i = 0; i < ticks; i++) { now += 1000; act(() => { for (const fn of [...timers.values()]) fn(); }); }
+  const end = now + ticks * 1000;
+  while (true) {
+    const due = Math.min(...[...timers.values()].map(timer => timer.nextAt));
+    if (due > end) break;
+    now = due;
+    act(() => { for (const [id, timer] of [...timers]) if (timers.has(id) && timer.nextAt <= now) { timer.nextAt += timer.delay; timer.fn(); } });
+  }
+  now = end;
   if (flush) fireEvent(window, new window.Event('pagehide'));
 }
 async function loadApp(disableMemo) {
@@ -69,7 +76,7 @@ function measure(App) {
   const initialElapsed = document.querySelector('.travel-elapsed').textContent;
   advance(10); output.travel = counts();
   assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '1h 40m');
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '40m');
   assert(!document.querySelector('.travel-progress'));
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
@@ -283,14 +290,14 @@ function measure(App) {
   window.Storage.prototype.setItem = nativeSet;
   setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 } });
   advance(3, false); fireEvent(window, new window.Event('pagehide'));
-  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 210);
+  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 228);
   cleanup(); render(React.createElement(App));
   assert(document.querySelector('.travel-screen'));
-  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 210, 'travel resumes from lifecycle save');
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '30m', 'elapsed time survives reload');
+  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 228, 'travel resumes from lifecycle save');
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '12m', 'elapsed time survives reload');
   assert(document.querySelector('.map-surface[inert] .district-map'), 'reload restores the map behind the travel dialog');
   advance(1, false); fireEvent(window, new window.Event('beforeunload'));
-  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 200);
+  assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 224);
   fireEvent.click(screen.getByRole('button', { name: 'Reset save' }));
   advance(10, false); fireEvent(window, new window.Event('pagehide'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).locationId, 'street');

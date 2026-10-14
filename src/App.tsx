@@ -19,7 +19,8 @@ import LifeSituation from './LifeSituation'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.14-173'
+const BUILD_VERSION = 'v2026.10.14-174'
+const TRAVEL_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
 type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
@@ -793,15 +794,16 @@ export default function App() {
       })
     }
     if (sleeping) return
-    const tickMinutes = trip ? Math.min(10, trip.remaining) : 1
+    const tickMinutes = trip ? Math.min(1, trip.remaining) : 1
     if (shelterQueue) setShelterQueue(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
     setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
   })
+  const gameClockInterval = trip ? TRAVEL_TICK_MS : 1000
   useEffect(() => {
-    const timer = window.setInterval(tickGameClock, 1000)
+    const timer = window.setInterval(tickGameClock, gameClockInterval)
     return () => window.clearInterval(timer)
-  }, [tickGameClock])
+  }, [tickGameClock, gameClockInterval])
 
   useEffect(() => {
     if (!trip || trip.remaining > 0) return

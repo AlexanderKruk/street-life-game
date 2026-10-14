@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-173`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-174`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Travel clock at ×4 (v174)
+
+Walking, paid public transport and fare-dodging trips advance one game minute every 250ms. The game clock switches to this cadence only while a trip exists and returns to one minute per second after arrival. Trip totals, fares and stored remaining minutes retain their existing format. Events, their results and hidden tabs pause travel; loading an unfinished trip resumes its remaining minutes at ×4. Regression timer mocks honor actual interval delays, with coverage for each minute, all three modes, exact arrival, midnight, reload, event/result pauses and restoration of the ordinary clock.
 
 ### Central button vertical spacing (v173)
 
