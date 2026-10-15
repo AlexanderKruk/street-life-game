@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-182`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-183`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Checkout clock at ×4 (v183)
+
+Active morning checkout now advances one game minute every 250 ms, showing every minute and finishing 30 game minutes in 7.5 real seconds. The progress transition matches that cadence. The reminder and completion result remain paused, hidden-tab pause and reload progress are preserved, and ordinary time returns to one minute per second afterward. Travel keeps the same ×4 cadence; sleep behavior is unchanged.
 
 ### Compact morning checkout (v182)
 

@@ -22,8 +22,8 @@ import CoinEmblem from './CoinEmblem'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-182'
-const TRAVEL_TICK_MS = 250
+const BUILD_VERSION = 'v2026.10.15-183'
+const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
 type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
@@ -787,7 +787,7 @@ export default function App() {
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
     setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
   })
-  const gameClockInterval = trip ? TRAVEL_TICK_MS : 1000
+  const gameClockInterval = trip || shelterDeparture ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
     const timer = window.setInterval(tickGameClock, gameClockInterval)
     return () => window.clearInterval(timer)

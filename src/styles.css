@@ -1048,7 +1048,7 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .checkout-card .sleep-clock strong { font-size:30px; font-weight:600; line-height:1.2; font-variant-numeric:tabular-nums; }
 .checkout-card .sleep-clock span { opacity:1; color:#a6adaf; font-size:13px; }
 .checkout-card .sleep-progress { height:8px; margin:0; background:#303942; }
-.checkout-card .sleep-progress i { background:#b8a68a; }
+.checkout-card .sleep-progress i { background:#b8a68a; transition:width .25s linear; }
 .checkout-card > .checkout-finish { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:12px 0 0; color:#a6adaf; font-size:12px; line-height:1.5; }
 .checkout-finish svg { width:15px; height:15px; flex-shrink:0; }
 .checkout-start { width:100%; min-height:48px; margin-top:16px; padding:11px 14px; border:1px solid #998a77; border-radius:10px; background:#b8a68a; color:#171b1e; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
