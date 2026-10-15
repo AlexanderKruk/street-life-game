@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-183`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-184`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Compact sleep and registration queue (v184)
+
+Active sleep and shelter registration queue now share the compact timed-dialog frame with checkout: one dark surface, line icons beside headings, current time above a thin sand-colored progress bar, and short supporting text. Sleep shows actual elapsed/total duration and ×10; the queue shows remaining minutes and the existing limited-place warning. Accessible progress values are included. Sleep speed, queue duration and availability, hidden/background handling, saved progress, manual debug wake and result flows are unchanged. The sleep-duration picker and other legacy dialogs remain for later design review.
 
 ### Checkout clock at ×4 (v183)
 

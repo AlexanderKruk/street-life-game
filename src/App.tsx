@@ -22,7 +22,7 @@ import CoinEmblem from './CoinEmblem'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-183'
+const BUILD_VERSION = 'v2026.10.15-184'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2299,49 +2299,48 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && shelterQueue && <div className="sleep-overlay queue-overlay" role="dialog" aria-modal="true" aria-label="Shelter registration queue">
-      <section className="sleep-card">
-        <div className="sleep-icon">🕒</div>
-        <p className="eyebrow">NIGHT SHELTER</p>
-        <h2>Registration queue</h2>
-        <p>You must wait until your turn. A place is not guaranteed.</p>
+    {!gameOver && shelterQueue && <div className="sleep-overlay queue-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Shelter registration queue">
+      <section className="sleep-card timed-card rest-card">
+        <div className="timed-heading"><Icon name="clock" /><div><p className="eyebrow">NIGHT SHELTER</p><h2>Registration queue</h2></div></div>
+        <p className="timed-description">Waiting for your turn. A bed isn’t guaranteed.</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterQueue.remaining} min remaining</span></div>
-        <div className="sleep-progress"><i style={{ width: `${(1 - shelterQueue.remaining / SHELTER_QUEUE_MINUTES) * 100}%` }} /></div>
-        <small>Earlier arrivals have a better chance of getting one of today's 0–3 places.</small>
+        <div className="sleep-progress" role="progressbar" aria-label="Registration queue progress" aria-valuemin={0} aria-valuemax={SHELTER_QUEUE_MINUTES} aria-valuenow={SHELTER_QUEUE_MINUTES - shelterQueue.remaining}><i style={{ width: `${(1 - shelterQueue.remaining / SHELTER_QUEUE_MINUTES) * 100}%` }} /></div>
+        <p className="timed-footnote">Today’s availability: 0–3 places. Earlier arrivals have a better chance.</p>
       </section>
     </div>}
 
-    {!gameOver && shelterCheckoutDue && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="sleep-overlay checkout-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter">
-      <section className="sleep-card checkout-card">
-        <div className="checkout-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Time to leave the night shelter</h2></div></div>
-        <p className="checkout-description">You must leave by 08:00. Packing and leaving takes 30 minutes.</p>
+    {!gameOver && shelterCheckoutDue && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter">
+      <section className="sleep-card timed-card">
+        <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Time to leave the night shelter</h2></div></div>
+        <p className="timed-description">You must leave by 08:00. Packing and leaving takes 30 minutes.</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>On the street at {formatTime((game.minutes + SHELTER_DEPARTURE_MINUTES) % 1440)}</span></div>
         <button className="checkout-start" autoFocus onClick={startShelterDeparture}>Leave the night shelter · 30 min</button>
       </section>
     </div>}
 
-    {!gameOver && shelterDeparture && <div className="sleep-overlay checkout-overlay" role="dialog" aria-modal="true" aria-label="Leaving the night shelter">
-      <section className="sleep-card checkout-card">
-        <div className="checkout-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Leaving the night shelter</h2></div></div>
-        <p className="checkout-description">Packing your things and heading outside.</p>
+    {!gameOver && shelterDeparture && <div className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leaving the night shelter">
+      <section className="sleep-card timed-card">
+        <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Leaving the night shelter</h2></div></div>
+        <p className="timed-description">Packing your things and heading outside.</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterDepartureRemaining} min remaining</span></div>
         <div className="sleep-progress" role="progressbar" aria-label="Packing progress" aria-valuemin={0} aria-valuemax={SHELTER_DEPARTURE_MINUTES} aria-valuenow={SHELTER_DEPARTURE_MINUTES - shelterDepartureRemaining}><i style={{ width: `${(1 - shelterDepartureRemaining / SHELTER_DEPARTURE_MINUTES) * 100}%` }} /></div>
-        <p className="checkout-finish"><Icon name="clock" />On the street at {formatTime((shelterDeparture.startAbsolute + SHELTER_DEPARTURE_MINUTES) % 1440)}</p>
+        <p className="timed-footnote"><Icon name="clock" />On the street at {formatTime((shelterDeparture.startAbsolute + SHELTER_DEPARTURE_MINUTES) % 1440)}</p>
       </section>
     </div>}
 
-    {sleeping && <div className="sleep-overlay">
-      <section className="sleep-card">
+    {sleeping && <div className="sleep-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Sleeping">
+      <section className="sleep-card timed-card rest-card">
         <SleepHeading kind={sleeping.kind} />
+        <p className="timed-description">{sleeping.kind === 'shelter' ? 'Resting in your reserved bed.' : sleeping.kind === 'residential' ? 'Resting in your room.' : sleeping.kind === 'bench' ? 'Resting on a bench, still exposed.' : 'Resting on the ground, out in the open.'}</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>Wake at {formatTime((sleeping.startAbsolute + sleeping.total) % 1440)}</span></div>
         {(() => {
           const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
           return <>
-            <div className="sleep-progress"><i style={{ width: `${(elapsed / sleeping.total) * 100}%` }} /></div>
-            <p>{Math.floor(elapsed / 60)}h {elapsed % 60}m / {formatTravelTime(sleeping.total)}</p>
+            <div className="sleep-progress" role="progressbar" aria-label="Sleep progress" aria-valuemin={0} aria-valuemax={sleeping.total} aria-valuenow={elapsed}><i style={{ width: `${(elapsed / sleeping.total) * 100}%` }} /></div>
+            <div className="timed-progress-detail"><span>{Math.floor(elapsed / 60)}h {elapsed % 60}m of {formatTravelTime(sleeping.total)}</span><span>×{DEBUG_SLEEP_SPEED}</span></div>
           </>
         })()}
-        <small>{sleeping.kind === 'shelter' ? 'Night shelter sleep ends by 07:30 so you can leave by 08:00.' : 'You cannot perform other actions until you wake up.'}</small>
+        <p className="timed-footnote">{sleeping.kind === 'shelter' ? 'Sleep ends by 07:30 for morning checkout.' : 'You cannot perform other actions until you wake up.'}</p>
         <button className="sleep-debug-wake" onClick={() => { const active = sleeping; setSleeping(null); finishSleep(active) }}>Wake up (debug)</button>
       </section>
     </div>}
