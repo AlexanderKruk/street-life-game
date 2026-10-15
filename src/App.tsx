@@ -20,10 +20,11 @@ import Stat from './Stat'
 import PhoneDialog from './PhoneDialog'
 import CoinEmblem from './CoinEmblem'
 import CompactStreetEvent from './CompactStreetEvent'
+import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-188'
+const BUILD_VERSION = 'v2026.10.15-189'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -93,7 +94,7 @@ type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
-type TrashItem = { id: number; layer: number; icon: string; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
+type TrashItem = { id: number; layer: number; icon: IconName; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
 const INITIAL_INVENTORY: Inventory = { clothingCleanliness: 80, showerGel: 0, bread: 0, breadFreshness: 100, cannedFood: 0, wipes: 0, water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: true }
@@ -1015,7 +1016,7 @@ export default function App() {
 
   function searchStreetBottles() {
     if (activeEvent || current.id !== 'street' || trashGame) return
-    const clutter = ['📰','🥤','📦','🍌','🥫','🧻','🛍️','🍕','🧤','🥡','🧃','🗞️']
+    const clutter: IconName[] = ['newspaper','cup','box','food','can','documents','bag','food','documents','box','cup','newspaper']
     const layers = 6
     const perLayer = 3
     const count = layers * perLayer
@@ -1027,14 +1028,15 @@ export default function App() {
       const layer = Math.floor(id / perLayer)
       const slot = id % perLayer
       const base = [
-        { x: 19, y: 31 },
-        { x: 48, y: 19 },
-        { x: 40, y: 53 },
+        { x: 22, y: 32 },
+        { x: 70, y: 28 },
+        { x: 48, y: 68 },
       ][slot]
+      const appearance = Math.random()
       return {
         id,
         layer,
-        icon: bottle ? (Math.random() < .5 ? '🍾' : '🧴') : clutter[Math.floor(Math.random() * clutter.length)],
+        icon: bottle ? 'bottle' : clutter[Math.floor(appearance * clutter.length)],
         x: base.x + (Math.random() * 14 - 7),
         y: base.y + (Math.random() * 14 - 7),
         rotation: -75 + Math.random() * 150,
@@ -1064,17 +1066,12 @@ export default function App() {
     const nextY = Math.max(-30, Math.min(110, pointerY - drag.offsetY))
     drag.moved = true
     const draggedItem = trashGame?.items.find((entry) => entry.id === id)
-    const itemRadius = 9 * (draggedItem?.scale ?? 1)
-    const centerX = nextX + 9
-    const centerY = nextY + 9
-    const dx = centerX - 50
-    const dy = centerY - 50
-    const distanceFromCenter = Math.sqrt(dx * dx + dy * dy)
-    // An item becomes cleared as soon as its outer edge reaches the rim.
-    const cleared = distanceFromCenter + itemRadius > 38
-    // Discard only the item currently being dragged, once roughly 25% of its
-    // size has crossed the rim. Untouched items are never evaluated here.
-    const outside = distanceFromCenter + itemRadius * 0.5 > 40
+    const halfWidth = 18 * (draggedItem?.scale ?? 1) / bounds.width * 100
+    const halfHeight = 20 * (draggedItem?.scale ?? 1) / bounds.height * 100
+    // Rectangular field: clear only the dragged item as it reaches an edge,
+    // and discard rubbish once roughly a quarter has crossed that edge.
+    const cleared = nextX - halfWidth < 0 || nextX + halfWidth > 100 || nextY - halfHeight < 0 || nextY + halfHeight > 100
+    const outside = nextX - halfWidth * .5 < 0 || nextX + halfWidth * .5 > 100 || nextY - halfHeight * .5 < 0 || nextY + halfHeight * .5 > 100
     setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
       ...item,
       x: nextX,
@@ -1102,25 +1099,18 @@ export default function App() {
 
   function finishTrashSearchImpl() {
     if (!trashGame) return
-    const realSeconds = Math.max(5, Math.floor((Date.now() - trashGame.startedAt) / 1000))
-    const minutes = Math.min(60, Math.max(10, Math.ceil(realSeconds / 5) * 5))
+    const minutes = trashSearchMinutes(trashGame.startedAt)
     const { found, rejected } = trashGame
     setGame((prev) => applyAction(prev, { minutes, energy: -Math.max(1, minutes / 15), hygiene: -Math.max(2, minutes / 5), mood: found > 0 ? 1 : -2 }))
     setTrashGame(null)
-    setMessage(found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable bottle${found === 1 ? '' : 's'}.` : rejected > 0 ? `You searched for ${minutes} minutes. The bottles you found were not returnable.` : `You searched for ${minutes} minutes and found nothing useful.`)
+    const text = found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable bottle${found === 1 ? '' : 's'}.` : rejected > 0 ? `You searched for ${minutes} minutes. The bottles you found were not returnable.` : `You searched for ${minutes} minutes and found nothing useful.`
+    setMessage(text)
+    setInfoModal({ title: 'Trash search results', text, bottleSearch: { found } })
   }
 
   const checkTrashDeadline = useLatestAction(() => {
     if (trashGame && Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
   })
-  const trashStartedAt = trashGame?.startedAt
-  useEffect(() => {
-    if (trashStartedAt === undefined) return
-    const timer = window.setInterval(() => {
-      checkTrashDeadline()
-    }, 250)
-    return () => window.clearInterval(timer)
-  }, [trashStartedAt, checkTrashDeadline])
 
   function returnBottlesImpl() {
     if (!open || current.id !== 'shop' || inventory.bottles <= 0) return
@@ -2004,22 +1994,23 @@ export default function App() {
     {infoModal && !inlineResult && <ResultCard result={infoModal} onClose={closeResult} />}
     {trashGame && <div className="trash-overlay">
       <section className="trash-card">
-        <div className="trash-head"><div><p className="eyebrow">SEARCHING TRASH</p><h2>Dig for bottles</h2></div><div><strong>♻️ {trashGame.found}</strong><small> kept</small></div></div>
-        <p className="trash-tip">Drag rubbish aside. Tap a bottle to check whether it can be returned.</p>
+        <div className="trash-head"><Icon name="bottle" /><h2>Look for bottles</h2></div>
+        <p className="trash-tip">Move rubbish. Tap bottles.</p>
+        <div className="trash-search-row"><TrashSearchTime startedAt={trashGame.startedAt} onDeadline={checkTrashDeadline} /><span aria-label={`${trashGame.found} bottles kept`}><Icon name="bottle" /><strong>{trashGame.found}</strong></span></div>
         <div className="trash-bin">
-          <div className="trash-bin-rim">BIN</div>
           {trashGame.items.map((item, index) => !item.collected && <button
             key={item.id}
             className={item.bottle ? 'trash-piece bottle-piece' : 'trash-piece'}
-            style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: index + 2 }}
+            aria-label={item.bottle ? 'Pick up bottle' : 'Move rubbish'}
+            style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `translate(-50%, -50%) rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: index + 2 }}
             onPointerDown={(e) => { const bounds = e.currentTarget.parentElement!.getBoundingClientRect(); if (startTrashDrag(item.id, e.clientX, e.clientY, bounds)) e.currentTarget.setPointerCapture(e.pointerId) }}
             onPointerMove={(e) => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; moveTrashItem(item.id, e.clientX, e.clientY, e.currentTarget.parentElement!.getBoundingClientRect()) }}
-            onPointerUp={(e) => { const moved = trashDrag.current?.id === item.id && trashDrag.current.moved; trashDrag.current = null; if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); if (item.bottle && !moved) collectTrashBottle(item.id) }}
-          >{item.icon}</button>)}
+            onPointerUp={(e) => { const moved = trashDrag.current?.id === item.id && trashDrag.current.moved; trashDrag.current = null; if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); if (!moved) { if (item.bottle) collectTrashBottle(item.id); else setTrashGame(active => active ? { ...active, items: active.items.map(entry => entry.id === item.id ? { ...entry, collected: true } : entry) } : null) } }}
+            onPointerCancel={() => { trashDrag.current = null }}
+            onClick={e => { if (e.detail !== 0) return; if (item.bottle) collectTrashBottle(item.id); else setTrashGame(active => active ? { ...active, items: active.items.map(entry => entry.id === item.id ? { ...entry, collected: true } : entry) } : null) }}
+          ><Icon name={item.icon} /></button>)}
         </div>
-        <div className="trash-result"><span>🎒 Bottles: {inventory.bottles}</span><span>🚫 Rejected: {trashGame.rejected}</span></div>
-        <div className="trash-build">Build 2026.10.10-94</div>
-        <button className="trash-stop" onClick={finishTrashSearch}>Stop searching</button>
+        <button className="trash-stop" onClick={finishTrashSearch}>Finish searching</button>
       </section>
     </div>}
 

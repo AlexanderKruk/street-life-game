@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-188`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-189`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Minimal bottle-search presentation (v189)
+
+The approved minimal search uses one dark frame, a short instruction, charged search time, kept-bottle count, a rectangular pile of line-icon rubbish and a sand-colored Finish searching button. Duplicate inventory/rejection counters, value estimates during searching and the obsolete build label are removed. Rubbish can be dragged beyond the rectangular edge or moved aside with a tap; keyboard activation is supported too. Only the dragged rubbish is discarded at an edge, never untouched items or bottles. The procedural 18-item pile, 2–6 bottles, 65% returnability, backpack limits, 10–60-minute charged time and 60-second real deadline are preserved. One child timer updates the displayed charged time and deadline without re-rendering the whole App on each tick. The concise result shows the actual bottles kept and their return value at Cheap Shop (not a cash award); shared significant consequences and time costs remain visible. Journal retains the full original result text. A final audit of other legacy dialogs remains separate.
 
 ### Remaining location and action icons (v188)
 

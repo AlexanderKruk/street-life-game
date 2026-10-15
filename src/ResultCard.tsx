@@ -8,7 +8,7 @@ import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string }
-export type ResultCardData = { title: string; text: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; variant?: 'coin' } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; variant?: 'coin'; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -88,7 +88,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   const costs = (result.costs ?? []).filter(isMajorChange)
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
   const coinReward = coin ? gains.find(change => resultLabel(change.label) === 'Money') : undefined
-  const gainRows = gains.filter(change => !change.meter && change !== coinReward)
+  const gainRows = gains.filter(change => !change.meter && change !== coinReward && !(result.bottleSearch && resultLabel(change.label) === 'Returnable bottles'))
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter)
 
@@ -96,13 +96,16 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
     <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${coin ? ' coin-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
       {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} />}
       <div className="result-card-heading">
-        <p className="result-card-label">{presentation?.label ?? 'AFTER THE ACTION'}</p>
+        {!result.bottleSearch && <p className="result-card-label">{presentation?.label ?? 'AFTER THE ACTION'}</p>}
         {coin && <CoinEmblem />}
-        <h2 id="result-title">{presentation?.heading ?? result.title}</h2>
+        <h2 id="result-title">{result.bottleSearch ? 'Bottle search' : presentation?.heading ?? result.title}</h2>
       </div>
       <div className="result-card-content">
         {coinReward && <p className="coin-reward"><span className="sr-only">Money </span>{coinReward.value}</p>}
-        {presentation ? <>
+        {result.bottleSearch ? <>
+          <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <>+{result.bottleSearch.found} <span className="sr-only">returnable </span>bottle{result.bottleSearch.found === 1 ? '' : 's'}</> : 'Nothing useful found'}</p>
+          {result.bottleSearch.found > 0 && <p className="result-description">Return at Cheap Shop · {(result.bottleSearch.found * .5).toFixed(2)} zł</p>}
+        </> : presentation ? <>
           <p className="result-lead">{presentation.lead}</p>
           {!!presentation.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <Icon name="map" />

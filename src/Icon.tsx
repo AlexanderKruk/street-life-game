@@ -1,8 +1,13 @@
 import { memo, type ReactNode } from 'react'
 
-export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target'
+export type IconName = 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag'
 
 const paths: Record<IconName, ReactNode> = {
+  newspaper: <><path d="M5 4h16v16H5a2 2 0 0 1-2-2V8h2V4Zm0 4v12M9 8h8m-8 4h8m-8 4h3m3 0h2" /></>,
+  cup: <><path d="M5 7h14l-2 14H7L5 7Zm-1 0h16M13 7l2-5h4" /></>,
+  box: <><path d="m3 7 9-5 9 5v10l-9 5-9-5V7Zm0 0 9 5 9-5M12 12v10M7 5l10 5" /></>,
+  can: <><ellipse cx="12" cy="5" rx="7" ry="3" /><path d="M5 5v14c0 4 14 4 14 0V5M8 10h8m-8 6h8" /></>,
+  bag: <><path d="M4 7h16l-1 14H5L4 7Zm4 0V5a4 4 0 0 1 8 0v2" /></>,
   pill: <><path d="M9 3a5 5 0 0 1 7 7l-6 6a5 5 0 0 1-7-7l6-6Z" transform="translate(2 2)" /><path d="m8 8 8 8" /></>,
   cigarette: <><path d="M3 15h18v5H3zM16 15v5M7 3c-3 4 4 4 1 8m6-10c-3 5 4 5 1 10" /></>,
   plug: <><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v4" /></>,
