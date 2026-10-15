@@ -22,7 +22,7 @@ import CoinEmblem from './CoinEmblem'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-181'
+const BUILD_VERSION = 'v2026.10.15-182'
 const TRAVEL_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2312,25 +2312,21 @@ export default function App() {
     </div>}
 
     {!gameOver && shelterCheckoutDue && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="sleep-overlay checkout-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter">
-      <section className="sleep-card">
-        <div className="sleep-icon">🌅</div>
-        <p className="eyebrow">NIGHT SHELTER · MORNING CHECKOUT</p>
-        <h2>Time to leave the night shelter</h2>
-        <p>You must leave by 08:00. Packing your things and leaving takes 30 minutes.</p>
+      <section className="sleep-card checkout-card">
+        <div className="checkout-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Time to leave the night shelter</h2></div></div>
+        <p className="checkout-description">You must leave by 08:00. Packing and leaving takes 30 minutes.</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>On the street at {formatTime((game.minutes + SHELTER_DEPARTURE_MINUTES) % 1440)}</span></div>
-        <button className="sleep-debug-wake" autoFocus onClick={startShelterDeparture}>Leave the night shelter · 30 min</button>
+        <button className="checkout-start" autoFocus onClick={startShelterDeparture}>Leave the night shelter · 30 min</button>
       </section>
     </div>}
 
     {!gameOver && shelterDeparture && <div className="sleep-overlay checkout-overlay" role="dialog" aria-modal="true" aria-label="Leaving the night shelter">
-      <section className="sleep-card">
-        <div className="sleep-icon">🎒</div>
-        <p className="eyebrow">MORNING CHECKOUT</p>
-        <h2>Leaving the night shelter</h2>
-        <p>You are packing your things and heading outside.</p>
+      <section className="sleep-card checkout-card">
+        <div className="checkout-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Leaving the night shelter</h2></div></div>
+        <p className="checkout-description">Packing your things and heading outside.</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterDepartureRemaining} min remaining</span></div>
-        <div className="sleep-progress"><i style={{ width: `${(1 - shelterDepartureRemaining / SHELTER_DEPARTURE_MINUTES) * 100}%` }} /></div>
-        <small>You will be on the street when the 30 minutes are over.</small>
+        <div className="sleep-progress" role="progressbar" aria-label="Packing progress" aria-valuemin={0} aria-valuemax={SHELTER_DEPARTURE_MINUTES} aria-valuenow={SHELTER_DEPARTURE_MINUTES - shelterDepartureRemaining}><i style={{ width: `${(1 - shelterDepartureRemaining / SHELTER_DEPARTURE_MINUTES) * 100}%` }} /></div>
+        <p className="checkout-finish"><Icon name="clock" />On the street at {formatTime((shelterDeparture.startAbsolute + SHELTER_DEPARTURE_MINUTES) % 1440)}</p>
       </section>
     </div>}
 

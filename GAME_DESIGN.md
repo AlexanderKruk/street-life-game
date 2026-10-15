@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-181`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-182`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Compact morning checkout (v182)
+
+The morning reminder and active checkout share one compact dark frame with a line backpack icon beside the heading. During packing, the current time and remaining minutes sit above a thin sand-colored progress bar, with the actual completion time below. Completion time derives from the departure start plus 30 minutes, including late starts; it is not fixed to 08:00. The reminder uses the same frame and sand-colored start button. The 30-minute duration, clock rate, pause/reload behavior, booking and stored items are unchanged. The progress bar exposes elapsed minutes accessibly and respects reduced motion.
 
 ### Consecutive Journal entries (v181)
 
