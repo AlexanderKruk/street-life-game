@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-184`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-185`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Short sleep-duration picker (v185)
+
+The sleep picker uses the selected short layout: a line moon icon, location/current-time row, Energy summary, 2/4/6/8-hour choices on one row, and a large wake time with its actual day. The chosen duration keeps a sand accent and Start sleeping uses the same sand button as other dialogs. Fatigue restrictions remain disabled with accessible reasons and a visible explanation. Actual sleep duration, shelter cutoff, outdoor risks and Cancel remain visible. This is a presentation change; availability, wake calculation, pause behavior and all sleep mechanics are unchanged.
 
 ### Compact sleep and registration queue (v184)
 

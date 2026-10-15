@@ -539,7 +539,7 @@ for(const [energy,allowed] of [[100,[2]],[75.01,[2]],[75,[2,4]],[50.01,[2,4]],[5
  const group=screen.getByRole('group',{name:'Sleep duration'});const options=within(group).getAllByRole('button');assert.equal(options.length,4);
  const enabled=options.filter(button=>!button.disabled).map(button=>Number(button.querySelector('strong').textContent.split(' ')[0]));assert.deepEqual(enabled,allowed);
  const selected=options.find(button=>button.getAttribute('aria-pressed')==='true');assert(allowed.includes(Number(selected.querySelector('strong').textContent.split(' ')[0])));
- const disabled=options.find(button=>button.disabled);assert(disabled.querySelector('em').textContent.includes(energy>50?'Not tired enough':'Too tired'));
+ const disabled=options.find(button=>button.disabled);assert(disabled.title.includes(energy>50?'Not tired enough':'Too tired'));assert(disabled.querySelector('.sr-only').textContent.includes(disabled.title));
  fireEvent.click(disabled);assert.equal(group.querySelector('[aria-pressed="true"]'),selected);assert(!localStorage.getItem('street-life-sleep-v1'));
  chooseHours(allowed[0]);advance(3000);assert.equal(read(stateKey).minutes,1380);click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,allowed[0]*60);
 }

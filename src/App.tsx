@@ -22,7 +22,7 @@ import CoinEmblem from './CoinEmblem'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-184'
+const BUILD_VERSION = 'v2026.10.15-185'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1976,25 +1976,24 @@ export default function App() {
   return <main className={`shell${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {sleepChoice && <div className="phone-overlay result-overlay">
       <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
-        <p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p>
-        <h2 id="sleep-choice-title">How long do you want to sleep?</h2>
-        <p className="muted">{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</p>
-        <p className="sleep-choice-energy">Energy {Math.round(game.energy)}/100 · {game.energy > 75 ? 'Rested' : game.energy > 50 ? 'Slightly tired' : game.energy > 25 ? 'Tired' : 'Exhausted'}</p>
+        <div className="timed-heading"><Icon name="moon" /><div><p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p><h2 id="sleep-choice-title">How long do you want to sleep?</h2></div></div>
+        <div className="sleep-choice-context"><span>{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</span><span>Day {game.day} {weekday(game.day)} · {formatTime(game.minutes)}</span></div>
+        <p className="sleep-choice-energy"><Icon name="energy" />Energy {Math.round(game.energy)}% · {game.energy > 75 ? 'Rested' : game.energy > 50 ? 'Slightly tired' : game.energy > 25 ? 'Tired' : 'Exhausted'}</p>
         <div className="sleep-duration-options" role="group" aria-label="Sleep duration">
           {SLEEP_HOURS.map(hours => {
             const reason = sleepDurationUnavailable(hours, game.energy)
-            return <button key={hours} className={hours === sleepHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === sleepHours} disabled={reason !== null} autoFocus={hours === sleepHours} onClick={() => setSleepHours(hours)}>
-              <strong>{hours} h</strong><small>Wake {wakeLabel(hours, sleepChoice)}</small>
-              {reason && <em>{reason}</em>}
+            return <button key={hours} className={hours === sleepHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === sleepHours} disabled={reason !== null} title={reason ?? undefined} autoFocus={hours === sleepHours} onClick={() => setSleepHours(hours)}>
+              <strong>{hours} h</strong><span className="sr-only"> · Wake {wakeLabel(hours, sleepChoice)}{reason && ` · ${reason}`}</span>
             </button>
           })}
         </div>
-        <div className="sleep-choice-preview">
-          <div><small>Current time</small><strong>Day {game.day} {weekday(game.day)} · {formatTime(game.minutes)}</strong></div>
-          <div><small>Wake up at</small><strong>{wakeLabel(sleepHours, sleepChoice)}</strong></div>
+        {SLEEP_HOURS.some(hours => sleepDurationUnavailable(hours, game.energy)) && <p className="sleep-choice-note">Available sleep lengths depend on your fatigue.</p>}
+        <div className="sleep-choice-preview" aria-live="polite">
+          <small>Wake up · {wakeLabel(sleepHours, sleepChoice).split(' · ')[0]}</small><span className="sr-only"> · </span><strong>{wakeLabel(sleepHours, sleepChoice).split(' · ')[1]}</strong>
         </div>
-        <p className="muted">Sleep time: {formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}.</p>
-        {sleepChoice === 'shelter' && <p className="muted">Night shelter sleep ends by 07:30 so you can leave by 08:00. Longer choices are shortened automatically.</p>}
+        <p className="sleep-choice-note">Sleep time: {formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}.</p>
+        {(sleepChoice === 'ground' || sleepChoice === 'bench') && <p className="sleep-choice-note">Sleeping outside carries a risk of illness and theft.</p>}
+        {sleepChoice === 'shelter' && <p className="sleep-choice-note">Sleep ends by 07:30 for morning checkout. Longer choices are shortened.</p>}
         <div className="sleep-choice-buttons">
           <button onClick={() => setSleepChoice(null)}>Cancel</button>
           <button className="trash-stop" disabled={sleepDurationUnavailable(sleepHours, game.energy) !== null} onClick={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}>Start sleeping</button>
