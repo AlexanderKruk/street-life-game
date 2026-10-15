@@ -450,7 +450,7 @@ button.inventory-item { width:100%; }
 .support-menu { margin-top:14px; }
 .support-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
 .support-grid button { display:grid; grid-template-columns:34px 1fr; gap:9px; align-items:center; text-align:left; min-height:76px; padding:11px; border:1px solid #303a43; border-radius:14px; background:#141a20; color:inherit; }
-.support-grid button > span { font-size:23px; text-align:center; }
+.support-grid button > svg { width:26px; height:26px; justify-self:center; color:#d7b58a; }
 .support-grid button div { display:flex; flex-direction:column; gap:4px; }
 .support-grid button strong { font-size:13px; }
 .support-grid button small { color:#8d98a3; font-size:10px; line-height:1.25; }
@@ -506,7 +506,8 @@ button.inventory-item { width:100%; }
 .storage-note { margin:8px 0 11px; color:#8d98a3; font-size:11px; line-height:1.4; }
 .storage-grid { display:grid; gap:7px; }
 .storage-grid > div { display:grid; grid-template-columns:1fr auto; gap:3px 10px; align-items:center; padding:10px; border:1px solid #303a43; border-radius:11px; background:#171e24; }
-.storage-grid strong { font-size:12px; }
+.storage-grid strong { display:flex; align-items:center; gap:7px; min-width:0; font-size:12px; }
+.storage-grid strong svg { width:18px; height:18px; flex-shrink:0; color:#b8a68a; }
 .storage-grid small { grid-column:1; color:#8d98a3; font-size:10px; }
 .storage-grid button { grid-column:2; grid-row:1 / span 2; min-width:62px; padding:7px 9px; border:1px solid #46535e; border-radius:9px; background:#222c34; color:inherit; font-weight:750; }
 .storage-grid button:disabled { opacity:.4; }
@@ -564,7 +565,8 @@ button.inventory-item { width:100%; }
 
 /* Current location is informational, not an action card. */
 .location-summary { min-height:auto; padding:10px 2px 12px; border:0; border-radius:0; background:transparent; gap:12px; }
-.location-summary .location-icon { font-size:38px; }
+.location-summary .location-icon { display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0; filter:none; color:#d7b58a; }
+.location-summary .location-icon svg { width:38px; height:38px; }
 .location-summary h2 { font-size:22px; margin-bottom:3px; }
 
 /* v1 map: simple rows prevent overlapping locations on mobile. */
@@ -1088,3 +1090,5 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .rain-duration-options strong { display:block; font-size:16px; font-weight:600; }
 .rain-duration-options small { display:block; margin-top:4px; color:#a6adaf; font-size:11px; line-height:1.4; }
 .rain-back { min-height:44px; margin-top:18px; padding:8px 0; border:0; background:transparent; color:#b9bfc0; font:inherit; font-size:14px; }
+.goal-reminder > svg { width:20px; height:20px; flex-shrink:0; color:#d7b58a; }
+.action-label-icon { display:inline-block; width:20px; height:20px; margin-right:8px; vertical-align:-4px; color:#d7b58a; }

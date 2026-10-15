@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { formatTime } from './game'
 import { responsiveImageProps } from './responsiveImages'
-import { Icon } from './Icon'
+import { Icon, locationIcon } from './Icon'
 
 type ArtProps = { phone: boolean; inline: boolean; illustration?: string; night: boolean }
 export const StreetArt = memo(function StreetArt({ phone, inline, illustration, night }: ArtProps) {
@@ -12,10 +12,10 @@ export const StreetArt = memo(function StreetArt({ phone, inline, illustration, 
   </div>
 })
 
-type SummaryProps = { id: string; name: string; icon: string; description: string; open: boolean; opensAt: number }
-export const LocationSummary = memo(function LocationSummary({ id, name, icon, description, open, opensAt }: SummaryProps) {
+type SummaryProps = { id: string; name: string; description: string; open: boolean; opensAt: number }
+export const LocationSummary = memo(function LocationSummary({ id, name, description, open, opensAt }: SummaryProps) {
   return <section className={id === 'street' ? 'current location-summary story-scene' : 'current location-summary'}>
-    {id !== 'street' && <div className="location-icon">{icon}</div>}
+    {id !== 'street' && <div className="location-icon"><Icon name={locationIcon(id)} /></div>}
     <div><p className="eyebrow">{id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(opensAt)}`}`} </p><h2>{name}</h2><p>{description}</p></div>
   </section>
 })

@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-187`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-188`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Remaining location and action icons (v188)
+
+Location headings now use the existing line-icon mapping instead of standard emoji. Help Center categories use house, document, ticket and banknote icons; stored belongings use document, pill, cigarette and food icons. The public charging action, regular medical appointment and shelter-registration goal use matching line icons as well. Icon dimensions and muted sand coloring follow the current interface, and decorative SVGs stay hidden from screen readers. This changes presentation only; labels, actions, storage rules, location availability and goal logic remain unchanged. The bottle-search game and final legacy-dialog audit remain separate steps.
 
 ### Rain and run-end dialog refresh (v187)
 
