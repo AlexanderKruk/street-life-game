@@ -22,7 +22,7 @@ import CoinEmblem from './CoinEmblem'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.14-180'
+const BUILD_VERSION = 'v2026.10.15-181'
 const TRAVEL_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'

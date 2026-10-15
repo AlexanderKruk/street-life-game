@@ -153,6 +153,32 @@ function measure(App) {
   assert(screen.getByText('No recorded actions today yet.'));
   assert(!screen.queryByRole('button', { name: 'Show older entries' }));
   console.log('PASS: journal batches, complete order without duplicates, tick/day/reopen reset rules, new actions and unchanged 500-entry save.');
+  // Only consecutive identical reflections group, retaining the first event time.
+  const water = { day: 2, minute: 357, title: 'Drank water', text: 'I was thirsty.', actionTitle: 'Drink water', reflection: true };
+  const repeatedHistory = [
+    { ...water, day: 1, minute: 1439 },
+    water, { ...water, minute: 359 }, { ...water, minute: 361 },
+    { ...water, minute: 362, title: 'Rested', actionTitle: 'Rest', text: 'A break.' },
+    { ...water, minute: 363 },
+    { ...water, minute: 364, text: 'Still thirsty.' },
+    { ...water, minute: 365, text: 'Still thirsty.', actionTitle: 'Other action' },
+  ];
+  setup(App, 'journal', { day: 2 }, { 'street-life-journal-history-v1': repeatedHistory });
+  const untouchedHistory = localStorage.getItem('street-life-journal-history-v1');
+  assert.deepEqual(historyTitles(), ['Drank water', 'Drank water', 'Drank water', 'Rested', 'Drank water ×3']);
+  assert.equal(document.querySelectorAll('.timeline-entry time')[4].textContent, '05:57');
+  assert.equal(document.querySelectorAll('.journal-thought').length, 5);
+  advance(2);assert.equal(historyTitles().at(-1), 'Drank water ×3');
+  assert.equal(localStorage.getItem('street-life-journal-history-v1'), untouchedHistory);
+  cleanup();render(React.createElement(App));assert.equal(historyTitles().at(-1), 'Drank water ×3');
+  fireEvent.click(screen.getByRole('button', { name: 'Previous day' }));assert.deepEqual(historyTitles(), ['Drank water']);
+  // Group before pagination, including runs larger than a history batch.
+  setup(App, 'journal', { day: 2 }, { 'street-life-journal-history-v1': Array.from({length:70}, (_, i) => ({ ...water, minute:357+i })) });
+  assert.deepEqual(historyTitles(), ['Drank water ×70']);
+  assert.equal(document.querySelector('.timeline-entry time').textContent, '05:57');
+  assert(!screen.queryByRole('button', { name: 'Show older entries' }));
+  assert.equal(JSON.parse(localStorage.getItem('street-life-journal-history-v1')).length, 70);
+  console.log('PASS: consecutive journal groups, first time, counts, differing outcomes/actions, day boundaries, reload and grouping before pagination.');
   // All locations, including closed locations, preserve live action availability.
   const locationAudit = [];
   for (const id of ['street', 'station', 'shop', 'shelter', 'support', 'daycenter', 'free-clinic', 'hospital', 'jobcenter', 'work', 'residential-shelter']) {

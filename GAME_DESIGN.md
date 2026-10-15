@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-14 · Neutral office-worker protagonist. Latest application build: `v2026.10.14-180`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-181`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Consecutive Journal entries (v181)
+
+The Journal combines consecutive entries on the same day when their original action, displayed title and reflection text match. A group shows the first occurrence's time, one reflection and a title suffix such as ×2 or ×3. Another action or a different reflection breaks the group. Grouping happens before the 30-row pagination and only affects display; all original records remain saved, preserving existing saves and gameplay history. Reloads reconstruct the same groups.
 
 ### Coin event accent presentation (v180)
 
