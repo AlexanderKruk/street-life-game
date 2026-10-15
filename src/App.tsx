@@ -19,10 +19,11 @@ import LifeSituation from './LifeSituation'
 import Stat from './Stat'
 import PhoneDialog from './PhoneDialog'
 import CoinEmblem from './CoinEmblem'
+import CompactStreetEvent from './CompactStreetEvent'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-185'
+const BUILD_VERSION = 'v2026.10.15-186'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2345,10 +2346,11 @@ export default function App() {
     </div>}
 
     {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="street-event-title">
-      <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ''}${activeEvent.id === 'found-coins' ? ' coin-event' : ''}`}>
+      <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ''}${activeEvent.id === 'found-coins' ? ' coin-event' : !activeEvent.illustration ? ' compact-street-event' : ''}`}>
         {activeEvent.illustration && <img className="event-illustration" {...responsiveImageProps(activeEvent.illustration)} alt={activeEvent.text} />}
-        <div className="event-body">
-        {!activeEvent.illustration && activeEvent.id !== 'found-coins' && <div className="event-card-icon">{activeEvent.icon}</div>}
+        {!activeEvent.illustration && activeEvent.id !== 'found-coins'
+          ? <CompactStreetEvent event={activeEvent} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} />
+          : <div className="event-body">
         <p className="eyebrow">{activeEvent.id === 'found-coins' ? 'ON THE WAY' : 'STREET EVENT'}</p>
         {activeEvent.id === 'found-coins' && <CoinEmblem />}
         <h2 id="street-event-title">{activeEvent.id === 'found-coins' ? 'A small lucky find' : activeEvent.title}</h2>
@@ -2357,7 +2359,7 @@ export default function App() {
           const unavailable = checkUnavailableReason(choice)
           return <button key={choice.label} aria-label={choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable}><span>{choice.label}</span>{unavailable ? <small>{unavailable}</small> : !!choice.outcome?.minutes && <small className="event-choice-time">≈{choice.outcome.minutes}m</small>}</button>
         })}</div>
-        </div>
+        </div>}
       </section>
     </div>}
 
