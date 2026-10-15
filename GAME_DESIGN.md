@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-186`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-187`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Rain and run-end dialog refresh (v187)
+
+Rain decisions use the approved compact layout with line rain/umbrella icons and one column of narrative choices. Under the canopy, 15-minute, 1-hour and 4-hour options display their finish times, with a separate back action. Choosing a duration still applies that existing action immediately; time remains paused while deciding. The end-of-run dialog uses the approved centered accent layout: muted red broken-heart circle, actual day reached, health explanation and sand-colored Start new run button. These dialogs no longer show standard emoji. Rain outcomes, fatigue/need costs, death condition and reset behavior are unchanged.
 
 ### Compact ordinary street events (v186)
 

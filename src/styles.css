@@ -471,11 +471,17 @@ button.inventory-item { width:100%; }
 
 /* End of run */
 .game-over-overlay { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:20px; background:rgba(4,6,8,.92); backdrop-filter:blur(7px); }
-.game-over-card { width:min(100%,420px); padding:26px 22px; border:1px solid #4a3434; border-radius:22px; background:#15191d; text-align:center; box-shadow:0 28px 80px rgba(0,0,0,.65); }
-.game-over-icon { font-size:48px; margin-bottom:8px; }
-.game-over-card h2 { margin:5px 0 10px; }
-.game-over-card > p:not(.eyebrow) { color:#b8c0c7; line-height:1.5; }
-.game-over-card button { width:100%; min-height:50px; margin-top:18px; border:1px solid #59656e; border-radius:13px; background:#e5e9ec; color:#11171b; font-weight:850; }
+.game-over-card { width:min(100%,408px); max-height:calc(100dvh - 40px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); overflow:auto; overscroll-behavior:contain; padding:22px; border:1px solid #4a5155; border-radius:18px; background:#191e21; color:#e8e5de; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.24); }
+.game-over-card .eyebrow { margin:0; color:#a6adaf; font-size:11px; line-height:1.4; letter-spacing:.14em; }
+.game-over-emblem { display:flex; align-items:center; justify-content:center; width:64px; height:64px; margin:16px auto; border-radius:50%; background:#302725; color:#c99b8d; }
+.game-over-emblem svg { width:38px; height:38px; }
+.game-over-card h2 { margin:0; font-size:21px; font-weight:600; line-height:1.3; }
+.game-over-day { margin:20px 0 16px; }
+.game-over-day strong { display:block; font-size:28px; line-height:1.3; font-weight:600; }
+.game-over-day span { display:block; margin-top:4px; color:#a6adaf; font-size:12px; }
+.game-over-card .game-over-description { margin:0; color:#b9bfc0; font-size:14px; line-height:1.5; }
+.game-over-card button { width:100%; min-height:48px; margin-top:20px; padding:12px 14px; border:1px solid #998a77; border-radius:10px; background:#b8a68a; color:#171b1e; font:inherit; font-size:14px; font-weight:600; }
+.game-over-card button:focus-visible { outline:2px solid #dcc2a2; outline-offset:2px; }
 
 /* D20 skill checks */
 .dice-overlay { position:fixed; inset:0; z-index:110; display:grid; place-items:center; padding:20px; background:rgba(4,7,10,.9); backdrop-filter:blur(7px); }
@@ -1077,3 +1083,8 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .compact-event-pause svg { width:13px; height:13px; flex-shrink:0; }
 .compact-street-event :focus-visible { outline:2px solid #dcc2a2; outline-offset:2px; }
 @media(max-width:360px) { .compact-street-event { padding:20px; } .compact-event-heading { gap:10px; } .compact-street-event .compact-event-heading h2 { font-size:20px; } }
+.rain-duration-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.rain-duration-options button { min-height:60px; padding:10px 4px; border:1px solid #414b50; border-radius:10px; background:#232b30; color:#e8e5de; font:inherit; text-align:center; }
+.rain-duration-options strong { display:block; font-size:16px; font-weight:600; }
+.rain-duration-options small { display:block; margin-top:4px; color:#a6adaf; font-size:11px; line-height:1.4; }
+.rain-back { min-height:44px; margin-top:18px; padding:8px 0; border:0; background:transparent; color:#b9bfc0; font:inherit; font-size:14px; }

@@ -23,7 +23,7 @@ import CompactStreetEvent from './CompactStreetEvent'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-186'
+const BUILD_VERSION = 'v2026.10.15-187'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2264,29 +2264,32 @@ export default function App() {
 
     </div>
 
-    {gameOver && <div className="game-over-overlay">
+    {gameOver && <div className="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
       <section className="game-over-card">
-        <div className="game-over-icon">❤️‍🩹</div>
         <p className="eyebrow">RUN OVER</p>
-        <h2>Your health reached zero</h2>
-        <p>You made it to Day {game.day}. Food, water and medicine can stop causes of damage, but lost health needs proper recovery and care.</p>
+        <div className="game-over-emblem"><Icon name="heart-broken" /></div>
+        <h2 id="game-over-title">Your health reached zero</h2>
+        <p className="game-over-day"><strong>Day {game.day}</strong><span>Your run ended here</span></p>
+        <p className="game-over-description">Food, water and medicine can stop causes of damage, but lost health needs proper recovery and care.</p>
         <button onClick={reset}>Start new run</button>
       </section>
     </div>}
 
     {!gameOver && rainChoice && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
-      <section className="sleep-card"><p className="eyebrow">RAIN · TIME PAUSED</p><h2>{coverPlanning ? 'Wait out the night' : 'The rain is getting heavier'}</h2><p>{coverPlanning ? 'You can stay under the canopy without lying down. You remain awake; hunger, thirst and tiredness keep growing while you wait.' : 'Rain runs off the edge of a nearby canopy. The shop behind it is closed. Light is still on at the station.'}</p>
-        <div className="story-intents">
+      <section className="event-card compact-street-event rain-card"><div className="event-body">
+        <div className="compact-event-heading"><Icon name={coverPlanning ? 'umbrella' : 'rain'} /><div><p className="eyebrow">RAIN · TIME PAUSED</p><h2>{coverPlanning ? 'Wait out the night' : 'The rain is getting heavier'}</h2></div></div>
+        <p className="compact-event-description">{coverPlanning ? 'Stay awake under the canopy. Hunger, thirst and tiredness keep growing.' : 'Rain runs off the edge of a nearby canopy. The shop behind it is closed. Light is still on at the station.'}</p>
+        <div className={coverPlanning ? 'rain-duration-options' : 'event-choices'}>
           {coverPlanning ? <>
-            {[15, 60, 240].map(minutes => <button key={minutes} onClick={() => takeRainCover(minutes)}><span className="choice-emoji" aria-hidden="true">⏳</span>{minutes === 15 ? 'Just fifteen minutes. Then I’ll see.' : minutes === 60 ? 'Maybe an hour here. Stay out of the rain.' : minutes === 180 ? 'Three hours… I could wait it out here.' : 'Maybe four hours. I can wait here.'} · until {formatTime((game.minutes + minutes) % 1440)}</button>)}
-            <button onClick={() => setCoverPlanning(false)}>Choose another option</button>
+            {[15, 60, 240].map(minutes => <button key={minutes} aria-label={`${minutes === 15 ? 'Just fifteen minutes. Then I’ll see.' : minutes === 60 ? 'Maybe an hour here. Stay out of the rain.' : 'Maybe four hours. I can wait here.'} · until ${formatTime((game.minutes + minutes) % 1440)}`} onClick={() => takeRainCover(minutes)}><strong>{minutes < 60 ? `${minutes} min` : `${minutes / 60} h`}</strong><small>Until {formatTime((game.minutes + minutes) % 1440)}</small></button>)}
           </> : <>
-          <button onClick={() => setCoverPlanning(true)}><span className="choice-emoji" aria-hidden="true">☔</span>At least it looks dry under that canopy.</button>
-          <button onClick={() => { setRainChoice(false); setScreen('map'); chooseDestination('station') }}><span className="choice-emoji" aria-hidden="true">🚉</span>Maybe the station? At least I could sit down.</button>
-          <button data-choice="walk" onClick={() => walkCity()}><span className="choice-emoji" aria-hidden="true">🚶</span>I can’t just stand here. I’ll keep going.</button>
+          <button onClick={() => setCoverPlanning(true)}><span className="compact-event-choice-copy"><strong>At least it looks dry under that canopy.</strong></span><Icon name="umbrella" /></button>
+          <button onClick={() => { setRainChoice(false); setScreen('map'); chooseDestination('station') }}><span className="compact-event-choice-copy"><strong>Maybe the station? At least I could sit down.</strong></span><Icon name="station" /></button>
+          <button data-choice="walk" onClick={() => walkCity()}><span className="compact-event-choice-copy"><strong>I can’t just stand here. I’ll keep going.</strong></span><Icon name="walk" /></button>
           </>}
         </div>
-      </section>
+        {coverPlanning && <button className="rain-back" onClick={() => setCoverPlanning(false)}>Choose another option</button>}
+      </div></section>
     </div>}
     {!gameOver && diceCheck?.choice.check && <div className="dice-overlay">
       <section className="dice-card">
