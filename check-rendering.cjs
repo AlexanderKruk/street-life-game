@@ -261,7 +261,7 @@ function measure(App) {
   assert.deepEqual([...timers.keys()], trashTimerIds, 'new bottle count does not restart timers');
   advance(57);
   assert(!document.querySelector('.trash-overlay'));
-  assert(document.querySelector('.result-modal').textContent.includes('2 returnable bottles'), 'deadline uses the latest collected count');
+  assert(document.querySelector('.result-modal').textContent.includes('2 returnable containers'), 'deadline uses the latest collected count');
   assert.equal(timers.size, 2, 'trash timer is cleaned up after completion');
   const timerAudit = [];
   setup(App, 'location');

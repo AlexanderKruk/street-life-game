@@ -1103,13 +1103,11 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .trash-search-row > span { display:flex; align-items:center; gap:6px; }
 .trash-search-row svg { width:16px; height:16px; }
 .trash-search-row strong { color:#a6c7b2; font-size:14px; font-weight:600; }
-.trash-bin { width:100%; aspect-ratio:1.38; border:0; border-radius:12px; background:#101619; box-shadow:none; }
+.trash-bin { width:100%; aspect-ratio:4/3; border:0; border-radius:12px; background:#101619 url('/assets/trash-bin.webp') center/cover no-repeat; background-image:image-set(url('/assets/trash-bin-384.webp') 1x,url('/assets/trash-bin.webp') 2x); box-shadow:none; isolation:isolate; }
+.trash-pile { position:absolute; inset:16% 12% 13%; }
 .trash-bin::after { display:none; }
-.trash-piece { width:36px; height:40px; border-radius:4px; background:#242d2e; color:#7d8788; filter:none; }
-.trash-piece:nth-child(2n) { background:#2b2926; color:#9a9082; }
-.trash-piece:nth-child(3n) { background:#30322c; color:#939487; }
-.trash-piece svg { width:26px; height:30px; pointer-events:none; }
-.trash-piece.bottle-piece { background:#17231e; color:#95b59e; }
+.trash-piece, .trash-piece:nth-child(2n), .trash-piece:nth-child(3n), .trash-piece.bottle-piece { width:36px; height:40px; border-radius:0; border:0; background:transparent; filter:drop-shadow(1px 3px 2px rgba(0,0,0,.65)); box-shadow:none; }
+.trash-piece img { display:block; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; -webkit-user-drag:none; }
 .trash-card .trash-stop { min-height:48px; margin-top:12px; border:1px solid #998a77; border-radius:10px; background:#b8a68a; color:#171b1e; font:inherit; font-size:14px; font-weight:600; }
 .trash-card :focus-visible { outline:2px solid #dcc2a2; outline-offset:2px; }
 .bottle-search-reward { margin:14px 0 10px; color:#a6c7b2; font-size:32px; font-weight:600; line-height:1.2; }

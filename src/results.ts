@@ -43,7 +43,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
   for (const [key, label, suffix] of [
     ['phoneBattery', '🔋 Battery', '%'], ['phoneCondition', '📱 Phone condition', '%'],
     ['clothingCleanliness', '🧥 Clothing cleanliness', '%'], ['jacket', '🧥 Clothing condition', '%'], ['water', '💧 Water portions', ''],
-    ['food', '🥪 Food portions', ''], ['bottles', '♻️ Returnable bottles', ''],
+    ['food', '🥪 Food portions', ''], ['bottles', '♻️ Deposit containers', ''],
     ['bread', '🥖 Bread rolls', ''], ['cannedFood', '🥫 Canned food', ''], ['wipes', '🧻 Wet wipes', ''], ['showerGel', '🧴 3-in-1 gel uses', ''],
     ['cigarettes', '🚬 Cigarettes', ''], ['medicines', '💊 Medicine', ''],
   ] as const) {

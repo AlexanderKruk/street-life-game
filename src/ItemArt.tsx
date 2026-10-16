@@ -12,6 +12,12 @@ const equipment = new Set<ItemArtId>(['phone', 'clothing', 'documents', 'transit
 
 export default memo(function ItemArt({ id, className = 'inventory-art' }: { id: ItemArtId; className?: string }) {
   const essentials = equipment.has(id)
+  if (id === 'bottles') return <span className={className} aria-hidden="true" style={{
+    backgroundImage: 'url("/street-life-game/assets/trash-plastic.webp"), url("/street-life-game/assets/trash-can.webp")',
+    backgroundSize: '62% 88%, 42% 65%',
+    backgroundPosition: '10% 50%, 95% 65%',
+    backgroundRepeat: 'no-repeat',
+  }} />
   return <span className={className} aria-hidden="true" style={{
     backgroundImage: spriteImageSet(essentials ? 'inventory-equipment' : 'shop-products'),
     backgroundPosition: positions[id], backgroundSize: essentials ? '200% 300%' : '200% 400%',

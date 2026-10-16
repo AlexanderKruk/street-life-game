@@ -132,6 +132,34 @@ for(const [state,extra] of [
  assert(document.querySelector('.trash-bin'));assert(screen.getByRole('button',{name:'Finish searching'}));
 }
 
+// Deposit collection: intact PET and cans share the same carried stack; damaged
+// containers never earn a deposit, and a full backpack cannot collect either.
+const depositEmptyBag={water:0,food:0,medicines:0,bread:0,cannedFood:0,wipes:0,showerGel:0,cigarettes:0,bottles:0};
+for(const [draw,art,kept] of [[0,'can',2],[.5,'plastic',4],[.99,'plastic-crushed',0]]) {
+ setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>draw;
+ click('Look for bottles (test)');
+ assert.equal(document.querySelectorAll('.trash-piece').length,18);
+ const containers=[...document.querySelectorAll('.bottle-piece')];
+ assert(containers.length>=2&&containers.length<=6);
+ assert(containers.every(piece=>piece.dataset.art===art));
+ assert([...document.querySelectorAll('.trash-piece img')].every(img=>img.src.endsWith('.webp')));
+ for(const piece of containers)fireEvent.click(piece);
+ fireEvent(window,new window.Event('pagehide'));
+ assert.equal(read(invKey).bottles,kept);
+ click('Finish searching');
+ assert(document.querySelector('.bottle-search-reward').textContent.includes(kept?`+${kept}`:'Nothing useful'));
+ assert.equal(document.querySelectorAll('.result-change-list .positive').length,0,'no duplicate container gain');
+}
+setup({day:2,minutes:600},{[invKey]:{...depositEmptyBag,water:4,food:4,medicines:24}});Math.random=()=>0;
+click('Look for bottles (test)');fireEvent.click(document.querySelector('.bottle-piece'));
+fireEvent(window,new window.Event('pagehide'));assert.equal(read(invKey).bottles,0);
+assert.equal(document.querySelector('.trash-search-row strong').textContent,'0');
+// Legacy bottle saves retain their value, including shared stack semantics.
+setup({locationId:'shop',minutes:600},{[invKey]:{...depositEmptyBag,bottles:3}});
+const depositMoney=read(stateKey).money;
+click(/Return bottles & cans ×3/);advance(1250);
+assert.equal(read(invKey).bottles,0);assert.equal(read(stateKey).money,depositMoney+1.5);
+
 // Three normal directions plus the separate temporary test action.
 function storyIds(){return [...document.querySelectorAll('.story-actions > button:not([data-temporary])')].map(button=>button.dataset.choice);}
 setup({minutes:1320});assert.deepEqual(storyIds(),['question-morning','walk','station-route']);
@@ -746,8 +774,8 @@ assert.equal(document.querySelectorAll('.empty-slot').length,0);
 assert.equal(screen.getAllByRole('button',{name:/Water.*tap to drink/}).length,2);
 assert(screen.getByRole('group',{name:/3-in-1 shower gel ×20/}));
 assert(screen.getByRole('group',{name:/3-in-1 shower gel ×1 ·/}));
-assert(screen.getByRole('group',{name:/Returnable bottles ×8/}));
-assert(screen.getByRole('group',{name:/Returnable bottles ×1 ·/}));
+assert(screen.getByRole('group',{name:/Bottles & cans ×8/}));
+assert(screen.getByRole('group',{name:/Bottles & cans ×1 ·/}));
 click(/Water ×1 · tap to drink/);ok();
 assert.equal(read(invKey).water,4);assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,5);
 setup({}, {[invKey]:{water:4,food:4,medicines:4,bread:4,cannedFood:4,wipes:5,showerGel:20,cigarettes:20,bottles:0}});click(/^Inventory$/);

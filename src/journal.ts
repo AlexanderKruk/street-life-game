@@ -25,7 +25,7 @@ const titles: Record<string, string> = {
   'Watch videos': 'Watched videos', 'Charge phone': 'Charged the phone',
   'Use medicine': 'Took medicine', 'Use wet wipes': 'Cleaned up with wipes',
   'Smoke a cigarette': 'Smoked a cigarette', 'Ask for money': 'Asked for help',
-  'Return bottles': 'Returned bottles', 'Trash search results': 'Searched the bins',
+  'Return bottles': 'Returned bottles', 'Return containers': 'Returned bottles & cans', 'Trash search results': 'Searched the bins',
   'Day work': 'Finished a shift', 'Take a shower': 'Took a shower',
   'Ask for a shower': 'Asked for a shower', 'Do laundry': 'Washed clothes',
   'Stay indoors': 'Spent time indoors', 'Settle into your place': 'Settled into Schronisko',
@@ -103,8 +103,8 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = failed ? 'I was looking forward to feeling clean. It’s hard not to feel discouraged.' : 'I feel more like myself. I hadn’t realised how much I needed that.'
   } else if (/medicine|doctor|medical|emergency/.test(actionTitle.toLowerCase())) {
     text = failed ? 'I’m worried about feeling worse. I don’t want to face this alone.' : 'I feel less alone with this. I hope my body has a chance to recover.'
-  } else if (/trash|bottles|money/.test(actionTitle.toLowerCase())) {
-    text = failed ? 'It’s hard not to feel discouraged. I was counting on a little breathing room.' : changed('Money', 'positive') || changed('Returnable bottles', 'positive') ? 'I feel a little less cornered. Even something small gives me room to think.' : 'I feel worn out. I’m not sure this is getting me anywhere.'
+  } else if (/trash|bottles|containers|money/.test(actionTitle.toLowerCase())) {
+    text = failed ? 'It’s hard not to feel discouraged. I was counting on a little breathing room.' : changed('Money', 'positive') || changed('Deposit containers', 'positive') || changed('Returnable bottles', 'positive') ? 'I feel a little less cornered. Even something small gives me room to think.' : 'I feel worn out. I’m not sure this is getting me anywhere.'
   } else if (actionTitle.startsWith('Buy ')) {
     text = failed ? 'I feel frustrated. I thought I could make this work.' : 'I feel a little more prepared. I’m still worried about making what I have last.'
   } else if (/support|social worker|job|work|shift|schronisko|shelter extension/.test(actionTitle.toLowerCase())) {

@@ -88,7 +88,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   const costs = (result.costs ?? []).filter(isMajorChange)
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
   const coinReward = coin ? gains.find(change => resultLabel(change.label) === 'Money') : undefined
-  const gainRows = gains.filter(change => !change.meter && change !== coinReward && !(result.bottleSearch && resultLabel(change.label) === 'Returnable bottles'))
+  const gainRows = gains.filter(change => !change.meter && change !== coinReward && !(result.bottleSearch && resultLabel(change.label) === 'Deposit containers'))
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter)
 
@@ -98,12 +98,12 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
       <div className="result-card-heading">
         {!result.bottleSearch && <p className="result-card-label">{presentation?.label ?? 'AFTER THE ACTION'}</p>}
         {coin && <CoinEmblem />}
-        <h2 id="result-title">{result.bottleSearch ? 'Bottle search' : presentation?.heading ?? result.title}</h2>
+        <h2 id="result-title">{result.bottleSearch ? 'Bottle & can search' : presentation?.heading ?? result.title}</h2>
       </div>
       <div className="result-card-content">
         {coinReward && <p className="coin-reward"><span className="sr-only">Money </span>{coinReward.value}</p>}
         {result.bottleSearch ? <>
-          <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <>+{result.bottleSearch.found} <span className="sr-only">returnable </span>bottle{result.bottleSearch.found === 1 ? '' : 's'}</> : 'Nothing useful found'}</p>
+          <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <>+{result.bottleSearch.found} <span className="sr-only">returnable </span>container{result.bottleSearch.found === 1 ? '' : 's'}</> : 'Nothing useful found'}</p>
           {result.bottleSearch.found > 0 && <p className="result-description">Return at Cheap Shop · {(result.bottleSearch.found * .5).toFixed(2)} zł</p>}
         </> : presentation ? <>
           <p className="result-lead">{presentation.lead}</p>
