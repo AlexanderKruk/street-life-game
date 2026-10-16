@@ -667,7 +667,7 @@ button.inventory-item { width:100%; }
 .story-choices .eyebrow svg { width:17px; height:17px; }
 .street-screen .story-choices h2 { font-size:20px; line-height:1.3; font-weight:600; margin:0; }
 .street-screen .story-actions { gap:8px; }
-.street-screen .story-actions .action { position:relative; min-height:64px; padding:13px 30px 13px 14px; border-radius:12px; border-color:#3a4145; background:#191e21; color:#ece9e3; cursor:pointer; }
+.street-screen .story-actions .action { position:relative; min-height:64px; padding:13px 30px 13px 14px; border-radius:12px; border-color:#3a4145; background:#191e21; color:#ece9e3; cursor:pointer; align-items:center; }
 .street-screen .story-actions .action > div { display:grid; width:100%; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:12px; }
 .street-screen .story-action-icon { width:24px; height:24px; color:#aeb4b5; }
 .street-screen .story-actions strong { font-size:15px; line-height:1.4; font-weight:500; }

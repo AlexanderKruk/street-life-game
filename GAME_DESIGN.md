@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-193`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-194`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Centered Street choice content (v194)
+
+Street choice buttons explicitly center their content vertically, overriding the older mobile rule that top-aligned generic action buttons. The icon and text remain centered together for both one- and multi-line labels; duration stays at the button midpoint. Padding, minimum height, typography and other action layouts are unchanged.
 
 ### Drag rubbish, tap deposit containers (v193)
 
