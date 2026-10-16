@@ -24,7 +24,9 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.15-189'
+const BUILD_VERSION = 'v2026.10.16-190'
+// Temporary fourth Street action for bottle-search testing; turn off after review.
+const TEMP_BOTTLE_TEST = true
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -241,7 +243,7 @@ function loadGame(): GameState {
 
 // Flatten conditional fragments before sorting, so custom and configured
 // actions share one available-first ordering and keep their order within a group.
-function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = false, choiceGroups }: { children: ReactNode; className: string; tag?: 'section' | 'div'; thoughtsOnly?: boolean; choiceGroups?: string[][] }) {
+function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = false, choiceGroups, extraChoice }: { children: ReactNode; className: string; tag?: 'section' | 'div'; thoughtsOnly?: boolean; choiceGroups?: string[][]; extraChoice?: string }) {
   function flatten(nodes: ReactNode): ReactNode[] {
     return Children.toArray(nodes).flatMap(node =>
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment ? flatten(node.props.children) : [node])
@@ -279,12 +281,12 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
   if (thoughtsOnly && choiceGroups) {
     const find = (id: string) => nodes.find(node => isValidElement<{ 'data-choice'?: string }>(node) && node.props['data-choice'] === id)
     const selected = choiceGroups.slice(0, 3).flatMap(group => {
-      const candidates = group.map(find).filter(node => node !== undefined)
+      const candidates = group.filter(id => id !== extraChoice).map(find).filter(node => node !== undefined)
       const selected = candidates.find(node => !disabled(node)) ?? candidates[0]
       return selected ? [selected] : []
     })
     const Tag = tag
-    return <Tag className={className}>{selected.filter(node => !disabled(node))}{selected.filter(disabled)}</Tag>
+    return <Tag className={className}>{selected.filter(node => !disabled(node))}{selected.filter(disabled)}{extraChoice && find(extraChoice)}</Tag>
   }
   const available = nodes.filter(node => !disabled(node))
   const unavailable = nodes.filter(disabled)
@@ -2097,7 +2099,7 @@ export default function App() {
           <p className="eyebrow"><Icon name="pause" />TIME PAUSED</p>
           <h2>What matters most right now?</h2>
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
-        <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'} choiceGroups={streetChoiceGroups}>
+        <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'} choiceGroups={streetChoiceGroups} extraChoice={current.id === 'street' && TEMP_BOTTLE_TEST ? 'bottles' : undefined}>
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong><Icon name="hospital" className="action-label-icon" />Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
@@ -2117,7 +2119,7 @@ export default function App() {
             {!firstNight && !discoveredLocations.includes('work') && <button className="action" data-choice="work-search" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Could I find a little work? I need to keep some money.</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             {!discoveredLocations.includes('support') && <button className="action" data-choice="help-search" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Someone must know what I can do tomorrow.</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             {!firstNight && <button className="action" data-choice="beg" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask someone for change? It’s hard, but I could try.</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
-            {!firstNight && <button className="action" data-choice="bottles" onClick={searchStreetBottles}><div><strong>♻️ Maybe there are bottles I could return for a little money.</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>}
+            {(TEMP_BOTTLE_TEST || !firstNight) && <button className="action" data-choice="bottles" aria-label={TEMP_BOTTLE_TEST ? 'Look for bottles (test)' : undefined} data-temporary={TEMP_BOTTLE_TEST || undefined} onClick={searchStreetBottles}><div><strong>{TEMP_BOTTLE_TEST ? 'Look for bottles (test)' : 'Maybe there are bottles I could return for a little money.'}</strong><small>Dig through the pile yourself. Move rubbish aside and tap bottles you uncover.</small></div><span>~10–60 min</span></button>}
             {!streetBenchFound && <button className="action" data-choice="find-bench" onClick={() => streetAction('find-bench')}><div><strong>🪑 Is there a bench nearby? My legs could use a break.</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
             {streetBenchFound && <button className="action" data-choice="bench-rest" onClick={() => streetAction('bench-rest')}><div><strong>🪑 I’ll sit for a bit. Just get off my feet.</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
             {streetBenchFound && <button className="action" data-choice="bench-sleep" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Could I sleep here? What about my backpack…</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>Choose duration</span></button>}

@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-15 · Neutral office-worker protagonist. Latest application build: `v2026.10.15-189`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-190`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Temporary bottle-search access (v190)
+
+For user testing, Street appends Look for bottles (test) as a fourth choice after the three ordinary directions. It is reachable during the first night and regardless of shelter booking, discovered work or money. It appears only once and does not replace the normal three priorities. The temporary TEMP_BOTTLE_TEST flag in App.tsx can be turned off after review to restore the previous three-choice presentation and bottle eligibility. No save migration or search mechanics change is involved.
 
 ### Minimal bottle-search presentation (v189)
 

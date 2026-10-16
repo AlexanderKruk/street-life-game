@@ -117,8 +117,23 @@ assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));as
 setup({minutes:1320});fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));advance(3000);fireEvent.click(screen.getByRole('button',{name:'Reset save'}));advance(3000);
 assert(!document.querySelector('.phone-activity'));assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(stateKey).minutes,1320);
 
-// Three distinct directions, stable during a paused decision and after reload.
-function storyIds(){return [...document.querySelectorAll('.story-actions > button')].map(button=>button.dataset.choice);}
+// Temporary fourth action stays reachable independently of normal priorities.
+for(const [state,extra] of [
+ [{minutes:1320},{}],
+ [{day:2,minutes:600},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}}],
+ [{day:2,minutes:600},{'street-life-discovered-v1':['street','station','shop']}],
+ [{day:2,minutes:600,money:0},{}],
+]) {
+ setup(state,extra);
+ const choices=[...document.querySelectorAll('.story-actions > button')];
+ assert.equal(choices.length,4);assert.equal(choices.at(-1).dataset.choice,'bottles');
+ assert.equal(choices.filter(button=>button.dataset.choice==='bottles').length,1);
+ let draw=0;Math.random=()=>++draw%10/10;click('Look for bottles (test)');
+ assert(document.querySelector('.trash-bin'));assert(screen.getByRole('button',{name:'Finish searching'}));
+}
+
+// Three normal directions plus the separate temporary test action.
+function storyIds(){return [...document.querySelectorAll('.story-actions > button:not([data-temporary])')].map(button=>button.dataset.choice);}
 setup({minutes:1320});assert.deepEqual(storyIds(),['question-morning','walk','station-route']);
 const initialChoices=storyIds();advance(10000);assert.deepEqual(storyIds(),initialChoices);cleanup();render(React.createElement(App));assert.deepEqual(storyIds(),initialChoices);
 click('Where can I get help in the morning?');ok();assert.deepEqual(storyIds(),['question-morning','walk','station-route']);discoverHelp();assert.deepEqual(storyIds(),['question-bed','walk','station-route']);
@@ -137,7 +152,7 @@ setup({minutes:1320});click('Just one more street. I’m not ready to lie down.'
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
-assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,3);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
+assert.equal(document.querySelectorAll('.story-actions .action:not([data-temporary]) small, .story-actions .action:not([data-temporary]) > span').length,3);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
 assert.equal(document.querySelector('[data-choice="music-walk"] .choice-duration').textContent,'≈30m');
 assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'32m+');
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
@@ -439,7 +454,8 @@ setup({locationId:'shelter',minutes:1320});assert(screen.getByRole('button',{nam
 
 // Time/weekday/daily limits disable services before a click and put them last.
 function availableFirst(selector='.actions') {
- const buttons=[...document.querySelector(selector).querySelectorAll(':scope > button')];
+ // The user-requested temporary test action is pinned fourth, outside sorting.
+ const buttons=[...document.querySelector(selector).querySelectorAll(':scope > button:not([data-temporary])')];
  const firstDisabled=buttons.findIndex(button=>button.disabled);
  if(firstDisabled>=0)assert(buttons.slice(firstDisabled).every(button=>button.disabled));
 }
