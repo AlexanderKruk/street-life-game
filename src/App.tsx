@@ -24,7 +24,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.16-191'
+const BUILD_VERSION = 'v2026.10.16-192'
 // Temporary fourth Street action for bottle-search testing; turn off after review.
 const TEMP_BOTTLE_TEST = true
 const ACTIVITY_TICK_MS = 250
@@ -97,6 +97,12 @@ type ActiveEffect = { id: EffectId; expiresAt: number }
 type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
+// Physical proportions follow the object, never whether its deposit is valid.
+const TRASH_ITEM_SCALE: Record<TrashArt, number> = {
+  plastic: 2.5, 'plastic-crushed': 2.5,
+  can: 2, 'can-crushed': 2,
+  cup: 1.55, paper: 2, tray: 2.1, wrapper: 1.9,
+}
 type TrashItem = { id: number; layer: number; art: TrashArt; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
@@ -1042,14 +1048,15 @@ export default function App() {
       const appearance = Math.random()
       const returnable = bottle && Math.random() < .65
       const can = bottle && appearance < .35
+      const art: TrashArt = bottle ? can ? returnable ? 'can' : 'can-crushed' : returnable ? 'plastic' : 'plastic-crushed' : clutter[Math.floor(appearance * clutter.length)]
       return {
         id,
         layer,
-        art: bottle ? can ? returnable ? 'can' : 'can-crushed' : returnable ? 'plastic' : 'plastic-crushed' : clutter[Math.floor(appearance * clutter.length)],
+        art,
         x: base.x + (Math.random() * 14 - 7),
         y: base.y + (Math.random() * 14 - 7),
         rotation: -75 + Math.random() * 150,
-        scale: bottle ? 1.45 + Math.random() * .35 : 1.9 + Math.random() * .55,
+        scale: TRASH_ITEM_SCALE[art] + Math.random() * .2,
         bottle,
         returnable,
       }

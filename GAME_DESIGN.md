@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-191`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-192`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Rubbish proportions (v192)
+
+Sprite scale follows the object type, independent of deposit eligibility. Intact and crushed PET bottles share a 2.5 base scale; intact and crushed cans share 2.0. Cups use 1.55, paper 2.0, trays 2.1 and wrappers 1.9, each with only 0–0.2 random variation. This makes bottles larger than coffee cups and removes the previous bias that shrank every collectible compared with ordinary rubbish. Drag/discard bounds continue using the actual object scale.
 
 ### Realistic bin and deposit containers (v191)
 
