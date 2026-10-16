@@ -24,7 +24,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.16-194'
+const BUILD_VERSION = 'v2026.10.16-195'
 // Temporary fourth Street action for bottle-search testing; turn off after review.
 const TEMP_BOTTLE_TEST = true
 const ACTIVITY_TICK_MS = 250
@@ -1025,7 +1025,7 @@ export default function App() {
 
   function searchStreetBottles() {
     if (activeEvent || current.id !== 'street' || trashGame) return
-    const clutter: TrashArt[] = ['paper', 'cup', 'tray', 'wrapper', 'can-crushed']
+    const clutter: TrashArt[] = ['paper', 'cup', 'tray', 'wrapper']
     const layers = 6
     const perLayer = 3
     const count = layers * perLayer
@@ -1046,8 +1046,8 @@ export default function App() {
         { x: 48, y: 68 },
       ][slot]
       const appearance = Math.random()
-      const returnable = bottle && Math.random() < .65
       const can = bottle && appearance < .35
+      const returnable = bottle && Math.random() < (can ? .78 : .65)
       const art: TrashArt = bottle ? can ? returnable ? 'can' : 'can-crushed' : returnable ? 'plastic' : 'plastic-crushed' : clutter[Math.floor(appearance * clutter.length)]
       return {
         id,

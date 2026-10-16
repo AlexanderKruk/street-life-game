@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-194`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-195`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Matching can artwork and rarer damaged cans (v195)
+
+The intact can now uses realistic silver aluminum and a clean blue-white beverage print, retaining an undented cylindrical silhouette and deposit marking. It looks recently emptied, with no dirt, corrosion, peeling print or artificial aging. Generated with built-in imagegen using both former can sprites as target/style references, followed by a targeted edit removing all aging: realistic brushed aluminum and continuous blue-white print, open pull-tab top, intact shape, natural light, transparent background. Exported to the existing 256px WebP asset, used by both the bin and inventory.
+
+Damaged cans are no longer generated as ordinary clutter. Those positions now contain paper, cups, trays or wrappers. Among candidate cans, 78% are returnable and 22% damaged: approximately one damaged can per 3.5 intact cans over many searches, with natural variation in each small pile. PET eligibility stays at 65%; candidate count, search costs, inventory capacity and deposit payout are unchanged.
 
 ### Centered Street choice content (v194)
 

@@ -142,6 +142,7 @@ for(const [draw,art,kept] of [[0,'can',2],[.5,'plastic',4],[.99,'plastic-crushed
  const containers=[...document.querySelectorAll('.bottle-piece')];
  assert(containers.length>=2&&containers.length<=6);
  assert(containers.every(piece=>piece.dataset.art===art));
+ assert([...document.querySelectorAll('.trash-piece:not(.bottle-piece)')].every(piece=>!piece.dataset.art.startsWith('can')),'ordinary clutter does not add extra damaged cans');
  assert([...document.querySelectorAll('.trash-piece img')].every(img=>img.src.endsWith('.webp')));
  for(const piece of containers)fireEvent.click(piece);
  if(!kept)assert(containers.every(piece=>piece.isConnected),'damaged containers ignore clicks');
@@ -151,6 +152,15 @@ for(const [draw,art,kept] of [[0,'can',2],[.5,'plastic',4],[.99,'plastic-crushed
  assert(document.querySelector('.bottle-search-reward').textContent.includes(kept?`+${kept}`:'Nothing useful'));
  assert.equal(document.querySelectorAll('.result-change-list .positive').length,0,'no duplicate container gain');
 }
+// Cans use the more generous eligibility rate; a controlled pile can contain
+// three sound cans and one damaged can without additional cans in the clutter.
+setup({day:2,minutes:600},{[invKey]:depositEmptyBag});
+const canDraws=[.5,...Array(17).fill(0),.1,.5,.5,.5,.5];
+for(const eligibility of [.7,.7,.7,.9])canDraws.push(.1,eligibility,.5,.5,.5,.5);
+let canDrawIndex=0;Math.random=()=>canDraws[canDrawIndex++]??.5;
+click('Look for bottles (test)');
+assert.equal(document.querySelectorAll('[data-art="can"]').length,3);
+assert.equal(document.querySelectorAll('[data-art="can-crushed"]').length,1);
 // Tapping litter cannot clear the pile. Only dragging it out removes that item;
 // accepted deposit containers remain available even when moved across an edge.
 setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>.5;
