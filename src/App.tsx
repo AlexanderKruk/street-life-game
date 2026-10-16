@@ -24,7 +24,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.16-192'
+const BUILD_VERSION = 'v2026.10.16-193'
 // Temporary fourth Street action for bottle-search testing; turn off after review.
 const TEMP_BOTTLE_TEST = true
 const ACTIVITY_TICK_MS = 250
@@ -406,8 +406,8 @@ export default function App() {
         ? { day: saved.day, attempts: Math.min(3, saved.attempts) } : { day: game.day, attempts: 0 }
     } catch { return { day: game.day, attempts: 0 } }
   })
-  const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; rejected: number; before: ResultSnapshot } | null>(null)
-  const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; moved: boolean } | null>(null)
+  const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; before: ResultSnapshot } | null>(null)
+  const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
   const eventModalRef = useRef<HTMLElement>(null)
   const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(loadFirstNightEvents)
@@ -1061,7 +1061,7 @@ export default function App() {
         returnable,
       }
     })
-    setTrashGame({ items, startedAt: Date.now(), before: resultSnapshot(), found: 0, rejected: 0 })
+    setTrashGame({ items, startedAt: Date.now(), before: resultSnapshot(), found: 0 })
   }
 
   function startTrashDrag(id: number, clientX: number, clientY: number, bounds: DOMRect) {
@@ -1069,13 +1069,14 @@ export default function App() {
     if (!item || item.collected || !trashGame) return false
     const pointerX = ((clientX - bounds.left) / bounds.width) * 100
     const pointerY = ((clientY - bounds.top) / bounds.height) * 100
-    trashDrag.current = { id, offsetX: pointerX - item.x, offsetY: pointerY - item.y, moved: false }
+    trashDrag.current = { id, offsetX: pointerX - item.x, offsetY: pointerY - item.y, startX: clientX, startY: clientY, moved: false }
     return true
   }
 
   function moveTrashItem(id: number, clientX: number, clientY: number, bounds: DOMRect) {
     const drag = trashDrag.current
     if (!drag || drag.id !== id) return
+    if (!drag.moved && Math.hypot(clientX - drag.startX, clientY - drag.startY) < 5) return
     const pointerX = ((clientX - bounds.left) / bounds.width) * 100
     const pointerY = ((clientY - bounds.top) / bounds.height) * 100
     const nextX = Math.max(-30, Math.min(110, pointerX - drag.offsetX))
@@ -1093,18 +1094,14 @@ export default function App() {
       x: nextX,
       y: nextY,
       cleared: item.cleared || cleared,
-      collected: !item.bottle && outside ? true : item.collected,
+      collected: !item.returnable && outside ? true : item.collected,
     } : item) } : null)
   }
 
   function collectTrashBottle(id: number) {
     if (!trashGame) return
     const item = trashGame.items.find((entry) => entry.id === id)
-    if (!item || !item.bottle || item.collected) return
-    if (!item.returnable) {
-      setTrashGame((active) => active ? { ...active, rejected: active.rejected + 1, items: active.items.map((entry) => entry.id === id ? { ...entry, collected: true } : entry) } : null)
-      return
-    }
+    if (!item || !item.returnable || item.collected) return
     const currentBottleSlots = inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0
     const otherSlots = backpackSlots(inventory) - currentBottleSlots
     const bottleCapacity = Math.max(0, BACKPACK_CAPACITY - otherSlots) * BOTTLE_STACK_SIZE
@@ -1116,10 +1113,10 @@ export default function App() {
   function finishTrashSearchImpl() {
     if (!trashGame) return
     const minutes = trashSearchMinutes(trashGame.startedAt)
-    const { found, rejected } = trashGame
+    const { found } = trashGame
     setGame((prev) => applyAction(prev, { minutes, energy: -Math.max(1, minutes / 15), hygiene: -Math.max(2, minutes / 5), mood: found > 0 ? 1 : -2 }))
     setTrashGame(null)
-    const text = found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable container${found === 1 ? '' : 's'}.` : rejected > 0 ? `You searched for ${minutes} minutes. The containers you found were damaged or not returnable.` : `You searched for ${minutes} minutes and found nothing useful.`
+    const text = found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable container${found === 1 ? '' : 's'}.` : `You searched for ${minutes} minutes and found nothing useful.`
     setMessage(text)
     setInfoModal({ title: 'Trash search results', text, bottleSearch: { found } })
   }
@@ -2011,21 +2008,31 @@ export default function App() {
     {trashGame && <div className="trash-overlay">
       <section className="trash-card" role="dialog" aria-modal="true" aria-labelledby="trash-title">
         <div className="trash-head"><Icon name="bottle" /><h2 id="trash-title">Look for bottles</h2></div>
-        <p className="trash-tip">Move rubbish. Collect bottles & cans.</p>
+        <p className="trash-tip">Drag rubbish out. Tap intact bottles & cans.</p>
         <div className="trash-search-row"><TrashSearchTime startedAt={trashGame.startedAt} onDeadline={checkTrashDeadline} /><span aria-label={`${trashGame.found} containers kept`}><Icon name="bottle" /><strong>{trashGame.found}</strong></span></div>
         <div className="trash-bin">
           <div className="trash-pile">
           {trashGame.items.map((item, index) => !item.collected && <button
             key={item.id}
             className={item.bottle ? 'trash-piece bottle-piece' : 'trash-piece'}
-            aria-label={item.bottle ? item.art.startsWith('can') ? 'Pick up can' : 'Pick up plastic bottle' : 'Move rubbish'}
+            aria-label={item.returnable ? item.art === 'can' ? 'Pick up can' : 'Pick up plastic bottle' : 'Drag rubbish aside · arrow keys to move'}
             data-art={item.art}
             style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `translate(-50%, -50%) rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: index + 2 }}
             onPointerDown={(e) => { const bounds = e.currentTarget.parentElement!.getBoundingClientRect(); if (startTrashDrag(item.id, e.clientX, e.clientY, bounds)) e.currentTarget.setPointerCapture(e.pointerId) }}
             onPointerMove={(e) => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; moveTrashItem(item.id, e.clientX, e.clientY, e.currentTarget.parentElement!.getBoundingClientRect()) }}
-            onPointerUp={(e) => { const moved = trashDrag.current?.id === item.id && trashDrag.current.moved; trashDrag.current = null; if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); if (!moved) { if (item.bottle) collectTrashBottle(item.id); else setTrashGame(active => active ? { ...active, items: active.items.map(entry => entry.id === item.id ? { ...entry, collected: true } : entry) } : null) } }}
+            onPointerUp={(e) => { const tapped = trashDrag.current?.id === item.id && !trashDrag.current.moved; trashDrag.current = null; if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); if (tapped && item.returnable) collectTrashBottle(item.id) }}
             onPointerCancel={() => { trashDrag.current = null }}
-            onClick={e => { if (e.detail !== 0) return; if (item.bottle) collectTrashBottle(item.id); else setTrashGame(active => active ? { ...active, items: active.items.map(entry => entry.id === item.id ? { ...entry, collected: true } : entry) } : null) }}
+            onClick={e => { if (e.detail === 0 && item.returnable) collectTrashBottle(item.id) }}
+            onKeyDown={e => {
+              const direction = ({ ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] } as Record<string, number[]>)[e.key]
+              if (!direction) return
+              e.preventDefault()
+              const bounds = e.currentTarget.parentElement!.getBoundingClientRect()
+              const x = bounds.left + item.x / 100 * bounds.width
+              const y = bounds.top + item.y / 100 * bounds.height
+              if (startTrashDrag(item.id, x, y, bounds)) moveTrashItem(item.id, x + direction[0], y + direction[1], bounds)
+              trashDrag.current = null
+            }}
           ><img src={`/street-life-game/assets/trash-${item.art}.webp`} alt="" draggable={false} decoding="async" width="192" height="192" /></button>)}
           </div>
         </div>

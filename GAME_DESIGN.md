@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-192`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-193`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Drag rubbish, tap deposit containers (v193)
+
+Only accepted intact PET bottles and cans respond to a tap or keyboard activation. Other rubbish, including damaged bottles/cans, stays in place when clicked and must be moved across the pile edge to discard it. Moving an object within the pile leaves it there; moving an accepted container beyond the edge never discards or collects it. Arrow keys offer the same movement for keyboard users. Pointer movement under five pixels is tolerated as normal tap jitter; a drag never collects a container on release, and a cancelled pointer gesture cannot collect it. Tests cover litter clicks, in-pile movement, selected-item discard, damaged-container discard, edge protection, tap jitter, keyboard movement and unchanged collection/payout.
 
 ### Rubbish proportions (v192)
 

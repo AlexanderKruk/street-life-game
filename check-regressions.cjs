@@ -144,12 +144,48 @@ for(const [draw,art,kept] of [[0,'can',2],[.5,'plastic',4],[.99,'plastic-crushed
  assert(containers.every(piece=>piece.dataset.art===art));
  assert([...document.querySelectorAll('.trash-piece img')].every(img=>img.src.endsWith('.webp')));
  for(const piece of containers)fireEvent.click(piece);
+ if(!kept)assert(containers.every(piece=>piece.isConnected),'damaged containers ignore clicks');
  fireEvent(window,new window.Event('pagehide'));
  assert.equal(read(invKey).bottles,kept);
  click('Finish searching');
  assert(document.querySelector('.bottle-search-reward').textContent.includes(kept?`+${kept}`:'Nothing useful'));
  assert.equal(document.querySelectorAll('.result-change-list .positive').length,0,'no duplicate container gain');
 }
+// Tapping litter cannot clear the pile. Only dragging it out removes that item;
+// accepted deposit containers remain available even when moved across an edge.
+setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>.5;
+click('Look for bottles (test)');
+const trashBounds={left:0,top:0,width:400,height:300};
+document.querySelector('.trash-pile').getBoundingClientRect=()=>trashBounds;
+function trashPointer(piece,type,x,y){
+ piece.setPointerCapture=()=>{};piece.hasPointerCapture=()=>true;piece.releasePointerCapture=()=>{};
+ const event=new window.Event(type,{bubbles:true});Object.assign(event,{clientX:x,clientY:y,pointerId:1});fireEvent(piece,event);
+}
+const litter=document.querySelector('.trash-piece:not(.bottle-piece)');
+const center=piece=>[parseFloat(piece.style.left)*4,parseFloat(piece.style.top)*3];
+let [lx,ly]=center(litter);const pileCount=document.querySelectorAll('.trash-piece').length;
+fireEvent.click(litter);trashPointer(litter,'pointerdown',lx,ly);trashPointer(litter,'pointerup',lx,ly);
+assert(litter.isConnected);assert.equal(document.querySelectorAll('.trash-piece').length,pileCount);
+trashPointer(litter,'pointerdown',lx,ly);trashPointer(litter,'pointermove',200,150);trashPointer(litter,'pointerup',200,150);
+assert(litter.isConnected,'moving litter inside keeps it');
+trashPointer(litter,'pointerdown',200,150);trashPointer(litter,'pointermove',430,150);
+assert(!litter.isConnected);assert.equal(document.querySelectorAll('.trash-piece').length,pileCount-1,'only dragged litter is discarded');
+const keptContainer=document.querySelector('.bottle-piece');let [bx,by]=center(keptContainer);
+trashPointer(keptContainer,'pointerdown',bx,by);trashPointer(keptContainer,'pointercancel',bx,by);trashPointer(keptContainer,'pointerup',bx,by);
+assert(keptContainer.isConnected,'cancelled taps cannot collect a container');
+trashPointer(keptContainer,'pointerdown',bx,by);trashPointer(keptContainer,'pointermove',430,150);trashPointer(keptContainer,'pointerup',430,150);
+assert(keptContainer.isConnected);assert.equal(document.querySelector('.trash-search-row strong').textContent,'0','dragging never collects a container');
+[bx,by]=center(keptContainer);trashPointer(keptContainer,'pointerdown',bx,by);trashPointer(keptContainer,'pointermove',bx+2,by+1);trashPointer(keptContainer,'pointerup',bx+2,by+1);
+assert(!keptContainer.isConnected);assert.equal(document.querySelector('.trash-search-row strong').textContent,'1','tiny finger motion remains a tap');
+const keyboardLitter=document.querySelector('.trash-piece:not(.bottle-piece)');
+for(let i=0;i<30&&keyboardLitter.isConnected;i++)fireEvent.keyDown(keyboardLitter,{key:'ArrowRight'});
+assert(!keyboardLitter.isConnected,'keyboard users can move litter out instead of clicking it away');
+setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>.99;click('Look for bottles (test)');
+const damaged=document.querySelector('.bottle-piece');document.querySelector('.trash-pile').getBoundingClientRect=()=>trashBounds;
+const [dx,dy]=center(damaged);trashPointer(damaged,'pointerdown',dx,dy);trashPointer(damaged,'pointerup',dx,dy);
+assert(damaged.isConnected,'damaged bottles also ignore pointer taps');
+trashPointer(damaged,'pointerdown',dx,dy);trashPointer(damaged,'pointermove',430,150);
+assert(!damaged.isConnected,'damaged bottles can be dragged away like other rubbish');
 setup({day:2,minutes:600},{[invKey]:{...depositEmptyBag,water:4,food:4,medicines:24}});Math.random=()=>0;
 click('Look for bottles (test)');fireEvent.click(document.querySelector('.bottle-piece'));
 fireEvent(window,new window.Event('pagehide'));assert.equal(read(invKey).bottles,0);
