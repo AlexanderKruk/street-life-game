@@ -24,7 +24,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.16-195'
+const BUILD_VERSION = 'v2026.10.16-196'
 // Temporary fourth Street action for bottle-search testing; turn off after review.
 const TEMP_BOTTLE_TEST = true
 const ACTIVITY_TICK_MS = 250
@@ -1055,7 +1055,7 @@ export default function App() {
         art,
         x: base.x + (Math.random() * 14 - 7),
         y: base.y + (Math.random() * 14 - 7),
-        rotation: -75 + Math.random() * 150,
+        rotation: Math.random() * 360,
         scale: TRASH_ITEM_SCALE[art] + Math.random() * .2,
         bottle,
         returnable,
