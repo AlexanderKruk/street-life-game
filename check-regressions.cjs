@@ -29,6 +29,8 @@ function setup(s={},extra={}){
  for(const[k,v]of Object.entries(extra))localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));
  Math.random=()=>.99;
  render(React.createElement(App));
+ // Initial normalization may constrain a legacy Mood above its current ceiling.
+ fireEvent(window,new window.Event('pagehide'));
 }
 function click(name){const dialog=screen.queryByRole('dialog');const target=dialog ? within(dialog).getByRole('button',{name}) : screen.getByRole('button',{name});const previousRandom=Math.random;if(target.dataset.choice?.startsWith('question-')||/Ask AI/.test(target.textContent))Math.random=()=>.34;fireEvent.click(target);Math.random=previousRandom;if(document.querySelector('.phone-activity'))advance(read('street-life-phone-activity-v1').remaining*1000);}
 function chooseHours(hours){fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));}
@@ -78,7 +80,7 @@ assert(document.querySelector('.street-art img').srcset.includes('street-hero-14
 assert.equal(read(stateKey).minutes,1436);assert.equal(read(invKey).phoneBattery,batteryBefore);
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 advance(4000);assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,0);
-assert(read(invKey).phoneBattery<batteryBefore);assert(read(stateKey).mood > 28 && read(stateKey).mood < 29);
+assert(read(invKey).phoneBattery<batteryBefore);assert.equal(read(stateKey).mood,28,'unfinished searches do not passively raise Mood');
 assert(!read('street-life-discovered-v1').includes('support'));assert(!read('street-life-answers-v1').includes('morning'));
 const partialState=read(stateKey),partialInventory=read(invKey);
 Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});advance(5000);
@@ -400,7 +402,7 @@ for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,
  advance(1000);assert.equal(awardDraws,1);assert.deepEqual(read(stateKey),awarded);
  ok();cleanup();render(React.createElement(App));assert.equal(awardDraws,1);assert.equal(read(stateKey).money,awarded.money);assert(!document.querySelector('.event-overlay'));
 }
-setup();click('Map');click(/^.*Station/);click('Go →');const leaveCoinDraws=[.2,0,0];Math.random=()=>leaveCoinDraws.shift()??.99;click(/Public transport/);
+setup({mood:28});click('Map');click(/^.*Station/);click('Go →');const leaveCoinDraws=[.2,0,0];Math.random=()=>leaveCoinDraws.shift()??.99;click(/Public transport/);
 const leaveCoinBefore=read(stateKey);Math.random=()=>{throw new Error('Leaving a coin must not roll a reward')};click('Leave it');assert.equal(read(stateKey).money,leaveCoinBefore.money);assert.equal(read(stateKey).mood,leaveCoinBefore.mood+1);
 assert(screen.getByRole('dialog').textContent.includes('You leave it for someone'));
 assert(!document.querySelector('.result-gains'));assert(document.querySelector('.result-modal .result-stat-panel').textContent.includes('Mood'));
@@ -486,7 +488,7 @@ setup({hygiene:20},{[invKey]:{wipes:1}});click(/Inventory$/);click(/Wet wipes.*t
 // Bread ages separately; sealed canned food survives the same time advance.
 setup({hunger:20,energy:20},{[invKey]:{bread:2,breadFreshness:100,cannedFood:1}});beginSleep(/Lie down here\? I’m not sure… But I could try./,8);advance(48000);ok();assert(Math.abs(read(invKey).breadFreshness-(100-100/1440*480))<1e-8);assert.equal(read(invKey).cannedFood,1);
 for(const [freshness,gain,damage,mood] of [[100,12,0,0],[40,8,0,0],[0,4,3,-2]]) {
- setup({hunger:20},{[invKey]:{bread:1,breadFreshness:freshness}});click(/Inventory$/);click(/Bread roll.*tap to eat/);assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,58+mood);assert.equal(read(invKey).breadFreshness,100);
+ setup({hunger:20,mood:28},{[invKey]:{bread:1,breadFreshness:freshness}});click(/Inventory$/);click(/Bread roll.*tap to eat/);assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,28+mood);assert.equal(read(invKey).breadFreshness,100);
 }
 // New items occupy backpack slots, for both purchase and theft.
 for(const [name,price,key,quantity] of [['Bread roll','1.00','bread',1],['Canned food','6.00','cannedFood',1],['Wet wipes','5.00','wipes',5]]) {
@@ -515,8 +517,8 @@ setup({locationId:'shop',money:8,hunger:20});assert.equal(screen.queryByRole('bu
 
 // Fresh, stale and spoiled food have different effects; empty stacks reset freshness.
 for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]) {
-  setup({hunger:20},{[invKey]:{food:1,foodFreshness:freshness}});click(/Inventory$/);click(/Food.*tap to eat/);
-  assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,58+mood);assert.equal(read(invKey).foodFreshness,100);
+  setup({hunger:20,mood:28},{[invKey]:{food:1,foodFreshness:freshness}});click(/Inventory$/);click(/Food.*tap to eat/);
+  assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,28+mood);assert.equal(read(invKey).foodFreshness,100);
 }
 
 
@@ -542,6 +544,9 @@ assert.equal(document.querySelectorAll('.actions .action').length,1);assert(!scr
 click(/Join registration queue/);assert(screen.getByRole('dialog',{name:'Shelter registration queue'}));assert(!read(lifeKey).shelterUntilDay);
 advance(19000);assert.equal(read(stateKey).minutes,1159);assert(!read(lifeKey).shelterUntilDay);assert.equal(read('street-life-shelter-queue-v1').remaining,1);
 advance(1000);assert.equal(read(stateKey).minutes,1160);assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterLastStayDay,1);assert(!localStorage.getItem('street-life-shelter-queue-v1'));assert(screen.getByRole('dialog').textContent.includes('20 min'));ok();assert(screen.getByRole('button',{name:/Ask for a shower/}));assert(document.querySelector('.storage-panel'));assert(screen.getByRole('button',{name:/Use your reserved bed/}));
+
+assert.equal(read(stateKey).mood,53,'registration applies its +3 under the new housing ceiling');
+click(/^Status$/);assert.equal(document.querySelector('[data-stat="Mood"] .bar-cap-marker').style.left,'60%');
 
 // No vacancies still costs twenty minutes; failed attempts cannot reroll today.
 setup({locationId:'shelter',minutes:1140},{[lifeKey]:vacancyKey(0)});click(/Join registration queue/);advance(20000);
@@ -673,28 +678,28 @@ setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!d
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
-const {advanceTime,initialState,createInitialState,overallCondition,conditionBand,locations,travelTimeRange,randomTravelMinutes}=require('./regression-game.cjs');
+const {advanceTime,initialState,createInitialState,overallCondition,conditionBand,moodLimit,limitMood,HOUSING_MOOD_CAP,locations,travelTimeRange,randomTravelMinutes}=require('./regression-game.cjs');
 for(const base of [1,33,40,45,65,...locations.flatMap(location=>[location.travelMinutes,Math.ceil(location.travelMinutes*.5)])]) {
  const {min,max}=travelTimeRange(base);assert.equal(min,Math.ceil(base*.95));assert.equal(max,Math.floor(base*1.2));
  assert.equal(randomTravelMinutes(base,()=>0),min);assert.equal(randomTravelMinutes(base,()=>.999999),max);
  for(let value=min;value<=max;value++)assert.equal(randomTravelMinutes(base,()=>(value-min+.5)/(max-min+1)),value);
  assert(min>=base*.95&&max<=base*1.2);
 }
-// Five distinct faces, with the header describing the whole condition.
+// One Mood and the same five faces in the header and Status.
 assert.deepEqual([0,21,41,61,81].map(value=>conditionBand(value).level),['very-bad','bad','fair','ok','very-good']);
 for(const [boundary,below,above] of [[20,'very-bad','bad'],[40,'bad','fair'],[60,'fair','ok'],[80,'ok','very-good']]) {
  assert.equal(conditionBand(boundary).level,below);assert.equal(conditionBand(boundary+.01).level,above);
 }
 const healthyBody={...initialState,hunger:80,thirst:80,energy:80,health:80,hygiene:80,mood:28};
 for(const [value,label] of [[10,'VERY BAD'],[30,'BAD'],[50,'FAIR'],[70,'GOOD'],[90,'VERY GOOD']]) {
- setup({hunger:value,thirst:value,energy:value,health:value,hygiene:value,mood:value});
- assert(screen.getByRole('img',{name:'Overall condition: '+label}));
+ setup({hunger:value,thirst:value,energy:value,health:value,hygiene:value,mood:value},{[lifeKey]:{housing:'Apartment'}});
+ assert(screen.getByRole('img',{name:'Mood: '+label}));
  click(/^Status$/);
- assert([...document.querySelectorAll('.stat')].find(stat=>stat.textContent.includes('Mood')).querySelector('svg'));
+ assert.equal(document.querySelector('[data-stat="Mood"] svg').innerHTML,document.querySelector('.header-condition svg').innerHTML);
 }
-assert.equal(overallCondition(healthyBody).level,'fair');
-assert.equal(overallCondition({...healthyBody,mood:100,health:5}).level,'very-bad');
-assert.equal(overallCondition({...healthyBody,mood:100,energy:10}).level,'bad');
+assert.equal(overallCondition(healthyBody).level,'bad');
+assert.equal(overallCondition(limitMood({...healthyBody,mood:100,health:5},{housing:'Apartment'})).level,'bad');
+assert.equal(overallCondition(limitMood({...healthyBody,mood:100,energy:10},{housing:'Apartment'})).level,'fair');
 // Status promotes one need, never duplicates it, and keeps all six visible.
 setup({hunger:72,thirst:66,energy:45,health:90,hygiene:75,mood:28});click(/^Status$/);
 assert.equal(document.querySelector('.status-focus').dataset.stat,'Mood');
@@ -725,17 +730,17 @@ assert.equal(document.querySelector('.status-focus').dataset.stat,'Health');
 assert(document.querySelector('.status-needs [data-stat="Mood"]'));
 assert(document.querySelector('[data-stat="Energy"] small').textContent.startsWith('Max '));
 for(const [value,color] of [[30,'critical'],[30.1,'warning'],[60,'warning'],[60.1,'good']]) {
- setup({hunger:80,thirst:80,energy:80,health:90,hygiene:80,mood:value});click(/^Status$/);
+ setup({hunger:80,thirst:80,energy:80,health:90,hygiene:80,mood:value},{[lifeKey]:{housing:'Apartment'}});click(/^Status$/);
  assert(document.querySelector(`.status-focus .bar i.${color}`));
  if(color==='good')assert.equal(document.querySelector('.status-focus-label').textContent,'Lowest indicator');
 }
 const recoveredMood=advanceTime(healthyBody,60).mood;
-assert(recoveredMood>healthyBody.mood && recoveredMood<=healthyBody.mood+4.8+1e-8);
+assert.equal(recoveredMood,healthyBody.mood,'comfortable needs do not automatically refill Mood');
 for(const need of ['hunger','thirst','energy','health','hygiene']) {
- const comfortable={...healthyBody,mood:70};
+ const comfortable={...healthyBody,mood:100};
  const deprived={...comfortable,[need]:5};
- const lowMood=advanceTime(deprived,60).mood;
- assert(lowMood<70 && lowMood<advanceTime(comfortable,60).mood,need+' must affect Mood');
+ const lowMood=advanceTime(deprived,60,{housing:'Apartment'}).mood;
+ assert(lowMood<advanceTime(comfortable,60,{housing:'Apartment'}).mood,need+' must restrict Mood');
 }
 const emotionalShock={...healthyBody,mood:10};
 assert.equal(advanceTime(emotionalShock,0).mood,10);

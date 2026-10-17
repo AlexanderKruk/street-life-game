@@ -1,9 +1,10 @@
 import { memo, useEffect, useState, type ReactNode } from 'react'
 import { conditionBand } from './game'
+import MoodIcon from './MoodIcon'
 
 type StatChange = { from: number; value: string; kind: 'positive' | 'negative' | 'neutral' }
 
-export default memo(function Stat({ label, value, icon, cap = 100, focus = false, change }: { label: string; value: number; icon: ReactNode; cap?: number; focus?: boolean; change?: StatChange }) {
+export default memo(function Stat({ label, value, icon, cap = 100, capReason, focus = false, change }: { label: string; value: number; icon: ReactNode; cap?: number; capReason?: string; focus?: boolean; change?: StatChange }) {
   const [animatedValue, setAnimatedValue] = useState(change?.from ?? value)
   const from = change?.from
   useEffect(() => {
@@ -26,12 +27,13 @@ export default memo(function Stat({ label, value, icon, cap = 100, focus = false
   }, [from, value])
   const displayed = change ? animatedValue : value
   const level = displayed > 60 ? 'good' : displayed > 30 ? 'warning' : 'critical'
-  const blocked = label === 'Hygiene' && cap < 100
+  const blocked = (label === 'Hygiene' || label === 'Mood') && cap < 100
+  const restriction = capReason ?? (label === 'Hygiene' ? 'dirty clothes' : 'housing and physical needs')
   return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}${change ? ' result-stat' : ''}`} data-stat={label}>
     {focus && <p className="status-focus-label">{level === 'critical' ? 'Needs attention' : level === 'warning' ? 'Keep an eye on this' : 'Lowest indicator'}</p>}
-    <span className="status-stat-icon">{icon}</span>
-    <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && !blocked && <small>Max {cap}%</small>}</div>
-    <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={`${label}: ${conditionBand(value).label}${blocked ? `, maximum ${cap}% due to dirty clothes` : ''}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
+    <span className="status-stat-icon">{label === 'Mood' ? <MoodIcon value={value} /> : icon}</span>
+    <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && !blocked && <small>Max {cap}%</small>}{blocked && label === 'Mood' && capReason && <small>{capReason}</small>}</div>
+    <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={`${label}: ${conditionBand(value).label}${blocked ? `, maximum ${Math.round(cap)}% due to ${restriction}` : ''}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100} title={blocked ? `Limited by ${restriction}` : undefined}>
       {blocked && <span className="bar-blocked" style={{ left: `${cap}%` }} aria-hidden="true" />}
       <i className={level} style={{ width: `${displayed}%` }} />
       {blocked && <span className="bar-cap-marker" style={{ left: `${cap}%` }} aria-hidden="true" />}

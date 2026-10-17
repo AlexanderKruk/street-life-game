@@ -2,7 +2,6 @@ import { memo, useEffect, useRef } from 'react'
 import { responsiveImageProps } from './responsiveImages'
 import { Icon, type IconName } from './Icon'
 import Stat from './Stat'
-import { conditionBand } from './game'
 import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
@@ -26,8 +25,8 @@ function ResultStat({ change }: { change: ResultChange }) {
   const label = resultLabel(change.label)
   const meter = change.meter!
   const icons: Record<string, IconName> = { Food: 'food', Water: 'water', Energy: 'energy', Health: 'heart', Hygiene: 'shower', Battery: 'phone', 'Phone condition': 'phone', 'Clothing cleanliness': 'shower', 'Clothing condition': 'person' }
-  const icon = label === 'Mood' ? `face-${conditionBand(meter.after).level}` as IconName : icons[label] ?? 'person'
-  return <Stat label={label === 'Water' ? 'Thirst' : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} change={{ from: meter.before, value: change.value, kind: change.kind }} />
+  const icon = icons[label] ?? 'person'
+  return <Stat label={label === 'Water' ? 'Thirst' : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} capReason={meter.capReason} change={{ from: meter.before, value: change.value, kind: change.kind }} />
 }
 
 function ChangeRows({ changes }: { changes: ResultChange[] }) {

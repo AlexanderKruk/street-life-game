@@ -1,4 +1,5 @@
 import { illustrateStreetEvent } from './eventArtwork'
+import type { Housing } from './game'
 
 export type EventTrigger = 'travel' | 'location' | 'wake' | 'walk' | 'bench'
 
@@ -11,7 +12,7 @@ export type EventContext = {
   locationId: string
   travelMode?: 'walk' | 'transit' | 'fare-dodge'
   weather: string
-  housing: 'Street' | 'Night shelter' | 'Schronisko'
+  housing: Housing
   documents: boolean
   firstNight?: boolean
   sleepKind?: 'ground' | 'bench' | 'shelter' | 'residential'

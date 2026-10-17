@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, formatTime, createInitialState, isOpen, locations, overallCondition, conditionBand, travelTimeRange, randomTravelMinutes, type ActionResult, type GameState } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, travelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
 import { pickStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ConsumedItem, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
@@ -17,13 +17,14 @@ import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import Stat from './Stat'
+import MoodIcon from './MoodIcon'
 import PhoneDialog from './PhoneDialog'
 import CompactStreetEvent from './CompactStreetEvent'
 import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.17-200'
+const BUILD_VERSION = 'v2026.10.17-201'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -91,7 +92,7 @@ type Inventory = { clothingCleanliness: number; showerGel: number; bread: number
 type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number }
-type LifeSituation = { housing: 'Street' | 'Night shelter' | 'Schronisko'; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
+type LifeSituation = { housing: Housing; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
 // Physical proportions follow the object, never whether its deposit is valid.
@@ -299,12 +300,8 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
 }
 
 
-function overallStatus(game: GameState) {
-  return overallCondition(game)
-}
-
 export default function App() {
-  const [game, setGame] = useState<GameState>(loadGame)
+  const [game, commitGame] = useState<GameState>(loadGame)
   const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(loadPhoneActivity)
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
@@ -444,13 +441,25 @@ export default function App() {
       return []
     }
   })
+  function moodContext(state = game, housing?: Housing) {
+    return { effects, housing: housing ?? (life.housing === 'Street' && (life.shelterUntilDay ?? 0) >= state.day ? 'Night shelter' as const : life.housing) }
+  }
+  function setGame(update: GameState | ((previous: GameState) => GameState), housing?: Housing) {
+    commitGame(previous => {
+      const next = typeof update === 'function' ? update(previous) : update
+      return limitMood(next, moodContext(next, housing))
+    })
+  }
+  const moodCeiling = moodLimit(game, moodContext())
+  // Reconcile existing saves and changes of accommodation/effects without a gain.
+  useEffect(() => { setGame(previous => previous) }, [moodCeiling.cap])
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
   const shelterBooked = (life.shelterUntilDay ?? 0) >= game.day
   const currentActions = useMemo(() => actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest')), [current.id, shelterBooked])
   const mapPlaces = useMemo(() => locations.filter(location => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko')), [discoveredLocations, life.schroniskoReferral, life.housing])
   const open = isOpen(current, game.minutes)
   const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation && !infoModal.illustration
-  const overall = overallStatus(game)
+  const moodBand = conditionBand(game.mood)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
@@ -541,7 +550,7 @@ export default function App() {
     { id: 'energy', label: 'Energy', value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
     { id: 'health', label: 'Health', value: game.health, icon: 'heart' as IconName },
     { id: 'hygiene', label: 'Hygiene', value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
-    { id: 'mood', label: 'Mood', value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName },
+    { id: 'mood', label: 'Mood', value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: moodCeiling.reasons.join(', ') },
   ]
   // Dangerous physical needs take precedence over a lower mood score.
   const dangerousNeeds = statusNeeds.filter(need => need.id !== 'mood' && need.value <= 20)
@@ -552,11 +561,11 @@ export default function App() {
   }, [game.hygiene, hygieneLimit])
 
   function applyAction(state: GameState, result: ActionResult) {
-    return applyGameAction(state, result, { effects, walking: trip?.mode === 'walk', music: musicOn })
+    return applyGameAction(state, result, { ...moodContext(state), walking: trip?.mode === 'walk', music: musicOn })
   }
 
   function applySleepTime(state: GameState, minutes: number) {
-    return applyGameSleepTime(state, minutes, { effects })
+    return applyGameSleepTime(state, minutes, moodContext(state))
   }
 
   const [inventoryAgedAt, setInventoryAgedAt] = useState(absoluteMinutes(game))
@@ -592,7 +601,7 @@ export default function App() {
   }, [life.schroniskoReferral, life.housing])
 
   function resultSnapshot(): ResultSnapshot {
-    return { game: { ...game }, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
+    return { game: { ...game }, housing: moodContext().housing, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
   }
 
   function rememberFirstNightEvent(event: StreetEvent, state = game) {
@@ -617,7 +626,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit) return
+    if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit || game.mood > moodCeiling.cap) return
     setPendingResult(null)
     if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime, pendingResult.consumedItems)
@@ -714,7 +723,7 @@ export default function App() {
         setLife(status => ({ ...status, housing: 'Night shelter', shelterRegisteredDay: queued.day,
           shelterUntilDay: queued.day + 6, shelterLastStayDay: queued.day, shelterAuditDay: queued.day,
           shelterMisses: 0, shelterMissMonth: Math.floor((queued.day - 1) / 30), shelterStrikes: 0 }))
-        setGame(prev => applyAction(prev, { minutes: 0, mood: 3 }))
+        setGame(prev => applyGameAction(prev, { minutes: 0, mood: 3 }, moodContext(prev, 'Night shelter')), 'Night shelter')
         setActiveGoal(goal => goal?.type === 'night-shelter' ? null : goal)
         setMessage('After 20 minutes in the queue, a place is available. You are registered for 7 days. Shelter services and your bed are now available.')
       } else {
@@ -1165,10 +1174,10 @@ export default function App() {
       setRainChoice(false)
       setCoverPlanning(false)
       const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
-      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { effects, walking: true, music: playingMusic })
+      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: playingMusic })
       if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
-      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2, hygiene: startsRain || weather.label === 'Rain' || weather.label === 'Showers' ? -3 : 0 }, { effects, walking: true, music: playingMusic })
-      if (withMusic) next.mood += Math.max(0, Math.min(8, 60 - next.mood))
+      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2, hygiene: startsRain || weather.label === 'Rain' || weather.label === 'Showers' ? -3 : 0 }, { ...moodContext(next), walking: true, music: playingMusic })
+      if (withMusic) next.mood = Math.min(moodLimit(next, moodContext(next)).cap, next.mood + 8)
       const wet = (next.rainUntil ?? 0) > absoluteMinutes(next) || weather.label === 'Rain' || weather.label === 'Showers'
       setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440) - (wet ? 5 : 0)) }))
       setGame(next)
@@ -1239,7 +1248,7 @@ export default function App() {
       : question.text
     runWithResult(id === 'morning' && !foundPlace ? 'Searched for more help' : question.title, () => {
       const next = { ...game }
-      if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(60, before.game.mood + 3))
+      if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(moodLimit(next, moodContext(next)).cap, before.game.mood + 3))
       setGame(next)
       setAnsweredQuestions(previous => [...new Set([...previous, id])])
       setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
@@ -1475,7 +1484,7 @@ export default function App() {
       message: 'You showered with 3-in-1 gel. Hygiene gain ×1.5, up to 100. One use spent.' } : baseResult
     if (useGel) setInventory(prev => ({ ...prev, showerGel: prev.showerGel - 1 }))
     const washedClothes = actionId === 'daycenter-laundry' || actionId === 'shelter-laundry-pickup'
-    const next = applyAction(game, result)
+    const next = actionId === 'residential-stay' ? applyGameAction(game, result, moodContext(game, 'Schronisko')) : applyAction(game, result)
     if (washedClothes) {
       laundryCleanAt.current = absoluteMinutes(next)
       setInventory(prev => ({ ...prev, clothingCleanliness: 100 }))
@@ -1483,7 +1492,7 @@ export default function App() {
       const endCleanliness = Math.max(0, inventory.clothingCleanliness - result.minutes * (20 / 1440))
       next.hygiene = Math.min(next.hygiene, clothingHygieneCap(endCleanliness))
     }
-    setGame(next)
+    setGame(next, actionId === 'residential-stay' ? 'Schronisko' : undefined)
     setMessage((result.message ?? 'Time passes.') + (isShower && hygieneLimit < 100 ? ` Dirty clothes limit Hygiene to ${hygieneLimit}. Wash your clothes to raise the limit.` : ''))
 
     if (actionId === 'street-sleep') {
@@ -2043,7 +2052,7 @@ export default function App() {
         <h1 aria-label={`Day ${game.day} ${weekday(game.day)} ${formatTime(game.minutes)}`}><time>{formatTime(game.minutes)}</time><span className="game-day">D{game.day} <span className="weekday">{weekday(game.day)}</span></span></h1>
         <div className="weather" title={weather.label} aria-label={`${weather.label}, ${temperature}°C`}><Icon name={weather.label === 'Rain' || weather.label === 'Showers' ? 'rain' : weather.label === 'Clear' ? game.minutes >= 360 && game.minutes < 1200 ? 'sun' : 'moon' : 'cloud'} />{temperature}°</div>
         <div className="header-info">
-          <span className={`header-condition ${overall.level}`} role="img" aria-label={`Overall condition: ${overall.label}`} title={`Overall condition: ${overall.label}`}><Icon name={`face-${overall.level}`} /></span>
+          <span className={`header-condition ${moodBand.level}`} role="img" aria-label={`Mood: ${moodBand.label}`} title={`Mood: ${Math.round(game.mood)}% · ${moodBand.label}`}><MoodIcon value={game.mood} /></span>
           <div className="money" aria-label={`Money: ${game.money.toFixed(2)} zł`}><Icon name="banknote" />{Number(game.money.toFixed(2))} zł</div>
         </div>
         <div className={`phone-charge${inventory.phoneBattery <= 20 ? ' low' : ''}`} aria-label={`Phone battery: ${Math.round(inventory.phoneBattery)}%`} title="Your phone battery"><BatteryIcon charge={inventory.phoneBattery} /><strong>{Math.round(inventory.phoneBattery)}%</strong></div>
@@ -2254,9 +2263,9 @@ export default function App() {
         </div>
       </section>}
       <div className="condition-heading"><h3>Condition</h3></div>
-      <Stat label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} focus />
+      <Stat label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} capReason={focusedNeed.capReason} focus />
       <div className="status-needs" aria-label="Other condition indicators">
-        {statusNeeds.filter(need => need.id !== focusedNeed.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} />)}
+        {statusNeeds.filter(need => need.id !== focusedNeed.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} capReason={need.capReason} />)}
       </div>
       <LifeSituation housing={life.housing} employment={life.employment} income={life.income} documents={inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'} />
     </section>}
@@ -2386,7 +2395,7 @@ export default function App() {
       {nav('map', 'map', 'Map')}
       {nav('inventory', 'backpack', 'Inventory')}
       <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
-      <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={overall.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${overall.level}`} aria-hidden="true" /></button>
+      <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={moodBand.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${moodBand.level}`} aria-hidden="true" /></button>
       {nav('journal', 'journal', 'Journal')}
     </nav>
   </main>

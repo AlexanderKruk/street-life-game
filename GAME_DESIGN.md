@@ -2,7 +2,28 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-200`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-201`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### One Mood with housing and physical ceilings (v201)
+
+There is one saved Mood value. The header, Status, navigation indicator and action/event results use its five face bands; the previous weighted overall-condition calculation is retired. `MoodIcon` is shared by the header and all Mood meters.
+
+| Accommodation | Mood ceiling |
+|---|---:|
+| Street | 50% |
+| Night shelter | 60% |
+| Schronisko | 70% |
+| Hostel | 80% |
+| Room | 90% |
+| Apartment | 100% |
+
+A valid night-shelter reservation retains the 60% accommodation ceiling during daytime outings. Accommodation changes do not refill Mood. Hostel, Room and Apartment ceilings are defined for those housing states; this change does not introduce new locations or rental actions.
+
+The actual ceiling is the minimum of accommodation and the following continuous physical restrictions (all clamped to 100%): Food, Water and Health each allow `20 + 2 × value`; Energy allows `40 + value`; Hygiene allows `80 + 0.4 × value`. An active Cold allows at most 60%. Thus Energy 20 allows Mood 60, severe thirst at Water 10 allows Mood 40, and dirty clothes alone impose only a mild limit. Small changes of needs produce small changes of the ceiling, rather than threshold jumps. Worsening conditions constrain the current value; raising a ceiling never grants free Mood.
+
+Positive/negative events, sleep and other explicit action rewards change Mood directly within the ceiling. Comfortable physical needs no longer passively refill it by averaging other meters. Music and illness retain their timed emotional effects. All state writes (including direct item handlers), time steps and action resolution respect the limit. Existing saves retain their identity and all other progress; an above-ceiling Mood is brought within the current rules on load.
+
+Status and result bars hatch the unavailable part of Mood, show the limiting cause and use the same final face as the header. Results show actual capped gains once and omit zero gains. `check-mood.cjs` covers all six accommodation caps, physical continuity, illness expiry, tick/action equivalence, existing saves, direct item rewards, capped result bars and identical faces. This section supersedes older descriptions of separate overall condition and passive Mood recovery below.
 
 ### Street clock resumes after information results (v200)
 

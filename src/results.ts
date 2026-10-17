@@ -1,4 +1,4 @@
-import { absoluteMinutes, energyCap, type GameState } from './game'
+import { absoluteMinutes, energyCap, moodLimit, type GameState, type Housing } from './game'
 
 export type ResultInventory = {
   clothingCleanliness?: number; showerGel?: number; bread?: number; cannedFood?: number; wipes?: number; water: number; food: number; bottles: number; phoneBattery: number; phoneCondition: number
@@ -6,11 +6,12 @@ export type ResultInventory = {
 }
 export type ResultSnapshot = {
   game: GameState
+  housing?: Housing
   inventory: ResultInventory
   effects: { id: string; expiresAt: number }[]
 }
 export type ConsumedItem = 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'
-export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral'; consumed?: boolean; meter?: { before: number; after: number; cap?: number } }
+export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral'; consumed?: boolean; meter?: { before: number; after: number; cap?: number; capReason?: string } }
 export type ResultSummary = { costs: ResultChange[]; changes: ResultChange[] }
 
 function number(value: number, precision = 1) {
@@ -35,8 +36,9 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     ['health', '❤️ Health'], ['hygiene', '🧼 Hygiene'], ['mood', '🙂 Mood'],
   ] as const) {
     const cleanliness = after.inventory.clothingCleanliness ?? 100
-    const cap = key === 'energy' ? energyCap(after.game.health) : key === 'hygiene' ? cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60 : undefined
-    add(label, after.game[key] - before.game[key], '', false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}) })
+    const mood = key === 'mood' ? moodLimit(after.game, { housing: after.housing, effects: after.effects }) : undefined
+    const cap = key === 'energy' ? energyCap(after.game.health) : key === 'hygiene' ? cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60 : mood?.cap
+    add(label, after.game[key] - before.game[key], '', false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}), ...(mood ? { capReason: mood.reasons.join(', ') } : {}) })
   }
   add('🍺 Intoxication', after.game.intoxication - before.game.intoxication, '', true)
   const consumedKeys = new Set<string>(consumedItems)

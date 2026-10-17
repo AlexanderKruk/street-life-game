@@ -1,4 +1,8 @@
 export type Need = 'hunger' | 'thirst' | 'energy' | 'health' | 'hygiene' | 'mood'
+export type Housing = 'Street' | 'Night shelter' | 'Schronisko' | 'Hostel' | 'Room' | 'Apartment'
+export const HOUSING_MOOD_CAP: Record<Housing, number> = {
+  Street: 50, 'Night shelter': 60, Schronisko: 70, Hostel: 80, Room: 90, Apartment: 100,
+}
 
 export type GameState = {
   day: number
@@ -103,27 +107,32 @@ export function conditionBand(value: number) {
   return { label: 'VERY GOOD', level: 'very-good' as const }
 }
 
-function physicalNeeds(state: GameState) {
-  return [state.hunger, state.thirst, state.energy, state.health, state.hygiene]
-}
-
+// Compatibility name for callers: there is one Mood, never a second average.
 export function overallCondition(state: GameState) {
-  const needs = physicalNeeds(state)
-  const average = needs.reduce((total, value) => total + value, 0) / needs.length
-  let score = average * 0.6 + state.mood * 0.4
-  // Good averages must not hide dangerous deprivation or exhaustion.
-  if (Math.min(...needs) <= 20) score = Math.min(score, 40)
-  if (state.health <= 10 || state.hunger <= 5 || state.thirst <= 5) score = Math.min(score, 20)
-  return conditionBand(score)
+  return conditionBand(state.mood)
 }
 
-// Physical comfort changes morale gradually; it does not erase an event's
-// emotional impact or replace saved Mood with an average of the other meters.
-function physicalMoodChange(state: GameState) {
-  const needs = physicalNeeds(state)
-  const average = needs.reduce((total, value) => total + value, 0) / needs.length
-  const target = Math.min(average, Math.min(...needs) + 30)
-  return Math.max(-0.12, Math.min(0.08, (target - state.mood) / 360))
+export function moodLimit(state: GameState, context: TimeContext = {}) {
+  const housing = context.housing ?? 'Street'
+  const limits = [
+    { reason: housing, cap: HOUSING_MOOD_CAP[housing] ?? HOUSING_MOOD_CAP.Street },
+    { reason: 'Hunger', cap: Math.min(100, 20 + clamp(state.hunger) * 2) },
+    { reason: 'Thirst', cap: Math.min(100, 20 + clamp(state.thirst) * 2) },
+    { reason: 'Health', cap: Math.min(100, 20 + clamp(state.health) * 2) },
+    { reason: 'Tiredness', cap: Math.min(100, 40 + clamp(state.energy)) },
+    // Hygiene alone is a mild restriction, rather than another severe need.
+    { reason: 'Hygiene', cap: Math.min(100, 80 + clamp(state.hygiene) * .4) },
+  ]
+  if (context.effects?.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(state))) {
+    limits.push({ reason: 'Cold', cap: 60 })
+  }
+  const cap = Math.min(...limits.map(limit => limit.cap))
+  return { cap, reasons: cap < 100 ? limits.filter(limit => Math.abs(limit.cap - cap) < .001).map(limit => limit.reason) : [] }
+}
+
+export function limitMood(state: GameState, context: TimeContext = {}): GameState {
+  const mood = Math.min(clamp(state.mood), moodLimit(state, context).cap)
+  return mood === state.mood ? state : { ...state, mood }
 }
 
 export function energyCap(health: number) {
@@ -163,6 +172,7 @@ export function temperatureAt(base: number, minutes: number) {
 }
 
 export type TimeContext = {
+  housing?: Housing
   effects?: readonly { id: string; expiresAt: number }[]
   sleeping?: boolean
   walking?: boolean
@@ -196,10 +206,10 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const total = next.minutes + step
     next = { ...next, day: next.day + Math.floor(total / 1440), minutes: total % 1440,
       hunger, thirst, health, energy, hygiene,
-      mood: clamp(next.mood + physicalMoodChange({ ...next, hunger, thirst, health, energy, hygiene }) * step
-        - (cold ? 0.012 * step : 0) + (context.music ? 0.012 * step : 0)),
+      mood: clamp(next.mood - (cold ? 0.012 * step : 0) + (context.music ? 0.012 * step : 0)),
       intoxication: clamp(next.intoxication - step / 6),
     }
+    next = limitMood(next, context)
   }
   return next
 }
@@ -207,7 +217,7 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
 export function applyAction(state: GameState, result: ActionResult, context: TimeContext = {}): GameState {
   const next = advanceTime(state, result.minutes, context)
   const health = clamp(next.health + (result.health ?? 0))
-  return { ...next,
+  return limitMood({ ...next,
     money: Math.max(0, next.money + (result.money ?? 0)),
     hunger: clamp(next.hunger + (result.hunger ?? 0)),
     thirst: clamp(next.thirst + (result.thirst ?? 0)),
@@ -218,7 +228,7 @@ export function applyAction(state: GameState, result: ActionResult, context: Tim
       : next.hygiene + (result.hygiene ?? 0)),
     mood: clamp(next.mood + (result.mood ?? 0)),
     intoxication: clamp(next.intoxication + (result.intoxication ?? 0)),
-  }
+  }, context)
 }
 
 export function applySleepTime(state: GameState, minutes: number, context: TimeContext = {}): GameState {
