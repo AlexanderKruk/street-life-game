@@ -25,7 +25,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.17-210'
+const BUILD_VERSION = 'v2026.10.17-211'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -677,7 +677,7 @@ export default function App() {
   function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
   function buyItem(...args: Parameters<typeof buyItemImpl>) { runWithResult(`Buy ${args[0].name}`, () => buyItemImpl(...args)) }
   function useSupply(...args: Parameters<typeof useSupplyImpl>) { runWithResult(args[0] === 'wipes' ? 'Use wet wipes' : 'Eat food', () => useSupplyImpl(...args), resultSnapshot(), true, false, [args[0]]) }
-  function useMedicine(...args: Parameters<typeof useMedicineImpl>) { runWithResult('Use medicine', () => useMedicineImpl(...args), resultSnapshot(), true, true, ['medicines']) }
+  function useMedicine(...args: Parameters<typeof useMedicineImpl>) { runWithResult('Use medicine', () => useMedicineImpl(...args), resultSnapshot(), true, true) }
   function smokeCigarette(...args: Parameters<typeof smokeCigaretteImpl>) { runWithResult('Smoke a cigarette', () => smokeCigaretteImpl(...args), resultSnapshot(), true, false, ['cigarettes']) }
   function useItem(...args: Parameters<typeof useItemImpl>) { runWithResult(args[0] === 'water' ? 'Drink water' : 'Eat food', () => useItemImpl(...args), resultSnapshot(), true, false, [args[0]]) }
 
@@ -1844,20 +1844,24 @@ export default function App() {
 
   function useMedicineImpl() {
     if (inventory.medicines <= 0) return
+    const explain = (title: string, text: string, label = 'MEDICINE') => {
+      setMessage(text)
+      setInfoModal({ title, text, label })
+    }
     const now = absoluteMinutes(game)
     const cold = effects.find((effect) => effect.id === 'cold' && effect.expiresAt > now)
     if (!cold) {
-      setMessage('You are not sick. No reason to use medicine now.')
+      explain('No fever', 'You have no fever. There is no need to take a tablet now.\n\nYour medicine has been kept for when you need it.')
       return
     }
     if (cold.treated) {
-      setMessage('You have already taken medicine for this cold. Recovery is faster; another dose would not help.')
+      explain('One dose is enough', 'The first tablet is already helping you recover faster.\n\nA second tablet will not speed things up or remove the symptoms. You kept it for later.')
       return
     }
     setInventory((prev) => ({ ...prev, medicines: prev.medicines - 1 }))
     setEffects((prev) => prev.map(effect => effect.id === 'cold' && effect.expiresAt > now && !effect.treated
       ? { ...effect, treated: true, expiresAt: now + (effect.expiresAt - now) / 3 } : effect))
-    setMessage('You took medicine. The remaining recovery time is reduced to one third. Symptoms continue until you recover; one dose is enough for this cold.')
+    explain('Recovery accelerated', 'You took one tablet. It speeds up recovery from this cold by three times, but does not cure it immediately.\n\nSymptoms continue until you recover. One dose is enough for this illness.', 'AFTER THE ACTION')
   }
 
   function smokeCigaretteImpl() {

@@ -6,7 +6,7 @@ import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string }
-export type ResultCardData = { title: string; text: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; label?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -92,7 +92,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
     <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
       {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} />}
       <div className="result-card-heading">
-        {!result.bottleSearch && <p className="result-card-label">{presentation?.label ?? 'AFTER THE ACTION'}</p>}
+        {!result.bottleSearch && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}
         <h2 id="result-title">{result.bottleSearch ? 'Bottle & can search' : presentation?.heading ?? result.title}</h2>
       </div>
       <div className="result-card-content">

@@ -30,9 +30,15 @@ try {
  assert.equal(read(inventoryKey).medicines,doses-1);
  assert(!screen.getByRole('dialog').textContent.includes('Ended'));
  assert(screen.getByRole('dialog').textContent.includes('Cold recovery'));
+ assert(screen.getByRole('dialog',{name:'Recovery accelerated'}).textContent.includes('does not cure it immediately'));
+ assert(document.querySelector('.result-consequences').textContent.includes('Medicine−1'));
  close();cleanup();render(React.createElement(App));
  assert.deepEqual(read(effectsKey).find(e=>e.id==='cold'),treated,'treatment survives reload');
- take();assert.equal(read(inventoryKey).medicines,doses-1);assert.deepEqual(read(effectsKey).find(e=>e.id==='cold'),treated,'repeat doses do not stack or extend illness');close();
+ take();assert.equal(read(inventoryKey).medicines,doses-1);assert.deepEqual(read(effectsKey).find(e=>e.id==='cold'),treated,'repeat doses do not stack or extend illness');
+ assert(screen.getByRole('dialog',{name:'One dose is enough'}).textContent.includes('A second tablet will not speed things up'));
+ assert.equal(document.querySelector('.result-card-label').textContent,'MEDICINE');
+ assert(!screen.getByRole('dialog').textContent.includes('Cold recovery'),'repeat attempt does not claim another boost');
+ const paused=read(key).minutes;advance(2);assert.equal(read(key).minutes,paused,'explanation pauses game time');close();
  fireEvent.click(screen.getByRole('button',{name:'Status',exact:true}));assert(document.querySelector('.effect.illness').textContent.includes('treated'));
  advance(29);assert(read(effectsKey).some(e=>e.id==='cold'));
  advance(1);assert(!read(effectsKey).some(e=>e.id==='cold'));
@@ -40,5 +46,7 @@ try {
  const health=read(key).health;advance(2);assert.equal(read(key).health,health,'damage stops at the accelerated expiry');
  setup(.5);take();assert(read(effectsKey).find(e=>e.id==='cold').expiresAt>start,'even a nearly recovered Cold is not removed immediately');close();advance(1);assert(!read(effectsKey).some(e=>e.id==='cold'));
  setup(0);const healthyDoses=read(inventoryKey).medicines;take();assert.equal(read(inventoryKey).medicines,healthyDoses,'healthy players do not waste medicine');
+ assert(screen.getByRole('dialog',{name:'No fever'}).textContent.includes('There is no need to take a tablet now'));
+ assert(!screen.getByRole('dialog').textContent.includes('Cold recovery'),'healthy explanation does not promise a boost');
  console.log('PASS: medicine accelerates remaining recovery, preserves Cold penalties, survives reload, blocks repeat dosing, expires correctly and avoids healthy consumption.');
 } finally {cleanup();dom.window.close();}
