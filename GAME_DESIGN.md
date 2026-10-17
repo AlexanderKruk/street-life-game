@@ -2,11 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-203`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-204`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
 
 ### Life situation layout (v203)
 
-Housing, Employment, Income and Documents use a two-column, two-row card grid. Each card places its icon beside a small label above the value; long values wrap inside their card. The layout stays two columns on mobile and desktop.
+Housing, Employment, Income and Documents use a two-column, two-row card grid. Each card places its icon beside a small label above the value; long values wrap inside their card. The layout stays two columns on mobile and desktop. v204 reduces the card minimum height from 82px to 62px, tightens padding and grid gaps, and keeps label/value font sizes unchanged.
 
 ### Compact limiting effects (v202)
 
