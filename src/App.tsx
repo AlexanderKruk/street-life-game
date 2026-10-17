@@ -18,13 +18,12 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import Stat from './Stat'
 import PhoneDialog from './PhoneDialog'
-import CoinEmblem from './CoinEmblem'
 import CompactStreetEvent from './CompactStreetEvent'
 import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.17-198'
+const BUILD_VERSION = 'v2026.10.17-199'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1546,10 +1545,6 @@ export default function App() {
   function applyEventOutcomeImpl(outcome: EventOutcome) {
     const { rejected } = fitEventSupplies(inventory, outcome)
     const outcomeText = rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message
-    if (activeEvent?.id === 'found-coins') {
-      setInfoModal({ title: activeEvent.title, text: outcome.message, variant: 'coin',
-        presentation: { label: 'AFTER YOUR CHOICE', heading: outcome.money ? 'You found a coin' : 'You leave the coin', lead: outcome.message } })
-    }
     if (activeEvent?.illustration || outcome.illustration) {
       const place = locations.find(location => location.id === outcome.discoverLocation)
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
@@ -2371,15 +2366,14 @@ export default function App() {
     </div>}
 
     {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="street-event-title">
-      <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ''}${activeEvent.id === 'found-coins' ? ' coin-event' : !activeEvent.illustration ? ' compact-street-event' : ''}`}>
+      <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ' compact-street-event'}`}>
         {activeEvent.illustration && <img className="event-illustration" {...responsiveImageProps(activeEvent.illustration)} alt={activeEvent.text} />}
-        {!activeEvent.illustration && activeEvent.id !== 'found-coins'
+        {!activeEvent.illustration
           ? <CompactStreetEvent event={activeEvent} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} />
           : <div className="event-body">
-        <p className="eyebrow">{activeEvent.id === 'found-coins' ? 'ON THE WAY' : 'STREET EVENT'}</p>
-        {activeEvent.id === 'found-coins' && <CoinEmblem />}
-        <h2 id="street-event-title">{activeEvent.id === 'found-coins' ? 'A small lucky find' : activeEvent.title}</h2>
-        <p>{activeEvent.id === 'found-coins' ? 'A coin glints beside the curb.' : activeEvent.text}</p>
+        <p className="eyebrow">STREET EVENT</p>
+        <h2 id="street-event-title">{activeEvent.title}</h2>
+        <p>{activeEvent.text}</p>
         <div className="event-choices">{activeEvent.choices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
           return <button key={choice.label} aria-label={choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable}><span>{choice.label}</span>{unavailable ? <small>{unavailable}</small> : !!choice.outcome?.minutes && <small className="event-choice-time">≈{choice.outcome.minutes}m</small>}</button>
