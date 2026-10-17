@@ -117,19 +117,24 @@ assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));as
 setup({minutes:1320});fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));advance(3000);fireEvent.click(screen.getByRole('button',{name:'Reset save'}));advance(3000);
 assert(!document.querySelector('.phone-activity'));assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(stateKey).minutes,1320);
 
-// Temporary fourth action stays reachable independently of normal priorities.
-for(const [state,extra] of [
- [{minutes:1320},{}],
- [{day:2,minutes:600},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}}],
- [{day:2,minutes:600},{'street-life-discovered-v1':['street','station','shop']}],
- [{day:2,minutes:600,money:0},{}],
+// Street has three contextual choices; the test shortcut is gone. Bottle search
+// still opens through the ordinary action when normal priorities select it.
+for(const [state,extra,hasBottles] of [
+ [{minutes:1320},{},false],
+ [{day:2,minutes:600},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}},false],
+ [{day:2,minutes:600},{'street-life-discovered-v1':['street','station','shop']},false],
+ [{day:2,minutes:600,money:0},{},false],
+ [{day:2,minutes:600},{},true],
 ]) {
  setup(state,extra);
  const choices=[...document.querySelectorAll('.story-actions > button')];
- assert.equal(choices.length,4);assert.equal(choices.at(-1).dataset.choice,'bottles');
- assert.equal(choices.filter(button=>button.dataset.choice==='bottles').length,1);
- let draw=0;Math.random=()=>++draw%10/10;click('Look for bottles (test)');
- assert(document.querySelector('.trash-bin'));assert(screen.getByRole('button',{name:'Finish searching'}));
+ assert.equal(choices.length,3);assert(!document.querySelector('[data-temporary]'));
+ assert.equal(choices.filter(button=>button.dataset.choice==='bottles').length,hasBottles?1:0);
+ assert(!screen.queryByRole('button',{name:/Look for bottles \(test\)/}));
+ if(hasBottles){
+  let draw=0;Math.random=()=>++draw%10/10;click(/Maybe there are bottles I could return for a little money/);
+  assert(document.querySelector('.trash-bin'));assert(screen.getByRole('button',{name:'Finish searching'}));
+ }
 }
 
 // Deposit collection: intact PET and cans share the same carried stack; damaged
@@ -137,7 +142,7 @@ for(const [state,extra] of [
 const depositEmptyBag={water:0,food:0,medicines:0,bread:0,cannedFood:0,wipes:0,showerGel:0,cigarettes:0,bottles:0};
 for(const [draw,art,kept] of [[0,'can',2],[.5,'plastic',4],[.99,'plastic-crushed',0]]) {
  setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>draw;
- click('Look for bottles (test)');
+ click(/Maybe there are bottles I could return for a little money/);
  assert.equal(document.querySelectorAll('.trash-piece').length,18);
  const containers=[...document.querySelectorAll('.bottle-piece')];
  assert(containers.length>=2&&containers.length<=6);
@@ -158,13 +163,13 @@ setup({day:2,minutes:600},{[invKey]:depositEmptyBag});
 const canDraws=[.5,...Array(17).fill(0),.1,.5,.5,.5,.5];
 for(const eligibility of [.7,.7,.7,.9])canDraws.push(.1,eligibility,.5,.5,.5,.5);
 let canDrawIndex=0;Math.random=()=>canDraws[canDrawIndex++]??.5;
-click('Look for bottles (test)');
+click(/Maybe there are bottles I could return for a little money/);
 assert.equal(document.querySelectorAll('[data-art="can"]').length,3);
 assert.equal(document.querySelectorAll('[data-art="can-crushed"]').length,1);
 // Tapping litter cannot clear the pile. Only dragging it out removes that item;
 // accepted deposit containers remain available even when moved across an edge.
 setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>.5;
-click('Look for bottles (test)');
+click(/Maybe there are bottles I could return for a little money/);
 const trashBounds={left:0,top:0,width:400,height:300};
 document.querySelector('.trash-pile').getBoundingClientRect=()=>trashBounds;
 function trashPointer(piece,type,x,y){
@@ -190,14 +195,14 @@ assert(!keptContainer.isConnected);assert.equal(document.querySelector('.trash-s
 const keyboardLitter=document.querySelector('.trash-piece:not(.bottle-piece)');
 for(let i=0;i<30&&keyboardLitter.isConnected;i++)fireEvent.keyDown(keyboardLitter,{key:'ArrowRight'});
 assert(!keyboardLitter.isConnected,'keyboard users can move litter out instead of clicking it away');
-setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>.99;click('Look for bottles (test)');
+setup({day:2,minutes:600},{[invKey]:depositEmptyBag});Math.random=()=>.99;click(/Maybe there are bottles I could return for a little money/);
 const damaged=document.querySelector('.bottle-piece');document.querySelector('.trash-pile').getBoundingClientRect=()=>trashBounds;
 const [dx,dy]=center(damaged);trashPointer(damaged,'pointerdown',dx,dy);trashPointer(damaged,'pointerup',dx,dy);
 assert(damaged.isConnected,'damaged bottles also ignore pointer taps');
 trashPointer(damaged,'pointerdown',dx,dy);trashPointer(damaged,'pointermove',430,150);
 assert(!damaged.isConnected,'damaged bottles can be dragged away like other rubbish');
 setup({day:2,minutes:600},{[invKey]:{...depositEmptyBag,water:4,food:4,medicines:24}});Math.random=()=>0;
-click('Look for bottles (test)');fireEvent.click(document.querySelector('.bottle-piece'));
+click(/Maybe there are bottles I could return for a little money/);fireEvent.click(document.querySelector('.bottle-piece'));
 fireEvent(window,new window.Event('pagehide'));assert.equal(read(invKey).bottles,0);
 assert.equal(document.querySelector('.trash-search-row strong').textContent,'0');
 // Legacy bottle saves retain their value, including shared stack semantics.
@@ -206,8 +211,8 @@ const depositMoney=read(stateKey).money;
 click(/Return bottles & cans ×3/);advance(1250);
 assert.equal(read(invKey).bottles,0);assert.equal(read(stateKey).money,depositMoney+1.5);
 
-// Three normal directions plus the separate temporary test action.
-function storyIds(){return [...document.querySelectorAll('.story-actions > button:not([data-temporary])')].map(button=>button.dataset.choice);}
+// Three normal directions.
+function storyIds(){return [...document.querySelectorAll('.story-actions > button')].map(button=>button.dataset.choice);}
 setup({minutes:1320});assert.deepEqual(storyIds(),['question-morning','walk','station-route']);
 const initialChoices=storyIds();advance(10000);assert.deepEqual(storyIds(),initialChoices);cleanup();render(React.createElement(App));assert.deepEqual(storyIds(),initialChoices);
 click('Where can I get help in the morning?');ok();assert.deepEqual(storyIds(),['question-morning','walk','station-route']);discoverHelp();assert.deepEqual(storyIds(),['question-bed','walk','station-route']);
@@ -226,7 +231,7 @@ setup({minutes:1320});click('Just one more street. I’m not ready to lie down.'
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText.split('.').filter(part=>part.trim()).length,3);assert(openingText.split(/\s+/).length<=30);assert(!openingText.includes('where you can sleep safely'));
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
-assert.equal(document.querySelectorAll('.story-actions .action:not([data-temporary]) small, .story-actions .action:not([data-temporary]) > span').length,3);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
+assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,3);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
 assert.equal(document.querySelector('[data-choice="music-walk"] .choice-duration').textContent,'≈30m');
 assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'32m+');
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
@@ -528,8 +533,7 @@ setup({locationId:'shelter',minutes:1320});assert(screen.getByRole('button',{nam
 
 // Time/weekday/daily limits disable services before a click and put them last.
 function availableFirst(selector='.actions') {
- // The user-requested temporary test action is pinned fourth, outside sorting.
- const buttons=[...document.querySelector(selector).querySelectorAll(':scope > button:not([data-temporary])')];
+ const buttons=[...document.querySelector(selector).querySelectorAll(':scope > button')];
  const firstDisabled=buttons.findIndex(button=>button.disabled);
  if(firstDisabled>=0)assert(buttons.slice(firstDisabled).every(button=>button.disabled));
 }

@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-16 · Neutral office-worker protagonist. Latest application build: `v2026.10.16-196`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-198`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Bottle-search test shortcut removed (v198)
+
+After user testing, the temporary fourth Street choice and its override flag were removed. Street again shows at most three contextual choices. Bottle search remains in the ordinary practical-action priorities, with its previous first-night restriction and contextual eligibility. Search artwork, interactions, odds, time costs, backpack capacity and redemption are unchanged. Regression tests now open the search through its ordinary action and verify that the fourth shortcut is absent across opening-night, shelter-booked, undiscovered-work and low-money contexts.
 
 ### Full-circle rubbish orientation (v196)
 
