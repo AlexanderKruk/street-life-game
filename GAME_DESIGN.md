@@ -2,7 +2,7 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-204`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-205`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
 
 ### Life situation layout (v203)
 
@@ -10,7 +10,7 @@ Housing, Employment, Income and Documents use a two-column, two-row card grid. E
 
 ### Compact limiting effects (v202)
 
-Status shows each strongest Mood restriction, including every tied cause. Independent Energy limits from Health and Hygiene limits from dirty clothing remain visible even when another cause dominates Mood. A cause affecting multiple stats appears once with multiple cap badges. Cold merges its Mood cap into the existing illness row. Each effect occupies one compact line; derived restrictions disappear when their causes improve, without adding saved or timed effects. This is a presentation change; existing gameplay limits are unchanged.
+Status shows each strongest Mood restriction, including every tied cause. Independent Energy limits from Health and Hygiene limits from dirty clothing remain visible even when another cause dominates Mood. A cause affecting multiple stats appears once with multiple cap badges. Cold merges its Mood cap into the existing illness row. Each effect occupies one compact line; derived restrictions disappear when their causes improve, without adding saved or timed effects. This is a presentation change; existing gameplay limits are unchanged. v205 restores neutral text and borders for all effect rows; only their impact badges carry negative/positive colors.
 
 ### One Mood with housing and physical ceilings (v201)
 

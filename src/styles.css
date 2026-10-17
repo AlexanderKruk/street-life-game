@@ -292,13 +292,9 @@ button.inventory-item { width:100%; }
 .effect strong { font-size:13px; }
 .effect small { color:#89959f; margin-top:2px; line-height:1.3; }
 .effect > b { font-size:10px; font-weight:700; white-space:nowrap; padding:5px 7px; border-radius:999px; }
-.effect.positive { border-color:#30483a; }
 .effect.positive > b { color:#9ed0ad; background:#1c3024; }
-.effect.negative { border-color:#4d3434; }
 .effect.negative > b { color:#dca4a4; background:#352222; }
 
-.effect.positive strong { color:#72c98d; }
-.effect.negative strong { color:#df7777; }
 .effect-impact { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
 .effect-impact b,.effect-impact em { font-size:10px; font-style:normal; font-weight:800; white-space:nowrap; padding:3px 6px; border-radius:7px; }
 .effect.positive .effect-impact b,.effect.positive .effect-impact em { color:#9ed0ad; background:#1c3024; }
@@ -431,7 +427,7 @@ button.inventory-item { width:100%; }
 .status-screen .effects-heading h3 { font-size:18px; font-weight:650; line-height:1.35; }
 .status-screen .effects-heading > span { font-size:13px; color:#aab0b4; font-variant-numeric:tabular-nums; }
 .status-screen .effects-list { gap:8px; }
-.status-screen .effect { grid-template-columns:22px minmax(0,1fr) auto; border-radius:9px; padding:14px; background:#141b1f; }
+.status-screen .effect { grid-template-columns:22px minmax(0,1fr) auto; border-color:#343d42; border-radius:9px; padding:14px; background:#141b1f; }
 .status-screen .effect .effect-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .status-screen .effect .effect-impact { flex-wrap:nowrap; justify-content:flex-end; }
 .status-screen .effect-details { display:flex; align-items:center; gap:8px; }
