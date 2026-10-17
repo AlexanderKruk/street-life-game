@@ -2,7 +2,17 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-208`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-209`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Clothing wetness (v209)
+
+Wetness is a saved 0–100 state independent of clothing cleanliness and condition. Missing values in earlier saves mean dry clothes; valid wetness and unfinished wet-sleep loss survive reload. The current compatibility fixtures cover the actual ten published builds v199–v208, and the storage key remains v3.
+
+- Exposed rain adds 1 point/minute; Showers adds 0.6. Walking, outdoor work, street sleep and waiting outside closed services are exposed. Public transport and open indoor locations stop new rain. The shelter registration queue remains outside; sleeping on the station bench is sheltered.
+- Drying per minute: canopy 0.15; dry outdoors 0.2; windy outdoors 0.4; public transport 0.3; station/shop 0.6; other open indoor locations 1.2. A canopy stops new rain but does not dry clothes instantly. Returned laundry is dry.
+- Wet stress scales with average minute wetness, temperature (full at ≤10°C, ×0.65 through 15°C, ×0.35 above), and wind (×1.25 outdoors). Indoors/transit reduce stress to one quarter. Awake wet stress costs up to 0.04 Energy and 0.025 Mood/minute before those factors, in addition to existing weather rules. Wetness does not directly damage Health.
+- Outdoor sleep accumulates a saved rest-loss amount at 0.04 × wet stress/minute and subtracts it from the final Energy gain, even if starting Energy was zero. Completion clears this temporary accumulator. Cold-weather outdoor waking rolls gain up to 20 percentage points based on accumulated wet sleep loss; existing overall illness chance stays capped at 65%. No new awake illness roll is introduced.
+- Status displays one derived Wet clothes row with Energy− / Mood− tags and actual wetness, without a countdown. Clothing details show wetness and drying guidance. Results and journal record rounded wetting/drying changes, with drying positive; dry zero changes are omitted. Outdoor sleep previews/results explain reduced recovery.
 
 ### Map bottom spacing (v208)
 
@@ -452,9 +462,9 @@ Food, water and medicine are primarily designed to remove/prevent causes of Heal
 
 ## Weather
 
-Night wandering takes 30 game minutes, costs 2 additional Energy with walking need drain, and restores 2 Mood. It keeps the player on Street. Clothing gets the normal walking cleanliness loss. On a dry night (20:00–06:00), each walk has a 35% chance of rain beginning halfway through. The resulting rain lasts 180 game minutes from its onset, is saved in game state, and overrides the normal day weather during elapsed-time calculations, including across midnight. Wet walks additionally cost 3 Hygiene and 5 clothing cleanliness.
+Night wandering takes 30 game minutes, costs 2 additional Energy with walking need drain, and restores 2 Mood. It keeps the player on Street. Clothing gets the normal walking cleanliness loss. On a dry night (20:00–06:00), each walk has a 35% chance of rain beginning halfway through. The resulting rain lasts 180 game minutes from its onset, is saved in game state, and overrides the normal day weather during elapsed-time calculations, including across midnight. Since v209 the old instant rain penalties of 3 Hygiene and 5 clothing cleanliness are replaced by persistent wetness; walking still causes its ordinary cleanliness loss.
 
-After the walk result is read, a rainy walk presents a saved, paused choice: wait under an entrance canopy (choose 15 minutes, 1 or 4 hours; +1 Mood, no sleep/Energy recovery), choose a route to Station, or keep walking (another 30 minutes). Route selection itself is free; actual travel uses normal costs. Choosing an intention or wait duration pauses time and previews the end clock time. Waiting applies awake Energy and normal needs/ageing over the full chosen duration; a four-hour wait can carry the player through dawn without lying down. Rain decisions resume after reload and do not roll weather again just from rendering. Cover avoids the walk's wet-clothing penalty but does not end the rain or provide a bed. Reset clears both rain and its pending decision.
+After the walk result is read, a rainy walk presents a saved, paused choice: wait under an entrance canopy (choose 15 minutes, 1 or 4 hours; +1 Mood, no sleep/Energy recovery), choose a route to Station, or keep walking (another 30 minutes). Route selection itself is free; actual travel uses normal costs. Choosing an intention or wait duration pauses time and previews the end clock time. Waiting applies awake Energy and normal needs/ageing over the full chosen duration; a four-hour wait can carry the player through dawn without lying down. Rain decisions resume after reload and do not roll weather again just from rendering. Cover stops new rain and slowly dries clothes but does not end the rain or provide a bed. Reset clears rain, wetness and its pending decision.
 
 Weather is deterministic by game day and cycles through Cloudy, Rain, Clear, Windy and Showers.
 

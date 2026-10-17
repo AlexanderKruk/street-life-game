@@ -23,6 +23,10 @@ export function readSavedGame(storage: SaveReader): GameState | null {
     const locationId = saved.locationId
     next.locationId = locations.some(location => location.id === locationId) ? locationId : initialState.locationId
     if (!Number.isFinite(next.rainUntil) || next.rainUntil! < 0) delete next.rainUntil
+    for (const field of ['wetness', 'wetSleepLoss'] as const) {
+      if (saved[field] === undefined) delete next[field]
+      else next[field] = typeof saved[field] === 'number' && Number.isFinite(saved[field]) ? Math.max(0, Math.min(100, saved[field])) : 0
+    }
     return next
   } catch { /* Unreadable saves use the existing new-game fallback. */ }
   return null

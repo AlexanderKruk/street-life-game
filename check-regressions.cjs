@@ -95,7 +95,7 @@ assert(!localStorage.getItem('street-life-phone-activity-v1'));
 assert(read('street-life-discovered-v1').includes('support'));assert.equal(read('street-life-journal-history-v1').length,1);
 assert(document.querySelector('.result-inline'));assert(!document.querySelector('.result-overlay'));
 assert(!document.querySelector('.story-actions'));assert.equal(screen.getByRole('dialog').getAttribute('aria-modal'),'false');
-assert(!document.querySelector('.result-consequences'));
+assert(document.querySelector('.result-consequences').textContent.includes('Clothing wetness'));
 assert.equal(document.querySelectorAll('.result-place').length,1);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details').open);
 assert(document.querySelector('.street-art img').src.endsWith('help-morning-480.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
@@ -273,7 +273,7 @@ setup({minutes:1320});assert(!screen.queryByRole('button',{name:/What about Nigh
 setup({minutes:1320});click(/Maybe the station\? At least I could sit down./);assert(screen.getByRole('button',{name:/Public transport/}));assert.equal(read(stateKey).minutes,1320);
 // First-night wandering uses real walking costs; rain choices pause and persist.
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop'],[invKey]:{clothingCleanliness:80}});assert(!screen.queryByRole('button',{name:'Earn something for food',exact:true}));assert(screen.getByRole('button',{name:'Maybe the station? At least I could sit down.',exact:true}));const dryEnergy=read(stateKey).energy;click('Just one more street. I’m not ready to lie down.');assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).energy<dryEnergy);assert(!read(stateKey).rainUntil);assert(Math.abs(read(invKey).clothingCleanliness-(80-30*30/1440))<1e-8);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
-setup({minutes:1320},{[invKey]:{clothingCleanliness:80}});Math.random=()=>0;click('Just one more street. I’m not ready to lie down.');assert.equal(read(stateKey).minutes,1350);assert.equal(read(stateKey).rainUntil,1515);assert(read(invKey).clothingCleanliness<75);assert.equal(read('street-life-journal-history-v1').length,1);ok();assert(screen.getByRole('dialog',{name:'Rain on the street'}));const rainyState=read(stateKey),rainyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),rainyState);assert.deepEqual(read(invKey),rainyInventory);cleanup();render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));click('At least it looks dry under that canopy.');assert.equal(read(stateKey).minutes,1350);click(/Just fifteen minutes/);assert.equal(read(stateKey).minutes,1365);assert.equal(localStorage.getItem('street-life-rain-choice-v1'),'false');assert.equal(read(stateKey).rainUntil,1515);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
+setup({minutes:1320},{[invKey]:{clothingCleanliness:80}});Math.random=()=>0;click('Just one more street. I’m not ready to lie down.');assert.equal(read(stateKey).minutes,1350);assert.equal(read(stateKey).rainUntil,1515);assert.equal(read(stateKey).wetness,15);assert(Math.abs(read(invKey).clothingCleanliness-(80-30*30/1440))<1e-8);assert.equal(read('street-life-journal-history-v1').length,1);ok();assert(screen.getByRole('dialog',{name:'Rain on the street'}));const rainyState=read(stateKey),rainyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),rainyState);assert.deepEqual(read(invKey),rainyInventory);cleanup();render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));click('At least it looks dry under that canopy.');assert.equal(read(stateKey).minutes,1350);click(/Just fifteen minutes/);assert.equal(read(stateKey).minutes,1365);assert.equal(localStorage.getItem('street-life-rain-choice-v1'),'false');assert.equal(read(stateKey).rainUntil,1515);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
 setup({minutes:1320,rainUntil:1500});click('Just one more street. I’m not ready to lie down.');ok();click('Maybe the station? At least I could sit down.');assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));assert.equal(read(stateKey).minutes,1350);assert(screen.getByRole('button',{name:/Public transport/}));
 setup({day:2,minutes:400,rainUntil:1700});advance(1000);assert.equal(read(stateKey).minutes,401); // normal Street clock resumes after rain expires
 setup({day:2,minutes:240,rainUntil:2000});click('Just one more street. I’m not ready to lie down.');ok();click('At least it looks dry under that canopy.');const waitingBefore=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),waitingBefore);click(/Maybe four hours/);assert.equal(read(stateKey).minutes,510);assert(read(stateKey).energy<waitingBefore.energy);assert(!localStorage.getItem('street-life-sleep-v1'));assert(screen.getByRole('dialog').textContent.includes('You do not sleep'));assert.equal(read('street-life-journal-history-v1').length,2);
@@ -700,6 +700,14 @@ for(const [value,label] of [[10,'VERY BAD'],[30,'BAD'],[50,'FAIR'],[70,'GOOD'],[
 assert.equal(overallCondition(healthyBody).level,'bad');
 assert.equal(overallCondition(limitMood({...healthyBody,mood:100,health:5},{housing:'Apartment'})).level,'bad');
 assert.equal(overallCondition(limitMood({...healthyBody,mood:100,energy:10},{housing:'Apartment'})).level,'fair');
+// Wet clothes persist and dry indoors without changing clothing cleanliness.
+setup({day:2,minutes:600,locationId:'station',wetness:80},{[invKey]:{clothingCleanliness:80}});click(/^Status$/);
+assert(document.querySelector('.effect.wet-clothes').textContent.includes('80%'));
+const wetSave=read(stateKey);cleanup();render(React.createElement(App));
+assert.equal(read(stateKey).wetness,wetSave.wetness);
+advance(1000);assert(Math.abs(read(stateKey).wetness-79.4)<1e-8);
+assert(document.querySelector('.wet-clothes .effect-impact').textContent.includes('Energy−'));
+setup({locationId:'station',wetness:0});click(/^Status$/);assert(!document.querySelector('.wet-clothes'));
 // Status promotes one need only when attention is needed and keeps all six visible.
 setup({hunger:72,thirst:66,energy:45,health:90,hygiene:75,mood:28});click(/^Status$/);
 assert.equal(document.querySelector('.status-focus').dataset.stat,'Mood');
@@ -767,7 +775,7 @@ for(let amount=25;amount<=50;amount++){Math.random=()=>(amount-25+.5)/26;assert.
 Math.random=()=>0;assert.equal(createInitialState().money,25);Math.random=()=>.999999;assert.equal(createInitialState().money,50);Math.random=beforeMoneyRandom;
 cleanup();localStorage.clear();localStorage.setItem('street-life-mobile-auto-renew','false');Math.random=()=>0;render(React.createElement(App));assert.equal(read(stateKey).money,25);cleanup();Math.random=()=>.99;render(React.createElement(App));assert.equal(read(stateKey).money,25);click('Reset save');assert.equal(read(stateKey).money,49);assert.equal(read(stateKey).minutes,1320);cleanup();render(React.createElement(App));assert.equal(read(stateKey).money,49);setup({money:100});assert.equal(read(stateKey).money,100);
 assert.equal(initialState.health,90);assert.equal(initialState.hygiene,75);assert.equal(initialState.mood,28);
-const timedRain=advanceTime({...initialState,minutes:1320,rainUntil:1321,energy:100,health:100},2);
+const timedRain=advanceTime({...initialState,minutes:1320,rainUntil:1321,energy:100,health:100},2,{exposure:'indoors'});
 assert(Math.abs(timedRain.energy-(100-2*100/2160-.025))<1e-8);
 for(const context of [{},{sleeping:true},{walking:true,music:true}]) {
  const start={...initialState,minutes:1430,hunger:12,thirst:12,health:80};

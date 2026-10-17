@@ -17,6 +17,8 @@ export type GameState = {
   intoxication: number
   locationId: string
   rainUntil?: number
+  wetness?: number
+  wetSleepLoss?: number
 }
 
 export type Location = {
@@ -177,6 +179,14 @@ export type TimeContext = {
   sleeping?: boolean
   walking?: boolean
   music?: boolean
+  exposure?: 'outside' | 'cover' | 'indoors' | 'transit'
+}
+
+export function weatherExposure(state: GameState, context: TimeContext = {}) {
+  if (context.exposure) return context.exposure
+  if (context.walking) return 'outside'
+  const place = locations.find(place => place.id === state.locationId)
+  return place && !['street', 'work'].includes(place.id) && isOpen(place, state.minutes) ? 'indoors' : 'outside'
 }
 
 // Minute-sized steps make an instant action and timer ticks use the same rules,
@@ -197,16 +207,27 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const health = clamp(next.health - ((thirst <= 0 ? 0.10 : thirst <= 10 ? 0.025 : 0) +
       (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) + (cold ? 0.012 : 0)) * step)
     const temperature = temperatureAt(weather.temp, next.minutes)
+    const exposure = weatherExposure(next, context)
+    const wetBefore = clamp(next.wetness ?? 0)
+    const rainGain = exposure === 'outside' ? weather.label === 'Rain' ? 1 : weather.label === 'Showers' ? 0.6 : 0 : 0
+    const drying = exposure === 'indoors' ? next.locationId === 'station' || next.locationId === 'shop' ? 0.6 : 1.2
+      : exposure === 'transit' ? 0.3 : exposure === 'cover' ? 0.15 : weather.label === 'Windy' ? 0.4 : 0.2
+    const wetness = clamp(wetBefore + (rainGain || -drying) * step)
+    const wetStress = (wetBefore + wetness) / 200 * (temperature <= 10 ? 1 : temperature <= 15 ? 0.65 : 0.35)
+      * (exposure === 'indoors' || exposure === 'transit' ? 0.25 : weather.label === 'Windy' ? 1.25 : 1)
+    const wetSleepLoss = (next.wetSleepLoss ?? 0) + (context.sleeping && exposure !== 'indoors' && exposure !== 'transit' ? wetStress * 0.04 * step : 0)
     const walkingHygiene = context.walking ? (temperature >= 25 ? 0.05 : temperature >= 18 ? 0.033 : 0.025) : 0
     const energyDrain = context.sleeping ? 0 :
       NEED_DRAIN.energy * step * healthEnergyMultiplier(next.health) + weather.energyDrain * step +
-      (context.walking ? 0.01 * step * healthEnergyMultiplier(health) : 0) + (cold ? 0.045 * step : 0)
+      (context.walking ? 0.01 * step * healthEnergyMultiplier(health) : 0) + (cold ? 0.045 * step : 0) + wetStress * 0.04 * step
     const energy = Math.min(energyCap(health), clamp(next.energy - energyDrain))
     const hygiene = clamp(next.hygiene - step / 180 - walkingHygiene * step)
     const total = next.minutes + step
     next = { ...next, day: next.day + Math.floor(total / 1440), minutes: total % 1440,
       hunger, thirst, health, energy, hygiene,
-      mood: clamp(next.mood - (cold ? 0.012 * step : 0) + (context.music ? 0.012 * step : 0)),
+      ...(wetness > 0 || next.wetness !== undefined ? { wetness } : {}),
+      ...(wetSleepLoss > 0 || next.wetSleepLoss !== undefined ? { wetSleepLoss } : {}),
+      mood: clamp(next.mood - (cold ? 0.012 * step : 0) - wetStress * 0.025 * step + (context.music ? 0.012 * step : 0)),
       intoxication: clamp(next.intoxication - step / 6),
     }
     next = limitMood(next, context)

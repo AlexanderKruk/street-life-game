@@ -7,7 +7,7 @@ function bundled(path) {
   return module.exports;
 }
 const { initialState, HOUSING_MOOD_CAP, moodLimit, limitMood, applyAction, advanceTime, overallCondition, conditionBand } = bundled('src/game.ts');
-const comfortable = { ...initialState, day: 2, minutes: 600, hunger: 100, thirst: 100, health: 100, hygiene: 100, energy: 100, mood: 20 };
+const comfortable = { ...initialState, day: 2, minutes: 600, locationId: 'station', hunger: 100, thirst: 100, health: 100, hygiene: 100, energy: 100, mood: 20 };
 assert.deepEqual(Object.values(HOUSING_MOOD_CAP), [50, 60, 70, 80, 90, 100]);
 for (const [housing, cap] of Object.entries(HOUSING_MOOD_CAP)) {
   const context = { housing };

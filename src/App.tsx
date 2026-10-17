@@ -25,7 +25,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.17-208'
+const BUILD_VERSION = 'v2026.10.17-209'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -454,7 +454,7 @@ export default function App() {
   const moodCeiling = moodLimit(game, moodContext())
   const statLimits = limitingEffects(game, moodContext(), inventory.clothingCleanliness)
   const separateLimits = statLimits.filter(effect => effect.reason !== 'Cold')
-  const statusEffectCount = effects.length + separateLimits.length
+  const statusEffectCount = effects.length + separateLimits.length + ((game.wetness ?? 0) > 0 ? 1 : 0)
   // Reconcile existing saves and changes of accommodation/effects without a gain.
   useEffect(() => { setGame(previous => previous) }, [moodCeiling.cap])
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
@@ -566,11 +566,12 @@ export default function App() {
   }, [game.hygiene, hygieneLimit])
 
   function applyAction(state: GameState, result: ActionResult) {
-    return applyGameAction(state, result, { ...moodContext(state), walking: trip?.mode === 'walk', music: musicOn })
+    return applyGameAction(state, result, { ...moodContext(state), walking: trip?.mode === 'walk', ...(trip?.mode === 'transit' ? { exposure: 'transit' as const } : shelterQueue ? { exposure: 'outside' as const } : {}), music: musicOn })
   }
 
   function applySleepTime(state: GameState, minutes: number) {
-    return applyGameSleepTime(state, minutes, moodContext(state))
+    const kind = sleeping?.kind ?? sleepChoice
+    return applyGameSleepTime(state, minutes, { ...moodContext(state), ...(kind ? { exposure: kind === 'ground' || (kind === 'bench' && state.locationId === 'street') ? 'outside' as const : 'indoors' as const } : {}) })
   }
 
   const [inventoryAgedAt, setInventoryAgedAt] = useState(absoluteMinutes(game))
@@ -956,7 +957,12 @@ export default function App() {
         : sleep.kind === 'shelter'
           ? { minutes: 0, energy: 100 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
           : { minutes: 0, energy: 100 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
-    setGame((prev) => applyAction(prev, result))
+    const wetRestLoss = Math.max(0, (wakeState.wetSleepLoss ?? 0) - (sleep.before?.game.wetSleepLoss ?? 0))
+    setGame((prev) => {
+      const next = applyAction(prev, { ...result, energy: Math.max(0, result.energy - wetRestLoss) })
+      delete next.wetSleepLoss
+      return next
+    })
     let illnessText = ''
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
@@ -966,7 +972,8 @@ export default function App() {
         0.08 +
         (sleepTemp <= 5 ? 0.28 : sleepTemp <= 10 ? 0.16 : sleepTemp <= 15 ? 0.07 : 0) +
         (sleepWeather.label === 'Rain' ? 0.22 : sleepWeather.label === 'Showers' ? 0.14 : sleepWeather.label === 'Windy' ? 0.10 : 0) +
-        (sleep.kind === 'ground' ? 0.08 : 0)
+        (sleep.kind === 'ground' ? 0.08 : 0) +
+        Math.min(0.2, wetRestLoss / 100) * (sleepTemp <= 10 ? 1 : sleepTemp <= 15 ? 0.5 : 0)
       ))
       if (Math.random() < illnessChance) {
         setEffects((active) => active.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))
@@ -988,7 +995,7 @@ export default function App() {
     } else {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     }
-    setMessage(`You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${illnessText}`)
+    setMessage(`You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${wetRestLoss >= 0.5 ? ' Wet clothes made it harder to rest.' : ''}${illnessText}`)
   }
 
   function hospitalVisitImpl() {
@@ -1181,10 +1188,10 @@ export default function App() {
       const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
       let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: playingMusic })
       if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
-      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2, hygiene: startsRain || weather.label === 'Rain' || weather.label === 'Showers' ? -3 : 0 }, { ...moodContext(next), walking: true, music: playingMusic })
+      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2 }, { ...moodContext(next), walking: true, music: playingMusic })
       if (withMusic) next.mood = Math.min(moodLimit(next, moodContext(next)).cap, next.mood + 8)
       const wet = (next.rainUntil ?? 0) > absoluteMinutes(next) || weather.label === 'Rain' || weather.label === 'Showers'
-      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440) - (wet ? 5 : 0)) }))
+      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440)) }))
       setGame(next)
       const musicText = withMusic ? ' You put on familiar music. A few songs play as you pass the dark shop windows.' : ''
       if (wet) {
@@ -1292,7 +1299,7 @@ export default function App() {
     runWithResult('Shelter from the rain', () => {
       setRainChoice(false)
       setCoverPlanning(false)
-      const next = applyAction(game, { minutes, mood: 1 })
+      const next = applyGameAction(game, { minutes, mood: 1 }, { ...moodContext(), exposure: 'cover' })
       setGame(next)
       const coverText = `You stand under an entrance canopy for ${minutes < 60 ? `${minutes} minutes` : `${minutes / 60} hour${minutes > 60 ? 's' : ''}`}, watching the street. You do not sleep. ${next.minutes >= 360 && next.minutes < 720 ? 'Morning is finally here.' : 'For now, you are out of the rain.'}`
       setMessage(coverText)
@@ -1491,6 +1498,7 @@ export default function App() {
     const washedClothes = actionId === 'daycenter-laundry' || actionId === 'shelter-laundry-pickup'
     const next = actionId === 'residential-stay' ? applyGameAction(game, result, moodContext(game, 'Schronisko')) : applyAction(game, result)
     if (washedClothes) {
+      next.wetness = 0
       laundryCleanAt.current = absoluteMinutes(next)
       setInventory(prev => ({ ...prev, clothingCleanliness: 100 }))
     } else {
@@ -2003,6 +2011,7 @@ export default function App() {
           })}
         </div>
         {SLEEP_HOURS.some(hours => sleepDurationUnavailable(hours, game.energy)) && <p className="sleep-choice-note">Available sleep lengths depend on your fatigue.</p>}
+        {(sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.label === 'Rain' || weather.label === 'Showers') && <p className="sleep-choice-note">Wet clothes reduce outdoor sleep recovery. Somewhere dry would help.</p>}
         <div className="sleep-choice-preview" aria-live="polite">
           <small>Wake up · {wakeLabel(sleepHours, sleepChoice).split(' · ')[0]}</small><span className="sr-only"> · </span><strong>{wakeLabel(sleepHours, sleepChoice).split(' · ')[1]}</strong>
         </div>
@@ -2245,7 +2254,7 @@ export default function App() {
         <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); setPhoneOpen(true) }}>
           <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />tap to open</small></div>
         </button>
-        <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit.` })}>
+        <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%\nWetness ${Math.round(game.wetness ?? 0)}%\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit. Wet clothes drain Energy and Mood, especially in cold wind, and reduce outdoor sleep recovery. Dry indoors; a canopy stops new rain but dries clothes slowly.` })}>
           <ItemArt id="clothing" /><div><strong>Clothing</strong><small>Clean {Math.round(inventory.clothingCleanliness)}%<br />Condition {Math.round(inventory.jacket)}%</small></div>
         </button>
         <div className="inventory-item">
@@ -2261,6 +2270,10 @@ export default function App() {
       {!!statusEffectCount && <section className="status-effects" aria-labelledby="status-effects-heading">
         <div className="effects-heading"><h3 id="status-effects-heading">Effects</h3><span>{statusEffectCount}</span></div>
         <div className="effects-list">
+          {(game.wetness ?? 0) > 0 && <div className="effect negative wet-clothes">
+            <span><Icon name="water" /></span><strong className="effect-name">Wet clothes</strong>
+            <div className="effect-details"><div className="effect-impact"><b>Energy−</b><b>Mood−</b></div><small className="effect-time">{Math.max(1, Math.round(game.wetness!))}%</small></div>
+          </div>}
           {separateLimits.map(effect => <div className="effect negative limit-effect" data-limit-reason={effect.reason} data-mood-limit={effect.limits.some(limit => limit.stat === 'Mood') ? effect.reason : undefined} key={effect.reason}>
             <span><Icon name={effect.icon} /></span><strong className="effect-name" title={effect.name}>{effect.name}</strong>
             <div className="effect-impact">{effect.limits.map(limit => <b key={limit.stat}>{limit.stat} ≤ {Math.round(limit.cap)}%</b>)}</div>

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node check-mood.cjs && node check-save-compatibility.cjs && node check-autosave.cjs && node check-rendering.cjs && node check-responsive-images.mjs && node check-image-cache.mjs && node check-regressions.cjs && node check-ui.cjs && node check-results.cjs"
+    "test": "node check-wetness.cjs && node check-mood.cjs && node check-save-compatibility.cjs && node check-autosave.cjs && node check-rendering.cjs && node check-responsive-images.mjs && node check-image-cache.mjs && node check-regressions.cjs && node check-ui.cjs && node check-results.cjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.4",
