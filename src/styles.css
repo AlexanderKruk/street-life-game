@@ -452,7 +452,8 @@ button.inventory-item { width:100%; }
 @media(max-width:360px) {
   .status-needs { padding:0 10px; }
   .status-screen .status-needs .status-stat { grid-template-columns:20px 65px minmax(0,1fr) 36px; gap:7px; }
-  .life-card { column-gap:7px; padding:12px 9px; }
+  .life-card { column-gap:6px; padding:12px 8px; }
+  .life-card strong { font-size:14px; }
 }
 
 /* Social worker support */
