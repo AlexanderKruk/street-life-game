@@ -8,7 +8,7 @@ export type ResultSnapshot = {
   game: GameState
   housing?: Housing
   inventory: ResultInventory
-  effects: { id: string; expiresAt: number }[]
+  effects: { id: string; expiresAt: number; treated?: boolean }[]
 }
 export type ConsumedItem = 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'
 export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral'; consumed?: boolean; meter?: { before: number; after: number; cap?: number; capReason?: string } }
@@ -59,6 +59,11 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
   const names: Record<string, string> = { cold: '🤒 Cold', 'free-transit': '🎫 Free transport', 'well-fed': '🍲 Well fed' }
   const activeBefore = new Set(before.effects.filter(effect => effect.expiresAt > absoluteMinutes(before.game)).map(effect => effect.id))
   const activeAfter = new Set(after.effects.filter(effect => effect.expiresAt > absoluteMinutes(after.game)).map(effect => effect.id))
+  if (activeBefore.has('cold') && activeAfter.has('cold')
+    && !before.effects.find(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(before.game))?.treated
+    && after.effects.find(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(after.game))?.treated) {
+    changes.push({ label: '💊 Cold recovery', value: '×3', kind: 'positive' })
+  }
   for (const id of activeAfter) if (!activeBefore.has(id)) changes.push({ label: names[id] ?? id, value: 'Started', kind: id === 'cold' ? 'negative' : 'positive' })
   for (const id of activeBefore) if (!activeAfter.has(id)) changes.push({ label: names[id] ?? id, value: 'Ended', kind: id === 'cold' ? 'positive' : 'negative' })
   return { costs, changes }

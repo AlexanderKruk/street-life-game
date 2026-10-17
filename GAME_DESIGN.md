@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-209`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-210`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Medicine and gradual Cold recovery (v210)
+
+One Medicine dose marks the current active Cold as treated and reduces its remaining duration to one third: a newly caught 48-hour illness lasts 16 more hours if treated immediately; 12 hours remaining become 4. Cold remains active, with all existing Health, Energy and Mood consequences, until that new expiry. A second dose during the same illness does not stack, extend recovery or consume medicine. Healthy players do not consume doses. Treatment metadata and the shortened expiry survive reload; a later new Cold is untreated again.
+
+Status labels the illness Cold · treated without a countdown. Inventory/shop tags say Cold recovery ×3, and the treatment result reports recovery ×3 instead of Cold Ended. Clinic and hospital visits retain their existing cure behavior. The current ten-build save fixture window is v200–v209.
 
 ### Clothing wetness (v209)
 
@@ -380,7 +386,7 @@ Numeric rows that round to zero are hidden. Most values use one decimal place; m
 
 Covered flows include location actions, online searches, purchases/theft, inventory use, charging/video/mobile-service purchase, street rest/begging, bottle search/redemption, support/storage, work, treatment/ambulance, shelter interview completion, sleep completion, travel arrival and resolved street events/D20 choices.
 
-Sleep reports changes across the whole sleep session. Its outcome text states the slept duration; the separate Spent/Time row is currently omitted for sleep. New Cold appears as **Started** only if it was absent before and active afterward. An existing Cold is not reported as newly acquired. Medicine or clinic treatment can show Cold **Ended** together with any actual item/stat changes.
+Sleep reports changes across the whole sleep session. Its outcome text states the slept duration; the separate Spent/Time row is currently omitted for sleep. New Cold appears as **Started** only if it was absent before and active afterward. An existing Cold is not reported as newly acquired. Medicine shows Cold recovery ×3; a clinic cure or actual recovery can show Cold **Ended** together with any actual item/stat changes.
 
 While the player reads the result, game time and travel progression stop. Pressing OK dismisses it. If sleeping or a location action also generated a street event, the player acknowledges the action result before interacting with that event. The event's resolved choice then receives its own result window.
 
@@ -564,7 +570,7 @@ Using inventory:
 - 3-in-1 shower gel: used automatically only when a shelter/day-center shower succeeds; one use boosts the shower Hygiene gain by 1.5 and raises its cap from 70 to 100. No standalone use. Rejected/closed/full showers spend no gel. Existing Hygiene above 70 is preserved apart from ordinary time decay when showering without gel. Older saves receive zero gel, and missing gel in older result snapshots counts as zero.
 - New item counts default to zero in older saves; no existing inventory is replaced. These goods stay in the backpack and count toward event reward capacity too. Result summaries report actual quantities gained/used; older result snapshots treat missing quantities as zero.
 - Cigarette: consumes 1, +5 Mood, -0.5 Health.
-- Medicine: consumes 1 only when Cold is active and removes Cold.
+- Medicine: consumes 1 only when an untreated Cold is active and reduces its remaining duration to one third. Further doses during that illness are not consumed.
 
 Shop purchases respect backpack capacity.
 
@@ -633,7 +639,7 @@ The current assortment is implemented as follows. Prices are per purchase; quant
 | Wet wipes | 5 zł | 5 uses | +10 Hygiene, capped at 60 | 5 uses/slot |
 | 3-in-1 shower gel | 10 zł | 20 uses | Automatic shower bonus ×1.5 and Hygiene cap 100 | 20 uses/slot |
 | Cigarettes | 6 zł | 5 cigarettes | +5 Mood, −0.5 Health | 20 cigarettes/slot |
-| Medicine | 9 zł | 1 use | Removes active Cold | 4 uses/slot |
+| Medicine | 9 zł | 1 use | Cold recovery ×3, one dose per illness | 4 uses/slot |
 | Hot meal | 8 zł | Eaten immediately | +48 Food, +8 Thirst, +5 Mood; Well fed for 4 hours | No backpack slot |
 
 Backpack purchases take 3 game minutes. The entire purchase quantity must fit before money is spent or a theft attempt can start. Successful theft grants the same quantity as buying. This includes all three water drinks, five wipe uses or twenty gel uses. New stock mixes freshness with existing food/bread of the same type; bread and sandwich freshness are tracked separately.
@@ -664,7 +670,7 @@ Implemented timed effects:
 
 New runs start without Cold. Outdoor sleeping and existing events can still cause illness; saved Cold effects are preserved until cured or expired.
 
-Cold additionally drains Energy by 0.045/min and Mood by 0.012/min, on top of its Health damage. Medicine removes Cold.
+Cold additionally drains Energy by 0.045/min and Mood by 0.012/min, on top of its Health damage. Since v210 one Medicine dose reduces remaining recovery time to one third while Cold penalties continue until recovery.
 
 ## Street and sleeping outside
 

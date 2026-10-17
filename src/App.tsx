@@ -25,7 +25,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.17-209'
+const BUILD_VERSION = 'v2026.10.17-210'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -92,7 +92,7 @@ type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total:
 type Inventory = { clothingCleanliness: number; showerGel: number; bread: number; breadFreshness: number; cannedFood: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
-type ActiveEffect = { id: EffectId; expiresAt: number }
+type ActiveEffect = { id: EffectId; expiresAt: number; treated?: boolean }
 type LifeSituation = { housing: Housing; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
 type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number }
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -139,7 +139,7 @@ const SHOP_ITEMS: ShopItem[] = [
   { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene+'] },
   { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Hygiene+++'] },
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood+', 'Health−'] },
-  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'Basic medicine · stack 4', impacts: ['Removes Cold'] },
+  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'One dose per Cold · stack 4', impacts: ['Cold recovery ×3'] },
 ]
 
 function foodFreshnessLabel(value: number) {
@@ -677,7 +677,7 @@ export default function App() {
   function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
   function buyItem(...args: Parameters<typeof buyItemImpl>) { runWithResult(`Buy ${args[0].name}`, () => buyItemImpl(...args)) }
   function useSupply(...args: Parameters<typeof useSupplyImpl>) { runWithResult(args[0] === 'wipes' ? 'Use wet wipes' : 'Eat food', () => useSupplyImpl(...args), resultSnapshot(), true, false, [args[0]]) }
-  function useMedicine(...args: Parameters<typeof useMedicineImpl>) { runWithResult('Use medicine', () => useMedicineImpl(...args), resultSnapshot(), true, false, ['medicines']) }
+  function useMedicine(...args: Parameters<typeof useMedicineImpl>) { runWithResult('Use medicine', () => useMedicineImpl(...args), resultSnapshot(), true, true, ['medicines']) }
   function smokeCigarette(...args: Parameters<typeof smokeCigaretteImpl>) { runWithResult('Smoke a cigarette', () => smokeCigaretteImpl(...args), resultSnapshot(), true, false, ['cigarettes']) }
   function useItem(...args: Parameters<typeof useItemImpl>) { runWithResult(args[0] === 'water' ? 'Drink water' : 'Eat food', () => useItemImpl(...args), resultSnapshot(), true, false, [args[0]]) }
 
@@ -1844,14 +1844,20 @@ export default function App() {
 
   function useMedicineImpl() {
     if (inventory.medicines <= 0) return
-    const hasCold = effects.some((effect) => effect.id === 'cold')
-    if (!hasCold) {
+    const now = absoluteMinutes(game)
+    const cold = effects.find((effect) => effect.id === 'cold' && effect.expiresAt > now)
+    if (!cold) {
       setMessage('You are not sick. No reason to use medicine now.')
       return
     }
+    if (cold.treated) {
+      setMessage('You have already taken medicine for this cold. Recovery is faster; another dose would not help.')
+      return
+    }
     setInventory((prev) => ({ ...prev, medicines: prev.medicines - 1 }))
-    setEffects((prev) => prev.filter((effect) => effect.id !== 'cold'))
-    setMessage('The medicine helped. Cold removed.')
+    setEffects((prev) => prev.map(effect => effect.id === 'cold' && effect.expiresAt > now && !effect.treated
+      ? { ...effect, treated: true, expiresAt: now + (effect.expiresAt - now) / 3 } : effect))
+    setMessage('You took medicine. The remaining recovery time is reduced to one third. Symptoms continue until you recover; one dose is enough for this cold.')
   }
 
   function smokeCigaretteImpl() {
@@ -1992,7 +1998,7 @@ export default function App() {
     { art: 'wipes', name: 'Wet wipes', count: inventory.wipes, stackSize: WIPES_STACK_SIZE, effects: ['Hygiene+'], hint: game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean', onUse: () => useSupply('wipes'), disabled: game.hygiene >= 60 },
     { art: 'bottles', name: 'Bottles & cans', count: inventory.bottles, stackSize: BOTTLE_STACK_SIZE, effects: ['0.50 zł'], hint: 'Deposit containers · 0.50 zł each · return at shop' },
     { art: 'cigarettes', name: 'Cigarettes', count: inventory.cigarettes, stackSize: CIGARETTE_STACK_SIZE, effects: ['Mood+', 'Health−'], hint: 'tap to smoke', onUse: smokeCigarette },
-    { art: 'medicines', name: 'Medicine', count: inventory.medicines, stackSize: STACK_SIZE, effects: ['Removes Cold'], hint: 'treats Cold', onUse: useMedicine },
+    { art: 'medicines', name: 'Medicine', count: inventory.medicines, stackSize: STACK_SIZE, effects: ['Cold recovery ×3'], hint: 'treats Cold · one dose per illness', onUse: useMedicine },
     { art: 'showerGel', name: '3-in-1 shower gel', count: inventory.showerGel, stackSize: SHOWER_GEL_USES_PER_SLOT, effects: ['Hygiene+++'], hint: 'Uses left · automatic with a shower · Hygiene max 100' },
   ]
 
@@ -2282,7 +2288,7 @@ export default function App() {
             const effect = EFFECTS[active.id]
             const coldLimit = active.id === 'cold' ? statLimits.find(limit => limit.reason === 'Cold') : undefined
             return <div className={`effect ${effect.kind}${active.id === 'cold' ? ' illness' : ''}`} key={active.id}>
-              <span><Icon name={effect.icon} /></span><strong className="effect-name" title={effect.name}>{effect.name}</strong>
+              <span><Icon name={effect.icon} /></span><strong className="effect-name" title={active.id === 'cold' && active.treated ? 'Cold · treated: recovery ×3' : effect.name}>{effect.name}{active.id === 'cold' && active.treated ? ' · treated' : ''}</strong>
               <div className="effect-details"><div className="effect-impact">{effect.impacts.map(impact => <b key={impact}>{impact}{impact === 'Mood−' && coldLimit ? ` · ≤ ${Math.round(coldLimit.limits[0].cap)}%` : ''}</b>)}</div>{active.id !== 'cold' && <small className="effect-time">{remainingEffect(active.expiresAt, game)}</small>}</div>
             </div>
           })}
