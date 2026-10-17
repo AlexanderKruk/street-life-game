@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-207`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-208`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Map bottom spacing (v208)
+
+Removed the small district illustration caption and the fixed 175px map spacer that duplicated the shared shell/footer clearance. A ResizeObserver measures the pinned selection card; the map reserves only the height above its normal 83px footprint when descriptions or headings wrap. This keeps the lower Station marker reachable on narrow screens without leaving a large empty area after the illustration. Selection, routes and the pinned card/navigation remain unchanged. Browser layout QA covered all ten selectable destinations at 320×640, 390×700, 390×844, 430×740 and 760×900: no horizontal overflow, no illustration caption, a 12–25px gap below the scene at maximum scroll, and at least 33px clearance above the Station hit area.
 
 ### Closed map locations (v207)
 

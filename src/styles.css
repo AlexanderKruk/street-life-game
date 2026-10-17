@@ -799,7 +799,6 @@ button.inventory-item { width:100%; }
 .district-pin:focus-visible,.district-route-button:focus-visible { outline:2px solid #d7b58a; outline-offset:3px; }
 .district-route { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; overflow:visible; }
 .district-route path { fill:none; stroke:#d7b58a; stroke-width:2; vector-effect:non-scaling-stroke; stroke-dasharray:2 7; stroke-linecap:round; opacity:.85; }
-.district-note { position:absolute; z-index:2; bottom:10px; left:15px; color:#a6afb5; font-size:9px; background:#11171ca8; padding:3px 6px; border-radius:4px; }
 .district-card { position:relative; z-index:3; display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:12px; margin:0 12px; padding:16px 12px; border:1px solid #454d52; border-radius:14px; background:#141b1f; box-shadow:0 6px 24px #0003; }
 .district-place-icon { display:grid; place-items:center; width:44px; height:56px; border:1px solid #48535c; border-radius:9px; color:#abb5bd; }
 .district-place-icon svg { width:28px; height:28px; }
@@ -822,7 +821,8 @@ button.inventory-item { width:100%; }
 @media(prefers-reduced-motion:reduce) { .district-pin { scroll-behavior:auto; } }
 
 /* v103: the selected place stays above the pinned navigation. */
-.district-map { padding-bottom:175px; }
+/* Shared shell/footer spacing covers a normal card; reserve only its extra height. */
+.district-map { padding-bottom:max(0px,calc(var(--district-card-height,83px) - 83px)); }
 .district-card { position:fixed; z-index:21; left:50%; bottom:calc(90px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); width:min(736px,calc(100% - 24px)); margin:0; box-shadow:0 8px 28px #0008; }
 .district-place-copy small { max-height:72px; overflow:auto; }
 @media (max-height:600px) { .district-card { padding-top:10px; padding-bottom:10px; } .district-place-copy small { max-height:40px; } }
