@@ -711,7 +711,8 @@ assert(document.querySelector('.status-stat[data-stat="Energy"] .bar i.warning')
 assert(document.querySelector('.status-stat[data-stat="Food"] .bar i.good'));
 assert.equal(screen.getAllByRole('meter').length,6);
 assert(screen.getByRole('heading',{name:'Condition',exact:true}));
-assert(!screen.queryByRole('heading',{name:'Effects',exact:true}));
+assert(screen.getByRole('heading',{name:'Effects',exact:true}));
+assert(document.querySelector('[data-mood-limit="Street"]').textContent.includes('Mood ≤ 50%'));
 assert(!document.querySelector('[data-stat="Hygiene"] .bar-blocked'));
 setup({mood:28,hygiene:45},{[invKey]:{clothingCleanliness:10},'street-life-effects-v1':[{id:'cold',expiresAt:3000},{id:'well-fed',expiresAt:2000}]});click(/^Status$/);
 assert(document.querySelector('.status-effects + .condition-heading'));

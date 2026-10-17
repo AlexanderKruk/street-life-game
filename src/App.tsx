@@ -18,13 +18,14 @@ import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import Stat from './Stat'
 import MoodIcon from './MoodIcon'
+import { limitingEffects } from './limitingEffects'
 import PhoneDialog from './PhoneDialog'
 import CompactStreetEvent from './CompactStreetEvent'
 import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.17-201'
+const BUILD_VERSION = 'v2026.10.17-202'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -451,6 +452,9 @@ export default function App() {
     })
   }
   const moodCeiling = moodLimit(game, moodContext())
+  const statLimits = limitingEffects(game, moodContext(), inventory.clothingCleanliness)
+  const separateLimits = statLimits.filter(effect => effect.reason !== 'Cold')
+  const statusEffectCount = effects.length + separateLimits.length
   // Reconcile existing saves and changes of accommodation/effects without a gain.
   useEffect(() => { setGame(previous => previous) }, [moodCeiling.cap])
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
@@ -2253,12 +2257,20 @@ export default function App() {
     </section>}
     {screen === 'status' && <section className="status-screen">
       <h2 className="status-title">Status</h2>
-      {!!effects.length && <section className="status-effects" aria-labelledby="status-effects-heading">
-        <div className="effects-heading"><h3 id="status-effects-heading">Effects</h3><span>{effects.length}</span></div>
+      {!!statusEffectCount && <section className="status-effects" aria-labelledby="status-effects-heading">
+        <div className="effects-heading"><h3 id="status-effects-heading">Effects</h3><span>{statusEffectCount}</span></div>
         <div className="effects-list">
-          {effects.map((active) => {
+          {separateLimits.map(effect => <div className="effect negative limit-effect" data-limit-reason={effect.reason} data-mood-limit={effect.limits.some(limit => limit.stat === 'Mood') ? effect.reason : undefined} key={effect.reason}>
+            <span><Icon name={effect.icon} /></span><strong className="effect-name" title={effect.name}>{effect.name}</strong>
+            <div className="effect-impact">{effect.limits.map(limit => <b key={limit.stat}>{limit.stat} ≤ {Math.round(limit.cap)}%</b>)}</div>
+          </div>)}
+          {effects.map(active => {
             const effect = EFFECTS[active.id]
-            return <div className={`effect ${effect.kind}${active.id === 'cold' ? ' illness' : ''}`} key={active.id}><span><Icon name={effect.icon} /></span><div className="effect-body"><strong>{effect.name}</strong><div className="effect-impact">{effect.impacts.map((impact) => <b key={impact}>{impact}</b>)}</div></div>{active.id !== 'cold' && <small className="effect-time">{remainingEffect(active.expiresAt, game)}</small>}</div>
+            const coldLimit = active.id === 'cold' ? statLimits.find(limit => limit.reason === 'Cold') : undefined
+            return <div className={`effect ${effect.kind}${active.id === 'cold' ? ' illness' : ''}`} key={active.id}>
+              <span><Icon name={effect.icon} /></span><strong className="effect-name" title={effect.name}>{effect.name}</strong>
+              <div className="effect-details"><div className="effect-impact">{effect.impacts.map(impact => <b key={impact}>{impact}{impact === 'Mood−' && coldLimit ? ` · ≤ ${Math.round(coldLimit.limits[0].cap)}%` : ''}</b>)}</div>{active.id !== 'cold' && <small className="effect-time">{remainingEffect(active.expiresAt, game)}</small>}</div>
+            </div>
           })}
         </div>
       </section>}

@@ -35,6 +35,18 @@ let stepped = timed;
 for (let i = 0; i < 30; i++) stepped = advanceTime(stepped, 1, cold);
 assert.deepEqual(advanceTime(timed, 30, cold), stepped, 'instant actions and ticking share the same limits');
 
+const { limitingEffects } = bundled('src/limitingEffects.ts');
+const restrictions = limitingEffects({ ...comfortable, energy: 20 }, { housing: 'Night shelter' }, 10);
+assert.deepEqual(restrictions.map(effect => [effect.reason, effect.limits]), [
+  ['Night shelter', [{ stat: 'Mood', cap: 60 }]],
+  ['Tiredness', [{ stat: 'Mood', cap: 60 }]],
+  ['Dirty clothes', [{ stat: 'Hygiene', cap: 60 }]],
+]);
+assert.deepEqual(limitingEffects(comfortable, { housing: 'Night shelter' }, 100).map(effect => effect.reason), ['Night shelter']);
+assert.deepEqual(limitingEffects({ ...comfortable, thirst: 10 }, { housing: 'Night shelter' }, 10).map(effect => effect.reason), ['Thirst', 'Dirty clothes']);
+assert.deepEqual(limitingEffects({ ...comfortable, health: 10 }, { housing: 'Apartment' }, 100).map(effect => effect.limits), [[{ stat: 'Mood', cap: 40 }, { stat: 'Energy', cap: 60 }]]);
+assert.deepEqual(limitingEffects(comfortable, { housing: 'Apartment' }, 100), []);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/street-life-game/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event', 'MouseEvent']) global[key] = dom.window[key];
@@ -82,6 +94,20 @@ try {
     assert(!document.querySelector('.result-stat-panel [data-stat="Mood"]'), 'zero Mood gain remains hidden');
     cleanup(); render(React.createElement(App)); assert.equal(saved().mood, cap, 'reload preserves the capped value');
   }
+  setup('Night shelter', 45, { energy: 20 });
+  assert(document.querySelector('[data-limit-reason="Night shelter"]'));
+  assert(document.querySelector('[data-limit-reason="Tiredness"]'));
+  setup('Apartment', 40, { health: 10 });
+  assert.equal(document.querySelectorAll('[data-limit-reason="Health"]').length, 1);
+  assert.equal(document.querySelector('[data-limit-reason="Health"]').querySelectorAll('b').length, 2);
+  setup('Apartment', 60);
+  cleanup();
+  localStorage.setItem('street-life-effects-v1', JSON.stringify([{ id: 'cold', expiresAt: 3000 }]));
+  render(React.createElement(App));
+  assert.equal(document.querySelectorAll('.effect.illness').length, 1);
+  assert.equal(document.querySelectorAll('[data-limit-reason="Cold"]').length, 0);
+  assert(document.querySelector('.effect.illness').textContent.includes('Mood− · ≤ 60%'));
+  assert(!document.querySelector('.effect.illness .effect-time'));
   setup('Street', 55, {}, { shelterUntilDay: 7 });
   assert.equal(saved().mood, 55, 'a reserved shelter bed retains its ceiling during daytime outings');
   assert.equal(document.querySelector('[data-stat="Mood"] .bar-cap-marker').style.left, '60%');

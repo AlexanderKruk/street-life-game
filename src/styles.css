@@ -433,13 +433,23 @@ button.inventory-item { width:100%; }
 .status-screen .effects-heading > span { font-size:13px; color:#aab0b4; font-variant-numeric:tabular-nums; }
 .status-screen .effects-list { gap:8px; }
 .status-screen .effect { grid-template-columns:22px minmax(0,1fr) auto; border-radius:9px; padding:14px; background:#141b1f; }
-.status-screen .effect.illness { grid-template-columns:22px minmax(0,1fr); }
+.status-screen .effect .effect-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.status-screen .effect .effect-impact { flex-wrap:nowrap; justify-content:flex-end; }
+.status-screen .effect-details { display:flex; align-items:center; gap:8px; }
+.status-screen .effect .effect-time { margin:0; white-space:nowrap; }
+
 .status-screen .effect > span { display:flex; }
 .status-screen .effect > span svg { width:21px; height:21px; color:#aab0b4; }
 .status-screen .effect strong { font-size:15px; font-weight:600; }
 .status-screen .effect .effect-impact b { font-size:12px; font-weight:500; }
 .status-screen .effect .effect-time { font-size:12px; color:#aab0b4 !important; }
 .status-screen .effects-list > .empty { margin:0; font-size:15px; color:#aab0b4; }
+@media (max-width:360px) {
+  .status-screen .effect { padding:10px; gap:8px; }
+  .status-screen .effect strong { font-size:13px; }
+  .status-screen .effect .effect-impact b { padding:3px 4px; font-size:11px; }
+  .status-screen .effect-details { gap:5px; }
+}
 @media(max-width:360px) {
   .status-needs,.life-situation { padding:0 10px; }
   .status-screen .status-needs .status-stat { grid-template-columns:20px 65px minmax(0,1fr) 36px; gap:7px; }
