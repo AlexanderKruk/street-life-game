@@ -968,7 +968,7 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .inventory-slot:focus-visible { outline:2px solid #d7b58a; outline-offset:2px; }
 @media(min-width:600px) { .inventory-slot-copy strong { font-size:14px; } .inventory-effects em { font-size:12px; } .inventory-screen .essentials-grid strong { font-size:15px; } .inventory-screen .essentials-grid small { font-size:12px; } }
 
-/* Illustrated first-night events and their outcomes. */
+/* Event scenes and their choice outcomes share the same mobile framing. */
 .event-overlay { -webkit-backdrop-filter:blur(5px); }
 .illustrated-event { display:flex; flex-direction:column; padding:0; max-height:calc(100dvh - 40px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); overflow:hidden; background:#161d23; }
 .event-illustration { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; flex-shrink:0; }
@@ -1085,6 +1085,11 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .compact-event-pause svg { width:13px; height:13px; flex-shrink:0; }
 .compact-street-event :focus-visible { outline:2px solid #dcc2a2; outline-offset:2px; }
 @media(max-width:360px) { .compact-street-event { padding:20px; } .compact-event-heading { gap:10px; } .compact-street-event .compact-event-heading h2 { font-size:20px; } }
+
+/* Illustrated coin/rain cards keep their artwork flush with the card edges. */
+.event-card.illustrated-event { padding:0; overflow:hidden; }
+.coin-result.illustrated-result { padding-top:0; }
+.coin-result.illustrated-result .result-illustration { width:calc(100% + 40px); margin:0 -20px 15px; }
 .rain-duration-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
 .rain-duration-options button { min-height:60px; padding:10px 4px; border:1px solid #414b50; border-radius:10px; background:#232b30; color:#e8e5de; font:inherit; text-align:center; }
 .rain-duration-options strong { display:block; font-size:16px; font-weight:600; }

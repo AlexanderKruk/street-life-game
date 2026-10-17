@@ -1,3 +1,5 @@
+import { illustrateStreetEvent } from './eventArtwork'
+
 export type EventTrigger = 'travel' | 'location' | 'wake' | 'walk' | 'bench'
 
 export function firstNightTime(state: { day: number; minutes: number }) {
@@ -160,7 +162,7 @@ export function pickStreetEvent(trigger: EventTrigger, context: EventContext, ch
   let roll = Math.random() * total
   for (const event of pool) {
     roll -= event.weight
-    if (roll <= 0) return event
+    if (roll <= 0) return illustrateStreetEvent(event, context)
   }
-  return pool[pool.length - 1]
+  return illustrateStreetEvent(pool[pool.length - 1], context)
 }

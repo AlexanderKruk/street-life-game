@@ -1,5 +1,6 @@
 """Regenerate responsive WebP assets from retained originals (requires Pillow)."""
 import json
+import re
 from io import BytesIO
 from pathlib import Path
 from PIL import Image
@@ -32,6 +33,9 @@ widths = {
     'inventory-equipment': [256, 512, 768],
     'shop-products': [256, 512, 768],
 }
+for source in sorted(assets.glob('event-*.webp')):
+    if not re.search(r'-\d+\.webp$', source.name):
+        widths.setdefault(source.stem, [480, 768, 1024])
 manifest = {}
 for name, sizes in widths.items():
     source = assets / f'{name}.webp'

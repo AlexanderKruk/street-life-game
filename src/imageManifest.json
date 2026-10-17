@@ -501,5 +501,635 @@
         "file": "shop-products-768.webp"
       }
     ]
+  },
+  "event-coin-leave.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-coin-leave-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-coin-leave-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-coin-leave-1024.webp"
+      }
+    ]
+  },
+  "event-coin-take.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-coin-take-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-coin-take-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-coin-take-1024.webp"
+      }
+    ]
+  },
+  "event-crowd-away.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-crowd-away-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-crowd-away-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-crowd-away-1024.webp"
+      }
+    ]
+  },
+  "event-crowd-stay.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-crowd-stay-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-crowd-stay-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-crowd-stay-1024.webp"
+      }
+    ]
+  },
+  "event-found-coin.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-found-coin-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-found-coin-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-found-coin-1024.webp"
+      }
+    ]
+  },
+  "event-free-snack.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-free-snack-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-free-snack-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-free-snack-1024.webp"
+      }
+    ]
+  },
+  "event-night-theft.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-night-theft-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-night-theft-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-night-theft-1024.webp"
+      }
+    ]
+  },
+  "event-phone-caught.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-phone-caught-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-phone-caught-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-phone-caught-1024.webp"
+      }
+    ]
+  },
+  "event-phone-drop.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-phone-drop-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-phone-drop-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-phone-drop-1024.webp"
+      }
+    ]
+  },
+  "event-phone-fallen.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-phone-fallen-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-phone-fallen-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-phone-fallen-1024.webp"
+      }
+    ]
+  },
+  "event-quiet-bench.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-quiet-bench-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-quiet-bench-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-quiet-bench-1024.webp"
+      }
+    ]
+  },
+  "event-quiet-ground.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-quiet-ground-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-quiet-ground-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-quiet-ground-1024.webp"
+      }
+    ]
+  },
+  "event-quiet-shelter.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-quiet-shelter-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-quiet-shelter-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-quiet-shelter-1024.webp"
+      }
+    ]
+  },
+  "event-rain-cover.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-cover-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-cover-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-cover-1024.webp"
+      }
+    ]
+  },
+  "event-rain-moving.webp": {
+    "width": 1672,
+    "height": 940,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-moving-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-moving-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-moving-1024.webp"
+      }
+    ]
+  },
+  "event-rain-phone.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-phone-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-phone-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-phone-1024.webp"
+      }
+    ]
+  },
+  "event-rain-protect.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-protect-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-protect-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-protect-1024.webp"
+      }
+    ]
+  },
+  "event-rain-street.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-street-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-street-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-street-1024.webp"
+      }
+    ]
+  },
+  "event-rough-crowd.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rough-crowd-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rough-crowd-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rough-crowd-1024.webp"
+      }
+    ]
+  },
+  "event-snack-accept.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-snack-accept-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-snack-accept-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-snack-accept-1024.webp"
+      }
+    ]
+  },
+  "event-snack-decline.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-snack-decline-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-snack-decline-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-snack-decline-1024.webp"
+      }
+    ]
+  },
+  "event-station-accept.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-accept-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-accept-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-accept-1024.webp"
+      }
+    ]
+  },
+  "event-station-decline.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-decline-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-decline-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-decline-1024.webp"
+      }
+    ]
+  },
+  "event-station-food.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-food-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-food-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-food-1024.webp"
+      }
+    ]
+  },
+  "event-theft-check.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-theft-check-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-theft-check-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-theft-check-1024.webp"
+      }
+    ]
+  },
+  "event-ticket-check.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-ticket-check-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-ticket-check-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-ticket-check-1024.webp"
+      }
+    ]
+  },
+  "event-ticket-shown.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-ticket-shown-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-ticket-shown-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-ticket-shown-1024.webp"
+      }
+    ]
+  },
+  "event-tip-conversation.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-tip-conversation-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-tip-conversation-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-tip-conversation-1024.webp"
+      }
+    ]
+  },
+  "event-tip-ending.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-tip-ending-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-tip-ending-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-tip-ending-1024.webp"
+      }
+    ]
+  },
+  "event-useful-tip.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-useful-tip-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-useful-tip-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-useful-tip-1024.webp"
+      }
+    ]
   }
 }

@@ -24,7 +24,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.16-196'
+const BUILD_VERSION = 'v2026.10.17-197'
 // Temporary fourth Street action for bottle-search testing; turn off after review.
 const TEMP_BOTTLE_TEST = true
 const ACTIVITY_TICK_MS = 250
@@ -973,7 +973,7 @@ export default function App() {
       const sleepStartDay = Math.floor(sleep.startAbsolute / 1440) + 1
       const stayNightDay = sleep.startAbsolute % 1440 < 480 ? sleepStartDay - 1 : sleepStartDay
       setLife((status) => ({ ...status, housing: 'Night shelter', shelterLastStayDay: Math.max(status.shelterLastStayDay ?? 0, stayNightDay) }))
-      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, Math.min(0.65, 0.45 * scale))
+      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents, sleepKind: sleep.kind }, Math.min(0.65, 0.45 * scale))
       if (wakeEvent && wakeState.minutes < SHELTER_CHECKOUT_WARNING) setActiveEvent(wakeEvent)
     } else {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
@@ -1179,7 +1179,9 @@ export default function App() {
       const musicText = withMusic ? ' You put on familiar music. A few songs play as you pass the dark shop windows.' : ''
       if (wet) {
         setRainChoice(true)
-        setMessage((startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.') + musicText)
+        const rainText = (startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.') + musicText
+        setInfoModal({ title: withMusic ? 'Walk with music' : 'Walk through the city', text: rainText, illustration: '/street-life-game/assets/event-rain-street.webp', illustrationAlt: 'Rain grows heavier as you notice a canopy above a closed shop.' })
+        setMessage(rainText)
       } else {
         setMessage('You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.' + musicText)
         observeFirstNight('walk', next)
@@ -1282,7 +1284,9 @@ export default function App() {
       setCoverPlanning(false)
       const next = applyAction(game, { minutes, mood: 1 })
       setGame(next)
-      setMessage(`You stand under an entrance canopy for ${minutes < 60 ? `${minutes} minutes` : `${minutes / 60} hour${minutes > 60 ? 's' : ''}`}, watching the street. You do not sleep. ${next.minutes >= 360 && next.minutes < 720 ? 'Morning is finally here.' : 'For now, you are out of the rain.'}`)
+      const coverText = `You stand under an entrance canopy for ${minutes < 60 ? `${minutes} minutes` : `${minutes / 60} hour${minutes > 60 ? 's' : ''}`}, watching the street. You do not sleep. ${next.minutes >= 360 && next.minutes < 720 ? 'Morning is finally here.' : 'For now, you are out of the rain.'}`
+      setMessage(coverText)
+      setInfoModal({ title: 'Shelter from the rain', text: coverText, illustration: '/street-life-game/assets/event-rain-cover.webp', illustrationAlt: 'You wait awake under the canopy while rain falls beyond its edge.' })
     }, resultSnapshot(), true, true)
   }
 
@@ -1542,18 +1546,20 @@ export default function App() {
   }
 
   function applyEventOutcomeImpl(outcome: EventOutcome) {
+    const { rejected } = fitEventSupplies(inventory, outcome)
+    const outcomeText = rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message
     if (activeEvent?.id === 'found-coins') {
       setInfoModal({ title: activeEvent.title, text: outcome.message, variant: 'coin',
         presentation: { label: 'AFTER YOUR CHOICE', heading: outcome.money ? 'You found a coin' : 'You leave the coin', lead: outcome.message } })
     }
-    if (activeEvent?.illustration) {
+    if (activeEvent?.illustration || outcome.illustration) {
       const place = locations.find(location => location.id === outcome.discoverLocation)
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
-      setInfoModal({ title: activeEvent.title, text: outcome.message, illustration: outcome.illustration ?? activeEvent.illustration, illustrationAlt: outcome.message,
+      setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
         ...(place ? { presentation: { label: 'AFTER THE CONVERSATION', heading: 'A place to try next evening', lead: outcome.message,
           places: [{ id: place.id, name: place.name, hours: '19:00–22:00', detail: 'Registration · Address saved on your map' }],
-          notice: `Come on Day ${goalDay} at 19:00 to request a bed.` } } : {}) })
+          notice: `Come on Day ${goalDay} at 19:00 to request a bed.` } } : {}) }))
     }
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
     const foundPlace = locations.find(place => place.id === outcome.discoverLocation)
@@ -1579,8 +1585,7 @@ export default function App() {
       jacket: Math.max(0, Math.min(100, prev.jacket + (outcome.jacketCondition ?? 0))),
       documents: outcome.loseDocuments ? false : prev.documents,
     }))
-    const { rejected } = fitEventSupplies(inventory, outcome)
-    setMessage(rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message)
+    setMessage(outcomeText)
   }
 
   function checkModifier(choice: StreetEventChoice) {
@@ -2293,7 +2298,9 @@ export default function App() {
     </div>}
 
     {!gameOver && rainChoice && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
-      <section className="event-card compact-street-event rain-card"><div className="event-body">
+      <section className="event-card illustrated-event compact-street-event rain-card">
+        <img className="event-illustration" {...responsiveImageProps(`/street-life-game/assets/${coverPlanning ? 'event-rain-cover' : 'event-rain-street'}.webp`)} alt={coverPlanning ? 'Waiting awake under a canopy.' : 'Rain grows heavier beside a closed shop.'} />
+        <div className="event-body">
         <div className="compact-event-heading"><Icon name={coverPlanning ? 'umbrella' : 'rain'} /><div><p className="eyebrow">RAIN · TIME PAUSED</p><h2>{coverPlanning ? 'Wait out the night' : 'The rain is getting heavier'}</h2></div></div>
         <p className="compact-event-description">{coverPlanning ? 'Stay awake under the canopy. Hunger, thirst and tiredness keep growing.' : 'Rain runs off the edge of a nearby canopy. The shop behind it is closed. Light is still on at the station.'}</p>
         <div className={coverPlanning ? 'rain-duration-options' : 'event-choices'}>

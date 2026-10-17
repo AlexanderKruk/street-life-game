@@ -976,4 +976,35 @@ const benchWake=observationEvents.find(e=>e.id==='first-night-bench-wake');
 assert(benchWake.eligible({...context,sleepKind:'bench'}));
 assert(!benchWake.eligible({...context,sleepKind:'ground'}));
 assert(!benchWake.eligible({...context,firstNight:false,sleepKind:'bench'}));
-cleanup();dom.window.close();console.log('PASS: review regressions, first-night observations, pause/reload, cooldown, neutral contacts and bench-sleep eligibility.');
+// Every eligible catalog event now resolves to a real, responsive scene and outcome.
+const fs=require('node:fs');
+const stripArt=value=>JSON.parse(JSON.stringify(value,(key,item)=>key==='illustration'?undefined:item));
+for(const original of observationEvents) {
+ const first=original.id.startsWith('first-night-');
+ const artContext={locationId:first&&original.trigger!=='location'?'street':'station',weather:'Rain',housing:'Street',documents:true,firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
+ Math.random=()=>0;
+ const chosen=eventModule.exports.pickStreetEvent(original.trigger,artContext,1);
+ assert.equal(chosen?.id,original.id);assert.deepEqual(stripArt(chosen),stripArt(original),'illustration must not change gameplay');
+ const images=[chosen.illustration,...chosen.choices.flatMap(choice=>choice.check?[choice.check.success.illustration,choice.check.failure.illustration,choice.check.criticalSuccess?.illustration,choice.check.criticalFailure?.illustration]:[choice.outcome?.illustration])].filter(Boolean);
+ for(const image of images) {
+  const file=image.split('/').pop();assert(fs.existsSync('public/assets/'+file),file);
+  for(const width of [480,768,1024])assert(fs.existsSync('public/assets/'+file.replace('.webp',`-${width}.webp`)),file+' responsive '+width);
+ }
+}
+for(const [kind,housing,file] of [['ground','Street','ground'],['bench','Street','bench'],['shelter','Night shelter','shelter']]) {
+ Math.random=()=>0;
+ const quiet=eventModule.exports.pickStreetEvent('wake',{locationId:'station',weather:'Cloudy',documents:true,housing,sleepKind:kind,seenEventIds:observationEvents.filter(e=>e.id!=='quiet-night').map(e=>e.id)},1);
+ assert(quiet.illustration.endsWith(`event-quiet-${file}.webp`));assert.equal(quiet.choices[0].outcome.illustration,quiet.illustration);
+}
+// A real travel D20 retains its resource consequence and displays the matching result.
+for(const [roll,art,damage] of [[.99,'caught',0],[0,'fallen',15]]) {
+ setup();click('Map');click(/^.*Station/);click('Go →');
+ const draws=[.2,0,0];Math.random=()=>draws.shift()??.99;click(/Walk/);
+ assert(document.querySelector('.event-illustration').src.endsWith('event-phone-drop-480.webp'));
+ const phoneBefore=read(invKey).phoneCondition;
+ click('Try to catch it · Reflex DC 11');Math.random=()=>roll;click('Roll D20');click('Continue');
+ assert(document.querySelector('.result-illustration').src.endsWith(`event-phone-${art}-480.webp`));
+ assert.equal(read(invKey).phoneCondition,phoneBefore-damage);
+ ok();
+}
+cleanup();dom.window.close();console.log('PASS: review regressions, first-night observations, pause/reload, cooldown, neutral contacts, responsive event art, contextual waking and D20 outcome images.');
