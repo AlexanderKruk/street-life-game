@@ -30,9 +30,8 @@ export default memo(function Stat({ label, value, icon, cap = 100, capReason, fo
   const blocked = (label === 'Hygiene' || label === 'Mood') && cap < 100
   const restriction = capReason ?? (label === 'Hygiene' ? 'dirty clothes' : 'housing and physical needs')
   return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}${change ? ' result-stat' : ''}`} data-stat={label}>
-    {focus && <p className="status-focus-label">{level === 'critical' ? 'Needs attention' : level === 'warning' ? 'Keep an eye on this' : 'Lowest indicator'}</p>}
     <span className="status-stat-icon">{label === 'Mood' ? <MoodIcon value={value} /> : icon}</span>
-    <div className="status-stat-label"><strong>{label}</strong>{cap < 100 && !blocked && <small>Max {cap}%</small>}{blocked && label === 'Mood' && capReason && <small>{capReason}</small>}</div>
+    <div className="status-stat-label">{focus && level !== 'good' && <span className="status-focus-label">{level === 'critical' ? 'Needs attention' : 'Keep an eye on this'}</span>}<strong>{label}</strong>{cap < 100 && !blocked && <small>Max {cap}%</small>}{blocked && label === 'Mood' && capReason && <small>{capReason}</small>}</div>
     <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={`${label}: ${conditionBand(value).label}${blocked ? `, maximum ${Math.round(cap)}% due to ${restriction}` : ''}`} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100} title={blocked ? `Limited by ${restriction}` : undefined}>
       {blocked && <span className="bar-blocked" style={{ left: `${cap}%` }} aria-hidden="true" />}
       <i className={level} style={{ width: `${displayed}%` }} />

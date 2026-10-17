@@ -700,7 +700,7 @@ for(const [value,label] of [[10,'VERY BAD'],[30,'BAD'],[50,'FAIR'],[70,'GOOD'],[
 assert.equal(overallCondition(healthyBody).level,'bad');
 assert.equal(overallCondition(limitMood({...healthyBody,mood:100,health:5},{housing:'Apartment'})).level,'bad');
 assert.equal(overallCondition(limitMood({...healthyBody,mood:100,energy:10},{housing:'Apartment'})).level,'fair');
-// Status promotes one need, never duplicates it, and keeps all six visible.
+// Status promotes one need only when attention is needed and keeps all six visible.
 setup({hunger:72,thirst:66,energy:45,health:90,hygiene:75,mood:28});click(/^Status$/);
 assert.equal(document.querySelector('.status-focus').dataset.stat,'Mood');
 assert.equal(document.querySelectorAll('.status-needs .status-stat').length,5);
@@ -732,8 +732,21 @@ assert(document.querySelector('.status-needs [data-stat="Mood"]'));
 assert(document.querySelector('[data-stat="Energy"] small').textContent.startsWith('Max '));
 for(const [value,color] of [[30,'critical'],[30.1,'warning'],[60,'warning'],[60.1,'good']]) {
  setup({hunger:80,thirst:80,energy:80,health:90,hygiene:80,mood:value},{[lifeKey]:{housing:'Apartment'}});click(/^Status$/);
- assert(document.querySelector(`.status-focus .bar i.${color}`));
- if(color==='good')assert.equal(document.querySelector('.status-focus-label').textContent,'Lowest indicator');
+ if(color==='good') {
+  assert(!document.querySelector('.status-focus'));
+  assert(!document.querySelector('.status-focus-label'));
+  assert.equal(document.querySelectorAll('.status-needs .status-stat').length,6);
+  assert(document.querySelector('[data-stat="Mood"] .bar i.good'));
+ } else {
+  assert(document.querySelector(`.status-focus .bar i.${color}`));
+  assert.equal(document.querySelector('.status-focus .status-stat-label .status-focus-label').textContent,color==='critical'?'Needs attention':'Keep an eye on this');
+ }
+}
+for(const need of ['hunger','thirst','energy','health','hygiene','mood']) {
+ setup({hunger:80,thirst:80,energy:80,health:90,hygiene:80,mood:80,[need]:60.1},{[lifeKey]:{housing:'Apartment'}});click(/^Status$/);
+ assert(!document.querySelector('.status-focus'),need+' above 60 does not need a warning');
+ assert.equal(screen.getAllByRole('meter').length,6);
+ assert.deepEqual([...document.querySelectorAll('.status-needs .status-stat')].map(stat=>stat.dataset.stat),['Food','Thirst','Energy','Health','Hygiene','Mood']);
 }
 const recoveredMood=advanceTime(healthyBody,60).mood;
 assert.equal(recoveredMood,healthyBody.mood,'comfortable needs do not automatically refill Mood');

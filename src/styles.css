@@ -171,21 +171,18 @@ footer p { margin:0; }
 :is(.status-screen,.result-stat-panel) .status-stat .bar i.good { background:#64bb82; }
 :is(.status-screen,.result-stat-panel) .status-stat .bar i.warning { background:#d5a642; }
 :is(.status-screen,.result-stat-panel) .status-stat .bar i.critical { background:#d96a71; }
-.status-screen .status-focus { grid-template-columns:28px minmax(0,1fr) auto; padding:16px; border:1px solid #76514e; border-radius:9px; background:#1d191b; }
+.status-screen .status-focus { grid-template-columns:28px minmax(0,1fr) auto; gap:10px; padding:14px 16px; border:1px solid #76514e; border-radius:9px; background:#1d191b; }
 .status-screen .status-focus.warning { border-color:#6d5c35; background:#1e1c16; }
-.status-screen .status-focus.good { border-color:#3d5e49; background:#151e19; }
-.status-focus-label { grid-column:1 / -1; margin:0 0 4px; font-size:12px; line-height:1.4; color:#e4a5a8; }
+.status-focus-label { display:block; margin:0 0 1px; font-size:12px; line-height:1.15; color:#e4a5a8; }
 .status-focus.warning .status-focus-label { color:#d8bd7b; }
-.status-focus.good .status-focus-label { color:#9ac4a8; }
-.status-screen .status-focus .status-stat-icon { grid-row:2; }
+.status-screen .status-focus .status-stat-icon { grid-row:1; }
 .status-screen .status-focus .status-stat-icon svg { width:28px; height:28px; color:#e4a5a8; }
 .status-screen .status-focus.warning .status-stat-icon svg { color:#d8bd7b; }
-.status-screen .status-focus.good .status-stat-icon svg { color:#9ac4a8; }
-.status-focus .status-stat-label { grid-row:2; }
-.status-focus .status-stat-label strong { font-size:19px; font-weight:650; }
+.status-focus .status-stat-label { grid-row:1; }
+.status-focus .status-stat-label strong { font-size:19px; font-weight:650; line-height:1.15; }
 .status-focus .status-stat-label small { font-size:12px; }
-.status-screen .status-focus .status-stat-value { grid-column:3; grid-row:2; font-size:26px; font-weight:650; }
-.status-screen .status-focus .bar { grid-column:1 / -1; grid-row:3; margin-top:6px; }
+.status-screen .status-focus .status-stat-value { grid-column:3; grid-row:1; font-size:26px; font-weight:650; }
+.status-screen .status-focus .bar { grid-column:1 / -1; grid-row:2; margin-top:3px; }
 @media (max-width:520px) {
   header { gap:8px; }
   .header-info { flex-direction:column; align-items:flex-end; gap:5px; }

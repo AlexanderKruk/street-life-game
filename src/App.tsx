@@ -25,7 +25,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.17-205'
+const BUILD_VERSION = 'v2026.10.17-206'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -558,8 +558,9 @@ export default function App() {
   ]
   // Dangerous physical needs take precedence over a lower mood score.
   const dangerousNeeds = statusNeeds.filter(need => need.id !== 'mood' && need.value <= 20)
-  const focusedNeed = (dangerousNeeds.length ? dangerousNeeds : statusNeeds)
+  const lowestNeed = (dangerousNeeds.length ? dangerousNeeds : statusNeeds)
     .reduce((lowest, need) => need.value < lowest.value ? need : lowest)
+  const focusedNeed = lowestNeed.value <= 60 ? lowestNeed : null
   useEffect(() => {
     if (game.hygiene > hygieneLimit) setGame(prev => ({ ...prev, hygiene: Math.min(prev.hygiene, hygieneLimit) }))
   }, [game.hygiene, hygieneLimit])
@@ -2275,9 +2276,9 @@ export default function App() {
         </div>
       </section>}
       <div className="condition-heading"><h3>Condition</h3></div>
-      <Stat label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} capReason={focusedNeed.capReason} focus />
-      <div className="status-needs" aria-label="Other condition indicators">
-        {statusNeeds.filter(need => need.id !== focusedNeed.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} capReason={need.capReason} />)}
+      {focusedNeed && <Stat label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} capReason={focusedNeed.capReason} focus />}
+      <div className="status-needs" aria-label={focusedNeed ? 'Other condition indicators' : 'Condition indicators'}>
+        {statusNeeds.filter(need => need.id !== focusedNeed?.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} capReason={need.capReason} />)}
       </div>
       <LifeSituation housing={life.housing} employment={life.employment} income={life.income} documents={inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'} />
     </section>}
