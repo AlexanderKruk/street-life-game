@@ -793,6 +793,9 @@ button.inventory-item { width:100%; }
 .district-pin.selected { z-index:4; }
 .district-pin.selected .district-marker { width:17px; height:17px; border-color:#e8c698; box-shadow:0 0 0 5px #111b2399,0 0 0 7px #d7b58a66; }
 .district-pin.selected .district-label { color:#f1d2a7; }
+.district-pin.closed .district-label { color:#8e999f; }
+.district-pin.closed:not(.here) .district-marker { border-color:#7f898f; background:#1a2228; box-shadow:0 1px 6px #000b,0 0 0 4px #111b2370; }
+.district-pin.closed.selected:not(.here) .district-marker { border-color:#a4adb3; box-shadow:0 0 0 5px #111b2399,0 0 0 7px #929ba366; }
 .district-pin:focus-visible,.district-route-button:focus-visible { outline:2px solid #d7b58a; outline-offset:3px; }
 .district-route { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; overflow:visible; }
 .district-route path { fill:none; stroke:#d7b58a; stroke-width:2; vector-effect:non-scaling-stroke; stroke-dasharray:2 7; stroke-linecap:round; opacity:.85; }

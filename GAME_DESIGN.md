@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-206`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-207`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Closed map locations (v207)
+
+Closed locations use muted gray map labels and markers. They remain normal, focusable buttons: selection, opening hours and routing still work. The selected closed marker keeps a neutral selection ring, and the current-location marker retains its gold position indicator. Styling follows the existing opening-hours flags, including changes while the map is open and overnight schedules.
 
 ### Life situation layout (v203)
 
