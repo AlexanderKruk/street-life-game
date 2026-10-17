@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-199`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-200`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Street clock resumes after information results (v200)
+
+Street uses the ordinary running clock: one game minute per real second while the page is visible. Removed the legacy blanket Street-decision pause, which also stopped time on Map, Inventory, Status and Journal whenever the hero's location was Street. Closing an information-search result resumes the clock without another action; returning to the location screen or reloading preserves this behavior. Removed the misleading TIME PAUSED label above ordinary Street choices. Actual event/result dialogs, rain decisions, sleep planning and other blocking flows retain their pauses, and travel keeps its existing accelerated clock. This supersedes the historical Street decision-pause descriptions below. Regression checks cover first-night and daytime idle ticks, search-result pause/resume, all navigation tabs, background visibility and reload.
 
 ### Bottle-search test shortcut removed (v198)
 

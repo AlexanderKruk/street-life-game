@@ -38,6 +38,35 @@ function advance(ms){const end=now+ms;while(true){const due=Math.min(...[...call
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 function discoverHelp(){for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
 
+// Street uses the ordinary one-minute-per-second clock, including after a
+// completed information search, tab changes and reload. Only the result pauses.
+for(const state of [{day:1,minutes:1320},{day:2,minutes:600}]) {
+ setup(state);
+ assert(!document.querySelector('.story-choices').textContent.includes('TIME PAUSED'));
+ advance(999);assert.equal(read(stateKey).minutes,state.minutes);
+ advance(1);assert.equal(read(stateKey).minutes,state.minutes+1);
+ const idleHunger=read(stateKey).hunger;
+ click('Where can I get help in the morning?');
+ const searchResult=read(stateKey);assert.equal(searchResult.minutes,state.minutes+16);
+ advance(3000);assert.deepEqual(read(stateKey),searchResult,'reading the search result pauses time');
+ ok();advance(1000);assert.equal(read(stateKey).minutes,searchResult.minutes+1,'closing the result resumes Street time');
+ for(const tab of ['Map','Inventory','Status','Journal']) {
+  click(tab);const beforeTab=read(stateKey).minutes;advance(1000);
+  assert.equal(read(stateKey).minutes,beforeTab+1,tab+' retains the Street clock');
+  fireEvent.click(document.querySelector('.nav-item.home'));
+  advance(1000);assert.equal(read(stateKey).minutes,beforeTab+2,'returning home keeps the clock running');
+ }
+ assert(read(stateKey).hunger<idleHunger,'ordinary needs keep changing on Street');
+ const beforeHidden=read(stateKey).minutes;
+ Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});
+ advance(2000);assert.equal(read(stateKey).minutes,beforeHidden);
+ Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
+ advance(1000);assert.equal(read(stateKey).minutes,beforeHidden+1);
+ const beforeReload=read(stateKey).minutes;
+ cleanup();render(React.createElement(App));advance(1000);
+ assert.equal(read(stateKey).minutes,beforeReload+1,'reloading Street resumes the ordinary clock');
+}
+
 // Phone work consumes one game minute per second, resumes, pauses in background,
 // and only unlocks knowledge/rewards when the full search has finished.
 setup({minutes:1436,mood:28},{'street-life-discovered-v1':['street','station','shop']});
@@ -115,7 +144,7 @@ for(const [draw,duration] of [[0,10],[.999,25]]) {
 setup({minutes:1320},{'street-life-mobile-service-until':'1322'});fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));advance(2000);
 assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));assert(!read('street-life-answers-v1').includes('morning'));
 setup({minutes:1320});fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));advance(3000);fireEvent.click(screen.getByRole('button',{name:'Reset save'}));advance(3000);
-assert(!document.querySelector('.phone-activity'));assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(stateKey).minutes,1320);
+assert(!document.querySelector('.phone-activity'));assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(stateKey).minutes,1323,'reset cancels the search and resumes the ordinary Street clock');
 
 // Street has three contextual choices; the test shortcut is gone. Bottle search
 // still opens through the ordinary action when normal priorities select it.
@@ -225,7 +254,7 @@ for(const [state,extra,expected] of [
  [{minutes:600,money:0},{},['question-morning','street-sleep','beg']],
 ]){setup(state,extra);assert.deepEqual(storyIds(),expected);assert.equal(storyIds().filter(id=>id.startsWith('question-')).length,1);}
 
-// One-level choices react immediately, while reading and deciding remain paused.
+// One-level choices react immediately; result reading pauses the clock.
 setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Maybe my phone can help'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
 setup({minutes:1320});click('Just one more street. I’m not ready to lie down.');assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog').textContent.includes('a steady office job'));assert(read('street-life-journal-history-v1')[0].text.includes('my old desk'));assert(!read('street-life-journal-history-v1')[0].text.includes('In your late thirties'));assert.equal(read('street-life-journal-history-v1')[0].summary,undefined);assert(read('street-life-memories-v1').includes('office-routine'));ok();cleanup();render(React.createElement(App));click('Just one more street. I’m not ready to lie down.');assert(!screen.getByRole('dialog').textContent.includes('a steady office job'));ok();click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();discoverHelp();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('a place to live'));ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();if(document.querySelector('.event-overlay')){fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button')[0]);ok();}fireEvent.click(screen.getByRole('button',{name:'Reset save'}));assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
@@ -236,7 +265,7 @@ assert.equal(document.querySelector('[data-choice="music-walk"] .choice-duration
 assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'32m+');
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
-const storyState=read(stateKey),storyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),storyState);assert.deepEqual(read(invKey),storyInventory);
+assert(!document.querySelector('.story-choices').textContent.includes('TIME PAUSED'));
 click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1335);assert(Math.abs(read(stateKey).mood-31)<1e-8);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));
 setup({minutes:1320});assert(!screen.queryByRole('button',{name:/What about Night Shelter\? Maybe there is a place./}));
 setup({minutes:1320});click(/Maybe the station\? At least I could sit down./);assert(screen.getByRole('button',{name:/Public transport/}));assert.equal(read(stateKey).minutes,1320);
@@ -244,7 +273,7 @@ setup({minutes:1320});click(/Maybe the station\? At least I could sit down./);as
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop'],[invKey]:{clothingCleanliness:80}});assert(!screen.queryByRole('button',{name:'Earn something for food',exact:true}));assert(screen.getByRole('button',{name:'Maybe the station? At least I could sit down.',exact:true}));const dryEnergy=read(stateKey).energy;click('Just one more street. I’m not ready to lie down.');assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).energy<dryEnergy);assert(!read(stateKey).rainUntil);assert(Math.abs(read(invKey).clothingCleanliness-(80-30*30/1440))<1e-8);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
 setup({minutes:1320},{[invKey]:{clothingCleanliness:80}});Math.random=()=>0;click('Just one more street. I’m not ready to lie down.');assert.equal(read(stateKey).minutes,1350);assert.equal(read(stateKey).rainUntil,1515);assert(read(invKey).clothingCleanliness<75);assert.equal(read('street-life-journal-history-v1').length,1);ok();assert(screen.getByRole('dialog',{name:'Rain on the street'}));const rainyState=read(stateKey),rainyInventory=read(invKey);advance(10000);assert.deepEqual(read(stateKey),rainyState);assert.deepEqual(read(invKey),rainyInventory);cleanup();render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));click('At least it looks dry under that canopy.');assert.equal(read(stateKey).minutes,1350);click(/Just fifteen minutes/);assert.equal(read(stateKey).minutes,1365);assert.equal(localStorage.getItem('street-life-rain-choice-v1'),'false');assert.equal(read(stateKey).rainUntil,1515);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
 setup({minutes:1320,rainUntil:1500});click('Just one more street. I’m not ready to lie down.');ok();click('Maybe the station? At least I could sit down.');assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));assert.equal(read(stateKey).minutes,1350);assert(screen.getByRole('button',{name:/Public transport/}));
-setup({day:2,minutes:400,rainUntil:1700});advance(1000);assert.equal(read(stateKey).minutes,400); // street decision remains paused after rain expires
+setup({day:2,minutes:400,rainUntil:1700});advance(1000);assert.equal(read(stateKey).minutes,401); // normal Street clock resumes after rain expires
 setup({day:2,minutes:240,rainUntil:2000});click('Just one more street. I’m not ready to lie down.');ok();click('At least it looks dry under that canopy.');const waitingBefore=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),waitingBefore);click(/Maybe four hours/);assert.equal(read(stateKey).minutes,510);assert(read(stateKey).energy<waitingBefore.energy);assert(!localStorage.getItem('street-life-sleep-v1'));assert(screen.getByRole('dialog').textContent.includes('You do not sleep'));assert.equal(read('street-life-journal-history-v1').length,2);
 // Music and concrete answers lift opening Mood, with real phone/time costs.
 setup({day:2,minutes:240});assert(document.querySelector('.story-scene').textContent.includes('Delivery vans'));assert(!document.querySelector('.story-scene').textContent.includes('It is past ten'));assert(screen.getByRole('button',{name:'Maybe the station? At least I could sit down.',exact:true}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.',exact:true}));
@@ -607,7 +636,7 @@ assert.deepEqual(read(stateKey),planState);assert.deepEqual(read(invKey),planInv
 chooseHours(6);
 assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 05:30'));
 assert(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:/^8 h.*07:30/}));advance(3000);assert.deepEqual(read(stateKey),planState);
-click('Cancel');assert(!screen.queryByRole('dialog'));assert.deepEqual(read(stateKey),planState);advance(1000);assert.equal(read(stateKey).minutes,1410);
+click('Cancel');assert(!screen.queryByRole('dialog'));assert.deepEqual(read(stateKey),planState);advance(1000);assert.equal(read(stateKey).minutes,1411,'cancelling sleep planning resumes the ordinary clock');
 setup({minutes:1410});click(/Lie down here\? I’m not sure… But I could try./);chooseHours(2);click('Start sleeping');
 assert.equal(read('street-life-sleep-v1').total,120);assert.equal(read('street-life-sleep-v1').startAbsolute,1410);assert(!document.querySelector('.sleep-choice-modal'));
 advance(1000);assert.equal(read(stateKey).minutes,1420);
