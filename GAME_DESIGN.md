@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-226`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-227`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Pedestrian junction phases (v227)
+
+Walking routes now alternate Walking, Approaching a junction, Waiting for the green light, Crossing the road and Walking on. A sequence fits within up to twelve existing game minutes, with one minute each for approaching, waiting, crossing and carrying on; longer routes repeat it. Very short legacy trips below five minutes remain walking. No extra duration is added. The walker and road streaks stop during the red-light wait, then resume. All pedestrian phases remain outdoors, including waiting: rain still wets clothes. Reload restores the current phase, and unchanged phase labels retain memoized rendering. Save fixtures cover actual published builds v217–v226.
 
 ### Activity first in travel card (v226)
 

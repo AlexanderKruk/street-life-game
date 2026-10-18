@@ -94,10 +94,11 @@ function measure(App) {
 (async () => {
   const Baseline = await loadApp(true), App = await loadApp(false);
   const before = measure(Baseline), after = measure(App);
-  for (const [section, name] of [['journal', 'JournalGoals'], ['journal', 'JournalTimeline'], ['map', 'DistrictScene'], ['status', 'LifeSituation'], ['inventory', 'ItemArt'], ['location', 'LocationSummary'], ['shop', 'ShopHero'], ['shop', 'ShopCard'], ['travel', 'TravelHeading'], ['phoneSearch', 'StreetArt'], ['sleep', 'SleepHeading']]) {
+  for (const [section, name] of [['journal', 'JournalGoals'], ['journal', 'JournalTimeline'], ['map', 'DistrictScene'], ['status', 'LifeSituation'], ['inventory', 'ItemArt'], ['location', 'LocationSummary'], ['shop', 'ShopHero'], ['shop', 'ShopCard'], ['phoneSearch', 'StreetArt'], ['sleep', 'SleepHeading']]) {
     assert(before[section][name] > 0, `${name}: baseline must render during ticks`);
     assert.equal(after[section][name] ?? 0, 0, `${name}: unchanged data must skip rendering`);
   }
+  assert(after.travel.TravelHeading > 0 && after.travel.TravelHeading < before.travel.TravelHeading, 'travel headings update for changing walking phases, skipping unchanged ticks');
   // Relevant changes must still render: opening hours, selected map pin, completed goal, journal day.
   setup(App, 'map', { minutes: 1319 }); advance(1);
   assert.equal(count('DistrictScene'), 1);

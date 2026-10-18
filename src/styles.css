@@ -132,6 +132,8 @@ footer p { margin:0; }
 .travel-elapsed svg { width:24px; height:24px; flex-shrink:0; color:#a0a8ae; }
 .travel-elapsed strong { font-size:27px; font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .travel-walker { display:block; width:90px; height:90px; object-fit:contain; animation:travel-walk .9s linear infinite; }
+.travel-visual.walking.waiting .travel-walker { animation:none; }
+.travel-visual.walking.waiting .travel-path { display:none; }
 .travel-visual .travel-bus { width:90px; height:90px; stroke-width:1.35; animation:travel-ride .9s linear infinite; }
 .travel-trail { position:absolute; left:22px; top:36px; width:22px; height:30px; }
 .travel-trail b { position:absolute; right:0; width:18px; height:3px; border-radius:2px; background:currentColor; opacity:0; animation:travel-trail .9s linear infinite; }

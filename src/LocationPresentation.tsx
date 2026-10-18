@@ -25,10 +25,10 @@ export const ShopHero = memo(function ShopHero({ name, open, opensAt, closesAt }
   return <section className="shop-hero" aria-label="Shop"><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{name}</h2><p>{open ? 'Open' : 'Closed'} · {formatTime(opensAt)}–{formatTime(closesAt)}</p></section>
 })
 
-type TravelHeadingProps = { from: string; to?: string; walking: boolean; transitPhase?: string }
-export const TravelHeading = memo(function TravelHeading({ from, to, walking, transitPhase }: TravelHeadingProps) {
+type TravelHeadingProps = { from: string; to?: string; walking: boolean; phaseLabel?: string; moving?: boolean }
+export const TravelHeading = memo(function TravelHeading({ from, to, walking, phaseLabel, moving = true }: TravelHeadingProps) {
   return <>
-    <div className={`travel-visual ${walking ? 'walking' : 'transit'}`} aria-hidden="true">
+    <div className={`travel-visual ${walking ? 'walking' : 'transit'}${moving ? '' : ' waiting'}`} aria-hidden="true">
       <span className={walking ? 'travel-path' : 'travel-trail'}><b /><b /><b />{walking && <b />}</span>
       {walking
         ? <img className="travel-walker" src="/street-life-game/assets/travel-walker.webp" width="90" height="90" alt="" />
@@ -36,7 +36,7 @@ export const TravelHeading = memo(function TravelHeading({ from, to, walking, tr
     </div>
     <div className="travel-route-heading">
       <p className="travel-route-summary">{from} <span>→</span> {to}</p>
-      <h2 className="travel-action-label">{walking ? 'Walking' : transitPhase ?? 'Public transport'}<span className="travel-phase-dots" aria-hidden="true"><i /><i /><i /></span></h2>
+      <h2 className="travel-action-label">{phaseLabel ?? (walking ? 'Walking' : 'Public transport')}<span className="travel-phase-dots" aria-hidden="true"><i /><i /><i /></span></h2>
     </div>
   </>
 })

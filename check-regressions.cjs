@@ -489,6 +489,17 @@ for(const mode of ['walk','transit','fare-dodge']) {
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
  advance(15*250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
 }
+// Pedestrians approach a junction, wait, cross and carry on within the
+// existing duration. Waiting pauses their animation but provides no rain cover.
+setup({day:2,minutes:600,wetness:20},{'street-life-trip-v1':{destinationId:'shop',mode:'walk',total:5,remaining:5},'street-life-rain-response-v1':{episode:'weather:2',locationId:'street',sheltered:false}});
+for(const [index,label] of ['Walking','Approaching a junction','Waiting for the green light','Crossing the road','Walking on'].entries()) {
+ assert.equal(document.querySelector('.travel-action-label').textContent,label);assert.equal(!!document.querySelector('.travel-visual.walking.waiting'),index===2);
+ cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,label);advance(250);assert.equal(read(stateKey).wetness,21+index);
+}
+assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,605);ok();
+// On longer walks crossing sequences repeat instead of waiting for a large
+// fraction of a multi-hour journey at a single traffic light.
+setup({minutes:600},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:30,remaining:30}});advance(10*250);assert.equal(document.querySelector('.travel-action-label').textContent,'Crossing the road');advance(2*250);assert.equal(document.querySelector('.travel-action-label').textContent,'Walking');
 // Bus phase text follows elapsed time and resumes at the same stage after reload.
 for(const mode of ['transit','fare-dodge']) {
  setup({minutes:600},{'street-life-trip-v1':{destinationId:'shop',mode,total:10,remaining:10}});
