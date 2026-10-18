@@ -29,6 +29,7 @@ export type Location = {
   open: number
   close: number
   travelMinutes: number
+  travelRange?: { min: number; max: number }
 }
 
 export function travelTimeRange(baseMinutes: number) {
@@ -36,10 +37,15 @@ export function travelTimeRange(baseMinutes: number) {
   return { min, max: Math.max(min, Math.floor(baseMinutes * 1.2)) }
 }
 
-// Whole-minute durations stay inside -5% / +20%; sample only when a trip starts.
-export function randomTravelMinutes(baseMinutes: number, random = Math.random) {
-  const { min, max } = travelTimeRange(baseMinutes)
+// Sample once per trip: ordinary routes use -5% / +20%, nearby routes can supply a range.
+export function randomTravelMinutes(baseMinutes: number | { min: number; max: number }, random = Math.random) {
+  const { min, max } = typeof baseMinutes === 'number' ? travelTimeRange(baseMinutes) : baseMinutes
   return min + Math.floor(random() * (max - min + 1))
+}
+
+export function destinationTravelTimeRange(destination: Location, mode: 'walk' | 'transit' | 'fare-dodge') {
+  // Nearby shops take as long by bus once walking to a stop and waiting count.
+  return destination.travelRange ?? travelTimeRange(mode === 'walk' ? destination.travelMinutes : Math.ceil(destination.travelMinutes * 0.5))
 }
 
 export type ActionResult = {
@@ -70,7 +76,7 @@ export type GameAction = {
 export const locations: Location[] = [
   { id: 'street', name: 'Street', icon: '🌆', description: 'An exposed city block. Free to stay, but there is little safety or real rest.', open: 0, close: 1440, travelMinutes: 60 },
   { id: 'station', name: 'Station', icon: '🚉', description: 'Crowds, benches and small chances to earn.', open: 0, close: 1440, travelMinutes: 65 },
-  { id: 'shop', name: 'Cheap Shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 75 },
+  { id: 'shop', name: 'Cheap Shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 10, travelRange: { min: 5, max: 15 } },
   { id: 'shelter', name: 'Night Shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 90 },
   { id: 'support', name: 'Help Center', icon: '🤝', description: 'Social workers can help with documents, benefits, accommodation and other support.', open: 480, close: 960, travelMinutes: 105 },
   { id: 'residential-shelter', name: 'Schronisko', icon: '🏠', description: '24/7 supported accommodation. Access requires a referral from the help center.', open: 0, close: 1440, travelMinutes: 120 },

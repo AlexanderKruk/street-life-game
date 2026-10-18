@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-222`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-223`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Nearby shop (v223)
+
+Cheap Shop is a nearby convenience store: walking takes a uniformly sampled 5–15 game minutes. Paid transport and riding without a ticket use the same 5–15 minute range because waiting and reaching the stop remove the speed advantage. All three route choices show that range. Other destinations retain their existing times; already-running saved trips keep their sampled total and remaining minutes. Save fixtures cover actual published builds v213–v222.
 
 ### Header low-battery warning (v222)
 

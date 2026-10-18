@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, travelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, destinationTravelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
 import { pickStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ConsumedItem, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
@@ -27,7 +27,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-222'
+const BUILD_VERSION = 'v2026.10.18-223'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -296,7 +296,7 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
     const text = isValidElement<{ children?: ReactNode }>(metadata) ? textOf(metadata.props.children) : ''
     const minutes = text.match(/~(\d+)(?:[–-](\d+))? min/)
     const destination = route ? locations.find(place => place.id === route) : undefined
-    const duration = destination ? `${approximateDuration(travelTimeRange(Math.ceil(destination.travelMinutes * 0.5)).min)}+`
+    const duration = destination ? `${approximateDuration(destinationTravelTimeRange(destination, 'transit').min)}+`
       : text === 'Choose duration' ? `${approximateDuration(SLEEP_HOURS[0] * 60)}+`
       : minutes ? minutes[2] ? `≈${minutes[1]}–${minutes[2]}m` : approximateDuration(Number(minutes[1])) : null
     return cloneElement(node, {}, Children.toArray(node.props.children)
@@ -1437,13 +1437,12 @@ export default function App() {
     if (sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
-    const baseMinutes = mode === 'walk' ? destination.travelMinutes : Math.ceil(destination.travelMinutes * 0.5)
     const fare = freeTransitActive ? 0 : 4.4
     if (mode === 'transit' && game.money < fare) {
       setMessage('You do not have enough money for public transport.')
       return
     }
-    const total = randomTravelMinutes(baseMinutes)
+    const total = randomTravelMinutes(destinationTravelTimeRange(destination, mode))
     recordShelterDeparture(destination.id)
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
@@ -1743,7 +1742,7 @@ export default function App() {
     if (diceCheck.fareDodgeDestinationId) {
       const destination = locations.find((entry) => entry.id === diceCheck.fareDodgeDestinationId)
       if (destination) {
-        const total = randomTravelMinutes(Math.ceil(destination.travelMinutes * 0.5))
+        const total = randomTravelMinutes(destinationTravelTimeRange(destination, 'fare-dodge'))
         recordShelterDeparture(destination.id)
         setStreetBenchFound(false)
         setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } })
@@ -2313,19 +2312,20 @@ export default function App() {
       const destination = locations.find((x) => x.id === selectedDestination)
       if (!destination) return null
       const transitMinutes = Math.ceil(destination.travelMinutes * 0.5)
+      const nearbyTime = destination.travelRange ? `${destination.travelRange.min}–${destination.travelRange.max}m` : null
       return <div className="travel-sheet">
         <button className="sheet-close" onClick={() => setSelectedDestination(null)}>×</button>
         <p className="eyebrow">TRAVEL TO</p>
         <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
         <ChoiceOptions seed={choiceSeed} decision={`${choiceDecisionKey}|travel:${destination.id}`}>
         <button className="travel-option" onClick={() => startTravel('walk')}>
-          <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>≈{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
+          <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>≈{nearbyTime ?? formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
         <button className="travel-option" onClick={() => startTravel('transit')} disabled={!freeTransitActive && game.money < 4.4}>
-          <Icon name="bus" /><div><strong>Public transport</strong><small>≈{formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · less physical strain</small></div>
+          <Icon name="bus" /><div><strong>Public transport</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · {nearbyTime ? 'includes waiting' : 'less physical strain'}</small></div>
         </button>
         {!freeTransitActive && <button className="travel-option" onClick={attemptFareDodge}>
-          <Icon name="coins" /><div><strong>Ride without ticket</strong><small>≈{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
+          <Icon name="coins" /><div><strong>Ride without ticket</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · free{nearbyTime ? ' · includes waiting' : ''}</small><small>Risk: 20–35 zł fine</small></div>
         </button>}
         </ChoiceOptions>
 

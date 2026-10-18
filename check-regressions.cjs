@@ -481,6 +481,14 @@ for(const mode of ['walk','transit','fare-dodge']) {
  advance(999);assert.deepEqual(read(stateKey),arrived);advance(1);assert.equal(read(stateKey).minutes,arrived.minutes+1);
 }
 
+// The nearby shop takes the same 5–15 minutes in each mode, including bus waits.
+for(const mode of ['walk','transit','fare-dodge']) {
+ setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click(/^.*Cheap Shop/);click('Go →');
+ const options=document.querySelectorAll('.travel-option');assert.equal(options.length,3);for(const option of options)assert(option.textContent.includes('≈5–15m'));
+ if(mode==='fare-dodge'){click(/Ride without ticket/);click('Roll D20');click('Continue');ok();}else click(mode==='walk'?/^Walk/:/Public transport/);
+ assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
+ advance(15*250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
+}
 // A paid trip resumes from remaining time with its original result snapshot.
 setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
 cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);
@@ -731,13 +739,15 @@ setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!d
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
-const {advanceTime,initialState,createInitialState,overallCondition,conditionBand,moodLimit,limitMood,HOUSING_MOOD_CAP,locations,travelTimeRange,randomTravelMinutes}=require('./regression-game.cjs');
+const {advanceTime,initialState,createInitialState,overallCondition,conditionBand,moodLimit,limitMood,HOUSING_MOOD_CAP,locations,travelTimeRange,destinationTravelTimeRange,randomTravelMinutes}=require('./regression-game.cjs');
 for(const base of [1,33,40,45,65,...locations.flatMap(location=>[location.travelMinutes,Math.ceil(location.travelMinutes*.5)])]) {
  const {min,max}=travelTimeRange(base);assert.equal(min,Math.ceil(base*.95));assert.equal(max,Math.floor(base*1.2));
  assert.equal(randomTravelMinutes(base,()=>0),min);assert.equal(randomTravelMinutes(base,()=>.999999),max);
  for(let value=min;value<=max;value++)assert.equal(randomTravelMinutes(base,()=>(value-min+.5)/(max-min+1)),value);
  assert(min>=base*.95&&max<=base*1.2);
 }
+const nearbyShop=locations.find(place=>place.id==='shop');
+for(const mode of ['walk','transit','fare-dodge']){const range=destinationTravelTimeRange(nearbyShop,mode);assert.deepEqual(range,{min:5,max:15});assert.equal(randomTravelMinutes(range,()=>0),5);assert.equal(randomTravelMinutes(range,()=>.999999),15);}
 // One Mood and the same five faces in the header and Status.
 assert.deepEqual([0,21,41,61,81].map(value=>conditionBand(value).level),['very-bad','bad','fair','ok','very-good']);
 for(const [boundary,below,above] of [[20,'very-bad','bad'],[40,'bad','fair'],[60,'fair','ok'],[80,'ok','very-good']]) {
