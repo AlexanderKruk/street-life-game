@@ -27,7 +27,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-219'
+const BUILD_VERSION = 'v2026.10.18-220'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -51,7 +51,6 @@ function approximateDuration(minutes: number) {
 }
 const PHONE_SEARCH_MIN = 10
 const PHONE_SEARCH_MAX = 25
-const PHONE_SEARCH_DRAIN_PER_MINUTE = 0.2
 type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot }
 
 function loadPhoneActivity(): PhoneActivity | null {
@@ -157,6 +156,22 @@ function mixFreshness(currentCount: number, currentFreshness: number, addedCount
 
 function phoneDrainMultiplier(condition: number) {
   return 1 + (100 - Math.max(0, Math.min(100, condition))) * 0.007
+}
+
+// Charge screen-on activities for each elapsed game minute so dawn, dusk,
+// midnight and rain ending can change brightness within the same activity.
+function phoneScreenDrain(state: GameState, condition: number, usage: 'browsing' | 'navigation', minutes = 1) {
+  let drain = 0
+  for (let elapsed = 0; elapsed < minutes; elapsed++) {
+    const absolute = absoluteMinutes(state) + elapsed
+    const minute = absolute % 1440
+    const day = Math.floor(absolute / 1440) + 1
+    const daylight = minute >= 360 && minute < 1200
+    const clear = (state.rainUntil ?? 0) <= absolute && WEATHER[(day - 1) % WEATHER.length].label === 'Clear'
+    const hourly = (usage === 'browsing' ? 18 : 12) + (daylight ? clear ? 12 : 6 : 0)
+    drain += hourly / 60 * phoneDrainMultiplier(condition) * Math.min(1, minutes - elapsed)
+  }
+  return drain
 }
 
 function stackSlots(count: number) {
@@ -472,8 +487,8 @@ export default function App() {
   const moodBand = conditionBand(game.mood)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const navigationInBrightSun = weather.label === 'Clear' && game.minutes >= 360 && game.minutes < 1200
-  const navigationDrainPerHour = navigationInBrightSun ? 15 : 12
-  const directSearchCost = 15 * PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
+  const navigationDrainPerHour = phoneScreenDrain(game, inventory.phoneCondition, 'navigation') * 60
+  const directSearchCost = phoneScreenDrain(game, inventory.phoneCondition, 'browsing', 15)
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
     { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until Day 2, 12:00.' },
@@ -597,7 +612,7 @@ export default function App() {
     const wornMinutes = Math.max(0, now - Math.max(now - elapsed, laundryCleanAt.current))
     setInventory(prev => {
       const multiplier = phoneDrainMultiplier(prev.phoneCondition)
-      const navigationDrain = trip && navigationOn ? navigationDrainPerHour / 60 * multiplier * elapsed : 0
+      const navigationDrain = trip && navigationOn ? phoneScreenDrain({ ...game, minutes: game.minutes - elapsed }, prev.phoneCondition, 'navigation', elapsed) : 0
       const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
       return { ...prev,
         clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1.5 : 1) - extraDirt),
@@ -799,7 +814,7 @@ export default function App() {
     if (phoneActivity) {
       if (phoneActivity.remaining <= 0 || gameOver || document.visibilityState !== 'visible') return
       setGame(previous => applyAction(previous, { minutes: 1 }))
-      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(previous.phoneCondition)) }))
+      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - phoneScreenDrain(game, previous.phoneCondition, 'browsing')) }))
       setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
       return
     }
@@ -1256,7 +1271,7 @@ export default function App() {
   ]
   const lastDecision = journalEntries.at(-1)
   const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
-  const phoneSearchCost = PHONE_SEARCH_MIN * PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
+  const phoneSearchCost = phoneScreenDrain(game, inventory.phoneCondition, 'browsing', PHONE_SEARCH_MIN)
 
   function finishPracticalQuestion(id: string, before = resultSnapshot()) {
     const question = practicalQuestions.find(entry => entry.id === id)
@@ -2265,7 +2280,7 @@ export default function App() {
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
     {phoneOpen && <PhoneDialog orderSeed={choiceSeed} decisionKey={choiceDecisionKey}
         battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
-        autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={Math.round(navigationDrainPerHour * phoneDrainMultiplier(inventory.phoneCondition) * 10) / 10} navigationInBrightSun={navigationInBrightSun}
+        autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={Math.round(navigationDrainPerHour * 10) / 10} navigationInBrightSun={navigationInBrightSun}
         videoDrain={Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}
         showAi={current.id === 'street'} canAskAi={mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= phoneSearchCost}
         canNavigate={inventory.phoneBattery > 0 && mobileServiceActive} canWatchVideo={mobileServiceActive && inventory.phoneBattery >= 9 * phoneDrainMultiplier(inventory.phoneCondition)}

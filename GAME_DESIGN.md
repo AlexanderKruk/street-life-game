@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-219`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-220`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Screen brightness and old-phone battery (v220)
+
+Screen-on base drain now follows game lighting: Browsing 18/hour at night, 24/hour in daylight and 30/hour in clear daylight; navigation respectively 12, 18 and 24/hour. Phone wear multiplies these rates. At the starting 72 condition, a 15-minute search uses about 5.4, 7.2 or 9 battery points. Daylight is 06:00–20:00; each elapsed minute is accounted for separately, including dawn/dusk, midnight and weather changes within an activity. Direct searches use the same calculation. The Phone dialog displays the actual current navigation rate. This replaces the lower v219 rates below. Save fixtures cover actual published builds v210–v219.
 
 ### Battery accounting audit (v219)
 

@@ -1,7 +1,7 @@
 [
   {
-    "commit": "8d640bc0b161688f2025daeb3fb6688ca36a2843",
-    "build": 209,
+    "commit": "6cb30b18910aae8ae0a1e67bfc44bd3e0b5464d4",
+    "build": 210,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":3,\"attempts\":0}",
@@ -24,8 +24,8 @@
     }
   },
   {
-    "commit": "6cb30b18910aae8ae0a1e67bfc44bd3e0b5464d4",
-    "build": 210,
+    "commit": "93a40fdef65d2cd9401a10b1a236c737ac085d24",
+    "build": 211,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":4,\"attempts\":0}",
@@ -48,8 +48,8 @@
     }
   },
   {
-    "commit": "93a40fdef65d2cd9401a10b1a236c737ac085d24",
-    "build": 211,
+    "commit": "b0187c6f26d6879b4a3d36eafb1c5b4491104c21",
+    "build": 212,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":5,\"attempts\":0}",
@@ -72,8 +72,8 @@
     }
   },
   {
-    "commit": "b0187c6f26d6879b4a3d36eafb1c5b4491104c21",
-    "build": 212,
+    "commit": "8f5a66b01589a195e2f27b12579ddd2852335fae",
+    "build": 213,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":6,\"attempts\":0}",
@@ -96,8 +96,8 @@
     }
   },
   {
-    "commit": "8f5a66b01589a195e2f27b12579ddd2852335fae",
-    "build": 213,
+    "commit": "eddaadf47da6a74757ac71b099e76707bf855907",
+    "build": 214,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":7,\"attempts\":0}",
@@ -120,8 +120,8 @@
     }
   },
   {
-    "commit": "eddaadf47da6a74757ac71b099e76707bf855907",
-    "build": 214,
+    "commit": "c204ce44c1700ffd2858ccd8b0dd7073a000224e",
+    "build": 215,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":8,\"attempts\":0}",
@@ -144,8 +144,8 @@
     }
   },
   {
-    "commit": "c204ce44c1700ffd2858ccd8b0dd7073a000224e",
-    "build": 215,
+    "commit": "709f1f104c29e40f58d9f362df82ca2e8785af7a",
+    "build": 216,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":9,\"attempts\":0}",
@@ -168,11 +168,12 @@
     }
   },
   {
-    "commit": "709f1f104c29e40f58d9f362df82ca2e8785af7a",
-    "build": 216,
+    "commit": "ad37ec8fdd0e9ff0e001208586a45e40b709065b",
+    "build": 217,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":10,\"attempts\":0}",
+      "street-life-choice-seed-v1": "3375896420",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -192,17 +193,17 @@
     }
   },
   {
-    "commit": "ad37ec8fdd0e9ff0e001208586a45e40b709065b",
-    "build": 217,
+    "commit": "dbf07e5ee70e323c22f291502d8e714a3246a433",
+    "build": 218,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":11,\"attempts\":0}",
-      "street-life-choice-seed-v1": "1849709792",
+      "street-life-choice-seed-v1": "1740677611",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
       "street-life-first-night-events-v1": "{\"seen\":[],\"lastAt\":null,\"pendingId\":null}",
-      "street-life-inventory-v1": "{\"clothingCleanliness\":85,\"showerGel\":0,\"bread\":0,\"breadFreshness\":100,\"cannedFood\":0,\"wipes\":0,\"water\":9,\"food\":0,\"foodFreshness\":100,\"bottles\":0,\"phoneBattery\":37,\"phoneCondition\":72,\"jacket\":42,\"documents\":false,\"cigarettes\":0,\"medicines\":2,\"transitCard\":true}",
+      "street-life-inventory-v1": "{\"clothingCleanliness\":85,\"showerGel\":0,\"bread\":0,\"breadFreshness\":100,\"cannedFood\":0,\"wipes\":0,\"water\":9,\"food\":0,\"foodFreshness\":100,\"bottles\":0,\"phoneBattery\":37,\"phoneCondition\":72,\"jacket\":42,\"documents\":false,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false}",
       "street-life-journal-goals-v1": "{\"morning\":true,\"shelter\":false,\"support\":false,\"work\":false}",
       "street-life-journal-history-v1": "[{\"day\":2,\"minute\":700,\"actionTitle\":\"Rest\",\"reflection\":true,\"title\":\"A moment of rest\",\"text\":\"I feel a little steadier.\"}]",
       "street-life-memories-v1": "[]",
@@ -217,12 +218,12 @@
     }
   },
   {
-    "commit": "dbf07e5ee70e323c22f291502d8e714a3246a433",
-    "build": 218,
+    "commit": "e78fd90b16b2f4f12c6af333b77372829251c9d3",
+    "build": 219,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":12,\"attempts\":0}",
-      "street-life-choice-seed-v1": "2433831683",
+      "street-life-choice-seed-v1": "4121601421",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
