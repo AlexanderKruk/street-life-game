@@ -11,19 +11,34 @@ const waiting: TravelPhase = { label: 'Waiting for the bus', walking: false, exp
 const riding: TravelPhase = { label: 'Riding the bus', walking: false, exposure: 'transit' }
 const toDestination: TravelPhase = { label: 'Walking to your destination', walking: true, exposure: 'outside' }
 
+function getWalkingStage(trip: TravelProgress): { phase: TravelPhase; minutes: number } {
+  const elapsed = Math.max(0, trip.total - trip.remaining)
+  if (trip.total < 5) return { phase: walking, minutes: Math.max(1, trip.total) }
+  // Spread complete junction sequences across the route; avoid a partial final one.
+  const junctions = Math.max(1, Math.floor(trip.total / 30))
+  const blockMinutes = Math.floor(trip.total / junctions)
+  const block = Math.min(junctions - 1, Math.floor(elapsed / blockMinutes))
+  const start = block * blockMinutes
+  const end = block === junctions - 1 ? trip.total : start + blockMinutes
+  const position = elapsed - start
+  const walkingMinutes = end - start - 4
+  if (position < walkingMinutes) return { phase: walking, minutes: walkingMinutes }
+  if (position < walkingMinutes + 1) return { phase: approachingCrossing, minutes: 1 }
+  if (position < walkingMinutes + 2) return { phase: waitingForGreen, minutes: 1 }
+  if (position < walkingMinutes + 3) return { phase: crossingRoad, minutes: 1 }
+  return { phase: walkingOn, minutes: 1 }
+}
+
+// Each pedestrian stage remains visible for at least five real seconds.
+// Only presentation speed changes: saved game minutes and weather costs stay intact.
+export function getTravelTickMs(trip: TravelProgress): number {
+  return trip.mode === 'walk' ? Math.max(250, Math.ceil(5000 / getWalkingStage(trip).minutes)) : 250
+}
+
 // Text and weather effects use the same saved trip progress and boundaries.
 export function getTravelPhase(trip: TravelProgress): TravelPhase {
   const elapsed = Math.max(0, trip.total - trip.remaining)
-  if (trip.mode === 'walk') {
-    const blockMinutes = Math.min(12, trip.total)
-    if (blockMinutes < 5) return walking
-    const position = elapsed % blockMinutes
-    if (position < blockMinutes - 4) return walking
-    if (position < blockMinutes - 3) return approachingCrossing
-    if (position < blockMinutes - 2) return waitingForGreen
-    if (position < blockMinutes - 1) return crossingRoad
-    return walkingOn
-  }
+  if (trip.mode === 'walk') return getWalkingStage(trip).phase
   if (elapsed < Math.max(1, Math.round(trip.total * 0.2))) return toStop
   if (elapsed < Math.max(2, Math.round(trip.total * 0.55))) return waiting
   if (elapsed < Math.max(3, Math.round(trip.total * 0.85))) return riding

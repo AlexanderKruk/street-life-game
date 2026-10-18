@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-227`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-229`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Readable pedestrian stages (v229)
+
+Walking now shows one complete junction sequence per roughly 30 game minutes (at least one for routes of five minutes or more), rather than repeating every twelve minutes. Every stage—walking, approaching, waiting for green, crossing and walking on—lasts at least five real seconds. The clock slows only as needed for that stage while still displaying every elapsed game minute. Route totals, rain exposure, costs and saved progress retain their original game-minute accounting. Very short legacy routes show only Walking, also for at least five seconds. Buses and waiting under rain cover retain their existing speed. Reload resumes the saved stage; events and hidden tabs pause progress as before. This supersedes the pedestrian timing and uniform ×4 walking cadence described below.
 
 ### Pedestrian junction phases (v227)
 

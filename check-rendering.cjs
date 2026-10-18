@@ -74,9 +74,9 @@ function measure(App) {
   assert([...document.querySelectorAll('.bottom-nav button')].every(button => button.disabled));
   assert.equal(document.body.style.overflow, 'hidden');
   const initialElapsed = document.querySelector('.travel-elapsed').textContent;
-  advance(10); output.travel = counts();
+  advance(12); output.travel = counts();
   assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '40m');
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '27m');
   assert(!document.querySelector('.travel-progress'));
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));

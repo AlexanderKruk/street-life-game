@@ -16,7 +16,7 @@ import { CHOICE_SEED_KEY, loadChoiceSeed, newChoiceSeed, shuffleChoiceOrder } fr
 import ChoiceOptions, { orderChoiceNodes } from './ChoiceOptions'
 import { StreetArt, LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
 import { useLatestAction } from './useLatestAction'
-import { getTravelPhase } from './travelPhases'
+import { getTravelPhase, getTravelTickMs } from './travelPhases'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import Stat from './Stat'
@@ -28,7 +28,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-228'
+const BUILD_VERSION = 'v2026.10.18-229'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -888,7 +888,7 @@ export default function App() {
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
     if (!underRainCover) setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
   })
-  const gameClockInterval = trip || shelterDeparture ? ACTIVITY_TICK_MS : 1000
+  const gameClockInterval = trip ? (underRainCover ? ACTIVITY_TICK_MS : getTravelTickMs(trip)) : shelterDeparture ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
     const timer = window.setInterval(tickGameClock, gameClockInterval)
     return () => window.clearInterval(timer)

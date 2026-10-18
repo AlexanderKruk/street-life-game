@@ -37,6 +37,19 @@ function chooseHours(hours){fireEvent.click(within(screen.getByRole('group',{nam
 function beginSleep(name,hours){click(name);if(hours!==undefined)chooseHours(hours);click('Start sleeping');}
 function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Got it',exact:true}));}
 function advance(ms){const end=now+ms;while(true){const due=Math.min(...[...callbacks.values()].map(timer=>timer.nextAt));if(due>end)break;now=due;act(()=>{for(const[id,timer]of [...callbacks])if(callbacks.has(id)&&timer.nextAt<=now){timer.nextAt+=timer.delay;timer.fn()}})}now=end;fireEvent(window,new window.Event('pagehide'))}
+// Advance real timers to each next game minute, including slower pedestrian stages.
+function advanceTravelMinutes(minutes) {
+ for(let n=0;n<minutes;n++) {
+  const before=read('street-life-trip-v1');assert(before,'trip is still active');
+  for(let guard=0;guard<100;guard++) {
+   const due=Math.min(...[...callbacks.values()].map(timer=>timer.nextAt));
+   advance(due-now);
+   const after=read('street-life-trip-v1');
+   if(!after||after.remaining<before.remaining)break;
+   assert(guard<99,'travel is not unexpectedly paused');
+  }
+ }
+}
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 function discoverHelp(){for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
 
@@ -156,7 +169,7 @@ for(const [day,minutes,condition,rate,enabled] of [[1,600,100,18,true],[1,600,72
  setup({day,minutes},{[invKey]:{phoneBattery:62,phoneCondition:condition},'street-life-trip-v1':{destinationId:'station',mode:'walk',total:5,remaining:5}});
  if(!enabled){cleanup();localStorage.removeItem('street-life-trip-v1');render(React.createElement(App));click('Inventory');click(/PhoneBattery/);fireEvent.click(screen.getByRole('switch',{name:'Navigation'}));click('Close phone');click('Map');click(/^.*Station/);click('Go →');click(/Walk/);}
  const beforeCharge=read(invKey).phoneBattery;
- const routeDuration=read('street-life-trip-v1').remaining;advance(routeDuration*250);
+ const routeDuration=read('street-life-trip-v1').remaining;advanceTravelMinutes(routeDuration);
  assert.equal(read(stateKey).locationId,'station');
  const expected=beforeCharge-(enabled?routeDuration*rate/60*(1+(100-condition)*.007):0);
  assert(Math.abs(read(invKey).phoneBattery-expected)<1e-8,'navigation uses all five elapsed minutes');
@@ -329,8 +342,8 @@ setup({day:2,minutes:600,mood:28},{'street-life-discovered-v1':['street','statio
 cleanup();localStorage.removeItem('street-life-rain-response-v1');render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));const stoppedCharge=read(invKey).phoneBattery,stoppedTime=read(stateKey).minutes;click(/^Stop what I’m doing/);assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(invKey).phoneBattery,stoppedCharge);assert.equal(read(stateKey).minutes,stoppedTime);assert(!read('street-life-discovered-v1').includes('support'));assert(!read('street-life-answers-v1').includes('morning'));assert(screen.getByRole('dialog').textContent.includes('Search stopped'));advance(5000);assert.equal(read(invKey).phoneBattery,stoppedCharge);ok();
 // A walking trip shelters without advancing the route, resumes automatically
 // when rain ends, or can be continued manually without losing route progress.
-setup({day:3,minutes:600,rainUntil:3488},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:9},'street-life-rain-choice-v1':'true'});click(/^Find cover, then continue/);assert.equal(read('street-life-trip-v1').remaining,9);const routeCharge=read(invKey).phoneBattery;advance(500);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(invKey).phoneBattery,routeCharge);assert(screen.getByRole('heading',{name:'Waiting under cover'}));advance(500);assert(read('street-life-trip-v1').remaining<9);
-setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:9},'street-life-rain-choice-v1':'true'});click(/^Find cover, then continue/);click('Continue journey in the rain');advance(250);assert.equal(read('street-life-trip-v1').remaining,8);
+setup({day:3,minutes:600,rainUntil:3488},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:9},'street-life-rain-choice-v1':'true'});click(/^Find cover, then continue/);assert.equal(read('street-life-trip-v1').remaining,9);const routeCharge=read(invKey).phoneBattery;advance(500);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(invKey).phoneBattery,routeCharge);assert(screen.getByRole('heading',{name:'Waiting under cover'}));advance(500);advanceTravelMinutes(1);assert(read('street-life-trip-v1').remaining<9);
+setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:9},'street-life-rain-choice-v1':'true'});click(/^Find cover, then continue/);click('Continue journey in the rain');advanceTravelMinutes(1);assert.equal(read('street-life-trip-v1').remaining,8);
 setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:7},'street-life-rain-choice-v1':'true'});click(/^Stop what I’m doing/);assert(!localStorage.getItem('street-life-trip-v1'));assert.equal(read(stateKey).locationId,'street');assert(screen.getByRole('dialog').textContent.includes('Journey stopped'));ok();
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Something familiar to listen to… I don’t want this silence./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).mood>30 && read(stateKey).mood<=60);assert(read(invKey).phoneBattery<musicBattery);assert(screen.getByRole('dialog').textContent.includes('familiar music'));ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(!screen.queryByRole('button',{name:/Something familiar to listen to… I don’t want this silence./}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.'}));
@@ -430,10 +443,10 @@ for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.9
  const chosenTrip=read('street-life-trip-v1'),expected=mode==='walk'?(draw===0?62:78):(draw===0?32:39);
  assert.equal(chosenTrip.total,expected);assert.equal(chosenTrip.remaining,expected);
  assert.equal(read(stateKey).money,mode==='transit'?95.6:100);
- advance(250);const partialTrip=read('street-life-trip-v1');let reloadDraws=0;Math.random=()=>{reloadDraws++;return .5};
+ advanceTravelMinutes(1);const partialTrip=read('street-life-trip-v1');let reloadDraws=0;Math.random=()=>{reloadDraws++;return .5};
  cleanup();render(React.createElement(App));assert.equal(reloadDraws,0,'loading a trip never samples again');assert.deepEqual(read('street-life-trip-v1'),partialTrip);
- advance(250);assert.equal(read('street-life-trip-v1').remaining,expected-2);
- Math.random=()=>.99;advance((expected-2)*250);assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,480+expected);assert(!localStorage.getItem('street-life-trip-v1'));ok();
+ advanceTravelMinutes(1);assert.equal(read('street-life-trip-v1').remaining,expected-2);
+ Math.random=()=>.99;advanceTravelMinutes(expected-2);assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,480+expected);assert(!localStorage.getItem('street-life-trip-v1'));ok();
 }
 
 // Found money uses one Polish coin, awards the actual grosz amount once,
@@ -461,21 +474,22 @@ assert(screen.getByRole('dialog').textContent.includes('You leave it for someone
 assert(!document.querySelector('.result-gains'));assert(document.querySelector('.result-modal .result-stat-panel').textContent.includes('Mood'));
 assert(document.querySelector('.result-illustration').src.includes('event-coin-leave'));ok();
 
-// All travel modes display every minute at x4, preserve partial progress,
+// All travel modes display every minute at their cadence, preserve partial progress,
 // pause while hidden, cross midnight and restore the x1 clock after arrival.
 for(const mode of ['walk','transit','fare-dodge']) {
  setup({day:2,minutes:1438},{'street-life-trip-v1':{destinationId:'station',mode,total:9,remaining:9}});
- advance(249);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(stateKey).minutes,1438);
+ const firstTick=mode==='walk'?1000:250;
+ advance(firstTick-1);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(stateKey).minutes,1438);
  advance(1);assert.equal(read('street-life-trip-v1').remaining,8);assert.equal(document.querySelector('.travel-elapsed').textContent,'1m');
- for(let elapsed=2;elapsed<=4;elapsed++){advance(250);if(screen.queryByRole('dialog',{name:'Rain on the street'}))fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));assert.equal(document.querySelector('.travel-elapsed').textContent,`${elapsed}m`)}
+ for(let elapsed=2;elapsed<=4;elapsed++){advanceTravelMinutes(1);if(screen.queryByRole('dialog',{name:'Rain on the street'}))fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));assert.equal(document.querySelector('.travel-elapsed').textContent,`${elapsed}m`)}
  assert.equal(read(stateKey).day,3);assert.equal(read(stateKey).minutes,2);
  const pausedTrip=read('street-life-trip-v1'),pausedGame=read(stateKey);
  Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});advance(1000);
  assert.deepEqual(read('street-life-trip-v1'),pausedTrip);assert.deepEqual(read(stateKey),pausedGame);
  Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
  cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-elapsed').textContent,'4m');
- advance(250);assert.equal(document.querySelector('.travel-elapsed').textContent,'5m');
- advance(999);assert.equal(read('street-life-trip-v1').remaining,1);assert.equal(read(stateKey).locationId,'street');
+ advanceTravelMinutes(1);assert.equal(document.querySelector('.travel-elapsed').textContent,'5m');
+ advanceTravelMinutes(3);advance((mode==='walk'?5000:250)-1);assert.equal(read('street-life-trip-v1').remaining,1);assert.equal(read(stateKey).locationId,'street');
  advance(1);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));
  const arrived=read(stateKey);advance(1000);assert.deepEqual(read(stateKey),arrived);ok();
  advance(999);assert.deepEqual(read(stateKey),arrived);advance(1);assert.equal(read(stateKey).minutes,arrived.minutes+1);
@@ -487,19 +501,29 @@ for(const mode of ['walk','transit','fare-dodge']) {
  const options=document.querySelectorAll('.travel-option');assert.equal(options.length,3);for(const option of options)assert(option.textContent.includes('≈5–15m'));
  if(mode==='fare-dodge'){click(/Ride without ticket/);click('Roll D20');click('Continue');ok();}else click(mode==='walk'?/^Walk/:/Public transport/);
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
- advance(15*250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
+ advanceTravelMinutes(15);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
 }
 // Pedestrians approach a junction, wait, cross and carry on within the
 // existing duration. Waiting pauses their animation but provides no rain cover.
 setup({day:2,minutes:600,wetness:20},{'street-life-trip-v1':{destinationId:'shop',mode:'walk',total:5,remaining:5},'street-life-rain-response-v1':{episode:'weather:2',locationId:'street',sheltered:false}});
 for(const [index,label] of ['Walking','Approaching a junction','Waiting for the green light','Crossing the road','Walking on'].entries()) {
  assert.equal(document.querySelector('.travel-action-label').textContent,label);assert.equal(!!document.querySelector('.travel-visual.walking.waiting'),index===2);
- cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,label);advance(250);assert.equal(read(stateKey).wetness,21+index);
+ cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,label);advance(4999);assert.equal(document.querySelector('.travel-action-label').textContent,label,'each stage stays readable for at least five seconds');advance(1);assert.equal(read(stateKey).wetness,21+index);
 }
 assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,605);ok();
-// On longer walks crossing sequences repeat instead of waiting for a large
-// fraction of a multi-hour journey at a single traffic light.
-setup({minutes:600},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:30,remaining:30}});advance(10*250);assert.equal(document.querySelector('.travel-action-label').textContent,'Crossing the road');advance(2*250);assert.equal(document.querySelector('.travel-action-label').textContent,'Walking');
+// Long routes have fewer complete junctions; every stage is readable and arrival
+// still charges exactly the original game minutes, including uneven route lengths.
+for(const total of [30,60,91,120]) {
+ setup({minutes:600},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total,remaining:total}});
+ let previous='',stages=[],started=now;
+ for(let minute=0;minute<total;minute++) {
+  const label=document.querySelector('.travel-action-label').textContent;
+  if(label!==previous){if(previous)assert(now-started>=5000);stages.push(label);started=now;previous=label;}
+  advanceTravelMinutes(1);
+ }
+ assert(now-started>=5000);assert.equal(stages.filter(label=>label==='Crossing the road').length,Math.max(1,Math.floor(total/30)));
+ assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,600+total);ok();
+}
 // Bus phase text follows elapsed time and resumes at the same stage after reload.
 for(const mode of ['transit','fare-dodge']) {
  setup({minutes:600},{'street-life-trip-v1':{destinationId:'shop',mode,total:10,remaining:10}});
@@ -1034,13 +1058,13 @@ assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:2,minute:
 
 // A shorter interval suppresses a different observation, including after reload.
 setup({minutes:1320},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20},[firstNightKey]:{seen:['first-night-door'],lastAt:1320,pendingId:null}});
-cleanup();render(React.createElement(App));Math.random=()=>.4;advance(5000);ok();
+cleanup();render(React.createElement(App));Math.random=()=>.4;advanceTravelMinutes(20);ok();
 assert(!document.querySelector('.event-overlay'));
 assert.deepEqual(read(firstNightKey).seen,['first-night-door']);
 
 // Arrival provides a neutral station observation; declining conversation discovers nothing.
 setup({minutes:1330},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20},'street-life-discovered-v1':['street','station','shop']});
-Math.random=()=>.4;advance(5000);assert.equal(read(stateKey).locationId,'station');ok();
+Math.random=()=>.4;advanceTravelMinutes(20);assert.equal(read(stateKey).locationId,'station');ok();
 assert(screen.getByRole('dialog').textContent.includes('The last departures'));
 assert(screen.getByRole('dialog').textContent.includes('another traveller with a bag'));
 click('Find a quiet seat on my own');assert(!read('street-life-discovered-v1').includes('shelter'));ok();
@@ -1113,7 +1137,7 @@ assert(screen.getByRole('dialog',{name:'Rain on the street'}));assert(document.q
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 
 // First-night boundaries and awake/bench-sleep eligibility are explicit.
-setup({day:2,minutes:60},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20}});Math.random=()=>.4;advance(5000);ok();
+setup({day:2,minutes:60},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20}});Math.random=()=>.4;advanceTravelMinutes(20);ok();
 assert(screen.getByRole('dialog').textContent.includes('The last departures'));
 const eventModule={exports:{}};
 new Function('module','exports',require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text)(eventModule,eventModule.exports);
