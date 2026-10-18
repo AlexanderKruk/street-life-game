@@ -28,7 +28,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-227'
+const BUILD_VERSION = 'v2026.10.18-228'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -490,7 +490,8 @@ export default function App() {
   const moodCeiling = moodLimit(game, moodContext())
   const statLimits = limitingEffects(game, moodContext(), inventory.clothingCleanliness)
   const separateLimits = statLimits.filter(effect => effect.reason !== 'Cold')
-  const statusEffectCount = effects.length + separateLimits.length + ((game.wetness ?? 0) > 0 ? 1 : 0)
+  const statusEffects = effects.filter(effect => effect.id !== 'free-transit')
+  const statusEffectCount = statusEffects.length + separateLimits.length + ((game.wetness ?? 0) > 0 ? 1 : 0)
   // Reconcile existing saves and changes of accommodation/effects without a gain.
   useEffect(() => { setGame(previous => previous) }, [moodCeiling.cap])
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
@@ -2389,7 +2390,7 @@ export default function App() {
             <span><Icon name={effect.icon} /></span><strong className="effect-name" title={effect.name}>{effect.name}</strong>
             <div className="effect-impact">{effect.limits.map(limit => <b key={limit.stat}>{limit.stat} ≤ {Math.round(limit.cap)}%</b>)}</div>
           </div>)}
-          {effects.map(active => {
+          {statusEffects.map(active => {
             const effect = EFFECTS[active.id]
             const coldLimit = active.id === 'cold' ? statLimits.find(limit => limit.reason === 'Cold') : undefined
             return <div className={`effect ${effect.kind}${active.id === 'cold' ? ' illness' : ''}`} key={active.id}>

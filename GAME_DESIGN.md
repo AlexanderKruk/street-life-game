@@ -737,7 +737,7 @@ Older saves retain existing possessions and start with zero of any missing new i
 
 Implemented timed effects:
 - Cold — negative: Health, Energy and Mood consequences.
-- Free transport — positive: public transport fare becomes free.
+- Free transport — public transport fare becomes free. Since v228 this benefit is excluded from the Status Effects list and its count; its duration and transport mechanics are unchanged.
 - Well fed — positive: slows/offsets Food decay.
 
 New runs start without Cold. Outdoor sleeping and existing events can still cause illness; saved Cold effects are preserved until cured or expired.
