@@ -34,7 +34,10 @@ export const TravelHeading = memo(function TravelHeading({ from, to, walking, tr
         ? <img className="travel-walker" src="/street-life-game/assets/travel-walker.webp" width="90" height="90" alt="" />
         : <Icon name="bus" className="travel-bus" />}
     </div>
-    <div className="travel-route-heading"><p>{walking ? 'Walking' : transitPhase ?? 'Public transport'}</p><h2>{from} <span>→</span> {to}</h2></div>
+    <div className="travel-route-heading">
+      <p className="travel-route-summary">{from} <span>→</span> {to}</p>
+      <h2 className="travel-action-label">{walking ? 'Walking' : transitPhase ?? 'Public transport'}<span className="travel-phase-dots" aria-hidden="true"><i /><i /><i /></span></h2>
+    </div>
   </>
 })
 

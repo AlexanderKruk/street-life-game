@@ -122,6 +122,12 @@ footer p { margin:0; }
 .travel-route-heading p { margin:0; color:#a0a8ae; font-size:15px; }
 .travel-route-heading h2 { margin:8px 0 0; font-size:22px; line-height:1.4; font-weight:600; letter-spacing:-.4px; overflow-wrap:anywhere; }
 .travel-route-heading h2 span { color:#a0a8ae; font-weight:400; margin:0 3px; }
+.travel-route-summary span { margin:0 3px; }
+.travel-route-heading h2 .travel-phase-dots { display:inline-flex; align-items:center; gap:3px; width:18px; height:1em; margin:0 0 0 5px; color:inherit; vertical-align:baseline; }
+.travel-phase-dots i { width:4px; height:4px; border-radius:50%; background:currentColor; animation:phone-pulse 1.2s ease-in-out infinite; }
+.travel-phase-dots i:nth-child(2) { animation-delay:.2s; }
+.travel-phase-dots i:nth-child(3) { animation-delay:.4s; }
+@media(prefers-reduced-motion:reduce) { .travel-phase-dots i { animation:none; opacity:.7; } }
 .travel-elapsed { grid-column:2; grid-row:2; align-self:start; display:flex; align-items:center; gap:11px; min-width:0; }
 .travel-elapsed svg { width:24px; height:24px; flex-shrink:0; color:#a0a8ae; }
 .travel-elapsed strong { font-size:27px; font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap; }
