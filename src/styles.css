@@ -1091,11 +1091,6 @@ button.inventory-slot { cursor:pointer; width:100%; }
 
 /* Illustrated event cards keep their artwork flush with the card edges. */
 .event-card.illustrated-event { padding:0; overflow:hidden; }
-.rain-duration-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.rain-duration-options button { min-height:60px; padding:10px 4px; border:1px solid #414b50; border-radius:10px; background:#232b30; color:#e8e5de; font:inherit; text-align:center; }
-.rain-duration-options strong { display:block; font-size:16px; font-weight:600; }
-.rain-duration-options small { display:block; margin-top:4px; color:#a6adaf; font-size:11px; line-height:1.4; }
-.rain-back { min-height:44px; margin-top:18px; padding:8px 0; border:0; background:transparent; color:#b9bfc0; font:inherit; font-size:14px; }
 .goal-reminder > svg { width:20px; height:20px; flex-shrink:0; color:#d7b58a; }
 .action-label-icon { display:inline-block; width:20px; height:20px; margin-right:8px; vertical-align:-4px; color:#d7b58a; }
 
@@ -1118,3 +1113,11 @@ button.inventory-slot { cursor:pointer; width:100%; }
 .trash-card :focus-visible { outline:2px solid #dcc2a2; outline-offset:2px; }
 .bottle-search-reward { margin:14px 0 10px; color:#a6c7b2; font-size:32px; font-weight:600; line-height:1.2; }
 @media(max-width:360px) { .trash-card { padding:20px; } .trash-head { gap:10px; } .trash-head h2 { font-size:20px; } }
+
+/* Rain shelter shares the compact activity card. */
+.rain-cover-visual svg { width:70px; height:70px; stroke-width:1.4; }
+.rain-travel-note { grid-column:1 / -1; margin:0; color:#aeb5b5; font-size:14px; line-height:1.5; }
+.rain-resume { grid-column:1 / -1; min-height:48px; border:1px solid #b49f80; border-radius:12px; padding:10px 14px; color:#151a1c; background:#c4ad8c; font-weight:600; }
+
+.rain-cover-status { display:flex; align-items:center; gap:7px; margin:0 0 16px; color:#a6c6b4; font-size:13px; }
+.rain-cover-status svg { width:18px; height:18px; }

@@ -25,13 +25,13 @@ function setup(state={},effects=[]){
  Math.random=()=>0.99;
  render(React.createElement(App));
 }
-function button(name){const dialog=screen.queryByRole('dialog');const target=dialog ? within(dialog).getByRole('button',{name}) : screen.getByRole('button',{name});const previousRandom=Math.random;if(target.dataset.choice?.startsWith('question-')||/Ask AI/.test(target.textContent))Math.random=()=>.34;fireEvent.click(target);Math.random=previousRandom;}
+function button(name){if(screen.queryByRole('dialog',{name:'Rain on the street'}))fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));const dialog=screen.queryByRole('dialog');const target=dialog ? within(dialog).getByRole('button',{name}) : screen.getByRole('button',{name});const previousRandom=Math.random;if(target.dataset.choice?.startsWith('question-')||/Ask AI/.test(target.textContent))Math.random=()=>.34;fireEvent.click(target);Math.random=previousRandom;}
 function beginSleep(hours=2){button(/Lie down here\? I’m not sure… But I could try./);fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:new RegExp('^'+hours+' h')}));button('Start sleeping');}
 function close(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Got it',exact:true}));}
 function summary(){return screen.getByRole('dialog').textContent;}
 function checkBattery(){fireEvent(window,new window.Event('pagehide'));const charge=Math.round(JSON.parse(localStorage.getItem('street-life-inventory-v1')).phoneBattery);assert(screen.getByLabelText(`Phone battery: ${charge}%`).textContent.includes(`${charge}%`));return charge;}
 function advance(ticks){const end=now+ticks*1000;while(true){const due=Math.min(...[...timers.values()].map(timer=>timer.nextAt));if(due>end)break;now=due;act(()=>{for(const[id,timer]of [...timers])if(timers.has(id)&&timer.nextAt<=now){timer.nextAt+=timer.delay;timer.fn()}})}now=end;fireEvent(window,new window.Event('pagehide'));}
-async function finishPhone(){advance(15);}
+async function finishPhone(){for(let n=0;n<15;n++){if(screen.queryByRole('dialog',{name:'Rain on the street'}))fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));advance(1);}}
 (async()=>{
  setup();const startingCharge=checkBattery();button('Where can I get help in the morning?');await finishPhone();assert(checkBattery()<startingCharge);close();button('Where can I get help in the morning?');await finishPhone();close();button('Where can I get help in the morning?');await finishPhone();close();button('How can I get a shelter bed?');await finishPhone();
  let text=summary();assert(!text.includes('−3.6%'));assert(!text.includes('0 zł'));assert(text.includes('15 min'));

@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-220`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-221`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Rain interrupts outdoor activities (v221)
+
+When rain starts outdoors, time pauses for three choices: find cover and continue, continue in the rain, or stop the current activity. Starting a phone search in existing rain also offers the choice. A canopy takes five game minutes to find, with normal outdoor exposure and no search/route progress; spent time and battery are retained. Browsing then resumes from its remaining duration under cover: no new wetting, slow drying. Continuing without cover preserves progress but keeps normal wetness gain. Stopping cancels the search without discoveries or Mood reward and shows already-paid costs. Walking trips can wait under cover without route or navigation-battery progress, resume automatically when rain ends, leave early, or be cancelled without teleporting to the destination. Rain decisions, cover and in-progress activities survive reload; moving away removes canopy protection. Indoor/transit activities do not receive the outdoor prompt. The prompt replaces the old canopy-duration/station/walk menu. Save fixtures cover actual published builds v211–v220.
 
 ### Screen brightness and old-phone battery (v220)
 

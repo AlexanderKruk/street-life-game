@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, travelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, travelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
 import { pickStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { summarizeResult, type ConsumedItem, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
@@ -27,7 +27,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-220'
+const BUILD_VERSION = 'v2026.10.18-221'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -40,6 +40,19 @@ function loadFirstNightEvents(): FirstNightEvents {
     const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
     return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId }
   } catch { return { seen: [], lastAt: null, pendingId: null } }
+}
+
+const RAIN_RESPONSE_KEY = 'street-life-rain-response-v1'
+type RainResponse = { episode: string; locationId: string; sheltered: boolean }
+function rainEpisode(state: GameState) {
+  if ((state.rainUntil ?? 0) > absoluteMinutes(state)) return `shower:${state.rainUntil}`
+  return ['Rain', 'Showers'].includes(WEATHER[(state.day - 1) % WEATHER.length].label) ? `weather:${state.day}` : null
+}
+function loadRainResponse(): RainResponse | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RAIN_RESPONSE_KEY) ?? 'null')
+    return typeof saved?.episode === 'string' && typeof saved.locationId === 'string' && typeof saved.sheltered === 'boolean' ? saved : null
+  } catch { return null }
 }
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
@@ -360,8 +373,9 @@ export default function App() {
   const [selectedJournalDay, setSelectedJournalDay] = useState<number | null>(null)
   const journalDay = Math.max(1, Math.min(selectedJournalDay ?? game.day, game.day))
   useEffect(() => { if (screen !== 'journal') setSelectedJournalDay(null) }, [screen])
-  const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true' && loadGame().locationId === 'street')
-  const [coverPlanning, setCoverPlanning] = useState(false)
+  const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true')
+  const [rainResponse, setRainResponse] = useState<RainResponse | null>(loadRainResponse)
+  const rainModalRef = useRef<HTMLElement>(null)
   const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => {
     try { const saved = JSON.parse(localStorage.getItem('street-life-answers-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
   })
@@ -489,6 +503,8 @@ export default function App() {
   const navigationInBrightSun = weather.label === 'Clear' && game.minutes >= 360 && game.minutes < 1200
   const navigationDrainPerHour = phoneScreenDrain(game, inventory.phoneCondition, 'navigation') * 60
   const directSearchCost = phoneScreenDrain(game, inventory.phoneCondition, 'browsing', 15)
+  const currentRainEpisode = rainEpisode(game)
+  const underRainCover = !!rainResponse?.sheltered && rainResponse.episode === currentRainEpisode && rainResponse.locationId === current.id
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
     { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until Day 2, 12:00.' },
@@ -534,11 +550,43 @@ export default function App() {
   }, [activeGoal, game.day, game.minutes, current.id, trip, life.shelterUntilDay, life.housing])
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
-  const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
+  const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || gameOver)
   useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
-  const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || gameOver)
+  const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || gameOver)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
-  const eventInteractionBlocked = !!activeEvent || !!diceCheck || rainChoice || eventResultOpen
+  const previousRainEpisode = useRef(currentRainEpisode)
+  useEffect(() => {
+    if (activeEvent || diceCheck || infoModal || pendingResult || sleeping || gameOver || phoneActivity?.remaining === 0 || trip?.remaining === 0) return
+    const previous = previousRainEpisode.current
+    const began = currentRainEpisode !== null && previous === null
+    previousRainEpisode.current = currentRainEpisode
+    if (previous && currentRainEpisode && previous !== currentRainEpisode && rainResponse?.episode === previous) {
+      setRainResponse({ ...rainResponse, episode: currentRainEpisode })
+      return
+    }
+    if (!currentRainEpisode) { if (rainResponse) setRainResponse(null); return }
+    const exposure = weatherExposure(game, trip?.mode === 'transit' || trip?.mode === 'fare-dodge' ? { exposure: 'transit' } : { walking: trip?.mode === 'walk' })
+    if (!rainChoice && exposure === 'outside' && rainResponse?.episode !== currentRainEpisode && (began || !!phoneActivity)) setRainChoice(true)
+  }, [currentRainEpisode, phoneActivity, trip, activeEvent, diceCheck, infoModal, pendingResult, sleeping, gameOver, rainChoice, rainResponse, game.locationId])
+  useEffect(() => {
+    if (!rainChoice || infoModal || pendingResult || activeEvent || diceCheck) return
+    const previous = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    const ownsScrollLock = !activityOverlay
+    if (ownsScrollLock) document.body.style.overflow = 'hidden'
+    rainModalRef.current?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true })
+    const trap = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      const buttons = Array.from(rainModalRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])
+      if (!buttons.length) return
+      event.preventDefault()
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
+      buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus()
+    }
+    document.addEventListener('keydown', trap)
+    return () => { if (ownsScrollLock) document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
+  }, [rainChoice, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay])
+  const eventInteractionBlocked = !!activeEvent || !!diceCheck || (rainChoice && !infoModal && !pendingResult) || eventResultOpen
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null
@@ -590,12 +638,12 @@ export default function App() {
   }, [game.hygiene, hygieneLimit])
 
   function applyAction(state: GameState, result: ActionResult) {
-    return applyGameAction(state, result, { ...moodContext(state), walking: trip?.mode === 'walk', ...(trip?.mode === 'transit' ? { exposure: 'transit' as const } : shelterQueue ? { exposure: 'outside' as const } : {}), music: musicOn })
+    return applyGameAction(state, result, { ...moodContext(state), walking: trip?.mode === 'walk' && !underRainCover, ...(underRainCover ? { exposure: 'cover' as const } : trip?.mode === 'transit' ? { exposure: 'transit' as const } : shelterQueue ? { exposure: 'outside' as const } : {}), music: musicOn })
   }
 
   function applySleepTime(state: GameState, minutes: number) {
     const kind = sleeping?.kind ?? sleepChoice
-    return applyGameSleepTime(state, minutes, { ...moodContext(state), ...(kind ? { exposure: kind === 'ground' || (kind === 'bench' && state.locationId === 'street') ? 'outside' as const : 'indoors' as const } : {}) })
+    return applyGameSleepTime(state, minutes, { ...moodContext(state), ...(kind ? { exposure: kind === 'ground' || (kind === 'bench' && state.locationId === 'street') ? underRainCover ? 'cover' as const : 'outside' as const : 'indoors' as const } : {}) })
   }
 
   const [inventoryAgedAt, setInventoryAgedAt] = useState(absoluteMinutes(game))
@@ -612,7 +660,7 @@ export default function App() {
     const wornMinutes = Math.max(0, now - Math.max(now - elapsed, laundryCleanAt.current))
     setInventory(prev => {
       const multiplier = phoneDrainMultiplier(prev.phoneCondition)
-      const navigationDrain = trip && navigationOn ? phoneScreenDrain({ ...game, minutes: game.minutes - elapsed }, prev.phoneCondition, 'navigation', elapsed) : 0
+      const navigationDrain = trip && !underRainCover && navigationOn ? phoneScreenDrain({ ...game, minutes: game.minutes - elapsed }, prev.phoneCondition, 'navigation', elapsed) : 0
       const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
       return { ...prev,
         clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1.5 : 1) - extraDirt),
@@ -811,6 +859,7 @@ export default function App() {
   }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity])
 
   const tickGameClock = useLatestAction(() => {
+    if (rainChoice) return
     if (phoneActivity) {
       if (phoneActivity.remaining <= 0 || gameOver || document.visibilityState !== 'visible') return
       setGame(previous => applyAction(previous, { minutes: 1 }))
@@ -831,7 +880,7 @@ export default function App() {
     const tickMinutes = trip ? Math.min(1, trip.remaining) : 1
     if (shelterQueue) setShelterQueue(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
-    setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
+    if (!underRainCover) setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
   })
   const gameClockInterval = trip || shelterDeparture ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
@@ -1066,6 +1115,7 @@ export default function App() {
 
   function searchStreetBottles() {
     if (activeEvent || current.id !== 'street' || trashGame) return
+    setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
     const clutter: TrashArt[] = ['paper', 'cup', 'tray', 'wrapper']
     const layers = 6
     const perLayer = 3
@@ -1209,7 +1259,7 @@ export default function App() {
     const playingMusic = withMusic || musicOn
     runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
       setRainChoice(false)
-      setCoverPlanning(false)
+      setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
       const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
       let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: playingMusic })
       if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
@@ -1220,7 +1270,7 @@ export default function App() {
       setGame(next)
       const musicText = withMusic ? ' You put on familiar music. A few songs play as you pass the dark shop windows.' : ''
       if (wet) {
-        setRainChoice(true)
+        setRainChoice(rainResponse?.episode !== rainEpisode(next))
         const rainText = (startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.') + musicText
         setInfoModal({ title: withMusic ? 'Walk with music' : 'Walk through the city', text: rainText, illustration: '/street-life-game/assets/event-rain-street.webp', illustrationAlt: 'Rain grows heavier as you notice a canopy above a closed shop.' })
         setMessage(rainText)
@@ -1323,35 +1373,46 @@ export default function App() {
     }
   }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver])
 
-  function takeRainCover(minutes: number) {
-    runWithResult('Shelter from the rain', () => {
-      setRainChoice(false)
-      setCoverPlanning(false)
-      const next = applyGameAction(game, { minutes, mood: 1 }, { ...moodContext(), exposure: 'cover' })
-      setGame(next)
-      const coverText = `You stand under an entrance canopy for ${minutes < 60 ? `${minutes} minutes` : `${minutes / 60} hour${minutes > 60 ? 's' : ''}`}, watching the street. You do not sleep. ${next.minutes >= 360 && next.minutes < 720 ? 'Morning is finally here.' : 'For now, you are out of the rain.'}`
-      setMessage(coverText)
-      setInfoModal({ title: 'Shelter from the rain', text: coverText, illustration: '/street-life-game/assets/event-rain-cover.webp', illustrationAlt: 'You wait awake under the canopy while rain falls beyond its edge.' })
-    }, resultSnapshot(), true, true)
+  function respondToRain(choice: 'cover' | 'continue' | 'stop') {
+    const response: RainResponse = { episode: currentRainEpisode ?? `weather:${game.day}`, locationId: current.id, sheltered: choice === 'cover' }
+    setRainChoice(false)
+    setRainResponse(response)
+    if (choice === 'cover') {
+      // Looking for an awning is a detour; the interrupted activity makes no progress.
+      setGame(previous => applyGameAction(previous, { minutes: 5 }, { ...moodContext(previous), walking: true, exposure: 'outside', music: musicOn }))
+      setMessage(phoneActivity ? 'You find an entrance canopy and continue browsing. Your clothes can slowly dry.' : trip ? 'You find cover. Your journey will resume when the rain stops; you can leave sooner.' : 'You find a canopy. You can carry on here without getting wetter.')
+    } else if (choice === 'stop' && phoneActivity) {
+      const before = phoneActivity.before
+      setPhoneActivity(null)
+      runWithResult('Search stopped', () => setInfoModal({ title: 'Search stopped', text: 'You put your phone away. Time and battery already spent are not returned. No new information was saved.', presentation: { ...locationPresentation([]), heading: 'Search stopped', lead: 'You put your phone away. No new information was saved.' } }), before, true, true)
+    } else if (choice === 'stop' && trip) {
+      const before = trip.before ?? resultSnapshot()
+      setTrip(null)
+      setScreen('location')
+      runWithResult('Journey stopped', () => setMessage('You stop before reaching your destination. Time and battery already spent are not returned.'), before, true, true)
+    }
   }
 
   function streetActionImpl(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
     if (activeEvent || current.id !== 'street') return
     if (kind === 'find-bench') {
+      setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
       const found = Math.random() < 0.7
-      setGame((prev) => applyAction(prev, { minutes: 20, energy: -2, mood: found ? 1 : -2 }))
+      setGame((prev) => applyGameAction(prev, { minutes: 20, energy: -2, mood: found ? 1 : -2 }, { ...moodContext(prev), exposure: 'outside', music: musicOn }))
       setStreetBenchFound(found)
       setMessage(found ? 'You found a usable bench nearby.' : 'You looked around, but every decent place to sit is occupied or unusable.')
       return
     }
     if (!streetBenchFound) return
     if (kind === 'bench-rest') {
-      const next = applyAction(game, { minutes: 45, energy: 18, mood: 2 })
+      setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
+      const next = applyGameAction(game, { minutes: 45, energy: 18, mood: 2 }, { ...moodContext(), exposure: 'outside', music: musicOn })
       setGame(next)
       setMessage('You sit on the bench and get off your feet for a while.')
       observeFirstNight('bench', next)
       return
     }
+    setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
     requestSleep('bench')
   }
 
@@ -1386,6 +1447,7 @@ export default function App() {
     recordShelterDeparture(destination.id)
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
+    setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
     setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot() })
     setSelectedDestination(null)
     setScreen('travel')
@@ -1940,7 +2002,7 @@ export default function App() {
     setPendingResult(null)
     setScreen('location')
     setRainChoice(false)
-    setCoverPlanning(false)
+    setRainResponse(null)
     setAnsweredQuestions([])
     setSeenMemories([])
     setTrip(null)
@@ -2008,6 +2070,7 @@ export default function App() {
     'street-life-memories-v1': seenMemories,
     [FIRST_NIGHT_EVENTS_KEY]: firstNightEvents,
     'street-life-rain-choice-v1': rainChoice,
+    [RAIN_RESPONSE_KEY]: rainResponse,
     'street-life-screen': screen === 'travel' ? undefined : screen,
     'street-life-mobile-service-until': mobileServiceUntil,
     'street-life-mobile-auto-renew': mobileAutoRenew,
@@ -2018,7 +2081,7 @@ export default function App() {
     'street-life-shelter-departure-v1': shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
     discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents, choiceSeed,
-    rainChoice, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
+    rainChoice, rainResponse, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture,
     phoneActivity?.questionId ?? null, infoModal,
   ])
@@ -2118,6 +2181,7 @@ export default function App() {
       {current.id === 'street' && <StreetArt phone={false} inline={inlineResult} illustration={infoModal?.illustration ? undefined : infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
       {inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={closeResult} /> : <>
       {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} description={current.id === 'street' ? streetScene : current.description} open={open} opensAt={current.open} />}
+      {underRainCover && !trip && <p className="rain-cover-status"><Icon name="umbrella" />Under cover</p>}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       <ClosedContent closed={!open && current.id !== 'hospital' && !currentActions.some(action => actionUnavailableReason(action) === null)} opensAt={formatTime(current.open)}>
       {shelterInterview && <section className="shop">
@@ -2225,7 +2289,7 @@ export default function App() {
     {phoneActivity && <div className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>
       <section className="travel-screen phone-activity" role="dialog" aria-modal="true" aria-labelledby="phone-activity-title" aria-busy="true" tabIndex={-1} ref={phoneSearchModalRef}>
         <PhoneSearchIcon />
-        <div className="travel-route-heading"><p>Browsing</p><h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through options' : 'Saving useful addresses'}</h2></div>
+        <div className="travel-route-heading"><p>{underRainCover ? 'Browsing · under cover' : 'Browsing'}</p><h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through options' : 'Saving useful addresses'}</h2></div>
         <div className="travel-elapsed phone-activity-meta" aria-label="Elapsed browsing time"><Icon name="clock" /><strong>{formatTravelTime(Math.max(0, phoneActivity.total - phoneActivity.remaining))}</strong></div>
       </section>
     </div>}
@@ -2240,7 +2304,7 @@ export default function App() {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const elapsed = Math.max(0, trip.total - trip.remaining)
       return <div className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><section className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
-        <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} />
+        {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Waiting under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} />}
         <div className="travel-elapsed" aria-label="Elapsed travel time"><Icon name="clock" /><strong>{formatTravelTime(elapsed)}</strong></div>
       </section></div>
     })()}
@@ -2364,23 +2428,19 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && rainChoice && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
-      <section className="event-card illustrated-event compact-street-event rain-card">
-        <img className="event-illustration" {...responsiveImageProps(`/street-life-game/assets/${coverPlanning ? 'event-rain-cover' : 'event-rain-street'}.webp`)} alt={coverPlanning ? 'Waiting awake under a canopy.' : 'Rain grows heavier beside a closed shop.'} />
+    {!gameOver && rainChoice && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
+      <section className="event-card illustrated-event compact-street-event rain-card" ref={rainModalRef}>
+        <img className="event-illustration" {...responsiveImageProps('/street-life-game/assets/event-rain-street.webp')} alt="Rain falls beside a closed shop with an entrance canopy." />
         <div className="event-body">
-        <div className="compact-event-heading"><Icon name={coverPlanning ? 'umbrella' : 'rain'} /><div><p className="eyebrow">RAIN · TIME PAUSED</p><h2>{coverPlanning ? 'Wait out the night' : 'The rain is getting heavier'}</h2></div></div>
-        <p className="compact-event-description">{coverPlanning ? 'Stay awake under the canopy. Hunger, thirst and tiredness keep growing.' : 'Rain runs off the edge of a nearby canopy. The shop behind it is closed. Light is still on at the station.'}</p>
-        <ChoiceOptions className={coverPlanning ? 'rain-duration-options' : 'event-choices'} seed={choiceSeed} decision={`${choiceDecisionKey}|rain`} fixed={coverPlanning}>
-          {coverPlanning ? <>
-            {[15, 60, 240].map(minutes => <button key={minutes} aria-label={`${minutes === 15 ? 'Just fifteen minutes. Then I’ll see.' : minutes === 60 ? 'Maybe an hour here. Stay out of the rain.' : 'Maybe four hours. I can wait here.'} · until ${formatTime((game.minutes + minutes) % 1440)}`} onClick={() => takeRainCover(minutes)}><strong>{minutes < 60 ? `${minutes} min` : `${minutes / 60} h`}</strong><small>Until {formatTime((game.minutes + minutes) % 1440)}</small></button>)}
-          </> : <>
-          <button onClick={() => setCoverPlanning(true)}><span className="compact-event-choice-copy"><strong>At least it looks dry under that canopy.</strong></span><Icon name="umbrella" /></button>
-          <button onClick={() => { setRainChoice(false); setScreen('map'); chooseDestination('station') }}><span className="compact-event-choice-copy"><strong>Maybe the station? At least I could sit down.</strong></span><Icon name="station" /></button>
-          <button data-choice="walk" onClick={() => walkCity()}><span className="compact-event-choice-copy"><strong>I can’t just stand here. I’ll keep going.</strong></span><Icon name="walk" /></button>
-          </>}
-        </ChoiceOptions>
-        {coverPlanning && <button className="rain-back" onClick={() => setCoverPlanning(false)}>Choose another option</button>}
-      </div></section>
+          <div className="compact-event-heading"><Icon name="rain" /><div><p className="eyebrow">RAIN · TIME PAUSED</p><h2>It’s starting to rain</h2></div></div>
+          <p className="compact-event-description">{phoneActivity ? 'Drops land on your screen. You could find a canopy and finish looking things up there.' : trip ? 'Rain catches you on the way. You could wait under cover before continuing your journey.' : 'Your clothes are getting wet. You could find a nearby canopy and carry on there.'}</p>
+          <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|rain`}>
+            <button onClick={() => respondToRain('cover')}><span className="compact-event-choice-copy"><strong>{trip ? 'Find cover, then continue when it stops.' : 'Find cover and continue.'}</strong><small>≈5m to find shelter</small></span><Icon name="umbrella" /></button>
+            <button onClick={() => respondToRain('continue')}><span className="compact-event-choice-copy"><strong>Continue as I am.</strong><small>You will keep getting wetter</small></span><Icon name="rain" /></button>
+            <button onClick={() => respondToRain('stop')}><span className="compact-event-choice-copy"><strong>Stop what I’m doing.</strong><small>{phoneActivity ? 'Put the phone away' : trip ? 'Stop the journey' : 'Stay here for now'}</small></span><Icon name="pause" /></button>
+          </ChoiceOptions>
+        </div>
+      </section>
     </div>}
     {!gameOver && diceCheck?.choice.check && <div className="dice-overlay">
       <section className="dice-card">
