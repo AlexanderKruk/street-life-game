@@ -27,7 +27,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-223'
+const BUILD_VERSION = 'v2026.10.18-224'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2302,8 +2302,13 @@ export default function App() {
     {screen === 'travel' && trip && (() => {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const elapsed = Math.max(0, trip.total - trip.remaining)
+      const transitPhase = trip.mode === 'walk' ? undefined
+        : elapsed < Math.max(1, Math.round(trip.total * 0.2)) ? 'Walking to the stop'
+        : elapsed < Math.max(2, Math.round(trip.total * 0.55)) ? 'Waiting for the bus'
+        : elapsed < Math.max(3, Math.round(trip.total * 0.85)) ? 'Riding the bus'
+        : 'Walking to your destination'
       return <div className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><section className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
-        {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Waiting under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} />}
+        {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Waiting under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} transitPhase={transitPhase} />}
         <div className="travel-elapsed" aria-label="Elapsed travel time"><Icon name="clock" /><strong>{formatTravelTime(elapsed)}</strong></div>
       </section></div>
     })()}

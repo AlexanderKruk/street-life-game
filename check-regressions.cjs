@@ -489,6 +489,13 @@ for(const mode of ['walk','transit','fare-dodge']) {
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
  advance(15*250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
 }
+// Bus phase text follows elapsed time and resumes at the same stage after reload.
+for(const mode of ['transit','fare-dodge']) {
+ setup({minutes:600},{'street-life-trip-v1':{destinationId:'shop',mode,total:10,remaining:10}});
+ assert.equal(document.querySelector('.travel-route-heading p').textContent,'Walking to the stop');advance(2*250);
+ assert.equal(document.querySelector('.travel-route-heading p').textContent,'Waiting for the bus');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-route-heading p').textContent,'Waiting for the bus');advance(5*250);
+ assert.equal(document.querySelector('.travel-route-heading p').textContent,'Riding the bus');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-route-heading p').textContent,'Riding the bus');advance(2*250);assert.equal(document.querySelector('.travel-route-heading p').textContent,'Walking to your destination');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-route-heading p').textContent,'Walking to your destination');advance(250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,610);ok();
+}
 // A paid trip resumes from remaining time with its original result snapshot.
 setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
 cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);

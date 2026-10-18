@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-223`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-224`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Transit phase text (v224)
+
+The transit activity card changes its existing label from Walking to the stop, to Waiting for the bus, to Riding the bus, then Walking to your destination. Phases follow elapsed time within the existing sampled trip: approximately 20% walking to the stop, 35% waiting, 30% riding and 15% walking from the stop to the destination, rounded to game-minute boundaries. Paid and ticketless travel share the labels. Reloads resume the current phase; no extra time is added. Walking trips retain their Walking label. Save fixtures cover actual published builds v214–v223.
 
 ### Nearby shop (v223)
 
