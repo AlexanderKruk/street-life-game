@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-230`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-231`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### One result for a quiet night (v231)
+
+The quiet-night wake event now folds into the sleep-completion result: its contextual illustration, brief outcome and capped +5 Energy/+5 Mood bonus appear with the existing sleep gains in one card. One Got it resumes play. There is no separate Get up choice or second quiet-night result. This applies to natural/debug wake and the older sleep-action path. Events requiring a real choice (theft, being woken on a bench) retain their existing sequence. Regression checks compare bonus/no-bonus shelter wakes, single journal entries, paused reading, reload and return to ordinary time.
 
 ### Pedestrian text independent of travel speed (v230)
 

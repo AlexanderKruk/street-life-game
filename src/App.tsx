@@ -28,7 +28,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-230'
+const BUILD_VERSION = 'v2026.10.18-231'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1024,6 +1024,18 @@ export default function App() {
     }, before, false, true)
   }
 
+  function presentWakeEvent(event: StreetEvent | null, title: string, completionText: string) {
+    if (!event) return
+    const outcome = event.choices[0]?.outcome
+    if (event.id !== 'quiet-night' || !outcome) { setActiveEvent(event); return }
+    // A peaceful night has no decision to make: fold its bonus and artwork into
+    // the existing sleep result instead of asking for another confirmation.
+    const text = `${completionText} ${outcome.message}`
+    setGame(previous => applyAction(previous, { minutes: outcome.minutes ?? 0, energy: outcome.energy, mood: outcome.mood }))
+    setMessage(text)
+    setInfoModal({ title, text, label: 'AFTER REST', illustration: outcome.illustration ?? event.illustration, illustrationAlt: event.text })
+  }
+
   function finishSleepImpl(sleep: SleepState) {
     const hours = sleep.total / 60
     const scale = hours / 8
@@ -1043,6 +1055,7 @@ export default function App() {
       return next
     })
     let illnessText = ''
+    let wakeEvent: StreetEvent | null = null
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
       const sleepWeather = (wakeState.rainUntil ?? 0) > absoluteMinutes(wakeState) ? WEATHER[1] : WEATHER[(wakeState.day - 1) % WEATHER.length]
@@ -1062,19 +1075,20 @@ export default function App() {
       }
       const baseChance = sleep.kind === 'ground' ? 0.75 : 0.65
       const sleepStart = { day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 }
-      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: sleepWeather.label, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: firstNightEvents.seen }, Math.min(0.9, baseChance * scale))
-      if (wakeEvent?.id.startsWith('first-night-')) rememberFirstNightEvent(wakeEvent, wakeState)
-      else if (wakeEvent) setActiveEvent(wakeEvent)
+      wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: sleepWeather.label, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: firstNightEvents.seen }, Math.min(0.9, baseChance * scale))
+      if (wakeEvent?.id.startsWith('first-night-')) { rememberFirstNightEvent(wakeEvent, wakeState); wakeEvent = null }
     } else if (sleep.kind === 'shelter') {
       const sleepStartDay = Math.floor(sleep.startAbsolute / 1440) + 1
       const stayNightDay = sleep.startAbsolute % 1440 < 480 ? sleepStartDay - 1 : sleepStartDay
       setLife((status) => ({ ...status, housing: 'Night shelter', shelterLastStayDay: Math.max(status.shelterLastStayDay ?? 0, stayNightDay) }))
-      const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents, sleepKind: sleep.kind }, Math.min(0.65, 0.45 * scale))
-      if (wakeEvent && wakeState.minutes < SHELTER_CHECKOUT_WARNING) setActiveEvent(wakeEvent)
+      const event = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents, sleepKind: sleep.kind }, Math.min(0.65, 0.45 * scale))
+      if (wakeState.minutes < SHELTER_CHECKOUT_WARNING) wakeEvent = event
     } else {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     }
-    setMessage(`You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${wetRestLoss >= 0.5 ? ' Wet clothes made it harder to rest.' : ''}${illnessText}`)
+    const completionText = `You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${wetRestLoss >= 0.5 ? ' Wet clothes made it harder to rest.' : ''}${illnessText}`
+    setMessage(completionText)
+    presentWakeEvent(wakeEvent, 'Sleep complete', completionText)
   }
 
   function hospitalVisitImpl() {
@@ -1606,11 +1620,11 @@ export default function App() {
     if (actionId === 'street-sleep') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
       const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Street', documents: inventory.documents }, 0.75)
-      if (wakeEvent) setActiveEvent(wakeEvent)
+      presentWakeEvent(wakeEvent, action.name, result.message ?? 'Time passes.')
     } else if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
       setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
       const wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents }, 0.45)
-      if (wakeEvent) setActiveEvent(wakeEvent)
+      presentWakeEvent(wakeEvent, action.name, result.message ?? 'Time passes.')
     } else {
       if (firstNight) observeFirstNight('location', next)
       else {

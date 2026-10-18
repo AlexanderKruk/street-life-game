@@ -777,6 +777,34 @@ setup({locationId:'shelter',minutes:1140},{[lifeKey]:notAdmitted});click(/Use yo
 click(/Use your reserved bed/);fireEvent.keyDown(window,{key:'Escape'});assert(!screen.queryByRole('dialog'));assert.equal(read(lifeKey).shelterLastStayDay,0);
 click(/Use your reserved bed/);click('Start sleeping');assert.equal(read(lifeKey).shelterLastStayDay,1);assert.equal(read(lifeKey).housing,'Night shelter');
 
+// A quiet shelter night is one illustrated sleep result, not another event and
+// result after it. Natural wake and debug wake grant the bonus exactly once.
+for(const debug of [false,true]) {
+ let ordinary;
+ for(const quiet of [false,true]) {
+  setup({day:2,locationId:'shelter',minutes:359,energy:30,mood:30},{
+   [lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1},
+   'street-life-sleep-v1':{kind:'shelter',total:120,remaining:1,startAbsolute:1680,realStartedAt:Date.now()-11900}
+  });
+  Math.random=()=>quiet?0:.99;
+  if(debug)click('Wake up (debug)');else advance(1000);
+  assert.equal(screen.getAllByRole('dialog').length,1);assert(screen.getByRole('dialog',{name:'Sleep complete'}));
+  assert(!document.querySelector('.event-overlay'));assert(!localStorage.getItem('street-life-sleep-v1'));
+  const woke=read(stateKey);
+  if(!quiet)ordinary=woke;
+  else {
+   assert(document.querySelector('.result-illustration').src.includes('event-quiet-shelter'));
+   assert(screen.getByRole('dialog').textContent.includes('quiet night'));
+   assert(Math.abs(woke.energy-ordinary.energy-5)<1e-8);assert(Math.abs(woke.mood-ordinary.mood-5)<1e-8);
+   assert.equal(read('street-life-journal-history-v1').filter(entry=>entry.actionTitle==='Sleep complete').length,1);
+  }
+  advance(3000);assert.deepEqual(read(stateKey),woke,'reading the merged result pauses time and bonuses');
+  ok();assert(!screen.queryByRole('dialog'));assert(!document.querySelector('.event-overlay'));Math.random=()=>.99;
+  advance(1000);assert.equal(read(stateKey).minutes,361,'one confirmation resumes the game');
+  const after=read(stateKey);cleanup();render(React.createElement(App));assert.deepEqual(read(stateKey),after);assert(!document.querySelector('.event-overlay'));
+ }
+}
+
 // Station, street bench and Schronisko all use the same paused chooser.
 setup({locationId:'station',minutes:1380});beginSleep(/Try to sleep/,2);assert.equal(read('street-life-sleep-v1').kind,'bench');assert.equal(read('street-life-sleep-v1').total,120);
 setup({}, {'street-life-answers-v1':['morning','bed']});Math.random=()=>0;click(/Is there a bench nearby\? My legs could use a break./);ok();Math.random=()=>.99;click(/Could I sleep here\? What about my backpack…/);assert(screen.getByLabelText('Sleep duration'));click('Start sleeping');assert.equal(read('street-life-sleep-v1').kind,'bench');
