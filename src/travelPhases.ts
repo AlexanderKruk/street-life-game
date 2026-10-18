@@ -29,13 +29,7 @@ function getWalkingStage(trip: TravelProgress): { phase: TravelPhase; minutes: n
   return { phase: walkingOn, minutes: 1 }
 }
 
-// Each pedestrian stage remains visible for at least five real seconds.
-// Only presentation speed changes: saved game minutes and weather costs stay intact.
-export function getTravelTickMs(trip: TravelProgress): number {
-  return trip.mode === 'walk' ? Math.max(250, Math.ceil(5000 / getWalkingStage(trip).minutes)) : 250
-}
-
-// Text and weather effects use the same saved trip progress and boundaries.
+// Simulation phases determine physical effort and weather independently of text.
 export function getTravelPhase(trip: TravelProgress): TravelPhase {
   const elapsed = Math.max(0, trip.total - trip.remaining)
   if (trip.mode === 'walk') return getWalkingStage(trip).phase
@@ -43,4 +37,24 @@ export function getTravelPhase(trip: TravelProgress): TravelPhase {
   if (elapsed < Math.max(2, Math.round(trip.total * 0.55))) return waiting
   if (elapsed < Math.max(3, Math.round(trip.total * 0.85))) return riding
   return toDestination
+}
+
+// Display labels last at least two seconds of active travel (8 game minutes at ×4).
+// Presentation never controls the clock or costs; arrival can end a label early.
+export function getTravelDisplayPhase(trip: TravelProgress): TravelPhase {
+  if (trip.mode !== 'walk') return getTravelPhase(trip)
+  const stages = [
+    { phase: walking, minutes: 16 },
+    { phase: approachingCrossing, minutes: 8 },
+    { phase: waitingForGreen, minutes: 12 },
+    { phase: crossingRoad, minutes: 8 },
+  ]
+  const elapsed = Math.max(0, trip.total - trip.remaining)
+  const cycleMinutes = stages.reduce((total, stage) => total + stage.minutes, 0)
+  let position = elapsed % cycleMinutes
+  for (const stage of stages) {
+    if (position < stage.minutes) return elapsed >= cycleMinutes && stage.phase === walking ? walkingOn : stage.phase
+    position -= stage.minutes
+  }
+  return walking
 }

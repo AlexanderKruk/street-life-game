@@ -478,7 +478,7 @@ assert(document.querySelector('.result-illustration').src.includes('event-coin-l
 // pause while hidden, cross midnight and restore the x1 clock after arrival.
 for(const mode of ['walk','transit','fare-dodge']) {
  setup({day:2,minutes:1438},{'street-life-trip-v1':{destinationId:'station',mode,total:9,remaining:9}});
- const firstTick=mode==='walk'?1000:250;
+ const firstTick=250;
  advance(firstTick-1);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(stateKey).minutes,1438);
  advance(1);assert.equal(read('street-life-trip-v1').remaining,8);assert.equal(document.querySelector('.travel-elapsed').textContent,'1m');
  for(let elapsed=2;elapsed<=4;elapsed++){advanceTravelMinutes(1);if(screen.queryByRole('dialog',{name:'Rain on the street'}))fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));assert.equal(document.querySelector('.travel-elapsed').textContent,`${elapsed}m`)}
@@ -489,7 +489,7 @@ for(const mode of ['walk','transit','fare-dodge']) {
  Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
  cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-elapsed').textContent,'4m');
  advanceTravelMinutes(1);assert.equal(document.querySelector('.travel-elapsed').textContent,'5m');
- advanceTravelMinutes(3);advance((mode==='walk'?5000:250)-1);assert.equal(read('street-life-trip-v1').remaining,1);assert.equal(read(stateKey).locationId,'street');
+ advanceTravelMinutes(3);advance(249);assert.equal(read('street-life-trip-v1').remaining,1);assert.equal(read(stateKey).locationId,'street');
  advance(1);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));
  const arrived=read(stateKey);advance(1000);assert.deepEqual(read(stateKey),arrived);ok();
  advance(999);assert.deepEqual(read(stateKey),arrived);advance(1);assert.equal(read(stateKey).minutes,arrived.minutes+1);
@@ -503,26 +503,30 @@ for(const mode of ['walk','transit','fare-dodge']) {
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
  advanceTravelMinutes(15);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
 }
-// Pedestrians approach a junction, wait, cross and carry on within the
-// existing duration. Waiting pauses their animation but provides no rain cover.
+// Short walks retain ×4 travel and outdoor rain costs. No label sequence can
+// delay arrival; reloading restores the text from saved progress.
 setup({day:2,minutes:600,wetness:20},{'street-life-trip-v1':{destinationId:'shop',mode:'walk',total:5,remaining:5},'street-life-rain-response-v1':{episode:'weather:2',locationId:'street',sheltered:false}});
-for(const [index,label] of ['Walking','Approaching a junction','Waiting for the green light','Crossing the road','Walking on'].entries()) {
- assert.equal(document.querySelector('.travel-action-label').textContent,label);assert.equal(!!document.querySelector('.travel-visual.walking.waiting'),index===2);
- cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,label);advance(4999);assert.equal(document.querySelector('.travel-action-label').textContent,label,'each stage stays readable for at least five seconds');advance(1);assert.equal(read(stateKey).wetness,21+index);
+for(let minute=0;minute<5;minute++) {
+ assert.equal(document.querySelector('.travel-action-label').textContent,'Walking');
+ cleanup();render(React.createElement(App));advance(250);assert.equal(read(stateKey).wetness,21+minute);
 }
 assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,605);ok();
-// Long routes have fewer complete junctions; every stage is readable and arrival
-// still charges exactly the original game minutes, including uneven route lengths.
+// Display text stays for at least two real seconds independently of the minute clock.
+// Every minute still advances at ×4, pauses/reloads retain the displayed stage,
+// and an incomplete final label never extends the route.
 for(const total of [30,60,91,120]) {
  setup({minutes:600},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total,remaining:total}});
- let previous='',stages=[],started=now;
+ let previous='',started=now;const journeyStarted=now,durations=[];
  for(let minute=0;minute<total;minute++) {
   const label=document.querySelector('.travel-action-label').textContent;
-  if(label!==previous){if(previous)assert(now-started>=5000);stages.push(label);started=now;previous=label;}
-  advanceTravelMinutes(1);
+  if(label!==previous){if(previous){durations.push(now-started);assert(now-started>=2000);}started=now;previous=label;}
+  assert.equal(!!document.querySelector('.travel-visual.walking.waiting'),label==='Waiting for the green light');
+  if(minute===42){cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,label);}
+  advance(249);assert.equal(read('street-life-trip-v1').remaining,total-minute);
+  assert.equal(document.querySelector('.travel-action-label').textContent,label);
+  advance(1);assert.equal(read(stateKey).minutes,601+minute);
  }
- assert(now-started>=5000);assert.equal(stages.filter(label=>label==='Crossing the road').length,Math.max(1,Math.floor(total/30)));
- assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,600+total);ok();
+ assert(durations.some(ms=>ms>2000),'two seconds is a minimum, not a uniform label timer');assert.equal(now-journeyStarted,total*250);assert.equal(read(stateKey).locationId,'station');ok();
 }
 // Bus phase text follows elapsed time and resumes at the same stage after reload.
 for(const mode of ['transit','fare-dodge']) {

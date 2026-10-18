@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-229`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-230`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Pedestrian text independent of travel speed (v230)
+
+All trips again advance one game minute every 250 ms (×4). Pedestrian presentation starts with Walking, then cycles through Approaching a junction, Waiting for the green light, Crossing the road and Walking on, keeping every label and its matching animation for at least two seconds of active travel: walking/carrying on four seconds, approaching two, waiting for green three, crossing two. Two seconds is a minimum, not a uniform switching timer. The display derives from saved elapsed minutes independently of simulation phases, so rain cover, navigation battery and physical costs keep their existing game-minute accounting. Pauses stop the display timeline; reload resumes it. Arrival ends the display immediately, even midway through a label; short routes show only the stages that fit. Bus presentation is unchanged. This replaces v229's clock slowdown.
 
 ### Readable pedestrian stages (v229)
 

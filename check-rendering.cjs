@@ -76,7 +76,7 @@ function measure(App) {
   const initialElapsed = document.querySelector('.travel-elapsed').textContent;
   advance(12); output.travel = counts();
   assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '27m');
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '48m');
   assert(!document.querySelector('.travel-progress'));
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
