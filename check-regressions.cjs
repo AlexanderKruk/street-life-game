@@ -96,8 +96,8 @@ assert(read('street-life-discovered-v1').includes('support'));assert.equal(read(
 assert(document.querySelector('.result-inline'));assert(!document.querySelector('.result-overlay'));
 assert(!document.querySelector('.story-actions'));assert.equal(screen.getByRole('dialog').getAttribute('aria-modal'),'false');
 assert(document.querySelector('.result-consequences').textContent.includes('Clothing wetness'));
-assert.equal(document.querySelectorAll('.result-place').length,1);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details').open);
-assert(document.querySelector('.street-art img').src.endsWith('help-morning-480.webp'));
+assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert.equal(document.querySelectorAll('.result-place').length,0);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details').open);
+assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
 ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));assert(!document.querySelector('.phone-activity-overlay'));assert.equal(document.body.style.overflow,'');
 click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(!document.querySelector('.phone-activity'));assert.equal(read(stateKey).minutes,completed.minutes+15);assert(read('street-life-discovered-v1').includes('daycenter'));
@@ -106,7 +106,7 @@ assert.equal(document.querySelectorAll('.result-cost-line').length,1);ok();disco
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop']});
 for(const [index,id] of ['support','daycenter','free-clinic'].entries()){
  click('Where can I get help in the morning?');
- assert.equal(document.querySelectorAll('.result-place').length,1);
+ assert.equal(document.querySelectorAll('.compact-info-heading').length,1);
  assert.equal(read('street-life-discovered-v1').length,4+index);
  assert(read('street-life-discovered-v1').includes(id));
  if(index<2)assert(!read('street-life-discovered-v1').includes('free-clinic'));

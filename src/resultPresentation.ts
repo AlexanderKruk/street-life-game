@@ -11,7 +11,7 @@ const services: Record<string, string> = {
 }
 
 const answers: Record<string, Pick<ResultPresentation, 'heading' | 'lead' | 'notice' | 'illustration'>> = {
-  morning: { heading: 'Help for tomorrow', lead: 'Places saved on your map.', notice: 'Services may be full.', illustration: '/street-life-game/assets/help-morning.webp' },
+  morning: { heading: 'Help for tomorrow', lead: 'Places saved on your map.', notice: 'Services may be full.' },
   bed: { heading: 'A place for the night', lead: 'Arrive by 19:00. A bed is not guaranteed.', notice: 'Successful registration reserves seven nights.' },
   'no-place': { heading: 'If there is no bed', lead: 'Ask Help Center about a Schronisko referral.', notice: 'Day Center is a daytime option, not an overnight bed.' },
   supplies: { heading: 'Food and water', lead: 'Use supplies in your backpack or visit the shop.', notice: 'Shelter meals are for registered guests.' },
@@ -26,6 +26,8 @@ export function questionPresentation(id: string, placeIds: string[], saved = fal
     ...answer,
     ...(id === 'morning' ? { heading: morningPlace?.name ?? 'No new information', lead: morningPlace ? 'Address saved on your map.' : 'You found no new places.', notice: undefined } : {}),
     label: saved ? 'SAVED INFORMATION' : id === 'charging' ? 'A REMEMBERED PLACE' : 'FOUND INFORMATION',
+    compact: id === 'morning',
+    mapStatus: saved ? 'Saved on map' : 'Added to map',
     places: placeIds.flatMap(placeId => {
       const place = locations.find(location => location.id === placeId)
       if (!place) return []

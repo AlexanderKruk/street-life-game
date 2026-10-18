@@ -5,7 +5,7 @@ import Stat from './Stat'
 import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
-export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string }
+export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
 export type ResultCardData = { title: string; text: string; label?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
@@ -79,26 +79,36 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   }, [inline])
 
   const presentation = result.presentation
+  const compactPlace = presentation?.compact && presentation.places?.length === 1 ? presentation.places[0] : undefined
   const changes = (result.changes ?? []).filter(isMajorChange)
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive' && isMajorChange(change))
   const costs = (result.costs ?? []).filter(isMajorChange)
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
+  const compactMood = compactPlace ? meters.find(change => resultLabel(change.label) === 'Mood') : undefined
+  const statMeters = meters.filter(change => change !== compactMood)
   const gainRows = gains.filter(change => !change.meter && !(result.bottleSearch && resultLabel(change.label) === 'Deposit containers'))
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter)
 
   return <div className={inline ? "result-inline" : "phone-overlay result-overlay"}>
-    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
+    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactPlace ? ' compact-info-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
       {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} />}
       <div className="result-card-heading">
-        {!result.bottleSearch && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}
-        <h2 id="result-title">{result.bottleSearch ? 'Bottle & can search' : presentation?.heading ?? result.title}</h2>
+        {!result.bottleSearch && !compactPlace && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}
+        <div className={compactPlace ? 'compact-info-heading' : undefined}>
+          <h2 id="result-title">{compactPlace && <Icon name="info" />}{compactPlace?.name ?? (result.bottleSearch ? 'Bottle & can search' : presentation?.heading ?? result.title)}</h2>
+          {compactPlace && <span className="compact-info-hours">{compactPlace.hours}</span>}
+        </div>
       </div>
       <div className="result-card-content">
         {result.bottleSearch ? <>
           <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <>+{result.bottleSearch.found} <span className="sr-only">returnable </span>container{result.bottleSearch.found === 1 ? '' : 's'}</> : 'Nothing useful found'}</p>
           {result.bottleSearch.found > 0 && <p className="result-description">Return at Cheap Shop · {(result.bottleSearch.found * .5).toFixed(2)} zł</p>}
+        </> : compactPlace ? <>
+          <p className="result-description">{compactPlace.detail}</p>
+          <p className="compact-info-saved"><Icon name="check" />{presentation?.mapStatus}</p>
+          {presentation?.notice && <p className="result-notice">{presentation.notice}</p>}
         </> : presentation ? <>
           <p className="result-lead">{presentation.lead}</p>
           {!!presentation.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
@@ -107,10 +117,13 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
         </> : <p className="result-description">{result.text}</p>}
-        {meters.length > 0 && <div className="status-needs result-stat-panel">{meters.map(change => <ResultStat key={change.label} change={change} />)}</div>}
+        {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} />)}</div>}
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
-        {costRows.length > 0 && <div className="result-cost-line" aria-label="Spent">{costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}><Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} /><span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}</div>}
+        {(costRows.length > 0 || compactMood) && <div className={`result-cost-line${compactPlace ? ' compact-info-summary' : ''}`} aria-label={compactPlace ? 'Action summary' : 'Spent'}>
+          {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}><Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} /><span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}
+          {compactMood && <span className={`compact-info-mood ${compactMood.kind}`}><Icon name="face-fair" />Mood {compactMood.value}</span>}
+        </div>}
         {presentation && <details className="result-details">
           <summary>Full answer & details</summary>
           <p className="result-description">{result.text}</p>

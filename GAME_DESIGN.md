@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-17 · Neutral office-worker protagonist. Latest application build: `v2026.10.17-211`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-212`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Compact information discoveries (v212)
+
+Finding Help Center, Day Center or Free Clinic uses one compact information card: an info icon beside the location name, opening hours aligned to the right, services, and a short Added to map label. A single summary row combines elapsed time and any actual Mood change; the full answer remains collapsed under Full answer & details. Zero gains stay hidden. Other meaningful stat changes retain their existing presentation. The street illustration stays visible: searching does not show an arrival scene or move the player. No-new-information, multi-place and other practical answers retain their existing explanations. Saved compact answers say Saved on map. Save fixtures cover the actual ten published builds v202–v211.
 
 ### Medicine explanations (v211)
 

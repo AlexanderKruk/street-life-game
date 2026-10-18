@@ -5,7 +5,7 @@ import { Icon, locationIcon } from './Icon'
 
 type ArtProps = { phone: boolean; inline: boolean; illustration?: string; night: boolean }
 export const StreetArt = memo(function StreetArt({ phone, inline, illustration, night }: ArtProps) {
-  const source = phone ? '/street-life-game/assets/phone-search.webp' : illustration ?? (inline ? '/street-life-game/assets/phone-search.webp' : '/street-life-game/assets/street-hero.webp')
+  const source = phone ? '/street-life-game/assets/phone-search.webp' : illustration ?? '/street-life-game/assets/street-hero.webp'
   return <div className={`street-art${phone || inline ? ' phone-art' : !illustration && night ? ' night' : ''}`} aria-hidden="true">
     <img {...responsiveImageProps(source)} alt="" width="1400" height={phone || inline ? 1050 : 788} fetchPriority="high" />
     {illustration && <span className="result-art-caption">Looking ahead</span>}
