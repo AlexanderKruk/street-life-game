@@ -641,6 +641,29 @@ for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]
 }
 
 
+// Free shelter water tops up the backpack to four portions, respecting access
+// and slots. Existing stock above four is preserved without spending time.
+for(const locationId of ['shelter','residential-shelter']) {
+ for(const water of [0,1,3,4,7]) {
+  setup({day:2,locationId,minutes:420},{[invKey]:{water},[lifeKey]:{housing:locationId==='shelter'?'Night shelter':'Schronisko',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1}});
+  const before=read(stateKey),button=screen.getByRole('button',{name:/Refill water/});
+  assert.equal(button.disabled,water>=4);fireEvent.click(button);
+  assert.equal(read(invKey).water,Math.max(4,water));assert.equal(read(stateKey).money,before.money);
+  if(water<4){assert.equal(read(stateKey).minutes,425);assert(read(stateKey).thirst<=before.thirst);assert(screen.getByRole('dialog').textContent.includes(`+${4-water}`));ok();assert(screen.getByRole('button',{name:/Refill water/}).disabled);cleanup();render(React.createElement(App));assert.equal(read(invKey).water,4);}
+  else {assert.deepEqual(read(stateKey),before);assert(!screen.queryByRole('dialog'));}
+ }
+ // Seven medicine slots and one food slot leave no room for a new water stack.
+ setup({day:2,locationId,minutes:420},{[invKey]:{water:0,food:4,medicines:28},[lifeKey]:{shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1}});
+ const full=screen.getByRole('button',{name:/Refill water/});assert(full.disabled);const before=read(stateKey);fireEvent.click(full);assert.equal(read(invKey).water,0);assert.deepEqual(read(stateKey),before);
+ // Topping up a partially filled water stack needs no extra slot.
+ setup({day:2,locationId,minutes:420},{[invKey]:{water:1,food:4,medicines:24},[lifeKey]:{shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1}});
+ assert(!screen.getByRole('button',{name:/Refill water/}).disabled);click(/Refill water/);assert.equal(read(invKey).water,4);ok();
+}
+for(const [minutes,reserved] of [[420,false],[900,true],[1380,true]]) {
+ setup({day:2,locationId:'shelter',minutes},{[invKey]:{water:1},[lifeKey]:reserved?{shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1}:{} });
+ const refill=document.querySelector('[data-choice="shelter-refill-water"]');const before=read(stateKey);if(reserved){assert(refill.disabled);fireEvent.click(refill);}else assert.equal(refill,null);assert.deepEqual(read(stateKey),before);assert.equal(read(invKey).water,1);
+}
+
 // Worker access follows appointment hours, not overnight accommodation hours.
 const booking={housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterAuditDay:1,shelterLastStayDay:1};
 setup({locationId:'shelter',minutes:1080},{[lifeKey]:booking});const worker=screen.getByRole('button',{name:/Talk to shelter social worker/});assert(worker.disabled);fireEvent.click(worker);assert.equal(read(stateKey).minutes,1080);

@@ -350,6 +350,16 @@ export const actions: GameAction[] = [
     resolve: (state) => ({ minutes: 8 * 60, energy: 90, health: state.hunger > 20 && state.thirst > 20 ? 3 : 0, hygiene: 3, mood: 8, message: state.hunger > 20 && state.thirst > 20 ? 'A safe full night restores some health.' : 'You sleep safely, but hunger or dehydration prevents physical recovery.' }),
   },
   {
+    id: 'residential-refill-water', locationId: 'residential-shelter', name: 'Refill water',
+    description: 'Free · top up the water in your backpack to 4 portions.', minutes: 5,
+    resolve: () => ({ minutes: 5, message: 'You refill your backpack water.' }),
+  },
+  {
+    id: 'shelter-refill-water', locationId: 'shelter', name: 'Refill water',
+    description: 'Free · top up the water in your backpack to 4 portions.', minutes: 5,
+    resolve: () => ({ minutes: 5, message: 'You refill your backpack water.' }),
+  },
+  {
     id: 'shelter-shower', locationId: 'shelter', name: 'Ask for a shower',
     description: 'There may be a queue, but it restores hygiene.', minutes: 35,
     resolve: () => ({ minutes: 35, hygiene: 55, hygieneCap: 70, energy: 4, mood: 4, message: 'You got a shower with water only. Hygiene improves up to 70; gel helps clean more thoroughly.' }),

@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-231`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-232`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Free shelter water refill (v232)
+
+Night Shelter and Schronisko offer Refill water: five game minutes, no money, topping up carried water to four portions. Existing stock of four or more is unchanged and disables the action without spending time. A new water stack requires a free backpack slot; topping up an existing partial stack still works with all eight slots occupied. This adds inventory water rather than drinking it. Normal Night Shelter registration, opening and quiet-hour rules apply; Schronisko remains open 24/7. The result shows only the actual added portions and elapsed time, and the refill is saved and journaled.
 
 ### One result for a quiet night (v231)
 

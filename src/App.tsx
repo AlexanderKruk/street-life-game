@@ -28,7 +28,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-231'
+const BUILD_VERSION = 'v2026.10.18-232'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -122,6 +122,7 @@ type TrashItem = { id: number; layer: number; art: TrashArt; x: number; y: numbe
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
 const INITIAL_INVENTORY: Inventory = { clothingCleanliness: 80, showerGel: 0, bread: 0, breadFreshness: 100, cannedFood: 0, wipes: 0, water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: false }
 const BACKPACK_CAPACITY = 8
+const FREE_WATER_LIMIT = 4
 const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0, foodFreshness: 100 }
 const SCHRONISKO_FOOD_CAPACITY = 4
 const FOOD_FRESHNESS_PER_MINUTE = 100 / (48 * 60)
@@ -1515,6 +1516,10 @@ export default function App() {
     }
     if (!open && action.requiresOpen !== false) return `Closed · opens at ${formatTime(current.open)}.`
     if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && id !== 'shelter-rest') return 'Quiet hours 22:00–06:00 · sleeping only.'
+    if (id.endsWith('-refill-water')) {
+      if (inventory.water >= FREE_WATER_LIMIT) return 'You already carry 4 or more water portions.'
+      if (backpackSlots({ ...inventory, water: FREE_WATER_LIMIT }) > BACKPACK_CAPACITY) return 'Backpack full · make room for water.'
+    }
     if (action.cost && game.money < action.cost) return `Need ${action.cost.toFixed(2)} zł.`
     return null
   }
@@ -1544,6 +1549,13 @@ export default function App() {
       return
     }
     if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
+    if (actionId.endsWith('-refill-water')) {
+      const added = FREE_WATER_LIMIT - inventory.water
+      setInventory(previous => ({ ...previous, water: Math.max(previous.water, FREE_WATER_LIMIT) }))
+      setGame(previous => applyAction(previous, { minutes: action.minutes }))
+      setMessage(`You refilled your water for free. Backpack: ${FREE_WATER_LIMIT} portions (+${added}).`)
+      return
+    }
     if ((current.id === 'daycenter' || current.id === 'free-clinic') && actionId.startsWith('daycenter-')) {
       const hour = game.minutes / 60
       const chance = hour < 10 ? 0.9 : hour < 12 ? 0.75 : hour < 14 ? 0.55 : 0.35

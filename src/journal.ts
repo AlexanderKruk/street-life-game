@@ -12,7 +12,7 @@ export type JournalEntry = {
 const titles: Record<string, string> = {
   'The door closes': 'Watched someone return home', 'Making a bed on a bench': 'Noticed someone settling in',
   'The last departures': 'Looked around the station', 'Someone needs the bench': 'Woken on a bench',
-  'Drink water': 'Drank water', 'Eat food': 'Ate food',
+  'Drink water': 'Drank water', 'Eat food': 'Ate food', 'Refill water': 'Refilled water',
   'Walk with music': 'Walked with music', 'Walk through the city': 'Walked through the city',
   'Rest on the bench': 'Rested on a bench', 'Sit and recover': 'Rested at the station',
   'Sleep complete': 'Woke up', 'Shelter from the rain': 'Waited under cover',
