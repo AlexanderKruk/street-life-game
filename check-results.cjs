@@ -102,7 +102,7 @@ try {
   assert.equal(row('Battery').querySelector('.bar-loss-trail').style.left, '37%');
   assert.equal(row('Battery').querySelector('.bar-loss-trail').style.width, '6%');
   assert(frames.size > 0); cleanup(); assert.equal(frames.size, 0, 'unmount cancels every animation frame');
-  const searchAfter = { ...before, inventory: { ...before.inventory, phoneBattery: 37 }, game: { ...before.game, minutes: 619, mood: 63.2 } };
+  const searchAfter = { ...before, inventory: { ...before.inventory, phoneBattery: 38.9 }, game: { ...before.game, minutes: 619, mood: 63.2 } };
   const searchSummary = summarizeResult(before, searchAfter);
   for (const [id, name] of [['support', 'Help Center'], ['daycenter', 'Day Center'], ['free-clinic', 'Free Clinic']]) {
     const presentation = questionPresentation('morning', [id]);
@@ -112,7 +112,8 @@ try {
     assert.equal(dialog.querySelectorAll('h2').length, 1);
     assert(!dialog.querySelector('.result-place'), 'location is not repeated');
     assert(!row('Mood'), 'search gain uses compact text instead of a stat bar');
-    assert(row('Battery').querySelector('.bar-loss-trail'), 'compact search results retain the animated battery meter and its loss trace');
+    assert(row('Battery').querySelector('.bar-loss-trail'), 'search costs below 5% retain the animated battery meter and its loss trace');
+    assert(!row('Battery').querySelector('.result-stat-delta'));
     assert(!dialog.querySelector('.result-card-label'));
     assert(dialog.querySelector('.compact-info-heading svg'), 'title has an information icon');
     assert(dialog.querySelector('.compact-info-hours').textContent);

@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-215`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-216`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Visible search battery costs (v216)
+
+Information-result cards show all nonzero recorded battery costs, including decreases below the general 5-point passive-drain threshold. The existing animated percentage, loss trace and hidden numeric minus label remain. Zero-cost remembered/saved answers do not invent a battery row. Actual battery consumption remains 0.2/min times the phone-condition multiplier; only result visibility changes. Save fixtures cover actual published builds v206–v215.
 
 ### One simple information-result design (v215)
 

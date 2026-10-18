@@ -84,7 +84,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   const changes = (result.changes ?? []).filter(isMajorChange)
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive' && isMajorChange(change))
-  const costs = (result.costs ?? []).filter(isMajorChange)
+  const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || (compactInfo && resultLabel(cost.label) === 'Battery'))
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
   const compactMood = compactInfo ? meters.find(change => resultLabel(change.label) === 'Mood') : undefined
   const statMeters = meters.filter(change => change !== compactMood)
