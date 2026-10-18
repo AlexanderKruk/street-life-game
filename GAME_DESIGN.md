@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-232`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-233`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Shelter meal portions and tea (v233)
+
+Night Shelter breakfast and dinner each restore 38 Thirst from tea, equivalent to drinking one water portion from the backpack, before normal elapsed-time decay and the 100-point cap. Descriptions and outcome text mention tea. Breakfast now restores 12 Food (Food+, like a fresh bread roll), dinner 28 Food (Food++, like a fresh sandwich). Both action cards show their Food, Thirst and Mood tags. Meal hours, daily limits, duration and backpack stock are unchanged.
 
 ### Free shelter water refill (v232)
 
@@ -841,8 +845,8 @@ Night Shelter:
 - **Quiet hours are 22:00–06:00.** During that period normal shelter actions are blocked and only sleeping is allowed.
 - Shower: 35 minutes, +55 Hygiene capped at 70 without gel; with gel +82.5 Hygiene capped at 100 and one gel use spent. +4 Energy, +4 Mood.
 - Intoxication above 10 blocks shelter sleep/admission to bed; the initial registration branch itself does not currently check intoxication.
-- Free dinner is served **19:00–20:30**, once per day: 20 minutes, +34 Food, +10 Thirst, +4 Mood before normal elapsed-time decay.
-- Free breakfast is served **06:30–07:00**, once per day: 15 minutes, +25 Food, +8 Thirst, +3 Mood before normal elapsed-time decay.
+- Free dinner is served **19:00–20:30**, once per day: 20 minutes, +28 Food (Food++), +38 Thirst (tea, equivalent to one water drink), +4 Mood before normal elapsed-time decay.
+- Free breakfast is served **06:30–07:00**, once per day: 15 minutes, +12 Food (Food+), +38 Thirst (tea, equivalent to one water drink), +3 Mood before normal elapsed-time decay.
 - Thursday laundry is a two-step persistent cycle: leave clothes **06:30–08:00 Thursday**, then collect them **18:00–22:00 Thursday**. Pickup is only possible if clothes were actually left that morning.
 - A shelter social worker is available **Tuesday and Friday, 16:00–20:00**. Renewal is handled through a short interview about why the player still needs the place, what they are already doing and what they plan to do next. The extension is not based on missed nights/strikes: first renewal can reach 30 days; later renewal length depends on renewal count and constructive/progress answers, currently producing 7, 14 or 30 days. Availability is checked before spending time, independently of night-shelter bed opening hours. The interview pauses background time and charges 30 minutes once, when completed; opening it or an unavailable appointment spends no time.
 

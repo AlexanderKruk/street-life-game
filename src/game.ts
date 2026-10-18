@@ -69,6 +69,7 @@ export type GameAction = {
   description: string
   minutes: number
   cost?: number
+  impacts?: string[]
   requiresOpen?: boolean
   resolve: (state: GameState) => ActionResult
 }
@@ -366,13 +367,15 @@ export const actions: GameAction[] = [
   },
   {
     id: 'shelter-dinner', locationId: 'shelter', name: 'Dinner',
-    description: 'Free evening meal served from 19:00 to 20:30.', minutes: 20,
-    resolve: () => ({ minutes: 20, hunger: 34, thirst: 10, mood: 4, message: 'You eat the free shelter dinner.' }),
+    description: 'Free evening meal with tea, served from 19:00 to 20:30.', minutes: 20,
+    impacts: ['Food++', 'Thirst+++', 'Mood+'],
+    resolve: () => ({ minutes: 20, hunger: 28, thirst: 38, mood: 4, message: 'You eat the free shelter dinner and drink tea.' }),
   },
   {
     id: 'shelter-breakfast', locationId: 'shelter', name: 'Breakfast',
-    description: 'Free breakfast served from 06:30 to 07:00.', minutes: 15,
-    resolve: () => ({ minutes: 15, hunger: 25, thirst: 8, mood: 3, message: 'You eat breakfast before leaving the shelter.' }),
+    description: 'Free breakfast with tea, served from 06:30 to 07:00.', minutes: 15,
+    impacts: ['Food+', 'Thirst+++', 'Mood+'],
+    resolve: () => ({ minutes: 15, hunger: 12, thirst: 38, mood: 3, message: 'You eat breakfast and drink tea before leaving the shelter.' }),
   },
   {
     id: 'shelter-laundry-drop', locationId: 'shelter', name: 'Leave clothes for laundry',
