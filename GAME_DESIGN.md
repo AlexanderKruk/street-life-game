@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-216`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-217`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Random order of choices (v217)
+
+The three main street choices keep the same contextual selection (information, rest/movement and practical direction), but their displayed order is shuffled using a separate per-run presentation seed. This does not consume gameplay random rolls. Order is deterministic for the current completed-action history and selected choice IDs, so minute ticks, ordinary rerenders, tab changes and reloads preserve positions. A completed action or a changed set of available directions can produce a new order. Disabled options still follow available choices. The seed is saved, validated on load, generated for older saves and renewed on Reset save. The same stable shuffle applies to illustrated and compact event replies, rain decisions, social-worker interview answers, transport alternatives, action lists at other locations and phone actions (while leaving on/off switches in their slots). Yes/no, accept/decline and equivalent conventional binary pairs keep their order. Numeric duration choices, confirmation/cancel controls, navigation, shop/catalog order and on/off settings keep their natural order. Compatibility fixtures cover v207–v216.
 
 ### Visible search battery costs (v216)
 

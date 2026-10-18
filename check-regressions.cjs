@@ -244,17 +244,37 @@ assert.equal(read(invKey).bottles,0);assert.equal(read(stateKey).money,depositMo
 
 // Three normal directions.
 function storyIds(){return [...document.querySelectorAll('.story-actions > button')].map(button=>button.dataset.choice);}
-setup({minutes:1320});assert.deepEqual(storyIds(),['question-morning','walk','station-route']);
-const initialChoices=storyIds();advance(10000);assert.deepEqual(storyIds(),initialChoices);cleanup();render(React.createElement(App));assert.deepEqual(storyIds(),initialChoices);
-click('Where can I get help in the morning?');ok();assert.deepEqual(storyIds(),['question-morning','walk','station-route']);discoverHelp();assert.deepEqual(storyIds(),['question-bed','walk','station-route']);
-click('How can I get a shelter bed?');ok();assert.deepEqual(storyIds(),['question-no-place','find-bench','station-route']);
+function assertStoryChoices(expected){assert.deepEqual([...storyIds()].sort(),[...expected].sort());}
+const choiceCode=require('esbuild').buildSync({entryPoints:['src/streetChoiceOrder.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
+const choiceModule={exports:{}};new Function('module','exports',choiceCode)(choiceModule,choiceModule.exports);
+const {shuffleChoiceOrder}=choiceModule.exports;
+const choiceInput=['information','rest','practical'];
+const gameplayRandom=Math.random;Math.random=()=>{throw Error('UI order must not consume a gameplay roll')};
+const permutations=new Set();
+for(let seed=0;seed<120;seed++){const order=shuffleChoiceOrder(choiceInput,seed,'decision');permutations.add(order.join('|'));assert.deepEqual([...order].sort(),[...choiceInput].sort());assert.deepEqual(order,shuffleChoiceOrder(choiceInput,seed,'decision'));}
+assert.equal(permutations.size,6,'all six three-option orders are reachable');
+assert.deepEqual(choiceInput,['information','rest','practical']);Math.random=gameplayRandom;
+const optionCode=require('esbuild').buildSync({entryPoints:['src/ChoiceOptions.tsx'],bundle:true,platform:'node',format:'cjs',write:false,external:['react','react/jsx-runtime']}).outputFiles[0].text;
+const optionModule={exports:{}};new Function('require','module','exports',optionCode)(require,optionModule,optionModule.exports);
+const {orderChoiceNodes}=optionModule.exports;
+for(const labels of [['Yes','No'],['Accept','Decline'],['Pick it up','Leave it'],['Start','Cancel']])for(let seed=0;seed<20;seed++){
+ const nodes=labels.map(label=>React.createElement('button',{'aria-label':label,key:label},label));
+ assert.deepEqual(orderChoiceNodes(nodes,seed,'dialog').map(node=>node.props['aria-label']),labels,'conventional binary pairs stay in order');
+}
+const durations=['2 h','4 h','6 h','8 h'].map(label=>React.createElement('button',{key:label},label));
+assert.deepEqual(orderChoiceNodes(durations,42,'sleep',true).map(node=>node.props.children),['2 h','4 h','6 h','8 h']);
+
+setup({minutes:1320});assertStoryChoices(['question-morning','walk','station-route']);
+const initialChoices=storyIds();const originalChoice=document.querySelector('.story-actions > button');originalChoice.focus();advance(10000);assert.equal(document.activeElement,originalChoice,'ticks preserve the focused choice');assert.deepEqual(storyIds(),initialChoices);cleanup();render(React.createElement(App));assert.deepEqual(storyIds(),initialChoices);
+click('Where can I get help in the morning?');ok();assertStoryChoices(['question-morning','walk','station-route']);discoverHelp();assertStoryChoices(['question-bed','walk','station-route']);
+click('How can I get a shelter bed?');ok();assertStoryChoices(['question-no-place','find-bench','station-route']);
 for(const [state,extra,expected] of [
  [{minutes:1320,mood:28},{},['question-morning','music-walk','station-route']],
  [{minutes:1320,energy:20},{},['question-morning','street-sleep','station-route']],
  [{minutes:1320,thirst:20},{[invKey]:{phoneBattery:30}},['question-charging','walk','station-route']],
  [{minutes:1320,thirst:20},{[invKey]:{phoneBattery:31}},['question-supplies','walk','station-route']],
  [{minutes:600,money:0},{},['question-morning','street-sleep','beg']],
-]){setup(state,extra);assert.deepEqual(storyIds(),expected);assert.equal(storyIds().filter(id=>id.startsWith('question-')).length,1);}
+]){setup(state,extra);assertStoryChoices(expected);assert.equal(storyIds().filter(id=>id.startsWith('question-')).length,1);}
 
 // One-level choices react immediately; result reading pauses the clock.
 setup({minutes:1320});assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('Maybe my phone can help'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?'}));
@@ -964,8 +984,12 @@ for(const [label,asset] of [['Ask how they get through the night','conversation'
  setup({minutes:1385},{[firstNightKey]:{seen:['first-night-bench'],lastAt:1385,pendingId:'first-night-bench'}});
  const scene=document.querySelector('.event-illustration');assert(scene.src.endsWith('event-first-night-bench-480.webp'));assert.match(scene.srcset,/480w.*768w.*1024w/);
  assert(document.querySelector('.illustrated-event'));assert.equal(document.body.style.overflow,'hidden');
- assert.equal(document.activeElement.textContent.includes('Ask how they get through the night'),true);
- fireEvent.keyDown(document,{key:'Tab'});assert(document.activeElement.textContent.includes('Watch quietly'));
+ const eventOrder=within(screen.getByRole('dialog')).getAllByRole('button').map(button=>button.getAttribute('aria-label'));
+ advance(10000);assert.deepEqual(within(screen.getByRole('dialog')).getAllByRole('button').map(button=>button.getAttribute('aria-label')),eventOrder);
+ cleanup();render(React.createElement(App));assert.deepEqual(within(screen.getByRole('dialog')).getAllByRole('button').map(button=>button.getAttribute('aria-label')),eventOrder,'event order survives reload');
+ const displayedReplies=within(screen.getByRole('dialog')).getAllByRole('button');
+ assert.equal(document.activeElement,displayedReplies[0]);
+ fireEvent.keyDown(document,{key:'Tab'});assert.equal(document.activeElement,displayedReplies[1]);
  click(label);
  assert(document.querySelector('.result-illustration').src.endsWith(`event-bench-${asset}-480.webp`));
  assert(document.querySelector('.result-overlay .illustrated-result'));assert(!document.querySelector('.result-inline'));
@@ -980,7 +1004,10 @@ for(const [id,assets,durations] of [
 ]) for(let index=0;index<assets.length;index++) {
  setup({minutes:1385},{[firstNightKey]:{seen:[`first-night-${id}`],lastAt:1385,pendingId:`first-night-${id}`}});
  assert(document.querySelector('.event-illustration').src.endsWith(`event-first-night-${id}-480.webp`));
- fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button')[index]);
+ const eventDefinition=require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
+ const eventModule={exports:{}};new Function('module','exports',eventDefinition)(eventModule,eventModule.exports);
+ const reply=eventModule.exports.STREET_EVENTS.find(event=>event.id===`first-night-${id}`).choices[index].label;
+ click(reply);
  assert(document.querySelector('.result-illustration').src.endsWith(`event-${assets[index]}-480.webp`));
  assert.match(document.querySelector('.result-illustration').srcset,/480w.*768w.*1024w/);
  assert.equal(read(stateKey).minutes,1385+durations[index]);assert.equal(read(firstNightKey).pendingId,null);

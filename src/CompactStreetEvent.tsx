@@ -1,4 +1,5 @@
 import { Icon, type IconName } from './Icon'
+import ChoiceOptions from './ChoiceOptions'
 import type { StreetEvent, StreetEventChoice } from './events'
 
 const eventIcons: Record<string, IconName> = {
@@ -14,10 +15,12 @@ const choiceIcons: Record<string, IconName> = {
   'Stay where you are': 'person', 'Get up': 'walk', 'Check your things': 'backpack',
 }
 
-export default function CompactStreetEvent({ event, onChoose, unavailableReason }: {
+export default function CompactStreetEvent({ event, onChoose, unavailableReason, orderSeed = 0, decisionKey = '' }: {
   event: StreetEvent
   onChoose: (choice: StreetEventChoice) => void
   unavailableReason: (choice: StreetEventChoice) => string | null
+  orderSeed?: number
+  decisionKey?: string
 }) {
   const icon = eventIcons[event.id] ?? 'help'
   return <div className="event-body">
@@ -25,7 +28,7 @@ export default function CompactStreetEvent({ event, onChoose, unavailableReason 
       <p className="eyebrow">STREET EVENT</p><h2 id="street-event-title">{event.title}</h2>
     </div></div>
     <p className="compact-event-description">{event.text}</p>
-    <div className="event-choices">{event.choices.map(choice => {
+    <ChoiceOptions className="event-choices" seed={orderSeed} decision={`${decisionKey}|event:${event.id}`}>{event.choices.map(choice => {
       const unavailable = unavailableReason(choice)
       const label = choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label
       return <button key={choice.label} aria-label={choice.label} disabled={!!unavailable} onClick={() => onChoose(choice)}>
@@ -35,7 +38,7 @@ export default function CompactStreetEvent({ event, onChoose, unavailableReason 
         </span>
         <Icon name={choice.check ? choice.check.stat === 'reflex' ? 'energy' : 'person' : choiceIcons[choice.label] ?? icon} />
       </button>
-    })}</div>
+    })}</ChoiceOptions>
     <p className="compact-event-pause"><Icon name="pause" />Time paused</p>
   </div>
 }

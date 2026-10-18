@@ -12,6 +12,8 @@ import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
 import ResultCard, { type ResultCardData } from './ResultCard'
 import { locationPresentation, questionPresentation } from './resultPresentation'
+import { CHOICE_SEED_KEY, loadChoiceSeed, newChoiceSeed, shuffleChoiceOrder } from './streetChoiceOrder'
+import ChoiceOptions, { orderChoiceNodes } from './ChoiceOptions'
 import { StreetArt, LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
 import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
@@ -25,7 +27,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-216'
+const BUILD_VERSION = 'v2026.10.18-217'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -249,7 +251,7 @@ function loadGame(): GameState {
 
 // Flatten conditional fragments before sorting, so custom and configured
 // actions share one available-first ordering and keep their order within a group.
-function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = false, choiceGroups }: { children: ReactNode; className: string; tag?: 'section' | 'div'; thoughtsOnly?: boolean; choiceGroups?: string[][] }) {
+function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = false, choiceGroups, orderSeed = 0, decisionKey = '' }: { children: ReactNode; className: string; tag?: 'section' | 'div'; thoughtsOnly?: boolean; choiceGroups?: string[][]; orderSeed?: number; decisionKey?: string }) {
   function flatten(nodes: ReactNode): ReactNode[] {
     return Children.toArray(nodes).flatMap(node =>
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment ? flatten(node.props.children) : [node])
@@ -291,11 +293,14 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
       const selected = candidates.find(node => !disabled(node)) ?? candidates[0]
       return selected ? [selected] : []
     })
+    const ids = selected.map(node => isValidElement<{ 'data-choice'?: string }>(node) ? node.props['data-choice'] : '').join('|')
+    const ordered = shuffleChoiceOrder(selected, orderSeed, `${decisionKey}|${ids}`)
     const Tag = tag
-    return <Tag className={className}>{selected.filter(node => !disabled(node))}{selected.filter(disabled)}</Tag>
+    return <Tag className={className}>{ordered.filter(node => !disabled(node))}{ordered.filter(disabled)}</Tag>
   }
-  const available = nodes.filter(node => !disabled(node))
-  const unavailable = nodes.filter(disabled)
+  const ordered = orderChoiceNodes(nodes, orderSeed, decisionKey)
+  const available = ordered.filter(node => !disabled(node))
+  const unavailable = ordered.filter(disabled)
   const Tag = tag
   return <Tag className={className}>{available}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable}</Tag>
 }
@@ -303,6 +308,7 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
 
 export default function App() {
   const [game, commitGame] = useState<GameState>(loadGame)
+  const [choiceSeed, setChoiceSeed] = useState(loadChoiceSeed)
   const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(loadPhoneActivity)
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
@@ -1221,7 +1227,7 @@ export default function App() {
     || (question.id === 'supplies' && (game.hunger <= 45 || game.thirst <= 45))
     || (question.id === 'charging' && inventory.phoneBattery <= 30))
   // One thought per direction. Urgent needs interrupt the ordered questions.
-  // No random draws or reshuffling while the player is deciding.
+  // Choose the same useful directions; shuffle only their presentation below.
   const remainingHelpPlaces = practicalQuestions[0].locations.filter(id => !discoveredLocations.includes(id))
   const nextQuestion = inventory.phoneBattery <= 30 ? 'charging'
     : game.hunger <= 45 || game.thirst <= 45 ? 'supplies'
@@ -1245,6 +1251,8 @@ export default function App() {
     bodyChoices,
     practicalChoices,
   ]
+  const lastDecision = journalEntries.at(-1)
+  const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
   const phoneSearchCost = PHONE_SEARCH_MIN * PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
 
   function finishPracticalQuestion(id: string, before = resultSnapshot()) {
@@ -1893,6 +1901,7 @@ export default function App() {
 
   function reset() {
     autosave.resetPending()
+    setChoiceSeed(newChoiceSeed())
     localStorage.removeItem(SAVE_KEY)
     localStorage.removeItem(DISCOVERY_KEY)
     localStorage.removeItem('street-life-discovery-version')
@@ -1965,6 +1974,7 @@ export default function App() {
 
   const autosave = useGameAutosave({
     [SAVE_KEY]: game,
+    [CHOICE_SEED_KEY]: choiceSeed,
     [DISCOVERY_KEY]: discoveredLocations,
     'street-life-discovery-version': 2,
     [GOAL_KEY]: activeGoal,
@@ -1989,7 +1999,7 @@ export default function App() {
     'street-life-shelter-queue-v1': shelterQueue,
     'street-life-shelter-departure-v1': shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
-    discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents,
+    discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents, choiceSeed,
     rainChoice, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture,
     phoneActivity?.questionId ?? null, infoModal,
@@ -2094,7 +2104,7 @@ export default function App() {
       <ClosedContent closed={!open && current.id !== 'hospital' && !currentActions.some(action => actionUnavailableReason(action) === null)} opensAt={formatTime(current.open)}>
       {shelterInterview && <section className="shop">
         <div className="shop-heading"><div><p className="eyebrow">SOCIAL WORKER</p><h2>{shelterInterview.step === 'reason' ? 'Why do you still need a place?' : shelterInterview.step === 'action' ? 'What are you doing about your situation?' : 'What will you do next?'}</h2></div></div>
-        <div className="shop-grid">
+        <ChoiceOptions className="shop-grid" seed={choiceSeed} decision={`${choiceDecisionKey}|interview:${shelterInterview.step}`}>
           {shelterInterview.step === 'reason' && <>
             <button className="shop-item" onClick={() => answerShelterInterview('work')}><div><strong>I still cannot afford housing</strong><small>I am trying to get enough stable income.</small></div></button>
             <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I am sorting out documents/support</strong><small>The process is not finished yet.</small></div></button>
@@ -2111,7 +2121,7 @@ export default function App() {
             <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>Finish document/support matters</strong><small>Continue the administrative process.</small></div></button>
             <button className="shop-item" onClick={() => answerShelterInterview('nothing')}><div><strong>I cannot promise anything yet</strong><small>No concrete next step.</small></div></button>
           </>}
-        </div>
+        </ChoiceOptions>
       </section>}
       {current.id === 'shop' && <section className="shop">
         <div className="shop-capacity"><Icon name="backpack" /><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span><div className="shop-capacity-bar" role="meter" aria-label="Backpack capacity" aria-valuenow={usedBackpackSlots} aria-valuemin={0} aria-valuemax={BACKPACK_CAPACITY}><i style={{ width: `${usedBackpackSlots / BACKPACK_CAPACITY * 100}%` }} /></div></div>
@@ -2122,7 +2132,7 @@ export default function App() {
       </section>}
       {current.id === 'support' && <section className="support-menu">
         <div className="section-title"><h2>Talk to a social worker</h2><span>Choose what you need help with</span></div>
-        <AvailableFirst tag="div" className="support-grid">
+        <AvailableFirst tag="div" className="support-grid" orderSeed={choiceSeed} decisionKey={`${choiceDecisionKey}|support`}>
           <button onClick={() => socialSupport('housing')} disabled={!open}><Icon name="house" /><div><strong>Housing</strong><small>{life.schroniskoReferral ? 'Referral issued · Schronisko unlocked' : 'Ask about stable accommodation'}</small></div></button>
           <button onClick={() => socialSupport('documents')} disabled={!open}><Icon name="documents" /><div><strong>Documents</strong><small>{inventory.documents ? 'Documents complete' : 'Restore missing documents'}</small></div></button>
           <button onClick={() => socialSupport('transport')} disabled={!open || !inventory.documents}><Icon name="ticket" /><div><strong>Transport</strong><small>Apply for 3 days of free public transport</small></div></button>
@@ -2144,7 +2154,7 @@ export default function App() {
           <div><strong><Icon name="plug" className="action-label-icon" />Charge phone</strong><small>Use a public socket for 30 minutes.</small></div><span>+25% · ~30 min</span>
         </button>
       </section>}
-      {current.id === 'work' && <AvailableFirst className="actions">
+      {current.id === 'work' && <AvailableFirst className="actions" orderSeed={choiceSeed} decisionKey={`${choiceDecisionKey}|work`}>
         <button className="action" onClick={takeDayWork} disabled={!open || game.energy < dayWorkEnergyRequired}>
           <div><strong>Take a short shift</strong><small>{game.energy < dayWorkEnergyRequired ? `Need at least ${dayWorkEnergyRequired} Energy · current ${Math.floor(game.energy)}` : 'Three hours of physical work. Pays 35 zł.'}</small></div><span>+35 zł · ~180 min</span>
         </button>
@@ -2153,7 +2163,7 @@ export default function App() {
         {current.id === 'street' ? <section className="story-choices">
           <h2>What matters most right now?</h2>
         </section> : <div className="section-title"><h2>What do you do?</h2><span>Actions move time forward</span></div>}
-        <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'} choiceGroups={streetChoiceGroups}>
+        <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'} choiceGroups={streetChoiceGroups} orderSeed={choiceSeed} decisionKey={choiceDecisionKey}>
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong><Icon name="hospital" className="action-label-icon" />Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
@@ -2225,6 +2235,7 @@ export default function App() {
         <button className="sheet-close" onClick={() => setSelectedDestination(null)}>×</button>
         <p className="eyebrow">TRAVEL TO</p>
         <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
+        <ChoiceOptions seed={choiceSeed} decision={`${choiceDecisionKey}|travel:${destination.id}`}>
         <button className="travel-option" onClick={() => startTravel('walk')}>
           <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>≈{formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
@@ -2234,6 +2245,7 @@ export default function App() {
         {!freeTransitActive && <button className="travel-option" onClick={attemptFareDodge}>
           <Icon name="coins" /><div><strong>Ride without ticket</strong><small>≈{formatTravelTime(transitMinutes)} · free</small><small>Risk: 20–35 zł fine</small></div>
         </button>}
+        </ChoiceOptions>
 
       </div>
     })()}
@@ -2248,7 +2260,7 @@ export default function App() {
       {usedBackpackSlots === 0 && <p className="backpack-empty-message">Your backpack is empty.</p>}
 
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
-      {phoneOpen && <PhoneDialog
+    {phoneOpen && <PhoneDialog orderSeed={choiceSeed} decisionKey={choiceDecisionKey}
         battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
         autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={weather.label === 'Clear' ? 15 : 12}
         videoDrain={Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}
@@ -2340,7 +2352,7 @@ export default function App() {
         <div className="event-body">
         <div className="compact-event-heading"><Icon name={coverPlanning ? 'umbrella' : 'rain'} /><div><p className="eyebrow">RAIN · TIME PAUSED</p><h2>{coverPlanning ? 'Wait out the night' : 'The rain is getting heavier'}</h2></div></div>
         <p className="compact-event-description">{coverPlanning ? 'Stay awake under the canopy. Hunger, thirst and tiredness keep growing.' : 'Rain runs off the edge of a nearby canopy. The shop behind it is closed. Light is still on at the station.'}</p>
-        <div className={coverPlanning ? 'rain-duration-options' : 'event-choices'}>
+        <ChoiceOptions className={coverPlanning ? 'rain-duration-options' : 'event-choices'} seed={choiceSeed} decision={`${choiceDecisionKey}|rain`} fixed={coverPlanning}>
           {coverPlanning ? <>
             {[15, 60, 240].map(minutes => <button key={minutes} aria-label={`${minutes === 15 ? 'Just fifteen minutes. Then I’ll see.' : minutes === 60 ? 'Maybe an hour here. Stay out of the rain.' : 'Maybe four hours. I can wait here.'} · until ${formatTime((game.minutes + minutes) % 1440)}`} onClick={() => takeRainCover(minutes)}><strong>{minutes < 60 ? `${minutes} min` : `${minutes / 60} h`}</strong><small>Until {formatTime((game.minutes + minutes) % 1440)}</small></button>)}
           </> : <>
@@ -2348,7 +2360,7 @@ export default function App() {
           <button onClick={() => { setRainChoice(false); setScreen('map'); chooseDestination('station') }}><span className="compact-event-choice-copy"><strong>Maybe the station? At least I could sit down.</strong></span><Icon name="station" /></button>
           <button data-choice="walk" onClick={() => walkCity()}><span className="compact-event-choice-copy"><strong>I can’t just stand here. I’ll keep going.</strong></span><Icon name="walk" /></button>
           </>}
-        </div>
+        </ChoiceOptions>
         {coverPlanning && <button className="rain-back" onClick={() => setCoverPlanning(false)}>Choose another option</button>}
       </div></section>
     </div>}
@@ -2413,15 +2425,15 @@ export default function App() {
       <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ' compact-street-event'}`}>
         {activeEvent.illustration && <img className="event-illustration" {...responsiveImageProps(activeEvent.illustration)} alt={activeEvent.text} />}
         {!activeEvent.illustration
-          ? <CompactStreetEvent event={activeEvent} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} />
+          ? <CompactStreetEvent event={activeEvent} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} orderSeed={choiceSeed} decisionKey={choiceDecisionKey} />
           : <div className="event-body">
         <p className="eyebrow">STREET EVENT</p>
         <h2 id="street-event-title">{activeEvent.title}</h2>
         <p>{activeEvent.text}</p>
-        <div className="event-choices">{activeEvent.choices.map((choice) => {
+        <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{activeEvent.choices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
           return <button key={choice.label} aria-label={choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable}><span>{choice.label}</span>{unavailable ? <small>{unavailable}</small> : !!choice.outcome?.minutes && <small className="event-choice-time">≈{choice.outcome.minutes}m</small>}</button>
-        })}</div>
+        })}</ChoiceOptions>
         </div>}
       </section>
     </div>}

@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { BatteryIcon, Icon, type IconName } from './Icon'
+import { shuffleChoiceOrder } from './streetChoiceOrder'
 
 type PhoneDialogProps = {
+  orderSeed?: number; decisionKey?: string;
   battery: number; serviceActive: boolean; serviceMinutesLeft: number; canBuyService: boolean;
   autoRenew: boolean; navigation: boolean; music: boolean; navigationRate: number; videoDrain: number;
   showAi: boolean; canAskAi: boolean; canNavigate: boolean; canWatchVideo: boolean; canCallAmbulance: boolean; lowHealth: boolean; blocked: boolean;
@@ -58,6 +60,9 @@ export default function PhoneDialog(props: PhoneDialogProps) {
     { id: 'video', label: 'Watch video', icon: 'video', detail: `Battery ≈−${props.videoDrain}% · Mood+`, minutes: '30m', disabled: !props.canWatchVideo, onClick: props.onWatchVideo },
     { id: 'ambulance', label: 'Call ambulance', icon: 'ambulance', detail: props.lowHealth ? 'Emergency · no documents required' : 'Available at Health 20 or lower', disabled: !props.canCallAmbulance, onClick: props.onCallAmbulance },
   ]
+  const actions = shuffleChoiceOrder(rows.filter(row => row.checked === undefined), props.orderSeed ?? 0, `${props.decisionKey ?? ''}|phone`)
+  let actionIndex = 0
+  const orderedRows = rows.map(row => row.checked !== undefined ? row : actions[actionIndex++])
   function renderRow(row: Row) {
     return <button key={row.id} className="phone-list-row" disabled={row.disabled} onClick={row.onClick} aria-label={row.label} role={row.checked !== undefined ? 'switch' : undefined} aria-checked={row.checked}>
       <Icon name={row.icon} />
@@ -70,7 +75,7 @@ export default function PhoneDialog(props: PhoneDialogProps) {
       <header className="phone-list-header"><h2 id="phone-dialog-title">Phone</h2><span className="phone-list-battery" aria-label={`Phone battery: ${Math.round(props.battery)}%`}><BatteryIcon charge={props.battery} />{Math.round(props.battery)}%</span><button className="sheet-close phone-list-close" aria-label="Close phone" ref={closeButton} onClick={props.onClose}><Icon name="close" /></button></header>
       <div className="phone-list-service"><div className="phone-list-copy"><strong><Icon name="signal" />Mobile service</strong><small className={props.serviceActive ? 'service-active' : undefined}>{props.serviceActive ? `Active · ${props.serviceMinutesLeft >= 60 ? Math.ceil(props.serviceMinutesLeft / 60) + 'h left' : props.serviceMinutesLeft + 'm left'}` : 'No active service'}</small></div><button className="phone-list-pay" onClick={props.onBuyService} disabled={!props.canBuyService} aria-label="Add 24 hours of mobile service for 1 zł">+24h<small>1 zł</small></button></div>
       <button className="phone-list-row" role="switch" aria-checked={props.autoRenew} aria-label="Auto-renew" onClick={props.onAutoRenew}><Icon name="renew" /><span className="phone-list-copy"><strong>Auto-renew</strong><small>1 zł when service expires</small></span><span className="phone-list-toggle"><span>{props.autoRenew ? 'ON' : 'OFF'}</span><i className={props.autoRenew ? 'phone-switch on' : 'phone-switch'} aria-hidden="true" /></span></button>
-      <div className="phone-list-actions">{rows.filter(row => !row.disabled).map(renderRow)}{rows.some(row => row.disabled) && <p className="unavailable-heading">Unavailable now</p>}{rows.filter(row => row.disabled).map(renderRow)}</div>
+      <div className="phone-list-actions">{orderedRows.filter(row => !row.disabled).map(renderRow)}{orderedRows.some(row => row.disabled) && <p className="unavailable-heading">Unavailable now</p>}{orderedRows.filter(row => row.disabled).map(renderRow)}</div>
     </section>
   </div>
 }
