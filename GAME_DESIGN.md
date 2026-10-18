@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-218`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-219`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Battery accounting audit (v219)
+
+Browsing drains 0.2 battery points per game minute, multiplied by phone wear. The older direct 15-minute searches now use this same rate and refuse broken/undercharged phones instead of charging a flat two points. Navigation drains 12 points/hour or 15 in clear daylight (06:00–20:00), multiplied by wear; clear nights use the regular rate. The Phone dialog shows the actual rate including wear. Navigation is charged only during trips; disabling it removes that cost.
+
+### Approximate minimum durations (v219)
+
+Street choices with a minimum duration retain both the approximation sign and trailing plus, for example ≈32m+. This also applies to the minimum sleep-duration choice. Save fixtures cover actual published builds v209–v218.
 
 ### No starting transit pass (v218)
 

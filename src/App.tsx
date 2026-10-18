@@ -27,7 +27,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-218'
+const BUILD_VERSION = 'v2026.10.18-219'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -268,8 +268,8 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
     const text = isValidElement<{ children?: ReactNode }>(metadata) ? textOf(metadata.props.children) : ''
     const minutes = text.match(/~(\d+)(?:[–-](\d+))? min/)
     const destination = route ? locations.find(place => place.id === route) : undefined
-    const duration = destination ? `${approximateDuration(travelTimeRange(Math.ceil(destination.travelMinutes * 0.5)).min).slice(1)}+`
-      : text === 'Choose duration' ? `${approximateDuration(SLEEP_HOURS[0] * 60).slice(1)}+`
+    const duration = destination ? `${approximateDuration(travelTimeRange(Math.ceil(destination.travelMinutes * 0.5)).min)}+`
+      : text === 'Choose duration' ? `${approximateDuration(SLEEP_HOURS[0] * 60)}+`
       : minutes ? minutes[2] ? `≈${minutes[1]}–${minutes[2]}m` : approximateDuration(Number(minutes[1])) : null
     return cloneElement(node, {}, Children.toArray(node.props.children)
       .filter(part => !isValidElement(part) || part.type !== 'span')
@@ -471,6 +471,9 @@ export default function App() {
   const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation && !infoModal.illustration
   const moodBand = conditionBand(game.mood)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
+  const navigationInBrightSun = weather.label === 'Clear' && game.minutes >= 360 && game.minutes < 1200
+  const navigationDrainPerHour = navigationInBrightSun ? 15 : 12
+  const directSearchCost = 15 * PHONE_SEARCH_DRAIN_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
     { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until Day 2, 12:00.' },
@@ -594,7 +597,7 @@ export default function App() {
     const wornMinutes = Math.max(0, now - Math.max(now - elapsed, laundryCleanAt.current))
     setInventory(prev => {
       const multiplier = phoneDrainMultiplier(prev.phoneCondition)
-      const navigationDrain = trip && navigationOn ? (weather.label === 'Clear' ? 15 : 12) / 60 * multiplier * elapsed : 0
+      const navigationDrain = trip && navigationOn ? navigationDrainPerHour / 60 * multiplier * elapsed : 0
       const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
       return { ...prev,
         clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1.5 : 1) - extraDirt),
@@ -1160,7 +1163,7 @@ export default function App() {
   function searchOnlineForImpl(kind: 'shelter' | 'work' | 'help') {
     if (current.id !== 'street') return
     if (!mobileServiceActive) { setMessage('You need mobile internet to search online.'); return }
-    if (inventory.phoneBattery < 2) { setMessage('Your phone battery is too low to search online.'); return }
+    if (inventory.phoneCondition <= 0 || inventory.phoneBattery < directSearchCost) { setMessage('Your phone battery is too low or the phone is not working.'); return }
 
     const result = kind === 'shelter'
       ? { id: 'shelter', label: 'Night Shelter', message: 'You find information about a night shelter and save its address.' }
@@ -1169,7 +1172,7 @@ export default function App() {
         : { id: 'support', label: 'Help Center', message: 'You find a local help center and save its address.' }
     const presentation = locationPresentation([result.id], discoveredLocations.includes(result.id) ? 'On your map' : 'Added to map')
 
-    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2) }))
+    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - directSearchCost) }))
     setGame((prev) => applyAction(prev, { minutes: 15 }))
     setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
     if (kind === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
@@ -2179,9 +2182,9 @@ export default function App() {
             {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Come tomorrow at 19:00; a place is not guaranteed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
             {!firstNight && discoveredLocations.includes('work') && <button className="action" data-choice="work-route" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
             {<button className="action" data-choice="station-route" aria-label="Maybe the station? At least I could sit down." onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Maybe the station? At least I could sit down.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
-            {!discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-search" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>📱 There must be somewhere to sleep… Let me look.</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {!firstNight && !discoveredLocations.includes('work') && <button className="action" data-choice="work-search" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>💰 Could I find a little work? I need to keep some money.</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
-            {!discoveredLocations.includes('support') && <button className="action" data-choice="help-search" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneBattery < 2}><div><strong>🆘 Someone must know what I can do tomorrow.</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-search" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < directSearchCost}><div><strong>📱 There must be somewhere to sleep… Let me look.</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!firstNight && !discoveredLocations.includes('work') && <button className="action" data-choice="work-search" onClick={() => searchOnlineFor('work')} disabled={!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < directSearchCost}><div><strong>💰 Could I find a little work? I need to keep some money.</strong><small>{mobileServiceActive ? 'Look for a way to earn some money.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
+            {!discoveredLocations.includes('support') && <button className="action" data-choice="help-search" onClick={() => searchOnlineFor('help')} disabled={!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < directSearchCost}><div><strong>🆘 Someone must know what I can do tomorrow.</strong><small>{mobileServiceActive ? 'Find an organization that can explain your options.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
             {!firstNight && <button className="action" data-choice="beg" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask someone for change? It’s hard, but I could try.</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
             {!firstNight && <button className="action" data-choice="bottles" onClick={searchStreetBottles}><div><strong>Maybe there are bottles I could return for a little money.</strong><small>Move rubbish aside. Collect intact deposit bottles and cans.</small></div><span>~10–60 min</span></button>}
             {!streetBenchFound && <button className="action" data-choice="find-bench" onClick={() => streetAction('find-bench')}><div><strong>🪑 Is there a bench nearby? My legs could use a break.</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
@@ -2262,7 +2265,7 @@ export default function App() {
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
     {phoneOpen && <PhoneDialog orderSeed={choiceSeed} decisionKey={choiceDecisionKey}
         battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
-        autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={weather.label === 'Clear' ? 15 : 12}
+        autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={Math.round(navigationDrainPerHour * phoneDrainMultiplier(inventory.phoneCondition) * 10) / 10} navigationInBrightSun={navigationInBrightSun}
         videoDrain={Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}
         showAi={current.id === 'street'} canAskAi={mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= phoneSearchCost}
         canNavigate={inventory.phoneBattery > 0 && mobileServiceActive} canWatchVideo={mobileServiceActive && inventory.phoneBattery >= 9 * phoneDrainMultiplier(inventory.phoneCondition)}

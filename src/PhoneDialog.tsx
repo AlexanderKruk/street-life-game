@@ -5,7 +5,7 @@ import { shuffleChoiceOrder } from './streetChoiceOrder'
 type PhoneDialogProps = {
   orderSeed?: number; decisionKey?: string;
   battery: number; serviceActive: boolean; serviceMinutesLeft: number; canBuyService: boolean;
-  autoRenew: boolean; navigation: boolean; music: boolean; navigationRate: number; videoDrain: number;
+  autoRenew: boolean; navigation: boolean; music: boolean; navigationRate: number; navigationInBrightSun: boolean; videoDrain: number;
   showAi: boolean; canAskAi: boolean; canNavigate: boolean; canWatchVideo: boolean; canCallAmbulance: boolean; lowHealth: boolean; blocked: boolean;
   onClose: () => void; onBuyService: () => void; onAutoRenew: () => void; onNavigation: () => void;
   onMusic: () => void; onAskAi: () => void; onWatchVideo: () => void; onCallAmbulance: () => void;
@@ -55,7 +55,7 @@ export default function PhoneDialog(props: PhoneDialogProps) {
   type Row = { id: string; label: string; icon: IconName; detail: string; disabled: boolean; onClick: () => void; checked?: boolean; minutes?: string }
   const rows: Row[] = [
     ...(props.showAi ? [{ id: 'ai', label: 'Ask AI', icon: 'help' as IconName, detail: 'Searches for one new place', minutes: '≈15m', disabled: !props.canAskAi, onClick: props.onAskAi }] : []),
-    { id: 'navigation', label: 'Navigation', icon: 'navigation', detail: `${props.navigationRate}%/h ${props.navigationRate === 15 ? 'in bright sun' : 'while travelling'}`, disabled: !props.canNavigate, checked: props.navigation, onClick: props.onNavigation },
+    { id: 'navigation', label: 'Navigation', icon: 'navigation', detail: `${props.navigationRate}%/h ${props.navigationInBrightSun ? 'in bright sun' : 'while travelling'}`, disabled: !props.canNavigate, checked: props.navigation, onClick: props.onNavigation },
     { id: 'music', label: 'Music', icon: 'music', detail: '4%/h · slowly improves Mood', disabled: !props.canNavigate, checked: props.music, onClick: props.onMusic },
     { id: 'video', label: 'Watch video', icon: 'video', detail: `Battery ≈−${props.videoDrain}% · Mood+`, minutes: '30m', disabled: !props.canWatchVideo, onClick: props.onWatchVideo },
     { id: 'ambulance', label: 'Call ambulance', icon: 'ambulance', detail: props.lowHealth ? 'Emergency · no documents required' : 'Available at Health 20 or lower', disabled: !props.canCallAmbulance, onClick: props.onCallAmbulance },

@@ -142,6 +142,18 @@ for(const [draw,duration] of [[0,10],[.999,25]]) {
  assert(Math.abs(read(invKey).phoneBattery-(initialBattery-duration*.2*(1+(100-72)*.007)))<1e-8);
  assert(screen.getByRole('dialog').textContent.includes(duration+' min'));
 }
+// Navigation follows elapsed game time, including arrival; sunlight and worn
+// phones change its rate. Turning it off leaves the battery alone.
+for(const [day,minutes,condition,rate,enabled] of [[1,600,100,12,true],[1,600,72,12,true],[3,600,72,15,true],[3,1320,72,12,true],[1,600,72,12,false]]) {
+ setup({day,minutes},{[invKey]:{phoneBattery:62,phoneCondition:condition},'street-life-trip-v1':{destinationId:'station',mode:'walk',total:5,remaining:5}});
+ if(!enabled){cleanup();localStorage.removeItem('street-life-trip-v1');render(React.createElement(App));click('Inventory');click(/PhoneBattery/);fireEvent.click(screen.getByRole('switch',{name:'Navigation'}));click('Close phone');click('Map');click(/^.*Station/);click('Go →');click(/Walk/);}
+ const beforeCharge=read(invKey).phoneBattery;
+ const routeDuration=read('street-life-trip-v1').remaining;advance(routeDuration*250);
+ assert.equal(read(stateKey).locationId,'station');
+ const expected=beforeCharge-(enabled?routeDuration*rate/60*(1+(100-condition)*.007):0);
+ assert(Math.abs(read(invKey).phoneBattery-expected)<1e-8,'navigation uses all five elapsed minutes');
+}
+
 // Service expiry interrupts without granting knowledge. Reset cancels active work.
 setup({minutes:1320},{'street-life-mobile-service-until':'1322'});fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));advance(2000);
 assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));assert(!read('street-life-answers-v1').includes('morning'));
@@ -284,7 +296,7 @@ const openingText=document.querySelector('.story-scene div > p:last-child').text
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
 assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,3);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
 assert.equal(document.querySelector('[data-choice="music-walk"] .choice-duration').textContent,'≈30m');
-assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'32m+');
+assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'≈32m+');
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 assert(!document.querySelector('.story-choices').textContent.includes('TIME PAUSED'));
@@ -873,7 +885,7 @@ setup({locationId:'street'},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:
 setup({locationId:'support',minutes:1000});assert(!read(journalKey).support);
 setup({locationId:'support',minutes:600});assert(read(journalKey).support);click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'3');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'1');assert(!document.querySelector('.completed-goals').open);assert(!within(document.querySelector('.journal-goals > .goal-list')).queryByText('Visit social support'));assert(within(document.querySelector('.completed-goals')).getByText('Visit social support').closest('.goal').classList.contains('done'));cleanup();render(React.createElement(App));assert(read(journalKey).support);
 setup({locationId:'work',minutes:1200});assert(!read(journalKey).work);
-setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','station','shop']});click(/Could I find a little work\? I need to keep some money./);assert(read(journalKey).work);ok();
+setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','station','shop']});const directSearchBattery=read(invKey).phoneBattery;click(/Could I find a little work\? I need to keep some money./);assert(read(journalKey).work);assert(Math.abs(read(invKey).phoneBattery-(directSearchBattery-15*.2*1.196))<1e-8);ok();
 setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'0');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'4');assert(!document.querySelector('.main-goal'));assert(screen.getByText('All starting goals completed.'));
 click('Reset save');assert.deepEqual(read(journalKey),{morning:false,shelter:false,support:false,work:false});
 assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('There is nowhere to go back to'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
