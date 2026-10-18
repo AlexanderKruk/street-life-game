@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-224`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-225`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Weather exposure during transit (v225)
+
+Transit phases now drive weather exposure as well as the activity label. Walking to the stop and from it to the destination are outdoors and accumulate wetness in rain. Waiting at the stop uses canopy cover (no new wetting, drying 0.15/min), and riding uses transit shelter (no new wetting, drying 0.3/min). Paid and ticketless modes share the same rules, including after reload. If rain starts during a sheltered phase, the rain choice is deferred until leaving cover for the last walking leg. Full walking routes remain outdoors. Save fixtures cover actual published builds v215–v224.
 
 ### Transit phase text (v224)
 

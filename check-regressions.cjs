@@ -496,6 +496,18 @@ for(const mode of ['transit','fare-dodge']) {
  assert.equal(document.querySelector('.travel-route-heading p').textContent,'Waiting for the bus');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-route-heading p').textContent,'Waiting for the bus');advance(5*250);
  assert.equal(document.querySelector('.travel-route-heading p').textContent,'Riding the bus');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-route-heading p').textContent,'Riding the bus');advance(2*250);assert.equal(document.querySelector('.travel-route-heading p').textContent,'Walking to your destination');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-route-heading p').textContent,'Walking to your destination');advance(250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,610);ok();
 }
+// Bus stops are covered and the bus is dry: only the two walking legs wet
+// clothes. Reloads preserve both phase and accumulated wetness in either mode.
+for(const mode of ['transit','fare-dodge']) {
+ setup({day:2,minutes:600,wetness:20},{'street-life-trip-v1':{destinationId:'shop',mode,total:10,remaining:10},'street-life-rain-response-v1':{episode:'weather:2',locationId:'street',sheltered:false}});
+ advance(2*250);assert(Math.abs(read(stateKey).wetness-22)<1e-8);cleanup();render(React.createElement(App));
+ advance(4*250);assert(Math.abs(read(stateKey).wetness-21.4)<1e-8);cleanup();render(React.createElement(App));
+ advance(3*250);assert(Math.abs(read(stateKey).wetness-20.5)<1e-8);assert.equal(document.querySelector('.travel-route-heading p').textContent,'Walking to your destination');
+ advance(250);assert.equal(read(stateKey).locationId,'shop');assert(Math.abs(read(stateKey).wetness-21.5)<1e-8);ok();
+}
+// Rain starting at a covered stop does not interrupt waiting/riding, but the
+// choice appears before stepping out into the rain for the final walking leg.
+setup({day:1,minutes:1439,wetness:20},{'street-life-trip-v1':{destinationId:'shop',mode:'transit',total:10,remaining:8}});advance(250);assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));advance(6*250);assert(screen.getByRole('dialog',{name:'Rain on the street'}));const waitingRain=read(stateKey);advance(1000);assert.deepEqual(read(stateKey),waitingRain);click(/^Continue as I am/);advance(250);assert.equal(read(stateKey).locationId,'shop');ok();
 // A paid trip resumes from remaining time with its original result snapshot.
 setup({}, {[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Public transport/);advance(1000);const paid=read(stateKey).money,remaining=read('street-life-trip-v1').remaining;
 cleanup();render(React.createElement(App));assert(document.querySelector('.travel-screen'));assert.equal(read(stateKey).money,paid);assert.equal(read('street-life-trip-v1').remaining,remaining);

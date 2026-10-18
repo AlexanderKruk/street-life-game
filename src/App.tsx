@@ -16,6 +16,7 @@ import { CHOICE_SEED_KEY, loadChoiceSeed, newChoiceSeed, shuffleChoiceOrder } fr
 import ChoiceOptions, { orderChoiceNodes } from './ChoiceOptions'
 import { StreetArt, LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
 import { useLatestAction } from './useLatestAction'
+import { getTravelPhase } from './travelPhases'
 import { JournalGoals, JournalTimeline } from './JournalSections'
 import LifeSituation from './LifeSituation'
 import Stat from './Stat'
@@ -27,7 +28,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-224'
+const BUILD_VERSION = 'v2026.10.18-225'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -505,6 +506,8 @@ export default function App() {
   const directSearchCost = phoneScreenDrain(game, inventory.phoneCondition, 'browsing', 15)
   const currentRainEpisode = rainEpisode(game)
   const underRainCover = !!rainResponse?.sheltered && rainResponse.episode === currentRainEpisode && rainResponse.locationId === current.id
+  const travelPhase = trip ? getTravelPhase(trip) : null
+  const currentExposure = underRainCover ? 'cover' : travelPhase?.exposure ?? weatherExposure(game)
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
     { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until Day 2, 12:00.' },
@@ -555,8 +558,11 @@ export default function App() {
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || gameOver)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
   const previousRainEpisode = useRef(currentRainEpisode)
+  const previousExposure = useRef(currentExposure)
   useEffect(() => {
     if (activeEvent || diceCheck || infoModal || pendingResult || sleeping || gameOver || phoneActivity?.remaining === 0 || trip?.remaining === 0) return
+    const leavingCover = previousExposure.current !== 'outside' && currentExposure === 'outside'
+    previousExposure.current = currentExposure
     const previous = previousRainEpisode.current
     const began = currentRainEpisode !== null && previous === null
     previousRainEpisode.current = currentRainEpisode
@@ -565,9 +571,8 @@ export default function App() {
       return
     }
     if (!currentRainEpisode) { if (rainResponse) setRainResponse(null); return }
-    const exposure = weatherExposure(game, trip?.mode === 'transit' || trip?.mode === 'fare-dodge' ? { exposure: 'transit' } : { walking: trip?.mode === 'walk' })
-    if (!rainChoice && exposure === 'outside' && rainResponse?.episode !== currentRainEpisode && (began || !!phoneActivity)) setRainChoice(true)
-  }, [currentRainEpisode, phoneActivity, trip, activeEvent, diceCheck, infoModal, pendingResult, sleeping, gameOver, rainChoice, rainResponse, game.locationId])
+    if (!rainChoice && currentExposure === 'outside' && rainResponse?.episode !== currentRainEpisode && (began || leavingCover || !!phoneActivity)) setRainChoice(true)
+  }, [currentRainEpisode, phoneActivity, trip, activeEvent, diceCheck, infoModal, pendingResult, sleeping, gameOver, rainChoice, rainResponse, game.locationId, currentExposure])
   useEffect(() => {
     if (!rainChoice || infoModal || pendingResult || activeEvent || diceCheck) return
     const previous = document.activeElement as HTMLElement | null
@@ -638,7 +643,7 @@ export default function App() {
   }, [game.hygiene, hygieneLimit])
 
   function applyAction(state: GameState, result: ActionResult) {
-    return applyGameAction(state, result, { ...moodContext(state), walking: trip?.mode === 'walk' && !underRainCover, ...(underRainCover ? { exposure: 'cover' as const } : trip?.mode === 'transit' ? { exposure: 'transit' as const } : shelterQueue ? { exposure: 'outside' as const } : {}), music: musicOn })
+    return applyGameAction(state, result, { ...moodContext(state), walking: !!travelPhase?.walking && !underRainCover, ...(underRainCover ? { exposure: 'cover' as const } : travelPhase ? { exposure: travelPhase.exposure } : shelterQueue ? { exposure: 'outside' as const } : {}), music: musicOn })
   }
 
   function applySleepTime(state: GameState, minutes: number) {
@@ -2302,11 +2307,7 @@ export default function App() {
     {screen === 'travel' && trip && (() => {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const elapsed = Math.max(0, trip.total - trip.remaining)
-      const transitPhase = trip.mode === 'walk' ? undefined
-        : elapsed < Math.max(1, Math.round(trip.total * 0.2)) ? 'Walking to the stop'
-        : elapsed < Math.max(2, Math.round(trip.total * 0.55)) ? 'Waiting for the bus'
-        : elapsed < Math.max(3, Math.round(trip.total * 0.85)) ? 'Riding the bus'
-        : 'Walking to your destination'
+      const transitPhase = getTravelPhase(trip).label
       return <div className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><section className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
         {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Waiting under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} transitPhase={transitPhase} />}
         <div className="travel-elapsed" aria-label="Elapsed travel time"><Icon name="clock" /><strong>{formatTravelTime(elapsed)}</strong></div>
