@@ -195,7 +195,7 @@ function measure(App) {
   assert.notEqual(document.querySelector('.header-condition svg').innerHTML, oldFace, 'memoized icons update when condition changes');
   setup(App, 'location', { locationId: 'shop', minutes: 1319 }); advance(1);
   assert(screen.getByRole('button', { name: /Buy Water for/, hidden: true }).disabled);
-  assert.equal(count('ShopCard'), 8, 'all shop cards update when the shop closes');
+  assert.equal(count('ShopCard'), 9, 'all shop cards update when the shop closes');
   setup(App, 'location', { locationId: 'shop', money: 100 }, { 'street-life-mobile-auto-renew': false }); advance(1);
   act(() => global.__auditSetters.setGame(previous => ({ ...previous, money: 4 })));
   fireEvent.click(screen.getByRole('button', { name: /Buy Water for/ }));

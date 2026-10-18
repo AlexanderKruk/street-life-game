@@ -3,7 +3,7 @@ import ItemArt, { type ItemArtId } from './ItemArt'
 import { memo } from 'react'
 
 const captions: Record<string, string> = {
-  water: '3 portions', food: 'Sandwich', bread: '1 roll', cannedFood: 'Keeps well',
+  water: '3 portions', food: 'Sandwich', bread: '1 roll', cannedFood: 'Keeps well', readyMeal: 'Pasta with meat & herbs',
   wipes: '5 uses', showerGel: '20 showers', cigarettes: 'Pack of 5', medicines: 'Basic medicine',
 }
 

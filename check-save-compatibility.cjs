@@ -38,7 +38,11 @@ for (const fixture of fixtures) {
   for (let reopen = 0; reopen < 3; reopen++) {
     // Compare all keys: game, inventory, journal, discoveries, goals and service.
     for (const [key, value] of Object.entries(fixture.entries)) {
-      assert.equal(localStorage.getItem(key), value, `v${fixture.build}, reopen ${reopen}: ${key}`);
+      if (key === 'street-life-inventory-v1') {
+        assert.deepEqual(JSON.parse(localStorage.getItem(key)), { readyMeal: 0, readyMealFreshness: 100, ...JSON.parse(value) }, `v${fixture.build}, reopen ${reopen}: old inventory retained with empty ready-meal stock`);
+      } else {
+        assert.equal(localStorage.getItem(key), value, `v${fixture.build}, reopen ${reopen}: ${key}`);
+      }
     }
     assert.equal(localStorage.getItem('unrelated-app'), 'retain me');
     for (const [key, value] of Object.entries(entries)) assert.equal(localStorage.getItem(key), value, 'ancient entries stay untouched');

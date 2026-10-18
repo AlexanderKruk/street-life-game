@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-234`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-235`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Shop food assortment (v235)
+
+Canned food now costs 10 zł and retains +32 Food/+1 Mood with no spoilage. Ready meal costs 12 zł: pasta with meat and a little parsley in a plastic container, immediately usable from the backpack with no separate heating action. Fresh meals restore 48 Food (Food+++), stale 34, spoiled 16 with −8 Health/−4 Mood; the normal 100-point cap applies. Four containers fit per slot. Freshness mixes by quantity and decays independently at the sandwich rate (100 points/48 game hours); old saves start with zero meals and 100 freshness. Buying, stealing, results, consumption and save/reload use the common inventory flow. Phone advice lists the current food prices. Breakfast remains Food++ and dinner Food+++.
+
+Artwork: `public/assets/ready-meal.webp`, generated with built-in imagegen and optimized to 512×512 WebP. Prompt: single inexpensive supermarket ready meal, clear plastic container with macaroni pasta, browned meat and a little parsley, film partly folded back, three-quarter overhead photographic view on a dark scratched tabletop, dim amber light, no text/logos/hands/cutlery/microwave.
 
 ### Larger shelter meal portions (v234)
 
@@ -457,7 +463,7 @@ Initial state:
 - A uniformly random whole amount from 25 to 50 zł inclusive, chosen once per new run or reset. Reloading keeps the saved amount, including older 100 zł test saves. Auto-renew is ON by default and can immediately spend 1 zł, so the first displayed balance can be 24–49 zł; this is a real service expense, not a lower starting roll.
 - Food 72, Thirst 66, Energy 68, Health 90, Hygiene 75, Mood 28. New runs have no initial Cold; existing saves retain their stats and effects.
 - Housing: Street. Employment: Unemployed. Income: None.
-- Backpack/essentials: 2 water portions, 2 food portions, phone battery 62%, phone condition 72%, clothing condition 78%, cleanliness 80%, documents, 0 cigarettes, 2 medicines and no transit card. Bread rolls, canned food, wet wipes and 3-in-1 shower gel start at zero.
+- Backpack/essentials: 2 water portions, 2 food portions, phone battery 62%, phone condition 72%, clothing condition 78%, cleanliness 80%, documents, 0 cigarettes, 2 medicines and no transit card. Bread rolls, canned food, ready meals, wet wipes and 3-in-1 shower gel start at zero.
 
 ## Time
 
@@ -731,12 +737,12 @@ The current assortment is implemented as follows. Prices are per purchase; quant
 | Water | 3 zł | 3 drinks | +38 Thirst | 4 drinks/slot |
 | Cheap food | 5 zł | 1 portion | Fresh: +28 Food, +2 Mood; freshness rules apply | 4 portions/slot |
 | Bread roll | 1 zł | 1 roll | Fresh +12 Food; stale +8; spoiled +4 Food, −3 Health, −2 Mood | 4 rolls/slot |
-| Pull-tab canned food | 6 zł | 1 can | +32 Food, +1 Mood; no spoilage or opener requirement | 4 cans/slot |
+| Pull-tab canned food | 10 zł | 1 can | +32 Food, +1 Mood; no spoilage or opener requirement | 4 cans/slot |
+| Ready meal | 12 zł | 1 plastic container of pasta, meat and herbs | Fresh +48 Food; stale +34; spoiled +16 Food, −8 Health, −4 Mood | 4 containers/slot |
 | Wet wipes | 5 zł | 5 uses | +10 Hygiene, capped at 60 | 5 uses/slot |
 | 3-in-1 shower gel | 10 zł | 20 uses | Automatic shower bonus ×1.5 and Hygiene cap 100 | 20 uses/slot |
 | Cigarettes | 6 zł | 5 cigarettes | +5 Mood, −0.5 Health | 20 cigarettes/slot |
 | Medicine | 9 zł | 1 use | Cold recovery ×3, one dose per illness | 4 uses/slot |
-| Hot meal | 8 zł | Eaten immediately | +48 Food, +8 Thirst, +5 Mood; Well fed for 4 hours | No backpack slot |
 
 Backpack purchases take 3 game minutes. The entire purchase quantity must fit before money is spent or a theft attempt can start. Successful theft grants the same quantity as buying. This includes all three water drinks, five wipe uses or twenty gel uses. New stock mixes freshness with existing food/bread of the same type; bread and sandwich freshness are tracked separately.
 

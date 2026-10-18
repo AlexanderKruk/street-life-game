@@ -28,7 +28,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-234'
+const BUILD_VERSION = 'v2026.10.18-235'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -104,8 +104,8 @@ type Trip = { destinationId: string; mode: TravelMode; total: number; remaining:
 type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
 type ShelterQueue = { day: number; remaining: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
 type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
-type Inventory = { clothingCleanliness: number; showerGel: number; bread: number; breadFreshness: number; cannedFood: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
-type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
+type Inventory = { clothingCleanliness: number; showerGel: number; bread: number; breadFreshness: number; cannedFood: number; readyMeal: number; readyMealFreshness: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
+type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'readyMeal' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number; treated?: boolean }
 type LifeSituation = { housing: Housing; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
@@ -120,7 +120,7 @@ const TRASH_ITEM_SCALE: Record<TrashArt, number> = {
 type TrashItem = { id: number; layer: number; art: TrashArt; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
 const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
-const INITIAL_INVENTORY: Inventory = { clothingCleanliness: 80, showerGel: 0, bread: 0, breadFreshness: 100, cannedFood: 0, wipes: 0, water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: false }
+const INITIAL_INVENTORY: Inventory = { clothingCleanliness: 80, showerGel: 0, bread: 0, breadFreshness: 100, cannedFood: 0, readyMeal: 0, readyMealFreshness: 100, wipes: 0, water: 2, food: 2, foodFreshness: 100, bottles: 0, phoneBattery: 62, phoneCondition: 72, jacket: 78, documents: true, cigarettes: 0, medicines: 2, transitCard: false }
 const BACKPACK_CAPACITY = 8
 const FREE_WATER_LIMIT = 4
 const INITIAL_STORAGE: StoredItems = { documents: false, medicines: 0, cigarettes: 0, food: 0, foodFreshness: 100 }
@@ -151,7 +151,8 @@ const SHOP_ITEMS: ShopItem[] = [
   { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['Thirst+++'] },
   { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food++', 'Mood+'] },
   { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food+'] },
-  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 6, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food++', 'Mood+'] },
+  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 10, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food++', 'Mood+'] },
+  { id: 'readyMeal', name: 'Ready meal', icon: '🍝', price: 12, quantity: 1, description: 'Pasta with meat and herbs · plastic container · stack 4 · ready to eat', impacts: ['Food+++'] },
   { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene+'] },
   { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Hygiene+++'] },
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood+', 'Health−'] },
@@ -198,7 +199,7 @@ function storageSlots(storage: StoredItems) {
 }
 
 function backpackSlots(inventory: Inventory) {
-  return (inventory.showerGel > 0 ? Math.ceil(inventory.showerGel / SHOWER_GEL_USES_PER_SLOT) : 0) + stackSlots(inventory.bread) + stackSlots(inventory.cannedFood) + (inventory.wipes > 0 ? Math.ceil(inventory.wipes / WIPES_STACK_SIZE) : 0) + stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
+  return (inventory.showerGel > 0 ? Math.ceil(inventory.showerGel / SHOWER_GEL_USES_PER_SLOT) : 0) + stackSlots(inventory.bread) + stackSlots(inventory.cannedFood) + stackSlots(inventory.readyMeal) + (inventory.wipes > 0 ? Math.ceil(inventory.wipes / WIPES_STACK_SIZE) : 0) + stackSlots(inventory.water) + stackSlots(inventory.food) + (inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0) + (inventory.cigarettes > 0 ? Math.ceil(inventory.cigarettes / CIGARETTE_STACK_SIZE) : 0) + stackSlots(inventory.medicines)
 }
 
 function absoluteMinutes(game: GameState) {
@@ -240,6 +241,7 @@ function canAddToBackpack(inventory: Inventory, item: ShopItem) {
 function addShopItem(inventory: Inventory, item: ShopItem): Inventory {
   const next = { ...inventory, [item.id]: inventory[item.id] + item.quantity }
   if (item.id === 'food') next.foodFreshness = mixFreshness(inventory.food, inventory.foodFreshness, item.quantity, 100)
+  if (item.id === 'readyMeal') next.readyMealFreshness = mixFreshness(inventory.readyMeal, inventory.readyMealFreshness, item.quantity, 100)
   if (item.id === 'bread') next.breadFreshness = mixFreshness(inventory.bread, inventory.breadFreshness, item.quantity, 100)
   return next
 }
@@ -672,6 +674,7 @@ export default function App() {
       return { ...prev,
         clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1.5 : 1) - extraDirt),
         foodFreshness: prev.food > 0 ? Math.max(0, prev.foodFreshness - FOOD_FRESHNESS_PER_MINUTE * elapsed) : 100,
+        readyMealFreshness: prev.readyMeal > 0 ? Math.max(0, prev.readyMealFreshness - FOOD_FRESHNESS_PER_MINUTE * elapsed) : 100,
         breadFreshness: prev.bread > 0 ? Math.max(0, prev.breadFreshness - BREAD_FRESHNESS_PER_MINUTE * elapsed) : 100,
         phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
       }
@@ -1306,7 +1309,7 @@ export default function App() {
     { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: '', locations: ['support', 'daycenter', 'free-clinic'] },
     { id: 'bed', icon: '🛏️', title: 'How can I get a shelter bed?', text: 'First registration at Night Shelter runs 19:00–22:00. Arrive by 19:00, wait the full 20-minute queue, and then find out whether there is a place. There are only 0–3 free places each day; earlier arrivals have a better chance. A successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
     { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about accommodation. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: [] },
-    { id: 'supplies', icon: '🥪', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, and a hot meal 8 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
+    { id: 'supplies', icon: '🥪', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, canned food 10 zł, and a ready meal 12 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
     { id: 'charging', icon: '🔋', title: 'Where can I charge my phone?', text: 'You glance at the battery and remember an outlet in the waiting room at Station. You can go there tonight: it is available around the clock. Charging takes one hour and adds 60% battery, up to 100%. The station address is on your map. You do not need internet to remember this.', locations: ['station'] },
   ]
   const visibleQuestions = practicalQuestions.filter(question => answeredQuestions.includes(question.id)
@@ -1941,13 +1944,21 @@ export default function App() {
     setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })
   }
 
-  function useSupplyImpl(item: 'bread' | 'cannedFood' | 'wipes') {
+  function useSupplyImpl(item: 'bread' | 'cannedFood' | 'readyMeal' | 'wipes') {
     if (inventory[item] <= 0) return
     if (item === 'wipes') {
       if (game.hygiene >= 60) { setMessage('Wet wipes cannot improve Hygiene above 60. Find a shower.'); return }
       setInventory(prev => ({ ...prev, wipes: prev.wipes - 1 }))
       setGame(prev => ({ ...prev, hygiene: Math.min(60, prev.hygiene + 10) }))
       setMessage('You cleaned up with wet wipes. Hygiene improves, up to 60.')
+      return
+    }
+    if (item === 'readyMeal') {
+      const stale = inventory.readyMealFreshness <= 50
+      const spoiled = inventory.readyMealFreshness <= 20
+      setInventory(prev => ({ ...prev, readyMeal: prev.readyMeal - 1, readyMealFreshness: prev.readyMeal <= 1 ? 100 : prev.readyMealFreshness }))
+      setGame(prev => applyAction(prev, { minutes: 0, hunger: spoiled ? 16 : stale ? 34 : 48, health: spoiled ? -8 : 0, mood: spoiled ? -4 : 0 }))
+      setMessage(spoiled ? 'You ate spoiled pasta with meat. It damaged your health and mood.' : stale ? 'You ate stale pasta with meat. It was less filling.' : 'You ate the ready meal: pasta with meat and a little parsley from the plastic container.')
       return
     }
     const stale = item === 'bread' && inventory.breadFreshness <= 50
@@ -2122,6 +2133,7 @@ export default function App() {
     { art: 'food', name: 'Food', count: inventory.food, stackSize: STACK_SIZE, effects: inventory.foodFreshness > 50 ? ['Food++', 'Mood+'] : inventory.foodFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled', 'Health−'], hint: `${foodFreshnessLabel(inventory.foodFreshness)} · tap to eat`, onUse: () => useItem('food') },
     { art: 'bread', name: 'Bread roll', count: inventory.bread, stackSize: STACK_SIZE, effects: ['Food+', ...(inventory.breadFreshness <= 50 ? [foodFreshnessLabel(inventory.breadFreshness)] : [])], hint: `${foodFreshnessLabel(inventory.breadFreshness)} · tap to eat`, onUse: () => useSupply('bread') },
     { art: 'cannedFood', name: 'Canned food', count: inventory.cannedFood, stackSize: STACK_SIZE, effects: ['Food++', 'Mood+'], hint: 'Keeps well · tap to eat', onUse: () => useSupply('cannedFood') },
+    { art: 'readyMeal', name: 'Ready meal', count: inventory.readyMeal, stackSize: STACK_SIZE, effects: inventory.readyMealFreshness > 50 ? ['Food+++'] : inventory.readyMealFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled', 'Health−'], hint: `${foodFreshnessLabel(inventory.readyMealFreshness)} · tap to eat`, onUse: () => useSupply('readyMeal') },
     { art: 'wipes', name: 'Wet wipes', count: inventory.wipes, stackSize: WIPES_STACK_SIZE, effects: ['Hygiene+'], hint: game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean', onUse: () => useSupply('wipes'), disabled: game.hygiene >= 60 },
     { art: 'bottles', name: 'Bottles & cans', count: inventory.bottles, stackSize: BOTTLE_STACK_SIZE, effects: ['0.50 zł'], hint: 'Deposit containers · 0.50 zł each · return at shop' },
     { art: 'cigarettes', name: 'Cigarettes', count: inventory.cigarettes, stackSize: CIGARETTE_STACK_SIZE, effects: ['Mood+', 'Health−'], hint: 'tap to smoke', onUse: smokeCigarette },
@@ -2239,7 +2251,7 @@ export default function App() {
       {current.id === 'shop' && <section className="shop">
         <div className="shop-capacity"><Icon name="backpack" /><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span><div className="shop-capacity-bar" role="meter" aria-label="Backpack capacity" aria-valuenow={usedBackpackSlots} aria-valuemin={0} aria-valuemax={BACKPACK_CAPACITY}><i style={{ width: `${usedBackpackSlots / BACKPACK_CAPACITY * 100}%` }} /></div></div>
         {inventory.bottles > 0 && <button className="shop-return" onClick={returnBottles} disabled={!open}><Icon name="bottle" /><span><strong>Return bottles & cans ×{inventory.bottles}</strong><small>Deposit return · 0.50 zł each</small></span><b>+{(inventory.bottles * BOTTLE_DEPOSIT).toFixed(2)} zł</b></button>}
-        {[{ title: 'Food & drink', items: SHOP_ITEMS.slice(0, 4) }, { title: 'Care', items: SHOP_ITEMS.slice(4) }].map(group => <section className="shop-category" key={group.title} aria-label={group.title}>
+        {[{ title: 'Food & drink', items: SHOP_ITEMS.slice(0, 5) }, { title: 'Care', items: SHOP_ITEMS.slice(5) }].map(group => <section className="shop-category" key={group.title} aria-label={group.title}>
           <h3>{group.title}</h3><div className="shop-grid supply-grid">{group.items.map(item => <ShopCard key={item.id} item={item} open={open} fits={canAddToBackpack(inventory, item)} affordable={game.money >= item.price} onBuy={buyShopItem} onSteal={stealShopItem} />)}</div>
         </section>)}
       </section>}

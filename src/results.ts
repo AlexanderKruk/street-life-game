@@ -1,7 +1,7 @@
 import { absoluteMinutes, energyCap, moodLimit, type GameState, type Housing } from './game'
 
 export type ResultInventory = {
-  clothingCleanliness?: number; showerGel?: number; bread?: number; cannedFood?: number; wipes?: number; water: number; food: number; bottles: number; phoneBattery: number; phoneCondition: number
+  clothingCleanliness?: number; showerGel?: number; bread?: number; cannedFood?: number; readyMeal?: number; wipes?: number; water: number; food: number; bottles: number; phoneBattery: number; phoneCondition: number
   jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean
 }
 export type ResultSnapshot = {
@@ -10,7 +10,7 @@ export type ResultSnapshot = {
   inventory: ResultInventory
   effects: { id: string; expiresAt: number; treated?: boolean }[]
 }
-export type ConsumedItem = 'water' | 'food' | 'bread' | 'cannedFood' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'
+export type ConsumedItem = 'water' | 'food' | 'bread' | 'cannedFood' | 'readyMeal' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'
 export type ResultChange = { label: string; value: string; kind: 'positive' | 'negative' | 'neutral'; consumed?: boolean; meter?: { before: number; after: number; cap?: number; capReason?: string } }
 export type ResultSummary = { costs: ResultChange[]; changes: ResultChange[] }
 
@@ -47,7 +47,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     ['phoneBattery', '🔋 Battery', '%'], ['phoneCondition', '📱 Phone condition', '%'],
     ['clothingCleanliness', '🧥 Clothing cleanliness', '%'], ['jacket', '🧥 Clothing condition', '%'], ['water', '💧 Water portions', ''],
     ['food', '🥪 Food portions', ''], ['bottles', '♻️ Deposit containers', ''],
-    ['bread', '🥖 Bread rolls', ''], ['cannedFood', '🥫 Canned food', ''], ['wipes', '🧻 Wet wipes', ''], ['showerGel', '🧴 3-in-1 gel uses', ''],
+    ['bread', '🥖 Bread rolls', ''], ['cannedFood', '🥫 Canned food', ''], ['readyMeal', '🍝 Ready meals', ''], ['wipes', '🧻 Wet wipes', ''], ['showerGel', '🧴 3-in-1 gel uses', ''],
     ['cigarettes', '🚬 Cigarettes', ''], ['medicines', '💊 Medicine', ''],
   ] as const) {
     const previous = before.inventory[key] ?? (key === 'clothingCleanliness' ? after.inventory[key] ?? 0 : 0)

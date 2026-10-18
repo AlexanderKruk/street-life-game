@@ -571,7 +571,7 @@ assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(scr
 setup({locationId:'shop',minutes:419},{[invKey]:{water:0,bottles:2}});
 assert(screen.getByRole('status').textContent.includes('Closed'));
 assert(screen.getByRole('status').textContent.includes('Opens at 07:00'));
-assert.equal(document.querySelectorAll('.supply-card').length,8);
+assert.equal(document.querySelectorAll('.supply-card').length,9);
 assert(document.querySelector('.closed-content-body').hasAttribute('inert'));
 const closedMoney=read(stateKey).money, closedWater=read(invKey).water;
 for(const control of document.querySelectorAll('.shop button')) { assert(control.disabled); fireEvent.click(control); }
@@ -598,19 +598,25 @@ setup({locationId:'shop'},{[invKey]:{water:0}});fireEvent.click(screen.getAllByR
 
 // New supplies migrate old saves, persist, and report actual gains/uses.
 setup({locationId:'shop',hunger:20},{[invKey]:{water:2,food:0}});
-assert.equal(read(invKey).water,2);for(const key of ['bread','cannedFood','wipes'])assert.equal(read(invKey)[key],0);
+assert.equal(read(invKey).water,2);for(const key of ['bread','cannedFood','readyMeal','wipes'])assert.equal(read(invKey)[key],0);
 click('Buy Bread roll for 1.00 zł');assert.equal(read(stateKey).money,99);assert.equal(read(invKey).bread,1);assert(screen.getByRole('dialog').textContent.includes('Bread rolls'));ok();click(/Inventory$/);
 click(/Bread roll.*tap to eat/);assert.equal(read(invKey).bread,0);assert.equal(read(invKey).breadFreshness,100);assert(screen.getByRole('dialog').textContent.includes('+12'));ok();
-setup({locationId:'shop',hunger:20},{[invKey]:{cannedFood:0}});click('Buy Canned food for 6.00 zł');assert.equal(read(stateKey).money,94);assert.equal(read(invKey).cannedFood,1);ok();cleanup();render(React.createElement(App));assert.equal(read(invKey).cannedFood,1);click(/Inventory$/);click(/Canned food.*tap to eat/);assert.equal(read(invKey).cannedFood,0);assert(screen.getByRole('dialog').textContent.includes('+32'));ok();
+setup({locationId:'shop',hunger:20},{[invKey]:{cannedFood:0}});click('Buy Canned food for 10.00 zł');assert.equal(read(stateKey).money,90);assert.equal(read(invKey).cannedFood,1);ok();cleanup();render(React.createElement(App));assert.equal(read(invKey).cannedFood,1);click(/Inventory$/);click(/Canned food.*tap to eat/);assert.equal(read(invKey).cannedFood,0);assert(screen.getByRole('dialog').textContent.includes('+32'));ok();
 setup({locationId:'shop',hygiene:55},{[invKey]:{wipes:0}});click('Buy Wet wipes for 5.00 zł');assert.equal(read(stateKey).money,95);assert.equal(read(invKey).wipes,5);assert(screen.getByRole('dialog').textContent.includes('+5'));ok();click(/Inventory$/);const hygieneBefore=read(stateKey).hygiene;click(/Wet wipes.*tap to clean/);assert.equal(read(invKey).wipes,4);assert.equal(read(stateKey).hygiene,60);assert(60-hygieneBefore<10);ok();const cappedWipes=screen.getByRole('button',{name:/Wet wipes.*find a shower/});assert(cappedWipes.disabled);fireEvent.click(cappedWipes);assert.equal(read(invKey).wipes,4);cleanup();render(React.createElement(App));assert.equal(read(invKey).wipes,4);
 setup({hygiene:20},{[invKey]:{wipes:1}});click(/Inventory$/);click(/Wet wipes.*tap to clean/);assert.equal(read(stateKey).hygiene,30);assert.equal(read(invKey).wipes,0);ok();assert(!screen.queryByRole('button',{name:/Wet wipes/}));
+// Ready meals persist, consume one container, age separately, and respect the Food cap.
+setup({locationId:'shop',hunger:20},{[invKey]:{food:0}});click('Buy Ready meal for 12.00 zł');assert.equal(read(stateKey).money,88);assert.equal(read(invKey).readyMeal,1);assert(screen.getByRole('dialog').textContent.includes('Ready meals'));ok();cleanup();render(React.createElement(App));assert.equal(read(invKey).readyMeal,1);click(/Inventory$/);assert(screen.getByRole('button',{name:/Ready meal.*tap to eat/}).textContent.includes('Food+++'));click(/Ready meal.*tap to eat/);assert.equal(read(invKey).readyMeal,0);assert.equal(read(invKey).readyMealFreshness,100);assert(screen.getByRole('dialog').textContent.includes('+48'));ok();
+for(const [freshness,hunger,gain,damage] of [[100,20,48,0],[40,20,34,0],[0,20,16,8],[100,90,10,0]]) {
+ setup({hunger},{[invKey]:{readyMeal:1,readyMealFreshness:freshness}});click(/Inventory$/);click(/Ready meal.*tap to eat/);assert.equal(read(stateKey).hunger,hunger+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(invKey).readyMeal,0);
+}
+setup({hunger:20,energy:20},{[invKey]:{readyMeal:1,readyMealFreshness:100}});beginSleep(/Lie down here\? I’m not sure… But I could try./,8);advance(48000);ok();assert(Math.abs(read(invKey).readyMealFreshness-(100-100/2880*480))<1e-8);
 // Bread ages separately; sealed canned food survives the same time advance.
 setup({hunger:20,energy:20},{[invKey]:{bread:2,breadFreshness:100,cannedFood:1}});beginSleep(/Lie down here\? I’m not sure… But I could try./,8);advance(48000);ok();assert(Math.abs(read(invKey).breadFreshness-(100-100/1440*480))<1e-8);assert.equal(read(invKey).cannedFood,1);
 for(const [freshness,gain,damage,mood] of [[100,12,0,0],[40,8,0,0],[0,4,3,-2]]) {
  setup({hunger:20,mood:28},{[invKey]:{bread:1,breadFreshness:freshness}});click(/Inventory$/);click(/Bread roll.*tap to eat/);assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,28+mood);assert.equal(read(invKey).breadFreshness,100);
 }
 // New items occupy backpack slots, for both purchase and theft.
-for(const [name,price,key,quantity] of [['Bread roll','1.00','bread',1],['Canned food','6.00','cannedFood',1],['Wet wipes','5.00','wipes',5]]) {
+for(const [name,price,key,quantity] of [['Bread roll','1.00','bread',1],['Canned food','10.00','cannedFood',1],['Ready meal','12.00','readyMeal',1],['Wet wipes','5.00','wipes',5]]) {
  setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:24}});const full=screen.getByRole('button',{name:`Buy ${name} for ${price} zł`});assert(full.disabled);assert(screen.getByTitle(`Steal ${name}`).disabled);fireEvent.click(full);assert.equal(read(invKey)[key],0);assert.equal(read(stateKey).money,100);
  setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:20}});assert(!screen.getByRole('button',{name:`Buy ${name} for ${price} zł`}).disabled);fireEvent.click(screen.getByTitle(`Steal ${name}`));click('Roll D20');click('Continue');assert.equal(read(invKey)[key],quantity);assert.equal(read(stateKey).money,100);assert(screen.getByRole('dialog').textContent.includes(`+${quantity}`));
 }
