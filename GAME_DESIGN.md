@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-213`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-214`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Animated stat losses (v214)
+
+Result meters briefly hold the original value for 300 ms, then animate decreases over 1600 ms with smooth easing. The percentage, color, Mood icon and accessible meter value follow the same displayed value. A muted segment between the final and original values remains visible for the rest of the result, indicating the lost portion. Separate numeric minus labels are removed from meters; positive gain labels and non-meter costs remain. Reduced-motion mode immediately displays the final value with a static loss trace. Result percentages are 1.5 times larger, with wider number columns including at mobile widths. Save fixtures cover actual published builds v204–v213.
 
 ### Discovery details removed (v213)
 
