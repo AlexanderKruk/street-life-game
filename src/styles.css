@@ -629,7 +629,8 @@ button.inventory-item { width:100%; }
 .phone-charge { display:flex; align-items:center; gap:7px; font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .phone-charge > svg:first-child { width:15px; height:20px; color:#aeb2b5; }
 .phone-charge .battery-icon { width:25px; height:16px; color:#c3c6c4; }
-.phone-charge.low .battery-icon { color:#c28b7e; }
+.phone-charge.low { color:#d96a71; }
+.phone-charge.low .battery-icon { color:inherit; }
 .phone-charge strong { font-weight:500; }
 .game-header h1 { display:flex; align-items:baseline; flex-wrap:wrap; gap:10px; margin:0; font-size:18px; line-height:1.2; font-variant-numeric:tabular-nums; }
 .game-header .game-day { color:#ece9e3; font-weight:650; white-space:nowrap; }

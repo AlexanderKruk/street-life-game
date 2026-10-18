@@ -27,7 +27,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-221'
+const BUILD_VERSION = 'v2026.10.18-222'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2171,7 +2171,7 @@ export default function App() {
           <span className={`header-condition ${moodBand.level}`} role="img" aria-label={`Mood: ${moodBand.label}`} title={`Mood: ${Math.round(game.mood)}% · ${moodBand.label}`}><MoodIcon value={game.mood} /></span>
           <div className="money" aria-label={`Money: ${game.money.toFixed(2)} zł`}><Icon name="banknote" />{Number(game.money.toFixed(2))} zł</div>
         </div>
-        <div className={`phone-charge${inventory.phoneBattery <= 20 ? ' low' : ''}`} aria-label={`Phone battery: ${Math.round(inventory.phoneBattery)}%`} title="Your phone battery"><BatteryIcon charge={inventory.phoneBattery} /><strong>{Math.round(inventory.phoneBattery)}%</strong></div>
+        <div className={`phone-charge${inventory.phoneBattery < 30 ? ' low' : ''}`} aria-label={`Phone battery: ${Math.round(inventory.phoneBattery)}%`} title="Your phone battery"><BatteryIcon charge={inventory.phoneBattery} /><strong>{Math.round(inventory.phoneBattery)}%</strong></div>
       </div>
     </header>
 
