@@ -11,7 +11,7 @@ import InventorySlot from './InventorySlot'
 import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
 import ResultCard, { type ResultCardData } from './ResultCard'
-import { questionPresentation } from './resultPresentation'
+import { locationPresentation, questionPresentation } from './resultPresentation'
 import { StreetArt, LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
 import { useLatestAction } from './useLatestAction'
 import { JournalGoals, JournalTimeline } from './JournalSections'
@@ -25,7 +25,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-214'
+const BUILD_VERSION = 'v2026.10.18-215'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1161,6 +1161,7 @@ export default function App() {
       : kind === 'work'
         ? { id: 'work', label: 'Day Work', message: 'You find a place advertising casual day work and save the address.' }
         : { id: 'support', label: 'Help Center', message: 'You find a local help center and save its address.' }
+    const presentation = locationPresentation([result.id], discoveredLocations.includes(result.id) ? 'On your map' : 'Added to map')
 
     setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2) }))
     setGame((prev) => applyAction(prev, { minutes: 15 }))
@@ -1168,11 +1169,11 @@ export default function App() {
     if (kind === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
     if (kind === 'shelter' && game.minutes >= 22 * 60) {
       setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
-      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.',  })
+      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.', presentation: { ...presentation, notice: 'Registration is closed tonight. Come tomorrow by 19:00. A bed is not guaranteed.' } })
     } else if (kind === 'help' && !isOpen(locations.find(location => location.id === 'support')!, game.minutes)) {
-      setInfoModal({ title: 'Help Center found', text: 'You find the Help Center address, but its services are closed now. It opens at 08:00. You save the address for tomorrow; tonight you still need somewhere to stay.' })
+      setInfoModal({ title: 'Help Center found', text: 'You find the Help Center address, but its services are closed now. It opens at 08:00. You save the address for tomorrow; tonight you still need somewhere to stay.', presentation: { ...presentation, notice: 'Closed now · opens at 08:00. You still need somewhere to stay tonight.' } })
     } else {
-      setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.`,  })
+      setInfoModal({ title: `${result.label} found`, text: `${result.message} It has been added to your map.`, presentation })
     }
   }
 
@@ -1252,7 +1253,7 @@ export default function App() {
     const memory = id === 'charging'
     const foundPlace = id === 'morning' ? remainingHelpPlaces[0] : undefined
     const foundPlaces = id === 'morning' ? foundPlace ? [foundPlace] : [] : question.locations
-    const presentation = questionPresentation(id, foundPlaces)
+    const presentation = questionPresentation(id, foundPlaces, false, foundPlaces.every(placeId => discoveredLocations.includes(placeId)))
     const answerText = id === 'morning'
       ? foundPlace && presentation?.places?.[0]
         ? `${presentation.places[0].name} · ${presentation.places[0].hours}. ${presentation.places[0].detail}. The address is saved on your map.`
@@ -1291,7 +1292,8 @@ export default function App() {
       finishPracticalQuestion(phoneActivity.questionId, phoneActivity.before)
     } else if (inventory.phoneBattery <= 0 || !mobileServiceActive || gameOver) {
       setPhoneActivity(null)
-      runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text: gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.' }), phoneActivity.before, true, true)
+      const text = gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.'
+      runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
     }
   }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver])
 
@@ -1571,8 +1573,7 @@ export default function App() {
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
-        ...(place ? { presentation: { label: 'AFTER THE CONVERSATION', heading: 'A place to try next evening', lead: outcome.message,
-          places: [{ id: place.id, name: place.name, hours: '19:00–22:00', detail: 'Registration · Address saved on your map' }],
+        ...(place ? { presentation: { ...locationPresentation([place.id], discoveredLocations.includes(place.id) ? 'On your map' : 'Added to map'), lead: outcome.message,
           notice: `Come on Day ${goalDay} at 19:00 to request a bed.` } } : {}) }))
     }
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))

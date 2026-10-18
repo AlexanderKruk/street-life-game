@@ -101,7 +101,7 @@ assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.w
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
 ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));assert(!document.querySelector('.phone-activity-overlay'));assert.equal(document.body.style.overflow,'');
 click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(!document.querySelector('.phone-activity'));assert.equal(read(stateKey).minutes,completed.minutes+15);assert(read('street-life-discovered-v1').includes('daycenter'));
-assert.equal(document.querySelectorAll('.result-cost-line').length,1);ok();discoverHelp();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.result-place').length,1);ok();
+assert.equal(document.querySelectorAll('.result-cost-line').length,1);ok();discoverHelp();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert(!document.querySelector('.result-place'));assert(!document.querySelector('.result-details'));ok();
 // Each repeat finds exactly one new place, and reload cannot reveal the next one early.
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop']});
 for(const [index,id] of ['support','daycenter','free-clinic'].entries()){
@@ -970,7 +970,7 @@ for(const [label,asset] of [['Ask how they get through the night','conversation'
  assert(document.querySelector('.result-illustration').src.endsWith(`event-bench-${asset}-480.webp`));
  assert(document.querySelector('.result-overlay .illustrated-result'));assert(!document.querySelector('.result-inline'));
  assert(screen.getByRole('dialog').contains(document.activeElement),'result retains keyboard focus');
- if(asset==='conversation') assert(document.querySelector('.result-place').textContent.includes('19:00–22:00'));
+ if(asset==='conversation') assert(document.querySelector('.compact-info-hours').textContent.includes('19:00–22:00'));
  assert(read(firstNightKey).pendingId===null);ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
 for(const [id,assets,durations] of [

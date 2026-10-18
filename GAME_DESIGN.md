@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-214`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-18 · Neutral office-worker protagonist. Latest application build: `v2026.10.18-215`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### One simple information-result design (v215)
+
+All practical search results now use the compact information card, including Night Shelter, food/water, charging, no-bed advice, no-new-information, interrupted searches, saved answers, direct shelter/help/work searches, and addresses learned in conversations (with their existing event art). Single places show an info icon, one location name, hours, services and the map status. Multiple-place answers list each place once; answers without places omit the map check. Mood changes share the time row. Duplicate headings and Full answer & details are absent throughout search results. Relevant shelter arrival/queue/bed limits and seven-night booking, shelter meal times, charging rate and lack of internet requirement, safety/referral advice and closed-service messages remain visible. Already-known places say On your map and saved answers say Saved on map. Narrative reflections, pause/close behavior and all gameplay effects remain intact. Save fixtures cover actual published builds v205–v214.
 
 ### Animated stat losses (v214)
 

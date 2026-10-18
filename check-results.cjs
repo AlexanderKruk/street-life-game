@@ -21,7 +21,7 @@ const React = require('react');
 const { render, screen, fireEvent, act, cleanup } = require('@testing-library/react');
 const { default: ResultCard, isMajorChange } = bundled('src/ResultCard.tsx');
 const { summarizeResult } = bundled('src/results.ts');
-const { questionPresentation } = bundled('src/resultPresentation.ts');
+const { questionPresentation, locationPresentation } = bundled('src/resultPresentation.ts');
 const before = {
   game: { day: 2, minutes: 600, locationId: 'shelter', money: 57, hunger: 73, thirst: 50, energy: 34, health: 90, hygiene: 50, mood: 60.2, intoxication: 0 },
   inventory: { clothingCleanliness: 50, phoneBattery: 43, phoneCondition: 72, jacket: 78, water: 2, food: 2, medicines: 2, documents: true, cigarettes: 0, bottles: 0, transitCard: false },
@@ -102,7 +102,7 @@ try {
   assert.equal(row('Battery').querySelector('.bar-loss-trail').style.left, '37%');
   assert.equal(row('Battery').querySelector('.bar-loss-trail').style.width, '6%');
   assert(frames.size > 0); cleanup(); assert.equal(frames.size, 0, 'unmount cancels every animation frame');
-  const searchAfter = { ...before, game: { ...before.game, minutes: 619, mood: 63.2 } };
+  const searchAfter = { ...before, inventory: { ...before.inventory, phoneBattery: 37 }, game: { ...before.game, minutes: 619, mood: 63.2 } };
   const searchSummary = summarizeResult(before, searchAfter);
   for (const [id, name] of [['support', 'Help Center'], ['daycenter', 'Day Center'], ['free-clinic', 'Free Clinic']]) {
     const presentation = questionPresentation('morning', [id]);
@@ -112,6 +112,7 @@ try {
     assert.equal(dialog.querySelectorAll('h2').length, 1);
     assert(!dialog.querySelector('.result-place'), 'location is not repeated');
     assert(!row('Mood'), 'search gain uses compact text instead of a stat bar');
+    assert(row('Battery').querySelector('.bar-loss-trail'), 'compact search results retain the animated battery meter and its loss trace');
     assert(!dialog.querySelector('.result-card-label'));
     assert(dialog.querySelector('.compact-info-heading svg'), 'title has an information icon');
     assert(dialog.querySelector('.compact-info-hours').textContent);
@@ -127,6 +128,31 @@ try {
   render(React.createElement(ResultCard, { result: { title: 'Nothing new', text: 'No new places.', presentation: questionPresentation('morning', []), costs: [], changes: [] }, onClose: () => {} }));
   assert(screen.getByRole('dialog', { name: 'No new information' }));
   assert(!document.querySelector('.compact-info-saved'));cleanup();
+  for (const [id, places, heading, important] of [
+    ['bed', ['shelter'], 'Night Shelter', ['19:00–22:00', '20-minute queue', '0–3 free beds', 'seven nights', 'not guaranteed']],
+    ['supplies', ['shop'], 'Cheap Shop', ['07:00–22:00', 'Water 3 zł', '19:00–20:30', '06:30–07:00']],
+    ['charging', ['station'], 'Station', ['24 hours', '+60%', 'one hour', 'No internet needed']],
+    ['no-place', [], 'If there is no bed', ['Schronisko', 'Day Center', 'safe sleep']],
+  ]) for (const saved of [false, true]) {
+    render(React.createElement(ResultCard, { result: { title: 'Search', text: 'Long original answer.', presentation: questionPresentation(id, places, saved, true), ...(saved ? {costs:[],changes:[]} : searchSummary) }, onClose: () => {} }));
+    const dialog = screen.getByRole('dialog', { name: heading });
+    assert(dialog.classList.contains('compact-info-result'));
+    assert(!dialog.querySelector('.result-card-label'));
+    assert(!dialog.querySelector('details'));
+    assert(!row('Mood'));
+    for (const text of important) assert(dialog.textContent.includes(text), `${id} keeps ${text}`);
+    assert.equal(!!dialog.querySelector('.compact-info-saved'), places.length > 0);
+    if (saved) assert(!dialog.querySelector('.compact-info-summary'));
+    cleanup();
+  }
+  for (const places of [['work'], ['support'], ['shelter'], ['support', 'daycenter']]) {
+    render(React.createElement(ResultCard, { result: { title: 'Search', text: 'Search result.', presentation: locationPresentation(places), ...searchSummary }, onClose: () => {} }));
+    assert(document.querySelector('.compact-info-result'));
+    assert(!document.querySelector('details'));
+    assert(!row('Mood'));
+    assert.equal(document.querySelectorAll('.result-place').length, places.length === 1 ? 0 : places.length);
+    cleanup();
+  }
   console.log('PASS: shared Status result bars, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
   console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without duplicate details, names, bars or arrival imagery; other full answers, saved answers and no-new-information still work.');
 } finally { cleanup(); dom.window.close(); }
