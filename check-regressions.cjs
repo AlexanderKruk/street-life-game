@@ -96,7 +96,7 @@ assert(read('street-life-discovered-v1').includes('support'));assert.equal(read(
 assert(document.querySelector('.result-inline'));assert(!document.querySelector('.result-overlay'));
 assert(!document.querySelector('.story-actions'));assert.equal(screen.getByRole('dialog').getAttribute('aria-modal'),'false');
 assert(document.querySelector('.result-consequences').textContent.includes('Clothing wetness'));
-assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert.equal(document.querySelectorAll('.result-place').length,0);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details').open);
+assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert.equal(document.querySelectorAll('.result-place').length,0);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details'));
 assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
 ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));assert(!document.querySelector('.phone-activity-overlay'));assert.equal(document.body.style.overflow,'');

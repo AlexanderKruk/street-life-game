@@ -100,9 +100,7 @@ try {
     assert.equal(dialog.querySelector('.compact-info-saved').textContent, 'Added to map');
     const line = dialog.querySelector('.compact-info-summary').textContent;
     assert(line.includes('19 min') && line.includes('Mood +3'));
-    const details = dialog.querySelector('details');assert(!details.open);
-    fireEvent.click(screen.getByText('Full answer & details'));assert(details.open);
-    assert(details.textContent.includes('Full search answer.'));
+    assert(!dialog.querySelector('details'), 'compact discoveries do not repeat the same information in a disclosure');
     cleanup();
   }
   render(React.createElement(ResultCard, { result: { title: 'Saved', text: 'Saved answer.', presentation: questionPresentation('morning', ['support'], true), costs: [], changes: [] }, onClose: () => {} }));
@@ -112,5 +110,5 @@ try {
   assert(screen.getByRole('dialog', { name: 'No new information' }));
   assert(!document.querySelector('.compact-info-saved'));cleanup();
   console.log('PASS: shared Status result bars, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
-  console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without repeated names, bars or arrival imagery; full answers, saved answers and no-new-information still work.');
+  console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without duplicate details, names, bars or arrival imagery; other full answers, saved answers and no-new-information still work.');
 } finally { cleanup(); dom.window.close(); }

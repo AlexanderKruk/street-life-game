@@ -25,7 +25,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-212'
+const BUILD_VERSION = 'v2026.10.18-213'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -653,7 +653,7 @@ export default function App() {
       const entry: JournalEntry = { day: game.day, minute: game.minutes, actionTitle, reflection: true, ...reflection }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }
-    setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, ...summary }))
+    setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }))
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
   function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }

@@ -6,7 +6,7 @@ import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
-export type ResultCardData = { title: string; text: string; label?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -109,6 +109,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
           <p className="result-description">{compactPlace.detail}</p>
           <p className="compact-info-saved"><Icon name="check" />{presentation?.mapStatus}</p>
           {presentation?.notice && <p className="result-notice">{presentation.notice}</p>}
+          {result.reflection && <p className="result-description">{result.reflection}</p>}
         </> : presentation ? <>
           <p className="result-lead">{presentation.lead}</p>
           {!!presentation.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
@@ -124,7 +125,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
           {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}><Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} /><span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}
           {compactMood && <span className={`compact-info-mood ${compactMood.kind}`}><Icon name="face-fair" />Mood {compactMood.value}</span>}
         </div>}
-        {presentation && <details className="result-details">
+        {presentation && !compactPlace && <details className="result-details">
           <summary>Full answer & details</summary>
           <p className="result-description">{result.text}</p>
         </details>}
