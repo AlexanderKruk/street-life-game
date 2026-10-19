@@ -28,7 +28,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.18-235'
+const BUILD_VERSION = 'v2026.10.19-236'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -102,7 +102,8 @@ type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
 type TravelMode = 'walk' | 'transit' | 'fare-dodge'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
 type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
-type ShelterQueue = { day: number; remaining: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
+type ShelterArrival = { day: number; minute: number }
+type ShelterQueue = { day: number; remaining: number; total?: number; arrivalMinute?: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
 type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
 type Inventory = { clothingCleanliness: number; showerGel: number; bread: number; breadFreshness: number; cannedFood: number; readyMeal: number; readyMealFreshness: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'readyMeal' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
@@ -140,7 +141,18 @@ const DEBUG_SLEEP_SPEED = 10
 const SHELTER_CHECKOUT_WARNING = 7 * 60 + 30
 const SHELTER_DEPARTURE_MINUTES = 30
 const SHELTER_QUEUE_MINUTES = 20
-const SHELTER_REGISTRATION_OPEN = 19 * 60
+const SHELTER_ENTRY_OPEN = 18 * 60
+const SHELTER_REGISTRATION_OPEN = SHELTER_ENTRY_OPEN + 20
+const SHELTER_ARRIVAL_KEY = 'street-life-shelter-arrival-v1'
+
+function shelterPeopleAhead(arrivalMinute: number) {
+  // Applicants gather before the doors open; earlier arrival keeps priority.
+  return Math.floor(Math.max(0, arrivalMinute - 17 * 60) / 45)
+}
+
+function shelterQueueMinutes(minute: number) {
+  return Math.max(SHELTER_QUEUE_MINUTES, SHELTER_REGISTRATION_OPEN - minute)
+}
 const EFFECTS: Record<EffectId, { icon: IconName; name: string; kind: 'positive' | 'negative'; impacts: string[] }> = {
   cold: { icon: 'thermometer', name: 'Cold', kind: 'negative', impacts: ['Energy−−', 'Mood−'] },
   'free-transit': { icon: 'ticket', name: 'Free transport', kind: 'positive', impacts: ['Travel+++'] },
@@ -364,7 +376,7 @@ export default function App() {
     } catch { return { morning: false, shelter: false, support: false, work: false } }
   })
   const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => {
-    try { const raw = localStorage.getItem(GOAL_KEY); return raw ? JSON.parse(raw) : null } catch { return null }
+    try { const raw = localStorage.getItem(GOAL_KEY); return raw ? { ...JSON.parse(raw), minute: SHELTER_ENTRY_OPEN } : null } catch { return null }
   })
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>(() => {
@@ -407,8 +419,17 @@ export default function App() {
       const raw = localStorage.getItem('street-life-shelter-queue-v1')
       if (!raw) return null
       const saved = JSON.parse(raw) as ShelterQueue
-      return saved.day === game.day && game.locationId === 'shelter' && saved.remaining >= 0 && saved.remaining <= SHELTER_QUEUE_MINUTES && saved.before ? saved : null
+      const total = saved.total ?? SHELTER_QUEUE_MINUTES
+      return saved.day === game.day && game.locationId === 'shelter' && Number.isInteger(total) && total >= SHELTER_QUEUE_MINUTES && total <= SHELTER_REGISTRATION_OPEN - 480 && saved.remaining >= 0 && saved.remaining <= total && saved.before ? saved : null
     } catch { return null }
+  })
+  const [shelterArrival, setShelterArrival] = useState<ShelterArrival | null>(() => {
+    if (game.locationId !== 'shelter' || trip || game.minutes < 480 || game.minutes >= 1320) return null
+    try {
+      const saved = JSON.parse(localStorage.getItem(SHELTER_ARRIVAL_KEY) ?? 'null')
+      if (saved?.day === game.day && Number.isInteger(saved.minute) && saved.minute >= 480 && saved.minute <= game.minutes) return saved
+    } catch { /* Older saves start with their current arrival time. */ }
+    return { day: game.day, minute: game.minutes }
   })
   const [shelterDeparture, setShelterDeparture] = useState<ShelterDeparture | null>(() => {
     try {
@@ -552,7 +573,7 @@ export default function App() {
         (current.id === 'shelter' && !trip && game.day >= activeGoal.day && game.minutes >= activeGoal.minute && game.minutes < 1320)) {
       setActiveGoal(null)
     } else if (game.day > activeGoal.day || (game.day === activeGoal.day && game.minutes >= 1320)) {
-      setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: 1140 })
+      setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: SHELTER_ENTRY_OPEN })
     }
   }, [activeGoal, game.day, game.minutes, current.id, trip, life.shelterUntilDay, life.housing])
   const usedBackpackSlots = backpackSlots(inventory)
@@ -647,7 +668,7 @@ export default function App() {
   }, [game.hygiene, hygieneLimit])
 
   function applyAction(state: GameState, result: ActionResult) {
-    return applyGameAction(state, result, { ...moodContext(state), walking: !!travelPhase?.walking && !underRainCover, ...(underRainCover ? { exposure: 'cover' as const } : travelPhase ? { exposure: travelPhase.exposure } : shelterQueue ? { exposure: 'outside' as const } : {}), music: musicOn })
+    return applyGameAction(state, result, { ...moodContext(state), walking: !!travelPhase?.walking && !underRainCover, ...(underRainCover ? { exposure: 'cover' as const } : travelPhase ? { exposure: travelPhase.exposure } : {}), music: musicOn })
   }
 
   function applySleepTime(state: GameState, minutes: number) {
@@ -778,6 +799,12 @@ export default function App() {
     if (current.id !== 'shelter' || life.shelterVacancyDay === game.day) return
     setLife(status => ({ ...status, shelterVacancyDay: game.day, shelterVacancies: Math.floor(Math.random() * 4) }))
   }, [current.id, game.day, life.shelterVacancyDay])
+  useEffect(() => {
+    const waitingHere = current.id === 'shelter' && !trip && !shelterBooked && game.minutes >= 480 && game.minutes < 1320
+    setShelterArrival(previous => waitingHere
+      ? previous?.day === game.day ? previous : { day: game.day, minute: game.minutes }
+      : previous === null ? previous : null)
+  }, [current.id, !!trip, shelterBooked, game.day, game.minutes])
 
   useEffect(() => {
     if (!shelterDeparture || shelterDepartureRemaining > 0 || gameOver) return
@@ -813,11 +840,11 @@ export default function App() {
           shelterMisses: 0, shelterMissMonth: Math.floor((queued.day - 1) / 30), shelterStrikes: 0 }))
         setGame(prev => applyGameAction(prev, { minutes: 0, mood: 3 }, moodContext(prev, 'Night shelter')), 'Night shelter')
         setActiveGoal(goal => goal?.type === 'night-shelter' ? null : goal)
-        setMessage('After 20 minutes in the queue, a place is available. You are registered for 7 days. Shelter services and your bed are now available.')
+        setMessage('After waiting in the queue, a place is available. You are registered for 7 days. Shelter services and your bed are now available.')
       } else {
         setGame(prev => applyAction(prev, { minutes: 0, mood: -5 }))
-        setMessage(queued.vacancies === 0 ? 'You waited 20 minutes, but there are no free places today. Try tomorrow from 19:00.' :
-          'You waited 20 minutes, but people ahead of you took the remaining places. Try arriving earlier tomorrow, from 19:00.')
+        setMessage(queued.vacancies === 0 ? 'You waited, but there are no free places today. Try arriving before 18:00 tomorrow; registration starts at 18:20.' :
+          'You waited, but people ahead of you took the remaining places. Try arriving before 18:00 tomorrow; registration starts at 18:20.')
       }
       setScreen('location')
     }, queued.before, true, true)
@@ -1266,8 +1293,8 @@ export default function App() {
     setDiscoveredLocations((prev) => prev.includes(result.id) ? prev : [...prev, result.id])
     if (kind === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
     if (kind === 'shelter' && game.minutes >= 22 * 60) {
-      setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: 19 * 60 })
-      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed for tonight. Come tomorrow from 19:00 to request a place. The address has been added to your map.', presentation: { ...presentation, notice: 'Registration is closed tonight. Come tomorrow by 19:00. A bed is not guaranteed.' } })
+      setActiveGoal({ type: 'night-shelter', day: game.day + 1, minute: SHELTER_ENTRY_OPEN })
+      setInfoModal({ title: 'Night Shelter found', text: 'Registration is closed tonight. Arrive before 18:00 tomorrow to keep an earlier place in the queue. Doors open at 18:00; registration starts at 18:20. The address is on your map.', presentation: { ...presentation, notice: 'Arrive before 18:00 tomorrow · doors 18:00 · registration 18:20. A bed is not guaranteed.' } })
     } else if (kind === 'help' && !isOpen(locations.find(location => location.id === 'support')!, game.minutes)) {
       setInfoModal({ title: 'Help Center found', text: 'You find the Help Center address, but its services are closed now. It opens at 08:00. You save the address for tomorrow; tonight you still need somewhere to stay.', presentation: { ...presentation, notice: 'Closed now · opens at 08:00. You still need somewhere to stay tonight.' } })
     } else {
@@ -1307,7 +1334,7 @@ export default function App() {
 
   const practicalQuestions = [
     { id: 'morning', icon: '💬', title: 'Where can I get help in the morning?', text: '', locations: ['support', 'daycenter', 'free-clinic'] },
-    { id: 'bed', icon: '🛏️', title: 'How can I get a shelter bed?', text: 'First registration at Night Shelter runs 19:00–22:00. Arrive by 19:00, wait the full 20-minute queue, and then find out whether there is a place. There are only 0–3 free places each day; earlier arrivals have a better chance. A successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
+    { id: 'bed', icon: '🛏️', title: 'How can I get a shelter bed?', text: 'Night Shelter doors open at 18:00; registration starts at 18:20 and ends at 22:00. You can arrive earlier and wait outside. Your place in the queue depends on when you arrive, not when you press register. Leaving and returning loses that priority. Wait at least 20 minutes and until registration opens. There are only 0–3 free places each day; even an early arrival does not guarantee a bed. Successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
     { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about accommodation. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: [] },
     { id: 'supplies', icon: '🥪', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, canned food 10 zł, and a ready meal 12 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
     { id: 'charging', icon: '🔋', title: 'Where can I charge my phone?', text: 'You glance at the battery and remember an outlet in the waiting room at Station. You can go there tonight: it is available around the clock. Charging takes one hour and adds 60% battery, up to 100%. The station address is on your map. You do not need internet to remember this.', locations: ['station'] },
@@ -1365,7 +1392,7 @@ export default function App() {
       setGame(next)
       setAnsweredQuestions(previous => [...new Set([...previous, id])])
       setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
-      if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: 1140 })
+      if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: SHELTER_ENTRY_OPEN })
       setInfoModal({ title: id === 'morning' && !foundPlace ? 'No new information' : question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${answerText}`, presentation })
     }, before)
   }
@@ -1487,8 +1514,9 @@ export default function App() {
     if (id === 'shelter-rest') {
       if ((life.shelterBlockedUntilDay ?? 0) > game.day) return `Registration blocked until Day ${life.shelterBlockedUntilDay}.`
       if (!shelterBooked) {
-        if (life.shelterRegistrationAttemptDay === game.day) return 'You already queued today. Try tomorrow from 19:00.'
-        if (game.minutes < SHELTER_REGISTRATION_OPEN || game.minutes >= 1320) return 'Registration 19:00–22:00.'
+        if (life.shelterRegistrationAttemptDay === game.day) return 'You already queued today. Arrive before 18:00 tomorrow.'
+        if (game.minutes < 480 || game.minutes >= 1320) return 'Come back during the day to queue. Doors 18:00 · registration 18:20–22:00.'
+        return null // Waiting outside is possible before the doors open.
       } else {
         const nightDay = game.minutes < 480 ? game.day - 1 : game.day
         const alreadyAdmitted = life.shelterLastStayDay === nightDay
@@ -1596,16 +1624,18 @@ export default function App() {
       if (blocked) { setMessage(`You lost your shelter place. You can register again on Day ${life.shelterBlockedUntilDay}.`); return }
       const activeBooking = (life.shelterUntilDay ?? 0) >= game.day
       if (!activeBooking) {
-        if (game.minutes < SHELTER_REGISTRATION_OPEN || game.minutes >= 1320) { setMessage('Join the registration queue between 19:00 and 22:00.'); return }
-        if (life.shelterRegistrationAttemptDay === game.day) { setMessage('You already waited for registration today. Try tomorrow from 19:00.'); return }
-        // Earlier applicants arrive about every 30 minutes after registration opens.
-        // Keep today's vacancies and the player's queue position fixed across reloads.
+        if (game.minutes < 480 || game.minutes >= 1320) { setMessage('Queue during the day. Doors open at 18:00; registration starts at 18:20.'); return }
+        if (life.shelterRegistrationAttemptDay === game.day) { setMessage('You already waited for registration today. Arrive before 18:00 tomorrow.'); return }
+        // Arrival, rather than the time the registration button is pressed,
+        // fixes priority while the player stays here. Vacancies never reroll.
         const vacancies = life.shelterVacancyDay === game.day ? life.shelterVacancies ?? 0 : Math.floor(Math.random() * 4)
-        const peopleAhead = Math.floor((game.minutes - SHELTER_REGISTRATION_OPEN) / 30)
+        const arrivalMinute = shelterArrival?.day === game.day ? shelterArrival.minute : game.minutes
+        const peopleAhead = shelterPeopleAhead(arrivalMinute)
+        const total = shelterQueueMinutes(game.minutes)
         setLife(status => ({ ...status, shelterVacancyDay: game.day, shelterVacancies: vacancies, shelterRegistrationAttemptDay: game.day }))
-        setShelterQueue({ day: game.day, remaining: SHELTER_QUEUE_MINUTES, joinedAt: game.minutes, vacancies, peopleAhead, before: resultSnapshot() })
+        setShelterQueue({ day: game.day, remaining: total, total, arrivalMinute, joinedAt: game.minutes, vacancies, peopleAhead, before: resultSnapshot() })
         setMusicOn(false)
-        setMessage('You join the registration queue. You will know whether there is a place after 20 minutes.')
+        setMessage('You join the queue. Doors open at 18:00; registration starts at 18:20. Your arrival time keeps your priority while you stay here.')
         return
       }
       requestSleep('shelter')
@@ -1696,7 +1726,7 @@ export default function App() {
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
         ...(place ? { presentation: { ...locationPresentation([place.id], discoveredLocations.includes(place.id) ? 'On your map' : 'Added to map'), lead: outcome.message,
-          notice: `Come on Day ${goalDay} at 19:00 to request a bed.` } } : {}) }))
+          notice: `Arrive before 18:00 on Day ${goalDay}. Doors open at 18:00; registration starts at 18:20.` } } : {}) }))
     }
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
     const foundPlace = locations.find(place => place.id === outcome.discoverLocation)
@@ -1705,7 +1735,7 @@ export default function App() {
       if (foundPlace.id === 'shelter' && !shelterBooked) {
         const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
         const day = Math.floor(end / 1440) + 1
-        setActiveGoal({ type: 'night-shelter', day: end % 1440 >= 1320 ? day + 1 : day, minute: 1140 })
+        setActiveGoal({ type: 'night-shelter', day: end % 1440 >= 1320 ? day + 1 : day, minute: SHELTER_ENTRY_OPEN })
       }
     }
     setGame((prev) => applyAction(prev, {
@@ -2049,6 +2079,7 @@ export default function App() {
     setSeenMemories([])
     setTrip(null)
     setShelterQueue(null)
+    setShelterArrival(null)
     setShelterDeparture(null)
     setSelectedDestination(null)
     setMusicOn(false)
@@ -2120,11 +2151,12 @@ export default function App() {
     'street-life-trip-v1': trip,
     'street-life-sleep-v1': sleeping,
     'street-life-shelter-queue-v1': shelterQueue,
+    [SHELTER_ARRIVAL_KEY]: shelterArrival,
     'street-life-shelter-departure-v1': shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
     discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents, choiceSeed,
     rainChoice, rainResponse, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
-    game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture,
+    game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
     phoneActivity?.questionId ?? null, infoModal,
   ])
 
@@ -2301,7 +2333,7 @@ export default function App() {
             })}
             {<button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Something familiar to listen to… I don’t want this silence.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
-            {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Come tomorrow at 19:00; a place is not guaranteed.' : 'Registration starts at 19:00; places are limited.'}</small></div><span>Choose route</span></button>}
+            {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Arrive before 18:00 tomorrow; registration starts at 18:20. A place is not guaranteed.' : 'Doors open at 18:00; registration starts at 18:20. Arrive early; places are limited.'}</small></div><span>Choose route</span></button>}
             {!firstNight && discoveredLocations.includes('work') && <button className="action" data-choice="work-route" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
             {<button className="action" data-choice="station-route" aria-label="Maybe the station? At least I could sit down." onClick={() => { setScreen('map'); chooseDestination('station') }}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Maybe the station? At least I could sit down.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
             {!discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-search" onClick={() => searchOnlineFor('shelter')} disabled={!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < directSearchCost}><div><strong>📱 There must be somewhere to sleep… Let me look.</strong><small>{mobileServiceActive ? 'Look for somewhere safer to spend the night.' : 'Mobile internet required.'}</small></div><span>~15 min</span></button>}
@@ -2319,8 +2351,8 @@ export default function App() {
             const unavailableReason = actionUnavailableReason(action)
             const unavailable = unavailableReason !== null
             return <button className="action" data-choice={action.id} key={action.id} onClick={() => act(action.id)} disabled={unavailable}>
-              <div><strong>{action.id === 'street-sleep' && <span className="choice-emoji" aria-hidden="true">🛌</span>}{registering ? 'Join registration queue' : action.id === 'shelter-rest' ? 'Use your reserved bed' : action.id === 'street-sleep' ? 'Lie down here? I’m not sure… But I could try.' : action.name}</strong><small>{registering ? life.shelterRegistrationAttemptDay === game.day ? 'No places left for you today. Try tomorrow from 19:00.' : 'Registration 19:00–22:00 · wait 20 min. Earlier arrivals have a better chance; places are limited.' : action.id === 'shelter-rest' ? 'Use your reserved bed · arrive 18:00–22:00 and leave by 08:00.' : action.id === 'shelter-shower' || action.id === 'daycenter-shower' ? inventory.showerGel > 0 ? `3-in-1 gel: Hygiene gain ×1.5, max ${hygieneLimit} · uses 1 automatically.` : `Water only: Hygiene max ${Math.min(70, hygieneLimit)}. Bring 3-in-1 shower gel for better cleaning.` : action.description}{(action.id === 'shelter-shower' || action.id === 'daycenter-shower') && hygieneLimit < 100 && ` Dirty clothes: Hygiene max ${hygieneLimit}.`}{unavailableReason && <em className="action-unavailable-reason">{unavailableReason}</em>}</small>{action.impacts && <span className="shop-impact" aria-label="Effects">{action.impacts.map(impact => <em className="positive" key={impact}>{impact}</em>)}</span>}</div>
-              <span>{selectableSleep ? 'Choose duration' : <>{action.cost ? `${action.cost} zł · ` : ''}~{registering ? SHELTER_QUEUE_MINUTES : action.minutes} min</>}</span>
+              <div><strong>{action.id === 'street-sleep' && <span className="choice-emoji" aria-hidden="true">🛌</span>}{registering ? 'Join registration queue' : action.id === 'shelter-rest' ? 'Use your reserved bed' : action.id === 'street-sleep' ? 'Lie down here? I’m not sure… But I could try.' : action.name}</strong><small>{registering ? life.shelterRegistrationAttemptDay === game.day ? 'No places left for you today. Arrive before 18:00 tomorrow.' : 'Doors 18:00 · registration 18:20–22:00. Your arrival time sets queue priority; arrive early.' : action.id === 'shelter-rest' ? 'Use your reserved bed · arrive 18:00–22:00 and leave by 08:00.' : action.id === 'shelter-shower' || action.id === 'daycenter-shower' ? inventory.showerGel > 0 ? `3-in-1 gel: Hygiene gain ×1.5, max ${hygieneLimit} · uses 1 automatically.` : `Water only: Hygiene max ${Math.min(70, hygieneLimit)}. Bring 3-in-1 shower gel for better cleaning.` : action.description}{(action.id === 'shelter-shower' || action.id === 'daycenter-shower') && hygieneLimit < 100 && ` Dirty clothes: Hygiene max ${hygieneLimit}.`}{unavailableReason && <em className="action-unavailable-reason">{unavailableReason}</em>}</small>{action.impacts && <span className="shop-impact" aria-label="Effects">{action.impacts.map(impact => <em className="positive" key={impact}>{impact}</em>)}</span>}</div>
+              <span>{selectableSleep ? 'Choose duration' : <>{action.cost ? `${action.cost} zł · ` : ''}~{registering ? shelterQueueMinutes(game.minutes) : action.minutes} min</>}</span>
             </button>
           }) : <p className="empty">Nothing useful to do here yet.</p>}
         </AvailableFirst>
@@ -2501,10 +2533,10 @@ export default function App() {
     {!gameOver && shelterQueue && <div className="sleep-overlay queue-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Shelter registration queue">
       <section className="sleep-card timed-card rest-card">
         <div className="timed-heading"><Icon name="clock" /><div><p className="eyebrow">NIGHT SHELTER</p><h2>Registration queue</h2></div></div>
-        <p className="timed-description">Waiting for your turn. A bed isn’t guaranteed.</p>
+        <p className="timed-description">{game.minutes < SHELTER_ENTRY_OPEN ? 'Waiting outside. Doors open at 18:00.' : game.minutes < SHELTER_REGISTRATION_OPEN ? 'Waiting inside. Registration starts at 18:20.' : 'Waiting for your turn. A bed isn’t guaranteed.'}</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterQueue.remaining} min remaining</span></div>
-        <div className="sleep-progress" role="progressbar" aria-label="Registration queue progress" aria-valuemin={0} aria-valuemax={SHELTER_QUEUE_MINUTES} aria-valuenow={SHELTER_QUEUE_MINUTES - shelterQueue.remaining}><i style={{ width: `${(1 - shelterQueue.remaining / SHELTER_QUEUE_MINUTES) * 100}%` }} /></div>
-        <p className="timed-footnote">Today’s availability: 0–3 places. Earlier arrivals have a better chance.</p>
+        <div className="sleep-progress" role="progressbar" aria-label="Registration queue progress" aria-valuemin={0} aria-valuemax={shelterQueue.total ?? SHELTER_QUEUE_MINUTES} aria-valuenow={(shelterQueue.total ?? SHELTER_QUEUE_MINUTES) - shelterQueue.remaining}><i style={{ width: `${(1 - shelterQueue.remaining / (shelterQueue.total ?? SHELTER_QUEUE_MINUTES)) * 100}%` }} /></div>
+        <p className="timed-footnote">Arrived at {formatTime(shelterQueue.arrivalMinute ?? shelterQueue.joinedAt)} · {shelterQueue.peopleAhead} ahead of you. Today’s availability: 0–3 places.</p>
       </section>
     </div>}
 

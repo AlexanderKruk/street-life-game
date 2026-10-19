@@ -347,7 +347,7 @@ setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'
 setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:7},'street-life-rain-choice-v1':'true'});click(/^Stop what I’m doing/);assert(!localStorage.getItem('street-life-trip-v1'));assert.equal(read(stateKey).locationId,'street');assert(screen.getByRole('dialog').textContent.includes('Journey stopped'));ok();
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Something familiar to listen to… I don’t want this silence./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).mood>30 && read(stateKey).mood<=60);assert(read(invKey).phoneBattery<musicBattery);assert(screen.getByRole('dialog').textContent.includes('familiar music'));ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(!screen.queryByRole('button',{name:/Something familiar to listen to… I don’t want this silence./}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.'}));
-setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(Math.abs(read(stateKey).mood-31)<1e-8);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-4.5*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('support'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.equal(read(stateKey).minutes,rereadState.minutes+15);assert(read(invKey).phoneBattery<rereadInventory.phoneBattery);ok();discoverHelp();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1140);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
+setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(Math.abs(read(stateKey).mood-31)<1e-8);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-4.5*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('support'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.equal(read(stateKey).minutes,rereadState.minutes+15);assert(read(invKey).phoneBattery<rereadInventory.phoneBattery);ok();discoverHelp();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1080);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
 // P1: referral opens map, including migration of a v53 save.
 // Questions emerge from needs; remembering a station outlet does not need a charged phone.
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'What if the shelter has no places?',exact:true}));click('Where can I get help in the morning?');ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));
@@ -687,11 +687,11 @@ setup({day:2,money:0},{'street-life-begging-v1':{day:1,attempts:3}});assert(!scr
 
 // Unregistered visitors only have registration, and must finish the full queue.
 const vacancyKey=(slots)=>({shelterVacancyDay:1,shelterVacancies:slots});
-setup({locationId:'shelter',minutes:1140},{[lifeKey]:vacancyKey(1)});
+setup({locationId:'shelter',minutes:1080},{[lifeKey]:vacancyKey(2)});
 assert.equal(document.querySelectorAll('.actions .action').length,1);assert(!screen.queryByRole('button',{name:/shower/i}));assert(!document.querySelector('.storage-panel'));assert(!screen.queryByLabelText('Sleep duration'));
 click(/Join registration queue/);assert(screen.getByRole('dialog',{name:'Shelter registration queue'}));assert(!read(lifeKey).shelterUntilDay);
-advance(19000);assert.equal(read(stateKey).minutes,1159);assert(!read(lifeKey).shelterUntilDay);assert.equal(read('street-life-shelter-queue-v1').remaining,1);
-advance(1000);assert.equal(read(stateKey).minutes,1160);assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterLastStayDay,1);assert(!localStorage.getItem('street-life-shelter-queue-v1'));assert(screen.getByRole('dialog').textContent.includes('20 min'));ok();assert(screen.getByRole('button',{name:/Ask for a shower/}));assert(document.querySelector('.storage-panel'));assert(screen.getByRole('button',{name:/Use your reserved bed/}));
+advance(19000);assert.equal(read(stateKey).minutes,1099);assert(!read(lifeKey).shelterUntilDay);assert.equal(read('street-life-shelter-queue-v1').remaining,1);
+advance(1000);assert.equal(read(stateKey).minutes,1100);assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterLastStayDay,1);assert(!localStorage.getItem('street-life-shelter-queue-v1'));assert(screen.getByRole('dialog').textContent.includes('20 min'));ok();assert(screen.getByRole('button',{name:/Ask for a shower/}));assert(document.querySelector('.storage-panel'));assert(screen.getByRole('button',{name:/Use your reserved bed/}));
 
 assert.equal(read(stateKey).mood,53,'registration applies its +3 under the new housing ceiling');
 click(/^Status$/);assert.equal(document.querySelector('[data-stat="Mood"] .bar-cap-marker').style.left,'60%');
@@ -702,18 +702,47 @@ assert(!read(lifeKey).shelterUntilDay);assert(screen.getByRole('dialog').textCon
 cleanup();render(React.createElement(App));assert.equal(read(lifeKey).shelterVacancies,0);assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
 
 // Queue order reduces available places at later arrival times.
-for(const [slots,minute,accepted] of [[1,1140,true],[1,1170,false],[2,1170,true],[2,1200,false],[3,1200,true],[3,1230,false]]) {
- setup({locationId:'shelter',minutes:minute},{[lifeKey]:vacancyKey(slots)});click(/Join registration queue/);advance(20000);assert.equal(!!read(lifeKey).shelterUntilDay,accepted);
+for(const [slots,minute,accepted] of [[1,1020,true],[1,1080,false],[2,1080,true],[2,1110,false],[3,1110,true],[3,1155,false]]) {
+ setup({locationId:'shelter',minutes:minute},{[lifeKey]:vacancyKey(slots)});click(/Join registration queue/);advance(Math.max(20,1100-minute)*1000);assert.equal(!!read(lifeKey).shelterUntilDay,accepted);
 }
 
 // A reload keeps queue position, today's vacancies and remaining wait.
-setup({locationId:'shelter',minutes:1140},{[lifeKey]:vacancyKey(2)});click(/Join registration queue/);advance(7000);const queued=read('street-life-shelter-queue-v1');
+setup({locationId:'shelter',minutes:1080},{[lifeKey]:vacancyKey(2)});click(/Join registration queue/);advance(7000);const queued=read('street-life-shelter-queue-v1');
 cleanup();Math.random=()=>0;render(React.createElement(App));assert.deepEqual(read('street-life-shelter-queue-v1'),queued);assert.equal(read(lifeKey).shelterVacancies,2);advance(12000);assert(!read(lifeKey).shelterUntilDay);advance(1000);assert.equal(read(lifeKey).shelterUntilDay,7);
 
 // Tomorrow permits a new attempt; before registration hours the queue is closed.
 setup({day:2,locationId:'shelter',minutes:1140},{[lifeKey]:{shelterRegistrationAttemptDay:1,shelterVacancyDay:2,shelterVacancies:1}});assert(!screen.getByRole('button',{name:/Join registration queue/}).disabled);
-setup({locationId:'shelter',minutes:1139});assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
+setup({locationId:'shelter',minutes:479});assert(screen.getByRole('button',{name:/Join registration queue/,hidden:true}).disabled);
 setup({locationId:'shelter',minutes:1320});assert(screen.getByRole('button',{name:/Join registration queue/}).disabled);
+
+// Arrival is remembered before opening, including idle time and reloads.
+const arrivalKey='street-life-shelter-arrival-v1';
+setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});
+assert.equal(read(arrivalKey).minute,1020);assert(!screen.getByRole('button',{name:/Join registration queue/}).disabled);
+advance(90000);assert.equal(read(stateKey).minutes,1110);assert.equal(read(arrivalKey).minute,1020);
+cleanup();render(React.createElement(App));click(/Join registration queue/);assert.equal(read('street-life-shelter-queue-v1').peopleAhead,0);assert.equal(read('street-life-shelter-queue-v1').arrivalMinute,1020);advance(20000);assert.equal(read(lifeKey).shelterUntilDay,7);ok();
+
+// An early queue cannot register before 18:20; long waits resume after reload.
+setup({locationId:'shelter',minutes:1020,wetness:30},{[lifeKey]:vacancyKey(1)});click(/Join registration queue/);
+assert.equal(read('street-life-shelter-queue-v1').total,80);assert(screen.getByRole('dialog').textContent.includes('Waiting outside'));
+advance(59000);assert.equal(read(stateKey).minutes,1079);assert(!read(lifeKey).shelterUntilDay);
+cleanup();render(React.createElement(App));assert.equal(read('street-life-shelter-queue-v1').remaining,21);
+advance(1000);assert(screen.getByRole('dialog').textContent.includes('Waiting inside'));const indoorWetness=read(stateKey).wetness;
+advance(19000);assert.equal(read(stateKey).minutes,1099);assert(!read(lifeKey).shelterUntilDay);assert(read(stateKey).wetness<indoorWetness);
+advance(1000);assert.equal(read(lifeKey).shelterUntilDay,7);ok();
+
+// Leaving loses arrival priority, while vacancies remain fixed for the day.
+setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});click(/Map$/);click(/^.*Street/);click('Go →');
+assert.equal(read(stateKey).locationId,'street');assert(!read(arrivalKey));assert.equal(read(lifeKey).shelterVacancies,1);
+setup({locationId:'shelter',minutes:1110},{[lifeKey]:vacancyKey(1),[arrivalKey]:{day:0,minute:1020}});assert.equal(read(arrivalKey).minute,1110);click(/Join registration queue/);assert.equal(read('street-life-shelter-queue-v1').peopleAhead,2);advance(20000);assert(!read(lifeKey).shelterUntilDay);ok();
+
+// Actual travel records completion time; stale priority cannot survive a trip.
+setup({day:2,locationId:'street',minutes:1109},{[lifeKey]:{shelterVacancyDay:2,shelterVacancies:3},[arrivalKey]:{day:2,minute:1020},'street-life-trip-v1':{destinationId:'shelter',mode:'walk',total:1,remaining:1}});
+assert(!read(arrivalKey));advance(250);assert.equal(read(stateKey).locationId,'shelter');assert.equal(read(arrivalKey).minute,1110);ok();click(/Join registration queue/);assert.equal(read('street-life-shelter-queue-v1').peopleAhead,2);advance(20000);assert.equal(read(lifeKey).shelterUntilDay,8);ok();
+
+// Queues saved by old builds keep their fixed position and remaining time.
+const legacyQueue={...queued,joinedAt:1140,before:{...queued.before,game:{...queued.before.game,minutes:1140}}};delete legacyQueue.total;delete legacyQueue.arrivalMinute;
+setup({locationId:'shelter',minutes:1147},{[lifeKey]:{...vacancyKey(2),shelterRegistrationAttemptDay:1},'street-life-shelter-queue-v1':legacyQueue});assert.equal(read('street-life-shelter-queue-v1').remaining,13);advance(13000);assert.equal(read(lifeKey).shelterUntilDay,7);ok();
 
 // Time/weekday/daily limits disable services before a click and put them last.
 function availableFirst(selector='.actions') {
@@ -1035,8 +1064,8 @@ setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','
 setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'0');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'4');assert(!document.querySelector('.main-goal'));assert(screen.getByText('All starting goals completed.'));
 click('Reset save');assert.deepEqual(read(journalKey),{morning:false,shelter:false,support:false,work:false});
 assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('There is nowhere to go back to'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
-setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click(/Journal$/);assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 2 at 19:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
-setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1140}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
+setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click(/Journal$/);assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 2 at 18:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
+setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1080}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
 // Clothing caps every gain, migrates wear, and laundry cleans without repairing it.
 setup({hygiene:90},{[invKey]:{jacket:42}});assert.equal(read(invKey).jacket,42);assert.equal(read(invKey).clothingCleanliness,90);assert.equal(read(stateKey).hygiene,90);
 for(const [cleanliness,cap] of [[80,100],[60,80],[20,60]]) {
@@ -1115,7 +1144,7 @@ assert(!read('street-life-discovered-v1').includes('shelter'));
 click('Ask how they get through the night');
 assert(screen.getByRole('dialog').textContent.includes('You tell them you have nowhere'));
 assert(read('street-life-discovered-v1').includes('shelter'));
-assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:2,minute:1140});ok();
+assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:2,minute:1080});ok();
 
 // A shorter interval suppresses a different observation, including after reload.
 setup({minutes:1320},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20},[firstNightKey]:{seen:['first-night-door'],lastAt:1320,pendingId:null}});
@@ -1152,7 +1181,7 @@ for(const [label,asset] of [['Ask how they get through the night','conversation'
  assert(document.querySelector('.result-illustration').src.endsWith(`event-bench-${asset}-480.webp`));
  assert(document.querySelector('.result-overlay .illustrated-result'));assert(!document.querySelector('.result-inline'));
  assert(screen.getByRole('dialog').contains(document.activeElement),'result retains keyboard focus');
- if(asset==='conversation') assert(document.querySelector('.compact-info-hours').textContent.includes('19:00–22:00'));
+ if(asset==='conversation') assert(document.querySelector('.compact-info-hours').textContent.includes('18:00–08:00'));
  assert(read(firstNightKey).pendingId===null);ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
 for(const [id,assets,durations] of [

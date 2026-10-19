@@ -389,7 +389,7 @@ export const actions: GameAction[] = [
   },
   {
     id: 'shelter-rest', locationId: 'shelter', name: 'Registration / reserved bed',
-    description: 'First join the 20-minute registration queue from 19:00. With a reserved place, use your bed from 18:00 to 22:00.', minutes: 20,
+    description: 'Arrive early to keep your place in the queue. Doors 18:00; registration 18:20–22:00. Reserved beds: check in 18:00–22:00.', minutes: 20, requiresOpen: false,
     // App owns the persisted queue and booking; this resolver cannot grant a bed.
     resolve: () => ({ minutes: 0, message: 'A bed requires successful registration.' }),
   },

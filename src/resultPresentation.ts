@@ -5,7 +5,7 @@ const services: Record<string, string> = {
   support: 'Accommodation, documents and benefits',
   daycenter: 'A place indoors, shower, laundry and phone charging',
   'free-clinic': 'Free basic medical care · no insurance needed',
-  shelter: 'Arrive by 19:00 · 20-minute queue · 0–3 free beds',
+  shelter: 'Doors 18:00 · registration 18:20–22:00 · at least a 20-minute queue · 0–3 free beds. Arrive early to keep priority.',
   shop: 'Water 3 zł · roll 1 zł · sandwich 5 zł · hot meal 8 zł',
   station: 'Outlet in the waiting room · +60% charge in one hour, capped at 100%',
 }
@@ -26,7 +26,7 @@ export function locationPresentation(placeIds: string[], mapStatus = 'Added to m
       if (!place) return []
       return [{
         id: place.id, name: place.name,
-        hours: place.id === 'shelter' ? '19:00–22:00' : place.open === 0 && place.close === 1440 ? '24 hours' : `${formatTime(place.open)}–${formatTime(place.close)}`,
+        hours: place.open === 0 && place.close === 1440 ? '24 hours' : `${formatTime(place.open)}–${formatTime(place.close)}`,
         detail: services[place.id] ?? place.description,
       }]
     }),

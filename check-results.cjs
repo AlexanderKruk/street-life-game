@@ -130,7 +130,7 @@ try {
   assert(screen.getByRole('dialog', { name: 'No new information' }));
   assert(!document.querySelector('.compact-info-saved'));cleanup();
   for (const [id, places, heading, important] of [
-    ['bed', ['shelter'], 'Night Shelter', ['19:00–22:00', '20-minute queue', '0–3 free beds', 'seven nights', 'not guaranteed']],
+    ['bed', ['shelter'], 'Night Shelter', ['18:00–08:00', '18:20–22:00', '20-minute queue', '0–3 free beds', 'seven nights', 'not guaranteed']],
     ['supplies', ['shop'], 'Cheap Shop', ['07:00–22:00', 'Water 3 zł', '19:00–20:30', '06:30–07:00']],
     ['charging', ['station'], 'Station', ['24 hours', '+60%', 'one hour', 'No internet needed']],
     ['no-place', [], 'If there is no bed', ['Schronisko', 'Day Center', 'safe sleep']],
