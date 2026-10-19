@@ -1,0 +1,34 @@
+import { useEffect, useRef, type ReactNode } from 'react'
+import { Icon, type IconName } from './Icon'
+
+export default function InventoryDialog({ title, description, icon, onCancel, children }: { title: string; description: string; icon: IconName; onCancel: () => void; children: ReactNode }) {
+  const dialog = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    dialog.current?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true })
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onCancel(); return }
+      if (event.key !== 'Tab') return
+      const buttons = Array.from(dialog.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
+      if (!buttons.length) return
+      event.preventDefault()
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
+      buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus()
+    }
+    document.addEventListener('keydown', keydown)
+    return () => {
+      document.body.style.overflow = overflow
+      document.removeEventListener('keydown', keydown)
+      if (previous?.isConnected && !document.querySelector('[role="dialog"]')) previous.focus({ preventScroll: true })
+    }
+  }, [onCancel])
+  return <div className="phone-overlay result-overlay" onClick={event => { if (event.target === event.currentTarget) onCancel() }}>
+    <section ref={dialog} className="phone-modal discard-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-dialog-title" aria-describedby="inventory-dialog-description">
+      <div className="timed-heading"><Icon name={icon} /><div><p className="eyebrow">BACKPACK · TIME PAUSED</p><h2 id="inventory-dialog-title">{title}</h2></div></div>
+      <p id="inventory-dialog-description">{description}</p>
+      {children}
+    </section>
+  </div>
+}

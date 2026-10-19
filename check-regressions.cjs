@@ -601,19 +601,19 @@ setup({locationId:'shop'},{[invKey]:{water:0}});fireEvent.click(screen.getAllByR
 setup({thirst:20},{[invKey]:{water:9,food:0,medicines:0}});click(/Inventory$/);
 assert.equal(document.querySelectorAll('.backpack-grid .inventory-discard').length,3);assert(!document.querySelector('.essentials-grid .inventory-discard'));assert(!document.querySelector('.inventory-slot button button'));
 const discardGame=read(stateKey),discardInventory=read(invKey);screen.getByRole('button',{name:'Discard Water ×1'}).focus();click('Discard Water ×1');
-assert(screen.getByRole('dialog',{name:'Discard Water ×1?'}));assert.equal(document.activeElement.textContent,'Cancel');fireEvent.keyDown(document,{key:'Tab'});assert.equal(document.activeElement.textContent,'Discard');fireEvent.keyDown(document,{key:'Tab'});assert.equal(document.activeElement.textContent,'Cancel');assert(document.querySelector('.game-background').hasAttribute('inert'));assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+assert(screen.getByRole('dialog',{name:'Discard Water ×1?'}));assert.equal(document.activeElement.textContent,'Cancel');fireEvent.keyDown(document,{key:'Tab'});assert.equal(document.activeElement.textContent,'Discard all');fireEvent.keyDown(document,{key:'Tab'});assert.equal(document.activeElement.textContent,'Cancel');assert(document.querySelector('.game-background').hasAttribute('inert'));assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
 advance(5000);assert.deepEqual(read(stateKey),discardGame);assert.deepEqual(read(invKey),discardInventory);assert.equal(document.body.style.overflow,'hidden');click('Cancel');assert.equal(read(invKey).water,9);assert.equal(document.body.style.overflow,'');assert.equal(document.activeElement.getAttribute('aria-label'),'Discard Water ×1');
 click('Discard Water ×1');fireEvent.keyDown(document,{key:'Escape'});assert(!screen.queryByRole('dialog'));assert.equal(read(invKey).water,9);
 click('Discard Water ×1');fireEvent.click(document.querySelector('.phone-overlay.result-overlay'));assert(!screen.queryByRole('dialog'));assert.equal(read(invKey).water,9);
-click('Discard Water ×1');click('Discard');assert.equal(read(invKey).water,8);assert.deepEqual(read(stateKey),discardGame);assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,2);assert(!screen.queryByRole('dialog'));
-cleanup();render(React.createElement(App));assert.equal(read(invKey).water,8);fireEvent.click(screen.getAllByRole('button',{name:'Discard Water ×4'})[0]);click('Discard');assert.equal(read(invKey).water,4);assert.deepEqual(read(stateKey),discardGame);
+click('Discard Water ×1');click('Discard all');assert.equal(read(invKey).water,8);assert.deepEqual(read(stateKey),discardGame);assert.equal(document.querySelectorAll('.backpack-grid > .inventory-slot').length,2);assert(!screen.queryByRole('dialog'));
+cleanup();render(React.createElement(App));assert.equal(read(invKey).water,8);fireEvent.click(screen.getAllByRole('button',{name:'Discard Water ×4'})[0]);click('Discard all');assert.equal(read(invKey).water,4);assert.deepEqual(read(stateKey),discardGame);
 // Every slot type can be removed, including non-usable gel and capped wipes.
 for(const [id,name,quantity,freshness] of [['water','Water',4],['food','Food',4,'foodFreshness'],['bread','Bread roll',4,'breadFreshness'],['cannedFood','Canned food',4],['readyMeal','Ready meal',4,'readyMealFreshness'],['wipes','Wet wipes',5],['bottles','Bottles & cans',8],['cigarettes','Cigarettes',20],['medicines','Medicine',4],['showerGel','3-in-1 shower gel',20]]) {
- setup({hygiene:60},{[invKey]:{water:0,food:0,medicines:0,[id]:quantity,...(freshness?{[freshness]:20}:{})}});click(/Inventory$/);const beforeDiscard=read(stateKey);click(`Discard ${name} ×${quantity}`);click('Discard');assert.equal(read(invKey)[id],0);if(freshness)assert.equal(read(invKey)[freshness],100);assert.deepEqual(read(stateKey),beforeDiscard);assert(screen.getByText('Your backpack is empty.'));assert(!document.querySelector('.inventory-discard'));cleanup();render(React.createElement(App));assert.equal(read(invKey)[id],0);
+ setup({hygiene:60},{[invKey]:{water:0,food:0,medicines:0,[id]:quantity,...(freshness?{[freshness]:20}:{})}});click(/Inventory$/);const beforeDiscard=read(stateKey);click(`Discard ${name} ×${quantity}`);click('Discard all');assert.equal(read(invKey)[id],0);if(freshness)assert.equal(read(invKey)[freshness],100);assert.deepEqual(read(stateKey),beforeDiscard);assert(screen.getByText('Your backpack is empty.'));assert(!document.querySelector('.inventory-discard'));cleanup();render(React.createElement(App));assert.equal(read(invKey)[id],0);
 }
 // Reloading an unconfirmed dialog keeps the item; confirmation opens no second modal.
 setup({}, {[invKey]:{water:1}});click(/Inventory$/);click('Discard Water ×1');cleanup();render(React.createElement(App));assert.equal(read(invKey).water,1);assert(!screen.queryByRole('dialog'));
-setup({}, {[invKey]:{food:5,foodFreshness:37}});click(/Inventory$/);click('Discard Food ×1');click('Discard');assert.equal(read(invKey).food,4);assert.equal(read(invKey).foodFreshness,37);
+setup({}, {[invKey]:{food:5,foodFreshness:37}});click(/Inventory$/);click('Discard Food ×1');click('Discard all');assert.equal(read(invKey).food,4);assert.equal(read(invKey).foodFreshness,37);
 
 setup({locationId:'shop',hunger:20},{[invKey]:{water:2,food:0}});
 assert.equal(read(invKey).water,2);for(const key of ['bread','cannedFood','readyMeal','wipes'])assert.equal(read(invKey)[key],0);
@@ -625,13 +625,13 @@ setup({hygiene:20},{[invKey]:{wipes:1}});click(/Inventory$/);click(/Wet wipes.*t
 // Ready meals persist, consume one container, age separately, and respect the Food cap.
 setup({locationId:'shop',hunger:20},{[invKey]:{food:0}});click('Buy Ready meal for 12.00 zł');assert.equal(read(stateKey).money,88);assert.equal(read(invKey).readyMeal,1);assert(screen.getByRole('dialog').textContent.includes('Ready meals'));ok();cleanup();render(React.createElement(App));assert.equal(read(invKey).readyMeal,1);click(/Inventory$/);assert(screen.getByRole('button',{name:/Ready meal.*tap to eat/}).textContent.includes('Food+++'));click(/Ready meal.*tap to eat/);assert.equal(read(invKey).readyMeal,0);assert.equal(read(invKey).readyMealFreshness,100);assert(screen.getByRole('dialog').textContent.includes('+48'));ok();
 for(const [freshness,hunger,gain,damage] of [[100,20,48,0],[40,20,34,0],[0,20,16,8],[100,90,10,0]]) {
- setup({hunger},{[invKey]:{readyMeal:1,readyMealFreshness:freshness}});click(/Inventory$/);click(/Ready meal.*tap to eat/);assert.equal(read(stateKey).hunger,hunger+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(invKey).readyMeal,0);
+ setup({hunger},{[invKey]:{readyMeal:1,readyMealFreshness:freshness}});click(/Inventory$/);click(/Ready meal.*tap to eat/);if(freshness<=50)click(freshness>20?'Stale ×1':'Spoiled ×1');assert.equal(read(stateKey).hunger,hunger+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(invKey).readyMeal,0);
 }
 setup({hunger:20,energy:20},{[invKey]:{readyMeal:1,readyMealFreshness:100}});beginSleep(/Lie down here\? I’m not sure… But I could try./,8);advance(48000);ok();assert(Math.abs(read(invKey).readyMealFreshness-(100-100/2880*480))<1e-8);
 // Bread ages separately; sealed canned food survives the same time advance.
 setup({hunger:20,energy:20},{[invKey]:{bread:2,breadFreshness:100,cannedFood:1}});beginSleep(/Lie down here\? I’m not sure… But I could try./,8);advance(48000);ok();assert(Math.abs(read(invKey).breadFreshness-(100-100/1440*480))<1e-8);assert.equal(read(invKey).cannedFood,1);
 for(const [freshness,gain,damage,mood] of [[100,12,0,0],[40,8,0,0],[0,4,3,-2]]) {
- setup({hunger:20,mood:28},{[invKey]:{bread:1,breadFreshness:freshness}});click(/Inventory$/);click(/Bread roll.*tap to eat/);assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,28+mood);assert.equal(read(invKey).breadFreshness,100);
+ setup({hunger:20,mood:28},{[invKey]:{bread:1,breadFreshness:freshness}});click(/Inventory$/);click(/Bread roll.*tap to eat/);if(freshness<=50)click(freshness>20?'Stale ×1':'Spoiled ×1');assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,28+mood);assert.equal(read(invKey).breadFreshness,100);
 }
 // New items occupy backpack slots, for both purchase and theft.
 for(const [name,price,key,quantity] of [['Bread roll','1.00','bread',1],['Canned food','10.00','cannedFood',1],['Ready meal','12.00','readyMeal',1],['Wet wipes','5.00','wipes',5]]) {
@@ -660,7 +660,7 @@ setup({locationId:'shop',money:8,hunger:20});assert.equal(screen.queryByRole('bu
 
 // Fresh, stale and spoiled food have different effects; empty stacks reset freshness.
 for(const [freshness,gain,damage,mood] of [[100,28,0,2],[40,20,0,0],[0,10,8,-4]]) {
-  setup({hunger:20,mood:28},{[invKey]:{food:1,foodFreshness:freshness}});click(/Inventory$/);click(/Food.*tap to eat/);
+  setup({hunger:20,mood:28},{[invKey]:{food:1,foodFreshness:freshness}});click(/Inventory$/);click(/Food.*tap to eat/);if(freshness<=50)click(freshness>20?'Stale ×1':'Spoiled ×1');
   assert.equal(read(stateKey).hunger,20+gain);assert.equal(read(stateKey).health,82-damage);assert.equal(read(stateKey).mood,28+mood);assert.equal(read(invKey).foodFreshness,100);
 }
 

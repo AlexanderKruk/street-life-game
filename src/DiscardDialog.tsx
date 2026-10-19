@@ -1,34 +1,7 @@
-import { useEffect, useRef } from 'react'
-import { Icon } from './Icon'
+import InventoryDialog from './InventoryDialog'
 
-export default function DiscardDialog({ name, quantity, onCancel, onConfirm }: { name: string; quantity: number; onCancel: () => void; onConfirm: () => void }) {
-  const dialog = useRef<HTMLElement>(null)
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    dialog.current?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true })
-    const keydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); onCancel(); return }
-      if (event.key !== 'Tab') return
-      const buttons = Array.from(dialog.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])
-      if (!buttons.length) return
-      event.preventDefault()
-      const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
-      buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus()
-    }
-    document.addEventListener('keydown', keydown)
-    return () => {
-      document.body.style.overflow = overflow
-      document.removeEventListener('keydown', keydown)
-      if (previous?.isConnected) previous.focus({ preventScroll: true })
-    }
-  }, [onCancel])
-  return <div className="phone-overlay result-overlay" onClick={event => { if (event.target === event.currentTarget) onCancel() }}>
-    <section ref={dialog} className="phone-modal discard-modal" role="dialog" aria-modal="true" aria-labelledby="discard-title" aria-describedby="discard-description">
-      <div className="timed-heading"><Icon name="trash" /><div><p className="eyebrow">BACKPACK · TIME PAUSED</p><h2 id="discard-title">Discard {name} ×{quantity}?</h2></div></div>
-      <p id="discard-description">This removes the contents of this slot from your backpack. You cannot get them back.</p>
-      <div className="sleep-choice-buttons"><button type="button" onClick={onCancel}>Cancel</button><button type="button" className="discard-confirm" onClick={onConfirm}>Discard</button></div>
-    </section>
-  </div>
+export default function DiscardDialog({ name, quantity, spoiledQuantity, onCancel, onConfirm, onDiscardSpoiled }: { name: string; quantity: number; spoiledQuantity?: number; onCancel: () => void; onConfirm: () => void; onDiscardSpoiled: () => void }) {
+  return <InventoryDialog icon="trash" title={`Discard ${name} ×${quantity}?`} description={`${spoiledQuantity !== undefined ? `${spoiledQuantity} of ${quantity} portions in this slot are spoiled. Remove only those, or discard the entire slot. Remaining food of the same type fills the gap without changing its freshness.` : 'This removes the contents of this slot from your backpack.'} You cannot get discarded items back.`} onCancel={onCancel}>
+    <div className="sleep-choice-buttons discard-actions"><button type="button" onClick={onCancel}>Cancel</button>{spoiledQuantity !== undefined && <button type="button" className="discard-spoiled" disabled={spoiledQuantity === 0} onClick={onDiscardSpoiled}>Discard spoiled ×{spoiledQuantity}</button>}<button type="button" className="discard-confirm" onClick={onConfirm}>Discard all</button></div>
+  </InventoryDialog>
 }

@@ -2,7 +2,17 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-237`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-238`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Food freshness within backpack slots (v238)
+
+Sandwiches, bread rolls and ready meals retain the freshness of each portion, grouped into slots of up to four of the same type. Each slot shows the Fresh/Stale/Spoiled groups present and their counts. Buying fresh food, receiving food, moving stacks or transferring food through Schronisko storage cannot improve the condition of an older portion. Portions age independently at the existing rates and thresholds. Canned food still does not spoil.
+
+The trash confirmation now offers **Discard spoiled ×N** (only for perishable food, disabled when N=0) and **Discard all** (the selected slot only). Removing spoiled portions keeps edible portions in that slot. Following portions of the same food type compact into the gap, preserving their exact condition and order, and empty slots disappear. Counts/capacity remain accurate; other food types and Essentials are unaffected.
+
+Eating from an entirely fresh slot consumes one portion immediately and goes to the ordinary action result. Any slot containing stale/spoiled portions first opens a paused **Eat [food]?** dialog with only the Fresh/Stale/Spoiled groups available within that specific slot and their counts. Choosing a group consumes one matching portion from that slot; fresh food in another slot cannot appear in the choice. Even a wholly stale or spoiled slot requires this choice. Cancel, Escape, backdrop cancellation or reload of an unresolved choice does not consume food. Actual Food, Mood and Health effects use the chosen portion's own condition, never the slot average. Deletion and eating dialogs share keyboard focus trapping, a safe initial Cancel focus and background blocking.
+
+Storage keeps the same portion data. Legacy saves without portion arrays retain their known count and old average condition for each existing portion; their historical individual ages cannot be recovered. Arrays are persisted on food updates, and old count/average fields remain synchronized for compatibility and existing summaries. `check-food-inventory.cjs` covers all perishable types, purchase/age invariants, selected-slot choices, mixed/whole removals, compaction across up to eight slots, pause/reload and storage transfers. This supersedes earlier weighted-average gameplay rules.
 
 ### Discard a backpack slot (v237)
 
@@ -667,10 +677,10 @@ Backpack capacity is 8 slots.
 
 Stack sizes:
 - Water: 4 half-liter portions/slot (2 L).
-- Food, bread rolls, canned food: 4 of each type/slot.
+- Food, bread rolls, canned food and ready meals: 4 of each type/slot.
 - Wet wipes: 5 uses/slot.
 - 3-in-1 shower gel: 20 uses/slot (one bottle).
-  Its card appears under Equipped & essentials while any uses remain, because showers consume it automatically. It still counts toward backpack capacity.
+  Its card appears in Backpack while any uses remain; showers consume it automatically.
 - Medicine: 4/slot.
 - Returnable bottles: 8/slot.
 - Cigarettes: 20/slot.
@@ -679,12 +689,12 @@ Phone, clothing, documents and transit card are essentials/equipped items and us
 
 Using inventory:
 - Water: consumes one 0.5 L portion (one drop) and restores +38 Thirst. The shop shows Water ×3 and the 3 zł purchase price; inventory shows Water ×N with the current quantity. Both use a single water icon and omit repeated drops and liters. Purchase/drink results also omit liters.
-- Food is stored as one stack with an average freshness value, so different ages do not consume extra backpack slots.
+- Food portions retain their individual condition, grouped into slots of up to four of the same type. Different ages do not force extra slots; each slot displays the groups present and their counts.
 - Freshness falls from 100% to 0% over roughly 48 game hours, including while stored in Schronisko.
 - Freshness labels: Fresh >50%, Stale >20–50%, Spoiled 0–20%.
-- Every food use consumes 1 portion. Fresh (>50%): +28 Food, +2 Mood. Stale (>20–50%): +20 Food, no Mood bonus. Spoiled (0–20%): +10 Food, -8 Health, -4 Mood. Values are raw changes before caps. Emptying a stack resets its freshness to 100%.
-- Adding newly obtained food to an existing stack recalculates the stack's weighted average freshness.
-- Bread roll: consumes 1; fresh +12 Food, stale +8 Food, spoiled +4 Food/-3 Health/-2 Mood. Separate weighted freshness declines over 24 hours; labels use the same thresholds as other food. Empty stacks reset freshness.
+- Every food use consumes 1 portion from the selected slot. Fresh (>50%): +28 Food, +2 Mood. Stale (>20–50%): +20 Food, no Mood bonus. Spoiled (0–20%): +10 Food, -8 Health, -4 Mood. Entirely fresh slots skip the freshness picker; other slots offer only the groups present in that slot. Values are raw changes before caps. Empty stock resets its legacy average to 100%.
+- New food retains its own freshness; an existing spoiled portion never becomes edible through averaging. Discard spoiled removes only spoiled portions in the selected slot; Discard all removes that slot. Remaining portions of the same type compact without changing freshness.
+- Bread roll: consumes 1; fresh +12 Food, stale +8 Food, spoiled +4 Food/-3 Health/-2 Mood. Each portion declines over 24 hours; labels use the same thresholds as other food.
 - Pull-tab canned food: consumes 1; +32 Food, +1 Mood. Sealed cans do not spoil and need no opener.
 - Wet wipes: consumes 1 use, +10 Hygiene capped at 60; disabled at Hygiene 60+. Show remaining uses beside the name.
 - 3-in-1 shower gel: used automatically only when a shelter/day-center shower succeeds; one use boosts the shower Hygiene gain by 1.5 and raises its cap from 70 to 100. No standalone use. Rejected/closed/full showers spend no gel. Existing Hygiene above 70 is preserved apart from ordinary time decay when showering without gel. Older saves receive zero gel, and missing gel in older result snapshots counts as zero.
@@ -762,7 +772,7 @@ The current assortment is implemented as follows. Prices are per purchase; quant
 | Cigarettes | 6 zł | 5 cigarettes | +5 Mood, −0.5 Health | 20 cigarettes/slot |
 | Medicine | 9 zł | 1 use | Cold recovery ×3, one dose per illness | 4 uses/slot |
 
-Backpack purchases take 3 game minutes. The entire purchase quantity must fit before money is spent or a theft attempt can start. Successful theft grants the same quantity as buying. This includes all three water drinks, five wipe uses or twenty gel uses. New stock mixes freshness with existing food/bread of the same type; bread and sandwich freshness are tracked separately.
+Backpack purchases take 3 game minutes. The entire purchase quantity must fit before money is spent or a theft attempt can start. Successful theft grants the same quantity as buying. This includes all three water drinks, five wipe uses or twenty gel uses. New perishable stock appends fresh portions while existing portions retain their ages; bread, sandwiches and ready meals have separate stock.
 
 Water is displayed as **Water ×3** in the shop and **Water ×N** in inventory. Volume labels and repeated water-drop icons are omitted. Wipes and gel display remaining uses; gel has no standalone use button. Wet wipes are disabled once Hygiene reaches 60 and do not spend a use at that cap.
 
@@ -882,7 +892,7 @@ Night Shelter:
 
 Night Shelter and Schronisko share a persistent safe-storage inventory. Night Shelter exposes 6 slots; Schronisko expands capacity to 16 slots. Night Shelter cannot store food or water.
 
-Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food uses the same average-freshness model as backpack food and continues to spoil at the normal rate. Water is not stored. Night-shelter storage access requires an active booking. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
+Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food retains each portion's freshness, continues to spoil at the normal rate, and displays the shelf's average condition. Moving it back preserves all individual ages. Water is not stored. Night-shelter storage access requires an active booking. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
 
 ## Day Center & Clinic
 
