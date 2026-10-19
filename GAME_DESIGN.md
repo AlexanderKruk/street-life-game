@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-243`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-244`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Larger map labels and simpler food warning (v244)
+
+Map point names are twice their previous size: 24px on larger screens and 22px at viewport widths up to 520px. Their maximum text width also doubles to 240/210px. Only Free Clinic moves higher (y=29% to 25%) to clear the enlarged Help Center label; all other point positions are retained. Route endpoints use the same updated coordinates. Line height tightens to 1.15 on larger screens and 1 on mobile to preserve space between nearby labels. Marker sizes and the destination card are unchanged. Both stale and spoiled choices now say **Food poisoning risk**, without High; food poisoning is the English term for illness from contaminated food. Risk probabilities and consequences are unchanged.
 
 ### Illustrated food outcomes (v243)
 

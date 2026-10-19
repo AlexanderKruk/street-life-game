@@ -8,7 +8,7 @@ export default function FoodChoiceDialog({ name, counts, onCancel, onChoose }: {
       {(['fresh', 'stale', 'spoiled'] as const).filter(condition => counts[condition] > 0).map(condition => {
         const label = `${condition === 'fresh' ? 'Fresh' : condition === 'stale' ? 'Stale' : 'Spoiled'} ×${counts[condition]}`
         return <button type="button" className={`food-choice ${condition}`} key={condition} aria-label={label} aria-describedby={condition !== 'fresh' ? `food-risk-${condition} food-risk-effects` : undefined} onClick={() => onChoose(condition)}>
-          <span>{label}</span>{condition !== 'fresh' && <em id={`food-risk-${condition}`} className="food-choice-risk">{condition === 'spoiled' ? 'High poisoning risk' : 'Poisoning risk'}</em>}
+          <span>{label}</span>{condition !== 'fresh' && <em id={`food-risk-${condition}`} className="food-choice-risk">Food poisoning risk</em>}
         </button>
       })}
     </div>
