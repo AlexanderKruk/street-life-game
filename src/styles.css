@@ -990,6 +990,8 @@ footer .header-version { margin-left:auto; align-self:center; }
 .food-choice-actions .fresh { color:#a6d1b3; border-color:#486651; }
 .food-choice-actions .stale { color:#dfc29c; border-color:#766044; }
 .food-choice-actions .spoiled { color:#e4aaa3; border-color:#81504c; }
+.food-choice-actions .food-choice { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.food-choice-risk { padding:3px 6px; border-radius:5px; background:#392323; color:#dc9b98; font-size:12px; font-style:normal; white-space:nowrap; }
 .food-choice-cancel { order:1; }
 .inventory-slot-picture { position:relative; width:38%; min-height:80px; flex-shrink:0; }
 .inventory-art { display:block; width:100%; height:100%; background-repeat:no-repeat; }

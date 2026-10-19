@@ -31,7 +31,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-240'
+const BUILD_VERSION = 'v2026.10.19-241'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2456,7 +2456,7 @@ export default function App() {
             ...(kind === 'food' && freshness > 50 ? ['Mood+'] : []),
             ...(slot.fresh ? [`Fresh ×${slot.fresh}`] : []),
             ...(slot.stale ? [`Stale ×${slot.stale}`] : []),
-            ...(slot.spoiled ? [`Spoiled ×${slot.spoiled}`, 'Health−'] : []),
+            ...(slot.spoiled ? [`Spoiled ×${slot.spoiled}`] : []),
           ]
           const hint = slot ? `${foodFreshnessLabel(freshness)}${slot.spoiled && slot.spoiled < quantity ? ` · ${slot.spoiled} spoiled` : ''} · tap to eat` : item.hint
           const onUse = kind ? () => requestFood(kind, item.name, index) : item.onUse
