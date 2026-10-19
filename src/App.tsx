@@ -6,8 +6,9 @@ import { journalReflection, loadJournalEntries, type JournalEntry } from './jour
 import { BatteryIcon, Icon, choiceIcon, locationIcon, type IconName } from './Icon'
 import CityMap from './CityMap'
 import ShopCard from './ShopCard'
-import ItemArt, { type ItemArtId } from './ItemArt'
+import ItemArt from './ItemArt'
 import InventorySlot from './InventorySlot'
+import DiscardDialog from './DiscardDialog'
 import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
 import ResultCard, { type ResultCardData } from './ResultCard'
@@ -28,7 +29,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-236'
+const BUILD_VERSION = 'v2026.10.19-237'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -107,6 +108,7 @@ type ShelterQueue = { day: number; remaining: number; total?: number; arrivalMin
 type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
 type Inventory = { clothingCleanliness: number; showerGel: number; bread: number; breadFreshness: number; cannedFood: number; readyMeal: number; readyMealFreshness: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean }
 type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'readyMeal' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
+type BackpackItemId = ShopItem['id'] | 'bottles'
 type EffectId = 'cold' | 'free-transit' | 'well-fed'
 type ActiveEffect = { id: EffectId; expiresAt: number; treated?: boolean }
 type LifeSituation = { housing: Housing; housingUntil?: number; employment: 'Unemployed' | 'Day work'; income: 'None' | 'Irregular'; schroniskoReferral?: boolean; shelterRegisteredDay?: number; shelterUntilDay?: number; shelterLastStayDay?: number; shelterAuditDay?: number; shelterMisses?: number; shelterMissMonth?: number; shelterStrikes?: number; shelterBlockedUntilDay?: number; shelterRenewals?: number; shelterPlan?: 'jobcenter' | 'daywork' | 'documents' | 'benefits'; shelterDinnerDay?: number; shelterBreakfastDay?: number; shelterLaundryDropDay?: number; shelterVacancyDay?: number; shelterVacancies?: number; shelterRegistrationAttemptDay?: number; shelterCheckoutDay?: number }
@@ -399,6 +401,8 @@ export default function App() {
     try { const saved = JSON.parse(localStorage.getItem('street-life-memories-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
   })
   const [phoneOpen, setPhoneOpen] = useState(false)
+  const [discardItem, setDiscardItem] = useState<{ id: BackpackItemId; name: string; quantity: number } | null>(null)
+  const cancelDiscard = useCallback(() => setDiscardItem(null), [])
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const travelModalRef = useRef<HTMLElement>(null)
   const phoneSearchModalRef = useRef<HTMLElement>(null)
@@ -585,7 +589,7 @@ export default function App() {
   const previousRainEpisode = useRef(currentRainEpisode)
   const previousExposure = useRef(currentExposure)
   useEffect(() => {
-    if (activeEvent || diceCheck || infoModal || pendingResult || sleeping || gameOver || phoneActivity?.remaining === 0 || trip?.remaining === 0) return
+    if (discardItem || activeEvent || diceCheck || infoModal || pendingResult || sleeping || gameOver || phoneActivity?.remaining === 0 || trip?.remaining === 0) return
     const leavingCover = previousExposure.current !== 'outside' && currentExposure === 'outside'
     previousExposure.current = currentExposure
     const previous = previousRainEpisode.current
@@ -597,7 +601,7 @@ export default function App() {
     }
     if (!currentRainEpisode) { if (rainResponse) setRainResponse(null); return }
     if (!rainChoice && currentExposure === 'outside' && rainResponse?.episode !== currentRainEpisode && (began || leavingCover || !!phoneActivity)) setRainChoice(true)
-  }, [currentRainEpisode, phoneActivity, trip, activeEvent, diceCheck, infoModal, pendingResult, sleeping, gameOver, rainChoice, rainResponse, game.locationId, currentExposure])
+  }, [currentRainEpisode, phoneActivity, trip, activeEvent, diceCheck, infoModal, pendingResult, sleeping, gameOver, rainChoice, rainResponse, game.locationId, currentExposure, discardItem])
   useEffect(() => {
     if (!rainChoice || infoModal || pendingResult || activeEvent || diceCheck) return
     const previous = document.activeElement as HTMLElement | null
@@ -616,7 +620,7 @@ export default function App() {
     document.addEventListener('keydown', trap)
     return () => { if (ownsScrollLock) document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
   }, [rainChoice, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay])
-  const eventInteractionBlocked = !!activeEvent || !!diceCheck || (rainChoice && !infoModal && !pendingResult) || eventResultOpen
+  const eventInteractionBlocked = !!discardItem || !!activeEvent || !!diceCheck || (rainChoice && !infoModal && !pendingResult) || eventResultOpen
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null
@@ -877,7 +881,7 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (phoneActivity || rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
+    if (discardItem || phoneActivity || rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
     const safeKind = current.id === 'residential-shelter'
       ? 'residential'
       : current.id === 'shelter' && shelterBooked && open && game.intoxication <= 10
@@ -893,7 +897,7 @@ export default function App() {
     groundSleepWindow.current = safeKind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
     setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity])
+  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity, discardItem])
 
   const tickGameClock = useLatestAction(() => {
     if (rainChoice) return
@@ -904,7 +908,7 @@ export default function App() {
       setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
       return
     }
-    if (rainChoice || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
+    if (discardItem || rainChoice || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
     if (sleeping) {
       const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
       const targetAbsolute = sleeping.startAbsolute + elapsed
@@ -2071,6 +2075,7 @@ export default function App() {
     setInfoModal(null)
     setEventResultOpen(false)
     setPhoneActivity(null)
+    setDiscardItem(null)
     setPendingResult(null)
     setScreen('location')
     setRainChoice(false)
@@ -2160,7 +2165,21 @@ export default function App() {
     phoneActivity?.questionId ?? null, infoModal,
   ])
 
-  const backpackItems: { art: ItemArtId; name: string; count: number; stackSize: number; effects: string[]; hint: string; onUse?: () => void; disabled?: boolean }[] = [
+  function confirmDiscard() {
+    if (!discardItem) return
+    const { id, quantity } = discardItem
+    setInventory(previous => {
+      const remaining = Math.max(0, previous[id] - quantity)
+      return { ...previous, [id]: remaining,
+        ...(id === 'food' && remaining === 0 ? { foodFreshness: 100 } : {}),
+        ...(id === 'bread' && remaining === 0 ? { breadFreshness: 100 } : {}),
+        ...(id === 'readyMeal' && remaining === 0 ? { readyMealFreshness: 100 } : {}),
+      }
+    })
+    setDiscardItem(null)
+  }
+
+  const backpackItems: { art: BackpackItemId; name: string; count: number; stackSize: number; effects: string[]; hint: string; onUse?: () => void; disabled?: boolean }[] = [
     { art: 'water', name: 'Water', count: inventory.water, stackSize: STACK_SIZE, effects: ['Thirst+++'], hint: 'tap to drink', onUse: () => useItem('water') },
     { art: 'food', name: 'Food', count: inventory.food, stackSize: STACK_SIZE, effects: inventory.foodFreshness > 50 ? ['Food++', 'Mood+'] : inventory.foodFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled', 'Health−'], hint: `${foodFreshnessLabel(inventory.foodFreshness)} · tap to eat`, onUse: () => useItem('food') },
     { art: 'bread', name: 'Bread roll', count: inventory.bread, stackSize: STACK_SIZE, effects: ['Food+', ...(inventory.breadFreshness <= 50 ? [foodFreshnessLabel(inventory.breadFreshness)] : [])], hint: `${foodFreshnessLabel(inventory.breadFreshness)} · tap to eat`, onUse: () => useSupply('bread') },
@@ -2174,6 +2193,7 @@ export default function App() {
   ]
 
   return <main className={`shell${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
+    {discardItem && <DiscardDialog name={discardItem.name} quantity={discardItem.quantity} onCancel={cancelDiscard} onConfirm={confirmDiscard} />}
     {sleepChoice && <div className="phone-overlay result-overlay">
       <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
         <div className="timed-heading"><Icon name="moon" /><div><p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p><h2 id="sleep-choice-title">How long do you want to sleep?</h2></div></div>
@@ -2414,7 +2434,7 @@ export default function App() {
       <div className="inventory-section-heading"><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
       <div className="inventory-grid backpack-grid" role="group" aria-label="Backpack slots">
         {backpackItems.flatMap(item => Array.from({ length: Math.ceil(item.count / item.stackSize) }, (_, index) =>
-          <InventorySlot key={`${item.art}-${index}`} art={item.art} name={item.name} quantity={Math.min(item.stackSize, item.count - index * item.stackSize)} effects={item.effects} hint={item.hint} onUse={item.onUse} disabled={item.disabled} />))}
+          <InventorySlot key={`${item.art}-${index}`} art={item.art} name={item.name} quantity={Math.min(item.stackSize, item.count - index * item.stackSize)} effects={item.effects} hint={item.hint} onUse={item.onUse} disabled={item.disabled} onDiscard={() => setDiscardItem({ id: item.art, name: item.name, quantity: Math.min(item.stackSize, item.count - index * item.stackSize) })} />))}
       </div>
       {usedBackpackSlots === 0 && <p className="backpack-empty-message">Your backpack is empty.</p>}
 

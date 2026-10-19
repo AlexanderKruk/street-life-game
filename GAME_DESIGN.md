@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-236`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-237`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Discard a backpack slot (v237)
+
+Every occupied backpack slot has a separate trash icon in its upper right corner. It opens a confirmation naming the item and the quantity in that specific slot. Confirming discards that stack only, frees the corresponding capacity and immediately saves the inventory; other stacks of the same item remain. This also works for gel, deposit containers and temporarily unusable items such as wipes at the Hygiene cap. Essentials have no discard action.
+
+Confirmation pauses the game, blocks background controls, locks page scrolling and keeps keyboard focus inside the dialog. Cancel receives initial focus; Cancel, Escape or tapping the backdrop preserves inventory and returns focus to the original control when it still exists. Reloading an unconfirmed dialog preserves the item. Confirming opens no second result modal, spends no game time and grants no consumption benefits, money or other stat changes. Empty food/bread/ready-meal stacks reset their freshness; removing only one of several stacks retains remaining freshness. The use and discard controls are sibling buttons, avoiding nested buttons and accidental consumption from clicking trash.
+
+Checks cover cancelling, Escape, pause/background blocking, focus, partial and full stacks, all ten backpack item types, empty-bag display, persistence and unconfirmed reload.
 
 ### Shelter arrival priority and registration hours (v236)
 
