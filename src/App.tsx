@@ -10,7 +10,7 @@ import ItemArt from './ItemArt'
 import InventorySlot from './InventorySlot'
 import DiscardDialog from './DiscardDialog'
 import FoodChoiceDialog from './FoodChoiceDialog'
-import { foodConsumption } from './foodConsumption'
+import { foodConsumption, FOOD_OUTCOME_PRESENTATION } from './foodConsumption'
 import { addFoodPortions, ageFood, consumeFood, discardFood, foodPortions, foodPortionIndex, foodSlot, isPerishableFood, withFoodPortions, type FoodCondition, type FoodKind, type FoodPortionFields } from './foodInventory'
 import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
@@ -32,7 +32,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-242'
+const BUILD_VERSION = 'v2026.10.19-243'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2024,6 +2024,7 @@ export default function App() {
     setInventory(prev => consumeFood(prev, kind, slotIndex, condition))
     setGame(prev => applyAction(prev, result))
     setMessage(result.message)
+    if (result.outcome) setInfoModal({ ...FOOD_OUTCOME_PRESENTATION[result.outcome], text: result.message, label: 'AFTER EATING' })
   }
 
   function useItemImpl(item: 'water' | 'food', slotIndex = 0, condition?: FoodCondition) {

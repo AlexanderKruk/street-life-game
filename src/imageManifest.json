@@ -1131,5 +1131,68 @@
         "file": "event-useful-tip-1024.webp"
       }
     ]
+  },
+  "event-food-fine.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-food-fine-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-food-fine-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-food-fine-1024.webp"
+      }
+    ]
+  },
+  "event-food-nausea.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-food-nausea-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-food-nausea-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-food-nausea-1024.webp"
+      }
+    ]
+  },
+  "event-food-vomiting.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-food-vomiting-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-food-vomiting-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-food-vomiting-1024.webp"
+      }
+    ]
   }
 }

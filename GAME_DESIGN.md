@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-242`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-243`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Illustrated food outcomes (v243)
+
+All three risky-food outcomes now use the same illustrated result modal as existing events: **You feel fine**, **Nausea**, or **You vomited**. Each has its own cinematic 16:9 illustration, descriptive alternative text, outcome message, actual stat changes and the existing Got it confirmation. This remains one paused result dialog; closing it resumes play. The food-choice warning, probabilities, stat changes, consumption and save behavior are unchanged. Fresh food still uses its ordinary result.
+
+The three event-food images have retained WebP originals and 480/768/1024px responsive variants in the image manifest. They load on demand and use the existing revision-aware image cache. Food UI checks assert each outcome's title, selected image, responsive sources and single-dialog behavior for all three perishable food types. Art prompts and generation details are recorded in `docs/food-outcome-art.md`.
 
 ### Food poisoning lottery (v242)
 

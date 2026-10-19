@@ -72,6 +72,8 @@ try {
     assert.equal(draws,outcome===2?2:1,'one outcome roll, even under StrictMode');assert.equal(after.minutes,before.minutes);
     assert.equal(after.hunger,outcome===2?10:20+gain);assert.equal(after.thirst,outcome===2?46:66);assert.equal(after.energy,outcome===2?58:68);assert.equal(after.health,outcome===2?77:82);assert.equal(after.mood,outcome===1?25:28);
     assert.deepEqual(read(invKey)[`${kind}Portions`],[100]);assert(screen.getByRole('dialog').textContent.includes(outcome===2?'You vomited':outcome===1?'nauseous (Mood −3)':'feel fine'));
+    const resultDialog=screen.getByRole('dialog',{name:['You feel fine','Nausea','You vomited'][outcome]});assert(resultDialog.classList.contains('illustrated-result'));assert.equal(screen.getAllByRole('dialog').length,1);
+    const art=within(resultDialog).getByRole('img');assert(art.getAttribute('src').endsWith(`event-food-${['fine','nausea','vomiting'][outcome]}-480.webp`));assert(/480w.*768w.*1024w/.test(art.getAttribute('srcset')));assert(art.alt.length>20);
     const completed=read(gameKey);advance(5000);assert.deepEqual(read(gameKey),completed,'result pauses');cleanup();render(React.createElement(App));assert.deepEqual(read(gameKey),completed,'completed outcome survives reload');assert.deepEqual(read(invKey)[`${kind}Portions`],[100]);
    }
   }
