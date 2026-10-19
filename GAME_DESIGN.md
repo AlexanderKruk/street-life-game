@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-245`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-246`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Short mobile travel labels (v246)
+
+Long activity labels are shortened to fit the existing mobile travel heading beside the animation and elapsed time. Bus legs read **To the stop → Waiting → On the bus → Final walk**. Walking reads **Walking → Near a crossing → Red light → Crossing → Walking on**. Waiting out rain reads **Under cover**. Existing typography, durations, display holds, movement flags, weather exposure, costs and saved progress are unchanged. Regression checks use the shorter labels while retaining their travel, waiting-animation, wetness and reload assertions.
 
 ### Map labels at 18px on all screens (v245)
 

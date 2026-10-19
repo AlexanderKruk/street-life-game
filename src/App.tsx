@@ -32,7 +32,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-245'
+const BUILD_VERSION = 'v2026.10.19-246'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2399,7 +2399,7 @@ export default function App() {
       const elapsed = Math.max(0, trip.total - trip.remaining)
       const phase = getTravelDisplayPhase(trip)
       return <div className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><section className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
-        {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Waiting under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} phaseLabel={phase.label} moving={phase.walking} />}
+        {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} phaseLabel={phase.label} moving={phase.walking} />}
         <div className="travel-elapsed" aria-label="Elapsed travel time"><Icon name="clock" /><strong>{formatTravelTime(elapsed)}</strong></div>
       </section></div>
     })()}

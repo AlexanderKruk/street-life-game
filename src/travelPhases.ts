@@ -2,14 +2,14 @@ type TravelProgress = { mode: 'walk' | 'transit' | 'fare-dodge'; total: number; 
 type TravelPhase = { label: string; walking: boolean; exposure: 'outside' | 'cover' | 'transit' }
 
 const walking: TravelPhase = { label: 'Walking', walking: true, exposure: 'outside' }
-const approachingCrossing: TravelPhase = { label: 'Approaching a junction', walking: true, exposure: 'outside' }
-const waitingForGreen: TravelPhase = { label: 'Waiting for the green light', walking: false, exposure: 'outside' }
-const crossingRoad: TravelPhase = { label: 'Crossing the road', walking: true, exposure: 'outside' }
+const approachingCrossing: TravelPhase = { label: 'Near a crossing', walking: true, exposure: 'outside' }
+const waitingForGreen: TravelPhase = { label: 'Red light', walking: false, exposure: 'outside' }
+const crossingRoad: TravelPhase = { label: 'Crossing', walking: true, exposure: 'outside' }
 const walkingOn: TravelPhase = { label: 'Walking on', walking: true, exposure: 'outside' }
-const toStop: TravelPhase = { label: 'Walking to the stop', walking: true, exposure: 'outside' }
-const waiting: TravelPhase = { label: 'Waiting for the bus', walking: false, exposure: 'cover' }
-const riding: TravelPhase = { label: 'Riding the bus', walking: false, exposure: 'transit' }
-const toDestination: TravelPhase = { label: 'Walking to your destination', walking: true, exposure: 'outside' }
+const toStop: TravelPhase = { label: 'To the stop', walking: true, exposure: 'outside' }
+const waiting: TravelPhase = { label: 'Waiting', walking: false, exposure: 'cover' }
+const riding: TravelPhase = { label: 'On the bus', walking: false, exposure: 'transit' }
+const toDestination: TravelPhase = { label: 'Final walk', walking: true, exposure: 'outside' }
 
 function getWalkingStage(trip: TravelProgress): { phase: TravelPhase; minutes: number } {
   const elapsed = Math.max(0, trip.total - trip.remaining)

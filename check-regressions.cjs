@@ -342,7 +342,7 @@ setup({day:2,minutes:600,mood:28},{'street-life-discovered-v1':['street','statio
 cleanup();localStorage.removeItem('street-life-rain-response-v1');render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));const stoppedCharge=read(invKey).phoneBattery,stoppedTime=read(stateKey).minutes;click(/^Stop what I’m doing/);assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(invKey).phoneBattery,stoppedCharge);assert.equal(read(stateKey).minutes,stoppedTime);assert(!read('street-life-discovered-v1').includes('support'));assert(!read('street-life-answers-v1').includes('morning'));assert(screen.getByRole('dialog').textContent.includes('Search stopped'));advance(5000);assert.equal(read(invKey).phoneBattery,stoppedCharge);ok();
 // A walking trip shelters without advancing the route, resumes automatically
 // when rain ends, or can be continued manually without losing route progress.
-setup({day:3,minutes:600,rainUntil:3488},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:9},'street-life-rain-choice-v1':'true'});click(/^Find cover, then continue/);assert.equal(read('street-life-trip-v1').remaining,9);const routeCharge=read(invKey).phoneBattery;advance(500);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(invKey).phoneBattery,routeCharge);assert(screen.getByRole('heading',{name:'Waiting under cover'}));advance(500);advanceTravelMinutes(1);assert(read('street-life-trip-v1').remaining<9);
+setup({day:3,minutes:600,rainUntil:3488},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:9},'street-life-rain-choice-v1':'true'});click(/^Find cover, then continue/);assert.equal(read('street-life-trip-v1').remaining,9);const routeCharge=read(invKey).phoneBattery;advance(500);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(invKey).phoneBattery,routeCharge);assert(screen.getByRole('heading',{name:'Under cover'}));advance(500);advanceTravelMinutes(1);assert(read('street-life-trip-v1').remaining<9);
 setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:9},'street-life-rain-choice-v1':'true'});click(/^Find cover, then continue/);click('Continue journey in the rain');advanceTravelMinutes(1);assert.equal(read('street-life-trip-v1').remaining,8);
 setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:7},'street-life-rain-choice-v1':'true'});click(/^Stop what I’m doing/);assert(!localStorage.getItem('street-life-trip-v1'));assert.equal(read(stateKey).locationId,'street');assert(screen.getByRole('dialog').textContent.includes('Journey stopped'));ok();
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Something familiar to listen to… I don’t want this silence./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).mood>30 && read(stateKey).mood<=60);assert(read(invKey).phoneBattery<musicBattery);assert(screen.getByRole('dialog').textContent.includes('familiar music'));ok();
@@ -520,7 +520,7 @@ for(const total of [30,60,91,120]) {
  for(let minute=0;minute<total;minute++) {
   const label=document.querySelector('.travel-action-label').textContent;
   if(label!==previous){if(previous){durations.push(now-started);assert(now-started>=2000);}started=now;previous=label;}
-  assert.equal(!!document.querySelector('.travel-visual.walking.waiting'),label==='Waiting for the green light');
+  assert.equal(!!document.querySelector('.travel-visual.walking.waiting'),label==='Red light');
   if(minute===42){cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,label);}
   advance(249);assert.equal(read('street-life-trip-v1').remaining,total-minute);
   assert.equal(document.querySelector('.travel-action-label').textContent,label);
@@ -531,9 +531,9 @@ for(const total of [30,60,91,120]) {
 // Bus phase text follows elapsed time and resumes at the same stage after reload.
 for(const mode of ['transit','fare-dodge']) {
  setup({minutes:600},{'street-life-trip-v1':{destinationId:'shop',mode,total:10,remaining:10}});
- assert.equal(document.querySelector('.travel-action-label').textContent,'Walking to the stop');advance(2*250);
- assert.equal(document.querySelector('.travel-action-label').textContent,'Waiting for the bus');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,'Waiting for the bus');advance(5*250);
- assert.equal(document.querySelector('.travel-action-label').textContent,'Riding the bus');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,'Riding the bus');advance(2*250);assert.equal(document.querySelector('.travel-action-label').textContent,'Walking to your destination');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,'Walking to your destination');advance(250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,610);ok();
+ assert.equal(document.querySelector('.travel-action-label').textContent,'To the stop');advance(2*250);
+ assert.equal(document.querySelector('.travel-action-label').textContent,'Waiting');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,'Waiting');advance(5*250);
+ assert.equal(document.querySelector('.travel-action-label').textContent,'On the bus');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,'On the bus');advance(2*250);assert.equal(document.querySelector('.travel-action-label').textContent,'Final walk');cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-action-label').textContent,'Final walk');advance(250);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,610);ok();
 }
 // Bus stops are covered and the bus is dry: only the two walking legs wet
 // clothes. Reloads preserve both phase and accumulated wetness in either mode.
@@ -541,7 +541,7 @@ for(const mode of ['transit','fare-dodge']) {
  setup({day:2,minutes:600,wetness:20},{'street-life-trip-v1':{destinationId:'shop',mode,total:10,remaining:10},'street-life-rain-response-v1':{episode:'weather:2',locationId:'street',sheltered:false}});
  advance(2*250);assert(Math.abs(read(stateKey).wetness-22)<1e-8);cleanup();render(React.createElement(App));
  advance(4*250);assert(Math.abs(read(stateKey).wetness-21.4)<1e-8);cleanup();render(React.createElement(App));
- advance(3*250);assert(Math.abs(read(stateKey).wetness-20.5)<1e-8);assert.equal(document.querySelector('.travel-action-label').textContent,'Walking to your destination');
+ advance(3*250);assert(Math.abs(read(stateKey).wetness-20.5)<1e-8);assert.equal(document.querySelector('.travel-action-label').textContent,'Final walk');
  advance(250);assert.equal(read(stateKey).locationId,'shop');assert(Math.abs(read(stateKey).wetness-21.5)<1e-8);ok();
 }
 // Rain starting at a covered stop does not interrupt waiting/riding, but the
