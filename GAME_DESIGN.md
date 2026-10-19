@@ -2,7 +2,17 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-241`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-242`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Food poisoning lottery (v242)
+
+Each consumed stale/spoiled sandwich, bread roll or ready meal resolves one outcome using that selected portion's freshness. Fresh >50% is safe; stale >20–50% has 90% no adverse effect, 8% nausea and 2% vomiting; spoiled 0–20% has 25% no adverse effect, 45% nausea and 30% vomiting. These are game-balancing probabilities, not real-world medical estimates. This replaces all guaranteed spoiled-food health/mood damage.
+
+Safe and nausea outcomes retain the existing reduced Food gains (stale sandwich/bread/ready meal 20/8/34, spoiled 10/4/16). Nausea adds Mood −3, with no Energy or Health loss. Vomiting gives no nutrition from the portion and applies Food −10, Water −20, Energy −5–10 (uniform integer), Health −5 relative to the state before eating. Normal stat bounds still apply. Fresh nutrition and the fresh sandwich's Mood +2 remain unchanged; canned food/water are unaffected.
+
+The paused food-choice dialog labels stale food **Poisoning risk** and spoiled food **High poisoning risk**, without revealing the exact odds. It explains nausea and vomiting consequences before confirmation, including that a vomited portion gives no Food. Outcome text and actual stat losses appear together in the existing action result and journal. No extra modal, game-time charge or persistent illness effect is added. Randomness is resolved once outside React state updaters, only after choosing a valid portion, and the consumed portion/stat changes persist normally. Merely opening or cancelling the choice has no consequences.
+
+Food checks cover exact freshness/probability boundaries, all three food types and all three outcomes, the full Energy loss range, no risk roll for fresh food, selected-portion consumption, StrictMode single resolution, accessible warnings, result pause and save/reload. Existing slot, aging, storage and legacy-save checks remain in place.
 
 ### Health warning on the food choice (v241)
 

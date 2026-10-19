@@ -1,4 +1,24 @@
 const assert=require('node:assert/strict');
+const originalRandom=Math.random;
+require('esbuild').buildSync({entryPoints:['src/foodConsumption.ts'],bundle:true,platform:'node',format:'cjs',outfile:'food-consumption-app.cjs'});
+const {foodConsumption}=require('./food-consumption-app.cjs');
+for(const [kind,gains] of [['food',[28,20,10]],['bread',[12,8,4]],['readyMeal',[48,34,16]]]) {
+ const fresh=foodConsumption(kind,51,()=>{throw Error('Fresh food must not roll')});assert.equal(fresh.hunger,gains[0]);assert.equal(fresh.mood,kind==='food'?2:0);
+ for(const [freshness,gain,expected] of [[50,gains[1],[900,80,20]],[20,gains[2],[250,450,300]]]) {
+  const counts=[0,0,0];
+  for(let i=0;i<1000;i++) {
+   let draws=0;const result=foodConsumption(kind,freshness,()=>draws++===0?(i+.5)/1000:0);
+   if(result.hunger<0){counts[2]++;assert.deepEqual([result.hunger,result.thirst,result.energy,result.health],[-10,-20,-5,-5]);assert.equal(draws,2)}
+   else {assert.equal(result.hunger,gain);assert.equal(result.health,undefined);assert.equal(result.energy,undefined);assert.equal(result.thirst,undefined);counts[result.mood===-3?1:0]++;assert.equal(draws,1)}
+  }
+  assert.deepEqual(counts,expected);
+ }
+ for(const [freshness,roll] of [[50,.9],[50,.98],[20,.25],[20,.7]]) {
+  const result=foodConsumption(kind,freshness,()=>roll);assert.equal(result.hunger<0,roll===(freshness===50?.98:.7),'exact outcome boundaries');
+ }
+ for(let loss=5;loss<=10;loss++) {let n=0;assert.equal(foodConsumption(kind,0,()=>n++===0?.99:(loss-5+.5)/6).energy,-loss)}
+}
+console.log('PASS: exact freshness/outcome boundaries, all food nutrition, 90/8/2 and 25/45/30 odds, vomiting losses and safe fresh food.');
 require('esbuild').buildSync({entryPoints:['src/foodInventory.ts'],bundle:true,platform:'node',format:'cjs',outfile:'food-inventory-app.cjs'});
 const {foodPortions,foodSlot,withFoodPortions,addFoodPortions,ageFood,consumeFood,discardFood}=require('./food-inventory-app.cjs');
 for(const kind of ['food','bread','readyMeal']) {
@@ -29,17 +49,35 @@ let now=1800000000000,id=0;Date.now=()=>now;const timers=new Map();window.setInt
 require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'food-ui-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');const {render,screen,within,fireEvent,act,cleanup,configure}=require('@testing-library/react');configure({getElementError:message=>new Error(message)});const App=require('./food-ui-app.cjs').default;
 const invKey='street-life-inventory-v1',gameKey='street-life-save-v3',read=k=>JSON.parse(localStorage.getItem(k));
-function setup(stock={},state={},extra={}){cleanup();localStorage.clear();localStorage.setItem(gameKey,JSON.stringify({day:2,minutes:600,money:100,hunger:20,thirst:66,energy:68,health:82,hygiene:55,mood:28,intoxication:0,locationId:'station',...state}));localStorage.setItem('street-life-effects-v1','[]');localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-screen','inventory');localStorage.setItem(invKey,JSON.stringify({water:0,food:0,medicines:0,...stock}));for(const[k,v]of Object.entries(extra))localStorage.setItem(k,JSON.stringify(v));render(React.createElement(App));fireEvent(window,new window.Event('pagehide'))}
+function setup(stock={},state={},extra={},strict=false){cleanup();localStorage.clear();localStorage.setItem(gameKey,JSON.stringify({day:2,minutes:600,money:100,hunger:20,thirst:66,energy:68,health:82,hygiene:55,mood:28,intoxication:0,locationId:'station',...state}));localStorage.setItem('street-life-effects-v1','[]');localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-screen','inventory');localStorage.setItem(invKey,JSON.stringify({water:0,food:0,medicines:0,...stock}));for(const[k,v]of Object.entries(extra))localStorage.setItem(k,JSON.stringify(v));render(strict?React.createElement(React.StrictMode,null,React.createElement(App)):React.createElement(App));fireEvent(window,new window.Event('pagehide'))}
 function click(name){fireEvent.click((screen.queryByRole('dialog')?within(screen.getByRole('dialog')):screen).getByRole('button',{name}))}
 function ok(){click('Got it')}
 function advance(ms){const end=now+ms;while(true){const due=Math.min(...[...timers.values()].map(t=>t.next));if(due>end)break;now=due;act(()=>{for(const[k,t]of [...timers])if(timers.has(k)&&t.next<=now){t.next+=t.delay;t.fn()}})}now=end;fireEvent(window,new window.Event('pagehide'))}
 try {
+ Math.random=()=>0;
  setup({food:6,foodFreshness:50,foodPortions:[0,10,100,40,80,90]});assert.equal(document.querySelectorAll('.inventory-slot').length,2);assert(document.querySelector('.inventory-slot').textContent.includes('Spoiled ×2'));click('Discard Food ×4');const before=read(gameKey);advance(5000);assert.deepEqual(read(gameKey),before);click('Discard spoiled ×2');assert.deepEqual(read(invKey).foodPortions,[100,40,80,90]);assert.equal(document.querySelectorAll('.inventory-slot').length,1);assert(document.querySelector('.inventory-slot').textContent.includes('Fresh ×3'));assert(document.querySelector('.inventory-slot').textContent.includes('Stale ×1'));cleanup();render(React.createElement(App));assert.deepEqual(read(invKey).foodPortions,[100,40,80,90]);click('Discard Food ×4');assert(screen.getByRole('button',{name:'Discard spoiled ×0'}).disabled);click('Discard all');assert.equal(read(invKey).food,0);assert(screen.getByText('Your backpack is empty.'));
  setup({food:6,foodPortions:[50,50,50,50,0,100]});click('Discard Food ×2');click('Discard spoiled ×1');assert.deepEqual(read(invKey).foodPortions,[50,50,50,50,100]);click('Discard Food ×4');click('Discard all');assert.deepEqual(read(invKey).foodPortions,[100]);
  setup({food:6,foodPortions:[0,0,0,0,100,100]});click(/Food ×2.*tap to eat/);assert(screen.getByRole('dialog').textContent.includes('+28'));assert(!screen.queryByRole('dialog',{name:'Eat Food?'}));ok();assert.equal(read(invKey).food,5);click(/Food ×4.*tap to eat/);assert(screen.getByRole('dialog',{name:'Eat Food?'}));assert(!screen.queryByRole('button',{name:/^Fresh ×/}));assert(screen.getByRole('button',{name:'Spoiled ×4'}));click('Cancel');assert.equal(read(invKey).food,5);
- setup({food:3,foodPortions:[0,40,100]});click(/Food ×3.*tap to eat/);assert(screen.getByRole('button',{name:'Fresh ×1'}));assert(screen.getByRole('button',{name:'Stale ×1'}));assert(screen.getByRole('button',{name:'Spoiled ×1'}));const paused=read(gameKey);advance(5000);assert.deepEqual(read(gameKey),paused);click('Fresh ×1');assert.equal(read(gameKey).hunger,48);assert.equal(read(gameKey).health,82);assert.deepEqual(read(invKey).foodPortions,[0,40]);ok();click(/Food ×2.*tap to eat/);assert(!screen.queryByRole('button',{name:/^Fresh ×/}));click('Stale ×1');assert.equal(read(gameKey).hunger,68);assert.equal(read(gameKey).health,82);ok();click(/Food ×1.*tap to eat/);click('Spoiled ×1');assert.equal(read(gameKey).hunger,78);assert.equal(read(gameKey).health,74);ok();assert.equal(read(invKey).food,0);
- for(const [kind,name,gain,damage]of [['bread','Bread roll',4,3],['readyMeal','Ready meal',16,8]]){setup({[kind]:1,[`${kind}Portions`]:[0]});click(new RegExp(name+'.*tap to eat'));assert(screen.getByRole('dialog',{name:'Eat '+name+'?'}));click('Spoiled ×1');assert.equal(read(gameKey).hunger,20+gain);assert.equal(read(gameKey).health,82-damage);ok()}
+ setup({food:3,foodPortions:[0,40,100]});click(/Food ×3.*tap to eat/);assert(screen.getByRole('button',{name:'Fresh ×1'}));assert(screen.getByRole('button',{name:'Stale ×1'}));assert(screen.getByRole('button',{name:'Spoiled ×1'}));const paused=read(gameKey);advance(5000);assert.deepEqual(read(gameKey),paused);click('Fresh ×1');assert.equal(read(gameKey).hunger,48);assert.equal(read(gameKey).health,82);assert.deepEqual(read(invKey).foodPortions,[0,40]);ok();click(/Food ×2.*tap to eat/);assert(!screen.queryByRole('button',{name:/^Fresh ×/}));click('Stale ×1');assert.equal(read(gameKey).hunger,68);assert.equal(read(gameKey).health,82);ok();click(/Food ×1.*tap to eat/);click('Spoiled ×1');assert.equal(read(gameKey).hunger,78);assert.equal(read(gameKey).health,82);ok();assert.equal(read(invKey).food,0);
+ for(const [kind,name,gain]of [['bread','Bread roll',4],['readyMeal','Ready meal',16]]){setup({[kind]:1,[`${kind}Portions`]:[0]});click(new RegExp(name+'.*tap to eat'));assert(screen.getByRole('dialog',{name:'Eat '+name+'?'}));click('Spoiled ×1');assert.equal(read(gameKey).hunger,20+gain);assert.equal(read(gameKey).health,82);ok()}
+ // Every perishable type uses its selected portion, with each outcome checked
+ // through the real UI, result summary and save. StrictMode must not re-roll.
+ for(const [kind,name,staleGain,spoiledGain] of [['food','Food',20,10],['bread','Bread roll',8,4],['readyMeal','Ready meal',34,16]]) {
+  for(const [freshness,label,gain,rolls] of [[40,'Stale',staleGain,[0,.95,.99]],[0,'Spoiled',spoiledGain,[0,.5,.99]]]) {
+   for(const [outcome,roll] of rolls.entries()) {
+    setup({[kind]:2,[`${kind}Portions`]:[freshness,100]},{},{},true);const before=read(gameKey);let draws=0;Math.random=()=>{draws++;return roll};
+    assert(!document.querySelector('.inventory-slot').textContent.includes('Health−'));click(new RegExp(name+'.*tap to eat'));click('Cancel');assert.equal(draws,0,'opening/cancelling never rolls');assert.deepEqual(read(gameKey),before);assert.equal(read(invKey)[kind],2);click(new RegExp(name+'.*tap to eat'));
+    const option=screen.getByRole('button',{name:label+' ×1'});assert(/poisoning risk/i.test(option.textContent));assert(option.getAttribute('aria-describedby').includes('food-risk-effects'));
+    assert(screen.getByRole('dialog').textContent.includes('Energy −5–10'));click(label+' ×1');const after=read(gameKey);
+    assert.equal(draws,outcome===2?2:1,'one outcome roll, even under StrictMode');assert.equal(after.minutes,before.minutes);
+    assert.equal(after.hunger,outcome===2?10:20+gain);assert.equal(after.thirst,outcome===2?46:66);assert.equal(after.energy,outcome===2?58:68);assert.equal(after.health,outcome===2?77:82);assert.equal(after.mood,outcome===1?25:28);
+    assert.deepEqual(read(invKey)[`${kind}Portions`],[100]);assert(screen.getByRole('dialog').textContent.includes(outcome===2?'You vomited':outcome===1?'nauseous (Mood −3)':'feel fine'));
+    const completed=read(gameKey);advance(5000);assert.deepEqual(read(gameKey),completed,'result pauses');cleanup();render(React.createElement(App));assert.deepEqual(read(gameKey),completed,'completed outcome survives reload');assert.deepEqual(read(invKey)[`${kind}Portions`],[100]);
+   }
+  }
+ }
+ Math.random=()=>0;
  setup({food:3,foodFreshness:0},{locationId:'shop'});click('Cheap Shop');click('Buy Cheap food for 5.00 zł');ok();click(/^Inventory$/);const bought=read(invKey).foodPortions;assert.deepEqual(bought.slice(0,3),[0,0,0]);assert(bought[3]>99&&bought[3]<=100);assert(document.querySelector('.inventory-slot').textContent.includes('Spoiled ×3'));
  setup({food:6,foodPortions:[0,5,40,80,90,100]},{locationId:'residential-shelter'},{'street-life-situation-v1':{housing:'Schronisko',schroniskoReferral:true}});click('Schronisko');fireEvent.click(within(screen.getByText(/^Food ×\d+\/4$/).closest('div')).getByRole('button',{name:'Store'}));ok();assert.deepEqual(read(invKey).foodPortions,[90,100]);assert.deepEqual(read('street-life-storage-v1').foodPortions,[0,5,40,80]);fireEvent.click(within(screen.getByText(/^Food ×\d+\/4$/).closest('div')).getByRole('button',{name:'Take'}));ok();assert.deepEqual(read(invKey).foodPortions,[90,100,0,5,40,80]);assert.equal(read('street-life-storage-v1').food,0);
  console.log('PASS: UI slot labels, spoiled/all removal, compaction, pause/reload, freshness choices, fresh-only bypass, actual gains and storage transfers.');
-} finally {cleanup();dom.window.close()}
+} finally {Math.random=originalRandom;cleanup();dom.window.close()}

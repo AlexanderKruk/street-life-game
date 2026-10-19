@@ -10,6 +10,7 @@ import ItemArt from './ItemArt'
 import InventorySlot from './InventorySlot'
 import DiscardDialog from './DiscardDialog'
 import FoodChoiceDialog from './FoodChoiceDialog'
+import { foodConsumption } from './foodConsumption'
 import { addFoodPortions, ageFood, consumeFood, discardFood, foodPortions, foodPortionIndex, foodSlot, isPerishableFood, withFoodPortions, type FoodCondition, type FoodKind, type FoodPortionFields } from './foodInventory'
 import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
@@ -31,7 +32,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-241'
+const BUILD_VERSION = 'v2026.10.19-242'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1978,27 +1979,13 @@ export default function App() {
       setMessage('You cleaned up with wet wipes. Hygiene improves, up to 60.')
       return
     }
-    if (item === 'readyMeal') {
-      const freshness = foodPortions(inventory, item)[foodPortionIndex(inventory, item, slotIndex, condition)]
-      if (freshness === undefined) return
-      const stale = freshness <= 50
-      const spoiled = freshness <= 20
-      setInventory(prev => consumeFood(prev, item, slotIndex, condition))
-      setGame(prev => applyAction(prev, { minutes: 0, hunger: spoiled ? 16 : stale ? 34 : 48, health: spoiled ? -8 : 0, mood: spoiled ? -4 : 0 }))
-      setMessage(spoiled ? 'You ate spoiled pasta with meat. It damaged your health and mood.' : stale ? 'You ate stale pasta with meat. It was less filling.' : 'You ate the ready meal: pasta with meat and a little parsley from the plastic container.')
+    if (item === 'bread' || item === 'readyMeal') {
+      eatPerishable(item, slotIndex, condition)
       return
     }
-    const freshness = item === 'bread' ? foodPortions(inventory, item)[foodPortionIndex(inventory, item, slotIndex, condition)] : 100
-    if (freshness === undefined) return
-    const stale = item === 'bread' && freshness <= 50
-    const spoiled = item === 'bread' && freshness <= 20
-    setInventory(prev => item === 'bread' ? consumeFood(prev, item, slotIndex, condition) : { ...prev, cannedFood: prev.cannedFood - 1 })
-    setGame(prev => applyAction(prev, { minutes: 0,
-      hunger: item === 'cannedFood' ? 32 : spoiled ? 4 : stale ? 8 : 12,
-      mood: item === 'cannedFood' ? 1 : spoiled ? -2 : 0, health: spoiled ? -3 : 0 }))
-    setMessage(item === 'cannedFood' ? 'You opened the pull-tab can and ate the food.' :
-      spoiled ? 'You ate a spoiled bread roll. It damaged your health and mood.' :
-      stale ? 'You ate a stale bread roll. It was less filling.' : 'You ate a bread roll.')
+    setInventory(prev => ({ ...prev, cannedFood: prev.cannedFood - 1 }))
+    setGame(prev => applyAction(prev, { minutes: 0, hunger: 32, mood: 1 }))
+    setMessage('You opened the pull-tab can and ate the food.')
   }
 
   function useMedicineImpl() {
@@ -2030,23 +2017,21 @@ export default function App() {
     setMessage('You smoked a cigarette. Mood+, health slightly worse.')
   }
 
+  function eatPerishable(kind: FoodKind, slotIndex: number, condition?: FoodCondition) {
+    const freshness = foodPortions(inventory, kind)[foodPortionIndex(inventory, kind, slotIndex, condition)]
+    if (freshness === undefined) return
+    const result = foodConsumption(kind, freshness)
+    setInventory(prev => consumeFood(prev, kind, slotIndex, condition))
+    setGame(prev => applyAction(prev, result))
+    setMessage(result.message)
+  }
+
   function useItemImpl(item: 'water' | 'food', slotIndex = 0, condition?: FoodCondition) {
     if (inventory[item] <= 0) return
-    const freshness = item === 'food' ? foodPortions(inventory, item)[foodPortionIndex(inventory, item, slotIndex, condition)] : 100
-    if (freshness === undefined) return
-    setInventory(prev => item === 'food' ? consumeFood(prev, item, slotIndex, condition) : { ...prev, water: prev.water - 1 })
-    if (item === 'water') {
-      setGame(prev => applyAction(prev, { minutes: 0, thirst: 38 }))
-      setMessage('You drank water.')
-    } else {
-      const spoiled = freshness <= 20
-      const stale = freshness <= 50
-      setGame(prev => applyAction(prev, { minutes: 0,
-        hunger: spoiled ? 10 : stale ? 20 : 28,
-        health: spoiled ? -8 : 0, mood: spoiled ? -4 : stale ? 0 : 2 }))
-      setMessage(spoiled ? 'You ate spoiled food. It eased hunger a little, but damaged your health and mood.' :
-        stale ? 'You ate stale food. It was less filling.' : 'You ate the food from your backpack.')
-    }
+    if (item === 'food') { eatPerishable(item, slotIndex, condition); return }
+    setInventory(prev => ({ ...prev, water: prev.water - 1 }))
+    setGame(prev => applyAction(prev, { minutes: 0, thirst: 38 }))
+    setMessage('You drank water.')
   }
 
   function reset() {
@@ -2193,10 +2178,10 @@ export default function App() {
 
   const backpackItems: { art: BackpackItemId; name: string; count: number; stackSize: number; effects: string[]; hint: string; onUse?: () => void; disabled?: boolean }[] = [
     { art: 'water', name: 'Water', count: inventory.water, stackSize: STACK_SIZE, effects: ['Thirst+++'], hint: 'tap to drink', onUse: () => useItem('water') },
-    { art: 'food', name: 'Food', count: inventory.food, stackSize: STACK_SIZE, effects: inventory.foodFreshness > 50 ? ['Food++', 'Mood+'] : inventory.foodFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled', 'Health−'], hint: `${foodFreshnessLabel(inventory.foodFreshness)} · tap to eat`, onUse: () => useItem('food') },
+    { art: 'food', name: 'Food', count: inventory.food, stackSize: STACK_SIZE, effects: inventory.foodFreshness > 50 ? ['Food++', 'Mood+'] : inventory.foodFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled'], hint: `${foodFreshnessLabel(inventory.foodFreshness)} · tap to eat`, onUse: () => useItem('food') },
     { art: 'bread', name: 'Bread roll', count: inventory.bread, stackSize: STACK_SIZE, effects: ['Food+', ...(inventory.breadFreshness <= 50 ? [foodFreshnessLabel(inventory.breadFreshness)] : [])], hint: `${foodFreshnessLabel(inventory.breadFreshness)} · tap to eat`, onUse: () => useSupply('bread') },
     { art: 'cannedFood', name: 'Canned food', count: inventory.cannedFood, stackSize: STACK_SIZE, effects: ['Food++', 'Mood+'], hint: 'Keeps well · tap to eat', onUse: () => useSupply('cannedFood') },
-    { art: 'readyMeal', name: 'Ready meal', count: inventory.readyMeal, stackSize: STACK_SIZE, effects: inventory.readyMealFreshness > 50 ? ['Food+++'] : inventory.readyMealFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled', 'Health−'], hint: `${foodFreshnessLabel(inventory.readyMealFreshness)} · tap to eat`, onUse: () => useSupply('readyMeal') },
+    { art: 'readyMeal', name: 'Ready meal', count: inventory.readyMeal, stackSize: STACK_SIZE, effects: inventory.readyMealFreshness > 50 ? ['Food+++'] : inventory.readyMealFreshness > 20 ? ['Food++', 'Stale'] : ['Food+', 'Spoiled'], hint: `${foodFreshnessLabel(inventory.readyMealFreshness)} · tap to eat`, onUse: () => useSupply('readyMeal') },
     { art: 'wipes', name: 'Wet wipes', count: inventory.wipes, stackSize: WIPES_STACK_SIZE, effects: ['Hygiene+'], hint: game.hygiene >= 60 ? 'Hygiene 60+ · find a shower' : 'tap to clean', onUse: () => useSupply('wipes'), disabled: game.hygiene >= 60 },
     { art: 'bottles', name: 'Bottles & cans', count: inventory.bottles, stackSize: BOTTLE_STACK_SIZE, effects: ['0.50 zł'], hint: 'Deposit containers · 0.50 zł each · return at shop' },
     { art: 'cigarettes', name: 'Cigarettes', count: inventory.cigarettes, stackSize: CIGARETTE_STACK_SIZE, effects: ['Mood+', 'Health−'], hint: 'tap to smoke', onUse: smokeCigarette },
