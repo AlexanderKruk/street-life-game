@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-248`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-249`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Closing-time departure event (v249)
+
+When a place closes while the player is there, the player moves to Street and a **[Place] has closed** event explains the departure. It applies to Cheap Shop, Help Center, Day Center, Free Clinic, Hospital regular hours, Job Centre and Day Work. Night Shelter retains its existing, separate morning packing/checkout unchanged. Station and Schronisko remain open around the clock. Arriving at an already closed building is not a closing transition, and closing the origin during travel never interrupts the journey.
+
+The notice pauses time, blocks background interaction, and requires acknowledgement. Existing action results appear first, with their rewards/costs retained; the closing notice follows. Exhaustion waits for acknowledgement before forcing sleep outside. Closure adds no travel time, fare or extra stat penalty. A single journal entry records the departure. The pending place ID persists under `street-life-closing-notice-v1` until acknowledgement, so reload restores the notice without replaying departure or duplicating the journal. Reset clears it. Saves with no notice key remain compatible.
+
+At zero Energy, an admitted Night Shelter guest or a Schronisko resident falls asleep in the available bed, with existing bed durations and morning checkout unchanged. At other locations, the character leaves first and then sleeps on Street under the existing outdoor sleep rules. A station bench is not a bed. Shelter departure collects a charging phone as usual when there is no usable bed. Ongoing travel, results, events and checkout finish before exhaustion can start sleep.
 
 ### Shelter entrance and overnight bed access (v248)
 

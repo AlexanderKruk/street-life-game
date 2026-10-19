@@ -12,6 +12,7 @@ import DiscardDialog from './DiscardDialog'
 import FoodChoiceDialog from './FoodChoiceDialog'
 import { foodConsumption, FOOD_OUTCOME_PRESENTATION } from './foodConsumption'
 import { SHELTER_PHONE_CHARGE_KEY, SHELTER_CHARGE_PER_HOUR, shelterChargingMinutes } from './shelterCharging'
+import { CLOSING_NOTICE_KEY, locationClosedSince } from './locationClosing'
 import { addFoodPortions, ageFood, consumeFood, discardFood, foodPortions, foodPortionIndex, foodSlot, isPerishableFood, withFoodPortions, type FoodCondition, type FoodKind, type FoodPortionFields } from './foodInventory'
 import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
@@ -33,7 +34,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-248'
+const BUILD_VERSION = 'v2026.10.19-249'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -351,6 +352,12 @@ export default function App() {
   const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(loadPhoneActivity)
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
+  const [closingNotice, setClosingNotice] = useState<string | null>(() => {
+    try {
+      const id = JSON.parse(localStorage.getItem(CLOSING_NOTICE_KEY) ?? 'null')
+      return locations.some(place => place.id === id && place.id !== 'shelter' && !(place.open === 0 && place.close === 1440)) ? id : null
+    } catch { return null }
+  })
   const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean; consumedItems: ConsumedItem[] } | null>(null)
   const [eventResultOpen, setEventResultOpen] = useState(false)
   const closeResult = useCallback(() => { setInfoModal(null); setEventResultOpen(false) }, [])
@@ -594,7 +601,7 @@ export default function App() {
   const gameOver = game.health <= 0
   const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || gameOver)
   useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
-  const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || gameOver)
+  const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || gameOver || closingNotice)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
   const previousRainEpisode = useRef(currentRainEpisode)
   const previousExposure = useRef(currentExposure)
@@ -630,7 +637,7 @@ export default function App() {
     document.addEventListener('keydown', trap)
     return () => { if (ownsScrollLock) document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
   }, [rainChoice, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay])
-  const eventInteractionBlocked = inventoryDialogOpen || !!activeEvent || !!diceCheck || (rainChoice && !infoModal && !pendingResult) || eventResultOpen
+  const eventInteractionBlocked = inventoryDialogOpen || !!activeEvent || !!diceCheck || (rainChoice && !infoModal && !pendingResult) || eventResultOpen || !!closingNotice
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null
@@ -780,6 +787,21 @@ export default function App() {
     setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }))
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
+  const closingWatch = useRef({ id: game.locationId, minute: absoluteMinutes(game), travelling: !!trip })
+  const locationIsClosing = !trip && !closingWatch.current.travelling && closingWatch.current.id === current.id && locationClosedSince(current, closingWatch.current.minute, absoluteMinutes(game))
+  useEffect(() => {
+    const previous = closingWatch.current
+    const now = absoluteMinutes(game)
+    closingWatch.current = { id: current.id, minute: now, travelling: !!trip }
+    if (gameOver || trip || previous.travelling || previous.id !== current.id || !locationClosedSince(current, previous.minute, now)) return
+    setClosingNotice(current.id)
+    setGame(state => ({ ...state, locationId: 'street' }))
+    setSelectedDestination(null)
+    setPhoneOpen(false)
+    setScreen('location')
+    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionTitle: 'Closing time', text: `${current.name} closed. You stepped outside onto the street.` }].slice(-500))
+  }, [game.day, game.minutes, current, !!trip, gameOver])
+
   function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
   function watchVideo(...args: Parameters<typeof watchVideoImpl>) { runWithResult('Watch videos', () => watchVideoImpl(...args)) }
   function chargePhone(...args: Parameters<typeof chargePhoneImpl>) { runWithResult('Charge phone', () => chargePhoneImpl(...args)) }
@@ -899,25 +921,28 @@ export default function App() {
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 
   useEffect(() => {
-    if (inventoryDialogOpen || phoneActivity || rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
-    const safeKind = current.id === 'residential-shelter'
-      ? 'residential'
-      : insideNightShelter
-        ? 'shelter'
-        : 'ground'
+    if (locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
+    const safeKind = current.id === 'residential-shelter' ? 'residential' : insideNightShelter ? 'shelter' : 'ground'
     const hours = 8
     const realStartedAt = Date.now()
     setMusicOn(false)
     setNavigationOn(false)
     setTrip(null)
-    if (safeKind === 'ground' && current.id !== 'street') setGame((prev) => ({ ...prev, locationId: 'street' }))
+    if (safeKind === 'ground' && current.id !== 'street') {
+      recordShelterDeparture('street')
+      setGame((prev) => ({ ...prev, locationId: 'street' }))
+      setSelectedDestination(null)
+      setPhoneOpen(false)
+      setScreen('location')
+    }
     const total = safeKind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
     groundSleepWindow.current = safeKind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
-    setMessage(safeKind === 'ground' ? `You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep.')
-  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity, inventoryDialogOpen])
+    setMessage(safeKind === 'ground' ? `${current.id !== 'street' ? `You leave ${current.name} and step outside. ` : ''}You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep in your bed.')
+  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity, inventoryDialogOpen, closingNotice, locationIsClosing])
 
   const tickGameClock = useLatestAction(() => {
+    if (closingNotice) return
     if (rainChoice) return
     if (phoneActivity) {
       if (phoneActivity.remaining <= 0 || gameOver || document.visibilityState !== 'visible') return
@@ -2101,6 +2126,8 @@ export default function App() {
     setGame(createInitialState())
     setMessage('New run started.')
     setInfoModal(null)
+    setClosingNotice(null)
+    localStorage.removeItem(CLOSING_NOTICE_KEY)
     setEventResultOpen(false)
     setPhoneActivity(null)
     setDiscardItem(null)
@@ -2172,6 +2199,7 @@ export default function App() {
     [PHONE_ACTIVITY_KEY]: phoneActivity,
     'street-life-inventory-v1': inventory,
     [SHELTER_PHONE_CHARGE_KEY]: shelterPhoneCharging || null,
+    [CLOSING_NOTICE_KEY]: closingNotice,
     'street-life-storage-v1': storage,
     'street-life-effects-v1': effects,
     'street-life-situation-v1': life,
@@ -2194,7 +2222,7 @@ export default function App() {
     discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents, choiceSeed,
     rainChoice, rainResponse, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
-    phoneActivity?.questionId ?? null, infoModal, shelterPhoneCharging,
+    phoneActivity?.questionId ?? null, infoModal, shelterPhoneCharging, closingNotice,
   ])
 
   function eatFromSlot(kind: FoodKind, slotIndex: number, condition?: FoodCondition) {
@@ -2272,6 +2300,11 @@ export default function App() {
       </section>
     </div>}
     {infoModal && !inlineResult && <ResultCard result={infoModal} onClose={closeResult} />}
+    {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
+      title: `${locations.find(place => place.id === closingNotice)?.name} has closed`,
+      label: 'CLOSING TIME · TIME PAUSED',
+      text: 'It’s closing time. You have to leave. You step outside and find yourself back on the street.',
+    }} onClose={() => setClosingNotice(null)} />}
     {trashGame && <div className="trash-overlay">
       <section className="trash-card" role="dialog" aria-modal="true" aria-labelledby="trash-title">
         <div className="trash-head"><Icon name="bottle" /><h2 id="trash-title">Look for bottles</h2></div>
@@ -2598,7 +2631,7 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && rainChoice && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
+    {!gameOver && !closingNotice && rainChoice && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
       <section className="event-card illustrated-event compact-street-event rain-card" ref={rainModalRef}>
         <img className="event-illustration" {...responsiveImageProps('/street-life-game/assets/event-rain-street.webp')} alt="Rain falls beside a closed shop with an entrance canopy." />
         <div className="event-body">

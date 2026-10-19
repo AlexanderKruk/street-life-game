@@ -53,6 +53,36 @@ function advanceTravelMinutes(minutes) {
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
 function discoverHelp(){for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
 
+// Closing time moves guests outside once, pauses for acknowledgement, survives
+// reload, and waits behind action results. Shelter and 24-hour stays are exempt.
+const closingKey='street-life-closing-notice-v1';
+for(const [id,close] of [['shop',1320],['support',960],['daycenter',960],['free-clinic',960],['hospital',1080],['jobcenter',900],['work',1080]]) {
+ setup({locationId:id,minutes:close-1});advance(1000);
+ assert.equal(read(stateKey).locationId,'street');assert.equal(read(closingKey),id);
+ assert(screen.getByRole('dialog').textContent.includes('has closed'));
+ const stopped=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),stopped);
+ cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('has closed'));
+ ok();assert.equal(read(closingKey),null);advance(1000);assert.equal(read(stateKey).minutes,close+1);
+ assert.equal(read('street-life-journal-history-v1').filter(entry=>entry.actionTitle==='Closing time').length,1);
+}
+setup({locationId:'shop',minutes:1319},{[invKey]:{water:0}});click('Buy Water for 3.00 zł');
+assert.equal(read(stateKey).locationId,'street');assert.equal(read(invKey).water,3);assert.equal(read(stateKey).money,97);
+assert(screen.getByRole('dialog').textContent.includes('Bought Water'));ok();assert(screen.getByRole('dialog').textContent.includes('has closed'));ok();
+setup({locationId:'shop',minutes:1321});advance(1000);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(closingKey),null,'arriving at a closed door is not a closing event');
+setup({locationId:'shop',minutes:1319,energy:0.01});advance(1000);assert(screen.getByRole('dialog').textContent.includes('has closed'));assert(!document.querySelector('.sleep-overlay'));ok();assert(document.querySelector('.sleep-overlay'),'forced sleep starts outside after acknowledging closure');
+setup({locationId:'shop',minutes:1319});click('Map');advance(1000);assert(screen.getByRole('dialog').textContent.includes('has closed'));assert.equal(read(stateKey).locationId,'street');
+for(const id of ['station','residential-shelter']) {
+ setup({locationId:id,minutes:1439},{[lifeKey]:{housing:'Schronisko'}});advance(1000);assert.equal(read(stateKey).locationId,id);assert.equal(read(closingKey),null);
+}
+setup({locationId:'shop',minutes:1319},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20}});advance(1000);assert.equal(read(closingKey),null);assert(read('street-life-trip-v1'),'closing the origin never interrupts travel');
+// Exhaustion uses an available bed. Other places require leaving first and
+// sleeping on the street; the station bench is not a bed.
+for(const id of ['street','station','shop','support','daycenter','free-clinic','hospital','jobcenter','work','shelter','residential-shelter']) {
+ setup({locationId:id,minutes:1140,energy:0},{[lifeKey]:{housing:id==='residential-shelter'?'Schronisko':'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1}});
+ const bed=id==='shelter'?'shelter':id==='residential-shelter'?'residential':null;
+ assert.equal(read(stateKey).locationId,bed?id:'street');assert.equal(read('street-life-sleep-v1').kind,bed??'ground');assert.equal(read('street-life-sleep-v1').forced,true);assert.equal(read('street-life-sleep-v1').total,480);
+}
+
 // Street uses the ordinary one-minute-per-second clock, including after a
 // completed information search, tab changes and reload. Only the result pauses.
 for(const state of [{day:1,minutes:1320},{day:2,minutes:600}]) {
