@@ -35,7 +35,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-250'
+const BUILD_VERSION = 'v2026.10.19-251'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1208,7 +1208,10 @@ export default function App() {
     }
     const completionText = `You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${wetRestLoss >= 0.5 ? ' Wet clothes made it harder to rest.' : ''}${illnessText}`
     setMessage(completionText)
-    if (newlyIll) setInfoModal({ title: 'Feeling unwell', label: 'WAKE-UP EVENT', text: completionText })
+    if (newlyIll) setInfoModal({ title: 'Feeling unwell', label: 'WAKE-UP EVENT', text: completionText,
+      illustration: `/street-life-game/assets/event-sleep-cold-${sleep.kind === 'bench' ? 'bench' : 'ground'}.webp`,
+      illustrationAlt: sleep.kind === 'bench' ? 'You wake on a bench with a sore throat and a blocked nose.' : 'You wake on the pavement, chilled and feeling unwell.',
+    })
     else presentWakeEvent(wakeEvent, 'Sleep complete', completionText)
   }
 

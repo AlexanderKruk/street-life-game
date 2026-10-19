@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-250`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-251`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Illustrated illness awakenings (v251)
+
+The **Feeling unwell** wake event selects a separate illustration for ground sleep and bench sleep (including Station), using the actual sleep kind. Both show the established protagonist waking with a cold. The shared illustrated result modal retains symptoms, sleep results and the actual Cold consequence in one confirmation. Images have 480/768/1024px responsive WebP variants, are loaded on demand and do not enter startup image warmup. Prompts and provenance are recorded in `docs/sleep-illness-art.md`. Sleep illness probabilities and other mechanics are unchanged.
 
 ### Cumulative sleep illness and wake symptoms (v250)
 

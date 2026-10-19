@@ -42,12 +42,15 @@ function reloadApp(){cleanup();render(React.createElement(App));flush();}
 function wake(){Math.random=()=>0;fireEvent.click(screen.getByRole('button',{name:'Wake up (debug)',exact:true}));flush();}
 try{
  setup();sleep();wake();assert(screen.getByRole('dialog',{name:'Feeling unwell'}).textContent.includes('Your throat feels sore'));
+ assert(document.querySelector('.result-illustration').src.endsWith('event-sleep-cold-ground-480.webp'));
+ assert(document.querySelector('.result-illustration').srcset.includes('event-sleep-cold-ground-1024.webp'));
  assert.equal(document.querySelector('.result-card-label').textContent,'WAKE-UP EVENT');assert.equal(read(effectsKey).filter(e=>e.id==='cold').length,1);
  assert(document.querySelector('.result-consequences').textContent.includes('Cold'));
  assert.equal(read(SAVE_KEY).sleepIllnessDose,undefined);assert.equal(read(SAVE_KEY).sleepIllnessMinutes,undefined);assert.equal(read(sleepKey),null);
  const stopped=read(SAVE_KEY);step(5000);assert.deepEqual(read(SAVE_KEY),stopped,'wake illness event pauses time');
  fireEvent.click(screen.getByRole('button',{name:'Got it',exact:true}));assert(!screen.queryByRole('dialog'),'illness replaces competing wake events');
  const expiry=read(effectsKey).find(e=>e.id==='cold').expiresAt;reloadApp();assert(!screen.queryByRole('dialog',{name:'Feeling unwell'}));assert.equal(read(effectsKey).find(e=>e.id==='cold').expiresAt,expiry,'reload neither rerolls illness nor duplicates the event');
+ setup({locationId:'station'});fireEvent.click(screen.getByRole('button',{name:/Try to sleep/}));fireEvent.click(screen.getByRole('button',{name:'Start sleeping',exact:true}));wake();assert(screen.getByRole('dialog',{name:'Feeling unwell'}));assert(document.querySelector('.result-illustration').src.endsWith('event-sleep-cold-bench-480.webp'));assert(document.querySelector('.result-illustration').srcset.includes('event-sleep-cold-bench-1024.webp'));
  setup();sleep();Math.random=()=>0;step(24000);const halfway=read(SAVE_KEY);assert.equal(halfway.sleepIllnessMinutes,240);assert(halfway.sleepIllnessDose>0);
  reloadApp();near(read(SAVE_KEY).sleepIllnessDose,halfway.sleepIllnessDose);Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});step(24000);
  assert(screen.getByRole('dialog',{name:'Feeling unwell'}));assert.equal(read(SAVE_KEY).sleepIllnessDose,undefined);const resumed=read(SAVE_KEY);

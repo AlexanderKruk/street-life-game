@@ -1194,5 +1194,47 @@
         "file": "event-food-vomiting-1024.webp"
       }
     ]
+  },
+  "event-sleep-cold-bench.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-sleep-cold-bench-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-sleep-cold-bench-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-sleep-cold-bench-1024.webp"
+      }
+    ]
+  },
+  "event-sleep-cold-ground.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-sleep-cold-ground-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-sleep-cold-ground-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-sleep-cold-ground-1024.webp"
+      }
+    ]
   }
 }
