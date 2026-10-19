@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-251`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-252`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Illustrated closing-time departure (v252)
+
+The existing closing-time event now shows the protagonist outside a closed public entrance, with a backpack and lowered blinds behind the glass. The same generic scene suits all closing places, remains on restored notices, and uses 480/768/1024px responsive WebP assets loaded only when needed. Timing, automatic departure, acknowledgement pause and Night Shelter's separate checkout are unchanged. Prompt and provenance: `docs/closing-time-art.md`.
 
 ### Illustrated illness awakenings (v251)
 

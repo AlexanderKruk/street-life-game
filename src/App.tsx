@@ -35,7 +35,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-251'
+const BUILD_VERSION = 'v2026.10.19-252'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2329,6 +2329,8 @@ export default function App() {
       title: `${locations.find(place => place.id === closingNotice)?.name} has closed`,
       label: 'CLOSING TIME · TIME PAUSED',
       text: 'It’s closing time. You have to leave. You step outside and find yourself back on the street.',
+      illustration: '/street-life-game/assets/event-closing-time.webp',
+      illustrationAlt: 'You stand outside with your backpack after the doors have closed behind you.',
     }} onClose={() => setClosingNotice(null)} />}
     {trashGame && <div className="trash-overlay">
       <section className="trash-card" role="dialog" aria-modal="true" aria-labelledby="trash-title">

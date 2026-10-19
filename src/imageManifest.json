@@ -1236,5 +1236,26 @@
         "file": "event-sleep-cold-ground-1024.webp"
       }
     ]
+  },
+  "event-closing-time.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-closing-time-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-closing-time-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-closing-time-1024.webp"
+      }
+    ]
   }
 }

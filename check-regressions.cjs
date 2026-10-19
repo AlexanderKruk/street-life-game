@@ -60,6 +60,8 @@ for(const [id,close] of [['shop',1320],['support',960],['daycenter',960],['free-
  setup({locationId:id,minutes:close-1});advance(1000);
  assert.equal(read(stateKey).locationId,'street');assert.equal(read(closingKey),id);
  assert(screen.getByRole('dialog').textContent.includes('has closed'));
+ assert(document.querySelector('.result-illustration').src.endsWith('event-closing-time-480.webp'));
+ assert(document.querySelector('.result-illustration').srcset.includes('event-closing-time-1024.webp'));
  const stopped=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),stopped);
  cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('has closed'));
  ok();assert.equal(read(closingKey),null);advance(1000);assert.equal(read(stateKey).minutes,close+1);
