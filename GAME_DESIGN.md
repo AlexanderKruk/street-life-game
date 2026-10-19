@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-246`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-247`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Background phone charging at Night Shelter (v247)
+
+Admitted, sober guests can **Leave phone charging** inside Night Shelter during its 18:00–08:00 opening hours, including quiet hours. Plugging in and collecting are free, instant actions. Charging adds 60 battery percentage points per game hour, capped at 100, alongside ordinary time, meals, showers, other actions and sleep. Result/event pauses do not charge because game time is paused. A time jump can charge only until the current night's 08:00 closure, never through daytime into another night. Existing charging at Station, Day Center, Help Center and Schronisko is unchanged.
+
+While left at the socket, the phone cannot be used; music and navigation are switched off. **Collect phone** retrieves it at its current charge, including at 100%. The Inventory Phone card shows **Charging · tap to collect** and collects the device instead of opening its controls. Charging remains active at 100% until collection. Walking/travelling away collects it automatically; during morning packing it keeps charging until collection at the exit, and the checkout result confirms retrieval. No lost-phone or theft chance is introduced.
+
+The active charger flag is persisted separately under `street-life-shelter-phone-charge-v1`; battery stays in the existing inventory save. Reload retains the flag and accumulated charge, without granting offline wall-time gains. Existing sleeping-time catch-up also charges for the game minutes it actually advances, including when hidden. Invalid/out-of-location flags are cleared and reset removes the flag. Old saves with no flag remain unplugged and their inventory schema is unchanged. `check-shelter-charging.cjs` covers interval boundaries, parallel actions/sleep, quiet hours, caps, pause/reload, phone access, morning checkout, manual departure/travel, access restrictions and legacy/reset saves. Compatibility fixtures were refreshed from actual published builds v237–v246 and pass repeated upgrade/reload checks.
 
 ### Short mobile travel labels (v246)
 

@@ -11,6 +11,7 @@ import InventorySlot from './InventorySlot'
 import DiscardDialog from './DiscardDialog'
 import FoodChoiceDialog from './FoodChoiceDialog'
 import { foodConsumption, FOOD_OUTCOME_PRESENTATION } from './foodConsumption'
+import { SHELTER_PHONE_CHARGE_KEY, SHELTER_CHARGE_PER_HOUR, shelterChargingMinutes } from './shelterCharging'
 import { addFoodPortions, ageFood, consumeFood, discardFood, foodPortions, foodPortionIndex, foodSlot, isPerishableFood, withFoodPortions, type FoodCondition, type FoodKind, type FoodPortionFields } from './foodInventory'
 import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
@@ -32,7 +33,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-246'
+const BUILD_VERSION = 'v2026.10.19-247'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -393,6 +394,9 @@ export default function App() {
     try { const saved = JSON.parse(localStorage.getItem('street-life-memories-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
   })
   const [phoneOpen, setPhoneOpen] = useState(false)
+  const [shelterPhoneCharging, setShelterPhoneCharging] = useState(() => {
+    try { return localStorage.getItem(SHELTER_PHONE_CHARGE_KEY) === 'true' } catch { return false }
+  })
   const [discardItem, setDiscardItem] = useState<{ id: BackpackItemId; name: string; quantity: number; slotIndex: number; spoiledQuantity?: number } | null>(null)
   const cancelDiscard = useCallback(() => setDiscardItem(null), [])
   const [foodChoice, setFoodChoice] = useState<{ kind: FoodKind; name: string; slotIndex: number } | null>(null)
@@ -522,6 +526,9 @@ export default function App() {
   const currentActions = useMemo(() => actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest')), [current.id, shelterBooked])
   const mapPlaces = useMemo(() => locations.filter(location => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko')), [discoveredLocations, life.schroniskoReferral, life.housing])
   const open = isOpen(current, game.minutes)
+  const shelterNightDay = game.minutes < 480 ? game.day - 1 : game.day
+  const insideNightShelter = current.id === 'shelter' && !trip && open && game.intoxication <= 10 &&
+    (shelterBooked || life.shelterLastStayDay === shelterNightDay)
   const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation && !infoModal.illustration
   const moodBand = conditionBand(game.mood)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
@@ -638,6 +645,13 @@ export default function App() {
     life.shelterCheckoutDay !== game.day && game.minutes >= SHELTER_CHECKOUT_WARNING && game.minutes < 12 * 60 &&
     (game.minutes < 8 * 60 || life.shelterLastStayDay === game.day - 1)
   const shelterDepartureRemaining = shelterDeparture ? Math.max(0, SHELTER_DEPARTURE_MINUTES - (absoluteMinutes(game) - shelterDeparture.startAbsolute)) : 0
+  useEffect(() => {
+    if (!shelterPhoneCharging) return
+    setPhoneOpen(false)
+    setMusicOn(false)
+    setNavigationOn(false)
+    if (!insideNightShelter && !shelterDeparture) setShelterPhoneCharging(false)
+  }, [shelterPhoneCharging, insideNightShelter, shelterDeparture])
   const freeTransitActive = inventory.transitCard || effects.some(effect => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
   const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
   const mobileServiceMinutesLeft = Math.max(0, mobileServiceUntil - absoluteMinutes(game))
@@ -679,7 +693,8 @@ export default function App() {
   const agedThrough = useRef(absoluteMinutes(game))
   useEffect(() => {
     const now = absoluteMinutes(game)
-    const elapsed = Math.max(0, now - agedThrough.current)
+    const from = agedThrough.current
+    const elapsed = Math.max(0, now - from)
     agedThrough.current = now
     setInventoryAgedAt(now)
     if (elapsed === 0) return
@@ -691,9 +706,11 @@ export default function App() {
       const multiplier = phoneDrainMultiplier(prev.phoneCondition)
       const navigationDrain = trip && !underRainCover && navigationOn ? phoneScreenDrain({ ...game, minutes: game.minutes - elapsed }, prev.phoneCondition, 'navigation', elapsed) : 0
       const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
+      const chargingGain = shelterPhoneCharging && game.locationId === 'shelter' && !trip
+        ? shelterChargingMinutes(from, now) * SHELTER_CHARGE_PER_HOUR / 60 : 0
       return { ...ageFood(prev, elapsed),
         clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1.5 : 1) - extraDirt),
-        phoneBattery: Math.max(0, prev.phoneBattery - navigationDrain - musicDrain),
+        phoneBattery: Math.min(100, Math.max(0, prev.phoneBattery + chargingGain - navigationDrain - musicDrain)),
       }
     })
   }, [game.day, game.minutes])
@@ -811,8 +828,9 @@ export default function App() {
       setLife(previous => ({ ...previous, housing: 'Street', housingUntil: undefined, shelterCheckoutDay: departure.day }))
       setSelectedDestination(null)
       setPhoneOpen(false)
+      setShelterPhoneCharging(false)
       setScreen('location')
-      setMessage('You packed your things and left the night shelter. After 30 minutes you are on the street.' + (shelterBooked ? ' Your reserved place remains available for tonight.' : ''))
+      setMessage('You packed your things and left the night shelter. After 30 minutes you are on the street.' + (shelterPhoneCharging ? ' You collected your phone from the charger.' : '') + (shelterBooked ? ' Your reserved place remains available for tonight.' : ''))
     }, departure.before, true, true)
   }, [shelterDeparture, shelterDepartureRemaining, gameOver])
 
@@ -943,6 +961,7 @@ export default function App() {
   }
 
   function watchVideoImpl() {
+    if (shelterPhoneCharging) { setMessage('Collect your phone from the charger first.'); return }
     if (!mobileServiceActive) { setMessage('You need active mobile service to use online video.'); return }
     const videoDrain = 9 * phoneDrainMultiplier(inventory.phoneCondition)
     if (inventory.phoneBattery < videoDrain) { setMessage('Not enough battery for 30 minutes of video.'); return }
@@ -960,7 +979,22 @@ export default function App() {
     setMessage('You charged the phone for 30 minutes. Battery +25%.')
   }
 
+  function toggleShelterPhoneCharging() {
+    if (!insideNightShelter || sleeping || shelterDeparture || shelterCheckoutDue || gameOver) return
+    if (!shelterPhoneCharging && (inventory.phoneBattery >= 100 || inventory.phoneCondition <= 0)) return
+    runWithResult(shelterPhoneCharging ? 'Collect phone' : 'Phone charging', () => {
+      setShelterPhoneCharging(!shelterPhoneCharging)
+      setPhoneOpen(false)
+      setMusicOn(false)
+      setNavigationOn(false)
+      setMessage(shelterPhoneCharging
+        ? `You collected your phone. Battery: ${Math.round(inventory.phoneBattery)}%.`
+        : 'You left your phone plugged in at Night Shelter. It gains up to 60% battery per hour while you do other things or sleep. Collect it whenever you need it; you cannot use it while it is left charging.')
+    }, resultSnapshot(), true, true)
+  }
+
   function recordShelterDeparture(id: string) {
+    if (game.locationId === 'shelter' && id !== 'shelter') setShelterPhoneCharging(false)
     if (game.locationId === 'shelter' && id !== 'shelter' && game.minutes > 480 && game.minutes < 1080 && (life.shelterUntilDay ?? 0) >= game.day) {
       const strikes = (life.shelterStrikes ?? 0) + 1
       const evicted = strikes >= 3
@@ -982,7 +1016,7 @@ export default function App() {
       setGame((prev) => ({ ...prev, locationId: 'street' }))
       setSelectedDestination(null)
       setScreen('location')
-      setMessage('You step outside onto the street.')
+      setMessage('You step outside onto the street.' + (shelterPhoneCharging ? ' You collected your phone from the charger before leaving.' : ''))
       return
     }
     setSelectedDestination(id)
@@ -1132,6 +1166,7 @@ export default function App() {
 
   function callAmbulanceImpl() {
     if (activeEvent) return
+    if (shelterPhoneCharging) { setMessage('Collect your phone from the charger first.'); return }
     if (game.health > 20) { setMessage('An ambulance is only available as a gameplay emergency option at Health 20 or lower.'); return }
     if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0) { setMessage('Your phone is not working, so you cannot call an ambulance.'); return }
     const hours = 4 + Math.floor(Math.random() * 5)
@@ -1491,6 +1526,7 @@ export default function App() {
     }
     const total = randomTravelMinutes(destinationTravelTimeRange(destination, mode))
     recordShelterDeparture(destination.id)
+    if (shelterPhoneCharging) setMessage('You collected your phone from the charger before leaving Night Shelter.')
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
     setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
@@ -2072,6 +2108,8 @@ export default function App() {
     setStreetBenchFound(false)
     setBegging({ day: 1, attempts: 0 })
     setNavigationOn(true)
+    setShelterPhoneCharging(false)
+    localStorage.removeItem(SHELTER_PHONE_CHARGE_KEY)
     setActiveEvent(null)
     setFirstNightEvents({ seen: [], lastAt: null, pendingId: null })
     localStorage.removeItem(FIRST_NIGHT_EVENTS_KEY)
@@ -2121,6 +2159,7 @@ export default function App() {
     [JOURNAL_HISTORY_KEY]: journalEntries,
     [PHONE_ACTIVITY_KEY]: phoneActivity,
     'street-life-inventory-v1': inventory,
+    [SHELTER_PHONE_CHARGE_KEY]: shelterPhoneCharging || null,
     'street-life-storage-v1': storage,
     'street-life-effects-v1': effects,
     'street-life-situation-v1': life,
@@ -2143,7 +2182,7 @@ export default function App() {
     discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents, choiceSeed,
     rainChoice, rainResponse, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
-    phoneActivity?.questionId ?? null, infoModal,
+    phoneActivity?.questionId ?? null, infoModal, shelterPhoneCharging,
   ])
 
   function eatFromSlot(kind: FoodKind, slotIndex: number, condition?: FoodCondition) {
@@ -2330,6 +2369,15 @@ export default function App() {
           <div><strong><Icon name="plug" className="action-label-icon" />Charge phone</strong><small>Use a public socket for 30 minutes.</small></div><span>+25% · ~30 min</span>
         </button>
       </section>}
+      {current.id === 'shelter' && <section className="charging-station" aria-label="Night shelter phone charging">
+        <button className="action" onClick={toggleShelterPhoneCharging} disabled={!insideNightShelter || (!shelterPhoneCharging && (inventory.phoneBattery >= 100 || inventory.phoneCondition <= 0))}>
+          <div><strong><Icon name="plug" className="action-label-icon" />{shelterPhoneCharging ? 'Collect phone' : 'Leave phone charging'}</strong><small>{shelterPhoneCharging
+            ? 'Charging while you do other things. Collect at any time.'
+            : !insideNightShelter ? 'Available inside Night Shelter with an active bed, 18:00–08:00.'
+            : inventory.phoneCondition <= 0 ? 'Your phone is not working.' : inventory.phoneBattery >= 100 ? 'Phone is fully charged.' : 'Leave it plugged in while you eat, shower or sleep. Also available during quiet hours.'}</small></div>
+          <span>{shelterPhoneCharging ? `${Math.round(inventory.phoneBattery)}%` : '+60%/h · free'}</span>
+        </button>
+      </section>}
       {current.id === 'work' && <AvailableFirst className="actions" orderSeed={choiceSeed} decisionKey={`${choiceDecisionKey}|work`}>
         <button className="action" onClick={takeDayWork} disabled={!open || game.energy < dayWorkEnergyRequired}>
           <div><strong>Take a short shift</strong><small>{game.energy < dayWorkEnergyRequired ? `Need at least ${dayWorkEnergyRequired} Energy · current ${Math.floor(game.energy)}` : 'Three hours of physical work. Pays 35 zł.'}</small></div><span>+35 zł · ~180 min</span>
@@ -2452,7 +2500,7 @@ export default function App() {
       {usedBackpackSlots === 0 && <p className="backpack-empty-message">Your backpack is empty.</p>}
 
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
-    {phoneOpen && <PhoneDialog orderSeed={choiceSeed} decisionKey={choiceDecisionKey}
+    {phoneOpen && !shelterPhoneCharging && <PhoneDialog orderSeed={choiceSeed} decisionKey={choiceDecisionKey}
         battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
         autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={Math.round(navigationDrainPerHour * 10) / 10} navigationInBrightSun={navigationInBrightSun}
         videoDrain={Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}
@@ -2466,8 +2514,8 @@ export default function App() {
         onWatchVideo={() => { setPhoneOpen(false); watchVideo() }} onCallAmbulance={() => { setPhoneOpen(false); callAmbulance() }}
       />}
       <div className="inventory-grid essentials-grid">
-        <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); setPhoneOpen(true) }}>
-          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />tap to open</small></div>
+        <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); if (shelterPhoneCharging) toggleShelterPhoneCharging(); else setPhoneOpen(true) }}>
+          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />{shelterPhoneCharging ? 'Charging · tap to collect' : 'tap to open'}</small></div>
         </button>
         <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%\nWetness ${Math.round(game.wetness ?? 0)}%\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit. Wet clothes drain Energy and Mood, especially in cold wind, and reduce outdoor sleep recovery. Dry indoors; a canopy stops new rain but dries clothes slowly.` })}>
           <ItemArt id="clothing" /><div><strong>Clothing</strong><small>Clean {Math.round(inventory.clothingCleanliness)}%<br />Condition {Math.round(inventory.jacket)}%</small></div>
@@ -2585,7 +2633,7 @@ export default function App() {
     {!gameOver && shelterDeparture && <div className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leaving the night shelter">
       <section className="sleep-card timed-card">
         <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Leaving the night shelter</h2></div></div>
-        <p className="timed-description">Packing your things and heading outside.</p>
+        <p className="timed-description">Packing your things and heading outside.{shelterPhoneCharging && ' Your phone keeps charging until you collect it on the way out.'}</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterDepartureRemaining} min remaining</span></div>
         <div className="sleep-progress" role="progressbar" aria-label="Packing progress" aria-valuemin={0} aria-valuemax={SHELTER_DEPARTURE_MINUTES} aria-valuenow={SHELTER_DEPARTURE_MINUTES - shelterDepartureRemaining}><i style={{ width: `${(1 - shelterDepartureRemaining / SHELTER_DEPARTURE_MINUTES) * 100}%` }} /></div>
         <p className="timed-footnote"><Icon name="clock" />On the street at {formatTime((shelterDeparture.startAbsolute + SHELTER_DEPARTURE_MINUTES) % 1440)}</p>
