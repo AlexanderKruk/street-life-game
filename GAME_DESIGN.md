@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-247`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-248`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Shelter entrance and overnight bed access (v248)
+
+18:00–22:00 limits entry, not use of a reserved bed. A sober booked guest admitted during this window can start sleeping throughout the night, including after midnight. Attendance is recorded on admission even if the guest stays awake. The final booked night continues until morning; normal 07:30 packing / 08:00 departure still applies. A late arrival stays outside, cannot use indoor services or charging, and counts as a missed night under the existing attendance rules. Returning from outside requires admission again.
+
+Optional `shelterEntry: { night, admitted }` in the existing life save distinguishes an admitted guest from a refused arrival. Old saves already at the shelter during opening hours are treated as inside and repaired without resetting progress. Registration and arrival record admission independently of sleep. Regression coverage checks midnight, reload, legacy repair, missed attendance and the last booked night.
 
 ### Background phone charging at Night Shelter (v247)
 

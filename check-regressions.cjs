@@ -783,7 +783,26 @@ setup({day:2,locationId:'shelter',minutes:990},{[lifeKey]:admitted});assert(!scr
 // Already-admitted players can sleep after quiet hours begin, including after midnight.
 setup({locationId:'shelter',minutes:1380},{[lifeKey]:admitted});beginSleep(/Use your reserved bed/);assert(document.querySelector('.sleep-overlay'));
 setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:admitted});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);beginSleep(/Use your reserved bed/);click('Wake up (debug)');assert.equal(read(lifeKey).shelterLastStayDay,1);
-setup({day:2,locationId:'shelter',minutes:30},{[lifeKey]:{...booking,shelterLastStayDay:0}});assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
+// Old saves already inside are repaired even if no sleep was started that night.
+for (const [minute,admission] of [[1319,true],[1321,false]]) {
+ setup({locationId:'street',minutes:minute},{[lifeKey]:{...booking,shelterLastStayDay:0},'street-life-trip-v1':{destinationId:'shelter',mode:'walk',total:1,remaining:0}});
+ assert.deepEqual(read(lifeKey).shelterEntry,{night:1,admitted:admission});ok();
+ assert.equal(screen.getByRole('button',{name:/Use your reserved bed/}).disabled,!admission);
+}
+setup({day:2,locationId:'shelter',minutes:5},{[lifeKey]:{...booking,shelterLastStayDay:0}});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);assert.equal(read(lifeKey).shelterLastStayDay,1);assert.equal(read(lifeKey).shelterMisses,0);
+// Entering before 22:00 records attendance immediately; staying awake until
+// midnight, switching screens and reloading never relocks the reserved bed.
+setup({locationId:'shelter',minutes:1319},{[lifeKey]:{...booking,shelterLastStayDay:0}});
+assert.deepEqual(read(lifeKey).shelterEntry,{night:1,admitted:true});advance(122000);
+assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,1);assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);assert.equal(read(lifeKey).shelterMisses,0);
+cleanup();render(React.createElement(App));assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);beginSleep(/Use your reserved bed/);assert(document.querySelector('.sleep-overlay'));
+// A refused late arrival remains outside across midnight and reload and counts
+// as a missed night, even if yesterday's booking is still valid.
+setup({day:2,locationId:'shelter',minutes:1439},{[lifeKey]:{...booking,shelterLastStayDay:1,shelterEntry:{night:2,admitted:false}}});
+assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);advance(1000);assert.equal(read(lifeKey).shelterMisses,1);assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
+cleanup();render(React.createElement(App));assert(screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
+// The final booked night lasts until morning, rather than expiring at midnight.
+setup({day:8,locationId:'shelter',minutes:5},{[lifeKey]:{...booking,shelterLastStayDay:7,shelterAuditDay:7,shelterEntry:{night:7,admitted:true}}});assert(!screen.getByRole('button',{name:/Use your reserved bed/}).disabled);
 // Sorting also spans Street fragments and configured actions, plus support choices.
 setup({}, {'street-life-mobile-service-until':'0','street-life-discovered-v1':['street','station','shop']});availableFirst();assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).disabled);
 setup({locationId:'support'},{[invKey]:{documents:false}});availableFirst('.support-grid');
@@ -842,7 +861,7 @@ setup({minutes:1410});click(/Lie down here\? I’m not sure… But I could try./
 assert.equal(read('street-life-sleep-v1').total,120);assert.equal(read('street-life-sleep-v1').startAbsolute,1410);assert(!document.querySelector('.sleep-choice-modal'));
 advance(1000);assert.equal(read(stateKey).minutes,1420);
 
-// Cancelling a reserved bed never marks attendance. The shortened shelter
+// Cancelling sleep preserves attendance already recorded at entrance. The shortened shelter
 // duration shown in the chooser is exactly the duration that starts.
 const notAdmitted={...booking,housing:'Street',shelterLastStayDay:0};
 setup({day:2,locationId:'shelter',minutes:30,energy:20},{[lifeKey]:admitted});click(/Use your reserved bed/);
@@ -850,8 +869,8 @@ chooseHours(6);assert(document.querySelector('.sleep-choice-preview').textConten
 chooseHours(8);
 assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 07:30'));assert(document.querySelector('.sleep-choice-modal').textContent.includes('Sleep time: 7h'));
 click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,420);
-setup({locationId:'shelter',minutes:1140},{[lifeKey]:notAdmitted});click(/Use your reserved bed/);advance(10000);click('Cancel');assert.equal(read(lifeKey).shelterLastStayDay,0);assert.equal(read(lifeKey).housing,'Street');assert.equal(read(stateKey).minutes,1140);
-click(/Use your reserved bed/);fireEvent.keyDown(window,{key:'Escape'});assert(!screen.queryByRole('dialog'));assert.equal(read(lifeKey).shelterLastStayDay,0);
+setup({locationId:'shelter',minutes:1140},{[lifeKey]:notAdmitted});click(/Use your reserved bed/);advance(10000);click('Cancel');assert.equal(read(lifeKey).shelterLastStayDay,1);assert.equal(read(lifeKey).housing,'Street');assert.equal(read(stateKey).minutes,1140);
+click(/Use your reserved bed/);fireEvent.keyDown(window,{key:'Escape'});assert(!screen.queryByRole('dialog'));assert.equal(read(lifeKey).shelterLastStayDay,1);
 click(/Use your reserved bed/);click('Start sleeping');assert.equal(read(lifeKey).shelterLastStayDay,1);assert.equal(read(lifeKey).housing,'Night shelter');
 
 // A quiet shelter night is one illustrated sleep result, not another event and
