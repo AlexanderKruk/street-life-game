@@ -2,7 +2,19 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-249`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-250`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Cumulative sleep illness and wake symptoms (v250)
+
+Illness risk on the ground or a bench is integrated for every game minute of sleep, using that minute's temperature, weather exposure and clothing wetness. A warm awakening no longer erases a cold night. Longer exposure increases risk; drying clothes gradually reduce it. Beds do not generate this risk. Roofs and indoor station benches exclude direct rain and wind modifiers while retaining ambient-temperature and wet-clothing risk. Existing outdoor wetness, sleep recovery and sleep durations remain unchanged.
+
+Each minute adds `-ln(1 - R8) / 480` to cumulative hazard, where `R8` preserves the former eight-hour baseline: 16% ground / 8% bench, plus 28 percentage points at ≤5°C, 16 at ≤10°C or 7 at ≤15°C; direct rain +22, showers +14 or wind +10; wet clothing adds up to 20 in cold conditions (half at 11–15°C). `R8` and the final probability `1 - exp(-dose)` are capped at 65%. The random outcome is sampled once on waking, outside React state updaters, only when no Cold remains active. Existing active illness is not extended or duplicated.
+
+A newly ill sleeper gets a **Feeling unwell** wake event describing a sore throat, blocked nose and chills, with the actual **Cold** consequence and normal sleep results in one confirmation. It replaces competing random wake events for that awakening. Existing two-day Cold duration, treatment and physical penalties are unchanged; the UI does not promise a fixed recovery countdown.
+
+Optional `sleepIllnessDose` / `sleepIllnessMinutes` fields in the existing v3 game save preserve accumulated exposure across reload and hidden sleep catch-up and are removed on completion. Old in-progress outdoor sleep without these fields reconstructs its elapsed prefix once from its saved starting snapshot and available weather data; missing old snapshots use current conditions as the best available estimate. Non-sleeping old saves remain unchanged. Tests cover duration, temperature, moisture, roof/bed protection, midpoint reload, legacy sleep migration, midnight/rain expiry, tick versus time jump equivalence, wake presentation, pause and duplicate prevention.
+
+Compatibility fixtures were refreshed from actual published builds v240–v249 and checked through repeated upgrade/reload cycles.
 
 ### Closing-time departure event (v249)
 

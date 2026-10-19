@@ -27,6 +27,10 @@ export function readSavedGame(storage: SaveReader): GameState | null {
       if (saved[field] === undefined) delete next[field]
       else next[field] = typeof saved[field] === 'number' && Number.isFinite(saved[field]) ? Math.max(0, Math.min(100, saved[field])) : 0
     }
+    for (const field of ['sleepIllnessDose', 'sleepIllnessMinutes'] as const) {
+      if (saved[field] === undefined) delete next[field]
+      else next[field] = typeof saved[field] === 'number' && Number.isFinite(saved[field]) ? Math.max(0, Math.min(field === 'sleepIllnessDose' ? 100 : 1440, saved[field])) : 0
+    }
     return next
   } catch { /* Unreadable saves use the existing new-game fallback. */ }
   return null

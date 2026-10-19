@@ -1,3 +1,5 @@
+import { sleepIllnessHazard, type SleepKind } from './sleepIllness'
+
 export type Need = 'hunger' | 'thirst' | 'energy' | 'health' | 'hygiene' | 'mood'
 export type Housing = 'Street' | 'Night shelter' | 'Schronisko' | 'Hostel' | 'Room' | 'Apartment'
 export const HOUSING_MOOD_CAP: Record<Housing, number> = {
@@ -19,6 +21,8 @@ export type GameState = {
   rainUntil?: number
   wetness?: number
   wetSleepLoss?: number
+  sleepIllnessDose?: number
+  sleepIllnessMinutes?: number
 }
 
 export type Location = {
@@ -184,6 +188,7 @@ export type TimeContext = {
   housing?: Housing
   effects?: readonly { id: string; expiresAt: number }[]
   sleeping?: boolean
+  sleepKind?: SleepKind
   walking?: boolean
   music?: boolean
   exposure?: 'outside' | 'cover' | 'indoors' | 'transit'
@@ -223,6 +228,8 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const wetStress = (wetBefore + wetness) / 200 * (temperature <= 10 ? 1 : temperature <= 15 ? 0.65 : 0.35)
       * (exposure === 'indoors' || exposure === 'transit' ? 0.25 : weather.label === 'Windy' ? 1.25 : 1)
     const wetSleepLoss = (next.wetSleepLoss ?? 0) + (context.sleeping && exposure !== 'indoors' && exposure !== 'transit' ? wetStress * 0.04 * step : 0)
+    const trackSleepRisk = context.sleeping && (context.sleepKind === 'ground' || context.sleepKind === 'bench')
+    const sleepIllnessDose = trackSleepRisk ? (next.sleepIllnessDose ?? 0) + sleepIllnessHazard(context.sleepKind!, temperature, weather.label, (wetBefore + wetness) / 2, exposure) * step : undefined
     const walkingHygiene = context.walking ? (temperature >= 25 ? 0.05 : temperature >= 18 ? 0.033 : 0.025) : 0
     const energyDrain = context.sleeping ? 0 :
       NEED_DRAIN.energy * step * healthEnergyMultiplier(next.health) + weather.energyDrain * step +
@@ -234,6 +241,7 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
       hunger, thirst, health, energy, hygiene,
       ...(wetness > 0 || next.wetness !== undefined ? { wetness } : {}),
       ...(wetSleepLoss > 0 || next.wetSleepLoss !== undefined ? { wetSleepLoss } : {}),
+      ...(trackSleepRisk ? { sleepIllnessDose, sleepIllnessMinutes: (next.sleepIllnessMinutes ?? 0) + step } : {}),
       mood: clamp(next.mood - (cold ? 0.012 * step : 0) - wetStress * 0.025 * step + (context.music ? 0.012 * step : 0)),
       intoxication: clamp(next.intoxication - step / 6),
     }

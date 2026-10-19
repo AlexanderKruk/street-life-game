@@ -13,6 +13,7 @@ import FoodChoiceDialog from './FoodChoiceDialog'
 import { foodConsumption, FOOD_OUTCOME_PRESENTATION } from './foodConsumption'
 import { SHELTER_PHONE_CHARGE_KEY, SHELTER_CHARGE_PER_HOUR, shelterChargingMinutes } from './shelterCharging'
 import { CLOSING_NOTICE_KEY, locationClosedSince } from './locationClosing'
+import { sleepIllnessChance } from './sleepIllness'
 import { addFoodPortions, ageFood, consumeFood, discardFood, foodPortions, foodPortionIndex, foodSlot, isPerishableFood, withFoodPortions, type FoodCondition, type FoodKind, type FoodPortionFields } from './foodInventory'
 import ClosedContent from './ClosedContent'
 import { responsiveImageProps } from './responsiveImages'
@@ -34,7 +35,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.19-249'
+const BUILD_VERSION = 'v2026.10.19-250'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -286,7 +287,27 @@ function loadTrip(): Trip | null {
 }
 
 function loadGame(): GameState {
-  return readSavedGame(localStorage) ?? createInitialState()
+  const game = readSavedGame(localStorage) ?? createInitialState()
+  try {
+    const sleep = JSON.parse(localStorage.getItem('street-life-sleep-v1') ?? 'null') as SleepState | null
+    if (sleep && (sleep.kind === 'ground' || sleep.kind === 'bench') && game.sleepIllnessDose === undefined) {
+      const elapsed = Math.min(sleep.total, Math.max(0, absoluteMinutes(game) - sleep.startAbsolute))
+      if (Number.isFinite(elapsed) && elapsed > 0) {
+        const start = { ...(sleep.before?.game ?? game), day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440, locationId: game.locationId }
+        const restored = applyGameSleepTime(start, elapsed, { sleepKind: sleep.kind, exposure: sleep.kind === 'bench' && game.locationId !== 'street' ? 'indoors' : 'outside' })
+        return { ...game, sleepIllnessDose: restored.sleepIllnessDose, sleepIllnessMinutes: elapsed }
+      }
+    }
+  } catch { /* Existing saves without an active outdoor sleep need no migration. */ }
+  return game
+}
+
+function clearSleepIllness(game: GameState): GameState {
+  if (game.sleepIllnessDose === undefined && game.sleepIllnessMinutes === undefined) return game
+  const next = { ...game }
+  delete next.sleepIllnessDose
+  delete next.sleepIllnessMinutes
+  return next
 }
 
 // Flatten conditional fragments before sorting, so custom and configured
@@ -471,6 +492,7 @@ export default function App() {
         ? { day: saved.day, attempts: Math.min(3, saved.attempts) } : { day: game.day, attempts: 0 }
     } catch { return { day: game.day, attempts: 0 } }
   })
+  const lastFinishedSleep = useRef<SleepState | null>(null)
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
   const [navigationOn, setNavigationOn] = useState(true)
@@ -701,7 +723,7 @@ export default function App() {
 
   function applySleepTime(state: GameState, minutes: number) {
     const kind = sleeping?.kind ?? sleepChoice
-    return applyGameSleepTime(state, minutes, { ...moodContext(state), ...(kind ? { exposure: kind === 'ground' || (kind === 'bench' && state.locationId === 'street') ? underRainCover ? 'cover' as const : 'outside' as const : 'indoors' as const } : {}) })
+    return applyGameSleepTime(state, minutes, { ...moodContext(state), ...(kind ? { sleepKind: kind, exposure: kind === 'ground' || (kind === 'bench' && state.locationId === 'street') ? underRainCover ? 'cover' as const : 'outside' as const : 'indoors' as const } : {}) })
   }
 
   const [inventoryAgedAt, setInventoryAgedAt] = useState(absoluteMinutes(game))
@@ -925,6 +947,7 @@ export default function App() {
     const safeKind = current.id === 'residential-shelter' ? 'residential' : insideNightShelter ? 'shelter' : 'ground'
     const hours = 8
     const realStartedAt = Date.now()
+    setGame(clearSleepIllness)
     setMusicOn(false)
     setNavigationOn(false)
     setTrip(null)
@@ -1103,6 +1126,7 @@ export default function App() {
     setMusicOn(false)
     setNavigationOn(false)
     const realStartedAt = Date.now()
+    setGame(clearSleepIllness)
     const total = chosenSleepMinutes(hours, kind)
     groundSleepWindow.current = kind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot() })
@@ -1115,6 +1139,8 @@ export default function App() {
   }, [sleeping, game.day, game.minutes])
 
   function finishSleep(sleep: SleepState) {
+    if (lastFinishedSleep.current === sleep) return
+    lastFinishedSleep.current = sleep
     setSleeping(null)
     const before = sleep.before ?? { ...resultSnapshot(), game: { ...game, day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 } }
     runWithResult('Sleep complete', () => {
@@ -1151,30 +1177,25 @@ export default function App() {
     setGame((prev) => {
       const next = applyAction(prev, { ...result, energy: Math.max(0, result.energy - wetRestLoss) })
       delete next.wetSleepLoss
+      delete next.sleepIllnessDose
+      delete next.sleepIllnessMinutes
       return next
     })
     let illnessText = ''
+    let newlyIll = false
     let wakeEvent: StreetEvent | null = null
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
       const sleepWeather = (wakeState.rainUntil ?? 0) > absoluteMinutes(wakeState) ? WEATHER[1] : WEATHER[(wakeState.day - 1) % WEATHER.length]
-      const sleepTemp = temperatureAt(sleepWeather.temp, wakeState.minutes)
-      const illnessChance = Math.min(0.65, Math.max(0.05,
-        0.08 +
-        (sleepTemp <= 5 ? 0.28 : sleepTemp <= 10 ? 0.16 : sleepTemp <= 15 ? 0.07 : 0) +
-        (sleepWeather.label === 'Rain' ? 0.22 : sleepWeather.label === 'Showers' ? 0.14 : sleepWeather.label === 'Windy' ? 0.10 : 0) +
-        (sleep.kind === 'ground' ? 0.08 : 0) +
-        Math.min(0.2, wetRestLoss / 100) * (sleepTemp <= 10 ? 1 : sleepTemp <= 15 ? 0.5 : 0)
-      ))
-      if (Math.random() < illnessChance) {
-        setEffects((active) => active.some((effect) => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))
-          ? active
-          : [...active, { id: 'cold', expiresAt: absoluteMinutes(wakeState) + 2 * 1440 }])
-        if (!effects.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))) illnessText = ` You woke up with a cold after sleeping outside in ${sleepWeather.label.toLowerCase()} weather.`
+      const alreadyIll = effects.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))
+      newlyIll = !alreadyIll && Math.random() < sleepIllnessChance(wakeState.sleepIllnessDose ?? 0)
+      if (newlyIll) {
+        setEffects(active => [...active.filter(effect => effect.id !== 'cold'), { id: 'cold', expiresAt: absoluteMinutes(wakeState) + 2 * 1440 }])
+        illnessText = ' Your throat feels sore, your nose is blocked, and a chill runs through you as you sit up. You feel unwell — you have caught a cold.'
       }
       const baseChance = sleep.kind === 'ground' ? 0.75 : 0.65
       const sleepStart = { day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 }
-      wakeEvent = pickStreetEvent('wake', { locationId: current.id, weather: sleepWeather.label, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: firstNightEvents.seen }, Math.min(0.9, baseChance * scale))
+      wakeEvent = newlyIll ? null : pickStreetEvent('wake', { locationId: current.id, weather: sleepWeather.label, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: firstNightEvents.seen }, Math.min(0.9, baseChance * scale))
       if (wakeEvent?.id.startsWith('first-night-')) { rememberFirstNightEvent(wakeEvent, wakeState); wakeEvent = null }
     } else if (sleep.kind === 'shelter') {
       const sleepStartDay = Math.floor(sleep.startAbsolute / 1440) + 1
@@ -1187,7 +1208,8 @@ export default function App() {
     }
     const completionText = `You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${wetRestLoss >= 0.5 ? ' Wet clothes made it harder to rest.' : ''}${illnessText}`
     setMessage(completionText)
-    presentWakeEvent(wakeEvent, 'Sleep complete', completionText)
+    if (newlyIll) setInfoModal({ title: 'Feeling unwell', label: 'WAKE-UP EVENT', text: completionText })
+    else presentWakeEvent(wakeEvent, 'Sleep complete', completionText)
   }
 
   function hospitalVisitImpl() {
@@ -2291,7 +2313,7 @@ export default function App() {
           <small>Wake up · {wakeLabel(sleepHours, sleepChoice).split(' · ')[0]}</small><span className="sr-only"> · </span><strong>{wakeLabel(sleepHours, sleepChoice).split(' · ')[1]}</strong>
         </div>
         <p className="sleep-choice-note">Sleep time: {formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}.</p>
-        {(sleepChoice === 'ground' || sleepChoice === 'bench') && <p className="sleep-choice-note">Sleeping outside carries a risk of illness and theft.</p>}
+        {(sleepChoice === 'ground' || sleepChoice === 'bench') && <p className="sleep-choice-note">Cold, wet clothes and longer exposure increase illness risk. Your belongings may also be stolen.</p>}
         {sleepChoice === 'shelter' && <p className="sleep-choice-note">Sleep ends by 07:30 for morning checkout. Longer choices are shortened.</p>}
         <div className="sleep-choice-buttons">
           <button onClick={() => setSleepChoice(null)}>Cancel</button>

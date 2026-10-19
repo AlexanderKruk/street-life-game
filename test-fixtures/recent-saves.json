@@ -1,11 +1,11 @@
 [
   {
-    "commit": "ec1967d7b7cd7050e418a4056753b774560a773d",
-    "build": 237,
+    "commit": "8fe7d26614c38d9585edd54f35095db2867f487d",
+    "build": 240,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":3,\"attempts\":0}",
-      "street-life-choice-seed-v1": "4263281870",
+      "street-life-choice-seed-v1": "3139458932",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -25,12 +25,12 @@
     }
   },
   {
-    "commit": "7292df627bba05d4910a0e3a1ea488245c70e853",
-    "build": 238,
+    "commit": "b09a7f68ccd04a78c389ae1b547d04527c91ca88",
+    "build": 241,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":4,\"attempts\":0}",
-      "street-life-choice-seed-v1": "3507196452",
+      "street-life-choice-seed-v1": "3742666056",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -50,12 +50,12 @@
     }
   },
   {
-    "commit": "24adab4f591beedb3042d14a3ca5275e1e9a82a0",
-    "build": 239,
+    "commit": "6c0f7ae7d765070b0d5d08b67142df10c9d4e70c",
+    "build": 242,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":5,\"attempts\":0}",
-      "street-life-choice-seed-v1": "44794356",
+      "street-life-choice-seed-v1": "2894002245",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -75,12 +75,12 @@
     }
   },
   {
-    "commit": "8fe7d26614c38d9585edd54f35095db2867f487d",
-    "build": 240,
+    "commit": "c7df4514898509648af1bead32e8cb40ef62aa8c",
+    "build": 243,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":6,\"attempts\":0}",
-      "street-life-choice-seed-v1": "4276547622",
+      "street-life-choice-seed-v1": "285026526",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -100,12 +100,12 @@
     }
   },
   {
-    "commit": "b09a7f68ccd04a78c389ae1b547d04527c91ca88",
-    "build": 241,
+    "commit": "0894369008332454a1693d4194cf32209d70b522",
+    "build": 244,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":7,\"attempts\":0}",
-      "street-life-choice-seed-v1": "362531412",
+      "street-life-choice-seed-v1": "1627603331",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -125,12 +125,12 @@
     }
   },
   {
-    "commit": "6c0f7ae7d765070b0d5d08b67142df10c9d4e70c",
-    "build": 242,
+    "commit": "333687b12d05b47ed0174b62ad33c72071345f74",
+    "build": 245,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":8,\"attempts\":0}",
-      "street-life-choice-seed-v1": "791601389",
+      "street-life-choice-seed-v1": "681589255",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -150,12 +150,12 @@
     }
   },
   {
-    "commit": "c7df4514898509648af1bead32e8cb40ef62aa8c",
-    "build": 243,
+    "commit": "ac9057f734a6df9ba7c51fd557e342d4a9428715",
+    "build": 246,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":9,\"attempts\":0}",
-      "street-life-choice-seed-v1": "1208423152",
+      "street-life-choice-seed-v1": "2290639915",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -175,12 +175,12 @@
     }
   },
   {
-    "commit": "0894369008332454a1693d4194cf32209d70b522",
-    "build": 244,
+    "commit": "822e8dfbacf7bf9f4f44585027525e207574e701",
+    "build": 247,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":10,\"attempts\":0}",
-      "street-life-choice-seed-v1": "4026771632",
+      "street-life-choice-seed-v1": "3557647108",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -200,12 +200,12 @@
     }
   },
   {
-    "commit": "333687b12d05b47ed0174b62ad33c72071345f74",
-    "build": 245,
+    "commit": "69366f07a83a75f971147c4e9f355999d40970bc",
+    "build": 248,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":11,\"attempts\":0}",
-      "street-life-choice-seed-v1": "242193143",
+      "street-life-choice-seed-v1": "3577306978",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
@@ -225,12 +225,12 @@
     }
   },
   {
-    "commit": "ac9057f734a6df9ba7c51fd557e342d4a9428715",
-    "build": 246,
+    "commit": "01e4e93eedc93b089881be1ce8474d72f3de4f6e",
+    "build": 249,
     "entries": {
       "street-life-answers-v1": "[]",
       "street-life-begging-v1": "{\"day\":12,\"attempts\":0}",
-      "street-life-choice-seed-v1": "1685168603",
+      "street-life-choice-seed-v1": "487181085",
       "street-life-discovered-v1": "[\"street\",\"station\",\"shop\",\"daycenter\"]",
       "street-life-discovery-version": "2",
       "street-life-effects-v1": "[]",
