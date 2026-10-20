@@ -35,7 +35,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-267'
+const BUILD_VERSION = 'v2026.10.20-268'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2378,8 +2378,6 @@ export default function App() {
         <div className={`phone-charge${inventory.phoneBattery < 30 ? ' low' : ''}`} aria-label={`Phone battery: ${Math.round(inventory.phoneBattery)}%`} title="Your phone battery"><BatteryIcon charge={inventory.phoneBattery} /><strong>{Math.round(inventory.phoneBattery)}%</strong></div>
       </div>
     </header>
-
-    {activeGoal?.type === 'night-shelter' && <section className="event goal-reminder"><Icon name="target" /><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <div className="location-surface" inert={!!phoneActivity} aria-hidden={!!phoneActivity || undefined}>
       {current.id === 'street' && <StreetArt phone={false} inline={false} illustration={infoModal?.illustration ? undefined : infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
