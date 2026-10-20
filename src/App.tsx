@@ -36,7 +36,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-270'
+const BUILD_VERSION = 'v2026.10.20-271'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2552,8 +2552,7 @@ export default function App() {
       </div>
     })()}
 
-    {screen === 'inventory' && <section className="inventory-screen">
-      <div className="inventory-heading"><h2>Inventory</h2></div>
+    {screen === 'inventory' && <section className="inventory-screen" aria-label="Inventory">
       <div className="inventory-section-heading"><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span></div>
       <div className="inventory-grid backpack-grid" role="group" aria-label="Backpack slots">
         {backpackItems.flatMap(item => Array.from({ length: Math.ceil(item.count / item.stackSize) }, (_, index) => {
@@ -2590,8 +2589,7 @@ export default function App() {
         </div>
       </div>
     </section>}
-    {screen === 'status' && <section className="status-screen">
-      <h2 className="status-title">Status</h2>
+    {screen === 'status' && <section className="status-screen" aria-label="Status">
       {!!statusEffectCount && <section className="status-effects" aria-labelledby="status-effects-heading">
         <div className="effects-heading"><h3 id="status-effects-heading">Effects</h3><span>{statusEffectCount}</span></div>
         <div className="effects-list">

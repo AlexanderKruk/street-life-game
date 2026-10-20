@@ -163,7 +163,6 @@ footer p { margin:0; }
 .overall-status.fair { border-color:#66552f; }
 .overall-status.bad { border-color:#673b3b; }
 .status-screen { margin-top:16px; }
-.status-title { margin:0 0 22px; font-size:26px; }
 .status-needs { display:grid; padding:0 14px; margin-top:10px; border:1px solid #343d42; border-radius:9px; background:#141b1f; }
 :is(.status-screen,.result-stat-panel) .status-stat { display:grid; grid-template-columns:22px 72px minmax(0,1fr) 38px; gap:8px; align-items:center; min-height:50px; padding:0; background:transparent; border:0; border-radius:0; }
 .status-needs .status-stat + .status-stat { border-top:1px solid #2c343a; }
@@ -977,7 +976,7 @@ footer .header-version { margin-left:auto; align-self:center; }
 @media(max-width:360px) { .district-card { grid-template-columns:40px minmax(0,1fr) auto; } .district-place-icon,.district-place-icon svg { width:40px; height:40px; } }
 
 /* v131: actual backpack stacks with tangible empty slots. */
-.inventory-screen { --inventory-section-space:16px; --inventory-heading-space:12px; margin-top:var(--inventory-section-space); }
+.inventory-screen { --inventory-section-space:16px; --inventory-heading-space:12px; margin-top:0; }
 .inventory-screen .inventory-heading { margin:0 0 var(--inventory-section-space); }
 .inventory-screen .inventory-heading h2 { font-size:26px; margin:0; }
 .inventory-screen .inventory-section-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 var(--inventory-heading-space); }
@@ -1204,6 +1203,8 @@ body:has(.map-screen) { min-height:100dvh; }
 .phone-shell .game-header { margin-bottom:4px; }
 .phone-screen { min-width:0; }
 .phone-screen-header { display:flex; align-items:center; justify-content:space-between; gap:8px; height:44px; margin:0 0 14px; padding:0; border-bottom:1px solid #2b3742; }
+.phone-home-header { justify-content:flex-end; height:40px; margin-bottom:0; border-bottom:0; }
+.phone-home-header + .phone-app-grid { margin-top:16px; }
 .phone-screen-heading { display:flex; align-items:center; gap:8px; min-width:0; }
 .phone-screen-heading > svg { width:18px; height:18px; flex-shrink:0; }
 .phone-screen-heading h2 { margin:0; font-size:16px; line-height:1.25; font-weight:600; }
