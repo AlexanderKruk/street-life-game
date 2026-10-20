@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-255`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-256`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Compact map heading (v256)
+
+The visible map title is shortened to Map, with Street and Nearest shop on the same row to its right. Compact shortcuts use 14px labels, 20px icons and 44px touch targets. Map destination labels are reduced from v255's 27px to 16px to match the approved mockup at phone scale. Fixed destinations are scattered among artwork city blocks and railway buildings, rather than arranged in rows. Pin and route coordinates share the background image's centered cover projection, recalculated on resize and card-height changes, so markers remain attached to the map. Nearby shortcuts and current-location disabling are unchanged.
 
 ### City plan and nearby shortcuts (v255)
 
