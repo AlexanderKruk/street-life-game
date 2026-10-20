@@ -35,7 +35,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-262'
+const BUILD_VERSION = 'v2026.10.20-263'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -566,7 +566,6 @@ export default function App() {
     if (!insideNightShelter || (life.shelterEntry?.night === shelterNightDay && life.shelterEntry.admitted)) return
     setLife(status => ({ ...status, shelterEntry: { night: shelterNightDay, admitted: true }, shelterLastStayDay: shelterNightDay }))
   }, [insideNightShelter, shelterNightDay, life.shelterEntry?.night, life.shelterEntry?.admitted])
-  const inlineResult = screen === 'location' && current.id === 'street' && !!infoModal?.presentation && !infoModal.illustration
   const moodBand = conditionBand(game.mood)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
   const navigationInBrightSun = weather.label === 'Clear' && game.minutes >= 360 && game.minutes < 1200
@@ -659,7 +658,7 @@ export default function App() {
     document.addEventListener('keydown', trap)
     return () => { if (ownsScrollLock) document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
   }, [rainChoice, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay])
-  const eventInteractionBlocked = inventoryDialogOpen || !!activeEvent || !!diceCheck || (rainChoice && !infoModal && !pendingResult) || eventResultOpen || !!closingNotice
+  const eventInteractionBlocked = inventoryDialogOpen || !!activeEvent || !!diceCheck || (rainChoice && !infoModal && !pendingResult) || eventResultOpen || !!infoModal || !!pendingResult || !!closingNotice
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null
@@ -2324,7 +2323,7 @@ export default function App() {
         </div>
       </section>
     </div>}
-    {infoModal && !inlineResult && <ResultCard result={infoModal} onClose={closeResult} />}
+    {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: `${locations.find(place => place.id === closingNotice)?.name} has closed`,
       label: 'CLOSING TIME · TIME PAUSED',
@@ -2383,8 +2382,7 @@ export default function App() {
     {activeGoal?.type === 'night-shelter' && <section className="event goal-reminder"><Icon name="target" /><p><strong>Goal:</strong> Be at Night Shelter on Day {activeGoal.day} at {formatTime(activeGoal.minute)} for registration.</p></section>}
 
     {screen === 'location' && <div className="location-surface" inert={!!phoneActivity} aria-hidden={!!phoneActivity || undefined}>
-      {current.id === 'street' && <StreetArt phone={false} inline={inlineResult} illustration={infoModal?.illustration ? undefined : infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
-      {inlineResult && infoModal ? <ResultCard inline result={infoModal} onClose={closeResult} /> : <>
+      {current.id === 'street' && <StreetArt phone={false} inline={false} illustration={infoModal?.illustration ? undefined : infoModal?.presentation?.illustration} night={game.minutes >= 1200 || game.minutes < 360} />}
       {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} description={current.id === 'street' ? streetScene : current.description} open={open} opensAt={current.open} />}
       {underRainCover && !trip && <p className="rain-cover-status"><Icon name="umbrella" />Under cover</p>}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
@@ -2497,7 +2495,6 @@ export default function App() {
         </AvailableFirst>
       </>}
       </ClosedContent>
-      </>}
     </div>}
 
     {phoneActivity && <div className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>

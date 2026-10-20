@@ -33,7 +33,7 @@ function ChangeRows({ changes }: { changes: ResultChange[] }) {
   return <div className="result-change-list">{changes.map(change => <div key={change.label} className={`result-change ${change.kind}`}><span>{resultLabel(change.label)}</span><strong>{change.value}</strong></div>)}</div>
 }
 
-export default memo(function ResultCard({ result, onClose, inline = false }: { result: ResultCardData; onClose: () => void; inline?: boolean }) {
+export default memo(function ResultCard({ result, onClose }: { result: ResultCardData; onClose: () => void }) {
   const dialog = useRef<HTMLElement>(null)
   const confirm = useRef<HTMLButtonElement>(null)
   const close = useRef(onClose)
@@ -43,7 +43,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
     confirm.current?.focus({ preventScroll: true })
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') { event.preventDefault(); close.current(); return }
-      if (inline || event.key !== 'Tab' || !dialog.current) return
+      if (event.key !== 'Tab' || !dialog.current) return
       const focusable = Array.from(dialog.current.querySelectorAll<HTMLElement>('button, summary, a[href], [tabindex="0"]')).filter(element => !element.closest('details:not([open]) > :not(summary)'))
       const index = focusable.indexOf(document.activeElement as HTMLElement)
       event.preventDefault()
@@ -51,10 +51,9 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
     }
     document.addEventListener('keydown', onKey)
     return () => { document.removeEventListener('keydown', onKey); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
-  }, [inline])
+  }, [])
 
   useEffect(() => {
-    if (inline) return
     // Fixed body also prevents background touch scrolling in mobile Safari.
     const body = document.body
     const root = document.documentElement
@@ -76,7 +75,7 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
       root.style.overflow = saved.rootOverflow
       window.scrollTo(x, y)
     }
-  }, [inline])
+  }, [])
 
   const presentation = result.presentation
   const compactInfo = !!presentation?.compact
@@ -92,8 +91,8 @@ export default memo(function ResultCard({ result, onClose, inline = false }: { r
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter)
 
-  return <div className={inline ? "result-inline" : "phone-overlay result-overlay"}>
-    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactInfo ? ' compact-info-result' : ''}`} role="dialog" aria-modal={!inline} aria-labelledby="result-title" ref={dialog}>
+  return <div className="phone-overlay result-overlay">
+    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactInfo ? ' compact-info-result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="result-title" ref={dialog}>
       {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} />}
       <div className="result-card-heading">
         {!result.bottleSearch && !compactInfo && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}

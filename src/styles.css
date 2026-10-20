@@ -780,10 +780,6 @@ button.inventory-item { width:100%; }
 }
 
 
-/* The phone answer replaces progress in the same central section. */
-.result-inline { margin:0 -2px 20px; }
-.result-inline .result-modal { width:100%; max-height:none; border-radius:14px; box-shadow:none; }
-.result-inline .result-card-content { overflow:visible; }
 .street-art.phone-art { height:clamp(200px,38svh,360px); }
 .street-art.phone-art img { object-position:45% 55%; }
 .phone-search-icon .phone-search-outline { width:90px; height:90px; stroke-width:1.35; }

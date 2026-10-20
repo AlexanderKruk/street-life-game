@@ -51,6 +51,23 @@ function advanceTravelMinutes(minutes) {
  }
 }
 function report(name,evidence){console.log(JSON.stringify({name,evidence}));}
+function assertResultLocked() {
+ const dialog=screen.getByRole('dialog');
+ assert.equal(dialog.getAttribute('aria-modal'),'true');
+ assert(document.querySelector('.result-overlay')?.contains(dialog));
+ assert(document.querySelector('.game-background[inert][aria-hidden="true"]'));
+ assert(document.querySelector('.bottom-nav[inert][aria-hidden="true"]'));
+ assert(document.querySelector('footer[inert] .reset').disabled);
+ assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+ assert(dialog.contains(document.activeElement));
+ assert.equal(document.body.style.position,'fixed');
+ const state=read(stateKey), inventory=read(invKey), content=dialog.textContent;
+ for(const button of document.querySelectorAll('.bottom-nav button, footer .reset, .game-background button'))fireEvent.click(button);
+ assert.equal(screen.getByRole('dialog').textContent,content);
+ fireEvent.keyDown(document,{key:'Tab'});assert(dialog.contains(document.activeElement));
+ fireEvent.keyDown(document,{key:'Tab',shiftKey:true});assert(dialog.contains(document.activeElement));
+ advance(3000);assert.deepEqual(read(stateKey),state);assert.deepEqual(read(invKey),inventory);
+}
 function discoverHelp(){for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
 
 // Closing time moves guests outside once, pauses for acknowledgement, survives
@@ -139,8 +156,8 @@ assert.equal(read('street-life-phone-activity-v1').remaining,6);advance(5000);as
 advance(1000);assert.equal(read(stateKey).minutes,6);assert(Math.abs(read(stateKey).mood-31)<1e-8);
 assert(!localStorage.getItem('street-life-phone-activity-v1'));
 assert(read('street-life-discovered-v1').includes('support'));assert.equal(read('street-life-journal-history-v1').length,1);
-assert(document.querySelector('.result-inline'));assert(!document.querySelector('.result-overlay'));
-assert(!document.querySelector('.story-actions'));assert.equal(screen.getByRole('dialog').getAttribute('aria-modal'),'false');
+assert(document.querySelector('.result-overlay'));assert(!document.querySelector('.result-inline'));
+assert(document.querySelector('.game-background[inert] .story-actions'));assertResultLocked();
 assert(document.querySelector('.result-consequences').textContent.includes('Clothing wetness'));
 assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert.equal(document.querySelectorAll('.result-place').length,0);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details'));
 assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));
@@ -157,12 +174,13 @@ for(const [index,id] of ['support','daycenter','free-clinic'].entries()){
  assert(read('street-life-discovered-v1').includes(id));
  if(index<2)assert(!read('street-life-discovered-v1').includes('free-clinic'));
  assert(!screen.getByRole('dialog').textContent.includes('referral'));
- ok();cleanup();render(React.createElement(App));
+ assertResultLocked();
+ ok();assert(!document.querySelector('.bottom-nav[inert]'));cleanup();render(React.createElement(App));
  assert.equal(read('street-life-discovered-v1').length,4+index,'reload retains just the completed discoveries');
 }
 const noNewBefore=read(stateKey),noNewBattery=read(invKey).phoneBattery,noNewPlaces=read('street-life-discovered-v1');
 click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);
-assert(screen.getByRole('dialog').textContent.includes('No new information'));
+assert(screen.getByRole('dialog').textContent.includes('No new information'));assertResultLocked();
 assert.equal(document.querySelectorAll('.result-place').length,0);
 assert.deepEqual(read('street-life-discovered-v1'),noNewPlaces);
 assert.equal(read(stateKey).minutes,noNewBefore.minutes+15);
@@ -1290,6 +1308,16 @@ for(const [id,assets,durations] of [
  assert.equal(read(stateKey).minutes,1385+durations[index]);assert.equal(read(firstNightKey).pendingId,null);
  ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
+
+// Ordinary results on location and inventory screens share the same lock.
+setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});click('Buy Water for 3.00 zł');assertResultLocked();ok();
+assert(!document.querySelector('.game-background[inert]'));assert.equal(document.body.style.position,'');
+click('Inventory');click(/Water.*tap to drink/);assertResultLocked();ok();
+assert(!document.querySelector('.bottom-nav[inert]'));click('Map');assert(document.querySelector('.map-surface'));
+// Saved information also requires acknowledgement and then restores navigation.
+setup({minutes:1320},{[invKey]:{phoneBattery:20}});click('Where can I charge my phone?');assertResultLocked();ok();
+click('Where can I charge my phone?');assertResultLocked();ok();
+assert(!document.querySelector('.bottom-nav[inert]'));advance(1000);
 
 // Every event and its result block all background interaction, not just the clock.
 setup({minutes:1385},{[firstNightKey]:{seen:['first-night-door'],lastAt:1385,pendingId:'first-night-door'}});

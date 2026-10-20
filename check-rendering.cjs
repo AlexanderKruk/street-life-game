@@ -202,7 +202,8 @@ function measure(App) {
   fireEvent.click(screen.getByRole('button', { name: /Buy Water for/ }));
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).money, 1);
   assert.equal(JSON.parse(localStorage.getItem('street-life-inventory-v1')).water, 5);
-  assert(screen.getByRole('button', { name: /Buy Water for/ }).disabled, 'affordability updates after purchase');
+  assert(document.querySelector('.game-background[inert]'));
+  assert(screen.getByRole('button', { name: /Buy Water for/, hidden: true }).disabled, 'affordability updates behind the result modal');
   const modalAudit = [];
   const pauseAudit = (name, selector) => {
     assert(document.querySelector(selector), name);

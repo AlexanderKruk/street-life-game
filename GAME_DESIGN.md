@@ -2,7 +2,15 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-261`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-263`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Consistent result modals (v263)
+
+Every Got it result uses the existing centered result modal and its shared blur/backdrop, including new and saved phone answers, map discoveries, no-new-information messages and ordinary action results. The former inline Street result branch is removed. All results lock background controls, navigation and reset, trap keyboard focus, lock page scrolling and retain the existing time pause. Closing restores normal controls and time. Cards retain their existing content and responsive modal layout.
+
+### Backpack discard placement (v262)
+
+Backpack trash icons overlay the bottom-right corner without reserving space or changing card dimensions. The dark contour follows the glyph.
 
 ### Ready meal image density (v261)
 
