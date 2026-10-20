@@ -68,7 +68,7 @@ function assertResultLocked() {
  fireEvent.keyDown(document,{key:'Tab',shiftKey:true});assert(dialog.contains(document.activeElement));
  advance(3000);assert.deepEqual(read(stateKey),state);assert.deepEqual(read(invKey),inventory);
 }
-function discoverHelp(){for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
+function discoverHelp(){if(document.querySelector('.phone-screen'))click('Street');for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
 
 // Closing time moves guests outside once, pauses for acknowledgement, survives
 // reload, and waits behind action results. Shelter and 24-hour stays are exempt.

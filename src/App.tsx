@@ -787,7 +787,7 @@ export default function App() {
     if (sleepChoice && title !== 'Start sleeping') return
     if (shelterQueue && title !== 'Shelter registration') return
     if (shelterDeparture && title !== 'Shelter checkout') return
-    if (shelterCheckoutDue && !activeEvent && !diceCheck && !shelterInterview && title !== 'Sleep complete') return
+    if (shelterCheckoutDue && !activeEvent && !diceCheck && !shelterInterview && title !== 'Sleep complete' && title !== 'Search interrupted') return
     action()
     setPendingResult({ title, before, includeTime, always, consumedItems })
   }
