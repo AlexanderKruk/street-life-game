@@ -3,8 +3,8 @@ import { Icon, type IconName } from './Icon'
 
 export type PhoneApp = 'home' | 'goals' | 'notes' | 'history' | 'search'
 const apps: { id: Exclude<PhoneApp, 'home'>; label: string; icon: IconName }[] = [
-  { id: 'goals', label: 'Goals', icon: 'target' },
-  { id: 'notes', label: 'Notes', icon: 'journal' },
+  { id: 'goals', label: 'Goals', icon: 'target-arrow' },
+  { id: 'notes', label: 'Notes', icon: 'notepad' },
   { id: 'history', label: 'History', icon: 'history' },
   { id: 'search', label: 'Search', icon: 'search' },
 ]

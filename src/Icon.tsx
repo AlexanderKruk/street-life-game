@@ -1,10 +1,12 @@
 import { memo, type ReactNode } from 'react'
 
-export type IconName = 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
+export type IconName = 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
 
 const paths: Record<IconName, ReactNode> = {
+  'target-arrow': <><path d="M18.4 9.1a8.5 8.5 0 1 1-3.5-3.5M15.5 12a4.5 4.5 0 1 1-3.5-3.5" /><path d="m10.5 13.5 10-10m-5.5 0h5.5V9" /></>,
+  notepad: <><rect x="4" y="4" width="16" height="18" rx="2" /><path d="M8 2v4m8-4v4M8 10h8m-8 4h8m-8 4h5" /></>,
   search: <><circle cx="10.5" cy="10.5" r="7.5" /><path d="m16 16 5 5" /></>,
-  history: <><path d="M3 11a9 9 0 1 1 2.6 7.4M3 4v7h7M12 7v5l3 2" /></>,
+  history: <><path d="M3.5 8.5a9 9 0 1 1 .6 8.2M2.5 3.5l1 5.5L9 8M12 6.5V12l4 2" /></>,
   trash: <><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></>,
   info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></>,
   newspaper: <><path d="M5 4h16v16H5a2 2 0 0 1-2-2V8h2V4Zm0 4v12M9 8h8m-8 4h8m-8 4h3m3 0h2" /></>,

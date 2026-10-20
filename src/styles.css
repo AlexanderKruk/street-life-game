@@ -1201,15 +1201,16 @@ body:has(.map-screen) { min-height:100dvh; }
 
 
 /* Phone launcher and apps share the existing game typography and navigation. */
+.phone-shell .game-header { margin-bottom:4px; }
 .phone-screen { min-width:0; }
-.phone-screen-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 18px; padding:8px 0 12px; border-bottom:1px solid #2b3742; }
+.phone-screen-header { display:flex; align-items:center; justify-content:space-between; gap:8px; height:44px; margin:0 0 14px; padding:0; border-bottom:1px solid #2b3742; }
 .phone-screen-heading { display:flex; align-items:center; gap:8px; min-width:0; }
-.phone-screen-heading > svg { width:21px; height:21px; flex-shrink:0; }
-.phone-screen-heading h2 { margin:0; font-size:18px; line-height:1.25; }
+.phone-screen-heading > svg { width:18px; height:18px; flex-shrink:0; }
+.phone-screen-heading h2 { margin:0; font-size:16px; line-height:1.25; font-weight:600; }
 .phone-screen-heading h2:focus { outline:none; }
 .phone-back { display:grid; place-items:center; width:32px; min-height:40px; padding:4px; border:0; background:none; color:#cad3dd; cursor:pointer; }
 .phone-back svg { width:21px; height:21px; }
-.phone-plan-status { display:flex; align-items:center; gap:6px; flex-shrink:0; padding:8px 0 8px 6px; min-height:40px; border:0; background:none; color:#aebac7; font-size:12px; white-space:nowrap; cursor:pointer; }
+.phone-plan-status { display:flex; align-items:center; gap:6px; flex-shrink:0; padding:0 0 0 6px; min-height:40px; border:0; background:none; color:#aebac7; font-size:12px; white-space:nowrap; cursor:pointer; }
 .phone-plan-status i { width:7px; height:7px; border-radius:50%; background:#89bb89; }
 .phone-plan-status.unpaid i { background:#d38a6d; }
 .phone-plan-status:disabled { opacity:.55; cursor:default; }

@@ -36,7 +36,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-269'
+const BUILD_VERSION = 'v2026.10.20-270'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2295,7 +2295,7 @@ export default function App() {
     { art: 'showerGel', name: '3-in-1 shower gel', count: inventory.showerGel, stackSize: SHOWER_GEL_USES_PER_SLOT, effects: ['Hygiene+++'], hint: 'Uses left · automatic with a shower · Hygiene max 100' },
   ]
 
-  return <main className={`shell${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
+  return <main className={`shell${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {foodChoice && <FoodChoiceDialog name={foodChoice.name} counts={foodSlot(inventory, foodChoice.kind, foodChoice.slotIndex)} onCancel={cancelFoodChoice} onChoose={chooseFood} />}
     {discardItem && <DiscardDialog name={discardItem.name} quantity={discardItem.quantity} spoiledQuantity={discardItem.spoiledQuantity} onCancel={cancelDiscard} onConfirm={() => confirmDiscard(false)} onDiscardSpoiled={() => confirmDiscard(true)} />}
     {sleepChoice && <div className="phone-overlay result-overlay">
