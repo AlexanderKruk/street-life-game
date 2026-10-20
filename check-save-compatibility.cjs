@@ -40,6 +40,8 @@ for (const fixture of fixtures) {
     for (const [key, value] of Object.entries(fixture.entries)) {
       if (key === 'street-life-inventory-v1') {
         assert.deepEqual(JSON.parse(localStorage.getItem(key)), { readyMeal: 0, readyMealFreshness: 100, ...JSON.parse(value) }, `v${fixture.build}, reopen ${reopen}: old inventory retained with empty ready-meal stock`);
+      } else if (key === 'street-life-screen' && value === 'journal') {
+        assert.equal(localStorage.getItem(key), 'phone', 'old Journal selection migrates to Phone');
       } else {
         assert.equal(localStorage.getItem(key), value, `v${fixture.build}, reopen ${reopen}: ${key}`);
       }

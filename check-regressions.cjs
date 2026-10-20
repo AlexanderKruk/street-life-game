@@ -68,7 +68,7 @@ function assertResultLocked() {
  fireEvent.keyDown(document,{key:'Tab',shiftKey:true});assert(dialog.contains(document.activeElement));
  advance(3000);assert.deepEqual(read(stateKey),state);assert.deepEqual(read(invKey),inventory);
 }
-function discoverHelp(){for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
+function discoverHelp(){if(document.querySelector('.phone-screen'))click('Street');for(let n=0;n<3;n++){if(['support','daycenter','free-clinic'].every(id=>read('street-life-discovered-v1').includes(id)))return;click('Where can I get help in the morning?');ok();}}
 
 // Closing time moves guests outside once, pauses for acknowledgement, survives
 // reload, and waits behind action results. Shelter and 24-hour stays are exempt.
@@ -114,7 +114,7 @@ for(const state of [{day:1,minutes:1320},{day:2,minutes:600}]) {
  const searchResult=read(stateKey);assert.equal(searchResult.minutes,state.minutes+16);
  advance(3000);assert.deepEqual(read(stateKey),searchResult,'reading the search result pauses time');
  ok();advance(1000);assert.equal(read(stateKey).minutes,searchResult.minutes+1,'closing the result resumes Street time');
- for(const tab of ['Map','Inventory','Status','Journal']) {
+ for(const tab of ['Map','Inventory','Status','Phone']) {
   click(tab);const beforeTab=read(stateKey).minutes;advance(1000);
   assert.equal(read(stateKey).minutes,beforeTab+1,tab+' retains the Street clock');
   fireEvent.click(document.querySelector('.nav-item.home'));
@@ -163,7 +163,7 @@ assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert
 assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));
 assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
 ok();assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.webp'));assert(!document.querySelector('.phone-activity-overlay'));assert.equal(document.body.style.overflow,'');
-click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(!document.querySelector('.phone-activity'));assert.equal(read(stateKey).minutes,completed.minutes+15);assert(read('street-life-discovered-v1').includes('daycenter'));
+click(/Inventory$/);click(/PhoneBattery/);click('Search');click('Help & hygiene');assert(!document.querySelector('.phone-activity'));assert.equal(read(stateKey).minutes,completed.minutes+15);assert(read('street-life-discovered-v1').includes('daycenter'));
 assert.equal(document.querySelectorAll('.result-cost-line').length,1);ok();discoverHelp();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert(!document.querySelector('.result-place'));assert(!document.querySelector('.result-details'));ok();
 // Each repeat finds exactly one new place, and reload cannot reveal the next one early.
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop']});
@@ -179,7 +179,7 @@ for(const [index,id] of ['support','daycenter','free-clinic'].entries()){
  assert.equal(read('street-life-discovered-v1').length,4+index,'reload retains just the completed discoveries');
 }
 const noNewBefore=read(stateKey),noNewBattery=read(invKey).phoneBattery,noNewPlaces=read('street-life-discovered-v1');
-click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);
+click(/Inventory$/);click(/PhoneBattery/);click('Search');click('Help & hygiene');
 assert(screen.getByRole('dialog').textContent.includes('No new information'));assertResultLocked();
 assert.equal(document.querySelectorAll('.result-place').length,0);
 assert.deepEqual(read('street-life-discovered-v1'),noNewPlaces);
@@ -214,10 +214,10 @@ for(const [day,minutes,baseDrain] of [[1,600,6],[3,600,7.5],[3,1320,4.5],[1,1198
  assert(Math.abs(read(invKey).phoneBattery-(beforeCharge-baseDrain*1.196))<1e-8,'browsing accounts for daylight each minute');
 }
 // Navigation follows elapsed game time, including arrival; sunlight and worn
-// phones change its rate. Turning it off leaves the battery alone.
+// phones change its rate. Unpaid internet disables navigation drain.
 for(const [day,minutes,condition,rate,enabled] of [[1,600,100,18,true],[1,600,72,18,true],[3,600,72,24,true],[3,1320,72,12,true],[1,600,72,18,false]]) {
  setup({day,minutes},{[invKey]:{phoneBattery:62,phoneCondition:condition},'street-life-trip-v1':{destinationId:'station',mode:'walk',total:5,remaining:5}});
- if(!enabled){cleanup();localStorage.removeItem('street-life-trip-v1');render(React.createElement(App));click('Inventory');click(/PhoneBattery/);fireEvent.click(screen.getByRole('switch',{name:'Navigation'}));click('Close phone');click('Map');click(/^.*Station/);click('Go →');click(/Walk/);}
+ if(!enabled){cleanup();localStorage.setItem('street-life-mobile-service-until','0');render(React.createElement(App));}
  const beforeCharge=read(invKey).phoneBattery;
  const routeDuration=read('street-life-trip-v1').remaining;advanceTravelMinutes(routeDuration);
  assert.equal(read(stateKey).locationId,'station');
@@ -397,13 +397,13 @@ setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'
 setup({day:3,minutes:600,rainUntil:3500},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:9,remaining:7},'street-life-rain-choice-v1':'true'});click(/^Stop what I’m doing/);assert(!localStorage.getItem('street-life-trip-v1'));assert.equal(read(stateKey).locationId,'street');assert(screen.getByRole('dialog').textContent.includes('Journey stopped'));ok();
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Something familiar to listen to… I don’t want this silence./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).mood>30 && read(stateKey).mood<=60);assert(read(invKey).phoneBattery<musicBattery);assert(screen.getByRole('dialog').textContent.includes('familiar music'));ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(!screen.queryByRole('button',{name:/Something familiar to listen to… I don’t want this silence./}));assert(screen.getByRole('button',{name:'Just one more street. I’m not ready to lie down.'}));
-setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(Math.abs(read(stateKey).mood-31)<1e-8);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-4.5*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('support'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert.equal(read(stateKey).minutes,rereadState.minutes+15);assert(read(invKey).phoneBattery<rereadInventory.phoneBattery);ok();discoverHelp();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1080);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
+setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(Math.abs(read(stateKey).mood-31)<1e-8);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-4.5*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('support'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click(/PhoneBattery/);click('Search');click('Help & hygiene');assert.equal(read(stateKey).minutes,rereadState.minutes+15);assert(read(invKey).phoneBattery<rereadInventory.phoneBattery);ok();click('Street');discoverHelp();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('0–3'));assert.equal(read('street-life-goal-v1').minute,1080);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
 // P1: referral opens map, including migration of a v53 save.
 // Questions emerge from needs; remembering a station outlet does not need a charged phone.
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'How can I get a shelter bed?',exact:true}));assert(!screen.queryByRole('button',{name:'What if the shelter has no places?',exact:true}));click('Where can I get help in the morning?');ok();discoverHelp();assert(screen.getByRole('button',{name:'How can I get a shelter bed?',exact:true}));
 setup({minutes:1320,thirst:45},{[invKey]:{phoneBattery:31}});assert(screen.getByRole('button',{name:'Where can I get food and water?',exact:true}));assert(!screen.queryByRole('button',{name:'Where can I charge my phone?',exact:true}));
 setup({minutes:1320,mood:28},{[invKey]:{phoneBattery:0},'street-life-mobile-service-until':'0'});const rememberedState=read(stateKey);click('Where can I charge my phone?');assert.equal(read(stateKey).minutes,rememberedState.minutes);assert.equal(read(invKey).phoneBattery,0);assert(screen.getByRole('dialog').textContent.includes('waiting room'));assert(screen.getByRole('dialog').textContent.includes('60%'));const rememberedAfter=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),rememberedAfter);ok();assert(!screen.queryByRole('button',{name:'Where can I get help in the morning?',exact:true}));click('Where can I charge my phone?');assert.deepEqual(read(stateKey),rememberedAfter);ok();
-setup({minutes:1320},{[invKey]:{phoneBattery:30}});click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(screen.getByRole('dialog').textContent.includes('08:00'));assert.equal(read(stateKey).minutes,1335);ok();assert(screen.getByRole('button',{name:'Where can I charge my phone?',exact:true}));
+setup({minutes:1320},{[invKey]:{phoneBattery:30}});click(/Inventory$/);click(/PhoneBattery/);click('Search');click('Help & hygiene');assert(screen.getByRole('dialog').textContent.includes('08:00'));assert.equal(read(stateKey).minutes,1335);ok();click('Street');assert(screen.getByRole('button',{name:'Where can I charge my phone?',exact:true}));
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
 for (const name of ['Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.district-scene strong')].some(node=>node.textContent===name));
 assert(![...document.querySelectorAll('.district-pin')].some(pin=>/Cheap Shop|Street/.test(pin.textContent)));
@@ -472,30 +472,26 @@ assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),33
 setup({day:2,money:0},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'6000'});
 assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6000);
 
-// The phone is one accessible list dialog; switches retain state while open,
-// service/video results replace it, and closing releases the mobile scroll lock.
+// Phone launches from inventory; its compact header opens the mobile plan sheet.
 setup({locationId:'shop',minutes:600},{[invKey]:{phoneBattery:43,phoneCondition:72},'street-life-mobile-service-until':'5000'});
-click('Inventory');const phoneTrigger=screen.getByRole('button',{name:/PhoneBattery/});fireEvent.click(phoneTrigger);
-assert(screen.getByRole('dialog',{name:'Phone'}));assert(!document.querySelector('.phone-panel'));
-assert(document.activeElement===screen.getByRole('button',{name:'Close phone'}),'close button receives focus');assert.equal(document.body.style.position,'fixed');
-const healthyAmbulance=screen.getByRole('button',{name:'Call ambulance'});assert(healthyAmbulance.disabled);
+click('Inventory');click(/PhoneBattery/);
+assert(screen.getByRole('region',{name:'Phone'}));assert(!screen.queryByRole('dialog'));
+assert.equal(document.querySelectorAll('.phone-app-grid button').length,4);
+assert(!screen.queryByRole('switch',{name:'Music'}));assert(!screen.queryByRole('switch',{name:'Navigation'}));
+click('Mobile plan');assert(screen.getByRole('dialog',{name:'Mobile plan'}));
+assert(document.activeElement===screen.getByRole('button',{name:'Close mobile plan'}));assert.equal(document.body.style.position,'fixed');
 const phoneMinute=read(stateKey).minutes;advance(1000);assert.equal(read(stateKey).minutes,phoneMinute+1);
-fireEvent.click(screen.getByRole('switch',{name:'Music'}));assert.equal(screen.getByRole('switch',{name:'Music'}).getAttribute('aria-checked'),'true');
-fireEvent.click(screen.getByRole('switch',{name:'Navigation'}));assert.equal(screen.getByRole('switch',{name:'Navigation'}).getAttribute('aria-checked'),'false');
 fireEvent.click(screen.getByRole('switch',{name:'Auto-renew'}));fireEvent(window,new window.Event('pagehide'));assert.equal(localStorage.getItem('street-life-mobile-auto-renew'),'true');
-fireEvent(document,new window.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true}));assert(document.activeElement===screen.getByRole('button',{name:'Watch video'}),'backward Tab wraps to video');
-fireEvent(document,new window.KeyboardEvent('keydown',{key:'Tab',bubbles:true}));assert(document.activeElement===screen.getByRole('button',{name:'Close phone'}),'close button receives focus');
-fireEvent(document,new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert(!screen.queryByRole('dialog'));assert(document.activeElement===phoneTrigger,'closing restores phone trigger focus');assert.equal(document.body.style.position,'');
-fireEvent.click(phoneTrigger);assert.equal(screen.getByRole('switch',{name:'Music'}).getAttribute('aria-checked'),'true');
-const beforeTopup=read(stateKey);click('Add 24 hours of mobile service for 1 zł');assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);
+fireEvent(document,new window.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true}));assert(document.activeElement===screen.getByRole('switch',{name:'Auto-renew'}),'backward Tab wraps within the plan');
+fireEvent(document,new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert(!screen.queryByRole('dialog'));assert(document.activeElement===screen.getByRole('button',{name:'Mobile plan'}),'closing the plan restores its trigger focus');assert.equal(document.body.style.position,'');
+click('Mobile plan');const beforeTopup=read(stateKey);click('Add 24 hours of mobile service for 1 zł');assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);
 assert.equal(read(stateKey).money,beforeTopup.money-1);assert.equal(read(stateKey).minutes,beforeTopup.minutes);assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),6440);
 assert(screen.getByRole('dialog').textContent.includes('−1 zł'));ok();assert.equal(document.body.style.position,'');
-fireEvent.click(phoneTrigger);const beforeVideo=read(stateKey),batteryBeforeVideo=read(invKey).phoneBattery;click('Watch video');
-assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);assert.equal(read(stateKey).minutes,beforeVideo.minutes+30);assert(read(invKey).phoneBattery<batteryBeforeVideo);ok();
-fireEvent.click(phoneTrigger);fireEvent.click(document.querySelector('.phone-list-overlay'));assert(!screen.queryByRole('dialog'));assert.equal(document.body.style.position,'');
-setup({locationId:'shop',money:0},{[invKey]:{phoneBattery:0,phoneCondition:0},'street-life-mobile-service-until':'0'});click('Inventory');click(/PhoneBattery/);
-assert(screen.getByRole('button',{name:'Add 24 hours of mobile service for 1 zł'}).disabled);assert(screen.getByRole('switch',{name:'Navigation'}).disabled);assert(screen.getByRole('switch',{name:'Music'}).disabled);assert(screen.getByRole('button',{name:'Watch video'}).disabled);assert(screen.getByRole('button',{name:'Call ambulance'}).disabled);assert(screen.getByText('No active service'));
-setup({locationId:'shop',health:20},{[invKey]:{phoneBattery:43,phoneCondition:72}});click('Inventory');click(/PhoneBattery/);assert(!screen.getByRole('button',{name:'Call ambulance'}).disabled);click('Call ambulance');assert(!document.querySelector('.phone-list-modal'));assert.equal(screen.getAllByRole('dialog').length,1);assert.equal(read(stateKey).locationId,'hospital');ok();assert.equal(document.body.style.position,'');
+click('Mobile plan');fireEvent.click(document.querySelector('.phone-list-overlay'));assert(!screen.queryByRole('dialog'));assert.equal(document.body.style.position,'');
+setup({locationId:'shop',money:0},{[invKey]:{phoneBattery:0,phoneCondition:0},'street-life-mobile-service-until':'0'});click('Phone');
+assert(screen.getByText('Phone unavailable'));assert(!screen.queryByRole('button',{name:'Search',exact:true}));assert(screen.getByRole('button',{name:'Mobile plan'}).disabled);
+click('Map');assert(document.querySelector('.map-surface'));
+setup({locationId:'shop',health:20},{[invKey]:{phoneBattery:43,phoneCondition:72}});click('Inventory');click(/PhoneBattery/);assert(!screen.getByRole('button',{name:'Call ambulance'}).disabled);click('Call ambulance');assert.equal(screen.getAllByRole('dialog').length,1);assert.equal(read(stateKey).locationId,'hospital');ok();assert.equal(document.body.style.position,'');
 
 // New trips sample -5% / +20% once; previews stay approximate and reloading
 // preserves the chosen duration and fare for walking, paid/free transit and fare-dodging.
@@ -1125,7 +1121,7 @@ assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,
 assert.equal(read(historyKey)[0].title,'Bought Water');assert.equal(read(historyKey)[0].actionTitle,'Buy Water');
 assert.equal(read(historyKey)[0].summary,undefined);assert(!read(historyKey)[0].text.includes('3 zł'));
 assert(screen.getByRole('dialog').textContent.includes('−3 zł'));
-ok();click(/Inventory$/);click(/Water.*tap to drink/);assert.equal(read(historyKey).length,2);ok();click(/Journal$/);
+ok();click(/Inventory$/);click(/Water.*tap to drink/);assert.equal(read(historyKey).length,2);ok();click('Phone');click('History');
 assert.deepEqual([...document.querySelectorAll('.timeline-entry strong')].map(node=>node.textContent),['Drank water','Bought Water']);
 assert(document.querySelector('.timeline').textContent.includes('I didn’t realise how thirsty I was.'));
 assert(!document.querySelector('.timeline').textContent.includes('You drank water'));
@@ -1134,23 +1130,23 @@ assert(!document.querySelector('.journal-result-changes'));assert(!document.quer
 assert(screen.getByRole('button',{name:'Previous day'}).disabled);assert(screen.getByRole('button',{name:'Next day'}).disabled);
 cleanup();render(React.createElement(App));assert.equal(read(historyKey).length,2);
 const yesterday=read(historyKey);
-setup({day:3},{[historyKey]:yesterday});click(/Journal$/);
+setup({day:3},{[historyKey]:yesterday});click('Phone');click('History');
 assert(screen.getByRole('heading',{name:'Day 3 · We'}));assert(screen.getByText('No recorded actions today yet.'));
 assert(screen.getByRole('button',{name:'Next day'}).disabled);
 click('Previous day');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert(screen.getByText('No recorded actions on this day.'));
 click('Previous day');assert(screen.getByRole('heading',{name:'Day 1 · Mo'}));assert(document.querySelector('.timeline').textContent.includes('Bought Water'));
 assert(screen.getByRole('button',{name:'Previous day'}).disabled);assert(!screen.getByRole('button',{name:'Next day'}).disabled);
 click('Next day');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));click('Next day');assert(screen.getByRole('heading',{name:'Day 3 · We'}));
-click('Previous day');click(/Inventory$/);click(/Journal$/);assert(screen.getByRole('heading',{name:'Day 3 · We'}));
+click('Previous day');click(/Inventory$/);click('Phone');click('History');assert(screen.getByRole('heading',{name:'Day 3 · We'}));
 assert.equal(read(historyKey).length,2);click('Reset save');assert.deepEqual(read(historyKey),[]);
 setup({minutes:1380,energy:90});beginSleep(/Lie down here\? I’m not sure… But I could try./,2);assert.deepEqual(read(historyKey),[]);
 click('Wake up (debug)');assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].day,2);assert.equal(read(historyKey)[0].minute,60);assert.equal(read(historyKey)[0].title,'Woke up');
 // Existing reports migrate in place; malformed rows cannot erase valid history.
 const oldReport={day:1,minute:600,title:'Drink water',text:'You drank water.',summary:{costs:[],changes:[{label:'💧 Water',value:'+34',kind:'positive'},null]}};
-setup({day:2},{[historyKey]:[oldReport,{day:0,minute:20,title:'Bad',text:'Bad'}]});click(/Journal$/);click('Previous day');
+setup({day:2},{[historyKey]:[oldReport,{day:0,minute:20,title:'Bad',text:'Bad'}]});click('Phone');click('History');click('Previous day');
 assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,600);assert.equal(read(historyKey)[0].summary,undefined);
 assert.equal(read(historyKey)[0].actionTitle,'Drink water');assert(document.querySelector('.journal-thought').textContent.startsWith('I'));
-cleanup();render(React.createElement(App));assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert.equal(read(historyKey).length,1);
+cleanup();render(React.createElement(App));click('History');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert.equal(read(historyKey).length,1);
 require('esbuild').buildSync({entryPoints:['src/journal.ts'],bundle:true,platform:'node',format:'cjs',outfile:'journal-app.cjs'});
 const {journalReflection}=require('./journal-app.cjs');
 const refused=journalReflection('Shelter registration','No free places today.',{costs:[],changes:[{label:'🙂 Mood',value:'−5',kind:'negative'}]});
@@ -1159,20 +1155,20 @@ assert.notEqual(refused.text,admittedReflection.text);assert(!refused.text.inclu
 assert(!/\d|[+−]/.test(refused.text+admittedReflection.text));
 // Journal goals follow real progress, stay completed, and reminders expire sensibly.
 const journalKey='street-life-journal-goals-v1',reminderKey='street-life-goal-v1';
-setup({minutes:600});click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'4');assert(!document.querySelector('.completed-goals'));assert.equal(document.querySelector('.main-goal strong').textContent,'Get through the morning');assert(!document.querySelector('.next-event'));
+setup({minutes:600});click('Phone');click('Goals');assert.equal(document.querySelector('.journal-section-title > span').textContent,'4');assert(!document.querySelector('.completed-goals'));assert.equal(document.querySelector('.main-goal strong').textContent,'Get through the morning');assert(!document.querySelector('.next-event'));
 setup({day:1,minutes:1320});assert(!read(journalKey).morning);
 setup({day:2,minutes:719});assert(!read(journalKey).morning);
 setup({day:2,minutes:720});assert(read(journalKey).morning);
 setup({locationId:'shelter',minutes:1140},{[lifeKey]:{housing:'Street',shelterRegistrationAttemptDay:1,shelterVacancies:0}});assert(!read(journalKey).shelter);
 setup({locationId:'street'},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}});assert(read(journalKey).shelter);
 setup({locationId:'support',minutes:1000});assert(!read(journalKey).support);
-setup({locationId:'support',minutes:600});assert(read(journalKey).support);click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'3');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'1');assert(!document.querySelector('.completed-goals').open);assert(!within(document.querySelector('.journal-goals > .goal-list')).queryByText('Visit social support'));assert(within(document.querySelector('.completed-goals')).getByText('Visit social support').closest('.goal').classList.contains('done'));cleanup();render(React.createElement(App));assert(read(journalKey).support);
+setup({locationId:'support',minutes:600});assert(read(journalKey).support);click('Phone');click('Goals');assert.equal(document.querySelector('.journal-section-title > span').textContent,'3');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'1');assert(!document.querySelector('.completed-goals').open);assert(!within(document.querySelector('.journal-goals > .goal-list')).queryByText('Visit social support'));assert(within(document.querySelector('.completed-goals')).getByText('Visit social support').closest('.goal').classList.contains('done'));cleanup();render(React.createElement(App));assert(read(journalKey).support);
 setup({locationId:'work',minutes:1200});assert(!read(journalKey).work);
 setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','station','shop']});const directSearchBattery=read(invKey).phoneBattery;click(/Could I find a little work\? I need to keep some money./);assert(read(journalKey).work);assert(Math.abs(read(invKey).phoneBattery-(directSearchBattery-15*.4*1.196))<1e-8);ok();
-setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click(/Journal$/);assert.equal(document.querySelector('.journal-section-title > span').textContent,'0');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'4');assert(!document.querySelector('.main-goal'));assert(screen.getByText('All starting goals completed.'));
+setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click('Phone');click('Goals');assert.equal(document.querySelector('.journal-section-title > span').textContent,'0');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'4');assert(!document.querySelector('.main-goal'));assert(screen.getByText('All starting goals completed.'));
 click('Reset save');assert.deepEqual(read(journalKey),{morning:false,shelter:false,support:false,work:false});
 assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('There is nowhere to go back to'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
-setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click(/Journal$/);assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 2 at 18:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
+setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click('Phone');click('Goals');assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 2 at 18:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
 setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1080}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
 // Clothing caps every gain, migrates wear, and laundry cleans without repairing it.
 setup({hygiene:90},{[invKey]:{jacket:42}});assert.equal(read(invKey).jacket,42);assert.equal(read(invKey).clothingCleanliness,90);assert.equal(read(stateKey).hygiene,90);

@@ -1198,3 +1198,66 @@ body:has(.map-screen) { min-height:100dvh; }
   .map-screen .district-map-heading { padding-top:8px; padding-bottom:6px; }
   .map-screen .district-map-heading h2 { font-size:21px; }
 }
+
+
+/* Phone launcher and apps share the existing game typography and navigation. */
+.phone-screen { min-width:0; }
+.phone-screen-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 18px; padding:8px 0 12px; border-bottom:1px solid #2b3742; }
+.phone-screen-heading { display:flex; align-items:center; gap:8px; min-width:0; }
+.phone-screen-heading > svg { width:21px; height:21px; flex-shrink:0; }
+.phone-screen-heading h2 { margin:0; font-size:18px; line-height:1.25; }
+.phone-screen-heading h2:focus { outline:none; }
+.phone-back { display:grid; place-items:center; width:32px; min-height:40px; padding:4px; border:0; background:none; color:#cad3dd; cursor:pointer; }
+.phone-back svg { width:21px; height:21px; }
+.phone-plan-status { display:flex; align-items:center; gap:6px; flex-shrink:0; padding:8px 0 8px 6px; min-height:40px; border:0; background:none; color:#aebac7; font-size:12px; white-space:nowrap; cursor:pointer; }
+.phone-plan-status i { width:7px; height:7px; border-radius:50%; background:#89bb89; }
+.phone-plan-status.unpaid i { background:#d38a6d; }
+.phone-plan-status:disabled { opacity:.55; cursor:default; }
+.phone-app-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px 12px; max-width:420px; margin:28px auto 0; }
+.phone-app { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:108px; padding:12px; border:0; background:none; color:#e7edf2; font-size:16px; cursor:pointer; }
+.phone-app-art { position:relative; display:block; width:38px; height:38px; }
+.phone-app-art > svg { display:block; width:38px; height:38px; }
+.phone-app.goals .phone-app-art, .phone-app-symbol.goals { color:#dcb573; }
+.phone-app.notes .phone-app-art, .phone-app-symbol.notes { color:#a4bed2; }
+.phone-app.history .phone-app-art, .phone-app-symbol.history { color:#baa0c9; }
+.phone-app.search .phone-app-art, .phone-app-symbol.search { color:#a2bf91; }
+.phone-app-badge { position:absolute; top:-9px; right:-15px; display:grid; place-items:center; min-width:20px; height:20px; padding:0 4px; border-radius:50%; background:#dcb573; color:#14191e; font-size:11px; font-weight:700; }
+.phone-app:disabled { opacity:.42; }
+.phone-app small { font-size:11px; color:#b6c0cb; }
+.phone-app:focus-visible, .phone-back:focus-visible, .phone-plan-status:focus-visible { outline:2px solid #a5bdce; outline-offset:3px; border-radius:5px; }
+.phone-app:hover:not(:disabled) { background:rgba(255,255,255,.025); border-radius:10px; }
+.phone-app-content { min-width:0; }
+.phone-unavailable { padding:36px 12px; text-align:center; color:#aebac7; font-size:14px; line-height:1.5; }
+.phone-unavailable > svg { width:36px; height:36px; color:#778594; }
+.phone-unavailable h3 { color:#e1e7ed; font-size:16px; margin:14px 0 8px; }
+.phone-notes-list, .phone-search-list { display:grid; gap:10px; }
+.phone-note { margin:0; padding:12px; border:1px solid #2f3c48; border-radius:10px; background:#151e26; }
+.phone-note-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 10px; margin-bottom:6px; }
+.phone-note-heading h3 { margin:0; font-size:14px; font-weight:600; }
+.phone-note-meta { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; color:#abbaca; font-size:12px; margin-bottom:7px; }
+.phone-note-meta .on-map { color:#95be90; }
+.phone-note p { margin:0; color:#b5c1cd; font-size:13px; line-height:1.5; white-space:pre-line; }
+.phone-note details { margin-top:9px; font-size:12px; color:#aebbc8; }
+.phone-note summary { cursor:pointer; }
+.phone-note details p { margin-top:7px; }
+.phone-section-label, .phone-search-hint { color:#9aabba; font-size:13px; margin:0 0 12px; line-height:1.5; }
+.phone-search-row { width:100%; display:grid; grid-template-columns:23px minmax(0,1fr) auto; align-items:center; gap:10px; padding:13px 12px; border:1px solid #32414e; border-radius:10px; color:#e2e8ee; background:#17222c; text-align:left; cursor:pointer; }
+.phone-search-row > svg { width:22px; height:22px; color:#b3c0cc; }
+.phone-search-copy { display:grid; gap:5px; }
+.phone-search-copy strong { font-size:14px; font-weight:600; }
+.phone-search-copy small { font-size:12px; line-height:1.4; color:#a5b6c5; }
+.phone-search-time { white-space:nowrap; font-size:12px; color:#a5b6c5; }
+.phone-search-row:disabled { opacity:.45; }
+.phone-search-hint { margin-top:12px; }
+.phone-search-hint.warning { color:#d9a47e; }
+.phone-emergency { margin-top:26px; }
+.phone-history .journal-day-switch { margin-top:0; }
+.phone-goals .journal-section-title h3 { font-size:14px; }
+.phone-goals .goal, .phone-history .timeline-entry { font-size:14px; }
+@media (max-width:359px) {
+  .phone-screen-heading { gap:5px; }
+  .phone-screen-heading h2 { font-size:16px; }
+  .phone-screen-heading > svg { width:18px; height:18px; }
+  .phone-plan-status { gap:4px; font-size:11px; }
+  .phone-back { width:25px; }
+}

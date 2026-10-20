@@ -30,12 +30,13 @@ import Stat from './Stat'
 import MoodIcon from './MoodIcon'
 import { limitingEffects } from './limitingEffects'
 import PhoneDialog from './PhoneDialog'
+import PhoneScreen, { type PhoneApp } from './PhoneScreen'
 import CompactStreetEvent from './CompactStreetEvent'
 import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-268'
+const BUILD_VERSION = 'v2026.10.20-269'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -77,7 +78,7 @@ type PhoneActivity = { questionId: string; total: number; remaining: number; bef
 function loadPhoneActivity(): PhoneActivity | null {
   try {
     const saved = JSON.parse(localStorage.getItem(PHONE_ACTIVITY_KEY) ?? 'null')
-    if (!saved || !['morning', 'bed', 'no-place', 'supplies'].includes(saved.questionId) || !Number.isInteger(saved.remaining) || saved.remaining < 0 || saved.remaining > 30 || !saved.before?.game || !saved.before?.inventory || !Array.isArray(saved.before?.effects) || loadGame().locationId !== 'street') return null
+    if (!saved || !['morning', 'bed', 'no-place', 'supplies', 'work', 'clinic'].includes(saved.questionId) || !Number.isInteger(saved.remaining) || saved.remaining < 0 || saved.remaining > 30 || !saved.before?.game || !saved.before?.inventory || !Array.isArray(saved.before?.effects)) return null
     // Older fixed searches retain the ten-minute migration; new searches keep
     // their originally selected duration across reloads.
     const elapsed = absoluteMinutes(loadGame()) - absoluteMinutes(saved.before.game)
@@ -105,7 +106,7 @@ function formatTravelTime(minutes: number) {
   return `${hours}h ${mins}m`
 }
 
-type Screen = 'location' | 'map' | 'inventory' | 'status' | 'journal' | 'travel'
+type Screen = 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
 type TravelMode = 'walk' | 'transit' | 'fare-dodge'
 type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
 type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
@@ -406,12 +407,17 @@ export default function App() {
     if (loadPhoneActivity()) return 'location'
     if (loadTrip()) return 'travel'
     const saved = localStorage.getItem('street-life-screen')
-    return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'journal' ? saved : 'location'
+    if (saved === 'journal') return 'phone'
+    return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'phone' ? saved : 'location'
   })
+  const [phoneApp, setPhoneApp] = useState<PhoneApp>('home')
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [selectedJournalDay, setSelectedJournalDay] = useState<number | null>(null)
   const journalDay = Math.max(1, Math.min(selectedJournalDay ?? game.day, game.day))
-  useEffect(() => { if (screen !== 'journal') setSelectedJournalDay(null) }, [screen])
+  useEffect(() => {
+    if (screen !== 'phone') setPhoneApp('home')
+    if (screen !== 'phone' || phoneApp !== 'history') setSelectedJournalDay(null)
+  }, [screen, phoneApp])
   const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true')
   const [rainResponse, setRainResponse] = useState<RainResponse | null>(loadRainResponse)
   const rainModalRef = useRef<HTMLElement>(null)
@@ -495,7 +501,6 @@ export default function App() {
   const lastFinishedSleep = useRef<SleepState | null>(null)
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
-  const [navigationOn, setNavigationOn] = useState(true)
   const eventModalRef = useRef<HTMLElement>(null)
   const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(loadFirstNightEvents)
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(() => STREET_EVENTS.find(event => event.id === loadFirstNightEvents().pendingId) ?? null)
@@ -568,8 +573,6 @@ export default function App() {
   }, [insideNightShelter, shelterNightDay, life.shelterEntry?.night, life.shelterEntry?.admitted])
   const moodBand = conditionBand(game.mood)
   const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
-  const navigationInBrightSun = weather.label === 'Clear' && game.minutes >= 360 && game.minutes < 1200
-  const navigationDrainPerHour = phoneScreenDrain(game, inventory.phoneCondition, 'navigation') * 60
   const directSearchCost = phoneScreenDrain(game, inventory.phoneCondition, 'browsing', 15)
   const currentRainEpisode = rainEpisode(game)
   const underRainCover = !!rainResponse?.sheltered && rainResponse.episode === currentRainEpisode && rainResponse.locationId === current.id
@@ -685,12 +688,18 @@ export default function App() {
     if (!shelterPhoneCharging) return
     setPhoneOpen(false)
     setMusicOn(false)
-    setNavigationOn(false)
     if (!insideNightShelter && !shelterDeparture) setShelterPhoneCharging(false)
   }, [shelterPhoneCharging, insideNightShelter, shelterDeparture])
   const freeTransitActive = inventory.transitCard || effects.some(effect => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
   const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
   const mobileServiceMinutesLeft = Math.max(0, mobileServiceUntil - absoluteMinutes(game))
+  const phoneUnavailable = shelterPhoneCharging ? 'Collect your phone from the charger at Night Shelter.'
+    : inventory.phoneCondition <= 0 ? 'Your phone is broken.'
+    : inventory.phoneBattery <= 0 ? 'The battery is empty. Find somewhere to charge it.' : null
+  const navigationOn = mobileServiceActive && !phoneUnavailable && !sleeping && !gameOver
+  useEffect(() => {
+    if (phoneUnavailable) { setPhoneApp('home'); setPhoneOpen(false) }
+  }, [phoneUnavailable])
   const dayWorkEnergyRequired = 55
   const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
   const usedStorageSlots = storageSlots(storage)
@@ -778,7 +787,7 @@ export default function App() {
     if (sleepChoice && title !== 'Start sleeping') return
     if (shelterQueue && title !== 'Shelter registration') return
     if (shelterDeparture && title !== 'Shelter checkout') return
-    if (shelterCheckoutDue && !activeEvent && !diceCheck && !shelterInterview && title !== 'Sleep complete') return
+    if (shelterCheckoutDue && !activeEvent && !diceCheck && !shelterInterview && title !== 'Sleep complete' && title !== 'Search interrupted') return
     action()
     setPendingResult({ title, before, includeTime, always, consumedItems })
   }
@@ -824,7 +833,6 @@ export default function App() {
   }, [game.day, game.minutes, current, !!trip, gameOver])
 
   function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
-  function watchVideo(...args: Parameters<typeof watchVideoImpl>) { runWithResult('Watch videos', () => watchVideoImpl(...args)) }
   function chargePhone(...args: Parameters<typeof chargePhoneImpl>) { runWithResult('Charge phone', () => chargePhoneImpl(...args)) }
   function hospitalVisit(...args: Parameters<typeof hospitalVisitImpl>) { runWithResult('Medical appointment', () => hospitalVisitImpl(...args)) }
   function callAmbulance(...args: Parameters<typeof callAmbulanceImpl>) { runWithResult('Emergency care', () => callAmbulanceImpl(...args)) }
@@ -858,7 +866,7 @@ export default function App() {
     setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
     setMobileServiceUntil(until => Math.max(until, absoluteMinutes(game)) + 1440)
   }, [game.day, game.minutes, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
-  useEffect(() => { if (!mobileServiceActive) { setMusicOn(false); setNavigationOn(false) } }, [mobileServiceActive])
+  useEffect(() => { if (!mobileServiceActive) setMusicOn(false) }, [mobileServiceActive])
   useEffect(() => {
     if (current.id !== 'shelter' || life.shelterVacancyDay === game.day) return
     setLife(status => ({ ...status, shelterVacancyDay: game.day, shelterVacancies: Math.floor(Math.random() * 4) }))
@@ -888,7 +896,6 @@ export default function App() {
   function startShelterDeparture() {
     if (!shelterCheckoutDue || sleeping || infoModal || pendingResult || activeEvent || diceCheck || gameOver) return
     setMusicOn(false)
-    setNavigationOn(false)
     setPhoneOpen(false)
     setShelterDeparture({ day: game.day, startAbsolute: absoluteMinutes(game), before: resultSnapshot() })
     setMessage('Packing your things and leaving the night shelter. This takes 30 minutes.')
@@ -948,7 +955,6 @@ export default function App() {
     const realStartedAt = Date.now()
     setGame(clearSleepIllness)
     setMusicOn(false)
-    setNavigationOn(false)
     setTrip(null)
     if (safeKind === 'ground' && current.id !== 'street') {
       recordShelterDeparture('street')
@@ -1020,16 +1026,6 @@ export default function App() {
     setMessage('Mobile service activated for another 24 hours. Cost: 1 zł.')
   }
 
-  function watchVideoImpl() {
-    if (shelterPhoneCharging) { setMessage('Collect your phone from the charger first.'); return }
-    if (!mobileServiceActive) { setMessage('You need active mobile service to use online video.'); return }
-    const videoDrain = 9 * phoneDrainMultiplier(inventory.phoneCondition)
-    if (inventory.phoneBattery < videoDrain) { setMessage('Not enough battery for 30 minutes of video.'); return }
-    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - videoDrain) }))
-    setGame((prev) => applyAction(prev, { minutes: 30, mood: 8 }))
-    setMessage('You watched videos for 30 minutes. Mood improved, but the worn phone used more battery.')
-  }
-
   function chargePhoneImpl() {
     if (inventory.phoneBattery >= 100) { setMessage('Phone is already fully charged.'); return }
     if (current.id !== 'support' && current.id !== 'residential-shelter') return
@@ -1046,7 +1042,6 @@ export default function App() {
       setShelterPhoneCharging(!shelterPhoneCharging)
       setPhoneOpen(false)
       setMusicOn(false)
-      setNavigationOn(false)
       setMessage(shelterPhoneCharging
         ? `You collected your phone. Battery: ${Math.round(inventory.phoneBattery)}%.`
         : 'You left your phone plugged in at Night Shelter. It gains up to 60% battery per hour while you do other things or sleep. Collect it whenever you need it; you cannot use it while it is left charging.')
@@ -1123,7 +1118,6 @@ export default function App() {
       setLife(status => ({ ...status, shelterLastStayDay: stayNightDay, housing: 'Night shelter' }))
     }
     setMusicOn(false)
-    setNavigationOn(false)
     const realStartedAt = Date.now()
     setGame(clearSleepIllness)
     const total = chosenSleepMinutes(hours, kind)
@@ -1430,14 +1424,16 @@ export default function App() {
     { id: 'bed', icon: '🛏️', title: 'How can I get a shelter bed?', text: 'Night Shelter doors open at 18:00; registration starts at 18:20 and ends at 22:00. You can arrive earlier and wait outside. Your place in the queue depends on when you arrive, not when you press register. Leaving and returning loses that priority. Wait at least 20 minutes and until registration opens. There are only 0–3 free places each day; even an early arrival does not guarantee a bed. Successful registration reserves seven nights. The address is saved on your map.', locations: ['shelter'] },
     { id: 'no-place', icon: '🤔', title: 'What if the shelter has no places?', text: 'A discovered address does not guarantee a bed. Try registration earlier the following evening. During the day, ask Help Center about accommodation. Station benches and outdoor cover are temporary alternatives, with no guarantee of safe sleep.', locations: [] },
     { id: 'supplies', icon: '🥪', title: 'Where can I get food and water?', text: 'Cheap Shop opens 07:00–22:00. Water costs 3 zł for three drinks; a bread roll costs 1 zł, a sandwich 5 zł, canned food 10 zł, and a ready meal 12 zł. The shop is closed at the start of the night. You can use food and water already in your backpack. Registered shelter guests can get dinner 19:00–20:30 and breakfast 06:30–07:00; finding its address alone does not give access.', locations: ['shop'] },
+    { id: 'work', icon: '💼', title: 'Where can I find paid work?', text: 'You find a place advertising casual day work. Check its opening hours, arrive with enough energy and be prepared for a short shift. The address is saved on your map.', locations: ['work'] },
+    { id: 'clinic', icon: '🩺', title: 'Where can I get medical help?', text: 'You find a free clinic offering basic medical care without insurance. The address and opening hours are saved on your map.', locations: ['free-clinic'] },
     { id: 'charging', icon: '🔋', title: 'Where can I charge my phone?', text: 'You glance at the battery and remember an outlet in the waiting room at Station. You can go there tonight: it is available around the clock. Charging takes one hour and adds 60% battery, up to 100%. The station address is on your map. You do not need internet to remember this.', locations: ['station'] },
   ]
-  const visibleQuestions = practicalQuestions.filter(question => answeredQuestions.includes(question.id)
+  const visibleQuestions = practicalQuestions.filter(question => !['work', 'clinic'].includes(question.id) && (answeredQuestions.includes(question.id)
     || question.id === 'morning'
     || (question.id === 'bed' && (answeredQuestions.includes('morning') || discoveredLocations.includes('shelter')))
     || (question.id === 'no-place' && answeredQuestions.includes('bed'))
     || (question.id === 'supplies' && (game.hunger <= 45 || game.thirst <= 45))
-    || (question.id === 'charging' && inventory.phoneBattery <= 30))
+    || (question.id === 'charging' && inventory.phoneBattery <= 30)))
   // One thought per direction. Urgent needs interrupt the ordered questions.
   // Choose the same useful directions; shuffle only their presentation below.
   const remainingHelpPlaces = practicalQuestions[0].locations.filter(id => !discoveredLocations.includes(id))
@@ -1485,6 +1481,7 @@ export default function App() {
       setGame(next)
       setAnsweredQuestions(previous => [...new Set([...previous, id])])
       setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
+      if (id === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
       if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: SHELTER_ENTRY_OPEN })
       setInfoModal({ title: id === 'morning' && !foundPlace ? 'No new information' : question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${answerText}`, presentation })
     }, before)
@@ -1492,7 +1489,8 @@ export default function App() {
 
   function answerPracticalQuestion(id: string) {
     const question = practicalQuestions.find(entry => entry.id === id)
-    if (!question || phoneActivity || current.id !== 'street' || !visibleQuestions.includes(question)) return
+    if (!question || phoneActivity || (screen !== 'phone' && (current.id !== 'street' || !visibleQuestions.includes(question)))) return
+    if (screen === 'phone' && phoneUnavailable) return
     if (id !== 'morning' && answeredQuestions.includes(id)) {
       setInfoModal({ title: question.title, text: `${id === 'charging' ? 'A remembered place' : 'AI · Saved answer'}\n\n${question.text}`, presentation: questionPresentation(id, question.locations, true), costs: [], changes: [] })
       return
@@ -1500,14 +1498,18 @@ export default function App() {
     if (id === 'charging') { finishPracticalQuestion(id); return }
     if (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost) return
     setPhoneOpen(false)
-    setScreen('location')
+    if (screen !== 'phone') setScreen('location')
     const total = PHONE_SEARCH_MIN + Math.floor(Math.random() * (PHONE_SEARCH_MAX - PHONE_SEARCH_MIN + 1))
     setPhoneActivity({ questionId: id, total, remaining: total, before: resultSnapshot() })
   }
 
   useEffect(() => {
     if (!phoneActivity || inventoryAgedAt !== absoluteMinutes(game)) return
-    if (phoneActivity.remaining === 0) {
+    if (shelterCheckoutDue) {
+      setPhoneActivity(null)
+      const text = 'It is time to leave Night Shelter. You put the phone away before finishing the search.'
+      runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
+    } else if (phoneActivity.remaining === 0) {
       setPhoneActivity(null)
       finishPracticalQuestion(phoneActivity.questionId, phoneActivity.before)
     } else if (inventory.phoneBattery <= 0 || !mobileServiceActive || gameOver) {
@@ -1515,7 +1517,7 @@ export default function App() {
       const text = gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.'
       runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
     }
-  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver])
+  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver, shelterCheckoutDue])
 
   function respondToRain(choice: 'cover' | 'continue' | 'stop') {
     const response: RainResponse = { episode: currentRainEpisode ?? `weather:${game.day}`, locationId: current.id, sheltered: choice === 'cover' }
@@ -2143,6 +2145,7 @@ export default function App() {
     setJournalGoals({ morning: false, shelter: false, support: false, work: false })
     setJournalEntries([])
     setSelectedJournalDay(null)
+    setPhoneApp('home')
     lastRecordedResult.current = null
     localStorage.removeItem(JOURNAL_HISTORY_KEY)
     localStorage.removeItem(JOURNAL_GOALS_KEY)
@@ -2170,7 +2173,6 @@ export default function App() {
     setMusicOn(false)
     setStreetBenchFound(false)
     setBegging({ day: 1, attempts: 0 })
-    setNavigationOn(true)
     setShelterPhoneCharging(false)
     localStorage.removeItem(SHELTER_PHONE_CHARGE_KEY)
     setActiveEvent(null)
@@ -2365,6 +2367,13 @@ export default function App() {
         <button className="trash-stop" onClick={finishTrashSearch}>Finish searching</button>
       </section>
     </div>}
+
+    {phoneOpen && !phoneUnavailable && <PhoneDialog
+      battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
+      autoRenew={mobileAutoRenew} onClose={() => setPhoneOpen(false)} onBuyService={() => { setPhoneOpen(false); buyMobileService() }}
+      onAutoRenew={() => setMobileAutoRenew(value => !value)}
+      blocked={eventInteractionBlocked || !!sleeping || !!sleepChoice || !!gameOver}
+    />}
 
     <div className={`game-background${eventInteractionBlocked ? ' event-background-blocked' : ''}`} inert={eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} onClickCapture={event => { if (eventInteractionBlocked) { event.preventDefault(); event.stopPropagation() } }}>
     <header className="game-header">
@@ -2566,21 +2575,8 @@ export default function App() {
       {usedBackpackSlots === 0 && <p className="backpack-empty-message">Your backpack is empty.</p>}
 
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
-    {phoneOpen && !shelterPhoneCharging && <PhoneDialog orderSeed={choiceSeed} decisionKey={choiceDecisionKey}
-        battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
-        autoRenew={mobileAutoRenew} navigation={navigationOn} music={musicOn} navigationRate={Math.round(navigationDrainPerHour * 10) / 10} navigationInBrightSun={navigationInBrightSun}
-        videoDrain={Math.round(9 * phoneDrainMultiplier(inventory.phoneCondition))}
-        showAi={current.id === 'street'} canAskAi={mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= phoneSearchCost}
-        canNavigate={inventory.phoneBattery > 0 && mobileServiceActive} canWatchVideo={mobileServiceActive && inventory.phoneBattery >= 9 * phoneDrainMultiplier(inventory.phoneCondition)}
-        canCallAmbulance={game.health <= 20 && inventory.phoneBattery > 0 && inventory.phoneCondition > 0} lowHealth={game.health <= 20}
-        blocked={eventInteractionBlocked || !!infoModal || !!sleeping || !!sleepChoice || !!gameOver}
-        onClose={() => setPhoneOpen(false)} onBuyService={() => { setPhoneOpen(false); buyMobileService() }}
-        onAutoRenew={() => setMobileAutoRenew(value => !value)} onNavigation={() => setNavigationOn(value => !value)} onMusic={() => setMusicOn(value => !value)}
-        onAskAi={() => { setPhoneOpen(false); setScreen('location'); answerPracticalQuestion('morning') }}
-        onWatchVideo={() => { setPhoneOpen(false); watchVideo() }} onCallAmbulance={() => { setPhoneOpen(false); callAmbulance() }}
-      />}
       <div className="inventory-grid essentials-grid">
-        <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); if (shelterPhoneCharging) toggleShelterPhoneCharging(); else setPhoneOpen(true) }}>
+        <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); if (shelterPhoneCharging) toggleShelterPhoneCharging(); else { setPhoneApp('home'); setScreen('phone') } }}>
           <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />{shelterPhoneCharging ? 'Charging · tap to collect' : 'tap to open'}</small></div>
         </button>
         <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%\nWetness ${Math.round(game.wetness ?? 0)}%\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit. Wet clothes drain Energy and Mood, especially in cold wind, and reduce outdoor sleep recovery. Dry indoors; a canopy stops new rain but dries clothes slowly.` })}>
@@ -2624,11 +2620,9 @@ export default function App() {
       </div>
       <LifeSituation housing={life.housing} employment={life.employment} income={life.income} documents={inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'} />
     </section>}
-    {screen === 'journal' && <section className="journal-screen">
-      <div className="journal-heading"><h2>Journal</h2></div>
-
-      <JournalGoals pending={pendingGoals} completed={completedGoals} />
-
+    {screen === 'phone' && <PhoneScreen busy={!!phoneActivity} app={phoneApp} onApp={setPhoneApp} pendingGoals={pendingGoals.length} unavailable={phoneUnavailable} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} onPlan={() => setPhoneOpen(true)}>
+      {phoneApp === 'goals' && <JournalGoals pending={pendingGoals} completed={completedGoals} />}
+      {phoneApp === 'history' && <>
       <section className="journal-history" aria-labelledby="journal-day-heading">
         <div className="journal-day-switch" role="group" aria-label="Journal day">
           <button type="button" aria-label="Previous day" disabled={journalDay <= 1} onClick={() => setSelectedJournalDay(journalDay - 1)}><Icon name="chevron-left" /></button>
@@ -2637,7 +2631,41 @@ export default function App() {
         </div>
         <JournalTimeline entries={journalEntries} day={journalDay} today={journalDay === game.day} />
       </section>
-    </section>}
+      </>}
+      {phoneApp === 'notes' && <div className="phone-notes-list">
+        <p className="phone-section-label">Saved information</p>
+        {mapPlaces.filter(place => place.id !== 'street').map(place => {
+          const note = locationPresentation([place.id]).places?.[0]
+          const details = practicalQuestions.filter(question => answeredQuestions.includes(question.id) && question.locations.includes(place.id) && question.text)
+          return <article className="phone-note" key={place.id}>
+            <div className="phone-note-heading"><h3><Icon name={locationIcon(place.id)} className="action-label-icon" />{place.name}</h3></div>
+            <div className="phone-note-meta"><span>{note?.hours}</span><span className="on-map">On map</span></div>
+            <p>{note?.detail ?? place.description}</p>
+            {details.map(question => <details key={question.id}><summary>{question.title}</summary><p>{question.text}</p></details>)}
+          </article>
+        })}
+        {answeredQuestions.includes('no-place') && <article className="phone-note"><div className="phone-note-heading"><h3>If there is no shelter bed</h3></div><p>{practicalQuestions.find(question => question.id === 'no-place')?.text}</p></article>}
+      </div>}
+      {phoneApp === 'search' && <>
+        <p className="phone-section-label">What do you need to find?</p>
+        <div className="phone-search-list">
+          {([
+            { id: 'bed', title: 'Shelter', detail: 'A bed and registration information', icon: 'bed' },
+            { id: 'morning', title: 'Help & hygiene', detail: 'Help centers, showers and daytime support', icon: 'shower' },
+            { id: 'work', title: 'Work', detail: 'A place offering short shifts', icon: 'work' },
+            { id: 'clinic', title: 'Medical help', detail: 'Free basic care without insurance', icon: 'hospital' },
+            { id: 'supplies', title: 'Food & water', detail: 'Affordable supplies and meal times', icon: 'food' },
+          ] as { id: string; title: string; detail: string; icon: IconName }[]).map(search => {
+            const saved = search.id !== 'morning' && answeredQuestions.includes(search.id)
+            return <button className="phone-search-row" type="button" key={search.id} aria-label={search.title} data-choice={`question-${search.id}`} disabled={!mobileServiceActive || (!saved && inventory.phoneBattery < phoneSearchCost)} onClick={() => saved ? setPhoneApp('notes') : answerPracticalQuestion(search.id)}>
+              <Icon name={search.icon} /><span className="phone-search-copy"><strong>{search.title}</strong><small>{search.detail}</small></span><span className="phone-search-time">{saved ? 'Notes' : approximateDuration(PHONE_SEARCH_ESTIMATE)}</span>
+            </button>
+          })}
+        </div>
+        <p className={`phone-search-hint${!mobileServiceActive ? ' warning' : ''}`}>{!mobileServiceActive ? 'Mobile internet is unpaid. Activate the 1 zł/day plan in the header to search.' : inventory.phoneBattery < phoneSearchCost ? 'Not enough battery to search. Charge your phone first.' : 'Searching uses time and battery.'}</p>
+      </>}
+    </PhoneScreen>}
+    {screen === 'phone' && phoneApp === 'home' && !phoneUnavailable && game.health <= 20 && <button className="action phone-emergency" aria-label="Call ambulance" onClick={callAmbulance}><Icon name="ambulance" /><div><strong>Call ambulance</strong><small>Emergency care · no internet required</small></div></button>}
 
     </div>
 
@@ -2747,7 +2775,7 @@ export default function App() {
       {nav('inventory', 'backpack', 'Inventory')}
       <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => setScreen('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
       <button disabled={!!phoneActivity || travelling || eventInteractionBlocked} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => setScreen('status')} aria-label="Status" title={moodBand.label}><Icon name="person" /><small>Status</small><i className={`nav-condition ${moodBand.level}`} aria-hidden="true" /></button>
-      {nav('journal', 'journal', 'Journal')}
+      {nav('phone', 'phone', 'Phone')}
     </nav>
   </main>
 }
