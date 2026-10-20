@@ -14,7 +14,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - name: Gameplay and phone checks
-        run: npm test
+        run: |
+          node -e "const {spawnSync}=require('node:child_process');let failed=false;for(const command of require('./package.json').scripts.test.split(' && ')){console.log('CHECK_START '+command);const result=spawnSync(command,{shell:true,stdio:'inherit'});if(result.status!==0){failed=true;console.log('CHECK_FAILED '+command)}}process.exit(failed?1:0)"
       - name: TypeScript and production build
         if: always()
         run: npm run build
