@@ -11,7 +11,7 @@ export type ItemArtId = keyof typeof positions | 'readyMeal'
 const equipment = new Set<ItemArtId>(['phone', 'clothing', 'documents', 'transitCard', 'bottles', 'empty'])
 
 export default memo(function ItemArt({ id, className = 'inventory-art' }: { id: ItemArtId; className?: string }) {
-  if (id === 'readyMeal') return <span className={className} aria-hidden="true" style={{ backgroundImage: 'url("/street-life-game/assets/ready-meal.webp")', backgroundPosition: 'center', backgroundSize: 'cover' }} />
+  if (id === 'readyMeal') return <span className={className} aria-hidden="true" style={{ backgroundImage: 'url("/street-life-game/assets/ready-meal.webp")', backgroundPosition: 'center', backgroundSize: 'contain' }} />
   const essentials = equipment.has(id)
   if (id === 'bottles') return <span className={className} aria-hidden="true" style={{
     backgroundImage: 'url("/street-life-game/assets/trash-plastic.webp"), url("/street-life-game/assets/trash-can.webp")',

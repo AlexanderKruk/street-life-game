@@ -364,7 +364,7 @@ button.inventory-item { width:100%; }
 .shop-category h3::after { content:''; flex:1; height:1px; background:#30393f; }
 .supply-grid { gap:8px; align-items:stretch; }
 .supply-card { display:grid; grid-template-columns:39% minmax(0,1fr); grid-template-rows:1fr auto; border:1px solid #343d42; border-radius:8px; background:#10161a; overflow:hidden; min-width:0; }
-.supply-picture { min-width:0; display:flex; align-items:center; background:#101213; overflow:hidden; }
+.supply-picture { min-width:0; display:flex; align-items:center; background:transparent; overflow:hidden; }
 .supply-art { display:block; width:100%; aspect-ratio:1; background-size:200% 400%; background-repeat:no-repeat; }
 .supply-copy { padding:9px 6px 8px; min-width:0; display:flex; flex-direction:column; }
 .supply-copy > strong { font-size:11px; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
@@ -386,7 +386,7 @@ button.inventory-item { width:100%; }
 .shop-return small { font-size:10px; color:#99a3a9; }
 .shop-return b { font-size:12px; color:#d7b58a; }
 .shop-screen .shop-meal { margin-top:15px; border-radius:8px; background:#11171b; }
-@media (max-width:420px) { .shop-hero { margin-left:-12px; margin-right:-12px; padding-left:12px; padding-right:12px; } }
+@media (max-width:520px) { .shop-hero { margin-left:-12px; margin-right:-12px; padding-left:12px; padding-right:12px; } }
 @media (min-width:600px) { .supply-copy { padding:13px; } .supply-copy > strong { font-size:15px; } .supply-copy > small { font-size:12px; } .supply-effects.shop-impact em { font-size:11px; } }
 .shop-meal { width:100%; margin-top:8px; padding:13px; display:grid; grid-template-columns:36px 1fr auto; gap:10px; align-items:center; }
 .shop-meal > span { font-size:28px; }
@@ -974,9 +974,9 @@ footer .header-version { margin-left:auto; align-self:center; }
 .inventory-screen .backpack-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0; }
 .inventory-slot { position:relative; min-width:0; min-height:80px; padding:0; border:1px solid #343d42; border-radius:9px; background:#141b1f; color:#eceeed; overflow:hidden; text-align:left; font-family:inherit; display:flex; flex-direction:row; }
 .inventory-slot-use { display:flex; flex:1; min-width:0; width:100%; padding:0; border:0; border-radius:inherit; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
-.inventory-discard { position:absolute; top:2px; right:2px; width:32px; height:32px; display:grid; place-items:center; padding:2px 7px 12px; border:0; border-radius:7px; background:transparent; color:#a4abad; cursor:pointer; }
-.inventory-discard svg { width:17px; height:17px; }
-.inventory-discard:hover,.inventory-discard:active { background:#392323; color:#e2a4a0; }
+.inventory-discard { position:absolute; z-index:1; top:0; left:0; width:32px; height:32px; display:grid; place-items:center; padding:7px; border:0; border-radius:0; background:transparent; color:#bac1c3; cursor:pointer; }
+.inventory-discard svg { width:17px; height:17px; filter:drop-shadow(1px 0 0 #080b0d) drop-shadow(-1px 0 0 #080b0d) drop-shadow(0 1px 0 #080b0d) drop-shadow(0 -1px 0 #080b0d); }
+.inventory-discard:hover,.inventory-discard:active { background:transparent; color:#e2a4a0; }
 .inventory-discard:focus-visible,.inventory-slot-use:focus-visible { outline:2px solid #d7b58a; outline-offset:-2px; }
 .discard-modal { width:min(408px,100%); padding:22px; border:1px solid #4a5155; border-radius:18px; background:#191e21; color:#e8e5de; }
 .discard-modal h2 { margin:0; font-size:21px; line-height:1.3; font-weight:600; overflow-wrap:anywhere; }
@@ -997,7 +997,7 @@ footer .header-version { margin-left:auto; align-self:center; }
 .food-choice-cancel { order:1; }
 .inventory-slot-picture { position:relative; width:38%; min-height:80px; flex-shrink:0; }
 .inventory-art { display:block; width:100%; height:100%; background-repeat:no-repeat; }
-.inventory-slot-picture .inventory-art { position:absolute; inset:0; }
+.inventory-slot-picture .inventory-art { position:absolute; top:50%; left:0; width:100%; height:auto; aspect-ratio:1; transform:translateY(-50%); }
 .inventory-quantity { color:#aab0b4; font-size:inherit; font-weight:400; white-space:nowrap; }
 .inventory-slot-copy { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-width:0; gap:6px; padding:8px 5px; flex:1; }
 .inventory-slot-copy strong { font-size:12px; line-height:1.3; font-weight:600; overflow-wrap:anywhere; }

@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-258`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-259`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Transparent inventory and shop artwork (v259)
+
+All nine shop products and four Essentials now use isolated objects with real alpha transparency, shared between shop and inventory. The shared atlases keep their existing item order and responsive 1x/2x/3x variants. Clothing is muted olive, shower gel is navy blue, and the phone has highlighted edges for contrast on dark cards. Product picture areas have no separate background. Each cutout is centered within a padded square cell; backpack artwork stays vertically centered regardless of text height.
+
+Backpack discard controls float in the upper-left corner with their existing 32px touch targets. A thin dark contour follows the trash glyph itself, without a circular outline or backing. They reserve no layout space and do not move the artwork. Existing confirmation, spoiled/all removal, purchases, consumption, save data and Essentials behavior are unchanged. Prompts and generation provenance are recorded in `docs/item-cutout-generation.json`; atlas packing and WebP variants use `scripts/pack-item-art.py`.
 
 ### Day Work label placement (v258)
 

@@ -1,0 +1,33 @@
+{
+  "created": "2026-10-20",
+  "tool": "Built-in image_gen.imagegen",
+  "shop": {
+    "key": "shop",
+    "path": "public/assets/shop-products.webp at v256",
+    "prompt": "Background extraction and precise sprite atlas edit. Transform this existing 2-column 4-row photographic product sprite sheet into an actual transparent RGBA sprite atlas with exactly the same 1:2 overall canvas aspect ratio, exact evenly sized square tiles, no gaps or grid lines. REMOVE ALL table, floor, walls and background from every tile. Preserve the exact eight recognizable item designs and their order: row 1 water bottle with blue cap LEFT / plastic-wrapped sandwich RIGHT; row 2 bread roll LEFT / olive-gold rectangular ring-pull canned food RIGHT; row 3 white and blue wet wipes pack with white tissue LEFT / shower gel bottle RIGHT; row 4 cigarette pack LEFT / cream medicine box with green stripe and pill blister RIGHT. Change only shower gel body color from black to muted navy blue so it is visible on a dark UI. Keep each full object fully inside its own square tile, centered horizontally AND vertically, at approximately 80 percent of tile extent with transparent padding on every side. No downward bias. Same cinematic realistic photographic materials and slight painterly warmth, clear soft neutral highlights to be legible on dark charcoal cards. Only object silhouettes and alpha, no tabletop, no rectangular remnants, no cast ground shadows, no colored backdrops, no captions, no labels or UI, no checkerboard baked into image. Keep transparent bottle's specular edges sufficiently bright. Output the sprite atlas only on genuine transparent background."
+  },
+  "readyMeal": {
+    "key": "ready-meal",
+    "path": "public/assets/ready-meal.webp at v256",
+    "prompt": "Background-extraction for game item icon. Remove ONLY the entire table/background behind this pasta ready-meal tray, leaving the food, clear plastic tray and partly peeled clear film as a clean isolated object on actual transparent background. Preserve subject design, photorealistic slightly painterly warm lighting, proportions, materials and neutral colorful food. Square canvas, full object centered horizontally AND vertically, approximately 84 percent image extent with transparent padding, no clipping. No surface, ground shadow, vignette, colored backdrop, checkerboard, text or UI. Bright readable tray edges against a dark UI, genuine alpha transparency."
+  },
+  "equipmentReference": "public/assets/inventory-equipment.webp at v256",
+  "equipment": [
+    {
+      "key": "phone",
+      "prompt": "Background extraction / single game inventory cutout. The supplied image is a REFERENCE SHEET ONLY. Output a NEW SQUARE IMAGE showing ONLY the cracked smartphone from the TOP LEFT tile. Keep its cracked black glass screen, tilted slightly clockwise, but use a subtle silver frame and bright edge highlights for contrast on dark cards. Show just that one item on genuine transparent alpha background, not the sheet. Full subject must be fully visible with generous transparent padding on ALL four sides, approximately 15 percent canvas margins. Object centered horizontally and vertically; no clipping. Same realistic photographic lightly painterly material texture and warm neutral highlights as reference. Clear legibility on dark charcoal UI. Remove all ground, surfaces, background, shadows on ground and UI. No circular backdrop, no scene, no checkerboard, no text, no labels. TRANSPARENT RGBA PNG single object."
+    },
+    {
+      "key": "clothing",
+      "prompt": "Background extraction / single game inventory cutout. The supplied image is a REFERENCE SHEET ONLY. Output a NEW SQUARE IMAGE showing ONLY the folded hooded jacket from the TOP RIGHT tile. Change its dark charcoal fabric to muted light OLIVE GREEN with visible cloth folds, buttons/zip and hood; keep realistic practical everyday used clothing. Show just that one item on genuine transparent alpha background, not the sheet. Full subject must be fully visible with generous transparent padding on ALL four sides, approximately 15 percent canvas margins. Object centered horizontally and vertically; no clipping. Same realistic photographic lightly painterly material texture and warm neutral highlights as reference. Clear legibility on dark charcoal UI. Remove all ground, surfaces, background, shadows on ground and UI. No circular backdrop, no scene, no checkerboard, no text, no labels. TRANSPARENT RGBA PNG single object."
+    },
+    {
+      "key": "documents",
+      "prompt": "Background extraction / single game inventory cutout. The supplied image is a REFERENCE SHEET ONLY. Output a NEW SQUARE IMAGE showing ONLY the maroon passport with cream paper documents from the MIDDLE LEFT tile. Preserve recognizable stacked papers and maroon closed booklet, generic without readable personal text. Show just that one item on genuine transparent alpha background, not the sheet. Full subject must be fully visible with generous transparent padding on ALL four sides, approximately 15 percent canvas margins. Object centered horizontally and vertically; no clipping. Same realistic photographic lightly painterly material texture and warm neutral highlights as reference. Clear legibility on dark charcoal UI. Remove all ground, surfaces, background, shadows on ground and UI. No circular backdrop, no scene, no checkerboard, no text, no labels. TRANSPARENT RGBA PNG single object."
+    },
+    {
+      "key": "transitCard",
+      "prompt": "Background extraction / single game inventory cutout. The supplied image is a REFERENCE SHEET ONLY. Output a NEW SQUARE IMAGE showing ONLY the blue transit card from the MIDDLE RIGHT tile. Preserve a single blue rectangular used transit card with modest wear, no documents or other objects. Show just that one item on genuine transparent alpha background, not the sheet. Full subject must be fully visible with generous transparent padding on ALL four sides, approximately 15 percent canvas margins. Object centered horizontally and vertically; no clipping. Same realistic photographic lightly painterly material texture and warm neutral highlights as reference. Clear legibility on dark charcoal UI. Remove all ground, surfaces, background, shadows on ground and UI. No circular backdrop, no scene, no checkerboard, no text, no labels. TRANSPARENT RGBA PNG single object."
+    }
+  ]
+}
