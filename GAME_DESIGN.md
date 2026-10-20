@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-253`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-254`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Continuous city background (v254)
+
+Only the location pins fit the area above the selection card. The city illustration is a separate background extending from beneath the header, behind the overlaid City map title and selected-place card, to the bottom navigation. A small, width-based sky crop replaces v253's bottom-aligned enlargement of the shortened pin area. This restores the skyline and removes the blank title strip and abrupt image edge above the card. Pin anchors, routes and gameplay remain unchanged.
 
 ### Viewport-fitted city map (v253)
 

@@ -1152,7 +1152,7 @@ footer .header-version { margin-left:auto; align-self:center; }
 .rain-cover-status { display:flex; align-items:center; gap:7px; margin:0 0 16px; color:#a6c6b4; font-size:13px; }
 .rain-cover-status svg { width:18px; height:18px; }
 
-/* v253: fit the district and selection card between the header and navigation. */
+/* v254: fit the pins while the city continues behind the title and card. */
 body:has(.map-screen) { min-height:100dvh; }
 .map-screen { height:100dvh; min-height:0; padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)); }
 .map-screen > .game-background { height:100%; display:flex; flex-direction:column; min-height:0; }
@@ -1160,10 +1160,13 @@ body:has(.map-screen) { min-height:100dvh; }
 .map-screen .goal-reminder { flex-shrink:0; margin:8px 0 0; }
 .map-screen .map-surface { flex:1; min-height:0; }
 .map-screen > footer { display:none; }
-.map-screen .district-map { height:100%; display:flex; flex-direction:column; padding-bottom:0; }
-.map-screen .district-map-heading { flex-shrink:0; padding-top:14px; padding-bottom:10px; }
-.map-screen .district-scene { flex:1; min-height:0; aspect-ratio:auto; }
-.map-screen .district-scene > img { position:absolute; top:-18%; height:118%; object-position:center bottom; }
+.map-screen .district-map { position:relative; isolation:isolate; height:100%; display:flex; flex-direction:column; padding-bottom:0; }
+.map-screen .district-map-heading { position:relative; z-index:1; flex-shrink:0; padding-top:14px; padding-bottom:10px; text-shadow:0 2px 10px #000; }
+.district-backdrop { position:absolute; z-index:-1; inset:0 0 calc(-90px - env(safe-area-inset-bottom,0px)); overflow:hidden; pointer-events:none; --district-sky-crop:clamp(35px,12vw,70px); }
+.district-backdrop > img { position:absolute; top:calc(-1 * var(--district-sky-crop)); width:100%; height:auto; min-height:calc(100% + var(--district-sky-crop)); object-fit:cover; object-position:center top; display:block; }
+.district-backdrop::after { content:""; position:absolute; inset:0; background:linear-gradient(#10171d66,transparent 20%,transparent 65%,#11171999); }
+.map-screen .district-scene { flex:1; min-height:0; width:100%; aspect-ratio:auto; overflow:visible; background:transparent; }
+.map-screen .district-scene::after { content:none; }
 .map-screen .district-card { position:relative; flex-shrink:0; left:auto; bottom:auto; transform:none; width:calc(100% - 24px); margin:12px auto 0; }
 @media(max-height:600px) {
   .map-screen .district-map-heading { padding-top:8px; padding-bottom:6px; }

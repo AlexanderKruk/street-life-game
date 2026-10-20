@@ -18,8 +18,9 @@ type SceneProps = { places: Location[]; currentId: string; selectedId: string; o
 const DistrictScene = memo(function DistrictScene({ places, currentId, selectedId, openFlags, onFocus }: SceneProps) {
   const origin = positions[currentId]
   const target = positions[selectedId]
-  return <div className="district-scene">
+  return <><div className="district-backdrop">
       <img {...responsiveImageProps('/street-life-game/assets/city-night.webp')} width="1024" height="1536" alt="Rainy city rooftops, warm windows and a railway station beside the river at night" />
+    </div><div className="district-scene">
       {origin && target && selectedId !== currentId && <svg className="district-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={`M ${origin[0]} ${origin[1]} C ${origin[0] + (target[0] - origin[0]) * .55} ${origin[1]}, ${origin[0] + (target[0] - origin[0]) * .2} ${target[1]}, ${target[0]} ${target[1]}`} /></svg>}
       {places.map((place, index) => {
         const [x, y] = positions[place.id] ?? [50, 50]
@@ -30,7 +31,7 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
           <span className="district-marker" aria-hidden="true" /><span className="district-label"><strong>{place.name}</strong></span>
         </button>
       })}
-    </div>
+    </div></>
 })
 
 export default function CityMap({ places, currentId, minutes, reservedBed, routeId, onRoute }: {

@@ -403,8 +403,8 @@ click(/Take a short shift/);assert(Math.abs(read(stateKey).health - (90 - .147 *
 // Illustrated map only shows discovered places; selection is read-only until routing.
 setup({minutes:600}, {'street-life-discovered-v1':['street','station','shop']});click(/Map$/);
 const mapBefore=read(stateKey);
-assert(document.querySelector('.district-scene img').getAttribute('src').endsWith('/city-night-480.webp'));
-assert(document.querySelector('.district-scene img').srcset.includes('city-night-1024.webp 1024w'));
+assert(document.querySelector('.district-backdrop img').getAttribute('src').endsWith('/city-night-480.webp'));
+assert(document.querySelector('.district-backdrop img').srcset.includes('city-night-1024.webp 1024w'));
 assert(!document.querySelector('.district-pin').textContent.includes('Night Shelter'));
 assert(![...document.querySelectorAll('.district-pin')].some(pin=>pin.textContent.includes('Night Shelter')));
 click(/^.*Station/);assert.deepEqual(read(stateKey),mapBefore);assert(!document.querySelector('.travel-sheet'));
