@@ -65,7 +65,7 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
   if (!selected) return null
   const openFlags = places.map(place => isOpen(place, minutes) ? '1' : '0').join('')
   return <section className="district-map" aria-label="City map">
-    <div className="district-map-heading"><h2>Map</h2>
+    <div className="district-map-heading">
       <div className="district-shortcuts" aria-label="Nearby places">
         <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} disabled={currentId === 'street'} onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span>Street</span></button>
         <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} disabled={currentId === 'shop'} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span>Nearest shop</span></button>
