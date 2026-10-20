@@ -2665,7 +2665,7 @@ export default function App() {
         <p className={`phone-search-hint${!mobileServiceActive ? ' warning' : ''}`}>{!mobileServiceActive ? 'Mobile internet is unpaid. Activate the 1 zł/day plan in the header to search.' : inventory.phoneBattery < phoneSearchCost ? 'Not enough battery to search. Charge your phone first.' : 'Searching uses time and battery.'}</p>
       </>}
     </PhoneScreen>}
-    {screen === 'phone' && phoneApp === 'home' && !phoneUnavailable && game.health <= 20 && <button className="action phone-emergency" onClick={callAmbulance}><Icon name="ambulance" /><div><strong>Call ambulance</strong><small>Emergency care · no internet required</small></div></button>}
+    {screen === 'phone' && phoneApp === 'home' && !phoneUnavailable && game.health <= 20 && <button className="action phone-emergency" aria-label="Call ambulance" onClick={callAmbulance}><Icon name="ambulance" /><div><strong>Call ambulance</strong><small>Emergency care · no internet required</small></div></button>}
 
     </div>
 
