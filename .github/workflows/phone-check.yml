@@ -1,0 +1,20 @@
+name: Phone app validation
+on:
+  push:
+    branches: [phone-apps-v269]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: Gameplay and phone checks
+        run: npm test
+      - name: TypeScript and production build
+        if: always()
+        run: npm run build

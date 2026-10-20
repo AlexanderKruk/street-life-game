@@ -15,6 +15,8 @@ const answers: Record<string, Pick<ResultPresentation, 'heading' | 'lead' | 'not
   bed: { heading: 'A place for the night', lead: '', notice: 'A bed is not guaranteed. Successful registration reserves seven nights.' },
   'no-place': { heading: 'If there is no bed', lead: 'Try registration earlier the next evening. Ask Help Center about accommodation and a Schronisko referral.', notice: 'Day Center is daytime only. Station benches and outdoor cover do not guarantee safe sleep.' },
   supplies: { heading: 'Food and water', lead: 'You can also use supplies in your backpack.', notice: 'Registered shelter guests: dinner 19:00–20:30 · breakfast 06:30–07:00.' },
+  work: { heading: 'Day work', lead: '', notice: 'A shift and payment are not guaranteed.' },
+  clinic: { heading: 'Free medical help', lead: '', notice: 'No insurance needed for basic care.' },
   charging: { heading: 'An outlet at the station', lead: '', notice: 'No internet needed. The station is available tonight.' },
 }
 

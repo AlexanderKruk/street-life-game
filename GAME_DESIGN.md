@@ -1447,3 +1447,14 @@ All 14 catalog events now show a scene and illustrated choice results. The 10 fo
 ### Shared coin event presentation (v199)
 
 The coin encounter now uses the same illustrated event card, stacked choice buttons and shared result card as other street events. Removed the separate coin emblem and coin-only card styling. Picking up or leaving the coin retains its matching responsive illustration; awarded money appears once in the standard gains list. Coin probabilities, denominations, rewards, pauses and saves are unchanged.
+
+
+## Phone apps — v269 (2026-10-20)
+
+The last bottom navigation item is Phone, replacing Journal. Its home screen has four small muted-color outline icons: Goals, Notes, History, Search. Goals shows only the incomplete count; completed goals remain collapsible. History preserves day navigation, reverse chronological reflections, grouping and batching. Notes shows known places and previously saved practical information. Old Journal saves keep their goals, entries and discoveries and open the Phone launcher.
+
+The compact single-line Phone/app header has a back button on internal screens and the mobile plan status: 1 zł/day and Paid/Unpaid. Tapping the plan opens existing 24-hour top-up and auto-renew controls. Existing automatic renewal and prepaid time are preserved. Search alone needs paid internet; notes, history and goals work offline. An empty battery, broken phone or phone left charging at Night Shelter prevents access to every app. The separate map and travel remain available.
+
+Music, Video, Navigation and Plan launcher icons are hidden for now. Music/video playback controls are hidden. Navigation automatically works when the phone and mobile service are available, and is suspended during sleep, charging, outages and game over. Existing walking-with-music story actions remain unchanged.
+
+Search categories use real gameplay data: Shelter, Help & hygiene, Work, Medical help, Food & water. New searches use the shared 10–25 minute accelerated action flow, battery drain, interruption and reload handling; searching is also possible indoors. Previously saved one-off answers link to Notes without spending time or battery. Repeated help searches retain one-place-at-a-time discovery and the no-new-information result. The emergency ambulance action is retained contextually at Health 20 or lower, without requiring mobile internet.

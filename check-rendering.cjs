@@ -26,7 +26,10 @@ function setup(App, screenName, state = {}, extras = {}) {
   localStorage.setItem('street-life-effects-v1', '[]');
   localStorage.setItem('street-life-discovered-v1', '["street","station","shop"]');
   for (const [key, value] of Object.entries(extras)) localStorage.setItem(key, JSON.stringify(value));
-  render(React.createElement(App)); clearCounts();
+  render(React.createElement(App));
+  if (screenName === 'journal') fireEvent.click(screen.getByRole('button', {name:'History', exact:true}));
+  if (screenName === 'goals') { fireEvent.click(screen.getByRole('button', {name:'Phone',exact:true})); fireEvent.click(screen.getByRole('button', {name:'Goals',exact:true})); }
+  clearCounts();
 }
 function advance(ticks, flush = true) {
   const end = now + ticks * 1000;
@@ -62,6 +65,7 @@ function measure(App) {
   setup(App, 'journal'); advance(10);
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).minutes, 510);
   output.journal = counts();
+  setup(App, 'goals'); advance(10); output.goals = counts();
   setup(App, 'map'); advance(10); output.map = counts();
   setup(App, 'status'); advance(10); output.status = counts();
   setup(App, 'inventory', {}, { 'street-life-inventory-v1': { water: 2, food: 2 } }); advance(10); output.inventory = counts();
@@ -94,7 +98,7 @@ function measure(App) {
 (async () => {
   const Baseline = await loadApp(true), App = await loadApp(false);
   const before = measure(Baseline), after = measure(App);
-  for (const [section, name] of [['journal', 'JournalGoals'], ['journal', 'JournalTimeline'], ['map', 'DistrictScene'], ['status', 'LifeSituation'], ['inventory', 'ItemArt'], ['location', 'LocationSummary'], ['shop', 'ShopHero'], ['shop', 'ShopCard'], ['phoneSearch', 'StreetArt'], ['sleep', 'SleepHeading']]) {
+  for (const [section, name] of [['goals', 'JournalGoals'], ['journal', 'JournalTimeline'], ['map', 'DistrictScene'], ['status', 'LifeSituation'], ['inventory', 'ItemArt'], ['location', 'LocationSummary'], ['shop', 'ShopHero'], ['shop', 'ShopCard'], ['phoneSearch', 'StreetArt'], ['sleep', 'SleepHeading']]) {
     assert(before[section][name] > 0, `${name}: baseline must render during ticks`);
     assert.equal(after[section][name] ?? 0, 0, `${name}: unchanged data must skip rendering`);
   }
@@ -106,7 +110,7 @@ function measure(App) {
   clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Nearest shop' }));
   assert.equal(count('DistrictScene'), 1);
   assert.equal(document.querySelector('.district-card h3').textContent, 'Cheap Shop');
-  setup(App, 'journal', { day: 2, minutes: 719 }); advance(1);
+  setup(App, 'goals', { day: 2, minutes: 719 }); advance(1);
   assert(count('JournalGoals') > 0);
   assert(document.querySelector('.completed-goals .goal strong').textContent.includes('morning'));
   setup(App, 'journal', { day: 2 }, { 'street-life-journal-history-v1': [
@@ -143,7 +147,8 @@ function measure(App) {
   fireEvent.click(screen.getByRole('button', { name: 'Inventory', exact: true }));
   fireEvent.click(screen.getByRole('button', { name: /^Water ×/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Journal', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Phone', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'History', exact: true }));
   assert.equal(historyTitles().length, 30, 'reopening starts with recent entries');
   assert.equal(historyTitles()[0], 'Drank water', 'new action appears first');
   assert.equal(JSON.parse(localStorage.getItem('street-life-journal-history-v1')).length, 500);
@@ -226,7 +231,7 @@ function measure(App) {
   modalAudit.push({ name: 'travel choices (time continues)', renders: counts() });
   fireEvent.click(screen.getByRole('button', { name: /Ride without ticket/ })); pauseAudit('dice check', '.dice-overlay');
   setup(App, 'inventory'); fireEvent.click(screen.getByRole('button', { name: /PhoneBattery/ }));
-  assert(document.querySelector('.phone-list-modal')); clearCounts(); advance(3);
+  assert(document.querySelector('.phone-screen')); clearCounts(); advance(3);
   assert(count('App') > 0, 'phone panel intentionally keeps time running');
   modalAudit.push({ name: 'phone panel (time continues)', renders: counts() });
   setup(App, 'location');
@@ -273,7 +278,8 @@ function measure(App) {
   advance(20); assert.deepEqual([...timers.keys()], clockIds);
   assert.equal(nextId, clockCreations, 'ticks never recreate intervals');
   fireEvent.click(screen.getByRole('button', { name: 'Inventory', exact: true }));
-  fireEvent.click(screen.getByRole('button', { name: 'Journal', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Phone', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'History', exact: true }));
   assert.deepEqual([...timers.keys()], clockIds, 'screen changes retain the clock');
   Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
   const frozenMinute = JSON.parse(localStorage.getItem('street-life-save-v3')).minutes;
