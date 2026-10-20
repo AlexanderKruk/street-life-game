@@ -176,7 +176,7 @@ function measure(App) {
   assert.equal(document.querySelectorAll('.journal-thought').length, 5);
   advance(2);assert.equal(historyTitles().at(-1), 'Drank water ×3');
   assert.equal(localStorage.getItem('street-life-journal-history-v1'), untouchedHistory);
-  cleanup();render(React.createElement(App));assert.equal(historyTitles().at(-1), 'Drank water ×3');
+  cleanup();render(React.createElement(App));fireEvent.click(screen.getByRole('button',{name:'History',exact:true}));assert.equal(historyTitles().at(-1), 'Drank water ×3');
   fireEvent.click(screen.getByRole('button', { name: 'Previous day' }));assert.deepEqual(historyTitles(), ['Drank water']);
   // Group before pagination, including runs larger than a history batch.
   setup(App, 'journal', { day: 2 }, { 'street-life-journal-history-v1': Array.from({length:70}, (_, i) => ({ ...water, minute:357+i })) });

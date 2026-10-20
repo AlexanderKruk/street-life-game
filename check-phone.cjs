@@ -13,7 +13,7 @@ require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup,configure}=require('@testing-library/react');
 configure({getElementError:message=>new Error(message)});
-process.on('uncaughtException',error=>{console.error(error.message.split('Here are')[0]);console.error(error.stack.split('\n').filter(line=>line.includes('check-regressions')).join('\n'));cleanup();dom.window.close();process.exit(1)});
+process.on('uncaughtException',error=>{console.error(error.message.split('Here are')[0]);console.error(error.stack.split('\n').filter(line=>line.includes('check-phone')).join('\n'));cleanup();dom.window.close();process.exit(1)});
 const assert=require('node:assert/strict');
 const App=require('./phone-app.cjs').default;
 const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
@@ -73,11 +73,11 @@ try {
  setup({locationId:'station',minutes:600},{'street-life-discovered-v1':['street','station','shop']});
  click('Phone');click('Search');const beforeSearch=read(stateKey),beforeBattery=read(invKey).phoneBattery;
  Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));
- assert(screen.getByRole('dialog',{name:'Looking for information'}));advance(750);
+ assert(screen.getByRole('dialog',{name:'Looking for information'}));advance(3000);
  assert.equal(read('street-life-phone-activity-v1').remaining,12);
  cleanup();render(React.createElement(App));assert.equal(read('street-life-phone-activity-v1').remaining,12);
  assert(screen.getByRole('dialog',{name:'Looking for information'}));
- for(let n=0;n<20&&read('street-life-phone-activity-v1');n++)advance(250);
+ for(let n=0;n<20&&read('street-life-phone-activity-v1');n++)advance(1000);
  assert.equal(read(stateKey).minutes,beforeSearch.minutes+15);
  assert(read(invKey).phoneBattery<beforeBattery);assert(read('street-life-discovered-v1').includes('work'));
  assert.equal(read('street-life-journal-goals-v1').work,true);assert(screen.getByRole('dialog').textContent.includes('Day Work'));ok();
