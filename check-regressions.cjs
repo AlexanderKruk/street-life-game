@@ -114,7 +114,7 @@ for(const state of [{day:1,minutes:1320},{day:2,minutes:600}]) {
  const searchResult=read(stateKey);assert.equal(searchResult.minutes,state.minutes+16);
  advance(3000);assert.deepEqual(read(stateKey),searchResult,'reading the search result pauses time');
  ok();advance(1000);assert.equal(read(stateKey).minutes,searchResult.minutes+1,'closing the result resumes Street time');
- for(const tab of ['Map','Inventory','Status','Journal']) {
+ for(const tab of ['Map','Inventory','Status','Phone']) {
   click(tab);const beforeTab=read(stateKey).minutes;advance(1000);
   assert.equal(read(stateKey).minutes,beforeTab+1,tab+' retains the Street clock');
   fireEvent.click(document.querySelector('.nav-item.home'));

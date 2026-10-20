@@ -1505,7 +1505,11 @@ export default function App() {
 
   useEffect(() => {
     if (!phoneActivity || inventoryAgedAt !== absoluteMinutes(game)) return
-    if (phoneActivity.remaining === 0) {
+    if (shelterCheckoutDue) {
+      setPhoneActivity(null)
+      const text = 'It is time to leave Night Shelter. You put the phone away before finishing the search.'
+      runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
+    } else if (phoneActivity.remaining === 0) {
       setPhoneActivity(null)
       finishPracticalQuestion(phoneActivity.questionId, phoneActivity.before)
     } else if (inventory.phoneBattery <= 0 || !mobileServiceActive || gameOver) {
@@ -1513,7 +1517,7 @@ export default function App() {
       const text = gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.'
       runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
     }
-  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver])
+  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver, shelterCheckoutDue])
 
   function respondToRain(choice: 'cover' | 'continue' | 'stop') {
     const response: RainResponse = { episode: currentRainEpisode ?? `weather:${game.day}`, locationId: current.id, sheltered: choice === 'cover' }
@@ -2616,7 +2620,7 @@ export default function App() {
       </div>
       <LifeSituation housing={life.housing} employment={life.employment} income={life.income} documents={inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'} />
     </section>}
-    {screen === 'phone' && <PhoneScreen app={phoneApp} onApp={setPhoneApp} pendingGoals={pendingGoals.length} unavailable={phoneUnavailable} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} onPlan={() => setPhoneOpen(true)}>
+    {screen === 'phone' && <PhoneScreen busy={!!phoneActivity} app={phoneApp} onApp={setPhoneApp} pendingGoals={pendingGoals.length} unavailable={phoneUnavailable} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} onPlan={() => setPhoneOpen(true)}>
       {phoneApp === 'goals' && <JournalGoals pending={pendingGoals} completed={completedGoals} />}
       {phoneApp === 'history' && <>
       <section className="journal-history" aria-labelledby="journal-day-heading">

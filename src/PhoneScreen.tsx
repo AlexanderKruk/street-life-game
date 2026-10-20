@@ -10,11 +10,11 @@ const apps: { id: Exclude<PhoneApp, 'home'>; label: string; icon: IconName }[] =
 ]
 
 type Props = {
-  app: PhoneApp; onApp: (app: PhoneApp) => void; pendingGoals: number;
+  busy?: boolean; app: PhoneApp; onApp: (app: PhoneApp) => void; pendingGoals: number;
   unavailable: string | null; serviceActive: boolean; serviceMinutesLeft: number;
   onPlan: () => void; children: ReactNode;
 }
-export default function PhoneScreen({ app, onApp, pendingGoals, unavailable, serviceActive, serviceMinutesLeft, onPlan, children }: Props) {
+export default function PhoneScreen({ busy = false, app, onApp, pendingGoals, unavailable, serviceActive, serviceMinutesLeft, onPlan, children }: Props) {
   const heading = useRef<HTMLHeadingElement>(null)
   const previous = useRef(app)
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function PhoneScreen({ app, onApp, pendingGoals, unavailable, ser
     previous.current = app
   }, [app])
   const selected = apps.find(entry => entry.id === app)
-  return <section className="phone-screen" aria-label="Phone">
+  return <section className="phone-screen" aria-label="Phone" inert={busy} aria-hidden={busy || undefined}>
     <header className="phone-screen-header">
       <div className="phone-screen-heading">
         {app !== 'home' && !unavailable && <button type="button" className="phone-back" aria-label="Back to phone" onClick={() => onApp('home')}><Icon name="chevron-left" /></button>}

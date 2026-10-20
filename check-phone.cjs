@@ -74,7 +74,7 @@ try {
  click('Phone');click('Search');const beforeSearch=read(stateKey),beforeBattery=read(invKey).phoneBattery;
  Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));
  assert(screen.getByRole('dialog',{name:'Looking for information'}));advance(3000);
- assert.equal(read('street-life-phone-activity-v1').remaining,12);
+ assert.equal(read('street-life-phone-activity-v1').remaining,12);assert(document.querySelector('.phone-screen[inert]'));
  cleanup();render(React.createElement(App));assert.equal(read('street-life-phone-activity-v1').remaining,12);
  assert(screen.getByRole('dialog',{name:'Looking for information'}));
  for(let n=0;n<20&&read('street-life-phone-activity-v1');n++)advance(1000);
@@ -98,5 +98,11 @@ try {
  click('Phone');click('Search');advance(3000);
  assert([...document.querySelectorAll('.phone-search-row')].every(button=>button.disabled));
  assert(screen.getByText(/Mobile internet is unpaid/));click('Back to phone');click('History');assert(document.querySelector('.journal-history'));
+ // Morning checkout interrupts a search before the departure dialog opens.
+ setup({locationId:'shelter',day:2,minutes:449},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7,shelterLastStayDay:1},'street-life-mobile-service-until':'5000'});
+ click('Phone');click('Search');Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));advance(1000);
+ assert(!read('street-life-phone-activity-v1'));assert.equal(screen.getAllByRole('dialog').length,1);
+ assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));ok();
+ assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
  console.log('PASS: Phone apps, migration, offline notes, plan payment, indoor timed search/reload, work/clinic discovery, dead-phone travel, service expiry.');
 } finally { cleanup();dom.window.close(); }
