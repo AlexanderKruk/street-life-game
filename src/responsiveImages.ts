@@ -27,13 +27,17 @@ export function responsiveImageProps(url: string) {
 }
 
 export function spriteImageSet(name: 'inventory-equipment' | 'shop-products') {
+  return densityImageSet(name)
+}
+
+export function densityImageSet(name: 'inventory-equipment' | 'shop-products' | 'ready-meal') {
   return `image-set(${groups[`${name}.webp`].variants.map((image, index) => `url("${base}${image.file}") ${index + 1}x`).join(', ')})`
 }
 
 // Match the rendered slot and density; never warm every responsive alternative.
 export function warmImageUrls(width: number, height: number, density: number) {
   const dpr = Math.max(1, density)
-  return Object.entries(groups).filter(([file]) => !file.startsWith('event-')).map(([file, group]) => {
+  return Object.entries(groups).filter(([file]) => !file.startsWith('event-') && file !== 'ready-meal.webp').map(([file, group]) => {
     const sprite = file === 'inventory-equipment.webp' || file === 'shop-products.webp'
     if (sprite) return base + group.variants[Math.min(2, Math.ceil(dpr) - 1)].file
     let slot = Math.min(width, 760)

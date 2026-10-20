@@ -70,5 +70,11 @@ for name, image in (('shop-products', shop), ('inventory-equipment', equipment))
         variants.append({'width': width, 'height': height, 'file': filename})
     manifest[f'{name}.webp'] = {'width': image.width, 'height': image.height, 'variants': variants}
 ready_meal.save(assets / 'ready-meal.webp', 'WEBP', quality=86, method=6)
+meal_variants = []
+for width in (160, 320, 480):
+    filename = f'ready-meal-{width}.webp'
+    ready_meal.resize((width, width), Image.Resampling.LANCZOS).save(assets / filename, 'WEBP', quality=80, method=6)
+    meal_variants.append({'width': width, 'height': width, 'file': filename})
+manifest['ready-meal.webp'] = {'width': ready_meal.width, 'height': ready_meal.height, 'variants': meal_variants}
 manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
 print('Packed transparent shop/equipment atlases, 1x/2x/3x variants and ready meal.')

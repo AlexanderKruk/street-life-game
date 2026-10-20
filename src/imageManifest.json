@@ -1257,5 +1257,26 @@
         "file": "city-map-dark-1024.webp"
       }
     ]
+  },
+  "ready-meal.webp": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 160,
+        "height": 160,
+        "file": "ready-meal-160.webp"
+      },
+      {
+        "width": 320,
+        "height": 320,
+        "file": "ready-meal-320.webp"
+      },
+      {
+        "width": 480,
+        "height": 480,
+        "file": "ready-meal-480.webp"
+      }
+    ]
   }
 }

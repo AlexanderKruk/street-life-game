@@ -32,6 +32,7 @@ widths = {
     'shop-interior': [480, 768, 1440, 2172],
     'inventory-equipment': [256, 512, 768],
     'shop-products': [256, 512, 768],
+    'ready-meal': [160, 320, 480],
 }
 for source in sorted(assets.glob('event-*.webp')):
     if not re.search(r'-\d+\.webp$', source.name):
