@@ -974,7 +974,7 @@ footer .header-version { margin-left:auto; align-self:center; }
 .inventory-screen .backpack-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0; }
 .inventory-slot { position:relative; min-width:0; min-height:80px; padding:0; border:1px solid #343d42; border-radius:9px; background:#141b1f; color:#eceeed; overflow:hidden; text-align:left; font-family:inherit; display:flex; flex-direction:row; }
 .inventory-slot-use { display:flex; flex:1; min-width:0; width:100%; padding:0; border:0; border-radius:inherit; background:transparent; color:inherit; text-align:left; font:inherit; cursor:pointer; }
-.inventory-discard { position:absolute; z-index:1; top:0; left:0; width:32px; height:32px; display:grid; place-items:center; padding:7px; border:0; border-radius:0; background:transparent; color:#bac1c3; cursor:pointer; }
+.inventory-discard { position:absolute; z-index:1; bottom:0; right:0; width:32px; height:32px; display:grid; place-items:center; padding:7px; border:0; border-radius:0; background:transparent; color:#bac1c3; cursor:pointer; }
 .inventory-discard svg { width:17px; height:17px; filter:drop-shadow(1px 0 0 #080b0d) drop-shadow(-1px 0 0 #080b0d) drop-shadow(0 1px 0 #080b0d) drop-shadow(0 -1px 0 #080b0d); }
 .inventory-discard:hover,.inventory-discard:active { background:transparent; color:#e2a4a0; }
 .inventory-discard:focus-visible,.inventory-slot-use:focus-visible { outline:2px solid #d7b58a; outline-offset:-2px; }
