@@ -1,6 +1,6 @@
 import { memo, type ReactNode } from 'react'
 
-export type IconName = 'info' | 'map' | 'backpack' | 'street' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
+export type IconName = 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
 
 const paths: Record<IconName, ReactNode> = {
   trash: <><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></>,
@@ -45,7 +45,6 @@ const paths: Record<IconName, ReactNode> = {
   banknote: <><rect x="2" y="5" width="20" height="14" rx="2" /><circle cx="12" cy="12" r="3" /><path d="M5 9h.01M19 15h.01" /></>,
   map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z" /><path d="M9 3v15m6-12v15" /></>,
   backpack: <><rect x="5" y="6" width="14" height="15" rx="3" /><path d="M9 6V4a3 3 0 0 1 6 0v2M8 12h8v6H8zM3 10v7m18-7v7" /></>,
-  street: <><path d="M3 21V9h6v12M9 21V3h6v18m0 0V12h6v9M1 21h22M6 12v1m0 3v1m6-11v1m0 3v1m0 3v1m6 0v1" /></>,
   person: <><circle cx="12" cy="7" r="4" /><path d="M4 21v-2a8 8 0 0 1 16 0v2Z" /></>,
   journal: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 7h6M9 11h6M9 15h4M3 7h2m-2 5h2m-2 5h2" /></>,
   phone: <><rect x="6" y="2" width="12" height="20" rx="2" /><path d="M10 5h4m-3 14h2" /></>,
@@ -56,7 +55,7 @@ const paths: Record<IconName, ReactNode> = {
   moon: <path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z" />,
   bench: <><path d="M4 4h16v6H4zM2 13h20v4H2zM5 10v3m14-3v3M5 17v4m14-4v4" /></>,
   bottle: <path d="M10 2h4v4l2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10l2-4Z" />,
-  walk: <><circle cx="14" cy="4" r="2" /><path d="m7 21 4-7 3 3v4M9 12l2-5 4 1 2 4h3M4 12l4-2m3-3 1 7" /></>,
+  walk: <image href="/street-life-game/assets/travel-walker.webp" width="24" height="24" />,
   bed: <><path d="M3 5v16m18-9v9M3 17h18M3 12h15a3 3 0 0 1 3 3v2H3z" /><path d="M6 9h5v3H6z" /></>,
   station: <><rect x="5" y="2" width="14" height="16" rx="3" /><path d="M5 7h14m-9-5v5m4-5v5M8 21l2-3m6 3-2-3M8 13h1m6 0h1" /></>,
   bus: <><path d="M8 6v6m7-6v6M2 12h19.6M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2v-2c0-.4-.1-.8-.2-1.2L20 5c-.3-.6-.8-1-1.4-1H5c-1.7 0-3 1.3-3 3v11h3M9 18h5" /><circle cx="7" cy="18" r="2" /><circle cx="16" cy="18" r="2" /></>,
@@ -92,5 +91,5 @@ export function choiceIcon(id: string): IconName {
 }
 
 export function locationIcon(id: string): IconName {
-  return ({ street: 'street', station: 'station', shop: 'shop', shelter: 'bed', 'residential-shelter': 'bed', support: 'help', jobcenter: 'work', work: 'work', hospital: 'hospital', 'free-clinic': 'hospital', daycenter: 'help' } as Record<string, IconName>)[id] ?? 'street'
+  return ({ street: 'walk', station: 'station', shop: 'shop', shelter: 'bed', 'residential-shelter': 'bed', support: 'help', jobcenter: 'work', work: 'work', hospital: 'hospital', 'free-clinic': 'hospital', daycenter: 'help' } as Record<string, IconName>)[id] ?? 'walk'
 }

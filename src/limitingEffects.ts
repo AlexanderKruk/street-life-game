@@ -2,7 +2,7 @@ import { energyCap, moodLimit, type GameState, type TimeContext } from './game'
 import type { IconName } from './Icon'
 
 const causes: Record<string, { icon: IconName; name: string }> = {
-  Street: { icon: 'street', name: 'On the street' },
+  Street: { icon: 'walk', name: 'On the street' },
   'Night shelter': { icon: 'bed', name: 'Night shelter' },
   Schronisko: { icon: 'house', name: 'Schronisko' },
   Hostel: { icon: 'bed', name: 'Hostel' },
