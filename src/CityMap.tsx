@@ -5,9 +5,9 @@ import { responsiveImageProps } from './responsiveImages'
 
 // Percent coordinates in the 1024×1536 artwork, attached to city blocks and rail buildings.
 const positions: Record<string, [number, number]> = {
-  hospital: [74, 25.2], jobcenter: [42, 30.4], support: [35, 35.7],
-  'free-clinic': [52, 40.6], work: [58, 45.8], daycenter: [27, 45.5],
-  shelter: [65, 50.8], 'residential-shelter': [29.5, 55.3], station: [44, 59.8],
+  hospital: [81.3, 14.1], jobcenter: [37.3, 20.2], support: [11.2, 21.5],
+  'free-clinic': [85.1, 29.8], work: [50.4, 40.5], daycenter: [11.2, 47.5],
+  shelter: [89.3, 38.5], 'residential-shelter': [16.1, 63.2], station: [34.5, 65.8],
 }
 
 function hours(place: Location) {
@@ -50,7 +50,7 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
         const here = place.id === currentId
         const active = place.id === selectedId
         const open = openFlags[index] === '1'
-        return <button key={place.id} className={`district-pin${x > 55 && place.id !== 'work' ? ' label-left' : ''}${here ? ' here' : ''}${active ? ' selected' : ''}${open ? '' : ' closed'}`} style={{ left: `${x}%`, top: `${y}%` }} onClick={() => onFocus(place.id)} aria-pressed={active} aria-label={`${place.name} ${open ? 'Open' : 'Closed'} ${hours(place)}${here ? ' You are here' : ''}`}>
+        return <button key={place.id} className={`district-pin${x > 55 ? ' label-left' : ''}${here ? ' here' : ''}${active ? ' selected' : ''}${open ? '' : ' closed'}`} style={{ left: `${x}%`, top: `${y}%` }} onClick={() => onFocus(place.id)} aria-pressed={active} aria-label={`${place.name} ${open ? 'Open' : 'Closed'} ${hours(place)}${here ? ' You are here' : ''}`}>
           <span className="district-marker" aria-hidden="true" /><span className="district-label"><strong>{place.name}</strong></span>
         </button>
       })}

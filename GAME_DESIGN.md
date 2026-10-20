@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-256`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-257`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Visual landmark placement (v257)
+
+An independent visual review selects dispersed landmarks directly from the city-map artwork. Station is attached to the long light platforms/station structure in the southern railway corridor (approximately 34.5% across, 65.8% down), rather than the ordinary blocks east of the tracks. Other facilities are distributed among distinct city blocks. Natural geographic placement takes priority over a tidy grid or packing every label into the center; overlaps may be refined later without moving the underlying landmarks. The anchor layer is no longer clipped to the central space between toolbar and card, while the viewport still clips image overflow and the toolbar remains usable above markers. The 16px label size, map projection, and nearby shortcuts are retained.
 
 ### Compact map heading (v256)
 
