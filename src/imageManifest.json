@@ -335,27 +335,6 @@
       }
     ]
   },
-  "city-night.webp": {
-    "width": 1024,
-    "height": 1536,
-    "variants": [
-      {
-        "width": 480,
-        "height": 720,
-        "file": "city-night-480.webp"
-      },
-      {
-        "width": 768,
-        "height": 1152,
-        "file": "city-night-768.webp"
-      },
-      {
-        "width": 1024,
-        "height": 1536,
-        "file": "city-night-1024.webp"
-      }
-    ]
-  },
   "street-hero.webp": {
     "width": 1400,
     "height": 788,
@@ -1255,6 +1234,27 @@
         "width": 1024,
         "height": 576,
         "file": "event-closing-time-1024.webp"
+      }
+    ]
+  },
+  "city-map-dark.webp": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 480,
+        "height": 720,
+        "file": "city-map-dark-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 1152,
+        "file": "city-map-dark-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 1536,
+        "file": "city-map-dark-1024.webp"
       }
     ]
   }

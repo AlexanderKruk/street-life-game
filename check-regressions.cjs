@@ -387,7 +387,8 @@ setup({minutes:1320,thirst:45},{[invKey]:{phoneBattery:31}});assert(screen.getBy
 setup({minutes:1320,mood:28},{[invKey]:{phoneBattery:0},'street-life-mobile-service-until':'0'});const rememberedState=read(stateKey);click('Where can I charge my phone?');assert.equal(read(stateKey).minutes,rememberedState.minutes);assert.equal(read(invKey).phoneBattery,0);assert(screen.getByRole('dialog').textContent.includes('waiting room'));assert(screen.getByRole('dialog').textContent.includes('60%'));const rememberedAfter=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),rememberedAfter);ok();assert(!screen.queryByRole('button',{name:'Where can I get help in the morning?',exact:true}));click('Where can I charge my phone?');assert.deepEqual(read(stateKey),rememberedAfter);ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:30}});click(/Inventory$/);click(/PhoneBattery/);click(/Ask AI/);assert(screen.getByRole('dialog').textContent.includes('08:00'));assert.equal(read(stateKey).minutes,1335);ok();assert(screen.getByRole('button',{name:'Where can I charge my phone?',exact:true}));
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
-for (const name of ['Cheap Shop','Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.district-scene strong')].some(node=>node.textContent===name));
+for (const name of ['Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.district-scene strong')].some(node=>node.textContent===name));
+assert(![...document.querySelectorAll('.district-pin')].some(pin=>/Cheap Shop|Street/.test(pin.textContent)));
 assert(read(lifeKey).schroniskoReferral);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
 setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
 
@@ -403,15 +404,34 @@ click(/Take a short shift/);assert(Math.abs(read(stateKey).health - (90 - .147 *
 // Illustrated map only shows discovered places; selection is read-only until routing.
 setup({minutes:600}, {'street-life-discovered-v1':['street','station','shop']});click(/Map$/);
 const mapBefore=read(stateKey);
-assert(document.querySelector('.district-backdrop img').getAttribute('src').endsWith('/city-night-480.webp'));
-assert(document.querySelector('.district-backdrop img').srcset.includes('city-night-1024.webp 1024w'));
+assert(document.querySelector('.district-backdrop img').getAttribute('src').endsWith('/city-map-dark-480.webp'));
+assert(document.querySelector('.district-backdrop img').srcset.includes('city-map-dark-1024.webp 1024w'));
 assert(!document.querySelector('.district-pin').textContent.includes('Night Shelter'));
 assert(![...document.querySelectorAll('.district-pin')].some(pin=>pin.textContent.includes('Night Shelter')));
 click(/^.*Station/);assert.deepEqual(read(stateKey),mapBefore);assert(!document.querySelector('.travel-sheet'));
 assert(document.querySelector('.district-card').textContent.includes('Station'));
-assert(document.querySelector('.district-route path'));
+assert(!document.querySelector('.district-route path'), 'being outside has no fixed map anchor');
 click('Go →');assert(document.querySelector('.travel-sheet'));fireEvent.click(document.querySelector('.sheet-close'));
 assert.deepEqual(read(stateKey),mapBefore);
+
+// Street is an immediate exit; shops are nearby routes, with current-place shortcuts disabled.
+const streetShortcut=within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Street',exact:true});
+assert(streetShortcut.disabled);
+fireEvent.click(streetShortcut);assert.deepEqual(read(stateKey),mapBefore);
+click('Nearest shop');assert(document.querySelector('.travel-sheet'));
+assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
+assert.equal(read(stateKey).locationId,'street');
+fireEvent.click(document.querySelector('.sheet-close'));
+setup({locationId:'shop',minutes:600});click(/Map$/);
+assert(screen.getByRole('button',{name:'Nearest shop',exact:true}).disabled);
+const beforeExit=read(stateKey);
+fireEvent.click(screen.getByRole('button',{name:'Nearest shop',exact:true}));
+assert(!document.querySelector('.travel-sheet'));assert.deepEqual(read(stateKey),beforeExit);
+click('Street');assert.deepEqual(read(stateKey),{...beforeExit,locationId:'street'});
+assert(!document.querySelector('.travel-sheet'));assert(!read('street-life-trip-v1'));
+setup({locationId:'station',minutes:600});click(/Map$/);
+assert(!screen.getByRole('button',{name:'Street',exact:true}).disabled);
+assert(!screen.getByRole('button',{name:'Nearest shop',exact:true}).disabled);
 
 // Cancelled routes must never count as a departure; actual walking does, once.
 setup({locationId:'shelter',minutes:540},{[lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,shelterStrikes:0}});
@@ -529,7 +549,7 @@ for(const mode of ['walk','transit','fare-dodge']) {
 
 // The nearby shop takes the same 5–15 minutes in each mode, including bus waits.
 for(const mode of ['walk','transit','fare-dodge']) {
- setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click(/^.*Cheap Shop/);click('Go →');
+ setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click('Nearest shop');
  const options=document.querySelectorAll('.travel-option');assert.equal(options.length,3);for(const option of options)assert(option.textContent.includes('≈5–15m'));
  if(mode==='fare-dodge'){click(/Ride without ticket/);click('Roll D20');click('Continue');ok();}else click(mode==='walk'?/^Walk/:/Public transport/);
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
@@ -783,7 +803,7 @@ advance(19000);assert.equal(read(stateKey).minutes,1099);assert(!read(lifeKey).s
 advance(1000);assert.equal(read(lifeKey).shelterUntilDay,7);ok();
 
 // Leaving loses arrival priority, while vacancies remain fixed for the day.
-setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});click(/Map$/);click(/^.*Street/);click('Go →');
+setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});click(/Map$/);click('Street');
 assert.equal(read(stateKey).locationId,'street');assert(!read(arrivalKey));assert.equal(read(lifeKey).shelterVacancies,1);
 setup({locationId:'shelter',minutes:1110},{[lifeKey]:vacancyKey(1),[arrivalKey]:{day:0,minute:1020}});assert.equal(read(arrivalKey).minute,1110);click(/Join registration queue/);assert.equal(read('street-life-shelter-queue-v1').peopleAhead,2);advance(20000);assert(!read(lifeKey).shelterUntilDay);ok();
 

@@ -25,7 +25,7 @@ widths = {
     'event-bench-conversation': [480, 768, 1024],
     'event-bench-watch': [480, 768, 1024],
     'event-bench-space': [480, 768, 1024],
-    'city-night': [480, 768, 1024],
+    'city-map-dark': [480, 768, 1024],
     'street-hero': [480, 768, 1024, 1400],
     'phone-search': [480, 768, 1024, 1400],
     'help-morning': [480, 768, 1024, 1400],

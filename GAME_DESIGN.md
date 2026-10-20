@@ -2,7 +2,13 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-254`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-255`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### City plan and nearby shortcuts (v255)
+
+The approved dark overhead city plan replaces the close-up city illustration. A text-free cartographic background uses 480/768/1024px responsive WebP variants and image caching; labels and controls remain real UI. Location labels grow from 18px to approximately 27px, with a 24px minimum on narrow screens. Discovered fixed destinations have spaced anchors in the viewport above the selection card. Street and Cheap Shop no longer have fixed map pins or synthetic route origins: Street means stepping outside the current building, and Cheap Shop represents a nearby store.
+
+Two top shortcuts replace those pins. Street immediately uses the existing exit handler without travel or time costs; Nearest shop opens the existing route chooser (5–15 minutes, with the existing transport choices). Street is disabled when locationId is street, and Nearest shop is disabled when locationId is shop. Both remain inert behind travel/event overlays. Shelter departures and phone collection retain their existing rules. Background generation and provenance: `docs/city-map-dark-art.md`.
 
 ### Continuous city background (v254)
 

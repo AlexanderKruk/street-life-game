@@ -8,7 +8,7 @@ const fileName = (url: string) => url.split('/').pop() ?? ''
 export function imageSizes(url: string) {
   if (fileName(url).startsWith('event-')) return '(min-width: 480px) 480px, calc(100vw - 24px)'
   switch (fileName(url)) {
-    case 'city-night.webp': return '(min-width: 520px) 520px, 100vw'
+    case 'city-map-dark.webp': return '(min-width: 760px) 760px, 100vw'
     case 'phone-search.webp': return '(min-width: 760px) 760px, max(100vw, clamp(267px, 50.7svh, 480px))'
     case 'shop-interior.webp': return '(min-width: 760px) 760px, max(100vw, 435px)'
     default: return '(min-width: 760px) 760px, max(100vw, clamp(284px, 53.3svh, 462px))'
@@ -37,8 +37,7 @@ export function warmImageUrls(width: number, height: number, density: number) {
     const sprite = file === 'inventory-equipment.webp' || file === 'shop-products.webp'
     if (sprite) return base + group.variants[Math.min(2, Math.ceil(dpr) - 1)].file
     let slot = Math.min(width, 760)
-    if (file === 'city-night.webp') slot = Math.min(width, 520)
-    else if (file === 'phone-search.webp') slot = Math.max(slot, Math.min(360, Math.max(200, height * .38)) * 4 / 3)
+    if (file === 'phone-search.webp') slot = Math.max(slot, Math.min(360, Math.max(200, height * .38)) * 4 / 3)
     else if (file === 'shop-interior.webp') slot = Math.max(slot, 435)
     else slot = Math.max(slot, Math.min(260, Math.max(160, height * .30)) * 1400 / 788)
     const image = group.variants.find(image => image.width >= slot * dpr) ?? group.variants[group.variants.length - 1]
