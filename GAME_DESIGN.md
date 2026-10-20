@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-264`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-265`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Place result typography and visual alignment (v265)
+
+The place name, hours and On map label now share the visual vertical center of the heading row, replacing baseline alignment. Compact information modals use two main font sizes: 18px for the heading and stat percentages, 14px for metadata, descriptions, notices, reflections, stat labels, result summaries and the confirmation button. Narrow phones use a 16px heading/value with the same readable 14px body; reduced gaps and side padding keep the single heading row compact. Other result modals and gameplay are unchanged.
 
 ### Single-line place result heading (v264)
 
