@@ -29,7 +29,7 @@ export default function PhoneScreen({ busy = false, app, onApp, pendingGoals, un
         <Icon name={selected?.icon ?? 'phone'} className={selected ? `phone-app-symbol ${selected.id}` : undefined} />
         <h2 ref={heading} tabIndex={-1}>{selected?.label ?? 'Phone'}</h2>
       </div>
-      <button type="button" className={`phone-plan-status ${serviceActive ? 'paid' : 'unpaid'}`} aria-label="Mobile plan" disabled={!!unavailable} onClick={onPlan} title={serviceActive ? `Mobile internet: ${serviceMinutesLeft >= 60 ? Math.ceil(serviceMinutesLeft / 60) + 'h' : serviceMinutesLeft + 'm'} left. Manage plan.` : 'Mobile internet is unpaid. Manage plan.'}>
+      <button type="button" className={`phone-plan-status ${serviceActive ? 'paid' : 'unpaid'}`} aria-label="Mobile plan" disabled={!!unavailable} onClick={event => { event.currentTarget.focus({ preventScroll: true }); onPlan() }} title={serviceActive ? `Mobile internet: ${serviceMinutesLeft >= 60 ? Math.ceil(serviceMinutesLeft / 60) + 'h' : serviceMinutesLeft + 'm'} left. Manage plan.` : 'Mobile internet is unpaid. Manage plan.'}>
         <span>1 zł/day</span><span aria-hidden="true">·</span><i aria-hidden="true" /><span>{serviceActive ? 'Paid' : 'Unpaid'}</span>
       </button>
     </header>
