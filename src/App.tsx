@@ -35,7 +35,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-266'
+const BUILD_VERSION = 'v2026.10.20-267'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2557,7 +2557,6 @@ export default function App() {
           const effects = !slot ? item.effects : [
             kind === 'bread' ? 'Food+' : kind === 'readyMeal' && freshness > 50 ? 'Food+++' : freshness > 20 ? 'Food++' : 'Food+',
             ...(kind === 'food' && freshness > 50 ? ['Mood+'] : []),
-            ...(slot.fresh ? [`Fresh ×${slot.fresh}`] : []),
             ...(slot.stale ? [`Stale ×${slot.stale}`] : []),
             ...(slot.spoiled ? [`Spoiled ×${slot.spoiled}`] : []),
           ]

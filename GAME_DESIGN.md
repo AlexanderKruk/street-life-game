@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-266`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-267`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Default fresh food appearance (v267)
+
+Backpack food cards no longer show a Fresh count tag. Freshness is the default appearance; Stale and Spoiled portion counts remain visible on affected stacks. The explicit freshness choices in mixed/unsafe food consumption dialogs are unchanged, as are freshness aging, effects and saves.
 
 ### Progress dialog focus appearance (v266)
 
