@@ -117,6 +117,8 @@ footer p { margin:0; }
 .travel-screen { margin-top:27px; padding:20px 18px 22px; border:1px solid #333e49; border-radius:18px; background:#161d22; display:grid; grid-template-columns:98px minmax(0,1fr); column-gap:16px; row-gap:12px; align-items:center; }
 .travel-overlay { position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; padding:20px 12px; background:rgba(4,7,10,.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); overscroll-behavior:contain; }
 .travel-overlay .travel-screen { width:min(480px,100%); margin:0; max-height:calc(100dvh - 40px); overflow:auto; box-shadow:0 8px 30px rgba(0,0,0,.24); }
+/* Dialog containers receive focus for accessibility, without a browser focus ring. */
+.travel-screen[tabindex="-1"]:focus { outline:none; }
 .travel-visual { grid-column:1; grid-row:1 / 3; position:relative; width:98px; height:98px; display:flex; align-items:center; justify-content:center; color:#c4b69e; }
 .travel-route-heading { grid-column:2; grid-row:1; min-width:0; align-self:end; }
 .travel-route-heading p { margin:0; color:#a0a8ae; font-size:15px; }
