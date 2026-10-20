@@ -761,12 +761,21 @@ button.inventory-item { width:100%; }
 .result-details .result-change-list { margin:8px 0; }
 .result-confirm { appearance:none; -webkit-appearance:none; flex-shrink:0; width:100%; min-height:42px; margin-top:10px; border:1px solid #998a77; border-radius:10px; background:#b9a58b; color:#151a1c; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
 .result-confirm:active { background:#ab967b; }
-.compact-info-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
-.compact-info-heading h2 { display:flex; align-items:center; gap:7px; min-width:0; overflow-wrap:anywhere; }
-.compact-info-heading h2 svg { width:20px; height:20px; flex-shrink:0; color:#aeb5b6; }
-.compact-info-hours { color:#d5b58e; font-size:14px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.compact-info-heading { display:flex; flex-wrap:nowrap; align-items:baseline; gap:8px; }
+.result-modal .compact-info-heading h2 { display:flex; flex:1; align-items:baseline; gap:6px; min-width:0; font-size:20px; white-space:nowrap; }
+.compact-info-heading h2 span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.compact-info-heading h2 svg { width:18px; height:18px; flex-shrink:0; align-self:center; color:#aeb5b6; }
+.compact-info-hours { flex-shrink:0; color:#d5b58e; font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .compact-info-saved { display:flex; align-items:center; gap:6px; margin:0 0 8px; color:#a6c7b2; font-size:13px; line-height:1.4; }
 .compact-info-saved svg { width:16px; height:16px; flex-shrink:0; }
+.compact-info-heading .compact-info-saved { display:inline-flex; flex-shrink:0; align-items:baseline; gap:4px; margin:0; font-size:12px; white-space:nowrap; }
+.compact-info-heading .compact-info-saved svg { width:14px; height:14px; align-self:center; }
+@media (max-width:360px) {
+  .compact-info-heading { gap:6px; }
+  .result-modal .compact-info-heading h2 { font-size:16px; gap:4px; }
+  .compact-info-heading h2 svg { width:16px; height:16px; }
+  .compact-info-hours, .compact-info-heading .compact-info-saved { font-size:11px; }
+}
 .compact-info-summary { font-size:13px; margin-top:0; padding:9px 0; }
 .compact-info-mood.positive { color:#a6c7b2; }
 .compact-info-mood.negative { color:#d4a196; }

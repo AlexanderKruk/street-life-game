@@ -117,14 +117,16 @@ try {
     assert(!dialog.querySelector('.result-card-label'));
     assert(dialog.querySelector('.compact-info-heading svg'), 'title has an information icon');
     assert(dialog.querySelector('.compact-info-hours').textContent);
-    assert.equal(dialog.querySelector('.compact-info-saved').textContent, 'Added to map');
+    assert(dialog.querySelector('.compact-info-heading .compact-info-saved'), 'map status shares the name and hours heading');
+    assert(!dialog.querySelector('.result-card-content .compact-info-saved'), 'single-place result does not repeat map status below');
+    assert.equal(dialog.querySelector('.compact-info-saved').textContent, 'On map');
     const line = dialog.querySelector('.compact-info-summary').textContent;
     assert(line.includes('19 min') && line.includes('Mood +3'));
     assert(!dialog.querySelector('details'), 'compact discoveries do not repeat the same information in a disclosure');
     cleanup();
   }
   render(React.createElement(ResultCard, { result: { title: 'Saved', text: 'Saved answer.', presentation: questionPresentation('morning', ['support'], true), costs: [], changes: [] }, onClose: () => {} }));
-  assert.equal(document.querySelector('.compact-info-saved').textContent, 'Saved on map');
+  assert.equal(document.querySelector('.compact-info-saved').textContent, 'On map');
   assert(!document.querySelector('.compact-info-summary'), 'no costs or gains are invented for a saved answer');cleanup();
   render(React.createElement(ResultCard, { result: { title: 'Nothing new', text: 'No new places.', presentation: questionPresentation('morning', []), costs: [], changes: [] }, onClose: () => {} }));
   assert(screen.getByRole('dialog', { name: 'No new information' }));

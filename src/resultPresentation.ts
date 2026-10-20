@@ -18,7 +18,7 @@ const answers: Record<string, Pick<ResultPresentation, 'heading' | 'lead' | 'not
   charging: { heading: 'An outlet at the station', lead: '', notice: 'No internet needed. The station is available tonight.' },
 }
 
-export function locationPresentation(placeIds: string[], mapStatus = 'Added to map'): ResultPresentation {
+export function locationPresentation(placeIds: string[], mapStatus = 'On map'): ResultPresentation {
   return {
     heading: 'Information found', label: 'INFORMATION', lead: '', compact: true, mapStatus,
     places: placeIds.flatMap(placeId => {
@@ -33,10 +33,10 @@ export function locationPresentation(placeIds: string[], mapStatus = 'Added to m
   }
 }
 
-export function questionPresentation(id: string, placeIds: string[], saved = false, alreadyKnown = false): ResultPresentation | undefined {
+export function questionPresentation(id: string, placeIds: string[], _saved = false, _alreadyKnown = false): ResultPresentation | undefined {
   const answer = answers[id]
   if (!answer) return undefined
-  const places = locationPresentation(placeIds, saved ? 'Saved on map' : alreadyKnown ? 'On your map' : 'Added to map')
+  const places = locationPresentation(placeIds)
   return {
     ...places, ...answer,
     ...(id === 'morning' ? { heading: places.places?.[0]?.name ?? 'No new information', lead: places.places?.length ? '' : 'You found no new places.', notice: undefined } : {}),

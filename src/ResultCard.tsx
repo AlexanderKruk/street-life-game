@@ -97,8 +97,9 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
       <div className="result-card-heading">
         {!result.bottleSearch && !compactInfo && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}
         <div className={compactInfo ? 'compact-info-heading' : undefined}>
-          <h2 id="result-title">{compactInfo && <Icon name="info" />}{compactPlace?.name ?? (result.bottleSearch ? 'Bottle & can search' : presentation?.heading ?? result.title)}</h2>
+          <h2 id="result-title">{compactInfo && <Icon name="info" />}<span>{compactPlace?.name ?? (result.bottleSearch ? 'Bottle & can search' : presentation?.heading ?? result.title)}</span></h2>
           {compactPlace && <span className="compact-info-hours">{compactPlace.hours}</span>}
+          {compactPlace && presentation?.mapStatus && <span className="compact-info-saved"><Icon name="check" />{presentation.mapStatus}</span>}
         </div>
       </div>
       <div className="result-card-content">
@@ -110,7 +111,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>
           </div>)}</div>}
           {presentation?.lead && <p className="result-description">{presentation.lead}</p>}
-          {!!presentation?.places?.length && presentation.mapStatus && <p className="compact-info-saved"><Icon name="check" />{presentation.mapStatus}</p>}
+          {!compactPlace && !!presentation?.places?.length && presentation.mapStatus && <p className="compact-info-saved"><Icon name="check" />{presentation.mapStatus}</p>}
           {presentation?.notice && <p className="result-notice">{presentation.notice}</p>}
           {result.reflection && <p className="result-description">{result.reflection}</p>}
         </> : presentation ? <>

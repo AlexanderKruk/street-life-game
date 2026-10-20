@@ -35,7 +35,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-263'
+const BUILD_VERSION = 'v2026.10.20-264'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1379,7 +1379,7 @@ export default function App() {
       : kind === 'work'
         ? { id: 'work', label: 'Day Work', message: 'You find a place advertising casual day work and save the address.' }
         : { id: 'support', label: 'Help Center', message: 'You find a local help center and save its address.' }
-    const presentation = locationPresentation([result.id], discoveredLocations.includes(result.id) ? 'On your map' : 'Added to map')
+    const presentation = locationPresentation([result.id], 'On map')
 
     setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - directSearchCost) }))
     setGame((prev) => applyAction(prev, { minutes: 15 }))
@@ -1818,7 +1818,7 @@ export default function App() {
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
-        ...(place ? { presentation: { ...locationPresentation([place.id], discoveredLocations.includes(place.id) ? 'On your map' : 'Added to map'), lead: outcome.message,
+        ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcome.message,
           notice: `Arrive before 18:00 on Day ${goalDay}. Doors open at 18:00; registration starts at 18:20.` } } : {}) }))
     }
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))

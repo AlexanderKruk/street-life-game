@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-263`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-264`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Single-line place result heading (v264)
+
+Single-place information cards display the place name, opening hours and check-marked **On map** status in one non-wrapping heading row, aligned on the text baseline. New and saved discoveries share the short status. The separate map-status paragraph is removed for single-place cards; service details, reflection, stat effects and modal blocking stay unchanged. Compact typography and a narrow-phone adjustment keep the row usable on mobile.
 
 ### Consistent result modals (v263)
 
