@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-19 · Neutral office-worker protagonist. Latest application build: `v2026.10.19-252`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-253`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Viewport-fitted city map (v253)
+
+The map screen fits the live header, heading, map, selection card and bottom navigation within the dynamic viewport. The illustration crops its upper sky, the exploration hint is removed, and eleven pin anchors are spread vertically across the usable scene. The card takes its own space below the scene instead of covering southern locations; longer card copy and the shelter goal reminder reduce scene height naturally. Routes use the same anchors as pins. Other screens retain their scrolling and reset/version footer. Saves and gameplay are unchanged.
 
 ### Illustrated closing-time departure (v252)
 

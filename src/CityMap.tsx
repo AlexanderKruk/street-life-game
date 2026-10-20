@@ -1,12 +1,12 @@
-import { memo, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useState } from 'react'
 import { isOpen, type Location } from './game'
 import { Icon, locationIcon } from './Icon'
 import { responsiveImageProps } from './responsiveImages'
 
 const positions: Record<string, [number, number]> = {
-  support: [18, 30], daycenter: [64, 38], 'free-clinic': [82, 25], hospital: [85, 19], jobcenter: [16, 9],
-  shop: [26, 51], shelter: [80, 62], street: [13, 73], work: [85, 46],
-  station: [49, 91], 'residential-shelter': [83, 80],
+  support: [18, 32], daycenter: [64, 41], 'free-clinic': [82, 23], hospital: [85, 14], jobcenter: [16, 5],
+  shop: [26, 59], shelter: [80, 68], street: [13, 77], work: [85, 50],
+  station: [49, 95], 'residential-shelter': [83, 86],
 }
 
 function hours(place: Location) {
@@ -37,26 +37,13 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
   places: Location[]; currentId: string; minutes: number; reservedBed: boolean; routeId: string | null; onRoute: (id: string) => void
 }) {
   const [focusedId, setFocusedId] = useState(currentId)
-  const mapRef = useRef<HTMLElement>(null)
-  const cardRef = useRef<HTMLDivElement>(null)
   const selected = places.find(place => place.id === (routeId ?? focusedId)) ?? places.find(place => place.id === currentId) ?? places[0]
-  useLayoutEffect(() => {
-    const map = mapRef.current
-    const card = cardRef.current
-    if (!map || !card) return
-    const updateCardHeight = () => map.style.setProperty('--district-card-height', `${card.getBoundingClientRect().height}px`)
-    updateCardHeight()
-    if (typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(updateCardHeight)
-    observer.observe(card)
-    return () => observer.disconnect()
-  }, [!!selected])
   if (!selected) return null
   const openFlags = places.map(place => isOpen(place, minutes) ? '1' : '0').join('')
-  return <section ref={mapRef} className="district-map" aria-label="City map">
-    <div className="district-map-heading"><h2>City map</h2><span>Tap a place to explore</span></div>
+  return <section className="district-map" aria-label="City map">
+    <div className="district-map-heading"><h2>City map</h2></div>
     <DistrictScene places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />
-    <div ref={cardRef} className="district-card" aria-live="polite">
+    <div className="district-card" aria-live="polite">
       <div className="district-place-icon"><Icon name={locationIcon(selected.id)} /></div>
       <div className="district-place-copy"><div className="district-place-heading"><h3>{selected.name}</h3><p className={`district-hours ${isOpen(selected, minutes) ? 'open' : 'closed'}`}>{hours(selected)}</p></div><small>{selected.id === 'shelter' ? reservedBed ? 'Use your reserved bed during admission hours.' : 'A place is not guaranteed.' : selected.description}</small></div>
       <button className="district-route-button" onClick={() => onRoute(selected.id)}>Go →</button>
