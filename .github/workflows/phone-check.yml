@@ -15,7 +15,17 @@ jobs:
       - run: npm ci
       - name: Gameplay and phone checks
         run: |
-          node -e "const {spawnSync}=require('node:child_process');let failed=false;for(const command of require('./package.json').scripts.test.split(' && ')){console.log('CHECK_START '+command);const result=spawnSync(command,{shell:true,stdio:'inherit'});if(result.status!==0){failed=true;console.log('CHECK_FAILED '+command)}}process.exit(failed?1:0)"
+          node -e "const {spawnSync}=require('node:child_process');let failed=false;for(const command of require('./package.json').scripts.test.split(' && ').filter(command=>!command.includes('check-regressions.cjs'))){console.log('CHECK_START '+command);const result=spawnSync(command,{shell:true,stdio:'inherit'});if(result.status!==0){failed=true;console.log('CHECK_FAILED '+command)}}process.exit(failed?1:0)"
       - name: TypeScript and production build
         if: always()
         run: npm run build
+  regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: Full gameplay scenarios
+        run: node check-regressions.cjs
