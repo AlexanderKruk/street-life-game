@@ -3,12 +3,14 @@ import ChoiceOptions from './ChoiceOptions'
 import type { StreetEvent, StreetEventChoice } from './events'
 
 const eventIcons: Record<string, IconName> = {
+  'spare-change': 'coins', 'dropped-glove': 'person',
   'phone-drop': 'phone', 'rain-phone': 'rain', 'free-snack': 'food',
   'ticket-check': 'ticket', 'station-food': 'food', 'useful-tip': 'help',
   'rough-crowd': 'person', 'quiet-night': 'moon', 'night-theft': 'backpack',
 }
 
 const choiceIcons: Record<string, IconName> = {
+  'Give 1 zł': 'coins', 'Sorry, I can’t': 'person', 'Keep my distance': 'walk', 'Call after them': 'person',
   'Let it fall': 'phone', 'Hide it under the jacket': 'person', 'Keep moving': 'walk',
   'Take it': 'food', 'No thanks': 'walk', 'Show your ticket': 'ticket',
   'Just listen': 'help', 'Keep going': 'walk', 'Move away': 'walk',

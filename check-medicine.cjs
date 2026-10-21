@@ -14,7 +14,7 @@ const key='street-life-save-v3',effectsKey='street-life-effects-v1',inventoryKey
 const read=k=>JSON.parse(localStorage.getItem(k));
 const start=2*1440+600;
 function setup(coldMinutes){
- cleanup();localStorage.clear();
+ cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
  localStorage.setItem(key,JSON.stringify({day:3,minutes:600,money:100,hunger:100,thirst:100,energy:100,health:100,hygiene:80,mood:45,intoxication:0,locationId:'station'}));
  localStorage.setItem(effectsKey,JSON.stringify(coldMinutes>0?[{id:'cold',expiresAt:start+coldMinutes}]:[]));
  localStorage.setItem('street-life-screen','inventory');localStorage.setItem('street-life-mobile-auto-renew','false');

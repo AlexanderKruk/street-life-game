@@ -10,6 +10,7 @@ export function firstNightTime(state: { day: number; minutes: number }) {
 
 export type EventContext = {
   locationId: string
+  minutes?: number
   travelMode?: 'walk' | 'transit' | 'fare-dodge'
   weather: string
   housing: Housing
@@ -68,6 +69,7 @@ export type DiceCheck = {
 
 export type StreetEventChoice = {
   label: string
+  moneyRequired?: number
   outcome?: EventOutcome
   check?: DiceCheck
 }
@@ -98,18 +100,18 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Hide it under the jacket', outcome:{ jacketCondition:-2, phoneCondition:-3, mood:-2, message:'You protected it as best you could, but some moisture got inside.' } },
     { label:'Keep moving', outcome:{ phoneCondition:-10, mood:-1, message:'You save time, but the wet phone starts behaving strangely.' } }
   ]},
-  { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the curb.', weight:4, choices:[
+  { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the curb.', weight:4, eligible:c=>c.travelMode==='walk', choices:[
     { label:'Pick it up', outcome:{ randomCoin:true, message:'You pick up the coin.' } },
     { label:'Leave it', outcome:{ mood:1, message:'You leave it for someone who may need it more.' } }
   ]},
-  { id:'free-snack', trigger:'travel', icon:'🥪', title:'Someone offers food', text:'A passer-by offers you a packaged sandwich.', weight:3, eligible:c=>!c.firstNight, choices:[
+  { id:'free-snack', trigger:'travel', icon:'🥪', title:'Someone offers food', text:'A passer-by offers you a packaged sandwich.', weight:3, eligible:c=>!c.firstNight && c.travelMode==='walk', choices:[
     { label:'Take it', outcome:{ food:1, mood:2, message:'You put the sandwich in your backpack.' } },
     { label:'No thanks', outcome:{ message:'You politely decline and keep going.' } }
   ]},
   { id:'ticket-check', trigger:'travel', icon:'🎫', title:'Ticket inspection', text:'Inspectors enter the vehicle and start checking tickets.', weight:3, eligible:c=>c.travelMode==='transit', choices:[
     { label:'Show your ticket', outcome:{ message:'Everything is in order. You continue the trip.' } }
   ]},
-  { id:'station-food', trigger:'location', icon:'🥐', title:'Food before closing', text:'A worker has a small bag of unsold food and asks if you want it.', weight:3, eligible:c=>c.locationId==='station' && !c.firstNight, choices:[
+  { id:'station-food', trigger:'location', icon:'🥐', title:'Food before closing', text:'A worker has a small bag of unsold food and asks if you want it.', weight:3, eligible:c=>c.locationId==='station' && !c.firstNight && (c.minutes ?? 1200)>=1140, choices:[
     { label:'Accept', outcome:{ food:1, mood:3, message:'You received some food for later.' } },
     { label:'Decline', outcome:{ message:'You thank them and decline.' } }
   ]},
@@ -133,6 +135,15 @@ export const STREET_EVENTS: StreetEvent[] = [
   { id:'night-theft', trigger:'wake', icon:'🎒', title:'Something happened overnight', text:'You wake up and notice that someone went through your things.', weight:2, eligible:c=>c.housing==='Street', choices:[
     { label:'Check your things', outcome:{ money:-5, mood:-7, loseDocuments:true, message:'Some cash is gone, and your documents are missing.' } }
   ]},
+  { id:'spare-change', trigger:'location', icon:'🪙', title:'Have you got any change?', text:'A passer-by stops a few steps away. “Excuse me, could you spare a złoty?” They wait for your answer.', weight:2, eligible:c=>c.locationId==='street' || c.locationId==='station', choices:[
+    { label:'Give 1 zł', moneyRequired:1, outcome:{ money:-1, mood:1, message:'You give them a złoty. They thank you and move on. You check what you have left.' } },
+    { label:'Sorry, I can’t', outcome:{ message:'You say you cannot help. They nod and ask someone further down the pavement.' } },
+    { label:'Keep my distance', outcome:{ message:'You keep your distance and carry on. They do not follow you.' } },
+  ]},
+  { id:'dropped-glove', trigger:'location', icon:'👤', title:'Someone dropped a glove', text:'A glove slips from a passer-by’s pocket. They keep walking, unaware. You are close enough to call out.', weight:2, eligible:c=>c.locationId==='street', choices:[
+    { label:'Call after them', outcome:{ minutes:2, mood:2, message:'They turn around, pick up the glove and raise a hand in thanks. For a moment, it feels like an ordinary day.' } },
+    { label:'Keep going', outcome:{ message:'You keep going. Someone else may notice it.' } },
+  ]},
   { id:'first-night-door', illustration:'/street-life-game/assets/event-first-night-door.webp', trigger:'walk', icon:'🏠', title:'The door closes', text:'Someone ahead of you slows down, takes out a key and slips into a lit entrance. The door clicks shut. You keep standing on the pavement. Nobody has noticed anything unusual about you.', weight:1, eligible:c=>!!c.firstNight && c.locationId==='street', choices:[
     { label:'Keep walking', outcome:{ illustration:'/street-life-game/assets/event-door-walk.webp', message:'You turn towards the next crossing. Until recently, coming home still felt like an ordinary thing.' } },
     { label:'Stay here for a moment', outcome:{ illustration:'/street-life-game/assets/event-door-stay.webp', minutes:5, mood:-1, message:'You watch the entrance until the light goes out. Then you move away. You do not want to spend the night watching other people come home.' } },
@@ -155,15 +166,9 @@ export const STREET_EVENTS: StreetEvent[] = [
   ]},
 ]
 
-export function pickStreetEvent(trigger: EventTrigger, context: EventContext, chance: number) {
-  if (Math.random() >= chance) return null
-  const pool = STREET_EVENTS.filter(event => event.trigger === trigger && !context.seenEventIds?.includes(event.id) && (!event.eligible || event.eligible(context)))
-  if (!pool.length) return null
-  const total = pool.reduce((sum, event) => sum + event.weight, 0)
-  let roll = Math.random() * total
-  for (const event of pool) {
-    roll -= event.weight
-    if (roll <= 0) return illustrateStreetEvent(event, context)
-  }
-  return illustrateStreetEvent(pool[pool.length - 1], context)
+// The prototype presents each eligible scene once, in catalog order. Spawn
+// selection consumes no randomness; D20 and consequence rolls remain separate.
+export function nextStreetEvent(trigger: EventTrigger, context: EventContext): StreetEvent | null {
+  const event = STREET_EVENTS.find(event => event.trigger === trigger && !context.seenEventIds?.includes(event.id) && (!event.eligible || event.eligible(context)))
+  return event ? illustrateStreetEvent(event, context) : null
 }

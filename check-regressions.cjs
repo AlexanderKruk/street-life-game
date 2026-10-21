@@ -19,8 +19,9 @@ const assert=require('node:assert/strict');
 const App=require('./regression-app.cjs').default;
 const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
 const read=k=>JSON.parse(localStorage.getItem(k));
+let openingEvents = false;
 function setup(s={},extra={}){
- cleanup();localStorage.clear();
+ cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage,!openingEvents);
  localStorage.setItem(stateKey,JSON.stringify({day:1,minutes:480,money:100,hunger:72,thirst:66,energy:68,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...s}));
  localStorage.setItem('street-life-effects-v1','[]');
  localStorage.setItem('street-life-discovered-v1','["street","station","shop","support","shelter","work"]');
@@ -357,7 +358,7 @@ for(const [state,extra,expected] of [
  [{minutes:1320,energy:20},{},['question-morning','street-sleep','station-route']],
  [{minutes:1320,thirst:20},{[invKey]:{phoneBattery:30}},['question-charging','walk','station-route']],
  [{minutes:1320,thirst:20},{[invKey]:{phoneBattery:31}},['question-supplies','walk','station-route']],
- [{minutes:600,money:0},{},['question-morning','street-sleep','beg']],
+ [{minutes:600,money:0},{},['question-morning','walk','beg']],
 ]){setup(state,extra);assertStoryChoices(expected);assert.equal(storyIds().filter(id=>id.startsWith('question-')).length,1);}
 
 // One-level choices react immediately; result reading pauses the clock.
@@ -519,7 +520,7 @@ for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.9
 // Found money uses one Polish coin, awards the actual grosz amount once,
 // and retains it through result reading and reload without another draw.
 for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,100],[.975,200],[.995,500]]) {
- setup();click('Map');click(/^.*Station/);click('Go →');const eventDraws=[.2,0,0];Math.random=()=>eventDraws.shift()??.99;click(/Public transport/);
+ setup({}, {'street-life-encounters-v1':{seen:['phone-drop'],lastAt:null,pendingId:null}});click('Map');click(/^.*Station/);click('Go →');const eventDraws=[.2,0,0];Math.random=()=>eventDraws.shift()??.99;click(/Walk/);
  assert(screen.getByRole('dialog').textContent.includes('Coin on the pavement'));
  assert(document.querySelector('.event-card.illustrated-event .event-illustration').src.includes('event-found-coin'));
  assert(!document.querySelector('.coin-emblem'));
@@ -535,7 +536,7 @@ for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,
  advance(1000);assert.equal(awardDraws,1);assert.deepEqual(read(stateKey),awarded);
  ok();cleanup();render(React.createElement(App));assert.equal(awardDraws,1);assert.equal(read(stateKey).money,awarded.money);assert(!document.querySelector('.event-overlay'));
 }
-setup({mood:28});click('Map');click(/^.*Station/);click('Go →');const leaveCoinDraws=[.2,0,0];Math.random=()=>leaveCoinDraws.shift()??.99;click(/Public transport/);
+setup({mood:28}, {'street-life-encounters-v1':{seen:['phone-drop'],lastAt:null,pendingId:null}});click('Map');click(/^.*Station/);click('Go →');const leaveCoinDraws=[.2,0,0];Math.random=()=>leaveCoinDraws.shift()??.99;click(/Walk/);
 const leaveCoinBefore=read(stateKey);Math.random=()=>{throw new Error('Leaving a coin must not roll a reward')};click('Leave it');assert.equal(read(stateKey).money,leaveCoinBefore.money);assert.equal(read(stateKey).mood,leaveCoinBefore.mood+1);
 assert(screen.getByRole('dialog').textContent.includes('You leave it for someone'));
 assert(!document.querySelector('.result-gains'));assert(document.querySelector('.result-modal .result-stat-panel').textContent.includes('Mood'));
@@ -763,9 +764,10 @@ setup({locationId:'shelter',minutes:1080},{[lifeKey]:booking});const worker=scre
 setup({day:2,locationId:'shelter',minutes:1020},{[lifeKey]:booking});assert(!screen.getByRole('button',{name:/Talk to shelter social worker/}).disabled);click(/Talk to shelter social worker/);assert.equal(read(stateKey).minutes,1020);advance(3000);assert.equal(read(stateKey).minutes,1020);
 click(/I still cannot afford housing/);click(/I am looking for work/);click(/Go to the Job Centre/);assert.equal(read(stateKey).minutes,1050);assert.equal(read(lifeKey).shelterUntilDay,31);assert(screen.getByRole('dialog').textContent.includes('30 min'));
 
+console.log('PASS: location, travel, coins, food and inventory scenarios.');
 // Full backpack rejects new stacks; a partial stack still accepts food.
-setup({locationId:'station'},{[invKey]:{food:4,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);assert(screen.getByRole('dialog').textContent.includes('no backpack room'));
-setup({locationId:'station'},{[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);
+setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:[],lastAt:null,pendingId:null},[invKey]:{food:4,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);assert(screen.getByRole('dialog').textContent.includes('no backpack room'));
+setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:[],lastAt:null,pendingId:null},[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);
 
 // Daily begging allowance survives reload and resets only on the next game day.
 setup({money:0});for(let i=0;i<3;i++){click(/Ask someone for change\? It’s hard, but I could try./);ok();}assert(!screen.queryByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}));
@@ -947,6 +949,7 @@ for(const debug of [false,true]) {
  let ordinary;
  for(const quiet of [false,true]) {
   setup({day:2,locationId:'shelter',minutes:359,energy:30,mood:30},{
+   'street-life-encounters-v1':{seen:quiet?[]:['quiet-night'],lastAt:null,pendingId:null},
    [lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1},
    'street-life-sleep-v1':{kind:'shelter',total:120,remaining:1,startAbsolute:1680,realStartedAt:Date.now()-11900}
   });
@@ -1182,7 +1185,7 @@ setup({locationId:'daycenter',hygiene:50},{[invKey]:{clothingCleanliness:10,jack
 setup({locationId:'daycenter'},{[invKey]:{clothingCleanliness:10}});Math.random=()=>.99;click(/Do laundry/);assert(read(invKey).clothingCleanliness<10);
 setup({locationId:'shelter',day:4,minutes:1080},{[invKey]:{clothingCleanliness:10,jacket:42},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7,shelterLaundryDropDay:4}});click(/Collect clean laundry/);assert.equal(read(invKey).clothingCleanliness,100);assert.equal(read(invKey).jacket,42);ok();assert(screen.getByRole('button',{name:/Collect clean laundry/}).disabled);
 setup({locationId:'shelter',day:4,minutes:390},{[invKey]:{clothingCleanliness:10},[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}});click(/Leave clothes for laundry/);assert(read(invKey).clothingCleanliness<10);
-setup({energy:68},{[invKey]:{clothingCleanliness:100}});beginSleep(/Lie down here\? I’m not sure… But I could try./,4);click('Wake up (debug)');near(read(invKey).clothingCleanliness,90);
+setup({energy:68,minutes:1380},{[invKey]:{clothingCleanliness:100}});beginSleep(/Lie down here\? I’m not sure… But I could try./,4);click('Wake up (debug)');near(read(invKey).clothingCleanliness,90);
 // Inventory slots reflect actual stack occupancy, including passive supplies.
 const emptyBag={water:0,food:0,medicines:0,bread:0,cannedFood:0,wipes:0,showerGel:0,cigarettes:0,bottles:0};
 setup({}, {[invKey]:emptyBag});click(/^Inventory$/);
@@ -1221,7 +1224,9 @@ ok();assert(!screen.queryByRole('button',{name:/Take a shower/}));
 setup({locationId:'free-clinic',minutes:1020});
 assert(document.querySelector('.closed-content-notice'));
 assert([...document.querySelectorAll('.closed-content-body button')].find(button=>button.textContent.includes('See a doctor')).disabled);
+console.log('PASS: shelter, sleep, journal and needs scenarios.');
 // First-night observations follow actions, survive reload and do not repeat.
+openingEvents=true;
 const firstNightKey='street-life-first-night-events-v1';
 setup({minutes:1385},{'street-life-trip-v1':{destinationId:'station',mode:'transit',total:33,remaining:20},[firstNightKey]:{seen:['first-night-door'],lastAt:1385,pendingId:'first-night-door'}});
 const eventPausedTrip=read('street-life-trip-v1'),eventPausedGame=read(stateKey);
@@ -1373,10 +1378,12 @@ const fs=require('node:fs');
 const stripArt=value=>JSON.parse(JSON.stringify(value,(key,item)=>key==='illustration'?undefined:item));
 for(const original of observationEvents) {
  const first=original.id.startsWith('first-night-');
- const artContext={locationId:first&&original.trigger!=='location'?'street':'station',weather:'Rain',housing:'Street',documents:true,firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const artContext={locationId:original.id==='dropped-glove'||first&&original.trigger!=='location'?'street':'station',weather:'Rain',housing:'Street',documents:true,firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
  Math.random=()=>0;
- const chosen=eventModule.exports.pickStreetEvent(original.trigger,artContext,1);
- assert.equal(chosen?.id,original.id);assert.deepEqual(stripArt(chosen),stripArt(original),'illustration must not change gameplay');
+ const chosen=eventModule.exports.nextStreetEvent(original.trigger,artContext);
+ assert.equal(chosen?.id,original.id);
+ if (['spare-change','dropped-glove'].includes(original.id)) { assert(!chosen.illustration); continue }
+ assert.deepEqual(stripArt(chosen),stripArt(original),'illustration must not change gameplay');
  const images=[chosen.illustration,...chosen.choices.flatMap(choice=>choice.check?[choice.check.success.illustration,choice.check.failure.illustration,choice.check.criticalSuccess?.illustration,choice.check.criticalFailure?.illustration]:[choice.outcome?.illustration])].filter(Boolean);
  for(const image of images) {
   const file=image.split('/').pop();assert(fs.existsSync('public/assets/'+file),file);
@@ -1385,12 +1392,12 @@ for(const original of observationEvents) {
 }
 for(const [kind,housing,file] of [['ground','Street','ground'],['bench','Street','bench'],['shelter','Night shelter','shelter']]) {
  Math.random=()=>0;
- const quiet=eventModule.exports.pickStreetEvent('wake',{locationId:'station',weather:'Cloudy',documents:true,housing,sleepKind:kind,seenEventIds:observationEvents.filter(e=>e.id!=='quiet-night').map(e=>e.id)},1);
+ const quiet=eventModule.exports.nextStreetEvent('wake',{locationId:'station',weather:'Cloudy',documents:true,housing,sleepKind:kind,seenEventIds:observationEvents.filter(e=>e.id!=='quiet-night').map(e=>e.id)});
  assert(quiet.illustration.endsWith(`event-quiet-${file}.webp`));assert.equal(quiet.choices[0].outcome.illustration,quiet.illustration);
 }
 // A real travel D20 retains its resource consequence and displays the matching result.
 for(const [roll,art,damage] of [[.99,'caught',0],[0,'fallen',15]]) {
- setup();click('Map');click(/^.*Station/);click('Go →');
+ setup({}, {'street-life-encounters-v1':{seen:[],lastAt:null,pendingId:null}});click('Map');click(/^.*Station/);click('Go →');
  const draws=[.2,0,0];Math.random=()=>draws.shift()??.99;click(/Walk/);
  assert(document.querySelector('.event-illustration').src.endsWith('event-phone-drop-480.webp'));
  const phoneBefore=read(invKey).phoneCondition;

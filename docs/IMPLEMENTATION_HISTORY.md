@@ -1472,3 +1472,14 @@ The compact single-line Phone/app header has a back button on internal screens a
 Music, Video, Navigation and Plan launcher icons are hidden for now. Music/video playback controls are hidden. Navigation automatically works when the phone and mobile service are available, and is suspended during sleep, charging, outages and game over. Existing walking-with-music story actions remain unchanged.
 
 Search categories use real gameplay data: Shelter, Help & hygiene, Work, Medical help, Food & water. New searches use the shared 10–25 minute timed action flow, battery drain, interruption and reload handling; searching is also possible indoors. Previously saved one-off answers link to Notes without spending time or battery. Repeated help searches retain one-place-at-a-time discovery and the no-new-information result. The emergency ambulance action is retained contextually at Health 20 or lower, without requiring mobile internet.
+
+
+## Deterministic event queue and everyday encounters — v283 (2026-10-21)
+
+Opening-night observations could silently miss their chance, and no encounter checks ran while waiting awake. For the first version, catalog scene spawning now follows the user's requested deterministic queue instead of probability rolls.
+
+Each scene appears once per run when its context is available. A shared 45-game-minute interval prevents back-to-back encounters; an idle check runs every 15 opening-night minutes or every 30 later minutes on Street/Station. Opening observations take priority; awake bench rest, wandering, arrival and waking check their matching queue. Shown IDs, current choices and the shared interval persist across reload; reset clears them. D20, coin values and other choice consequences retain randomness.
+
+Daytime Street priorities expose walking/awake bench rest. Pavement/passers-by travel scenes require walking, ticket inspection requires transit, and leftover Station food is offered after 19:00 outside the first night. Two compact encounters add a request for change and a dropped glove, with disabled unaffordable choices and real resource consequences.
+
+`check-events.cjs` covers deterministic catalog reachability/context, opening idle visibility, action/result ordering, spacing, no repeats, reload, money/refusal and reset. Unrelated mechanic checks explicitly use a world whose catalog is complete rather than a high random draw to suppress encounters; focused scene, D20 and wake checks opt in as needed.

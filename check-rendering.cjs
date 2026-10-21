@@ -21,7 +21,7 @@ const counts = () => ({ ...global.__uiRenders });
 const clearCounts = () => { global.__uiRenders = {}; };
 const count = name => global.__uiRenders[name] ?? 0;
 function setup(App, screenName, state = {}, extras = {}) {
-  cleanup(); localStorage.clear();
+  cleanup(); localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
   localStorage.setItem('street-life-save-v3', JSON.stringify({ day: 1, minutes: 500, money: 100, hunger: 72, thirst: 66, energy: 68, health: 82, hygiene: 55, mood: 58, intoxication: 0, locationId: 'station', ...state }));
   localStorage.setItem('street-life-screen', screenName);
   localStorage.setItem('street-life-effects-v1', '[]');

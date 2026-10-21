@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-282`.
+**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-283`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -28,7 +28,7 @@ Earlier version notes and superseded designs are preserved in [Implementation hi
 | Map, travel phases and activity art | `src/CityMap.tsx`, `src/travelPhases.ts`, `src/LocationPresentation.tsx` |
 | Items, food and results | `src/foodInventory.ts`, `src/foodConsumption.ts`, `src/results.ts`, `src/ResultCard.tsx` |
 | Sleep illness and closing places | `src/sleepIllness.ts`, `src/locationClosing.ts`, `check-sleep-illness.cjs` |
-| Events and illustrations | `src/events.ts`, `src/eventArtwork.ts`, `docs/art/` |
+| Events and illustrations | `src/events.ts`, `src/eventArtwork.ts`, `check-events.cjs`, `docs/art/` |
 | Saves and history | `src/saveCompatibility.ts`, `src/useGameAutosave.ts`, `src/autosave.ts`, `src/journal.ts`, `src/JournalSections.tsx` |
 | Deferred wetness | `src/gameplayFeatures.ts`, `check-wetness-disabled.cjs`; opt-in wetness checks use an explicit feature flag. |
 
@@ -61,7 +61,7 @@ The narrator describes the surroundings, established memories and observable con
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and ordinary street-event choices are not persisted; unresolved first-night observation choices are persisted. Answered phone questions, journal goal flags/history, closing notices and charging state are persisted; reset clears them. Deferred rain-choice keys are retained for compatibility but inactive in release-default gameplay.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending result windows are not persisted. Unresolved catalog-event choices, shown event IDs and the shared encounter cooldown are persisted; first-night observations retain their existing compatibility key. Answered phone questions, journal goal flags/history, closing notices and charging state are persisted; reset clears them. Deferred rain-choice keys are retained for compatibility but inactive in release-default gameplay.
 
 Initial state:
 - Day 1, Monday, 22:00, Street. Existing saves retain their own time. Reset/new run starts at 22:00.
@@ -261,11 +261,7 @@ Walking also adds Hygiene loss per minute based on the current temperature: 0.02
 
 Travel uses a centered blocking card over the blurred map. The route is muted; the changing activity is bold white with three animated dots. Bus display stages are To the stop, Waiting, On the bus and Final walk. Walking cycles through Walking, Near a crossing, Red light, Crossing and Walking on; longer routes can show further crossings. Waiting changes the animation without changing the sampled trip duration. Weather-exposure phases distinguish outdoor walks from covered stops/transit, though wetness is currently disabled.
 
-Travel has its own progress screen. Active trips persist their mode, destination, remaining minutes and initial result snapshot; reloading resumes the progress screen without repeating fare payment. Arrival opens a result window summarizing changes since departure; changes from a travel event can also be included in that overall trip summary. A travel street-event roll occurs when travel begins:
-- Walking: 30% chance to attempt to spawn an eligible event.
-- Public transport: 18%.
-
-The event system then uses weighted selection among eligible events.
+Travel has its own progress screen. Active trips persist their mode, destination, remaining minutes and initial result snapshot; reloading resumes the progress screen without repeating fare payment. Arrival opens a result window summarizing changes since departure; changes from a travel event can also be included in that overall trip summary. A travel encounter is selected when travel begins if the shared encounter interval has elapsed. The next unseen eligible walking/transit scene is presented once; no spawn-probability or weighted-selection roll is used. The opening-night observation has priority before ordinary travel encounters.
 
 ## Inventory and backpack
 
@@ -432,7 +428,7 @@ Street has its own small survival loop. Its economy is deliberately capped aroun
 
 Clicking a sleep action opens the compact sleep-planning modal. Game time, needs, food ageing and forced exhaustion sleep pause until **Start sleeping** or **Cancel** (also Escape). Four duration buttons (2/4/6/8 hours) are only inside this modal. Compact 2h/4h/6h/8h choices use one shared selected wake-time preview; the chooser states the actual sleep duration. Crossing midnight updates the day; night-shelter previews use the 07:30 cap. Opening/cancelling the chooser consumes nothing and does not mark shelter attendance. Reserved-place admission records the night even if the guest stays awake; confirming bed sleep also retains attendance. Automatic exhaustion sleep still starts directly without a chooser. The chooser is not saved across reloads.
 
-Sleep duration uses **2, 4, 6 or 8 hours**, depending on awake Energy for ground sleep, bench sleep, Night Shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Wake-event chance scales with duration; Cold risk accumulates over each minute of actual ground/bench sleep. Night Shelter beds require successful queue registration and an active reserved place; existing bookings skip the registration queue.
+Sleep duration uses **2, 4, 6 or 8 hours**, depending on awake Energy for ground sleep, bench sleep, Night Shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Catalog wake scenes follow the saved encounter queue and interval; Cold risk accumulates over each minute of actual ground/bench sleep. Night Shelter beds require successful queue registration and an active reserved place; existing bookings skip the registration queue.
 
 The chooser disables unsuitable durations with an explanation. Higher Energy permits shorter sleep; lower Energy requires longer sleep. Available choices are:
 
@@ -544,11 +540,15 @@ Documents are included in event context and life status. Help-center Transport a
 
 ## Street event engine
 
-Events are data-driven and can trigger during travel, at a location, or after waking. Each event has a weight, optional eligibility rules and one or more choices/outcomes.
+Catalog events follow a deterministic, saved queue. A scene appears at most once per run, in catalog order among scenes that fit the current action, place, time, weather and sleep context. There is no random spawn chance or weighted selection. D20 checks, coin denominations and ordinary gameplay consequences retain their existing randomness.
 
-Location actions currently attempt a location event at 20% probability. Night Shelter wake attempts a wake event at min(65%, 45% × hours / 8).
+The shared minimum interval between catalog scenes is 45 game minutes. Awake Street/Station time checks every 15 idle game minutes during the opening night and every 30 thereafter, on all normal screens. Active travel, phone searches, sleep, queues and blocking dialogs do not accrue idle minutes. The idle check counter is session-local; the last presented time and seen/pending scene IDs persist through reload. Empty or ineligible queues do not force an unrelated scene.
 
-The catalog has ten general events plus four opening-night observations (The door closes, Making a bed on a bench, The last departures, Someone needs the bench). First-night observation eligibility, seen flags and cooldowns prevent repeats and restore pending choices. Ground/bench illness and closing-time notices are separate system events.
+First-night observations take priority over ordinary encounters, keep their no-repeat flags, and appear on a matching walk, awake bench rest, station arrival or idle observation. The opening observation establishes the first night before ordinary encounters. Once the first 15 game minutes have passed it also becomes due after a phone search, and waits for the search result to be acknowledged. Location actions, awake bench rest, arrival and wandering also check the queue when the interval allows. Daytime Street choices offer walking or awake bench rest when the hero has enough energy.
+
+Wake scenes use the same no-repeat queue and interval. First-night bench waking prioritizes Someone needs the bench. Quiet rest merges into the sleep result; illness keeps its separate wake result and does not consume an unshown catalog scene. Food before closing is restricted to Station after 19:00 and outside the first-night window. Coin-on-pavement and passer-by food encounters require walking; ticket inspection requires paid transit.
+
+The catalog has twelve general events plus four opening-night observations (The door closes, Making a bed on a bench, The last departures, Someone needs the bench). The two new everyday scenes use compact icon cards. Ground/bench illness and closing notices remain separate system events.
 
 General catalog events:
 
@@ -562,6 +562,8 @@ General catalog events:
 8. **Trouble nearby** — Station only; move away at a time/Energy cost or stay and lose Mood.
 9. **A quiet night** — wake event; +5 Mood and +5 Energy.
 10. **Something happened overnight** — Street housing wake event; loses up to 5 zł through clamping, -7 Mood and documents.
+11. **Have you got any change?** — Street/Station passer-by asks for money; give 1 zł/+1 Mood, decline or keep distance.
+12. **Someone dropped a glove** — Street; call after the owner for 2 minutes/+2 Mood, or continue.
 
 Event outcomes can currently change time, money, Mood, Energy, Health, Hygiene, Food, Water, phone condition, clothing condition and document possession. Food/Water gains respect backpack capacity, including free space in existing stacks; excess supplies are left behind with an explanatory result. For an outcome giving both, Food is fitted first, then Water.
 
@@ -675,7 +677,7 @@ The top toolbar has Street and Nearest shop, with no Map/City map title. Street 
 
 All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped stat bars and consequences, animate gains/losses, and omit zero/consumed-item noise. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
 
-Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. All 14 catalog events have artwork; this is no longer an unillustrated future task. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
+Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. The original 14 catalog events have artwork; the two v283 everyday encounters use compact icon cards; this is no longer an unillustrated future task. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
 
 ## Phone Goals and History
 
@@ -709,7 +711,7 @@ These are implementation facts or defined future work, not claims that the whole
 - Night Shelter social-worker promises are saved but not verified against completed milestones; benefits remain informational; Schronisko referral is immediate.
 - Schronisko has no laundry action. Water cannot be stored. Ordinary storage accepts documents, medicine and cigarettes; food has its separate Schronisko shelf.
 - Most formal actions do not require documents; the documented transport/benefits/Hospital requirements do.
-- Not every custom action triggers a location event. Pending ordinary results/event choices are not generally persisted; first-night choices and closing notices have their own persistence.
+- Not every custom action triggers a location event; ordinary location checks also occur on arrival, awake bench rest and periodic idle checks. Pending result windows are not generally persisted; catalog choices, seen IDs, encounter cooldowns, first-night choices and closing notices have persistence.
 - History keeps at most 500 compact entries and cannot reconstruct actions from before history existed.
 - Life/support/referral/storage/discovery changes do not all have dedicated numeric result rows; text carries those outcomes.
 - Wetness/rain-cover decisions are deliberately disabled for the first release. Opt-in tests of retained code do not mean the feature is active for players.
@@ -721,6 +723,7 @@ These are implementation facts or defined future work, not claims that the whole
 
 | Suite | Scope |
 |---|---|
+| `check-events.cjs` | Deterministic context/queue, opening after search, spacing, no repeats, restored choices, money/refusal and reset. |
 | `check-phone.cjs` | Apps, legacy Journal migration, offline notes, plan payment/expiry, timed search/reload, work/clinic discovery and dead-phone travel. |
 | `check-sleep-illness.cjs` | Cumulative temperature/exposure risk, duration, roofs/beds, waking illness/result, legacy sleep/reload and hidden catch-up. |
 | `check-shelter-charging.cjs` | Background charge, quiet hours, caps, checkout, collection at the place, phone availability and informational Essentials. |

@@ -13,7 +13,7 @@ const React=require('react');const {render,screen,within,fireEvent,act,cleanup,c
 const gameKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1',read=k=>JSON.parse(localStorage.getItem(k));
 function flush(){fireEvent(window,new window.Event('pagehide'))}
 function setup({battery=10,charging=false,state={},life={},extra={},strict=false}={}){
- cleanup();localStorage.clear();Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
+ cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
  localStorage.setItem(gameKey,JSON.stringify({day:2,minutes:1140,money:100,hunger:20,thirst:60,energy:60,health:100,hygiene:55,mood:28,intoxication:0,locationId:'shelter',...state}));
  localStorage.setItem(invKey,JSON.stringify({phoneBattery:battery,phoneCondition:100,water:0,food:0}));localStorage.setItem(lifeKey,JSON.stringify({housing:'Night shelter',shelterUntilDay:7,shelterRegisteredDay:1,shelterLastStayDay:2,shelterAuditDay:1,...life}));
  localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-mobile-service-until','20000');localStorage.setItem('street-life-effects-v1','[]');

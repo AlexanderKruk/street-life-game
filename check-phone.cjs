@@ -19,7 +19,7 @@ const App=require('./phone-app.cjs').default;
 const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
 const read=k=>JSON.parse(localStorage.getItem(k));
 function setup(s={},extra={}){
- cleanup();localStorage.clear();
+ cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
  localStorage.setItem(stateKey,JSON.stringify({day:1,minutes:480,money:100,hunger:72,thirst:66,energy:68,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...s}));
  localStorage.setItem('street-life-effects-v1','[]');
  localStorage.setItem('street-life-discovered-v1','["street","station","shop","support","shelter","work"]');

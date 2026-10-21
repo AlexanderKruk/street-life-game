@@ -58,8 +58,8 @@ Date.now=()=>1800000000000;Math.random=()=>.99;
 const React=require('react');const {render,screen,fireEvent,within,cleanup}=require('@testing-library/react');
 const App=bundled('src/App.tsx').default;
 function sleepRun(wetness,resume=false){
- cleanup();localStorage.clear();
- localStorage.setItem(SAVE_KEY,JSON.stringify({...base,day:3,minutes:600,energy:55,wetness}));
+ cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
+ localStorage.setItem(SAVE_KEY,JSON.stringify({...base,day:3,minutes:1380,energy:55,wetness}));
  localStorage.setItem('street-life-effects-v1','[]');localStorage.setItem('street-life-mobile-service-until','10000');
  localStorage.setItem('street-life-mobile-auto-renew','false');
  render(React.createElement(App));
