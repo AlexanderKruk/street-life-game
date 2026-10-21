@@ -132,7 +132,7 @@ for(const state of [{day:1,minutes:1320},{day:2,minutes:600}]) {
  assert.equal(read(stateKey).minutes,beforeReload+1,'reloading Street resumes the ordinary clock');
 }
 
-// Phone work consumes one game minute per second, resumes, pauses in background,
+// Phone work consumes one game minute every 250 ms (×4), resumes, pauses in background,
 // and only unlocks knowledge/rewards when the full search has finished.
 setup({minutes:1436,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const phoneBefore=read(stateKey), batteryBefore=read(invKey).phoneBattery;Math.random=()=>0;
@@ -142,7 +142,7 @@ assert(document.querySelector('.street-art img').src.endsWith('street-hero-480.w
 assert(document.querySelector('.street-art img').srcset.includes('street-hero-1400.webp 1400w'));
 assert.equal(read(stateKey).minutes,1436);assert.equal(read(invKey).phoneBattery,batteryBefore);
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
-advance(4000);assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,0);
+advance(1000);assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,0);
 assert(screen.getByRole('dialog',{name:'Rain on the street'}));fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));
 assert(read(invKey).phoneBattery<batteryBefore);assert.equal(read(stateKey).mood,28,'unfinished searches do not passively raise Mood');
 assert(!read('street-life-discovered-v1').includes('support'));assert(!read('street-life-answers-v1').includes('morning'));
@@ -153,8 +153,8 @@ Object.defineProperty(document,'visibilityState',{value:'visible',configurable:t
 // Emulate the old 30-minute save after four minutes of work.
 const oldPhoneSession=read('street-life-phone-activity-v1');localStorage.setItem('street-life-phone-activity-v1',JSON.stringify({...oldPhoneSession,remaining:26,total:undefined}));
 cleanup();render(React.createElement(App));assert(document.querySelector('.phone-activity'));assert.deepEqual(read(stateKey),partialState);assert.deepEqual(read(invKey),partialInventory);
-assert.equal(read('street-life-phone-activity-v1').remaining,6);advance(5000);assert(screen.getByRole('dialog',{name:'Looking for information'}));assert.equal(document.querySelector('.phone-activity .activity-phase').textContent,'Saving addresses');
-advance(1000);assert.equal(read(stateKey).minutes,6);assert(Math.abs(read(stateKey).mood-31)<1e-8);
+assert.equal(read('street-life-phone-activity-v1').remaining,6);advance(1250);assert(screen.getByRole('dialog',{name:'Looking for information'}));assert.equal(document.querySelector('.phone-activity .activity-phase').textContent,'Saving addresses');
+advance(250);assert.equal(read(stateKey).minutes,6);assert(Math.abs(read(stateKey).mood-31)<1e-8);
 assert(!localStorage.getItem('street-life-phone-activity-v1'));
 assert(read('street-life-discovered-v1').includes('support'));assert.equal(read('street-life-journal-history-v1').length,1);
 assert(document.querySelector('.result-overlay'));assert(!document.querySelector('.result-inline'));
@@ -200,10 +200,10 @@ for(const [draw,duration] of [[0,10],[.999,25]]) {
  assert.equal(read('street-life-phone-activity-v1').total,duration);
  assert(!document.querySelector('[role="progressbar"]'));assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent,'01m');
  assert(!document.querySelector('.phone-activity .activity-status').textContent.includes('min left'));
- const initialBattery=read(invKey).phoneBattery;advance(3000);
+ const initialBattery=read(invKey).phoneBattery;advance(750);
  cleanup();Math.random=()=>.5;render(React.createElement(App));
  assert.equal(read('street-life-phone-activity-v1').total,duration);assert.equal(read('street-life-phone-activity-v1').remaining,duration-3);
- advance((duration-3)*1000);assert.equal(read(stateKey).minutes,1320+duration);assert.equal(read(stateKey).mood,31,'search gain totals three points across short and long searches');
+ advance((duration-3)*250);assert.equal(read(stateKey).minutes,1320+duration);assert.equal(read(stateKey).mood,31,'search gain totals three points across short and long searches');
  assert(Math.abs(read(invKey).phoneBattery-(initialBattery-duration*.3*(1+(100-72)*.007)))<1e-8);
  assert(screen.getByRole('dialog').textContent.includes(duration+' min'));
 }
@@ -387,7 +387,7 @@ const coverWetness=read(stateKey).wetness;advance(1000);assert(read(stateKey).we
 setup({minutes:1438,mood:28},{'street-life-discovered-v1':['street','station','shop']});Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));advance(2000);
 assert(screen.getByRole('dialog',{name:'Rain on the street'}));const pausedSearch=read('street-life-phone-activity-v1'),pausedCharge=read(invKey).phoneBattery,pausedWet=read(stateKey).wetness??0;advance(5000);assert.deepEqual(read('street-life-phone-activity-v1'),pausedSearch);assert.equal(read(invKey).phoneBattery,pausedCharge);
 cleanup();render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));click(/^Find cover and continue/);assert.equal(read('street-life-phone-activity-v1').remaining,pausedSearch.remaining);assert.equal(read(invKey).phoneBattery,pausedCharge);assert.equal(read(stateKey).minutes,5);assert(read(stateKey).wetness>=pausedWet);
-const shelteredWet=read(stateKey).wetness;cleanup();render(React.createElement(App));assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));advance(pausedSearch.remaining*1000);assert(read(stateKey).wetness<shelteredWet);assert(read('street-life-discovered-v1').includes('support'));assert(!localStorage.getItem('street-life-phone-activity-v1'));ok();
+const shelteredWet=read(stateKey).wetness;cleanup();render(React.createElement(App));assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));advance(pausedSearch.remaining*250);assert(read(stateKey).wetness<shelteredWet);assert(read('street-life-discovered-v1').includes('support'));assert(!localStorage.getItem('street-life-phone-activity-v1'));ok();
 // Stop keeps paid time and battery, cancels progress and grants no discoveries.
 setup({day:2,minutes:600,mood:28},{'street-life-discovered-v1':['street','station','shop'],'street-life-rain-response-v1':{episode:'weather:2',locationId:'street',sheltered:false}});Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));advance(3000);
 cleanup();localStorage.removeItem('street-life-rain-response-v1');render(React.createElement(App));assert(screen.getByRole('dialog',{name:'Rain on the street'}));const stoppedCharge=read(invKey).phoneBattery,stoppedTime=read(stateKey).minutes;click(/^Stop what I’m doing/);assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(invKey).phoneBattery,stoppedCharge);assert.equal(read(stateKey).minutes,stoppedTime);assert(!read('street-life-discovered-v1').includes('support'));assert(!read('street-life-answers-v1').includes('morning'));assert(screen.getByRole('dialog').textContent.includes('Search stopped'));advance(5000);assert.equal(read(invKey).phoneBattery,stoppedCharge);ok();

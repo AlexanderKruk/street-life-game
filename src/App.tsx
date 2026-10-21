@@ -37,7 +37,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.21-281'
+const BUILD_VERSION = 'v2026.10.21-282'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1005,7 +1005,7 @@ export default function App() {
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
     if (!underRainCover) setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
   })
-  const gameClockInterval = trip || shelterDeparture ? ACTIVITY_TICK_MS : 1000
+  const gameClockInterval = trip || shelterDeparture || phoneActivity ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
     const timer = window.setInterval(tickGameClock, gameClockInterval)
     return () => window.clearInterval(timer)

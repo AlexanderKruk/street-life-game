@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-281`.
+**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-282`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -16,7 +16,7 @@ Earlier version notes and superseded designs are preserved in [Implementation hi
 | Activity cards | Animated icon; muted route/context; elapsed time first; bold action with three animated dots. Starts at `01m`, then `1h 00m`; no reserved blank hour space. |
 | Map | Dark overhead city plan with scattered landmark anchors, Street and Nearest shop shortcuts, and no Map title. |
 | Results | Every Got it result uses a centered blocking modal with the shared blur/backdrop. |
-| Time | Ordinary gameplay/search/queue ×1; travel and morning packing ×4; sleep currently debug ×10. Some actions still apply time immediately. |
+| Time | Ordinary gameplay/queue ×1; phone search, travel and morning packing ×4; sleep currently debug ×10. Some actions still apply time immediately. |
 | Persistence | Existing localStorage progress is preserved; the last-ten-build compatibility window is a verification policy, not ten rotating save backups. |
 
 ## Source of truth by system
@@ -77,7 +77,7 @@ All elapsed game time uses the shared minute-by-minute calculation, including in
 | Activity | Current real-time speed | Notes |
 |---|---|---|
 | Ordinary visible gameplay | 1 game minute / second | Includes ordinary Street decisions and browsing Map/Inventory/Status/Phone. |
-| Timed phone search | 1 game minute / second | Random 10–25-minute duration, sampled once and restored after reload. |
+| Timed phone search | 1 game minute / 250 ms (×4) | Every elapsed minute is shown. Random 10–25-minute duration, sampled once and restored after reload. |
 | Shelter registration queue | 1 game minute / second | At least 20 minutes and not before 18:20. |
 | Walking / public transport | 1 game minute / 250 ms (×4) | Every elapsed minute is shown. |
 | Morning shelter packing | 1 game minute / 250 ms (×4) | 30 game minutes. |
@@ -701,7 +701,7 @@ The counter is calculated from the four saved flags. Completion never rolls back
 These are implementation facts or defined future work, not claims that the whole system has been completed:
 
 - Travel times are destination-based rather than a route network; public transport has no timetable. Job Centre has a defined location but no dedicated new-run phone-search discovery route.
-- Timed activity speeds differ: ordinary/search/queue ×1, travel/packing ×4, sleep debug ×10. Many service actions still advance time immediately.
+- Timed activity speeds differ: ordinary/queue ×1, phone search/travel/packing ×4, sleep debug ×10. Many service actions still advance time immediately.
 - The debug early-wake button remains exposed. Sleep/startup compatibility and ordinary gameplay use the current localStorage schema rather than server saves.
 - Temperature uses a 20-hour cosine cycle rather than a full 24-hour model.
 - Day Center capacity is rerolled per service action rather than per admission.

@@ -73,14 +73,21 @@ try {
  setup({locationId:'station',minutes:600},{'street-life-discovered-v1':['street','station','shop']});
  click('Phone');click('Search');const beforeSearch=read(stateKey),beforeBattery=read(invKey).phoneBattery;
  Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));
- assert(screen.getByRole('dialog',{name:'Looking for information'}));advance(3000);
- assert.equal(read('street-life-phone-activity-v1').remaining,12);assert(document.querySelector('.phone-screen[inert]'));
- cleanup();render(React.createElement(App));assert.equal(read('street-life-phone-activity-v1').remaining,12);
  assert(screen.getByRole('dialog',{name:'Looking for information'}));
- for(let n=0;n<20&&read('street-life-phone-activity-v1');n++)advance(1000);
+ advance(249);assert.equal(read(stateKey).minutes,beforeSearch.minutes);assert.equal(read('street-life-phone-activity-v1').remaining,15);
+ advance(1);assert.equal(read(stateKey).minutes,beforeSearch.minutes+1);assert.equal(read('street-life-phone-activity-v1').remaining,14);
+ advance(249);assert.equal(read(stateKey).minutes,beforeSearch.minutes+1);
+ advance(1);assert.equal(read(stateKey).minutes,beforeSearch.minutes+2);assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent,'02m');
+ advance(2500);assert.equal(read(stateKey).minutes,beforeSearch.minutes+12);assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent,'12m');
+ assert.equal(read('street-life-phone-activity-v1').remaining,3);assert(document.querySelector('.phone-screen[inert]'));
+ cleanup();render(React.createElement(App));assert.equal(read('street-life-phone-activity-v1').remaining,3);
+ assert(screen.getByRole('dialog',{name:'Looking for information'}));
+ advance(749);assert.equal(read('street-life-phone-activity-v1').remaining,1);advance(1);assert.equal(read('street-life-phone-activity-v1'),null);
  assert.equal(read(stateKey).minutes,beforeSearch.minutes+15);
  assert(read(invKey).phoneBattery<beforeBattery);assert(read('street-life-discovered-v1').includes('work'));
- assert.equal(read('street-life-journal-goals-v1').work,true);assert(screen.getByRole('dialog').textContent.includes('Day Work'));ok();
+ assert.equal(read('street-life-journal-goals-v1').work,true);assert(screen.getByRole('dialog').textContent.includes('Day Work'));
+ advance(1000);assert.equal(read(stateKey).minutes,beforeSearch.minutes+15);ok();
+ advance(999);assert.equal(read(stateKey).minutes,beforeSearch.minutes+15);advance(1);assert.equal(read(stateKey).minutes,beforeSearch.minutes+16);
  click('Phone');click('Notes');assert(screen.getByRole('heading',{name:/Day Work/}));
  // New clinic search uses the same timing and saves an actual clinic note.
  setup({locationId:'station',minutes:600},{'street-life-discovered-v1':['street','station','shop']});

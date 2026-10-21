@@ -89,7 +89,7 @@ function measure(App) {
   }
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
-  clearCounts(); advance(3); output.phoneSearch = counts();
+  clearCounts(); advance(.75); output.phoneSearch = counts();
   assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03m');
   setup(App, 'location', { locationId: 'station', minutes: 1380, energy: 20 });
   fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ }));
@@ -296,9 +296,12 @@ function measure(App) {
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   const phoneClockIds = [...timers.keys()];
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
-  assert.deepEqual([...timers.keys()], phoneClockIds, 'phone searches use the existing clock');
-  advance(3); assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03m');
-  assert.deepEqual([...timers.keys()], phoneClockIds);
+  assert.equal(timers.size, phoneClockIds.length, 'phone searches replace the clock interval without adding a timer');
+  const acceleratedPhoneClockIds = [...timers.keys()], phoneClockCreations = nextId;
+  assert.notDeepEqual(acceleratedPhoneClockIds, phoneClockIds, 'entering search switches to the 250 ms interval');
+  advance(.75); assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03m');
+  assert.deepEqual([...timers.keys()], acceleratedPhoneClockIds);
+  assert.equal(nextId, phoneClockCreations, 'search ticks never recreate intervals');
   timerAudit.push({ mode: 'phone search', activeIntervals: timers.size });
   setup(App, 'location', { minutes: 1380, energy: 20 });
   const sleepClockIds = [...timers.keys()];
