@@ -1,3 +1,4 @@
+// Exercise the deferred wetness feature explicitly; check-wetness-disabled.cjs covers release defaults.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { JSDOM } = require('jsdom');
@@ -44,7 +45,7 @@ function advance(ticks, flush = true) {
 }
 async function loadApp(disableMemo) {
   const result = await build({
-    entryPoints: ['src/App.tsx'], bundle: true, write: false, platform: 'node', format: 'cjs', external: ['react', 'react-dom', 'react/jsx-runtime'],
+    entryPoints: ['src/App.tsx'], bundle: true, define: {'import.meta.env': '{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'}, write: false, platform: 'node', format: 'cjs', external: ['react', 'react-dom', 'react/jsx-runtime'],
     plugins: [{ name: 'count-render-invocations', setup(builder) {
       builder.onLoad({ filter: /(?:App|JournalSections|LifeSituation|CityMap|ItemArt|LocationPresentation|ShopCard|ResultCard|Icon)\.tsx$/ }, async ({ path }) => {
         let source = fs.readFileSync(path, 'utf8').replace(/memo\(function (\w+)\(([\s\S]*?)\) \{/g,

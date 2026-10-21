@@ -1,3 +1,4 @@
+import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { absoluteMinutes, energyCap, moodLimit, type GameState, type Housing } from './game'
 
 export type ResultInventory = {
@@ -41,7 +42,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     add(label, after.game[key] - before.game[key], '', false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}), ...(mood ? { capReason: mood.reasons.join(', ') } : {}) })
   }
   add('🍺 Intoxication', after.game.intoxication - before.game.intoxication, '', true)
-  add('💧 Clothing wetness', (after.game.wetness ?? 0) - (before.game.wetness ?? 0), '%', true, false, 0)
+  if (CLOTHING_WETNESS_ENABLED) add('💧 Clothing wetness', (after.game.wetness ?? 0) - (before.game.wetness ?? 0), '%', true, false, 0)
   const consumedKeys = new Set<string>(consumedItems)
   for (const [key, label, suffix] of [
     ['phoneBattery', '🔋 Battery', '%'], ['phoneCondition', '📱 Phone condition', '%'],

@@ -1,3 +1,4 @@
+// Exercise the deferred wetness feature explicitly; check-wetness-disabled.cjs covers release defaults.
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', {url:'http://localhost/street-life-game/',pretendToBeVisual:true});
 for (const key of ['window','document','localStorage','HTMLElement','Node','Event','MouseEvent']) global[key]=dom.window[key];
@@ -9,7 +10,7 @@ Date.now=()=>now;
 const timers=new Map();
 window.setInterval=(fn,delay)=>{const id=nextTimerId++;timers.set(id,{fn,delay,nextAt:now+delay});return id;};
 window.clearInterval=id=>timers.delete(id);
-require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'qa-app.cjs',external:['react','react-dom','react/jsx-runtime']});
+require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:'qa-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup}=require('@testing-library/react');
 const App=require('./qa-app.cjs').default;

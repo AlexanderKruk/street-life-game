@@ -1,3 +1,4 @@
+import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, destinationTravelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
 import { pickStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
@@ -36,7 +37,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.21-277'
+const BUILD_VERSION = 'v2026.10.21-278'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -58,6 +59,7 @@ function rainEpisode(state: GameState) {
   return ['Rain', 'Showers'].includes(WEATHER[(state.day - 1) % WEATHER.length].label) ? `weather:${state.day}` : null
 }
 function loadRainResponse(): RainResponse | null {
+  if (!CLOTHING_WETNESS_ENABLED) return null
   try {
     const saved = JSON.parse(localStorage.getItem(RAIN_RESPONSE_KEY) ?? 'null')
     return typeof saved?.episode === 'string' && typeof saved.locationId === 'string' && typeof saved.sheltered === 'boolean' ? saved : null
@@ -427,7 +429,7 @@ export default function App() {
     if (screen !== 'phone') setPhoneApp('home')
     if (screen !== 'phone' || phoneApp !== 'history') setSelectedJournalDay(null)
   }, [screen, phoneApp])
-  const [rainChoice, setRainChoice] = useState(() => localStorage.getItem('street-life-rain-choice-v1') === 'true')
+  const [rainChoice, setRainChoice] = useState(() => CLOTHING_WETNESS_ENABLED && localStorage.getItem('street-life-rain-choice-v1') === 'true')
   const [rainResponse, setRainResponse] = useState<RainResponse | null>(loadRainResponse)
   const rainModalRef = useRef<HTMLElement>(null)
   const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => {
@@ -561,7 +563,7 @@ export default function App() {
   const statLimits = limitingEffects(game, moodContext(), inventory.clothingCleanliness)
   const separateLimits = statLimits.filter(effect => effect.reason !== 'Cold')
   const statusEffects = effects.filter(effect => effect.id !== 'free-transit')
-  const statusEffectCount = statusEffects.length + separateLimits.length + ((game.wetness ?? 0) > 0 ? 1 : 0)
+  const statusEffectCount = statusEffects.length + separateLimits.length + (CLOTHING_WETNESS_ENABLED && (game.wetness ?? 0) > 0 ? 1 : 0)
   // Reconcile existing saves and changes of accommodation/effects without a gain.
   useEffect(() => { setGame(previous => previous) }, [moodCeiling.cap])
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
@@ -603,7 +605,7 @@ export default function App() {
   const streetScene = firstNight && game.day === 1 && game.minutes === 1320 ? openingScene : [
     firstNight ? openingScene : '',
     !firstNight && (game.minutes >= 1200 || game.minutes < 360) ? 'The street has grown quiet. Light spills from the station entrance, but it is no bed for the night.' : firstNight ? '' : game.minutes >= 1020 ? 'The daylight is fading. People hurry past the station while you decide where to spend the night.' : 'People pass the station, each on their way somewhere. You stop and think about your next step.',
-    weather.label === 'Rain' || weather.label === 'Showers' ? 'Rain reaches your clothes; somewhere dry would make a difference.' : temperature < 10 ? 'The air is cold against your face.' : 'The pavement is dry for now.',
+    weather.label === 'Rain' || weather.label === 'Showers' ? (CLOTHING_WETNESS_ENABLED ? 'Rain reaches your clothes; somewhere dry would make a difference.' : 'Rain falls on the pavement around you.') : temperature < 10 ? 'The air is cold against your face.' : 'The pavement is dry for now.',
     game.energy < 30 ? 'Your legs feel heavy. Rest is becoming urgent.' : game.thirst < 30 ? 'Your mouth is dry. You need something to drink.' : game.hunger < 30 ? 'You have not eaten enough. Your stomach is empty.' : '',
     shelterBooked ? 'You have a reserved shelter bed, if you can get there in time.' : discoveredLocations.includes('shelter') ? 'You know the shelter address, but a place is not guaranteed.' : 'You do not yet know where you can sleep safely.',
   ].filter(Boolean).join(' ')
@@ -639,7 +641,7 @@ export default function App() {
   const previousRainEpisode = useRef(currentRainEpisode)
   const previousExposure = useRef(currentExposure)
   useEffect(() => {
-    if (inventoryDialogOpen || activeEvent || diceCheck || infoModal || pendingResult || sleeping || gameOver || phoneActivity?.remaining === 0 || trip?.remaining === 0) return
+    if (!CLOTHING_WETNESS_ENABLED || inventoryDialogOpen || activeEvent || diceCheck || infoModal || pendingResult || sleeping || gameOver || phoneActivity?.remaining === 0 || trip?.remaining === 0) return
     const leavingCover = previousExposure.current !== 'outside' && currentExposure === 'outside'
     previousExposure.current = currentExposure
     const previous = previousRainEpisode.current
@@ -1175,7 +1177,7 @@ export default function App() {
         : sleep.kind === 'shelter'
           ? { minutes: 0, energy: 100 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
           : { minutes: 0, energy: 100 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
-    const wetRestLoss = Math.max(0, (wakeState.wetSleepLoss ?? 0) - (sleep.before?.game.wetSleepLoss ?? 0))
+    const wetRestLoss = CLOTHING_WETNESS_ENABLED ? Math.max(0, (wakeState.wetSleepLoss ?? 0) - (sleep.before?.game.wetSleepLoss ?? 0)) : 0
     setGame((prev) => {
       const next = applyAction(prev, { ...result, energy: Math.max(0, result.energy - wetRestLoss) })
       delete next.wetSleepLoss
@@ -1416,7 +1418,7 @@ export default function App() {
       setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440)) }))
       setGame(next)
       const musicText = withMusic ? ' You put on familiar music. A few songs play as you pass the dark shop windows.' : ''
-      if (wet) {
+      if (CLOTHING_WETNESS_ENABLED && wet) {
         setRainChoice(rainResponse?.episode !== rainEpisode(next))
         const rainText = (startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.') + musicText
         setInfoModal({ title: withMusic ? 'Walk with music' : 'Walk through the city', text: rainText, illustration: '/street-life-game/assets/event-rain-street.webp', illustrationAlt: 'Rain grows heavier as you notice a canopy above a closed shop.' })
@@ -2321,12 +2323,12 @@ export default function App() {
           })}
         </div>
         {SLEEP_HOURS.some(hours => sleepDurationUnavailable(hours, game.energy)) && <p className="sleep-choice-note">Available sleep lengths depend on your fatigue.</p>}
-        {(sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.label === 'Rain' || weather.label === 'Showers') && <p className="sleep-choice-note">Wet clothes reduce outdoor sleep recovery. Somewhere dry would help.</p>}
+        {CLOTHING_WETNESS_ENABLED && (sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.label === 'Rain' || weather.label === 'Showers') && <p className="sleep-choice-note">Wet clothes reduce outdoor sleep recovery. Somewhere dry would help.</p>}
         <div className="sleep-choice-preview" aria-live="polite">
           <small>Wake up · {wakeLabel(sleepHours, sleepChoice).split(' · ')[0]}</small><span className="sr-only"> · </span><strong>{wakeLabel(sleepHours, sleepChoice).split(' · ')[1]}</strong>
         </div>
         <p className="sleep-choice-note">Sleep time: {formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}.</p>
-        {(sleepChoice === 'ground' || sleepChoice === 'bench') && <p className="sleep-choice-note">Cold, wet clothes and longer exposure increase illness risk. Your belongings may also be stolen.</p>}
+        {(sleepChoice === 'ground' || sleepChoice === 'bench') && <p className="sleep-choice-note">Cold and {CLOTHING_WETNESS_ENABLED ? 'wet clothes and ' : ''}longer exposure increase illness risk. Your belongings may also be stolen.</p>}
         {sleepChoice === 'shelter' && <p className="sleep-choice-note">Sleep ends by 07:30 for morning checkout. Longer choices are shortened.</p>}
         <div className="sleep-choice-buttons">
           <button onClick={() => setSleepChoice(null)}>Cancel</button>
@@ -2587,7 +2589,7 @@ export default function App() {
         <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); if (shelterPhoneCharging) toggleShelterPhoneCharging(); else { setPhoneApp('home'); setScreen('phone') } }}>
           <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />{shelterPhoneCharging ? 'Charging · tap to collect' : 'tap to open'}</small></div>
         </button>
-        <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%\nWetness ${Math.round(game.wetness ?? 0)}%\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit. Wet clothes drain Energy and Mood, especially in cold wind, and reduce outdoor sleep recovery. Dry indoors; a canopy stops new rain but dries clothes slowly.` })}>
+        <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%${CLOTHING_WETNESS_ENABLED ? `\nWetness ${Math.round(game.wetness ?? 0)}%` : ''}\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit.${CLOTHING_WETNESS_ENABLED ? ' Wet clothes drain Energy and Mood, especially in cold wind, and reduce outdoor sleep recovery. Dry indoors; a canopy stops new rain but dries clothes slowly.' : ''}` })}>
           <ItemArt id="clothing" /><div><strong>Clothing</strong><small>Clean {Math.round(inventory.clothingCleanliness)}%<br />Condition {Math.round(inventory.jacket)}%</small></div>
         </button>
         <div className="inventory-item">
@@ -2602,7 +2604,7 @@ export default function App() {
       {!!statusEffectCount && <section className="status-effects" aria-labelledby="status-effects-heading">
         <div className="effects-heading"><h3 id="status-effects-heading">Effects</h3><span>{statusEffectCount}</span></div>
         <div className="effects-list">
-          {(game.wetness ?? 0) > 0 && <div className="effect negative wet-clothes">
+          {CLOTHING_WETNESS_ENABLED && (game.wetness ?? 0) > 0 && <div className="effect negative wet-clothes">
             <span><Icon name="water" /></span><strong className="effect-name">Wet clothes</strong>
             <div className="effect-details"><div className="effect-impact"><b>Energy−</b><b>Mood−</b></div><small className="effect-time">{Math.max(1, Math.round(game.wetness!))}%</small></div>
           </div>}
@@ -2687,7 +2689,7 @@ export default function App() {
       </section>
     </div>}
 
-    {!gameOver && !closingNotice && rainChoice && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
+    {CLOTHING_WETNESS_ENABLED && !gameOver && !closingNotice && rainChoice && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="event-overlay" role="dialog" aria-modal="true" aria-label="Rain on the street">
       <section className="event-card illustrated-event compact-street-event rain-card" ref={rainModalRef}>
         <img className="event-illustration" {...responsiveImageProps('/street-life-game/assets/event-rain-street.webp')} alt="Rain falls beside a closed shop with an entrance canopy." />
         <div className="event-body">

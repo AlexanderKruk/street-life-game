@@ -1,3 +1,4 @@
+import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { sleepIllnessHazard, type SleepKind } from './sleepIllness'
 
 export type Need = 'hunger' | 'thirst' | 'energy' | 'health' | 'hygiene' | 'mood'
@@ -205,6 +206,7 @@ export function weatherExposure(state: GameState, context: TimeContext = {}) {
 // including effect expiry and changes of day/weather within an action.
 export function advanceTime(state: GameState, minutes: number, context: TimeContext = {}): GameState {
   let next = { ...state }
+  if (!CLOTHING_WETNESS_ENABLED) { delete next.wetness; delete next.wetSleepLoss }
   for (let left = Math.max(0, minutes); left > 0;) {
     const step = Math.min(1, left)
     left -= step
@@ -220,11 +222,11 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
       (hunger <= 0 ? 0.035 : hunger <= 10 ? 0.012 : 0) + (cold ? 0.012 : 0)) * step)
     const temperature = temperatureAt(weather.temp, next.minutes)
     const exposure = weatherExposure(next, context)
-    const wetBefore = clamp(next.wetness ?? 0)
+    const wetBefore = CLOTHING_WETNESS_ENABLED ? clamp(next.wetness ?? 0) : 0
     const rainGain = exposure === 'outside' ? weather.label === 'Rain' ? 1 : weather.label === 'Showers' ? 0.6 : 0 : 0
     const drying = exposure === 'indoors' ? next.locationId === 'station' || next.locationId === 'shop' ? 0.6 : 1.2
       : exposure === 'transit' ? 0.3 : exposure === 'cover' ? 0.15 : weather.label === 'Windy' ? 0.4 : 0.2
-    const wetness = clamp(wetBefore + (rainGain || -drying) * step)
+    const wetness = CLOTHING_WETNESS_ENABLED ? clamp(wetBefore + (rainGain || -drying) * step) : 0
     const wetStress = (wetBefore + wetness) / 200 * (temperature <= 10 ? 1 : temperature <= 15 ? 0.65 : 0.35)
       * (exposure === 'indoors' || exposure === 'transit' ? 0.25 : weather.label === 'Windy' ? 1.25 : 1)
     const wetSleepLoss = (next.wetSleepLoss ?? 0) + (context.sleeping && exposure !== 'indoors' && exposure !== 'transit' ? wetStress * 0.04 * step : 0)

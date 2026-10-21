@@ -1,3 +1,4 @@
+// Exercise the deferred wetness feature explicitly; check-wetness-disabled.cjs covers release defaults.
 const {JSDOM}=require('jsdom');
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'http://localhost/street-life-game/',pretendToBeVisual:true});
 for(const k of ['window','document','localStorage','HTMLElement','Node','Event','MouseEvent'])global[k]=dom.window[k];
@@ -9,7 +10,7 @@ Date.now=()=>now;
 const callbacks=new Map();
 window.setInterval=(fn,delay)=>{const id=nextId++;callbacks.set(id,{fn,delay,nextAt:now+delay});return id};
 window.clearInterval=id=>callbacks.delete(id);
-require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'regression-app.cjs',external:['react','react-dom','react/jsx-runtime']});
+require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:'regression-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup,configure}=require('@testing-library/react');
 configure({getElementError:message=>new Error(message)});
@@ -328,7 +329,7 @@ assert.equal(read(invKey).bottles,0);assert.equal(read(stateKey).money,depositMo
 // Three normal directions.
 function storyIds(){return [...document.querySelectorAll('.story-actions > button')].map(button=>button.dataset.choice);}
 function assertStoryChoices(expected){assert.deepEqual([...storyIds()].sort(),[...expected].sort());}
-const choiceCode=require('esbuild').buildSync({entryPoints:['src/streetChoiceOrder.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
+const choiceCode=require('esbuild').buildSync({entryPoints:['src/streetChoiceOrder.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const choiceModule={exports:{}};new Function('module','exports',choiceCode)(choiceModule,choiceModule.exports);
 const {shuffleChoiceOrder}=choiceModule.exports;
 const choiceInput=['information','rest','practical'];
@@ -337,7 +338,7 @@ const permutations=new Set();
 for(let seed=0;seed<120;seed++){const order=shuffleChoiceOrder(choiceInput,seed,'decision');permutations.add(order.join('|'));assert.deepEqual([...order].sort(),[...choiceInput].sort());assert.deepEqual(order,shuffleChoiceOrder(choiceInput,seed,'decision'));}
 assert.equal(permutations.size,6,'all six three-option orders are reachable');
 assert.deepEqual(choiceInput,['information','rest','practical']);Math.random=gameplayRandom;
-const optionCode=require('esbuild').buildSync({entryPoints:['src/ChoiceOptions.tsx'],bundle:true,platform:'node',format:'cjs',write:false,external:['react','react/jsx-runtime']}).outputFiles[0].text;
+const optionCode=require('esbuild').buildSync({entryPoints:['src/ChoiceOptions.tsx'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false,external:['react','react/jsx-runtime']}).outputFiles[0].text;
 const optionModule={exports:{}};new Function('require','module','exports',optionCode)(require,optionModule,optionModule.exports);
 const {orderChoiceNodes}=optionModule.exports;
 for(const labels of [['Yes','No'],['Accept','Decline'],['Pick it up','Leave it'],['Start','Cancel']])for(let seed=0;seed<20;seed++){
@@ -987,7 +988,7 @@ setup({energy:0});assert.equal(read('street-life-sleep-v1').total,480);assert(!d
 
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
-require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',outfile:'regression-game.cjs'});
+require('esbuild').buildSync({entryPoints:['src/game.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:'regression-game.cjs'});
 const {advanceTime,initialState,createInitialState,overallCondition,conditionBand,moodLimit,limitMood,HOUSING_MOOD_CAP,locations,travelTimeRange,destinationTravelTimeRange,randomTravelMinutes}=require('./regression-game.cjs');
 for(const base of [1,33,40,45,65,...locations.flatMap(location=>[location.travelMinutes,Math.ceil(location.travelMinutes*.5)])]) {
  const {min,max}=travelTimeRange(base);assert.equal(min,Math.ceil(base*.95));assert.equal(max,Math.floor(base*1.2));
@@ -1148,7 +1149,7 @@ setup({day:2},{[historyKey]:[oldReport,{day:0,minute:20,title:'Bad',text:'Bad'}]
 assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,600);assert.equal(read(historyKey)[0].summary,undefined);
 assert.equal(read(historyKey)[0].actionTitle,'Drink water');assert(document.querySelector('.journal-thought').textContent.startsWith('I'));
 cleanup();render(React.createElement(App));click('History');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert.equal(read(historyKey).length,1);
-require('esbuild').buildSync({entryPoints:['src/journal.ts'],bundle:true,platform:'node',format:'cjs',outfile:'journal-app.cjs'});
+require('esbuild').buildSync({entryPoints:['src/journal.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:'journal-app.cjs'});
 const {journalReflection}=require('./journal-app.cjs');
 const refused=journalReflection('Shelter registration','No free places today.',{costs:[],changes:[{label:'🙂 Mood',value:'−5',kind:'negative'}]});
 const admittedReflection=journalReflection('Shelter registration','A place is available.',{costs:[],changes:[{label:'🙂 Mood',value:'+3',kind:'positive'}]});
@@ -1296,7 +1297,7 @@ for(const [id,assets,durations] of [
 ]) for(let index=0;index<assets.length;index++) {
  setup({minutes:1385},{[firstNightKey]:{seen:[`first-night-${id}`],lastAt:1385,pendingId:`first-night-${id}`}});
  assert(document.querySelector('.event-illustration').src.endsWith(`event-first-night-${id}-480.webp`));
- const eventDefinition=require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
+ const eventDefinition=require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false}).outputFiles[0].text;
  const eventModule={exports:{}};new Function('module','exports',eventDefinition)(eventModule,eventModule.exports);
  const reply=eventModule.exports.STREET_EVENTS.find(event=>event.id===`first-night-${id}`).choices[index].label;
  click(reply);
@@ -1345,7 +1346,7 @@ assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button
 setup({day:2,minutes:60},{'street-life-trip-v1':{destinationId:'station',mode:'walk',total:65,remaining:20}});Math.random=()=>.4;advanceTravelMinutes(20);ok();
 assert(screen.getByRole('dialog').textContent.includes('The last departures'));
 const eventModule={exports:{}};
-new Function('module','exports',require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text)(eventModule,eventModule.exports);
+new Function('module','exports',require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false}).outputFiles[0].text)(eventModule,eventModule.exports);
 const observationEvents=eventModule.exports.STREET_EVENTS;
 const foundCoinOutcome=observationEvents.find(event=>event.id==='found-coins').choices[0].outcome;
 const coinFrequencies=new Map();

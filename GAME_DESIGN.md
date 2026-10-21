@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-20 · Neutral office-worker protagonist. Latest application build: `v2026.10.20-267`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-21 · Neutral office-worker protagonist. Latest application build: `v2026.10.21-278`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Clothing wetness deferred for the first release (v278)
+
+Clothing wetness is disabled by default via `src/gameplayFeatures.ts`. Wetting/drying, moisture penalties to Energy, Mood, outdoor sleep recovery and illness risk are inactive. Wetness status, result rows, clothing-detail guidance and rain/cover decision modals are hidden. Existing saves keep their other progress; legacy wetness and wet-sleep loss are discarded, and saved rain decisions/cover no longer block travel or searches. Rain, temperature, ordinary weather effects, outdoor sleep illness, clothing cleanliness/condition and laundry remain active. The retained wetness implementation and its opt-in regression checks can be enabled for later tuning with `VITE_CLOTHING_WETNESS_ENABLED=true`; release-default behavior has a separate regression check. Older wetness sections below document the deferred implementation.
 
 ### Default fresh food appearance (v267)
 
