@@ -36,7 +36,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.21-274'
+const BUILD_VERSION = 'v2026.10.21-275'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -107,8 +107,10 @@ function formatTravelTime(minutes: number) {
 }
 
 function ActivityStatus({ elapsed, label, timeLabel }: { elapsed: number; label: string; timeLabel: string }) {
+  const minutes = Math.max(1, elapsed)
+  const time = minutes < 60 ? `${String(minutes).padStart(2, '0')}m` : formatTravelTime(minutes)
   return <div className="activity-status">
-    <strong className="travel-elapsed" aria-label={timeLabel}>{String(Math.max(1, elapsed)).padStart(2, '0')} min</strong>
+    <strong className="travel-elapsed" aria-label={timeLabel}>{time}</strong>
     <span className="activity-phase travel-action-label">{label}<span className="travel-phase-dots" aria-hidden="true"><i /><i /><i /></span></span>
   </div>
 }

@@ -197,7 +197,7 @@ for(const [draw,duration] of [[0,10],[.999,25]]) {
  assert(screen.getByRole('button',{name:'Where can I get help in the morning?'}).textContent.includes('≈15m'));
  fireEvent.click(screen.getByRole('button',{name:'Where can I get help in the morning?'}));
  assert.equal(read('street-life-phone-activity-v1').total,duration);
- assert(!document.querySelector('[role="progressbar"]'));assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent,'01 min');
+ assert(!document.querySelector('[role="progressbar"]'));assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent,'01m');
  assert(!document.querySelector('.phone-activity .activity-status').textContent.includes('min left'));
  const initialBattery=read(invKey).phoneBattery;advance(3000);
  cleanup();Math.random=()=>.5;render(React.createElement(App));
@@ -544,18 +544,18 @@ assert(document.querySelector('.result-illustration').src.includes('event-coin-l
 // pause while hidden, cross midnight and restore the x1 clock after arrival.
 for(const mode of ['walk','transit','fare-dodge']) {
  setup({day:2,minutes:1438},{'street-life-trip-v1':{destinationId:'station',mode,total:9,remaining:9}});
- assert.equal(document.querySelector('.travel-elapsed').textContent,'01 min', 'counter starts at 01 before the first tick');
+ assert.equal(document.querySelector('.travel-elapsed').textContent,'01m', 'counter starts at 01 before the first tick');
  const firstTick=250;
  advance(firstTick-1);assert.equal(read('street-life-trip-v1').remaining,9);assert.equal(read(stateKey).minutes,1438);
- advance(1);assert.equal(read('street-life-trip-v1').remaining,8);assert.equal(document.querySelector('.travel-elapsed').textContent,'01 min');
- for(let elapsed=2;elapsed<=4;elapsed++){advanceTravelMinutes(1);if(screen.queryByRole('dialog',{name:'Rain on the street'}))fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));assert.equal(document.querySelector('.travel-elapsed').textContent,`${String(elapsed).padStart(2,'0')} min`)}
+ advance(1);assert.equal(read('street-life-trip-v1').remaining,8);assert.equal(document.querySelector('.travel-elapsed').textContent,'01m');
+ for(let elapsed=2;elapsed<=4;elapsed++){advanceTravelMinutes(1);if(screen.queryByRole('dialog',{name:'Rain on the street'}))fireEvent.click(screen.getByRole('button',{name:/^Continue as I am/}));assert.equal(document.querySelector('.travel-elapsed').textContent,`${String(elapsed).padStart(2,'0')}m`)}
  assert.equal(read(stateKey).day,3);assert.equal(read(stateKey).minutes,2);
  const pausedTrip=read('street-life-trip-v1'),pausedGame=read(stateKey);
  Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});advance(1000);
  assert.deepEqual(read('street-life-trip-v1'),pausedTrip);assert.deepEqual(read(stateKey),pausedGame);
  Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
- cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-elapsed').textContent,'04 min');
- advanceTravelMinutes(1);assert.equal(document.querySelector('.travel-elapsed').textContent,'05 min');
+ cleanup();render(React.createElement(App));assert.equal(document.querySelector('.travel-elapsed').textContent,'04m');
+ advanceTravelMinutes(1);assert.equal(document.querySelector('.travel-elapsed').textContent,'05m');
  advanceTravelMinutes(3);advance(249);assert.equal(read('street-life-trip-v1').remaining,1);assert.equal(read(stateKey).locationId,'street');
  advance(1);assert.equal(read(stateKey).locationId,'station');assert(!localStorage.getItem('street-life-trip-v1'));
  const arrived=read(stateKey);advance(1000);assert.deepEqual(read(stateKey),arrived);ok();

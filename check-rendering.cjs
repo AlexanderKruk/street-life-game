@@ -80,12 +80,14 @@ function measure(App) {
   const initialElapsed = document.querySelector('.travel-elapsed').textContent;
   advance(12); output.travel = counts();
   assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '48 min');
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '48m');
   assert(!document.querySelector('.travel-progress'));
+  setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 165 } });
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '1h 15m');
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
   clearCounts(); advance(3); output.phoneSearch = counts();
-  assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03 min');
+  assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03m');
   setup(App, 'location', { locationId: 'station', minutes: 1380, energy: 20 });
   fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ }));
   fireEvent.click(screen.getByRole('button', { name: /^2 h/ }));
@@ -292,7 +294,7 @@ function measure(App) {
   const phoneClockIds = [...timers.keys()];
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
   assert.deepEqual([...timers.keys()], phoneClockIds, 'phone searches use the existing clock');
-  advance(3); assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03 min');
+  advance(3); assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03m');
   assert.deepEqual([...timers.keys()], phoneClockIds);
   timerAudit.push({ mode: 'phone search', activeIntervals: timers.size });
   setup(App, 'location', { minutes: 1380, energy: 20 });
@@ -329,7 +331,7 @@ function measure(App) {
   cleanup(); render(React.createElement(App));
   assert(document.querySelector('.travel-screen'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 228, 'travel resumes from lifecycle save');
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '12 min', 'elapsed time survives reload');
+  assert.equal(document.querySelector('.travel-elapsed').textContent, '12m', 'elapsed time survives reload');
   assert(document.querySelector('.map-surface[inert] .district-map'), 'reload restores the map behind the travel dialog');
   advance(1, false); fireEvent(window, new window.Event('beforeunload'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 224);
