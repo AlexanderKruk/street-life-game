@@ -1,613 +1,36 @@
 # Street Life — Game Design & Implemented Mechanics
 
-This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
+**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-279`.
 
-**Last documentation sync:** 2026-10-21 · Neutral office-worker protagonist. Latest application build: `v2026.10.21-279`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
-### Informational essentials cards (v279)
+Earlier version notes and superseded designs are preserved in [Implementation history](docs/IMPLEMENTATION_HISTORY.md). That archive is historical; it does not override this file. Art prompts and measurements remain in their existing `docs/` files, `PERFORMANCE_REPORT.md` and `JOURNAL_OPTIMIZATION.md`.
 
-Phone and Clothing in Inventory are informational cards without tap actions. Phone shows Battery and Condition; active shelter charging is shown beside Battery. Phone apps open from the bottom navigation, and charging collection stays available at the Night Shelter. Clothing shows Clean and Condition without an extra details modal.
+## Current release at a glance
 
-### Clothing wetness deferred for the first release (v278)
-
-Clothing wetness is disabled by default via `src/gameplayFeatures.ts`. Wetting/drying, moisture penalties to Energy, Mood, outdoor sleep recovery and illness risk are inactive. Wetness status, result rows, clothing-detail guidance and rain/cover decision modals are hidden. Existing saves keep their other progress; legacy wetness and wet-sleep loss are discarded, and saved rain decisions/cover no longer block travel or searches. Rain, temperature, ordinary weather effects, outdoor sleep illness, clothing cleanliness/condition and laundry remain active. The retained wetness implementation and its opt-in regression checks can be enabled for later tuning with `VITE_CLOTHING_WETNESS_ENABLED=true`; release-default behavior has a separate regression check. Older wetness sections below document the deferred implementation.
-
-### Default fresh food appearance (v267)
-
-Backpack food cards no longer show a Fresh count tag. Freshness is the default appearance; Stale and Spoiled portion counts remain visible on affected stacks. The explicit freshness choices in mixed/unsafe food consumption dialogs are unchanged, as are freshness aging, effects and saves.
-
-### Progress dialog focus appearance (v266)
-
-The phone-search and travel progress dialog containers retain their programmatic focus and dialog semantics but suppress the browser's default outline on the container itself. This removes the intermittent blue Safari focus ring. Keyboard focus indicators on actual buttons and other controls remain unchanged.
-
-### Place result typography and visual alignment (v265)
-
-The place name, hours and On map label now share the visual vertical center of the heading row, replacing baseline alignment. Compact information modals use two main font sizes: 18px for the heading and stat percentages, 14px for metadata, descriptions, notices, reflections, stat labels, result summaries and the confirmation button. Narrow phones use a 16px heading/value with the same readable 14px body; reduced gaps and side padding keep the single heading row compact. Other result modals and gameplay are unchanged.
-
-### Single-line place result heading (v264)
-
-Single-place information cards display the place name, opening hours and check-marked **On map** status in one non-wrapping heading row, aligned on the text baseline. New and saved discoveries share the short status. The separate map-status paragraph is removed for single-place cards; service details, reflection, stat effects and modal blocking stay unchanged. Compact typography and a narrow-phone adjustment keep the row usable on mobile.
-
-### Consistent result modals (v263)
-
-Every Got it result uses the existing centered result modal and its shared blur/backdrop, including new and saved phone answers, map discoveries, no-new-information messages and ordinary action results. The former inline Street result branch is removed. All results lock background controls, navigation and reset, trap keyboard focus, lock page scrolling and retain the existing time pause. Closing restores normal controls and time. Cards retain their existing content and responsive modal layout.
-
-### Backpack discard placement (v262)
-
-Backpack trash icons overlay the bottom-right corner without reserving space or changing card dimensions. The dark contour follows the glyph.
-
-### Ready meal image density (v261)
-
-Ready meal now uses transparent 160/320/480px WebP variants at 1x/2x/3x in both the shop and inventory. The retained 512px original remains the generation source. Browser density selection replaces the fixed full-size request, and the image remains outside startup warmup. Regeneration scripts preserve the variants. Gameplay, layout and saves are unchanged.
-
-### Shared pedestrian icon (v260)
-
-Street uses the existing travel-walker artwork in its map shortcut, place card, travel destination, life-situation effect and current-location navigation. All walking icons share the same asset. The old hand-drawn walking SVG and building-shaped street icon are removed from the icon registry. The shared SVG container retains existing dimensions and disabled styling.
-
-### Transparent inventory and shop artwork (v259)
-
-All nine shop products and four Essentials now use isolated objects with real alpha transparency, shared between shop and inventory. The shared atlases keep their existing item order and responsive 1x/2x/3x variants. Clothing is muted olive, shower gel is navy blue, and the phone has highlighted edges for contrast on dark cards. Product picture areas have no separate background. Each cutout is centered within a padded square cell; backpack artwork stays vertically centered regardless of text height.
-
-Backpack discard controls float in the upper-left corner with their existing 32px touch targets. A thin dark contour follows the trash glyph itself, without a circular outline or backing. They reserve no layout space and do not move the artwork. Existing confirmation, spoiled/all removal, purchases, consumption, save data and Essentials behavior are unchanged. Prompts and generation provenance are recorded in `docs/item-cutout-generation.json`; atlas packing and WebP variants use `scripts/pack-item-art.py`.
-
-### Day Work label placement (v258)
-
-Day Work displays its label to the left of its existing city-block marker, clearing the Night Shelter label at phone width. Geographic coordinates and the other labels remain unchanged.
-
-### Visual landmark placement (v257)
-
-An independent visual review selects dispersed landmarks directly from the city-map artwork. Station is attached to the long light platforms/station structure in the southern railway corridor (approximately 34.5% across, 65.8% down), rather than the ordinary blocks east of the tracks. Other facilities are distributed among distinct city blocks. Natural geographic placement takes priority over a tidy grid or packing every label into the center; overlaps may be refined later without moving the underlying landmarks. The anchor layer is no longer clipped to the central space between toolbar and card, while the viewport still clips image overflow and the toolbar remains usable above markers. The 16px label size, map projection, and nearby shortcuts are retained.
-
-### Compact map heading (v256)
-
-The visible map title is shortened to Map, with Street and Nearest shop on the same row to its right. Compact shortcuts use 14px labels, 20px icons and 44px touch targets. Map destination labels are reduced from v255's 27px to 16px to match the approved mockup at phone scale. Fixed destinations are scattered among artwork city blocks and railway buildings, rather than arranged in rows. Pin and route coordinates share the background image's centered cover projection, recalculated on resize and card-height changes, so markers remain attached to the map. Nearby shortcuts and current-location disabling are unchanged.
-
-### City plan and nearby shortcuts (v255)
-
-The approved dark overhead city plan replaces the close-up city illustration. A text-free cartographic background uses 480/768/1024px responsive WebP variants and image caching; labels and controls remain real UI. Location labels grow from 18px to approximately 27px, with a 24px minimum on narrow screens. Discovered fixed destinations have spaced anchors in the viewport above the selection card. Street and Cheap Shop no longer have fixed map pins or synthetic route origins: Street means stepping outside the current building, and Cheap Shop represents a nearby store.
-
-Two top shortcuts replace those pins. Street immediately uses the existing exit handler without travel or time costs; Nearest shop opens the existing route chooser (5–15 minutes, with the existing transport choices). Street is disabled when locationId is street, and Nearest shop is disabled when locationId is shop. Both remain inert behind travel/event overlays. Shelter departures and phone collection retain their existing rules. Background generation and provenance: `docs/city-map-dark-art.md`.
-
-### Continuous city background (v254)
-
-Only the location pins fit the area above the selection card. The city illustration is a separate background extending from beneath the header, behind the overlaid City map title and selected-place card, to the bottom navigation. A small, width-based sky crop replaces v253's bottom-aligned enlargement of the shortened pin area. This restores the skyline and removes the blank title strip and abrupt image edge above the card. Pin anchors, routes and gameplay remain unchanged.
-
-### Viewport-fitted city map (v253)
-
-The map screen fits the live header, heading, map, selection card and bottom navigation within the dynamic viewport. The illustration crops its upper sky, the exploration hint is removed, and eleven pin anchors are spread vertically across the usable scene. The card takes its own space below the scene instead of covering southern locations; longer card copy and the shelter goal reminder reduce scene height naturally. Routes use the same anchors as pins. Other screens retain their scrolling and reset/version footer. Saves and gameplay are unchanged.
-
-### Illustrated closing-time departure (v252)
-
-The existing closing-time event now shows the protagonist outside a closed public entrance, with a backpack and lowered blinds behind the glass. The same generic scene suits all closing places, remains on restored notices, and uses 480/768/1024px responsive WebP assets loaded only when needed. Timing, automatic departure, acknowledgement pause and Night Shelter's separate checkout are unchanged. Prompt and provenance: `docs/closing-time-art.md`.
-
-### Illustrated illness awakenings (v251)
-
-The **Feeling unwell** wake event selects a separate illustration for ground sleep and bench sleep (including Station), using the actual sleep kind. Both show the established protagonist waking with a cold. The shared illustrated result modal retains symptoms, sleep results and the actual Cold consequence in one confirmation. Images have 480/768/1024px responsive WebP variants, are loaded on demand and do not enter startup image warmup. Prompts and provenance are recorded in `docs/sleep-illness-art.md`. Sleep illness probabilities and other mechanics are unchanged.
-
-### Cumulative sleep illness and wake symptoms (v250)
-
-Illness risk on the ground or a bench is integrated for every game minute of sleep, using that minute's temperature, weather exposure and clothing wetness. A warm awakening no longer erases a cold night. Longer exposure increases risk; drying clothes gradually reduce it. Beds do not generate this risk. Roofs and indoor station benches exclude direct rain and wind modifiers while retaining ambient-temperature and wet-clothing risk. Existing outdoor wetness, sleep recovery and sleep durations remain unchanged.
-
-Each minute adds `-ln(1 - R8) / 480` to cumulative hazard, where `R8` preserves the former eight-hour baseline: 16% ground / 8% bench, plus 28 percentage points at ≤5°C, 16 at ≤10°C or 7 at ≤15°C; direct rain +22, showers +14 or wind +10; wet clothing adds up to 20 in cold conditions (half at 11–15°C). `R8` and the final probability `1 - exp(-dose)` are capped at 65%. The random outcome is sampled once on waking, outside React state updaters, only when no Cold remains active. Existing active illness is not extended or duplicated.
-
-A newly ill sleeper gets a **Feeling unwell** wake event describing a sore throat, blocked nose and chills, with the actual **Cold** consequence and normal sleep results in one confirmation. It replaces competing random wake events for that awakening. Existing two-day Cold duration, treatment and physical penalties are unchanged; the UI does not promise a fixed recovery countdown.
-
-Optional `sleepIllnessDose` / `sleepIllnessMinutes` fields in the existing v3 game save preserve accumulated exposure across reload and hidden sleep catch-up and are removed on completion. Old in-progress outdoor sleep without these fields reconstructs its elapsed prefix once from its saved starting snapshot and available weather data; missing old snapshots use current conditions as the best available estimate. Non-sleeping old saves remain unchanged. Tests cover duration, temperature, moisture, roof/bed protection, midpoint reload, legacy sleep migration, midnight/rain expiry, tick versus time jump equivalence, wake presentation, pause and duplicate prevention.
-
-Compatibility fixtures were refreshed from actual published builds v240–v249 and checked through repeated upgrade/reload cycles.
-
-### Closing-time departure event (v249)
-
-When a place closes while the player is there, the player moves to Street and a **[Place] has closed** event explains the departure. It applies to Cheap Shop, Help Center, Day Center, Free Clinic, Hospital regular hours, Job Centre and Day Work. Night Shelter retains its existing, separate morning packing/checkout unchanged. Station and Schronisko remain open around the clock. Arriving at an already closed building is not a closing transition, and closing the origin during travel never interrupts the journey.
-
-The notice pauses time, blocks background interaction, and requires acknowledgement. Existing action results appear first, with their rewards/costs retained; the closing notice follows. Exhaustion waits for acknowledgement before forcing sleep outside. Closure adds no travel time, fare or extra stat penalty. A single journal entry records the departure. The pending place ID persists under `street-life-closing-notice-v1` until acknowledgement, so reload restores the notice without replaying departure or duplicating the journal. Reset clears it. Saves with no notice key remain compatible.
-
-At zero Energy, an admitted Night Shelter guest or a Schronisko resident falls asleep in the available bed, with existing bed durations and morning checkout unchanged. At other locations, the character leaves first and then sleeps on Street under the existing outdoor sleep rules. A station bench is not a bed. Shelter departure collects a charging phone as usual when there is no usable bed. Ongoing travel, results, events and checkout finish before exhaustion can start sleep.
-
-### Shelter entrance and overnight bed access (v248)
-
-18:00–22:00 limits entry, not use of a reserved bed. A sober booked guest admitted during this window can start sleeping throughout the night, including after midnight. Attendance is recorded on admission even if the guest stays awake. The final booked night continues until morning; normal 07:30 packing / 08:00 departure still applies. A late arrival stays outside, cannot use indoor services or charging, and counts as a missed night under the existing attendance rules. Returning from outside requires admission again.
-
-Optional `shelterEntry: { night, admitted }` in the existing life save distinguishes an admitted guest from a refused arrival. Old saves already at the shelter during opening hours are treated as inside and repaired without resetting progress. Registration and arrival record admission independently of sleep. Regression coverage checks midnight, reload, legacy repair, missed attendance and the last booked night.
-
-### Background phone charging at Night Shelter (v247)
-
-Admitted, sober guests can **Leave phone charging** inside Night Shelter during its 18:00–08:00 opening hours, including quiet hours. Plugging in and collecting are free, instant actions. Charging adds 60 battery percentage points per game hour, capped at 100, alongside ordinary time, meals, showers, other actions and sleep. Result/event pauses do not charge because game time is paused. A time jump can charge only until the current night's 08:00 closure, never through daytime into another night. Existing charging at Station, Day Center, Help Center and Schronisko is unchanged.
-
-While left at the socket, the phone cannot be used; music and navigation are switched off. **Collect phone** retrieves it at its current charge, including at 100%. The Inventory Phone card shows **Charging · tap to collect** and collects the device instead of opening its controls. Charging remains active at 100% until collection. Walking/travelling away collects it automatically; during morning packing it keeps charging until collection at the exit, and the checkout result confirms retrieval. No lost-phone or theft chance is introduced.
-
-The active charger flag is persisted separately under `street-life-shelter-phone-charge-v1`; battery stays in the existing inventory save. Reload retains the flag and accumulated charge, without granting offline wall-time gains. Existing sleeping-time catch-up also charges for the game minutes it actually advances, including when hidden. Invalid/out-of-location flags are cleared and reset removes the flag. Old saves with no flag remain unplugged and their inventory schema is unchanged. `check-shelter-charging.cjs` covers interval boundaries, parallel actions/sleep, quiet hours, caps, pause/reload, phone access, morning checkout, manual departure/travel, access restrictions and legacy/reset saves. Compatibility fixtures were refreshed from actual published builds v237–v246 and pass repeated upgrade/reload checks.
-
-### Short mobile travel labels (v246)
-
-Long activity labels are shortened to fit the existing mobile travel heading beside the animation and elapsed time. Bus legs read **To the stop → Waiting → On the bus → Final walk**. Walking reads **Walking → Near a crossing → Red light → Crossing → Walking on**. Waiting out rain reads **Under cover**. Existing typography, durations, display holds, movement flags, weather exposure, costs and saved progress are unchanged. Regression checks use the shorter labels while retaining their travel, waiting-animation, wetness and reload assertions.
-
-### Map labels at 18px on all screens (v245)
-
-Map point labels use exactly 18px on both desktop and mobile, replacing the oversized v244 labels. Maximum text widths are 180/157.5px and the original 1.3 line height returns. The single Free Clinic position adjustment from v244 is retained; other point positions and food-warning wording remain as in v244.
-
-### Larger map labels and simpler food warning (v244)
-
-Map point names are twice their previous size: 24px on larger screens and 22px at viewport widths up to 520px. Their maximum text width also doubles to 240/210px. Only Free Clinic moves higher (y=29% to 25%) to clear the enlarged Help Center label; all other point positions are retained. Route endpoints use the same updated coordinates. Line height tightens to 1.15 on larger screens and 1 on mobile to preserve space between nearby labels. Marker sizes and the destination card are unchanged. Both stale and spoiled choices now say **Food poisoning risk**, without High; food poisoning is the English term for illness from contaminated food. Risk probabilities and consequences are unchanged.
-
-### Illustrated food outcomes (v243)
-
-All three risky-food outcomes now use the same illustrated result modal as existing events: **You feel fine**, **Nausea**, or **You vomited**. Each has its own cinematic 16:9 illustration, descriptive alternative text, outcome message, actual stat changes and the existing Got it confirmation. This remains one paused result dialog; closing it resumes play. The food-choice warning, probabilities, stat changes, consumption and save behavior are unchanged. Fresh food still uses its ordinary result.
-
-The three event-food images have retained WebP originals and 480/768/1024px responsive variants in the image manifest. They load on demand and use the existing revision-aware image cache. Food UI checks assert each outcome's title, selected image, responsive sources and single-dialog behavior for all three perishable food types. Art prompts and generation details are recorded in `docs/food-outcome-art.md`.
-
-### Food poisoning lottery (v242)
-
-Each consumed stale/spoiled sandwich, bread roll or ready meal resolves one outcome using that selected portion's freshness. Fresh >50% is safe; stale >20–50% has 90% no adverse effect, 8% nausea and 2% vomiting; spoiled 0–20% has 25% no adverse effect, 45% nausea and 30% vomiting. These are game-balancing probabilities, not real-world medical estimates. This replaces all guaranteed spoiled-food health/mood damage.
-
-Safe and nausea outcomes retain the existing reduced Food gains (stale sandwich/bread/ready meal 20/8/34, spoiled 10/4/16). Nausea adds Mood −3, with no Energy or Health loss. Vomiting gives no nutrition from the portion and applies Food −10, Water −20, Energy −5–10 (uniform integer), Health −5 relative to the state before eating. Normal stat bounds still apply. Fresh nutrition and the fresh sandwich's Mood +2 remain unchanged; canned food/water are unaffected.
-
-The paused food-choice dialog labels stale food **Poisoning risk** and spoiled food **High poisoning risk**, without revealing the exact odds. It explains nausea and vomiting consequences before confirmation, including that a vomited portion gives no Food. Outcome text and actual stat losses appear together in the existing action result and journal. No extra modal, game-time charge or persistent illness effect is added. Randomness is resolved once outside React state updaters, only after choosing a valid portion, and the consumed portion/stat changes persist normally. Merely opening or cancelling the choice has no consequences.
-
-Food checks cover exact freshness/probability boundaries, all three food types and all three outcomes, the full Energy loss range, no risk roll for fresh food, selected-portion consumption, StrictMode single resolution, accessible warnings, result pause and save/reload. Existing slot, aging, storage and legacy-save checks remain in place.
-
-### Health warning on the food choice (v241)
-
-Perishable-food backpack cards show freshness groups and counts without a separate Health− tag. That warning now appears beside Spoiled in the paused food-choice dialog, where the player chooses what to eat, and is exposed as its accessible description. Freshness thresholds remain Fresh >50%, Stale >20–50%, Spoiled 0–20%; nutrition and penalties are unchanged.
-
-### Backpack trash icon baseline (v240)
-
-The trash glyph is raised 5px inside its existing 32px button to align its lower edge with the first item-name line. Its touch target, card layout, text and tag positions are unchanged.
-
-### Original backpack card spacing (v239)
-
-Backpack text and effect tags return to their original 8px vertical padding and centered alignment. The trash icon remains absolutely positioned in the upper-right corner, without reserving a blank row or adding card height. Deletion, confirmation and food freshness behavior are unchanged.
-
-### Food freshness within backpack slots (v238)
-
-Sandwiches, bread rolls and ready meals retain the freshness of each portion, grouped into slots of up to four of the same type. Each slot shows the Fresh/Stale/Spoiled groups present and their counts. Buying fresh food, receiving food, moving stacks or transferring food through Schronisko storage cannot improve the condition of an older portion. Portions age independently at the existing rates and thresholds. Canned food still does not spoil.
-
-The trash confirmation now offers **Discard spoiled ×N** (only for perishable food, disabled when N=0) and **Discard all** (the selected slot only). Removing spoiled portions keeps edible portions in that slot. Following portions of the same food type compact into the gap, preserving their exact condition and order, and empty slots disappear. Counts/capacity remain accurate; other food types and Essentials are unaffected.
-
-Eating from an entirely fresh slot consumes one portion immediately and goes to the ordinary action result. Any slot containing stale/spoiled portions first opens a paused **Eat [food]?** dialog with only the Fresh/Stale/Spoiled groups available within that specific slot and their counts. Choosing a group consumes one matching portion from that slot; fresh food in another slot cannot appear in the choice. Even a wholly stale or spoiled slot requires this choice. Cancel, Escape, backdrop cancellation or reload of an unresolved choice does not consume food. Actual Food, Mood and Health effects use the chosen portion's own condition, never the slot average. Deletion and eating dialogs share keyboard focus trapping, a safe initial Cancel focus and background blocking.
-
-Storage keeps the same portion data. Legacy saves without portion arrays retain their known count and old average condition for each existing portion; their historical individual ages cannot be recovered. Arrays are persisted on food updates, and old count/average fields remain synchronized for compatibility and existing summaries. `check-food-inventory.cjs` covers all perishable types, purchase/age invariants, selected-slot choices, mixed/whole removals, compaction across up to eight slots, pause/reload and storage transfers. This supersedes earlier weighted-average gameplay rules.
-
-### Discard a backpack slot (v237)
-
-Every occupied backpack slot has a separate trash icon in its upper right corner. It opens a confirmation naming the item and the quantity in that specific slot. Confirming discards that stack only, frees the corresponding capacity and immediately saves the inventory; other stacks of the same item remain. This also works for gel, deposit containers and temporarily unusable items such as wipes at the Hygiene cap. Essentials have no discard action.
-
-Confirmation pauses the game, blocks background controls, locks page scrolling and keeps keyboard focus inside the dialog. Cancel receives initial focus; Cancel, Escape or tapping the backdrop preserves inventory and returns focus to the original control when it still exists. Reloading an unconfirmed dialog preserves the item. Confirming opens no second result modal, spends no game time and grants no consumption benefits, money or other stat changes. Empty food/bread/ready-meal stacks reset their freshness; removing only one of several stacks retains remaining freshness. The use and discard controls are sibling buttons, avoiding nested buttons and accidental consumption from clicking trash.
-
-Checks cover cancelling, Escape, pause/background blocking, focus, partial and full stacks, all ten backpack item types, empty-bag display, persistence and unconfirmed reload.
-
-### Shelter arrival priority and registration hours (v236)
-
-Doors open at 18:00, registration begins at 18:20 and ends at 22:00. Unregistered players can wait outside during the day (08:00–22:00); arriving at 17:00 therefore improves priority over arriving at 18:30. The first arrival time for the current uninterrupted visit is saved separately, survives idle time and reloads, and resets on leaving, starting travel, a new day or successful booking. Clicking registration later while staying here retains the original priority. Today's 0–3 vacancies are still sampled only once and do not reset on returning.
-
-The prototype models one applicant ahead for every 45 minutes after 17:00: `floor(max(0, arrivalMinute - 1020) / 45)`. With uniformly sampled 0–3 vacancies, arrival before 17:45 has 75% admission odds, 17:45–18:29 has 50%, 18:30–19:14 has 25%, and 19:15 onward has none. This is game balancing, not a real-world statistic. Even first place cannot help on a zero-vacancy day.
-
-The active queue takes at least 20 game minutes and cannot finish before 18:20: `max(20, 1100 - joinMinute)`. Joining at 17:00 waits 80 minutes and joining at 18:00 waits 20; joining at 18:30 waits 20. The display shows the saved arrival time, people ahead, remaining time, and outdoor/indoor/registration stages. Before 18:00 weather exposure is outdoors; after entry it is indoors. Long waits persist their own total and progress, while older 20-minute saved queues retain their original progress and position. Existing booking, meals, extensions and daily-attempt rules are unchanged. Phone/event information and the arrival goal use the new hours; old arrival reminders migrate to 18:00.
-
-Regression coverage includes delayed button presses after a 17:00 arrival, 18:30 arrivals, zero places, leaving, actual trip completion, a long early queue across reload, the 18:00 indoor boundary, legacy queue progress and updated reminder/phone hours. Compatibility fixtures cover actual published builds v226–v235.
-
-### Shop food assortment (v235)
-
-Canned food now costs 10 zł and retains +32 Food/+1 Mood with no spoilage. Ready meal costs 12 zł: pasta with meat and a little parsley in a plastic container, immediately usable from the backpack with no separate heating action. Fresh meals restore 48 Food (Food+++), stale 34, spoiled 16 with −8 Health/−4 Mood; the normal 100-point cap applies. Four containers fit per slot. Freshness mixes by quantity and decays independently at the sandwich rate (100 points/48 game hours); old saves start with zero meals and 100 freshness. Buying, stealing, results, consumption and save/reload use the common inventory flow. Phone advice lists the current food prices. Breakfast remains Food++ and dinner Food+++.
-
-Artwork: `public/assets/ready-meal.webp`, generated with built-in imagegen and optimized to 512×512 WebP. Prompt: single inexpensive supermarket ready meal, clear plastic container with macaroni pasta, browned meat and a little parsley, film partly folded back, three-quarter overhead photographic view on a dark scratched tabletop, dim amber light, no text/logos/hands/cutlery/microwave.
-
-### Larger shelter meal portions (v234)
-
-Breakfast restores 28 Food (Food++), dinner 48 Food (Food+++), before ordinary time decay and the 100-point cap. Meal-card tags match these portions. Both still include tea restoring 38 Thirst. Other meal effects, hours and once-per-day limits are unchanged. This supersedes v233's smaller portions.
-
-### Shelter meal portions and tea (v233)
-
-Night Shelter breakfast and dinner each restore 38 Thirst from tea, equivalent to drinking one water portion from the backpack, before normal elapsed-time decay and the 100-point cap. Descriptions and outcome text mention tea. Breakfast now restores 12 Food (Food+, like a fresh bread roll), dinner 28 Food (Food++, like a fresh sandwich). Both action cards show their Food, Thirst and Mood tags. Meal hours, daily limits, duration and backpack stock are unchanged.
-
-### Free shelter water refill (v232)
-
-Night Shelter and Schronisko offer Refill water: five game minutes, no money, topping up carried water to four portions. Existing stock of four or more is unchanged and disables the action without spending time. A new water stack requires a free backpack slot; topping up an existing partial stack still works with all eight slots occupied. This adds inventory water rather than drinking it. Normal Night Shelter registration, opening and quiet-hour rules apply; Schronisko remains open 24/7. The result shows only the actual added portions and elapsed time, and the refill is saved and journaled.
-
-### One result for a quiet night (v231)
-
-The quiet-night wake event now folds into the sleep-completion result: its contextual illustration, brief outcome and capped +5 Energy/+5 Mood bonus appear with the existing sleep gains in one card. One Got it resumes play. There is no separate Get up choice or second quiet-night result. This applies to natural/debug wake and the older sleep-action path. Events requiring a real choice (theft, being woken on a bench) retain their existing sequence. Regression checks compare bonus/no-bonus shelter wakes, single journal entries, paused reading, reload and return to ordinary time.
-
-### Pedestrian text independent of travel speed (v230)
-
-All trips again advance one game minute every 250 ms (×4). Pedestrian presentation starts with Walking, then cycles through Approaching a junction, Waiting for the green light, Crossing the road and Walking on, keeping every label and its matching animation for at least two seconds of active travel: walking/carrying on four seconds, approaching two, waiting for green three, crossing two. Two seconds is a minimum, not a uniform switching timer. The display derives from saved elapsed minutes independently of simulation phases, so rain cover, navigation battery and physical costs keep their existing game-minute accounting. Pauses stop the display timeline; reload resumes it. Arrival ends the display immediately, even midway through a label; short routes show only the stages that fit. Bus presentation is unchanged. This replaces v229's clock slowdown.
-
-### Readable pedestrian stages (v229)
-
-Walking now shows one complete junction sequence per roughly 30 game minutes (at least one for routes of five minutes or more), rather than repeating every twelve minutes. Every stage—walking, approaching, waiting for green, crossing and walking on—lasts at least five real seconds. The clock slows only as needed for that stage while still displaying every elapsed game minute. Route totals, rain exposure, costs and saved progress retain their original game-minute accounting. Very short legacy routes show only Walking, also for at least five seconds. Buses and waiting under rain cover retain their existing speed. Reload resumes the saved stage; events and hidden tabs pause progress as before. This supersedes the pedestrian timing and uniform ×4 walking cadence described below.
-
-### Pedestrian junction phases (v227)
-
-Walking routes now alternate Walking, Approaching a junction, Waiting for the green light, Crossing the road and Walking on. A sequence fits within up to twelve existing game minutes, with one minute each for approaching, waiting, crossing and carrying on; longer routes repeat it. Very short legacy trips below five minutes remain walking. No extra duration is added. The walker and road streaks stop during the red-light wait, then resume. All pedestrian phases remain outdoors, including waiting: rain still wets clothes. Reload restores the current phase, and unchanged phase labels retain memoized rendering. Save fixtures cover actual published builds v217–v226.
-
-### Activity first in travel card (v226)
-
-The route is now the small upper line and the changing activity is the large heading below it. Three fixed-width dots pulse at the end of the activity label; reduced-motion settings keep the dots still. Walking trips use the same hierarchy. The route, trip timing and phase/weather rules remain unchanged. Save fixtures cover actual published builds v216–v225.
-
-### Weather exposure during transit (v225)
-
-Transit phases now drive weather exposure as well as the activity label. Walking to the stop and from it to the destination are outdoors and accumulate wetness in rain. Waiting at the stop uses canopy cover (no new wetting, drying 0.15/min), and riding uses transit shelter (no new wetting, drying 0.3/min). Paid and ticketless modes share the same rules, including after reload. If rain starts during a sheltered phase, the rain choice is deferred until leaving cover for the last walking leg. Full walking routes remain outdoors. Save fixtures cover actual published builds v215–v224.
-
-### Transit phase text (v224)
-
-The transit activity card changes its existing label from Walking to the stop, to Waiting for the bus, to Riding the bus, then Walking to your destination. Phases follow elapsed time within the existing sampled trip: approximately 20% walking to the stop, 35% waiting, 30% riding and 15% walking from the stop to the destination, rounded to game-minute boundaries. Paid and ticketless travel share the labels. Reloads resume the current phase; no extra time is added. Walking trips retain their Walking label. Save fixtures cover actual published builds v214–v223.
-
-### Nearby shop (v223)
-
-Cheap Shop is a nearby convenience store: walking takes a uniformly sampled 5–15 game minutes. Paid transport and riding without a ticket use the same 5–15 minute range because waiting and reaching the stop remove the speed advantage. All three route choices show that range. Other destinations retain their existing times; already-running saved trips keep their sampled total and remaining minutes. Save fixtures cover actual published builds v213–v222.
-
-### Header low-battery warning (v222)
-
-The header battery icon and percentage turn red below 30 battery points. At 30 or above they retain the normal colors. This does not change battery consumption or Phone dialog presentation. Save fixtures cover actual published builds v212–v221.
-
-### Rain interrupts outdoor activities (v221)
-
-When rain starts outdoors, time pauses for three choices: find cover and continue, continue in the rain, or stop the current activity. Starting a phone search in existing rain also offers the choice. A canopy takes five game minutes to find, with normal outdoor exposure and no search/route progress; spent time and battery are retained. Browsing then resumes from its remaining duration under cover: no new wetting, slow drying. Continuing without cover preserves progress but keeps normal wetness gain. Stopping cancels the search without discoveries or Mood reward and shows already-paid costs. Walking trips can wait under cover without route or navigation-battery progress, resume automatically when rain ends, leave early, or be cancelled without teleporting to the destination. Rain decisions, cover and in-progress activities survive reload; moving away removes canopy protection. Indoor/transit activities do not receive the outdoor prompt. The prompt replaces the old canopy-duration/station/walk menu. Save fixtures cover actual published builds v211–v220.
-
-### Screen brightness and old-phone battery (v220)
-
-Screen-on base drain now follows game lighting: Browsing 18/hour at night, 24/hour in daylight and 30/hour in clear daylight; navigation respectively 12, 18 and 24/hour. Phone wear multiplies these rates. At the starting 72 condition, a 15-minute search uses about 5.4, 7.2 or 9 battery points. Daylight is 06:00–20:00; each elapsed minute is accounted for separately, including dawn/dusk, midnight and weather changes within an activity. Direct searches use the same calculation. The Phone dialog displays the actual current navigation rate. This replaces the lower v219 rates below. Save fixtures cover actual published builds v210–v219.
-
-### Battery accounting audit (v219)
-
-Browsing drains 0.2 battery points per game minute, multiplied by phone wear. The older direct 15-minute searches now use this same rate and refuse broken/undercharged phones instead of charging a flat two points. Navigation drains 12 points/hour or 15 in clear daylight (06:00–20:00), multiplied by wear; clear nights use the regular rate. The Phone dialog shows the actual rate including wear. Navigation is charged only during trips; disabling it removes that cost.
-
-### Approximate minimum durations (v219)
-
-Street choices with a minimum duration retain both the approximation sign and trailing plus, for example ≈32m+. This also applies to the minimum sleep-duration choice. Save fixtures cover actual published builds v209–v218.
-
-### No starting transit pass (v218)
-
-New games and Reset save start without a transit card. Public transport costs 4.40 zł, and Ride without ticket is available with the existing fine risk. Walking remains free. Explicit transit cards in existing saves are preserved, and temporary Free transport benefits keep their existing behavior. Save fixtures cover actual published builds v208–v217.
-
-### Random order of choices (v217)
-
-The three main street choices keep the same contextual selection (information, rest/movement and practical direction), but their displayed order is shuffled using a separate per-run presentation seed. This does not consume gameplay random rolls. Order is deterministic for the current completed-action history and selected choice IDs, so minute ticks, ordinary rerenders, tab changes and reloads preserve positions. A completed action or a changed set of available directions can produce a new order. Disabled options still follow available choices. The seed is saved, validated on load, generated for older saves and renewed on Reset save. The same stable shuffle applies to illustrated and compact event replies, rain decisions, social-worker interview answers, transport alternatives, action lists at other locations and phone actions (while leaving on/off switches in their slots). Yes/no, accept/decline and equivalent conventional binary pairs keep their order. Numeric duration choices, confirmation/cancel controls, navigation, shop/catalog order and on/off settings keep their natural order. Compatibility fixtures cover v207–v216.
-
-### Visible search battery costs (v216)
-
-Information-result cards show all nonzero recorded battery costs, including decreases below the general 5-point passive-drain threshold. The existing animated percentage, loss trace and hidden numeric minus label remain. Zero-cost remembered/saved answers do not invent a battery row. Actual battery consumption remains 0.2/min times the phone-condition multiplier; only result visibility changes. Save fixtures cover actual published builds v206–v215.
-
-### One simple information-result design (v215)
-
-All practical search results now use the compact information card, including Night Shelter, food/water, charging, no-bed advice, no-new-information, interrupted searches, saved answers, direct shelter/help/work searches, and addresses learned in conversations (with their existing event art). Single places show an info icon, one location name, hours, services and the map status. Multiple-place answers list each place once; answers without places omit the map check. Mood changes share the time row. Duplicate headings and Full answer & details are absent throughout search results. Relevant shelter arrival/queue/bed limits and seven-night booking, shelter meal times, charging rate and lack of internet requirement, safety/referral advice and closed-service messages remain visible. Already-known places say On your map and saved answers say Saved on map. Narrative reflections, pause/close behavior and all gameplay effects remain intact. Save fixtures cover actual published builds v205–v214.
-
-### Animated stat losses (v214)
-
-Result meters briefly hold the original value for 300 ms, then animate decreases over 1600 ms with smooth easing. The percentage, color, Mood icon and accessible meter value follow the same displayed value. A muted segment between the final and original values remains visible for the rest of the result, indicating the lost portion. Separate numeric minus labels are removed from meters; positive gain labels and non-meter costs remain. Reduced-motion mode immediately displays the final value with a static loss trace. Result percentages are 1.5 times larger, with wider number columns including at mobile widths. Save fixtures cover actual published builds v204–v213.
-
-### Discovery details removed (v213)
-
-Compact cards for Help Center, Day Center and Free Clinic no longer show Full answer & details, because it repeats the name, opening hours, services and map confirmation already visible. A first-time personal reflection, when present, stays visible on its own without repeating the place information. Other practical answers retain their disclosure for additional instructions. Save fixtures cover the actual ten published builds v203–v212.
-
-### Compact information discoveries (v212)
-
-Finding Help Center, Day Center or Free Clinic uses one compact information card: an info icon beside the location name, opening hours aligned to the right, services, and a short Added to map label. A single summary row combines elapsed time and any actual Mood change; the full answer remains collapsed under Full answer & details. Zero gains stay hidden. Other meaningful stat changes retain their existing presentation. The street illustration stays visible: searching does not show an arrival scene or move the player. No-new-information, multi-place and other practical answers retain their existing explanations. Saved compact answers say Saved on map. Save fixtures cover the actual ten published builds v202–v211.
-
-### Medicine explanations (v211)
-
-Medicine opens a compact result modal in each of three cases, following the approved mockup. **Recovery accelerated** explains the ×3 recovery speed, continuing symptoms and one-dose limit, with Cold recovery ×3 and Medicine −1 rows. **One dose is enough** explains that treatment is already active and another tablet cannot speed it up or remove symptoms. **No fever** explains that medicine is unnecessary while healthy. The last two use the MEDICINE label, consume nothing and report no recovery boost. All three pause time until Got it is pressed. No separate fever statistic or change to illness/recovery mechanics is introduced; the no-fever message corresponds to having no active Cold. The current ten-build save fixture window is v201–v210.
-
-### Medicine and gradual Cold recovery (v210)
-
-One Medicine dose marks the current active Cold as treated and reduces its remaining duration to one third: a newly caught 48-hour illness lasts 16 more hours if treated immediately; 12 hours remaining become 4. Cold remains active, with all existing Health, Energy and Mood consequences, until that new expiry. A second dose during the same illness does not stack, extend recovery or consume medicine. Healthy players do not consume doses. Treatment metadata and the shortened expiry survive reload; a later new Cold is untreated again.
-
-Status labels the illness Cold · treated without a countdown. Inventory/shop tags say Cold recovery ×3, and the treatment result reports recovery ×3 instead of Cold Ended. Clinic and hospital visits retain their existing cure behavior. The current ten-build save fixture window is v200–v209.
-
-### Clothing wetness (v209)
-
-Wetness is a saved 0–100 state independent of clothing cleanliness and condition. Missing values in earlier saves mean dry clothes; valid wetness and unfinished wet-sleep loss survive reload. The current compatibility fixtures cover the actual ten published builds v199–v208, and the storage key remains v3.
-
-- Exposed rain adds 1 point/minute; Showers adds 0.6. Walking, outdoor work, street sleep and waiting outside closed services are exposed. Public transport and open indoor locations stop new rain. The shelter registration queue remains outside; sleeping on the station bench is sheltered.
-- Drying per minute: canopy 0.15; dry outdoors 0.2; windy outdoors 0.4; public transport 0.3; station/shop 0.6; other open indoor locations 1.2. A canopy stops new rain but does not dry clothes instantly. Returned laundry is dry.
-- Wet stress scales with average minute wetness, temperature (full at ≤10°C, ×0.65 through 15°C, ×0.35 above), and wind (×1.25 outdoors). Indoors/transit reduce stress to one quarter. Awake wet stress costs up to 0.04 Energy and 0.025 Mood/minute before those factors, in addition to existing weather rules. Wetness does not directly damage Health.
-- Outdoor sleep accumulates a saved rest-loss amount at 0.04 × wet stress/minute and subtracts it from the final Energy gain, even if starting Energy was zero. Completion clears this temporary accumulator. Cold-weather outdoor waking rolls gain up to 20 percentage points based on accumulated wet sleep loss; existing overall illness chance stays capped at 65%. No new awake illness roll is introduced.
-- Status displays one derived Wet clothes row with Energy− / Mood− tags and actual wetness, without a countdown. Clothing details show wetness and drying guidance. Results and journal record rounded wetting/drying changes, with drying positive; dry zero changes are omitted. Outdoor sleep previews/results explain reduced recovery.
-
-### Map bottom spacing (v208)
-
-Removed the small district illustration caption and the fixed 175px map spacer that duplicated the shared shell/footer clearance. A ResizeObserver measures the pinned selection card; the map reserves only the height above its normal 83px footprint when descriptions or headings wrap. This keeps the lower Station marker reachable on narrow screens without leaving a large empty area after the illustration. Selection, routes and the pinned card/navigation remain unchanged. Browser layout QA covered all ten selectable destinations at 320×640, 390×700, 390×844, 430×740 and 760×900: no horizontal overflow, no illustration caption, a 12–25px gap below the scene at maximum scroll, and at least 33px clearance above the Station hit area.
-
-### Closed map locations (v207)
-
-Closed locations use muted gray map labels and markers. They remain normal, focusable buttons: selection, opening hours and routing still work. The selected closed marker keeps a neutral selection ring, and the current-location marker retains its gold position indicator. Styling follows the existing opening-hours flags, including changes while the map is open and overnight schedules.
-
-### Life situation layout (v203)
-
-Housing, Employment, Income and Documents use a two-column, two-row card grid. Each card places its icon beside a small label above the value; long values wrap inside their card. The layout stays two columns on mobile and desktop. v204 reduces the card minimum height from 82px to 62px, tightens padding and grid gaps, and keeps label/value font sizes unchanged.
-
-### Compact limiting effects (v202)
-
-Status shows each strongest Mood restriction, including every tied cause. Independent Energy limits from Health and Hygiene limits from dirty clothing remain visible even when another cause dominates Mood. A cause affecting multiple stats appears once with multiple cap badges. Cold merges its Mood cap into the existing illness row. Each effect occupies one compact line; derived restrictions disappear when their causes improve, without adding saved or timed effects. This is a presentation change; existing gameplay limits are unchanged. v205 restores neutral text and borders for all effect rows; only their impact badges carry negative/positive colors.
-
-### One Mood with housing and physical ceilings (v201)
-
-There is one saved Mood value. The header, Status, navigation indicator and action/event results use its five face bands; the previous weighted overall-condition calculation is retired. `MoodIcon` is shared by the header and all Mood meters.
-
-| Accommodation | Mood ceiling |
-|---|---:|
-| Street | 50% |
-| Night shelter | 60% |
-| Schronisko | 70% |
-| Hostel | 80% |
-| Room | 90% |
-| Apartment | 100% |
-
-A valid night-shelter reservation retains the 60% accommodation ceiling during daytime outings. Accommodation changes do not refill Mood. Hostel, Room and Apartment ceilings are defined for those housing states; this change does not introduce new locations or rental actions.
-
-The actual ceiling is the minimum of accommodation and the following continuous physical restrictions (all clamped to 100%): Food, Water and Health each allow `20 + 2 × value`; Energy allows `40 + value`; Hygiene allows `80 + 0.4 × value`. An active Cold allows at most 60%. Thus Energy 20 allows Mood 60, severe thirst at Water 10 allows Mood 40, and dirty clothes alone impose only a mild limit. Small changes of needs produce small changes of the ceiling, rather than threshold jumps. Worsening conditions constrain the current value; raising a ceiling never grants free Mood.
-
-Positive/negative events, sleep and other explicit action rewards change Mood directly within the ceiling. Comfortable physical needs no longer passively refill it by averaging other meters. Music and illness retain their timed emotional effects. All state writes (including direct item handlers), time steps and action resolution respect the limit. Existing saves retain their identity and all other progress; an above-ceiling Mood is brought within the current rules on load.
-
-Status and result bars hatch the unavailable part of Mood, show the limiting cause and use the same final face as the header. Results show actual capped gains once and omit zero gains. `check-mood.cjs` covers all six accommodation caps, physical continuity, illness expiry, tick/action equivalence, existing saves, direct item rewards, capped result bars and identical faces. This section supersedes older descriptions of separate overall condition and passive Mood recovery below.
-
-### Street clock resumes after information results (v200)
-
-Street uses the ordinary running clock: one game minute per real second while the page is visible. Removed the legacy blanket Street-decision pause, which also stopped time on Map, Inventory, Status and Journal whenever the hero's location was Street. Closing an information-search result resumes the clock without another action; returning to the location screen or reloading preserves this behavior. Removed the misleading TIME PAUSED label above ordinary Street choices. Actual event/result dialogs, rain decisions, sleep planning and other blocking flows retain their pauses, and travel keeps its existing accelerated clock. This supersedes the historical Street decision-pause descriptions below. Regression checks cover first-night and daytime idle ticks, search-result pause/resume, all navigation tabs, background visibility and reload.
-
-### Bottle-search test shortcut removed (v198)
-
-After user testing, the temporary fourth Street choice and its override flag were removed. Street again shows at most three contextual choices. Bottle search remains in the ordinary practical-action priorities, with its previous first-night restriction and contextual eligibility. Search artwork, interactions, odds, time costs, backpack capacity and redemption are unchanged. Regression tests now open the search through its ordinary action and verify that the fourth shortcut is absent across opening-night, shelter-booked, undiscovered-work and low-money contexts.
-
-### Full-circle rubbish orientation (v196)
-
-Each individual object receives an independent random angle across the full 0–360° range when a new pile is created, replacing the limited −75° to +75° range. Bottles, cans and ordinary rubbish can lie sideways or upside down. Angles stay fixed while dragging or collecting; only a new search generates new angles.
-
-### Matching can artwork and rarer damaged cans (v195)
-
-The intact can now uses realistic silver aluminum and a clean blue-white beverage print, retaining an undented cylindrical silhouette and deposit marking. It looks recently emptied, with no dirt, corrosion, peeling print or artificial aging. Generated with built-in imagegen using both former can sprites as target/style references, followed by a targeted edit removing all aging: realistic brushed aluminum and continuous blue-white print, open pull-tab top, intact shape, natural light, transparent background. Exported to the existing 256px WebP asset, used by both the bin and inventory.
-
-Damaged cans are no longer generated as ordinary clutter. Those positions now contain paper, cups, trays or wrappers. Among candidate cans, 78% are returnable and 22% damaged: approximately one damaged can per 3.5 intact cans over many searches, with natural variation in each small pile. PET eligibility stays at 65%; candidate count, search costs, inventory capacity and deposit payout are unchanged.
-
-### Centered Street choice content (v194)
-
-Street choice buttons explicitly center their content vertically, overriding the older mobile rule that top-aligned generic action buttons. The icon and text remain centered together for both one- and multi-line labels; duration stays at the button midpoint. Padding, minimum height, typography and other action layouts are unchanged.
-
-### Drag rubbish, tap deposit containers (v193)
-
-Only accepted intact PET bottles and cans respond to a tap or keyboard activation. Other rubbish, including damaged bottles/cans, stays in place when clicked and must be moved across the pile edge to discard it. Moving an object within the pile leaves it there; moving an accepted container beyond the edge never discards or collects it. Arrow keys offer the same movement for keyboard users. Pointer movement under five pixels is tolerated as normal tap jitter; a drag never collects a container on release, and a cancelled pointer gesture cannot collect it. Tests cover litter clicks, in-pile movement, selected-item discard, damaged-container discard, edge protection, tap jitter, keyboard movement and unchanged collection/payout.
-
-### Rubbish proportions (v192)
-
-Sprite scale follows the object type, independent of deposit eligibility. Intact and crushed PET bottles share a 2.5 base scale; intact and crushed cans share 2.0. Cups use 1.55, paper 2.0, trays 2.1 and wrappers 1.9, each with only 0–0.2 random variation. This makes bottles larger than coffee cups and removes the previous bias that shrank every collectible compared with ordinary rubbish. Drag/discard bounds continue using the actual object scale.
-
-### Realistic bin and deposit containers (v191)
-
-The selected artwork is a worn metal bin lined with a black plastic bag. Its empty photographic background is separate from eight transparent WebP object sprites: cup, paper, tray, wrapper, crushed can, intact can, intact PET bottle and crushed PET bottle. Warm light, realistic material textures and muted colors follow the shop product art. Both bottle variants look recently discarded and clean; damage or missing labeling, rather than dirt, distinguishes the rejected bottle. Loose objects remain interactive in a pile inset from the rim; no bottles or rubbish are baked into the background. Artwork loads only when needed, with a responsive bin background and small transparent sprites. Inventory uses the new PET and can images as well.
-
-Artwork was generated with built-in imagegen. Prompt set: warm photorealistic product photography matching the shop, one object per transparent sprite, near-overhead view, upper-left lighting, no brands; intact labeled PET and cans carry a deposit mark/barcode, rejected variants are visibly crushed. The bin prompt removes all loose objects from the chosen black-bag concept while preserving the metal rim and bag folds. A targeted bottle edit removes all dirt while preserving its crushed silhouette. Runtime exports use 256px alpha WebP sprites and 384/768px background variants; generated full-resolution sources are not runtime dependencies.
-
-Search keeps its 18 layered objects, 2–6 candidate containers, 65% returnability, 10–60 charged minutes, one 60-second real deadline and temporary fourth Street test action. Candidate containers are PET bottles (65%) or metal drink cans (35%); intact labeled deposit containers can be kept, visibly crushed ones cannot. A bounded shuffle chooses candidate positions even with constant random input. Glass is not collectible in this game. Both accepted types pay 0.50 zł each at Cheap Shop and share the existing stack of eight per backpack slot. The legacy `inventory.bottles` field now counts both types, preserving existing saves and values without migration. Player labels, results and journal refer to bottles and cans or containers.
-
-Rules verified 2026-10-16: [Żabka](https://www.zabka.pl/postawnazwrot/) accepts deposit PET bottles up to 3 L and metal drink cans up to 1 L with a readable barcode and deposit marking; packages must be empty and uncrushed. [Biedronka](https://media.biedronka.pl/449064-biedronka-z-najwieksza-w-polsce-siecia-automatycznych-butelkomatow) also accepts PET and cans with the marking. [Ministry deposit FAQ](https://www.gov.pl/web/klimat/system-kaucyjny-pytania-i-odpowiedzi) confirms 0.50 zł for PET and metal cans. Reusable glass also exists in the real system at a different deposit, outside this feature's scope.
-
-### Temporary bottle-search access (v190)
-
-For user testing, Street appends Look for bottles (test) as a fourth choice after the three ordinary directions. It is reachable during the first night and regardless of shelter booking, discovered work or money. It appears only once and does not replace the normal three priorities. The temporary TEMP_BOTTLE_TEST flag in App.tsx can be turned off after review to restore the previous three-choice presentation and bottle eligibility. No save migration or search mechanics change is involved.
-
-### Minimal bottle-search presentation (v189)
-
-The approved minimal search uses one dark frame, a short instruction, charged search time, kept-bottle count, a rectangular pile of line-icon rubbish and a sand-colored Finish searching button. Duplicate inventory/rejection counters, value estimates during searching and the obsolete build label are removed. Rubbish can be dragged beyond the rectangular edge or moved aside with a tap; keyboard activation is supported too. Only the dragged rubbish is discarded at an edge, never untouched items or bottles. The procedural 18-item pile, 2–6 bottles, 65% returnability, backpack limits, 10–60-minute charged time and 60-second real deadline are preserved. One child timer updates the displayed charged time and deadline without re-rendering the whole App on each tick. The concise result shows the actual bottles kept and their return value at Cheap Shop (not a cash award); shared significant consequences and time costs remain visible. Journal retains the full original result text. A final audit of other legacy dialogs remains separate.
-
-### Remaining location and action icons (v188)
-
-Location headings now use the existing line-icon mapping instead of standard emoji. Help Center categories use house, document, ticket and banknote icons; stored belongings use document, pill, cigarette and food icons. The public charging action, regular medical appointment and shelter-registration goal use matching line icons as well. Icon dimensions and muted sand coloring follow the current interface, and decorative SVGs stay hidden from screen readers. This changes presentation only; labels, actions, storage rules, location availability and goal logic remain unchanged. The bottle-search game and final legacy-dialog audit remain separate steps.
-
-### Rain and run-end dialog refresh (v187)
-
-Rain decisions use the approved compact layout with line rain/umbrella icons and one column of narrative choices. Under the canopy, 15-minute, 1-hour and 4-hour options display their finish times, with a separate back action. Choosing a duration still applies that existing action immediately; time remains paused while deciding. The end-of-run dialog uses the approved centered accent layout: muted red broken-heart circle, actual day reached, health explanation and sand-colored Start new run button. These dialogs no longer show standard emoji. Rain outcomes, fatigue/need costs, death condition and reset behavior are unchanged.
-
-### Compact ordinary street events (v186)
-
-Ordinary events without illustrations now use the selected compact frame: a line icon alongside the title, existing narrative, a single column of choices with small action icons, and a Time paused footer. Check type and DC appear below the choice label; unavailable reasons and action durations remain visible. Full accessible choice names, focus handling, pause behavior, rewards and checks are unchanged. This covers dropped/wet phones, food offers, ticket inspection, tips, nearby trouble, quiet nights and theft. The special coin encounter and illustrated first-night events retain their existing presentation. Rain decisions and the end-of-run dialog remain for the next design review.
-
-### Short sleep-duration picker (v185)
-
-The sleep picker uses the selected short layout: a line moon icon, location/current-time row, Energy summary, 2/4/6/8-hour choices on one row, and a large wake time with its actual day. The chosen duration keeps a sand accent and Start sleeping uses the same sand button as other dialogs. Fatigue restrictions remain disabled with accessible reasons and a visible explanation. Actual sleep duration, shelter cutoff, outdoor risks and Cancel remain visible. This is a presentation change; availability, wake calculation, pause behavior and all sleep mechanics are unchanged.
-
-### Compact sleep and registration queue (v184)
-
-Active sleep and shelter registration queue now share the compact timed-dialog frame with checkout: one dark surface, line icons beside headings, current time above a thin sand-colored progress bar, and short supporting text. Sleep shows actual elapsed/total duration and ×10; the queue shows remaining minutes and the existing limited-place warning. Accessible progress values are included. Sleep speed, queue duration and availability, hidden/background handling, saved progress, manual debug wake and result flows are unchanged. The sleep-duration picker and other legacy dialogs remain for later design review.
-
-### Checkout clock at ×4 (v183)
-
-Active morning checkout now advances one game minute every 250 ms, showing every minute and finishing 30 game minutes in 7.5 real seconds. The progress transition matches that cadence. The reminder and completion result remain paused, hidden-tab pause and reload progress are preserved, and ordinary time returns to one minute per second afterward. Travel keeps the same ×4 cadence; sleep behavior is unchanged.
-
-### Compact morning checkout (v182)
-
-The morning reminder and active checkout share one compact dark frame with a line backpack icon beside the heading. During packing, the current time and remaining minutes sit above a thin sand-colored progress bar, with the actual completion time below. Completion time derives from the departure start plus 30 minutes, including late starts; it is not fixed to 08:00. The reminder uses the same frame and sand-colored start button. The 30-minute duration, clock rate, pause/reload behavior, booking and stored items are unchanged. The progress bar exposes elapsed minutes accessibly and respects reduced motion.
-
-### Consecutive Journal entries (v181)
-
-The Journal combines consecutive entries on the same day when their original action, displayed title and reflection text match. A group shows the first occurrence's time, one reflection and a title suffix such as ×2 or ×3. Another action or a different reflection breaks the group. Grouping happens before the 30-row pagination and only affects display; all original records remain saved, preserving existing saves and gameplay history. Reloads reconstruct the same groups.
-
-### Coin event accent presentation (v180)
-
-The coin encounter uses the selected centered accent layout: one dark frame, a 72 px gold circle with a larger 56 px coin icon, a short description and sand-colored Pick it up button alongside Leave it. The result repeats the same emblem, displays the actual cash gain once as a large green amount and closes with Got it. Leaving the coin uses the same result frame and the shared animated Mood bar. Other event and result layouts are unchanged. Weighted rewards, one-time resolution, Journal identity and paused travel behavior remain as specified below.
-
-### Found Polish coin rewards (v179)
-
-The found-money event now offers one Polish coin instead of a fixed 6 zł. Pick it up resolves one weighted denomination and applies that amount once; the result identifies the coin and shows the actual money gained, including 1 grosz. Reading or rendering the result does not sample again, and saved cash remains unchanged after reload. Leaving the coin still gives +1 Mood without sampling or adding money. The event keeps its existing appearance weight and event ID; Journal recognizes both its previous and current title.
-
-| Coin | Reward probability |
-|---|---:|
-| 1 gr | 10% |
-| 2 gr | 15% |
-| 5 gr | 20% |
-| 10 gr | 20% |
-| 20 gr | 15% |
-| 50 gr | 12% |
-| 1 zł | 5% |
-| 2 zł | 2% |
-| 5 zł | 1% |
-
-The maximum is 5 zł. Coins worth 1–50 groszy account for 92% of rewards. Regression coverage checks all nine real event outcomes, the exact weighted distribution, the upper bound, correct cash/result text, leaving the coin and no repeated draw or award during reading/reload.
-
-### Variable travel duration (v178)
-
-Every new walk and public-transport trip samples a uniform whole-minute duration between −5% and +20% of its base time. Lower bounds round up and upper bounds round down so integer minutes remain within the agreed limits. Walking uses the destination’s walking base; paid transit, free transit and fare-dodging use its existing half-duration base, rounded up. Example: a 45-minute base can take 43–54 minutes, and a 65-minute walk can take 62–78 minutes.
-
-The choice sheet shows the unchanged base estimate with ≈, and narrative route buttons show the shortest possible transit duration followed by +. A duration is sampled only when travel actually starts, then saved in the existing total/remaining fields. Reloading or rendering never samples again; older active trips retain their recorded durations. Fares, event probabilities and the ×4 cadence remain unchanged. Events may separately consume additional game time. Regression coverage tests both bounds, all possible integer samples, all four travel/payment paths, minute ticks, reload without randomness, fare retention and exact arrival time.
-
-### Phone dialog: compact list (v177)
-
-The accepted List design replaces the old nested phone panel with one result-style modal frame. The header has separate Phone, battery and close-button positions. Mobile service shows active remaining time and a compact +24h / 1 zł top-up button. Auto-renew, Navigation and Music use full-row accessible switches; the remaining actions use line icons, compact explanatory text and duration labels. Ask AI remains available on the Street; unavailable actions are grouped last with their requirements. Original fares, service duration, drain, rewards and eligibility remain unchanged.
-
-Top-up, Watch video and Call ambulance close the phone before opening their normal action result; Ask AI continues into its existing search/answer flow. The phone retains the ordinary running game clock. It traps keyboard focus, supports Escape and backdrop closing, restores trigger focus and locks background scrolling on mobile. Regression checks cover toggle states, service extension/cost, video duration/drain, emergency eligibility, one result dialog at a time and scroll-lock cleanup.
-
-### Hide consumed-item rows (v176)
-
-Result dialogs omit negative item-count rows caused by using water, food, bread, canned food, wet wipes, medicine, cigarettes or shower gel. These actions explicitly tag their consumed item when preparing the summary; the real inventory decrement still happens and is saved. The result retains stat bars, effect changes and time/money expenses. Received items and losses from other causes, including theft and storage transfers, retain their quantity rows. This supersedes the v175 rule that displayed consumed-item quantities. No save format or gameplay amounts change.
-
-### Animated result indicators (v175)
-
-Result dialogs reuse the same `Stat` component, icons, colors, thin bars and percentage layout as Status. Only changed percentage indicators are included: Food, Thirst, Energy, Health, Hygiene, Mood, Battery, phone condition and clothing indicators. Their bars and displayed numbers animate for 1.2 seconds from the actual before-action value to the actual net after-action value; the signed change stays below the percentage. Hygiene retains the clothes-imposed hatched cap, and Energy retains its health-dependent cap. Animation honors reduced motion, cancels on unmount and never advances game time or applies bonuses again. Existing saved activity snapshots continue to work.
-
-Positive changes are shown even when small. Ongoing percentage losses below **5 points** are omitted completely, including from expanded answers; losses of 5 or more remain visible. This rule also applies to Health, Mood, Battery and clothing/phone wear. Explicit money/time expenses, consumed item quantities, documents and effects such as Cold starting/ending remain visible. Non-stat results retain text rows. Expanded practical answers contain the full answer text without repeating hidden drain or listing all resource changes. Numeric metadata is presentation-only; action effects and save schemas are unchanged.
-
-### Travel clock at ×4 (v174)
-
-Walking, paid public transport and fare-dodging trips advance one game minute every 250ms. The game clock switches to this cadence only while a trip exists and returns to one minute per second after arrival. Trip totals, fares and stored remaining minutes retain their existing format. Events, their results and hidden tabs pause travel; loading an unfinished trip resumes its remaining minutes at ×4. Regression timer mocks honor actual interval delays, with coverage for each minute, all three modes, exact arrival, midnight, reload, event/result pauses and restoration of the ordinary clock.
-
-### Central button vertical spacing (v173)
-
-The raised location button distributes its icon and caption vertically with equal space above, between and below them. One- and two-line names use the whole 84px button independently of peer label baselines. The fixed icon-to-caption gap and bottom-only padding are removed; dimensions, typography, active states and the other navigation items are unchanged.
-
-### Raised central location button (v170)
-
-Only the central current-location navigation button is restyled. Its icon grows from 23px to 38px and caption from 10px to 13px. The existing panel color extends upward as a rectangular cap with gently rounded upper corners, rather than a detached circular button. The negative top margin offsets the added height, preserving the bar geometry and all four peer buttons, grid widths, icons, labels and active indicators. The central item retains its usual gray inactive and sand-colored active states, location-specific icon/name, navigation behavior and event/travel/search blocking.
-
-### Event background lock (v169)
-
-Street events, rain decisions, dice checks and their outcome results now make the entire underlying game surface inert and hidden from assistive technology. Lower navigation and reset are explicitly disabled and blurred along with the background; background click capture also prevents action handlers from running while locked. The event choices and subsequent result confirmation remain outside the inert surface, focused and usable. Closing the final modal restores normal navigation and actions. Inline phone-answer results retain their existing behavior. Regression coverage checks blocked navigation/reset/location clicks, paused resources, result focus and unlock, plus rain-event navigation blocking.
-
-### Complete first-night answer illustrations (v168)
-
-All twelve choices across the four first-night scenes now have distinct continuation images. Nine new frames complete the door scene (walk, stay by the dark entrance, consider a call), station scene (ask for a seat, ask about a night shelter, choose a quiet seat), and bench-wake scene (sit up with belongings, move away, ask for a moment to wake). The three bench-observation answers from v167 remain. The selected outcome image replaces the opening scene in the existing result modal; costs, actual stat changes, discovery, journal, persistence and closing behavior are unchanged. All new images have responsive 480/768/1024px WebP variants and retained 1400px sources, load on demand and participate in image-revision caching. Startup warmup still covers only the original seven image groups. Automated checks cover all twelve choice-to-image mappings, choice durations, result close and restoration of each original scene.
-
-### Illustrated events and outcomes (v167)
-
-The four first-night events have individual cinematic night illustrations. Their cards show the image above the description and three choices, with the choice duration beside the label. The bench scene has three distinct continuation images: asking about the night, watching quietly, and giving the person space. Its outcome replaces the opening image with the selected continuation; the other three events retain their scene image in their results. Existing actual changes, costs, expandable minor changes and Got it behavior remain intact. Illustrated results are modal over the blurred location, not inline phone-search results.
-
-Seven new WebP illustrations have 480, 768 and 1024px responsive variants plus retained 1400px sources. The existing empty 1024px phone-search variant was regenerated during the asset pass, and variant checks now reject empty files. New event art is excluded from startup image warmup and loads when a scene or result is shown; the existing content-revision image cache covers these assets. Cards reserve image aspect ratio, have viewport height limits and scrollable text/choices on small screens. Event choices receive initial keyboard focus and trap Tab while the page scroll is locked. Reloaded unresolved first-night choices retain their matching scene image.
-
-### First-night observations (v166)
-
-Between Day 1 22:00 and Day 2 06:00, a protagonist living on the Street can observe people returning home after a dry city walk, someone preparing a bed on a nearby bench after resting, or people remaining at the station after arrival or an ordinary station action. Each completed eligible action has a 55% event roll. Awake observations have a 45-game-minute cooldown and each scene appears once per run. The action result is read first, then the scene and its three choices. Time pauses during the choice.
-
-Strangers treat the awake hero as an ordinary passerby or traveller. They do not infer homelessness or spontaneously offer homeless-specific assistance. Existing unsolicited food/help events are excluded during this first night. In the bench/station scenes, the player can choose to disclose the need for somewhere to stay; only this choice reveals Night Shelter and its basic registration hours, with a goal for the next registration evening. Quiet observation or ordinary conversation reveals no address.
-
-Sleeping on a bench during the first night adds a possible wake event: someone asks the lying hero to sit up and make room. Ground sleep cannot draw this scene. First-night eligibility for waking uses the sleep start time; existing quiet-night and theft outcomes remain possible. The four scene IDs, awake cooldown timestamp and unresolved choice are saved and restored, and reset clears them. Choices create distinct journal reflections. Automated regression checks cover action/result order, reload, no repeats, cooldown, neutral contact, discovery, time boundaries and sleep-kind eligibility.
-
-### Information Mood reward (v165)
-
-A successful new information answer now tops up Mood to three points above the search-start value, capped at 60. This includes ordinary recovery during the search instead of adding a further five points to it. Higher Mood and larger independent time-based gains are not reduced. Empty searches and saved-answer rereads receive no reward. Regression checks verify a total gain of three points at both 10- and 25-minute search durations and after search restoration.
-
-### One place per information search (v164)
-
-The repeatable morning-help search now reveals one unknown place per completed search: Help Center, then Day Center, then Free Clinic. Known addresses are skipped. Each find gives only its name, opening hours, basic services and a saved map address; detailed admission/support rules remain for later questions and visits. The Street search option stays prioritized while any of these three addresses is unknown. Ask AI in the phone panel also runs a fresh search, rather than returning the original cached bundle.
-
-Each attempt retains the existing 10–25 minute duration, phone/battery requirements, browsing dialog, background pause, result costs and reload restoration. Finding a new place grants the existing capped Mood bonus. Once all three are known, searches still take time and battery but return No new information without opening a place or granting an extra Mood reward. The journal records this as an unsuccessful repeat search. Other saved questions remain free to reread. No-place advice no longer unlocks multiple addresses as a side effect.
-
-Discovery version 2 is persisted with the existing save checkpoint. It distinguishes new separate Day Center discoveries from legacy combined-center saves: new saves do not auto-unlock Free Clinic after reload, while legacy combined-center migration is retained. Existing discovered locations remain known and are not reset. Interrupted searches do not consume the next find. Regression coverage includes sequential single-place results, reload after each find, paid phone-panel repeats, exhausted searches, interruption, duration/cost persistence, reset and legacy migration.
-
-### Browsing dot alignment (v163)
-
-The three phone-search dots are horizontally centered and moved up into the middle of the gap between the globe and the lower phone bar. Their pulse animation remains unchanged.
-
-### Compact phone browsing dialog (v162)
-
-Phone information searches now use the approved compact travel-style card, centered over the dimmed and blurred original location screen. The card shows a large sand-colored phone with a globe and three pulsing dots, a Browsing label, the current search phase, and a clock with elapsed game time directly below the phase. The old illustration-specific browsing screen, progress strip, expected-duration label and explanatory lower panel are removed from active browsing. The original location illustration and actions remain underneath, inert and hidden from assistive technology. Navigation and the debug footer remain unavailable during the activity; background scrolling is locked and the current scroll position is retained at search start.
-
-The search duration draw, battery consumption, hidden-tab pause, saved-session migration/resume, interruptions, completion and resulting answer remain unchanged. On completion the browsing dialog disappears and the existing result is shown. Higher-priority result/event/game-over overlays keep precedence. Static phone art remains memoized; reduced-motion preferences disable the dots. Updated regression checks cover the dialog, original background, elapsed-only display, resumed phases and cleanup.
-
-### Mobile route spacing (v161)
-
-On phone screens, active travel cards reserve less space around the unchanged 90px icon: a 90px icon column, 10px gap and 14px side padding. Route text uses 20px type and removes the extra arrow margins, giving ordinary routes such as Cheap Shop → Station more room on one line. At widths up to 360px, side padding is 12px and route type is 18px; longer routes may still wrap naturally without clipping or truncation. Timer sizing and modal centering remain unchanged.
-
-### Consistent walking silhouette (v160)
-
-The Walk option in the TRAVEL TO selector now uses the same transparent sand-colored silhouette as the active walking dialog. It is static and displayed at 24px, matching the other transport-option icons.
-
-### Consistent side-view bus (v159)
-
-The shared bus icon now matches the approved side-view mockup, with two wheels and a forward-facing body. Both the Public transport option and the active trip dialog use this same icon; station/location icons retain their railway symbol. The existing forward-motion trails, card layout and arrival flow are retained.
-
-### Travel over the map (v158)
-
-Active walking and bus trips now display the v157 card as a fixed dialog centered horizontally and vertically in the viewport over the city map. The backdrop dims and blurs the map, with the destination route still selected beneath it. The background map and footer are inert, all navigation buttons are disabled, and page scrolling is locked until the trip ends. Reloading a trip restores the same map/dialog composition and elapsed time. Existing result, dice and street-event overlays appear above the travel dialog; it is hidden from assistive technology while these interruptions are present. Arrival removes the travel overlay and map, opens the destination's location screen, and retains the existing arrival result.
-
-Validation covers walking and paid bus map/dialog composition, disabled navigation, hidden background semantics, elapsed-time restoration, arrival cleanup and scroll unlocking. Production build passed; browser visual QA remains unavailable for this revision.
-
-### Compact travel card (v157)
-
-Walking and public transport share a compact graphite card. A large sand-colored icon sits to the left of the mode and route. The clock and elapsed in-game time sit directly below the route; there is no ON THE WAY heading, lower timer panel, progress bar, remaining-time estimate or real-seconds label. Elapsed time derives from the existing trip state and resumes correctly after reload. Travel duration, costs, events, hidden-tab pause and arrival behavior retain their existing rules.
-
-Walking uses the approved transparent silhouette with a slight whole-body bounce and four horizontal path marks arranged in two rows of two. Public transport, including fare dodging, uses a large outline bus with a slight vertical rocking motion and three thick trails moving backward from near its middle. Neither icon has a background tile or horizontal back-and-forth movement. Reduced-motion preferences disable these animations. The walker is a 270px transparent WebP for the 90px display and participates in the existing content-versioned image cache. The static route and illustration remain memoized separately from the ticking elapsed time.
-
-Validation: the existing rendering checks now verify the advancing elapsed timer and its restoration from a saved trip. Browser visual QA for this revision was unavailable; the approved mockup supplies the layout reference.
-
-### Journal batches (v156)
-
-The selected day's timeline renders its 30 most recent entries first. A framed `Show older entries` button appends up to 30 older entries, with a subdued `Showing N of M entries` status. The button disappears when all entries are shown; days with at most 30 entries have no extra control. Appending preserves the reader's scroll position. Newest-first order, reflections, all saved records and the 500-entry retention cap are unchanged.
-
-Switching the selected day or reopening Journal starts with that day's latest 30 entries. Ordinary game ticks preserve the expanded count, and unchanged history continues to skip timeline renders. A keyed day-view component owns transient display state; it does not add save keys or change migrations. Regression checks cover complete ordering without duplicate/missing entries, short and empty days, day/reopen/tick behavior, new actions and unchanged saved history.
-
-Two local production builds (v155 and v156) were compared in isolated Chromium profiles at 390×844, DPR 2 and CPU slowed 4×, with five Journal openings per build and 500 entries for the selected day. Median click-to-second-frame time changed from 287.7 ms to 28.7 ms; maximum from 321.3 ms to 39.4 ms. Long tasks were observed on all five baseline openings and none on the five new openings. This is a lab navigation measurement, not internet startup, INP or an iPhone/Safari result. Browser checks also verified all 500 entries remain reachable, day switching, mobile append scroll delta of 0 px and desktop layout. Full `npm test` and production build passed. Detailed comparison: [journal optimization report](JOURNAL_OPTIMIZATION.md) and `journal-performance.json`.
-
-### Measured performance and extended-session QA (v155 · 2026-10-12)
-
-The live build was measured in isolated Chromium 153 test profiles. Startup tests used three cold/cached loads per desktop and mobile-lab profile. The extended session used a 390×844 viewport, DPR 2 and CPU slowed 4×, with 500 current-day journal entries and all eight backpack slots occupied.
-
-| Measurement | Result |
+| Area | Current behavior |
 |---|---|
-| Cached interface ready, median | Desktop 84.5 ms; mobile lab 201.7 ms |
-| Ordinary five-screen navigation, click to second animation frame | Desktop median 28.1 ms / max 32.4 ms; mobile lab median 25.5 ms / max 42.4 ms |
-| Extended session | 600.4 real seconds; 300 screen switches, plus setup/measurement clicks; no JavaScript errors or progressive slowdown observed |
-| JS heap after explicit GC on Station | Initially 4.1 MiB; peak 5.0 MiB; last five minutes 4.8–4.9 MiB; final 4.9 MiB |
-| Station DOM/listeners after navigation | Nodes settled at 157; 187 listeners throughout; no accumulating documents |
-| Extreme journal: all 500 entries in one day | Opening around 200 ms; navigation p95 193–227 ms, max 242.5 ms; long tasks occurred during heavy journal rendering |
-| Distributed journal: 500 entries over 20 days, 25 shown today | 155 navigation clicks: median 25.3 ms, p95 31.1 ms, max 34.3 ms |
+| Navigation | Map, Inventory, current place, Status, Phone. Goals, Notes, History and Search are apps inside Phone. |
+| Essentials | Phone and Clothing are informational, non-clickable cards. Phone shows Battery and Condition; Clothing shows Clean and Condition. |
+| Wetness | Disabled by default. No moisture accumulation, penalties, wetness indicators or rain/cover decision modals. Rain/weather and rain-related equipment events remain. |
+| Activity cards | Animated icon; muted route/context; elapsed time first; bold action with three animated dots. Starts at `01m`, then `1h 00m`; no reserved blank hour space. |
+| Map | Dark overhead city plan with scattered landmark anchors, Street and Nearest shop shortcuts, and no Map title. |
+| Results | Every Got it result uses a centered blocking modal with the shared blur/backdrop. |
+| Time | Ordinary gameplay/search/queue ×1; travel and morning packing ×4; sleep currently debug ×10. Some actions still apply time immediately. |
+| Persistence | Existing localStorage progress is preserved; the last-ten-build compatibility window is a verification policy, not ten rotating save backups. |
 
-Separate test profiles verified 30 cycles of Clothing result and Phone panels with scroll-lock cleanup, 27 supply actions with the 500-entry retention cap, an offline water action and navigation in an already-open app, restoration after reconnect/reload and tab close/reopen, synthetic hidden/visible save-and-pause signals, and recovery from a simulated storage quota error. All repository regression checks (`npm test`) passed.
+## Source of truth by system
 
-These are lab observations, not physical iPhone/Safari, battery, INP or real-device FPS measurements. Heap values exclude total browser/GPU memory; ten minutes cannot prove the absence of every leak. Cold response times were dominated by the lab proxy route, so they are not representative user startup times. Lifecycle signals and quota failures were simulated; abrupt OS process termination and full offline reopening were not verified. The image worker still caches images only.
-
-**Follow-up implemented in v156:** selected-day records now render in batches of 30, as described above. The v155 QA results remain a historical baseline; the separate v156 comparison measures the improvement. Real iPhone/Safari validation remains outstanding, and application JS splitting is still deferred.
-
-Detailed methods, samples and coverage limits: [startup/navigation report](PERFORMANCE_REPORT.md), [extended-session report](SESSION_REPORT.md), `performance-report.json` and `session-report.json`. Reproduction tools are `scripts/benchmark.cjs`, `scripts/soak.cjs` and `scripts/lifecycle-lab.cjs`.
-
-### Stable game clock (v155)
-
-One persistent one-second interval serves ordinary time, travel, shelter queue/departure, sleep and phone searches. Its stable callback reads the latest committed game state through useLatestAction; changing screens, progress, effects or pause conditions does not recreate the interval. Phone searches no longer start a separate competing interval. Existing pause rules remain: ordinary activity and phone searches pause while hidden, sleeping uses wall-clock elapsed time even while hidden, and result/event/planning windows pause their existing activities. All actions remain discrete one-second ticks; starting a new mode uses the next clock tick instead of resetting the interval phase. The independent autosave timer remains unchanged.
-
-Trash search retains its separate 250ms deadline check, but its timer depends only on the search start time. Dragging rubbish and collecting bottles do not restart it; its callback sees current collection state. Completion/unmount removes the deadline timer. Instrumented tests verify unchanged interval IDs across twenty ticks, navigation, hide/resume, phone search and sleep; they also verify the fixed 60-second trash deadline uses the latest found count and cleans up. Existing travel, sleep, disease, battery, pause, completion and restoration regression tests remain required. These checks confirm scheduling behavior, not real-device FPS or battery improvements.
-
-### Batched autosave (v154)
-
-One save controller stages a coherent snapshot after inventory aging, Hygiene-cap repair and action-result processing have settled. Existing localStorage keys and JSON/raw formats remain unchanged, including older-save migrations; this is batching across legacy keys, not a new atomic database format. Ordinary ticks checkpoint approximately every five real seconds. User interactions, results, day/goal/discovery/life/effect milestones and the start/end of travel, sleep, phone searches and shelter sessions request immediate checkpoints. Screen changes are persisted immediately, with the pre-travel screen key retained during travel as before. Hidden visibility, pagehide, beforeunload and React cleanup synchronously flush the latest staged data.
-
-Only changed values are serialized, and equal serialized content is not rewritten. Unexpired effect arrays retain their reference. Reset cancels staged old-run data before deleting old keys; it then saves the new run normally. Failed writes stay pending and retry; an actual storage failure displays a warning that clears after a successful retry. Healthy checkpoints do not introduce additional state renders.
-
-Tests show two frequently changing keys use eight writes instead of forty over twenty ticks, while unchanged history is not serialized again. The integrated App also uses eight writes over twenty idle ticks. Tests cover background/exit flushes, travel reload, pending-reset cancellation, failure/retry, and existing sleep/phone/shelter restoration scenarios. Tests that inspect deferred progress first trigger a lifecycle flush rather than assume every tick reaches localStorage immediately. Browser/process termination without an exit event can lose roughly the last five real seconds of ordinary progress; storage failures can prolong this window. No real-device lifecycle or FPS claim is made.
-
-### Interface rendering (v153)
-
-Journal goals, journal timeline, life-situation rows, item illustrations and the illustrated map scene use shallow React memo boundaries with stable inputs. Goal ordering and visible map places are memoized by their actual source data; timeline filtering only runs when history or the selected day changes. Map scene inputs include opening-state flags instead of the ticking minute, so open/closed labels still update at boundaries while unchanged pins and the illustration skip renders. Selection uses the stable state setter; the route card keeps the current action callback. Clocks, needs, action availability and gameplay continue updating normally. Saving and timer behavior are unchanged.
-
-check-rendering.cjs counts component invocations during ten simulated game ticks, comparing the same code with these memo boundaries enabled and disabled. With unchanged relevant data, goals/timeline/map scene/life situation each skip 20 invocations, while seven item illustrations skip 140 combined invocations. Tests also verify the clock advances and map closing, map selection, goal completion and journal-day switching still update. These counts demonstrate avoided React work, not a measured FPS or whole-application speedup.
-
-The v153 audit extends to all eleven locations, open/closed shops, travel, phone searches, sleeping and the current overlays: results, sleep planning, rain, game over, travel choices, dice checks, phone panel, street events, shelter interviews, registration queue, morning checkout/departure and trash search/drag. Location summaries, street/shop illustrations, shop cards, travel/sleep headings, result cards and shared SVG icons now skip renders when their inputs are unchanged. Shop actions use stable callbacks backed by the latest committed game state; callback changes are never ignored in a custom comparator. In ten unchanged shop ticks, eight cards skip 160 combined invocations and the hero skips 20. Travel headings skip 20 while progress still advances. Phone/sleep checks use three ticks and their stable art/headings skip six invocations.
-
-Tests verify shop closing, updated money/backpack data after purchases, action Energy thresholds, condition-icon changes and all changing progress indicators. Paused result/event/planning windows have zero periodic background App renders. Phone and travel-choice panels intentionally keep time running; queue and checkout departure keep their clocks/progress live. Trash drag remains user-driven and does not rerender the unchanged street illustration. This audit uses instrumented React/DOM tests; browser visual checks, real-device FPS and battery usage are not measured.
-
-### Responsive images and caching (v151)
-
-All seven original illustrations are retained. Generated WebP alternatives use width-based srcset/sizes for map, street, phone search, morning illustration and shop interior, and 1x/2x/3x image-set for the two inventory/shop sprites. Sizes account for the shell/map width caps and cover cropping. Variants are generated with Pillow by scripts/optimize-images.py, checked into the repository with src/imageManifest.json; CI does not require Pillow. Regenerate them whenever originals change. Tests verify files, aspect ratios and density choices. At 390x844 the seven selected images total approximately 255 KB at 1x or 1172 KB at 3x; a 1440px-wide desktop at 1x selects approximately 490 KB, compared with 1556 KB for the originals.
-
-Production builds generate an image-only service worker with SHA-256 content revisions for public assets. Registration starts after page load. The client warms only one appropriate variant per illustration based on viewport and pixel density, and reselects after resize; installation never downloads all alternatives. Previously cached identical images are carried over, then old game-image caches are removed. Requested variants are cache-first and changed/missing selected variants are fetched in the background or on demand. Failed background warmup does not block gameplay or remove successfully cached images. Worker update checks bypass the HTTP cache. HTML, JavaScript, CSS, and saves are not cached or modified by this worker. Unsupported browsers or unavailable storage fall back to normal loading. This is image caching, not a guarantee that the full game opens offline; browsers may evict stored caches.
-
-The rules below describe the implemented prototype, including its current test speeds and limitations. Numerical action bonuses are raw bonuses unless explicitly described as net changes; the result window reports actual before/after changes.
+| System | Main source / checks |
+|---|---|
+| Needs, time, weather, Mood, locations | `src/game.ts`, `src/limitingEffects.ts`, `check-mood.cjs` |
+| Activity clock, phone, shelter, action orchestration | `src/App.tsx`, `src/PhoneScreen.tsx`, `src/PhoneDialog.tsx`, `src/shelterCharging.ts` |
+| Map, travel phases and activity art | `src/CityMap.tsx`, `src/travelPhases.ts`, `src/LocationPresentation.tsx` |
+| Items, food and results | `src/foodInventory.ts`, `src/foodConsumption.ts`, `src/results.ts`, `src/ResultCard.tsx` |
+| Sleep illness and closing places | `src/sleepIllness.ts`, `src/locationClosing.ts`, `check-sleep-illness.cjs` |
+| Events and illustrations | `src/events.ts`, `src/eventArtwork.ts`, `docs/art/` |
+| Saves and history | `src/saveCompatibility.ts`, `src/useGameAutosave.ts`, `src/autosave.ts`, `src/journal.ts`, `src/JournalSections.tsx` |
+| Deferred wetness | `src/gameplayFeatures.ts`, `check-wetness-disabled.cjs`; opt-in wetness checks use an explicit feature flag. |
 
 ## Protagonist biography — agreed narrative foundation
 
@@ -615,9 +38,9 @@ The protagonist is a man aged 35–40 who, until recently, had a stable office j
 
 The protagonist knows how to use a phone, search online, prepare a CV and handle professional tasks. He is unfamiliar with spending a night outside, accessing shelters and navigating social assistance. The player learns these practical possibilities alongside him. The experience is intended for people who have never lived on the street: each discovery should arise from a concrete need, observation or attempt.
 
-Age range (35–40), male gender and an office job are established. Name, precise age, profession, industry, reason for redundancy, family circumstances and the exact length of unemployment remain open. The accepted causal sequence is redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue in v92.
+Age range (35–40), male gender and an office job are established. Name, precise age, profession, industry, reason for redundancy, family circumstances and the exact length of unemployment remain open. The accepted causal sequence is redundancy → unsuccessful job search → depleted resources → loss of accommodation → first night outside. This is character background, not a playable job-loss prologue.
 
-### Gradual disclosure — implemented in v93
+### Gradual disclosure
 
 Keep the first narrator message to two or three short sentences about the present scene. Reveal biography through brief, action-linked fragments of one or two sentences during walking, sitting, waiting or checking the phone. Reveal one fragment at a time, and do not repeat a fragment once seen in the same run. The order should follow the player's actions rather than requiring a fixed sequence.
 
@@ -628,7 +51,7 @@ Keep the first narrator message to two or three short sentences about the presen
 | Checking the phone | Your last job application still has no reply. The redundancy email is still in your inbox. |
 | Looking for somewhere to sleep | Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning. |
 
-These examples guide the action-linked fragments implemented in v93. A completed normal/music walk reveals office routine; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications; the shelter-bed question reveals the loss of accommodation. Each fragment is appended to the existing result text, logged in Journal, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
+These examples guide the implemented action-linked fragments. A completed normal/music walk reveals office routine; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications; the shelter-bed question reveals the loss of accommodation. Each fragment is appended to the existing result text, logged in Phone → History, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
 
 ### Voice and knowledge
 
@@ -638,7 +61,7 @@ The narrator describes the surroundings, established memories and observable con
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and ordinary street-event choices are not persisted; unresolved first-night observation choices are persisted. The first-night rain decision, answered phone questions, journal goal flags and journal history are persisted; reset clears them.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending results and ordinary street-event choices are not persisted; unresolved first-night observation choices are persisted. Answered phone questions, journal goal flags/history, closing notices and charging state are persisted; reset clears them. Deferred rain-choice keys are retained for compatibility but inactive in release-default gameplay.
 
 Initial state:
 - Day 1, Monday, 22:00, Street. Existing saves retain their own time. Reset/new run starts at 22:00.
@@ -649,42 +72,53 @@ Initial state:
 
 ## Time
 
-Time is a primary pressure. Ordinary visible gameplay advances **1 game minute per real second**. The current test build accelerates travel to up to **10 game minutes per real second** and sleep to **10 game minutes per real second**; these are separate from the configured in-game durations.
+All elapsed game time uses the shared minute-by-minute calculation, including instant actions, midnight, weather changes, needs, active-effect expiry and food/clothing aging. Some actions apply their full configured duration immediately; they do not all have timed progress modals.
 
-Actions can advance larger blocks of game time immediately. Passing 1440 minutes advances the day. Weekdays cycle Monday through Sunday.
+| Activity | Current real-time speed | Notes |
+|---|---|---|
+| Ordinary visible gameplay | 1 game minute / second | Includes ordinary Street decisions and browsing Map/Inventory/Status/Phone. |
+| Timed phone search | 1 game minute / second | Random 10–25-minute duration, sampled once and restored after reload. |
+| Shelter registration queue | 1 game minute / second | At least 20 minutes and not before 18:20. |
+| Walking / public transport | 1 game minute / 250 ms (×4) | Every elapsed minute is shown. |
+| Morning shelter packing | 1 game minute / 250 ms (×4) | 30 game minutes. |
+| Sleep | 10 game minutes / second | Current `DEBUG_SLEEP_SPEED = 10`; eight hours take about 48 seconds. |
 
-The autonomous timer pauses while an action result is pending or its OK window is open, during a street event or D20 check (including theft/fare dodging), during sleep planning, during the shelter interview, during the trash minigame, and after Health reaches zero. Ordinary gameplay/travel also pauses when the browser/app is hidden. Sleep is an exception: its saved wall-clock timestamps allow it to catch up while hidden or after reloading.
+Results/Got it, information modals, street events, D20, sleep planning, shelter interviews, inventory choice/discard dialogs, the trash minigame, closing notices and game over pause autonomous time. Confirmed ongoing travel/search/queue/sleep/checkout have their own progress rules. Street itself does not pause time while the player simply chooses an action.
 
-## Action and event results (v53–v54)
+Hiding the app pauses ordinary gameplay, travel, search, queue and checkout. Sleep uses saved wall-clock timestamps and catches up after reload or a hidden interval. The mobile-plan overlay is an interactive panel and keeps the ordinary clock running; it must not be confused with a paused action-result modal.
 
-Completed actions and resolved event choices use a shared **RESULT** window with an **OK** button. It contains the outcome text and, when applicable, two sections:
+Travel and phone-search cards show elapsed time, not an exact remaining-time countdown. The display starts at `01m`, uses two-digit minutes through `59m`, then `1h 00m`, `1h 01m`, etc. Hours occupy space only when present. The animation and three cycling dots communicate activity without promising a fixed finish time. Sleep, queue and checkout retain their own progress displays.
+
+## Action and event results
+
+Completed actions, information discoveries and resolved event choices use a shared centered modal with a **Got it** button and the same blur/backdrop. It contains the outcome text and, when applicable, two sections:
 
 | Section | Contents |
 | --- | --- |
 | Changes & consequences | Actual gains/losses of Food, Water (Thirst), Energy, Health, Hygiene, Mood, Intoxication, inventory items, phone/clothing condition, carried documents and started/ended effects; positive money/battery changes also appear here. |
 | Spent | Elapsed game time for actions that include it, money spent/lost and phone battery used. |
 
-Rows are calculated from state snapshots **before and after** the completed action, rather than copying configured action bonuses. Caps, money clamping and normal need decay during elapsed action time are therefore reflected in the displayed values. For example, a +38 Water action at Thirst 90 shows +10 Water and −1 Water portion consumed, not +38. Consumable results also show bread rolls, canned food, wet-wipe uses and shower-gel uses actually gained or spent.
+Rows are calculated from state snapshots **before and after** the completed action, rather than copying configured action bonuses. Caps, money clamping and normal need decay during elapsed action time are therefore reflected in the displayed values. For example, drinking +38 Water at Thirst 90 shows the actual +10 Water gain. The consumed item is not repeated as a negative quantity row; actual newly gained supplies and other meaningful consequences remain visible.
 
-Numeric rows that round to zero are hidden. Most values use one decimal place; money uses two. Empty sections are hidden. A resolved event still opens an outcome window when it has no numeric changes. An ordinary rejected/no-change action generally leaves only its explanatory message.
+Numeric rows that round to zero and minor passive drain are hidden in the compact result presentation; actual purchases, gains and material consequences are retained. Most values use one decimal place; money uses two. Empty sections are hidden. A resolved event still opens an outcome window when it has no numeric changes. An ordinary rejected/no-change action generally leaves only its explanatory message.
 
-Covered flows include location actions, online searches, purchases/theft, inventory use, charging/video/mobile-service purchase, street rest/begging, bottle search/redemption, support/storage, work, treatment/ambulance, shelter interview completion, sleep completion, travel arrival and resolved street events/D20 choices.
+Covered flows include location actions, online searches, purchases/theft, inventory use, charging/mobile-service purchase, street rest/begging, bottle search/redemption, support/storage, work, treatment/ambulance, shelter interview completion, sleep completion, travel arrival and resolved street events/D20 choices.
 
 Sleep reports changes across the whole sleep session. Its outcome text states the slept duration; the separate Spent/Time row is currently omitted for sleep. New Cold appears as **Started** only if it was absent before and active afterward. An existing Cold is not reported as newly acquired. Medicine shows Cold recovery ×3; a clinic cure or actual recovery can show Cold **Ended** together with any actual item/stat changes.
 
-While the player reads the result, game time and travel progression stop. Pressing OK dismisses it. If sleeping or a location action also generated a street event, the player acknowledges the action result before interacting with that event. The event's resolved choice then receives its own result window.
+While the player reads the result, game time and travel progression stop. Pressing Got it dismisses it. If sleeping or a location action also generated a street event, the player acknowledges the action result before interacting with that event. The event's resolved choice then receives its own result window.
 
 Current snapshot coverage includes game needs/money/intoxication, carried inventory and active-effect membership. Housing/employment/referrals, storage contents, discovered addresses, mobile-service duration and effect-duration extensions are described in outcome text where available; they do not have dedicated numeric result rows.
 
-## Action availability (v58)
+## Action availability
 
-Location action lists show all currently enabled choices first, followed by a dimmed **Unavailable now** group. Within each group, the existing order is stable. Unavailable actions remain visible, cannot be clicked, and configured actions show the schedule or missing requirement. Unavailable sleep actions cannot open the duration chooser. Street curates at most three thoughts instead of listing every action; selected unavailable thoughts still appear last; support and phone choices use it too.
+Location action lists show all currently enabled choices first, followed by a dimmed **Unavailable now** group. Within each group, choices use the existing seeded ordering; eligible choice order is not guaranteed to put a safe response first. Unavailable actions remain visible, cannot be clicked, and configured actions show the schedule or missing requirement. Unavailable sleep actions cannot open the duration chooser. Street curates at most three thoughts instead of listing every action; selected unavailable thoughts still appear last; support and phone choices use it too.
 
 Configured actions use the same availability function for display and execution. It checks location opening hours, quiet hours, meals/laundry/social-worker schedules, daily meal/laundry limits, registration attempts/bans, booking, intoxication and money. Availability and ordering update with game time and state, without requiring a failed click. Examples: Dinner is disabled from 20:30 onward; Breakfast is enabled only 06:30–07:00 and only before that day's meal was received; laundry pickup requires Thursday evening and clothes left that morning. Storage buttons are disabled while the location is closed.
 
-## Morning night-shelter checkout (v59)
+## Morning night-shelter checkout
 
-At 07:30 a blocking reminder tells the guest to leave by 08:00. While it is open, time pauses. Clicking **Leave the night shelter · 30 min** starts a real wait of 30 game minutes (1 minute per visible real second), with a progress bar. The character remains inside until the wait finishes, then moves to Street. Normal needs and food freshness decay throughout checkout; its result reports the full 30 minutes and actual changes. Reload preserves progress, and hiding the app pauses departure.
+At 07:30 a blocking reminder tells the guest to leave by 08:00. While it is open, time pauses. Clicking **Leave the night shelter · 30 min** starts a real wait of 30 game minutes at ×4 (one minute per 250 ms), with a progress bar. The character remains inside until the wait finishes, then moves to Street. Normal needs and food freshness decay throughout checkout; its result reports the full 30 minutes and actual changes. Reload preserves progress, and hiding the app pauses departure.
 
 Night-shelter sleep, including forced sleep and restored sessions, ends no later than 07:30. Recovery reflects the actual shortened sleep. A sleep result is acknowledged before the checkout reminder appears. A returning saved guest already past the deadline also receives the reminder during the morning. Routine checkout keeps the reservation and stored belongings, changes current housing to Street, adds no violation, and is recorded once per day. Schronisko and outdoor sleep are unaffected.
 
@@ -698,9 +132,9 @@ Six needs are tracked from 0 to 100:
 - Hygiene
 - Mood
 
-### Status screen (v149)
+### Status screen
 
-Status shows active Effects first, before Condition. When there are no effects, the whole Effects subsection is omitted. Cold shows its name and impacts without a recovery countdown; timed benefits retain their remaining duration. Condition highlights one need at or below 60% in a large card, with the other five in compact rows underneath. When all six indicators are above 60%, all six appear as ordinary rows with no highlighted card or attention caption. It chooses the lowest physical need at 20 or below ahead of Mood; otherwise it chooses the lowest of all six. Ties retain the normal Food, Thirst, Energy, Health, Hygiene, Mood order. The highlighted need does not repeat in the list. Every indicator displays its percentage and uses a red fill at 0–30, yellow above 30 through 60, and green above 60. The highlighted card only shows Needs attention (red, 0–30%) or Keep an eye on this (yellow, above 30 through 60%). Since v206 both captions sit directly above the indicator name, to the right of its icon, with a 1px gap and compact line height. Green indicators retain their ordinary green bars and never receive an attention card. The percentage stays on the right and the bar below. Reduced Energy caps remain visible beneath their labels. Hygiene omits the Max percentage caption; a reduced Hygiene cap marks the unavailable part of the 0–100 scale with dark red hatching and a dashed boundary at the actual cap (60 or 80); this works in both the highlighted card and the compact row, and disappears after clean clothes restore the cap to 100. Life situation uses one panel with Housing, Employment, Income and Documents rows. Needs, life situation and active effects use the shared contour icon system.
+Status shows active Effects first, before Condition. When there are no effects, the whole Effects subsection is omitted. Cold shows its name and impacts without a recovery countdown; timed benefits retain their remaining duration. Condition highlights one need at or below 60% in a large card, with the other five in compact rows underneath. When all six indicators are above 60%, all six appear as ordinary rows with no highlighted card or attention caption. It chooses the lowest physical need at 20 or below ahead of Mood; otherwise it chooses the lowest of all six. Ties retain the normal Food, Thirst, Energy, Health, Hygiene, Mood order. The highlighted need does not repeat in the list. Every indicator displays its percentage and uses a red fill at 0–30, yellow above 30 through 60, and green above 60. The highlighted card only shows Needs attention (red, 0–30%) or Keep an eye on this (yellow, above 30 through 60%). Both captions sit directly above the indicator name, to the right of its icon, with a 1px gap and compact line height. Green indicators retain their ordinary green bars and never receive an attention card. The percentage stays on the right and the bar below. Reduced Energy caps remain visible beneath their labels. Hygiene omits the Max percentage caption; a reduced Hygiene cap marks the unavailable part of the 0–100 scale with dark red hatching and a dashed boundary at the actual cap (60 or 80); this works in both the highlighted card and the compact row, and disappears after clean clothes restore the cap to 100. Life situation uses one panel with Housing, Employment, Income and Documents rows. Needs, life situation and active effects use the shared contour icon system.
 
 All elapsed time uses `advanceTime`: ordinary ticks, travel, sleep and immediate actions. It evaluates minute by minute, including midnight/weather changes and expiry of Cold/Well fed. Bonuses are applied after elapsed time. Backpack/stored food ages for every elapsed minute; background Music/Navigation battery costs follow elapsed time too. Sleep skips awake Energy costs, while Food, Thirst, Hygiene, intoxication, weather Thirst drain and illness/dehydration/starvation Health damage continue.
 
@@ -713,12 +147,24 @@ Normal elapsed-time decay:
 - Hygiene loses 1 point per 180 game minutes: roughly 8 points per 24 hours before walking, work and action penalties.
 - Mood does not have a generic base decay; particular effects/actions/events change it.
 
-The header's overall condition is determined by the weakest of all six needs:
-- 0–30: BAD.
-- >30–60: FAIR.
-- >60: OK.
+The header, Status, result bars and navigation indicator use the same saved Mood value, not a separate physical-condition average. Five face bands are used: 0–20 VERY BAD, >20–40 BAD, >40–60 FAIR, >60–80 GOOD, >80 VERY GOOD. Meter fill colors still use 0–30 red, >30–60 yellow, >60 green.
 
-The Status screen shows the six needs plus Housing, Employment, Income, Documents and active effects.
+### Mood ceilings and limiting effects
+
+| Accommodation | Maximum Mood |
+|---|---:|
+| Street | 50 |
+| Night Shelter | 60 |
+| Schronisko | 70 |
+| Hostel | 80 |
+| Room | 90 |
+| Apartment | 100 |
+
+Only Street, Night Shelter and Schronisko have implemented accommodation flows. The other ceilings are defined future housing states. A valid Night Shelter reservation preserves its ceiling during daytime outings.
+
+Actual Mood is capped by the minimum of accommodation and these continuous restrictions, each clamped to 100: Food/Thirst/Health `20 + 2 × value`; Energy `40 + value`; Hygiene `80 + 0.4 × value`; active Cold 60. Raising a ceiling grants no free Mood. Comfortable physical needs no longer passively refill Mood; explicit rewards, music and illness change it.
+
+Status shows every tied strongest Mood restriction, plus independent Energy and Hygiene limits. A cause affecting multiple stats is grouped once. Cold includes its Mood cap in the illness row. Effect text/borders are neutral; positive/negative coloring belongs to impact badges. Reduced caps are hatched on Status/result bars. Free transport remains functional but is omitted from Status Effects and its count.
 
 ## Health and Energy
 
@@ -752,59 +198,53 @@ Food, water and medicine are primarily designed to remove/prevent causes of Heal
 
 ## Weather
 
-Night wandering takes 30 game minutes, costs 2 additional Energy with walking need drain, and restores 2 Mood. It keeps the player on Street. Clothing gets the normal walking cleanliness loss. On a dry night (20:00–06:00), each walk has a 35% chance of rain beginning halfway through. The resulting rain lasts 180 game minutes from its onset, is saved in game state, and overrides the normal day weather during elapsed-time calculations, including across midnight. Since v209 the old instant rain penalties of 3 Hygiene and 5 clothing cleanliness are replaced by persistent wetness; walking still causes its ordinary cleanliness loss.
+Day weather cycles deterministically through Cloudy, Rain, Clear, Windy and Showers. Base temperatures are 9°C, 7°C, 16°C, 6°C and 10°C. `temperatureAt` adds the time-of-day swing; the current formula has a 20-hour cosine period, an implementation limitation rather than an intended 24-hour model.
 
-After the walk result is read, a rainy walk presents a saved, paused choice: wait under an entrance canopy (choose 15 minutes, 1 or 4 hours; +1 Mood, no sleep/Energy recovery), choose a route to Station, or keep walking (another 30 minutes). Route selection itself is free; actual travel uses normal costs. Choosing an intention or wait duration pauses time and previews the end clock time. Waiting applies awake Energy and normal needs/ageing over the full chosen duration; a four-hour wait can carry the player through dawn without lying down. Rain decisions resume after reload and do not roll weather again just from rendering. Cover stops new rain and slowly dries clothes but does not end the rain or provide a bed. Reset clears rain, wetness and its pending decision.
+A new run starts dry at 22:00. A 30-minute night walk can start rain halfway through with 35% probability when currently dry, between 20:00 and 06:00. The override lasts 180 game minutes from onset and persists through reload/midnight. Starting the game itself does not roll rain.
 
-Weather is deterministic by game day and cycles through Cloudy, Rain, Clear, Windy and Showers.
+| Weather | Additional elapsed-time cost |
+|---|---|
+| Cloudy | None |
+| Rain | Energy −0.025/min while awake |
+| Clear | +15% of baseline Thirst drain |
+| Windy | Energy −0.035/min while awake |
+| Showers | Energy −0.015/min while awake |
 
-Current base temperatures are 9°C, 7°C, 16°C, 6°C and 10°C respectively. A time-of-day temperature swing is rendered on top.
+**Clothing wetness is deferred for the first release.** The release default in `src/gameplayFeatures.ts` disables wetting/drying, wet-clothing Energy/Mood penalties, wet-sleep recovery loss and moisture's extra illness risk. Wetness UI/result rows, clothing guidance and the rain/cover decision flow are inactive. Existing wetness/sleep-loss fields are discarded; saved rain choices and canopy responses no longer pause travel/search. Cleanliness, condition and laundry still work.
 
-Weather effects:
-- Rain: extra Energy drain 0.025/min.
-- Clear: +15% of baseline Thirst drain (about 0.01042/min).
-- Windy: extra Energy drain 0.035/min.
-- Showers: extra Energy drain 0.015/min.
-- Cloudy: no extra drain.
-
-Rain/Showers also enable the rain-phone street event.
+Rain, ordinary weather costs, temperature and outdoor-sleep illness remain active. The separate catalog event Caught in the rain can still damage phone/clothing condition; disabling accumulated clothing moisture does not remove that equipment event. The retained moisture implementation can be explicitly enabled with `VITE_CLOTHING_WETNESS_ENABLED=true` for later tuning; its old behavior is documented only in the history archive.
 
 ## Locations and opening hours
 
-Implemented locations:
-- Street — 24/7 and the starting location. It represents an exposed city block rather than the Station.
-- Station — 24/7.
-- Cheap Shop — 07:00–22:00.
-- Night Shelter — 18:00–08:00.
-- Help Center — 08:00–16:00.
-- Schronisko — 24/7, hidden until referral/unlocked.
-- Job Centre — 08:00–15:00.
-- Day Work — 07:00–18:00.
-- Day Center & Clinic — 08:00–16:00. Capacity is probabilistic and easier to get in earlier in the day.
-- Hospital — regular care 08:00–18:00; emergency care is called from the phone.
+| Location | Hours / access |
+|---|---|
+| Street | 24/7; initial location; stepping outside is immediate. |
+| Station | 24/7. |
+| Cheap Shop | 07:00–22:00; Nearest shop map shortcut. |
+| Night Shelter | 18:00–08:00; entry/check-in 18:00–22:00; first registration 18:20–22:00. |
+| Help Center | 08:00–16:00. |
+| Schronisko | 24/7; referral required. |
+| Day Center | 08:00–16:00; shower, laundry, rest, charging; capacity varies by time. |
+| Free Clinic | 08:00–16:00; separate location, no insurance required. |
+| Hospital | Regular care 08:00–18:00 with carried documents; emergency care through a phone call. |
+| Job Centre | 08:00–15:00. |
+| Day Work | 07:00–18:00. |
 
-The player may travel to a closed location. Actions that require it to be open are disabled.
+Travelling to a closed destination is allowed; closed services are disabled beneath their local Closed/Opens at overlay. When an open place closes while occupied, the character moves to Street and receives a persisted, illustrated closing notice. It pauses time and blocks controls until acknowledged. Existing action results appear first; closure adds no fare, travel duration or extra penalty. Arriving at an already closed building is not itself a closing transition, and an origin closing during travel does not interrupt that trip. Night Shelter uses its separate morning checkout; Station and Schronisko stay open.
 
 ### Gradual location discovery
 
-A new run initially shows only **Street, Station and Cheap Shop**. Other addresses remain hidden until included in the discovered-location list. Existing saves without a discovery list initially migrate to the full location list.
+A new run initially knows Street, Station and Cheap Shop. Phone Search offers Shelter, Help & hygiene, Work, Medical help, Food & water. Help searches reveal Help Center, Day Center and Free Clinic one at a time; work search reveals Day Work, and medical search reveals Free Clinic. Saved question/Notes and no-new-information flows retain prior discoveries. A referral unlocks Schronisko; old saves with a referral/housing repair a missing address. Hospital is also reached through the emergency call. Legacy saves without a discovery list retain the existing full-list migration.
 
-On Street, three initial information actions are offered while their targets remain unknown:
-- Search online for a place to sleep → Night Shelter.
-- Search online for quick work → Day Work.
-- Search online for free help → Help Center.
+Normal new information searches estimate about 15 minutes and sample 10–25 game minutes once, with per-minute battery costs and reload persistence. Older direct Street search handlers still apply 15 minutes immediately and use the same lighting/condition battery calculation; they are not flat 2%-battery searches. Reading a saved answer or a low-battery memory adds no new discovery reward/time cost, subject to the access rules below.
 
-Each search requires active mobile service and at least 2% Battery, advances 15 game minutes, consumes 2 percentage points of Battery and saves the discovered address to the map. Its result window also shows the actual need changes caused by those 15 minutes.
-
-Searching for Night Shelter at or after 22:00 (checked at the start of the search) says registration is closed tonight and creates a saved goal to be there **next game day at 18:00**, recommending an earlier arrival for queue priority. Doors open at 18:00; first registration starts at 18:20. Reserved-place check-in starts at 18:00.
-
-Schronisko also requires a referral or current Schronisko housing. Issuing the referral adds its address to discovery; older saves with a referral/housing but missing discovery are repaired on load. Discovery is persistent and resets on a new run. See limitations for services without a connected discovery route.
+Searching for a shelter after registration has closed creates the saved next-day 18:00 arrival goal, recommending earlier arrival for queue priority. The goal lives inside Phone → Goals; there is no global reminder above the main screens. Knowing an address never grants admission, a bed or a referral by itself.
 
 ## Travel
 
 Travel is not teleportation. The player chooses walking or public transport.
 
-Walking destinations are configured at roughly 60–120 minutes. Public transport takes 50% of the configured walking time, producing roughly 30–60 minute trips. Transit time represents the whole trip: walking to/from stops, waiting and riding.
+Ordinary destinations have walking bases of 65–120 minutes; public transport uses half the walking base, rounded up. Actual duration is sampled uniformly once from ceil(base × 0.95) through floor(base × 1.2), then saved. Cheap Shop explicitly uses 5–15 minutes for walking and bus alike because reaching/waiting at stops cancels the short ride advantage. Transit time includes walking to/from stops, waiting and riding.
 
 Public transport normally costs 4.40 zł. An active Transit card or an unexpired Free transport effect reduces the fare to 0. UI pricing, money requirements and fare payment use the same entitlement check. Since v218 a new run starts without a Transit card.
 
@@ -818,6 +258,8 @@ Walking adds on top of normal elapsed-time decay:
 At normal Health this means roughly 1 hour of ordinary activity costs 2.08 Food, 4.17 Thirst and 2.78 Energy, while 1 hour of walking costs about 2.60 Food, 5.21 Thirst and 3.38 Energy. Travel and sleep are mutually exclusive: sleep cannot be started while a trip is in progress.
 
 Walking also adds Hygiene loss per minute based on the current temperature: 0.025 below 18°C, 0.033 at 18–24°C and 0.05 at 25°C or above.
+
+Travel uses a centered blocking card over the blurred map. The route is muted; the changing activity is bold white with three animated dots. Bus display stages are To the stop, Waiting, On the bus and Final walk. Walking cycles through Walking, Near a crossing, Red light, Crossing and Walking on; longer routes can show further crossings. Waiting changes the animation without changing the sampled trip duration. Weather-exposure phases distinguish outdoor walks from covered stops/transit, though wetness is currently disabled.
 
 Travel has its own progress screen. Active trips persist their mode, destination, remaining minutes and initial result snapshot; reloading resumes the progress screen without repeating fare payment. Arrival opens a result window summarizing changes since departure; changes from a travel event can also be included in that overall trip summary. A travel street-event roll occurs when travel begins:
 - Walking: 30% chance to attempt to spawn an eligible event.
@@ -846,9 +288,9 @@ Using inventory:
 - Food portions retain their individual condition, grouped into slots of up to four of the same type. Different ages do not force extra slots; each slot displays the groups present and their counts.
 - Freshness falls from 100% to 0% over roughly 48 game hours, including while stored in Schronisko.
 - Freshness labels: Fresh >50%, Stale >20–50%, Spoiled 0–20%.
-- Every food use consumes 1 portion from the selected slot. Fresh (>50%): +28 Food, +2 Mood. Stale (>20–50%): +20 Food, no Mood bonus. Spoiled (0–20%): +10 Food, -8 Health, -4 Mood. Entirely fresh slots skip the freshness picker; other slots offer only the groups present in that slot. Values are raw changes before caps. Empty stock resets its legacy average to 100%.
+- Every food use consumes 1 portion from the selected slot. Fresh (>50%): +28 Food, +2 Mood. Stale (>20–50%): +20 Food, no Mood bonus. Spoiled (0–20%): +10 Food before the separate poisoning outcome; no guaranteed Health/Mood loss. Entirely fresh slots skip the freshness picker; other slots offer only the groups present in that slot. Values are raw changes before caps. Empty stock resets its legacy average to 100%.
 - New food retains its own freshness; an existing spoiled portion never becomes edible through averaging. Discard spoiled removes only spoiled portions in the selected slot; Discard all removes that slot. Remaining portions of the same type compact without changing freshness.
-- Bread roll: consumes 1; fresh +12 Food, stale +8 Food, spoiled +4 Food/-3 Health/-2 Mood. Each portion declines over 24 hours; labels use the same thresholds as other food.
+- Bread roll: consumes 1; fresh +12 Food, stale +8 Food, spoiled +4 Food before the separate poisoning outcome. Each portion declines over 24 hours; labels use the same thresholds as other food.
 - Pull-tab canned food: consumes 1; +32 Food, +1 Mood. Sealed cans do not spoil and need no opener.
 - Wet wipes: consumes 1 use, +10 Hygiene capped at 60; disabled at Hygiene 60+. Show remaining uses beside the name.
 - 3-in-1 shower gel: used automatically only when a shelter/day-center shower succeeds; one use boosts the shower Hygiene gain by 1.5 and raises its cap from 70 to 100. No standalone use. Rejected/closed/full showers spend no gel. Existing Hygiene above 70 is preserved apart from ordinary time decay when showering without gel. Older saves receive zero gel, and missing gel in older result snapshots counts as zero.
@@ -857,6 +299,17 @@ Using inventory:
 - Medicine: consumes 1 only when an untreated Cold is active and reduces its remaining duration to one third. Further doses during that illness are not consumed.
 
 Shop purchases respect backpack capacity.
+
+### Unsafe food outcomes
+
+Fresh >50% food is safe. Stale >20–50% and Spoiled 0–20% sandwiches, bread and ready meals roll once after consumption; the probabilities are balancing values, not medical estimates.
+
+| Condition | Feel fine | Nausea | Vomiting |
+|---|---:|---:|---:|
+| Stale | 90% | 8% | 2% |
+| Spoiled | 25% | 45% | 30% |
+
+Fine/nausea preserve reduced Food gains: stale sandwich/bread/ready meal 20/8/34; spoiled 10/4/16. Nausea adds Mood −3. Vomiting grants no nutrition and applies Food −10, Water −20, Energy −5–10 uniformly, Health −5. It replaces the old guaranteed spoiled-food penalties. The paused food picker warns of Food poisoning risk without exact odds. Fine/nausea/vomiting have separate illustrated results within the normal Got it modal; no extra persistent illness or time charge is added.
 
 ### Clothing cleanliness
 
@@ -872,37 +325,43 @@ Clothing cleanliness ≥70 allows Hygiene 100; ≥40 allows 80; below 40 allows 
 
 | Laundry service | Access | Duration | Completion |
 |---|---|---:|---|
-| Day Center & Clinic | Daily 08:00–16:00, subject to capacity | 90 min | Cleanliness 100 |
+| Day Center | Daily 08:00–16:00, subject to capacity | 90 min | Cleanliness 100 |
 | Night Shelter | Thursday drop-off 06:30–08:00; pickup 18:00–22:00; shelter admission required | 10 min each | Cleanliness 100 at pickup |
 | Schronisko | No laundry action implemented yet | — | — |
 
-Equipment display order is Phone, Clothing, Documents, Transit card, then 3-in-1 shower gel when available. Gel is displayed with automatic equipment but still consumes backpack space.
+Essentials display order is Phone, Clothing, Documents, Transit card. Phone and Clothing are plain informational cards without click handlers: Battery/Condition for Phone, Clean/Condition for Clothing. Charging is an optional status beside Battery; collect the phone at Night Shelter, not from Inventory. Gel is a backpack item with automatic shower use.
+
+Backpack/Essentials share transparent object artwork without picture backings. Backpack is a two-column grid with no empty-slot placeholders; occupancy remains `used / 8 slots`. Discard overlays the bottom-right corner, reserves no extra space, and opens a blocking confirmation. Fresh food has no Fresh count tag; Stale/Spoiled counts remain. Consumable cards keep their use actions; removing taps applies only to informational Essentials.
 
 ## Phone
 
-The phone has separate Battery and Condition.
+Phone is the last bottom-navigation destination. Its compact home header shows `1 zł/day · Paid/Unpaid`; app screens add a back button, icon and app title. The home launcher has Goals, Notes, History and Search. There is no standalone Journal tab or redundant Phone heading. The four additional Music/Video/Navigation/Plan launcher icons and playback toggles are hidden; Navigation is automatic when the phone and paid service work, and is suspended during sleep, charging and game over. Story walking-with-music remains available independently.
 
-Battery uses:
-- Navigation while travelling: 12%/hour normally, 15%/hour in Clear weather/bright sun.
-- Music: 4%/hour.
-- Video: 9% for 30 minutes before condition multiplier; watching gives +8 Mood and advances 30 minutes.
+| App | Access / behavior |
+|---|---|
+| Goals | Incomplete counter, persistent progress, collapsible Completed list; no internet needed. |
+| Notes | Known places, hours/services and saved practical answers; no internet needed. |
+| History | Newest-first reflections, day navigation, consecutive-action grouping and 30-entry batches; no internet needed. |
+| Search | Paid internet; Shelter, Help & hygiene, Work, Medical help, Food & water. New searches take 10–25 minutes; saved answers link to Notes. |
 
-A worn phone drains faster:
-`drain multiplier = 1 + (100 - condition) * 0.007`.
+All apps need a non-empty battery and Condition >0, and the phone must not be left charging at Night Shelter. With an unavailable phone the screen explains why; Map/travel remain usable. Scripted Street saved-answer/charging-memory choices can still be free recall rather than an app session. Search is authored game information, not a live AI/API integration. Indoors searching is supported.
 
-Examples:
-- Condition 100: x1.00.
-- Condition 72: about x1.20.
-- Condition 0: x1.70.
+Phone has separate Battery and Condition. Screen-on drain is calculated for each elapsed minute, including dawn/dusk, weather changes and midnight. Daylight is 06:00–20:00.
 
-The phone can be charged at the Help Center and Schronisko while open: 30 minutes gives +25% Battery.
+| Use | Night | Daylight | Clear daylight |
+|---|---:|---:|---:|
+| Browsing / information search | 18 battery points/hour | 24/hour | 30/hour |
+| Navigation during travel | 12/hour | 18/hour | 24/hour |
 
-Phone Condition can currently be damaged by street events, especially drops and rain.
+Phone wear multiplies those rates by `1 + (100 - condition) × 0.007`: Condition 100 → ×1, 72 → ×1.196, 0 → ×1.7. Condition 0 blocks use. Search checks enough battery for its minimum duration, then can stop if battery/service runs out; spent resources remain and unfinished discovery/reward is not granted. Information reward is up to +3 Mood from its starting value within the actual Mood cap.
+
+Station charging adds up to 60 points in 60 minutes; Day Center's service fills the battery in 60 minutes subject to capacity. Help Center/Schronisko add 25 points in 30 minutes. Night Shelter supports background charging for admitted guests: +60 points/hour, free to plug in/collect, including quiet hours. It continues during other actions/sleep and stops with paused game time. The device cannot be used until collected, including at full charge; leaving collects automatically, with morning charging continuing until exit. Saved charging flags survive reload without granting wall-time charge while ordinary gameplay is hidden.
+
+Phone/clothing condition can be damaged by equipment events. The emergency Call ambulance action appears on Phone home at Health ≤20, requires a working charged device and no paid internet, and transports the player to Hospital.
 
 ## Mobile service
-Phone data/service is a recurring survival expense: **1 zł buys 24 game hours**. Time can be topped up before expiry and stacks from the later of the current expiry or the current game time. Navigation, Music and online Video require active mobile service. The ambulance emergency call explicitly does **not** require paid service; it only requires a working phone with battery. Remaining service time is shown in the phone panel and persists across saves.
 
-Auto-renew is ON by default. It attempts renewal only when the existing paid service has expired, at most once per game day. On success it pays 1 zł and adds a full 1440 minutes from the later of existing expiry or current time. Already prepaid time is preserved with no extra automatic charge. Insufficient funds leave the expiry unchanged and produce a failure message; manual top-up remains available. Navigation and Music are switched off when service is inactive.
+**1 zł buys 24 game hours.** Topping up stacks from the later of the current expiry or current time. Tapping the compact plan header opens the payment/auto-renew panel. Auto-renew is ON initially, attempts only after expiry, at most once per game day, and preserves prepaid time. Insufficient funds leave service inactive; manual top-up remains available. Notes/Goals/History need no internet, but they still need a working phone. Map/travel need neither battery nor paid data.
 
 ## Shop
 
@@ -917,10 +376,10 @@ The current assortment is implemented as follows. Prices are per purchase; quant
 | Item | Price | Quantity per purchase | Effect per use | Backpack stacking |
 |---|---:|---:|---|---|
 | Water | 3 zł | 3 drinks | +38 Thirst | 4 drinks/slot |
-| Cheap food | 5 zł | 1 portion | Fresh: +28 Food, +2 Mood; freshness rules apply | 4 portions/slot |
-| Bread roll | 1 zł | 1 roll | Fresh +12 Food; stale +8; spoiled +4 Food, −3 Health, −2 Mood | 4 rolls/slot |
+| Cheap food | 5 zł | 1 portion | Fresh: +28 Food, +2 Mood; freshness/poisoning rules apply | 4 portions/slot |
+| Bread roll | 1 zł | 1 roll | Fresh +12 Food; stale +8; spoiled +4 Food; poisoning roll | 4 rolls/slot |
 | Pull-tab canned food | 10 zł | 1 can | +32 Food, +1 Mood; no spoilage or opener requirement | 4 cans/slot |
-| Ready meal | 12 zł | 1 plastic container of pasta, meat and herbs | Fresh +48 Food; stale +34; spoiled +16 Food, −8 Health, −4 Mood | 4 containers/slot |
+| Ready meal | 12 zł | 1 plastic container of pasta, meat and herbs | Fresh +48 Food; stale +34; spoiled +16 Food; poisoning roll | 4 containers/slot |
 | Wet wipes | 5 zł | 5 uses | +10 Hygiene, capped at 60 | 5 uses/slot |
 | 3-in-1 shower gel | 10 zł | 20 uses | Automatic shower bonus ×1.5 and Hygiene cap 100 | 20 uses/slot |
 | Cigarettes | 6 zł | 5 cigarettes | +5 Mood, −0.5 Health | 20 cigarettes/slot |
@@ -949,8 +408,8 @@ Older saves retain existing possessions and start with zero of any missing new i
 
 Implemented timed effects:
 - Cold — negative: Health, Energy and Mood consequences.
-- Free transport — public transport fare becomes free. Since v228 this benefit is excluded from the Status Effects list and its count; its duration and transport mechanics are unchanged.
-- Well fed — positive: slows/offsets Food decay.
+- Free transport — public transport fare becomes free. This benefit is excluded from the Status Effects list and its count; its duration and transport mechanics are unchanged.
+- Well fed — positive: halves baseline Food decay, never refills Food; walking surcharge remains.
 
 New runs start without Cold. Outdoor sleeping and existing events can still cause illness; saved Cold effects are preserved until cured or expired.
 
@@ -966,14 +425,14 @@ Street has its own small survival loop. Its economy is deliberately capped aroun
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
 - Once a bench is found, **Sleep on the bench** becomes available: fatigue-dependent 2/4/6/8 hours. At 8 hours: +66 Energy, -7 Hygiene, -5 Mood, no direct Health recovery, plus elapsed-time needs loss. Street wake-event attempt: min(90%, 65% × hours / 8).
-- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Cheap Shop for 0.50 zł each. Time/cost scales with time spent searching.
+- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Cheap Shop for 0.50 zł each. Search time is at least 10 and at most 60 game minutes, based on interaction duration (`trashSearchMinutes`); it is applied at completion. Valid plastic bottles and cans can be tapped to collect; ordinary rubbish must be dragged out, not removed by a tap.
 - The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Variable sleep duration
 
-Clicking any sleep action opens a separate **PLAN YOUR SLEEP** modal. Game time, needs, food ageing and forced exhaustion sleep pause until **Start sleeping** or **Cancel** (also Escape). Four duration buttons (2/4/6/8 hours) are only inside this modal. Every option includes its wake day/time, and a preview shows current time, actual sleep duration and selected wake time. Crossing midnight updates the day; night-shelter previews use the 07:30 cap. Opening/cancelling the chooser consumes nothing and does not mark shelter attendance. A reserved bed records attendance only after confirming sleep. Automatic exhaustion sleep still starts directly without a chooser. The chooser is not saved across reloads.
+Clicking a sleep action opens the compact sleep-planning modal. Game time, needs, food ageing and forced exhaustion sleep pause until **Start sleeping** or **Cancel** (also Escape). Four duration buttons (2/4/6/8 hours) are only inside this modal. Compact 2h/4h/6h/8h choices use one shared selected wake-time preview; the chooser states the actual sleep duration. Crossing midnight updates the day; night-shelter previews use the 07:30 cap. Opening/cancelling the chooser consumes nothing and does not mark shelter attendance. Reserved-place admission records the night even if the guest stays awake; confirming bed sleep also retains attendance. Automatic exhaustion sleep still starts directly without a chooser. The chooser is not saved across reloads.
 
-Sleep duration uses **2, 4, 6 or 8 hours**, depending on awake Energy for ground sleep, bench sleep, Night Shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Wake-event chance scales with duration; the separate Cold chance currently does not. Night Shelter beds require successful queue registration and an active reserved place; existing bookings skip the registration queue.
+Sleep duration uses **2, 4, 6 or 8 hours**, depending on awake Energy for ground sleep, bench sleep, Night Shelter beds and Schronisko. Recovery and direct penalties scale by hours / 8. Wake-event chance scales with duration; Cold risk accumulates over each minute of actual ground/bench sleep. Night Shelter beds require successful queue registration and an active reserved place; existing bookings skip the registration queue.
 
 The chooser disables unsuitable durations with an explanation. Higher Energy permits shorter sleep; lower Energy requires longer sleep. Available choices are:
 
@@ -995,16 +454,18 @@ The selected duration is validated again at confirmation. Opening the chooser ke
 
 During sleep, the shared time calculation applies Food loss (minutes / 28.8), Thirst loss (minutes / 14.4 plus weather), Hygiene loss (minutes / 180), intoxication decay, active Cold/Well fed modifiers and Health damage from illness, dehydration and starvation. Backpack and stored food continue ageing. Ordinary awake Energy loss is skipped. Actual Energy recovery is still capped by Health and all needs are clamped to 0–100.
 
-Outdoor sleep independently rolls for a two-day Cold effect at waking. Chance is clamped to 5–65%: base 8%, plus temperature (≤5°C +28%, ≤10°C +16%, ≤15°C +7%), weather (Rain +22%, Showers +14%, Windy +10%) and ground sleeping +8%. It uses waking-day weather/temperature. An already active Cold is neither duplicated nor extended by this roll. The sleep result preserves the illness text and shows a newly started Cold only when applicable.
+Ground/bench illness uses cumulative minute-by-minute exposure, rather than only waking weather. Each minute adds `-ln(1 - R8) / 480`; final probability is `min(65%, 1 - exp(-dose))`. R8 uses base 8%, ground +8 percentage points, temperature ≤5°C +28 / ≤10°C +16 / ≤15°C +7, direct Rain +22 / Showers +14 / Windy +10, capped at 65%. Roofs/Station benches exclude direct rain/wind while retaining temperature risk. Beds add no sleep-illness risk. Clothing dampness contributes nothing with the release-default feature flag.
+
+Risk dose and elapsed-risk minutes survive reload/hidden catch-up. Legacy unfinished sleeps reconstruct prior exposure from their starting snapshot where available. At waking there is one roll; an already active Cold is neither duplicated nor extended. Newly ill sleepers see Feeling unwell with ground/bench-specific illustration, symptoms and the actual Cold consequence in the same wake result. This takes priority over a competing random wake event. Existing two-day Cold and medicine treatment rules remain; the UI does not promise a fixed recovery countdown.
 
 ## Sleep progression and exhaustion
 
-Sleep is a blocking game state rather than an instant time skip. In the current test build, the selected 2/4/6/8 game hours advance at **10 game minutes per real second** (`DEBUG_SLEEP_SPEED = 10`): an 8-hour sleep lasts about 48 real seconds. A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. There is no manual Wake Up action: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Sleep starts with Music and Navigation switched off. Sleep state and wall-clock timestamps are saved, and the game catches up to the scheduled waking time after a reload. The sleep result opens after the period finishes; any generated wake event is shown after OK. Sleep cannot start during travel.
+Sleep is a blocking game state rather than an instant time skip. In the current test build, the selected 2/4/6/8 game hours advance at **10 game minutes per real second** (`DEBUG_SLEEP_SPEED = 10`): an 8-hour sleep lasts about 48 real seconds. A full-screen sleep overlay shows the current game time, planned wake time, elapsed/total sleep and a progress bar. A **Wake up (debug)** control is currently exposed for testing; ordinary sleep has no gameplay early-wake choice: map, inventory, phone, navigation and all other actions remain inaccessible until sleep finishes. Sleep starts with Music and Navigation switched off. Sleep state and wall-clock timestamps are saved, and the game catches up to the scheduled waking time after a reload. The sleep result opens after the period finishes; any generated wake event is shown after Got it. Sleep cannot start during travel.
 
 At Energy 0, when no trip/event/D20/interview/registration-queue/checkout/sleep-planning/result/sleep/game-over is active, the character automatically falls asleep: 8 hours at Schronisko or an open Night Shelter with an active booking and Intoxication ≤10; otherwise 8 hours on the ground, moving to Street if necessary.
 
 ## Alcohol / intoxication
-The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/promille). It starts at 0 and currently falls by about 10 points per game hour as time passes. The Night Shelter has a strict admission threshold: **Intoxication above 10 blocks shelter sleep until the character sobers up**. This creates a direct survival tradeoff for future alcohol items/events. The Status screen exposes the current Intoxication value. Alcohol sources and individual drink strengths can be added on top of this system.
+The game tracks **Intoxication on an abstract 0–100 gameplay scale** (not BAC/promille). It starts at 0 and currently falls by about 10 points per game hour as time passes. The Night Shelter has a strict admission threshold: **Intoxication above 10 blocks shelter sleep until the character sobers up**. This creates a direct survival tradeoff for future alcohol items/events. Alcohol sources and individual drink strengths can be added on top of this system.
 
 ## Housing and social support
 
@@ -1034,7 +495,7 @@ Night Shelter:
 - With an active booking, nightly check-in is **18:00–22:00**. Once admitted for that night, the bed remains usable during quiet hours and after midnight until closing at 08:00. After-midnight sleep counts toward the preceding shelter night, rather than marking the coming night as already stayed.
 - Missing 3 required nights within the current 30-day game-month cancels the place and blocks re-registration until the next month.
 - Actually departing after 08:00 and before 18:00 with an active booking creates a shelter rule strike. Selecting/cancelling a route does not count; walking, paid/fare-dodging transit or stepping onto Street does. A rejected unpaid transit attempt does not count; 3 strikes cancel the place and block re-registration until the next month.
-- **Quiet hours are 22:00–06:00.** During that period normal shelter actions are blocked and only sleeping is allowed.
+- **Quiet hours are 22:00–06:00.** Sleeping and background phone-charging controls remain available; normal meal/shower/laundry actions are blocked.
 - Shower: 35 minutes, +55 Hygiene capped at 70 without gel; with gel +82.5 Hygiene capped at 100 and one gel use spent. +4 Energy, +4 Mood.
 - Intoxication above 10 blocks shelter sleep/admission to bed; the initial registration branch itself does not currently check intoxication.
 - Free dinner is served **19:00–20:30**, once per day: 20 minutes, +48 Food (Food+++), +38 Thirst (tea, equivalent to one water drink), +4 Mood before normal elapsed-time decay.
@@ -1048,22 +509,18 @@ Night Shelter and Schronisko share a persistent safe-storage inventory. Night Sh
 
 Currently storable in the regular slots: documents, medicine and cigarettes. Schronisko additionally has a separate food shelf for up to 4 Food. This food does not consume the 16 regular storage slots. Stored food retains each portion's freshness, continues to spoil at the normal rate, and displays the shelf's average condition. Moving it back preserves all individual ages. Water is not stored. Night-shelter storage access requires an active booking. Documents placed in storage are not carried and therefore cannot be lost by street events. Formal applications that require documents require the player to take them out of storage first.
 
-## Day Center & Clinic
+## Day Center and Free Clinic
 
-The Day Center & Clinic is open **08:00–16:00** and represents a daytime drop-in service. Entry capacity is currently rolled when using its actions: before 10:00 90%, 10:00–12:00 75%, 12:00–14:00 55%, 14:00–16:00 35%. If full, the player loses 15 minutes and 2 Mood.
+These are separate 08:00–16:00 map locations and separate discoveries. Day Center capacity is currently rerolled per service action: before 10:00 90%, 10:00–12:00 75%, 12:00–14:00 55%, 14:00–16:00 35%. A full service costs 15 minutes and −2 Mood.
 
-Implemented services:
-- Stay indoors: 60 minutes, +10 Energy, +5 Mood.
-- Shower: 40 minutes, +50 Hygiene capped at 70 without gel; with gel +75 Hygiene capped at 100 and one gel use spent. +4 Mood.
-- Laundry: 90 minutes, +18 Hygiene, +5 Mood.
-- Charge phone: 60 minutes and Battery becomes 100%.
-- Clinic: 60 minutes, +12 Health below Health 65 or +4 otherwise, +3 Mood and removes Cold, before any caps.
+Day Center services: stay indoors 60 minutes (+10 Energy, +5 Mood); shower 40 minutes (+50 Hygiene/cap 70 or +75/cap 100 with one gel use, +4 Mood); laundry 90 minutes (+18 Hygiene, +5 Mood and cleanliness 100); charge phone 60 minutes to full Battery.
 
+Free Clinic provides the separate 60-minute basic-care action: +12 Health below 65 or +4 otherwise, +3 Mood and removes Cold, subject to ordinary elapsed-time costs/caps. It does not require insurance/documents. It uses the same time-of-day capacity roll and failed-access cost as Day Center.
 
 ## Hospital
 The city map includes a **Hospital**. Regular medical care is open 08:00–18:00 and requires the character to physically carry their documents. A regular visit takes about 90 minutes, removes the current Cold effect, and brings Health up to at least 65 rather than acting as an unlimited heal button.
 
-**Emergency care is reached by calling an ambulance from the phone interface**, alongside Navigation, Music and Video; it is not a walk-in Hospital action. The call is available only when Health is **20 or lower**, requires a working phone with battery, and does not require documents. The ambulance transports the character directly to Hospital. Emergency treatment consumes a random 4–8 game hours, costs Energy/Mood, and only stabilizes Health to **35**. Its purpose is to prevent a critical character from becoming trapped or dying solely because their documents are missing; it is intentionally worse than planned medical care.
+**Emergency care is reached by calling an ambulance from the phone interface**, on Phone home when critically unwell; it is not a walk-in Hospital action. The call is available only when Health is **20 or lower**, requires a working phone with battery, and does not require documents. The ambulance transports the character directly to Hospital. Emergency treatment consumes a random 4–8 game hours, costs Energy/Mood, and only stabilizes Health to **35**. Its purpose is to prevent a critical character from becoming trapped or dying solely because their documents are missing; it is intentionally worse than planned medical care.
 
 ## Work
 
@@ -1091,7 +548,10 @@ Events are data-driven and can trigger during travel, at a location, or after wa
 
 Location actions currently attempt a location event at 20% probability. Night Shelter wake attempts a wake event at min(65%, 45% × hours / 8).
 
-Implemented events:
+The catalog has ten general events plus four opening-night observations (The door closes, Making a bed on a bench, The last departures, Someone needs the bench). First-night observation eligibility, seen flags and cooldowns prevent repeats and restore pending choices. Ground/bench illness and closing-time notices are separate system events.
+
+General catalog events:
+
 1. **The phone slips** — walking only. D20 Reflex option or guaranteed drop/damage.
 2. **Caught in the rain** — walking in Rain/Showers. Protect with jacket or keep moving; damages phone/clothing.
 3. **Coin on the pavement** — pick up one weighted Polish coin, from 1 gr to 5 zł (5 zł: 1%; 1–50 gr: 92%), or leave it for +1 Mood.
@@ -1169,68 +629,37 @@ Night Shelter actions are described above. Schronisko settle action is described
 
 Several older generic shop/support actions still exist in `game.ts`, while the current UI uses newer dedicated shop/help-center interfaces.
 
-## UI/screens
+## UI and presentation
 
-### Street story and narrative voice (v79–v88)
+The fixed bottom navigation is Map, Inventory, current place (raised center button), Status and Phone. The central button uses the current place's icon and name. Travel/events/results block background navigation. Map, Inventory, Status and Phone home omit redundant screen headings; internal phone apps retain back navigation and their own labels.
 
-The opening night uses two voices: narrator describes the scene and observable consequences in second person; player choices express intentions in first person (for example, "Somewhere warm… The station lights are still on.", "Something familiar to listen to… I don’t want this silence."). Narration does not prescribe despair, reassurance or calm. Mood still changes mechanically and appears separately in results. The scene progresses from 22:00 to late evening, after midnight, and pre-dawn rather than repeating the opening paragraph all night. Street walk, rain, cover and search/rest choices use this voice; service interfaces and the wider event catalog have not yet been converted. Question titles already use first person. Time costs, thresholds, payouts, pause rules and sleep behavior are unchanged. Scene illustrations are a future possibility; no images were added for this pilot.
+The shared sticky header shows day/time, money, weather, Mood and actual phone Battery. Battery becomes red strictly below 30%. The version label and Reset save are in the footer. Dark responsive styling, safe-area spacing and one contour icon system are shared across screens. Street uses the same pedestrian artwork as walking travel.
 
-On Street, **I don’t know where to go… Maybe my phone can help.** immediately obtains the first scripted AI answer about morning help. **Ask AI** in the phone panel obtains the same answer directly, including after the opening night. Questions emerge individually: morning help is initially available; shelter registration appears after learning about help or discovering the shelter; the no-bed fallback appears after learning registration rules; food/water appears at Food or Water <=45; charging appears at Battery <=30. Answered questions stay available. Responses reflect implemented game schedules and services; this is authored game dialogue, not a live AI/API connection. Answers save relevant addresses; knowing an address does not grant admission or a bed.
+Street curates at most three direct thoughts: an information/understanding choice, a rest/movement choice and a practical response. Enabled choices come first and eligible choice order is seeded/shuffled rather than always placing the safe response first. There is no intention submenu or generic Other actions button. Opening-night money/work/bottle options are withheld until later; location knowledge arrives through observation, recall and authored phone answers. Narrator describes observable surroundings; first-person choices express possible intentions without prescribing the player's feelings.
 
-Each first AI question displays an estimate of about 15 minutes, takes a randomly selected 10–25 game minutes at one game minute per real second, and consumes 0.2% Battery per actual minute adjusted for phone condition, requires active mobile service and a working phone, and tops up Mood to at most +3 relative to the search-start value, stopping at 60 without reducing higher Mood or larger independent gains. Other questions are rewarded once per run; the repeatable morning-help search grants the reward only for a newly discovered place. Other saved answers persist under `street-life-answers-v1`, can be reread with zero battery or no service, and cost no time, battery or extra Mood. Selection and answer reading pause time. Reset clears saved answers. The shelter answer also creates the next 18:00 shelter arrival goal.
+Street decisions themselves keep ordinary time running. Result/event/parameter modals pause it as described under Time. A music walk is a 30-minute direct action with normal walking costs and an explicit Mood bonus within the current Mood ceiling; there are no visible global music/video switches.
 
-Charging is a remembered place rather than an AI lookup: at Battery <=30 an extra story choice notices the low battery. Reading it recalls the waiting-room outlet at Station, usable tonight and available around the clock (+60% Battery in one hour, capped at 100). This memory costs no time or battery, requires no service, works even at zero battery, and grants the same one-time clarity bonus. It saves only Station, without revealing unrelated daytime charging addresses.
+### Map
 
-Normal and musical walks are separate direct choices in the Street list. A musical walk lasts 30 minutes, retains ordinary walking/rain costs, and adds up to +8 Mood toward 60, alongside the usual walk +2 and passive music recovery. It lifts the starting Mood of 28 into the yellow zone. Battery cost is 2% multiplied by phone-condition drain; already active Music uses its normal elapsed-time drain instead of being charged twice. No temporary Music toggle stays enabled after the action. The choice requires working phone, paid mobile service and sufficient battery.
+The dark overhead map fits between the header and bottom navigation, with the destination card in its own lower space. Real UI labels anchor to dispersed city-block/railway landmarks through the same cover projection as the artwork. Station is anchored at approximately 34.5% across / 65.8% down; Day Work's label sits to the left of its marker. Compact labels are 16px.
 
-The opening is informed by the user's first-night experience: walking around, trying to understand available support, and waiting awake under cover for hours rather than immediately accepting sleep on the ground. This is a possible route, not a mandatory reenactment. Night searches save useful addresses but explain that shelter registration is closed until the next evening; doors 18:00 and registration 18:20 and Help Center services open at 08:00. The known unbooked shelter route is disabled during the opening night instead of being offered as immediate warmth. Station and temporary cover remain options for the current night; neither guarantees a safe bed.
+The top toolbar has Street and Nearest shop, with no Map/City map title. Street steps outside without travel; Nearest shop opens the 5–15-minute route chooser. Each shortcut is disabled at that place. These two have no fixed map pins. Discovered facilities retain selectable markers and shared route anchors; opening hours appear on the destination card in compact green/red text. There is no global goal reminder or You are here line in that card.
 
-Street now opens with a narrative scene and one level of direct action choices. Help immediately answers the morning question; walking and music each begin their own walk; station and known-location thoughts open route selection directly. At most three thoughts appear: one practical question, one bodily/emotional response and one practical action. Follow-up questions replace their predecessor according to discovery/need thresholds. Bench search/rest, sleep and searches can occupy those slots directly when the context calls for them. Money/bottles/work choices remain absent during the opening night and become visible later. There is no intention submenu, Choose another approach button, or generic Other actions button. Required route, sleep-duration and covered-wait planning remains, because those choices specify an actual action parameter rather than opening a category. Disabled actions still sort below active actions.
+### Results, illustrations and items
 
-On Street, the old message panel immediately below the scene is hidden: it duplicated the last action's result and looked like another story block. Result windows and Journal history remain intact. Other locations retain their inline messages; the goal reminder is unchanged.
+All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped stat bars and consequences, animate gains/losses, and omit zero/consumed-item noise. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
 
-While deciding on Street, game time and time-based needs/effects/clothing/food ageing are paused, including when consulting Map, Inventory or Journal before departure. Intent selection and changing approach do not spend time. Executing an instant action still applies its full configured elapsed minutes. Confirmed travel, sleep and active shelter queues/departures keep their existing countdowns. Completed street actions return to the intention choices after their result; exhaustion can still force sleep at Energy 0. This is the first street-scene prototype; other locations retain their existing service interfaces and normal clock behavior.
+Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. All 14 catalog events have artwork; this is no longer an unillustrated future task. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
 
-Implemented main screens:
-- Place/location.
-- Map.
-- Inventory.
-- Status.
-- Journal.
-- Travel.
-
-Bottom navigation exposes Map, Inventory, Place, Status and Journal. Travel temporarily disables normal navigation.
-
-The UI includes:
-- Day/week/time header.
-- Money.
-- Weather and temperature.
-- Overall condition.
-- Location opening state.
-- Map pins.
-- Travel progress.
-- Backpack capacity.
-- Phone controls/meters.
-- Life situation.
-- Active effects.
-- Street-event modal.
-- D20 roll/result modal.
-- Shared RESULT/OK window with Changes & consequences and Spent sections.
-- Sleep-duration planning modal with paused time, fatigue-dependent 2/4/6/8-hour choices and wake-time previews.
-- Sleep progress overlay.
-- Shelter registration queue and morning checkout reminder/progress.
-- Discovered-address map and active Night Shelter arrival goal.
-- Run Over modal.
-
-## Journal goals and daily history
+## Phone Goals and History
 
 Daily history displays completed actions/events at their completion day and time, newest first. Each entry has an action heading and one or two short first-person sentences about the character's thoughts, feelings or physical sensations. Reflections respond to actual outcomes and can incorporate an action-linked memory. They do not repeat the action report or resource numbers; an entry can omit its description when there is no useful reflection. Full narrative and actual resource deltas remain in the action result. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed the shared completion pipeline. Starting an ongoing activity does not log its completion early.
 
-The selected day initially shows its latest 30 entries; `Show older entries` appends another 30 without jumping the reading position. Switching days or reopening Journal resets the display count; ordinary ticks preserve expanded entries. The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Journal opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on Day 1 and forward on the current day. Reopening Journal returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals and their progression retain their existing behavior.
+The selected day initially shows its latest 30 entries; `Show older entries` appends another 30 without jumping the reading position. Switching days or reopening History resets the display count; ordinary ticks preserve expanded entries. The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Phone → History opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on Day 1 and forward on the current day. Reopening History returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals and their progression retain their existing behavior.
 
 Goals use persistent completion flags. First morning completes at noon of day 2 (or on a later day alive), after the opening night. Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state.
 
-Journal displays incomplete goals in priority order: morning, safe sleep, social support, work. A pending shelter appointment promotes safe sleep to the top and displays the appointment day/time within that goal's description, without duplicating it in a separate next-important panel. Only the first incomplete goal has a warm yellow border. Goals shows the incomplete count; Completed shows the completed count in a separate subsection below, collapsed by default. Completed cards have a green check, muted title and strikethrough. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
+Phone → Goals displays incomplete goals in priority order: morning, safe sleep, social support, work. A pending shelter appointment promotes safe sleep to the top and displays the appointment day/time within that goal's description, without duplicating it in a separate next-important panel. Only the first incomplete goal has a warm yellow border. Goals shows the incomplete count; Completed shows the completed count in a separate subsection below, collapsed by default. Completed cards have a green check, muted title and strikethrough. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
 
 | Goal | Completion condition |
 |---|---|
@@ -1241,228 +670,71 @@ Journal displays incomplete goals in priority order: morning, safe sleep, social
 
 The counter is calculated from the four saved flags. Completion never rolls back just because a booking expires or a location is left. A reset clears all flags and history. History uses completion time: an action crossing midnight is recorded on the day it finishes. Entries contain compact reflections; exact resource deltas and the detailed explanation remain in the action result. Passive clock ticks and navigation between screens are not individual actions.
 
-## Known implementation gaps / current limitations
-
-These are current code realities, not planned features:
-- Water storage is not implemented; the other safe-storage rules are described above.
-- The shop shelf is only rendered while the shop is open instead of remaining visible/disabled when closed.
-- Phone Condition increases battery drain, but Condition 0 does not yet universally disable all phone functions.
-- Music's Mood gain can continue based on toggle state even if battery reaches zero.
-- Travel times are destination-based rather than pair-to-pair.
-- Public transport has no service timetable.
-- Day Center capacity is currently rerolled per service action rather than once per visit/admission.
-- Station bench sleep still shares generic bench wake-event plumbing and should eventually have station-specific risk handling.
-- Shelter social-worker promises/plans are stored but are not yet verified against completed gameplay milestones.
-- Not every custom action currently rolls a location event.
-- Journal cannot reconstruct actions performed before history was implemented and retains only the latest 500 entries across all days. Previous-day browsing and loading older selected-day entries in batches of 30 are implemented.
-- Schronisko has no laundry action yet.
-- Benefits support is a placeholder.
-- Documents exist and can be lost/restored, but most formal actions do not yet require them.
-- Schronisko referral is immediate; no application/approval process yet.
-- The temperature day-cycle formula currently uses a 20-hour cosine period despite the comment describing a normal daily cycle.
-- Active effects and some old saves may expose transitional edge cases as schemas evolve.
-- The gradual map has connected online discovery routes for Night Shelter, Day Work and Help Center, plus Schronisko through a referral. Day Center and Free Clinic are revealed separately by successive morning-help searches. Remaining services still lack a connected discovery route in a new run.
-- Result windows do not display every life/support/discovery state as a separate row; coverage is listed above.
-- Result windows and pending event choices are not saved across reloads.
-
-## Regression checks (through v94)
-
-`npm test` runs the result-window checks plus scenarios for all ten review findings: referral/map migration; Health/food ageing during sleep and work; cancelled versus real shelter departures; D20 pause; prepaid/expired mobile service; resumed paid travel; fresh/stale/spoiled food; social-worker access/time charge; full/partial backpack event rewards; daily begging persistence. Pure time checks verify large blocks equal minute ticks across midnight/weather changes and effect expiry, plus full-meter Food/Water duration, 36-hour baseline awake Energy duration, eight-hour sleep consumption, walking/clear-weather surcharges and non-refilling Well fed. Schedule scenarios check meal boundaries and repeated meals, Thursday laundry, worker appointment access, overnight admitted beds, and enabled-first ordering including custom action fragments. Queue scenarios additionally check locked services, the full 20-minute wait, zero places, earlier/later arrivals, fixed vacancies and resumed waiting after reload. Morning checkout checks cover the 07:30 boundary, the full 30-minute exit, hidden-tab pause, reload, preservation of booking/storage, exhaustion during checkout and capped/restored sheltered sleep. Sleep-planning checks cover paused time/stats, cancel/Escape, attendance only at confirmation, midnight wake-day previews, the actual shelter cap and all four sleep places. Fatigue scenarios check every Energy boundary, disabled short/long options, selection fallback, actual confirmed duration and eight-hour exhaustion sleep. Travel entitlement checks cover active cards, unexpired/expired grants, free travel at zero money and reappearance of fare dodging when a grant expires. Water purchase checks cover three portions for 3 zł, exactly three half-liter drinks, remaining-count display without liters, reload persistence, whole-purchase backpack capacity and the matching theft quantity. Latest shop/hygiene checks additionally verify:
-
-- Legacy inventory migration without free new items; purchase prices and quantities; saved counts after reload.
-- Bread freshness during sleep, fresh/stale/spoiled effects and reset after the last roll; sealed cans keep their quantity through the same time advance.
-- Canned-food purchase and consumption; wipe purchase, consumption, cap at 60 and disabled behavior at that cap.
-- Backpack capacity for purchases and theft of new goods, with matching successful-theft quantities and result rows.
-- Hot meals available at exactly 8 zł, unavailable below 8 zł, with the correct deduction, 15-minute duration and Well-fed effect.
-- Gel at 10 zł for 20 uses, one bottle fitting in one free slot, matching theft quantity and no manual inventory-use button.
-- Both shower locations: water-only cap 70 even after repeated showers, gel cap 100 and stronger gain from a dirty baseline, exactly one use consumed, reload persistence, and preservation of higher pre-existing Hygiene without gel.
-- Full/closed shower services preserve gel stock.
-- Clothing: migration of condition/cleanliness, each Hygiene cap, capped item use, successful/refused laundry, Thursday collection and prevention of repeated pickup, outdoor-sleep dirt and unchanged wear after washing.
-- Journal goals: real completion conditions, closed locations and failed registration, persistent progress/counter, new-run reset and shelter appointment rescheduling/attendance.
-- Today: one record per completed action, purchase/item-use costs and gains, reload persistence, current-day filtering, reset and sleep completion across midnight.
-
-GitHub Pages deployment runs `npm test` and `npm run build` before publishing.
-
-## Design principles already established by implemented systems
-
-- Time should create pressure; avoid free waiting/teleportation.
-- Health is long-term condition, while Energy is short-term capacity.
-- Work is gated by capacity (Energy); Health influences it indirectly.
-- Items have physical consequences and wear, especially the phone.
-- Food and drink normally belong in the backpack; Schronisko has a small separate food shelf, while Night Shelter does not accept food.
-- Random events should create choices, not just arbitrary punishment.
-- D20 is for explicit uncertain choices, not every action. It is now shared by street events, shop theft and fare dodging.
-- DC describes situational difficulty; modifiers come from the character's actual condition/context.
-- Some actions can be physically impossible before the roll.
-- Prefer safe choice vs risky check vs walk-away when it creates a meaningful decision.
-- Do not add abstract RPG stats unless the existing survival/life stats prove insufficient.
-- Result feedback should show actual changes, hide zero rows and let the player read before time resumes.
-
-
-
-
-## Agreed next steps — not implemented
-
-- **Hostel:** discover it through phone search before showing its address on the map. Show the nightly price before payment and let the player decline. The discussed cheapest game option is 40 zł for a shared-room bed, separate from free Night Shelter registration. With starting money 25–50 zł, this can be unaffordable or consume most/all of the balance. No hostel location, booking, payment, bed or checkout flow exists in v87; these rules still need implementation.
-- **Additional scene illustrations:** extend the implemented Street, phone-search, map and shop artwork to further narrative scenes such as wandering, rain and waiting under cover. These additional scenes still need dedicated artwork.
-- **Wider narrative conversion:** try the opening-night narrator/first-person-choice style before extending it to daytime services and the full street-event catalog. Do not prescribe the player's emotions in the narrator's voice.
-
-Latest regression additions cover opening-night scene progression, paused choices and rain decisions, awake waits under cover, music walking costs and Mood, contextual AI questions and offline memory, all 26 starting-money outcomes and save/reset behavior, removal of Other actions and the duplicate Street message panel, and navigation using the new v88 thought wording. Both test suites and the v88 build passed before publication.
-
-### Player thoughts refinement (v88)
-
-Opening-night choices now read as thoughts rather than a sequence of commands beginning with "I will". They vary between uncertainty, wanting warmth, reluctance to sleep outside, seeking familiar music, hesitant rest, and decisive movement. Rain and canopy duration choices follow the same voice; low battery prompts a tentative memory of the station outlet. Narrator descriptions remain restrained. Action intent remains identifiable, with schedules, requirements, duration and costs shown separately. All action handlers, probabilities, rewards, resource costs and pause rules are unchanged. UI text remains in English, matching the existing game language. This supersedes the more mechanical v86 choice wording; other service and event text remains outside the pilot.
-
-### Choice emoji cues (v89)
-
-Narrative choice buttons now have one leading emoji: phone/help, warmth, walking, music, station, sleep, charging, and rain cover. Specific phone questions and covered-wait durations have matching cues; later Street intent choices use them too. Existing icons on bottle/search/bench actions are retained, without adding duplicates. Newly added emoji spans are decorative (`aria-hidden`), so accessible names remain the full thought text. A small inline gap keeps the icon separate from the text. No action behavior or costs changed; utility buttons such as choosing another approach remain text-only.
-
-### Single-level choices (v90)
-
-Removed the Street intention state and all category navigation. Choices now execute or open necessary parameter selection immediately. The first help answer costs five game minutes and 1% Battery once; rereading remains free. Closing its result reveals newly relevant questions in the same Street list. Music is a separate button, not a second click after selecting walking. Phone Ask AI also opens the first answer directly and is disabled when a new answer cannot be obtained. Time remains paused while deciding and reading. Regression helpers now click real actions directly rather than traversing category menus; checks cover immediate first help, one-time cost, paused reading, direct station route planning and contextual follow-up questions.
-
-### Consequences after choosing (v91)
-
-Street narrative buttons now show only their leading emoji and thought/question. Secondary descriptive hints and advance previews of time, battery, bonuses and costs are removed from the rendered buttons, rather than merely hidden with CSS. The repeated Help Center schedule note below choices is also removed; its details remain in the AI answer. After an action, the result window and Journal still show the actual elapsed time, resources spent, changes and explanation. Availability rules and enabled-first ordering remain unchanged, and unavailable actions stay disabled. Other location/service interfaces and necessary route/sleep/wait parameter selection retain their existing information. No resource amounts, time costs or outcomes changed. Regression checks verify no secondary hint/cost nodes in Street buttons and preserve the direct help and result flows.
-
-### Short first message (v92)
-
-At the initial Day 1 22:00 Street moment, the narrator uses only three short sentences: backpack on the street, nowhere to return tonight, and lit station windows. Weather, needs and shelter knowledge are not appended to this first message. Later scenes keep their contextual information, and the early-evening base paragraph is also shortened. This is a copy/presentation change with no changes to game state or outcomes. Regression checks limit the opening text to three sentences and 30 words.
-
-### Two-level narrative experience (v93)
-
-The ordinary narrative loop is main choices → action reaction/result → main choices after OK. Biography fragments appear as a short paragraph in that same reaction, with preserved paragraph breaks. They do not open a third screen or create another result. At most one new fragment is added to any result; fragment order follows actions, and a shared redundancy/savings fragment is not repeated across sitting and waiting. Required route/sleep/wait parameter selection and existing events keep their established flow. Initial scene remains three short sentences. Tests cover one result dialog, action-linked biography, Journal inclusion, persistence across reload, no repetition, and reset.
-
-### Earlier IT and AI protagonist variant (v94; superseded by v96)
-
-The accepted protagonist is male, aged 35–40, formerly in a good IT job; his employer recently replaced his work with AI. The walk fragment now establishes his age range, IT office routine and AI replacement in two sentences. The first help-answer fragment recalls an unanswered IT application and the redundancy email about the AI system. Before asking for help, his selectable thought is "AI again… All right. I need to know where to go." Saved-answer reading uses a neutral recall thought. This hesitation belongs to a selectable player thought; narration does not prescribe a universal emotional response to AI. The redundancy, depleted savings and lost-home fragments retain their gradual disclosure triggers. Existing seen-memory IDs are preserved, so revised fragments are not replayed automatically in old runs; a reset allows the whole updated biography to unfold. The first scene, mechanics, costs and two-level narrative flow are unchanged.
-
-
-### Three distinct narrative choices (v95)
-
-Street displays at most three choices, with one candidate selected from each direction: understanding options; movement, comfort or rest; and a practical action such as reaching shelter or finding money. This is curation, not taking the first three buttons from the old list. Morning help precedes shelter registration, which precedes the no-vacancy question. Battery at 30% or below prioritizes the charging memory; Food or Thirst at 45 or below prioritizes supplies otherwise. Only one question appears at a time. Saved morning answers remain readable through Phone → Ask AI.
-
-Low Mood prioritizes music when usable, and ordinary walking replaces it when the phone cannot support it. Energy at 40 or below prioritizes sleep. After learning about shelter, a bench thought can appear; after resting or walking, that thought yields to another response. Continuing a walk does not force a bedtime merely because 23:00 passed. A reserved bed takes priority in the practical slot; the opening night offers Station; later there may be a work search or ways to collect money. Unavailable candidates are skipped in favor of usable ones within their direction, with a disabled thought retained only when none is usable. Selected disabled thoughts sort last and count toward the limit.
-
-Selection is deterministic from current needs, discoveries, answered questions and the last completed action. There is no random reshuffle while reading, on render or on reload; optional random variety is not implemented. Covered-wait planning also has three choices (15, 60 or 240 minutes). The established four sleep-duration parameters remain 2/4/6/8 hours with fatigue restrictions. Regression tests cover the three distinct directions, question dependencies, need-based priority, pause/reload stability and existing action behavior under the curated scenarios.
-
-
-### Neutral office-worker protagonist (v96)
-
-The current protagonist is a man aged 35–40 who previously had a stable office job. Redundancy, an unsuccessful job search, depleted savings and loss of accommodation remain the causal sequence. His profession and the reason for redundancy are unspecified: the story does not establish IT work or replacement by AI. This keeps the premise relatable to more players and avoids tying it to a particular technology moment. The walk recalls his office desk and redundancy notice; the phone recalls an unanswered application and the redundancy email. The opening phone thought is “Maybe my phone can help… I need somewhere to start.” AI remains a tool for asking practical questions, with the established costs and saved answers. Existing memory IDs are preserved, so already-seen fragments do not replay; newly encountered fragments use the revised wording. Biography is still disclosed gradually in action results, and the opening narrator text, three-choice limit and gameplay mechanics are unchanged.
-
-### Main-screen visual direction and pinned navigation (v97)
-
-The Street main screen uses a melancholy cinematic illustration of the same ordinary former office worker, intact everyday clothing and commuter backpack. Graphite surfaces, warm off-white text, muted sand accents and monochrome outline icons replace its playful emoji presentation. The existing contextual narrator text, three first-person choices, availability rules, action handlers and result flow are retained. The banner is deliberately compact and becomes smaller on short mobile viewports; the reading area scrolls without hiding information.
-
-All screens share a sticky top header displaying day/weekday, game time, money, weather and the character's actual phone battery. The battery is explicitly paired with a phone icon, updates after consumption or charging, and becomes muted red at 20% or lower. The bottom five-destination navigation remains fixed at the viewport bottom, with a subtle active underline, monochrome icons and a small condition indicator on Status. Both panels accommodate device safe areas; page padding keeps final controls reachable above navigation. The central contents of Map, Inventory, Status, Journal, travel and other location panels are retained. The debug version badge moves to the footer so it no longer covers the header. Existing saves and game mechanics are unchanged.
-
-
-## v98 — phone activity and compact results
-
-New practical phone answers show a visible search/reading/saving stage for 30 real seconds (30 game minutes). Header time and battery update incrementally. Starting requires enough charge for the estimated search; phone-condition drain multiplier applies, alongside any existing music drain. Main navigation is disabled during work. Hidden tabs pause this stage; reload resumes its remaining time and original result snapshot. Mobile-service expiry or exhausted battery interrupts without saving the answer or granting Mood. Reset cancels the activity. Saved answers and the remembered station charging point remain instant and free.
-
-Action results use a compact bottom card with a lighter scrim, smaller text and an always-visible confirm button. Gains appear first; significant losses and Health/effect changes remain visible. Minor passive losses and the complete original narrative are available in expandable details and the Journal. Phone answers replace the progress section with an inline card directly below the illustration, preserving the common header and navigation. They list actual discovered locations without a fixed count. The morning-help result shows an illustrative preview of the help-center conversation behind the card, labelled Looking ahead; closing restores the current Street scene. Other screens retain their central layouts.
-
-Phone-use artwork: `public/assets/phone-search.webp`. Generated with built-in imagegen from the approved phone-use mockup, then optimized to WebP. Prompt: standalone cinematic painterly illustration of the same tired middle-aged man seated near Warsaw station on a rainy night, reading a phone held in both hands; preserve character, dark jacket/backpack, amber station lights, restrained melancholy mood; horizontal 4:3, no UI or text.
-
-
-## v99 — shorter phone searches
-
-New practical information searches take 10 game minutes / 10 real seconds. Battery drain remains 0.2 percentage points per minute before the phone-condition multiplier (2% base per search). Stage labels and cost previews use the new duration. A v98 search in progress resumes toward the shorter ten-minute total without a new charge or restart; already spent game time and battery are retained.
-
-
-## v100 — estimated phone search time
-
-New information searches preview Approx. 15 min; the actual duration is drawn once from 10–25 minutes and saved with the ongoing activity. Reload never rerolls it. The activity shows elapsed minutes, a moving indeterminate bar and reading stages, without a precise countdown. Final result and Journal report actual time and battery spent. Battery drain remains 0.2 percentage points per actual minute before condition/music adjustments. Starting needs charge for at least the minimum search; if a longer search drains it, the existing interruption preserves spent resources without granting the answer. Saved answers remain immediate and free.
-
-
-## Current presentation — v101–v115
-
-These changes supersede earlier presentation descriptions while retaining gameplay values, saved state and availability rules.
-
-- **City map (v101–v103):** illustrated city with selectable location markers, showing discovered locations only. The selected-location card and route button remain fixed above the bottom navigation so they stay reachable.
-- **Action-result dialogs (v104–v106):** darkened, blurred background; page scrolling locked while a modal is open and restored on dismissal. The modal opens vertically centered, with safe-area padding and scrollable content when necessary. Inline phone answers remain in the main screen beneath the illustration and preserve the shared header/navigation.
-- **Shop (v107–v109):** cinematic shop banner and realistic product artwork; compact two-column product cards with picture on the left and name, quantity/description and effects on the right. Effects are immediately visible without opening a disclosure. The action row has a narrow theft-icon button and a price-as-purchase button twice as wide; quantities, prices, backpack checks and transaction mechanics remain unchanged.
-- **Closed locations (v110–v111):** retain their contents beneath local blur/darkening with an 80 px clock icon, `Closed` and a single `Opens at HH:MM` line. There is no additional opening-hours line inside this notice. Header, location banner and bottom navigation remain sharp. Closed-shop transactions are disabled; opening automatically removes the notice and re-enables available controls. Independently available actions, such as a booked shelter social-worker appointment, and hospital emergency access are not covered by the closed notice.
-- **Effect labels (v112–v114):** qualitative strength uses `+`, `++`, `+++` without a space after the stat name; negative effects use `−`. Bread: `Food+`; sandwich and canned food: `Food++`; water: `Thirst+++`; wipes: `Hygiene+`; shower gel: `Hygiene+++`; cigarettes: `Mood+`, `Health−`. Medicine retains `Removes Cold`. Hot meal shows `Food+++`, `Thirst+`, `Mood+`; its `Well fed · 4h` card tag was removed, while the actual timed Well-fed effect remains implemented. Exact result changes and underlying bonuses remain unchanged.
-- **Shared header (v115):** one sticky row with prominent time first, compact day number (`D2`) and weekday, then one vertical separator before money, weather and phone battery. Resources use monochrome outline banknote/weather/battery icons and plain values, without pill outlines or button-like surfaces. Whole-zloty balances omit `.00` in the visual label; money keeps its existing precision. The game name and separate branding row are removed. Phone battery still reflects the real inventory value and turns muted red at 20% or lower. The build version is in the page footer beside Reset save. Bottom navigation remains fixed.
-
-Validation for v115: `npm run build` and `npm test` passed locally, and its GitHub Actions deployment completed successfully before the repository visibility change.
-
-## Repository access and hosting — checked 2026-10-11
-
-- Repository: `AlexanderKruk/street-life-game`, default branch `main`.
-- Visibility: **public**, confirmed through GitHub metadata after the owner restored it.
-- The connected GitHub integration retains repository read and push permissions. Private repository metadata, the main branch and `GAME_DESIGN.md` can still be read. Documentation changes are written through the authenticated integration.
-- GitHub reports `has_pages: true`. The game is served at `https://alexanderkruk.github.io/street-life-game/` through the existing GitHub Actions workflow; deployment was restored after the repository became public again.
-
-## Current clinic and map presentation (v128)
-
-- Help Center handles accommodation, documents and benefits. The former Day Center & Clinic is now two separate points: Day Center (indoor rest, shower, laundry and charging) and Free Clinic (free basic medical care, no insurance or documents required), both open 08:00–16:00.
-- The existing clinic action retains its 60-minute duration, Health/Mood bonuses, Cold removal and time-of-day capacity checks. Its internal `daycenter-doctor` action ID remains stable, but it is available only at `free-clinic`.
-- Previously discovered combined centers migrate to both addresses without resetting a save. Since v164, successive morning-help searches discover these points separately; no-bed advice does not reveal addresses.
-- Map markers display names only. The fixed destination card shows opening hours after the name, using the same 16 px semibold type, compact `08-16` format, green when open and muted red when closed. No hours background or visible “You are here” text.
-
-## Mood and five overall-condition faces (v129)
-
-- Mood remains a saved independent value. Initial Mood 28 represents the protagonist's emotional shock; loading a save does not replace it with physical-stat averages.
-- Every elapsed game minute, Food, Thirst, Energy, Health and Hygiene influence Mood. The comfort target is the smaller of their average and their lowest value plus 30. Mood approaches this target by `(target - mood) / 360` per minute, capped at +0.08 or −0.12 per minute. Thus one hour of comfortable conditions can restore up to 4.8 Mood; sustained deprivation can reduce it by up to 7.2 before other effects.
-- Action/event bonuses and penalties, music and Cold still apply. Physical influence runs through the same time progression for actions, travel, phone work and sleep, with no change while time is paused. Refreshing does not add a recovery bonus.
-- The header describes overall condition, separately from Mood: 60% of the physical-stat average plus 40% Mood. Any physical stat at 20 or lower caps the score at 40; Health at 10 or lower, Food or Thirst at 5 or lower caps it at 20, so comfortable averages cannot hide an emergency.
-- Five monochrome outline faces: Very bad (≤20), Bad (≤40), Fair (≤60), Good (≤80), Very good (>80). The Mood card uses these same five faces based on Mood itself. Overall header, status notification dot and journal condition text use the combined score.
-
-## Inventory slot presentation (v131–v139)
-
-v137 matched Essentials artwork width to backpack cards; v138 removed the slot-free subtitle and increased Essentials details to 12px. v139 replaces stretchable Essentials artwork with identical 68px square photos, inset and vertically centered in cards. Clothing shows Clean first, then Condition; tapping it opens read-only details including the hygiene limit. These changes do not alter cleanliness, durability or time.
-
-v135 narrows backpack artwork to 38% and reduces copy padding so short effect tags fit side by side on phone screens. v136 reduces backpack and Essentials cards to an 80px minimum height, moves stack quantities inline after item names and reduces the Essentials divider spacing to 14px. Longer text can still grow cards rather than being clipped; item handlers and accessible labels remain unchanged.
-
-v134 gives effect tags the full available copy width so they share a line when they fit and wrap otherwise. The phone's “tap to open” hint starts on a new line below its battery percentage.
-
-v132 arranges backpack slots in two columns. Each occupied card has the item image on the left and its name and effect tags on the right. v133 removes empty placeholder cards to avoid unnecessary vertical space; an empty backpack shows a short message. The compact occupancy count remains, with no progress bar.
-
-- The selected backpack-slot mockup is implemented as a two-column grid of eight actual storage slots (initially four columns in v131). Filled slots show realistic item artwork, a per-stack quantity badge and qualitative effect tags. Each stack consumes a separate visible slot, using the existing four-item, eight-bottle, twenty-cigarette, five-wipe and twenty-gel-use limits. The occupancy progress bar is removed; the compact `used / 8 slots` label remains.
-- v131–v132 showed photographed backpack lining with a dashed border for empty slots; v133 no longer renders these placeholders. Slot occupancy updates after use, purchase, theft, storage and reload. Over-capacity legacy inventory remains visible rather than losing items.
-- Shower gel now appears in the backpack, consistent with its existing storage cost. It is automatically used when showering; the passive card does not add a direct-use action. Phone, clothing, documents and transit card remain in a separate, slot-free two-column Essentials section.
-- Consumable artwork reuses `public/assets/shop-products.webp`. Shared `ItemArt` serves the shop and inventory. `public/assets/inventory-equipment.webp` contains phone, jacket, generic papers, blue transit card, returnable bottles and empty lining in a two-column/three-row sheet. Generated with the built-in imagegen tool: six equal photographic square tiles, dark charcoal fabric/tabletop, dim amber light, worn realistic objects, no text/UI/branding. It is optimized as WebP from the generated source.
-- Existing item handlers, freshness, medicine, wipes caps, phone controls and all gameplay values are unchanged. Freshness warnings appear on stale/spoiled food slots; use hints are included in accessible item labels.
-
-### Street action duration labels (v143)
-
-Street choices keep duration visible at the right center of the card, replacing chevrons. Estimates use compact notation such as `≈15m` and `≈1h15m`; variable searches keep their range. Destination choices show the existing public-transport duration (half the walking time, rounded up) followed by `+`, since walking takes longer. Sleep choices show the minimum selectable duration, `2h+`. Saved answers keep their free-answer hint. Gameplay durations are unchanged.
-
-### Persistent save compatibility (v172)
-
-The agreed compatibility and verification window is the **last ten published builds**, rather than the earliest prototype schemas. For the v172 update, the captured window is v162–v171. These ten builds all use `street-life-save-v3`; the `v3` suffix is a storage schema version, not the visible build number. Loading shared-schema data does not identify or reject an earlier build by age because existing saves do not record that build number.
-
-- The extra v1/v2 readers introduced in v171 are removed. Those obsolete records are not loaded or automatically deleted. The current v3 record is preserved on upgrade. Only explicit **Reset save** resets the current run; obsolete records cannot resurrect it because they are never read.
-- `src/saveCompatibility.ts` validates the shared v3 game record, retains zero values and defaults missing fields. Existing inventory, discovery, journal and unfinished activity readers remain in place. Updates never call `localStorage.clear()`.
-- `test-fixtures/recent-saves.json` contains actual autosave output from the ten historical Apps, with source commit and build recorded for each fixture. `scripts/capture-recent-saves.cjs` refreshes this window from the latest ten release commits when compatibility-sensitive changes require it. Ordinary release numbering does not require an extra migration.
-- `check-save-compatibility.cjs` loads each captured save into the current App and compares every persisted key through repeated reloads **without clearing localStorage between reloads**. This covers day/time, cash including zero, inventory including empty/over-capacity stacks and missing documents, discoveries, journal, goals, UI screen and phone service. It also checks explicit reset and that unrelated and obsolete entries remain untouched. Existing gameplay regressions cover phone-search, travel and sleep reloads.
-
-
-### Complete event illustrations and hero reference (v197)
-
-All 14 catalog events now show a scene and illustrated choice results. The 10 formerly unillustrated events receive 28 assets: 10 base scenes, 16 consequence images and 2 contextual variants for quiet waking. The separate rain/canopy flow adds 2 images, for 30 new narrative assets in total. Existing first-night scenes and their twelve outcomes are retained.
-
-- `docs/art/hero-reference.webp` establishes the same protagonist from the existing phone, bench conversation and street hero artwork: late thirties, dark wavy hair, short stubble, charcoal hooded jacket, dark sweater, jeans, boots and one black backpack. `docs/art/generation-manifest.json` records the exact built-in generation prompts and reference mapping.
-- `src/eventArtwork.ts` attaches scenes and consequence art after weighted selection; eligibility, spawn probabilities, D20 modifiers and outcomes stay unchanged. Ordinary/critical successes share success art, and failures share failure art. Quiet waking selects ground, bench or night-shelter imagery from sleep context.
-- Coin scenes/results retain the existing coin emblem, one randomized denomination and one reward display. Rain reaction, rain choice, covered-wait planning and covered-wait result have matching imagery.
-- Event originals have responsive 480/768/1024-pixel WebP variants generated by the image script, load on demand and use the content-versioned image cache. The hero reference is outside public assets and never loads in the game.
-- QA covers every eligible event's scene/result assets, unchanged gameplay data, contextual sleep art, real travel D20 success/failure images, coin rewards and existing modal/save/pause flows.
-
-### Shared coin event presentation (v199)
-
-The coin encounter now uses the same illustrated event card, stacked choice buttons and shared result card as other street events. Removed the separate coin emblem and coin-only card styling. Picking up or leaving the coin retains its matching responsive illustration; awarded money appears once in the standard gains list. Coin probabilities, denominations, rewards, pauses and saves are unchanged.
-
-
-## Phone apps — v269 (2026-10-20)
-
-The last bottom navigation item is Phone, replacing Journal. Its home screen has four small muted-color outline icons: Goals, Notes, History, Search. Goals shows only the incomplete count; completed goals remain collapsible. History preserves day navigation, reverse chronological reflections, grouping and batching. Notes shows known places and previously saved practical information. Old Journal saves keep their goals, entries and discoveries and open the Phone launcher.
-
-The compact single-line Phone/app header has a back button on internal screens and the mobile plan status: 1 zł/day and Paid/Unpaid. Tapping the plan opens existing 24-hour top-up and auto-renew controls. Existing automatic renewal and prepaid time are preserved. Search alone needs paid internet; notes, history and goals work offline. An empty battery, broken phone or phone left charging at Night Shelter prevents access to every app. The separate map and travel remain available.
-
-Music, Video, Navigation and Plan launcher icons are hidden for now. Music/video playback controls are hidden. Navigation automatically works when the phone and mobile service are available, and is suspended during sleep, charging, outages and game over. Existing walking-with-music story actions remain unchanged.
-
-Search categories use real gameplay data: Shelter, Help & hygiene, Work, Medical help, Food & water. New searches use the shared 10–25 minute timed action flow, battery drain, interruption and reload handling; searching is also possible indoors. Previously saved one-off answers link to Notes without spending time or battery. Repeated help searches retain one-place-at-a-time discovery and the no-new-information result. The emergency ambulance action is retained contextually at Health 20 or lower, without requiring mobile internet.
+## Known implementation gaps and deferred features
+
+These are implementation facts or defined future work, not claims that the whole system has been completed:
+
+- Travel times are destination-based rather than a route network; public transport has no timetable. Job Centre has a defined location but no dedicated new-run phone-search discovery route.
+- Timed activity speeds differ: ordinary/search/queue ×1, travel/packing ×4, sleep debug ×10. Many service actions still advance time immediately.
+- The debug early-wake button remains exposed. Sleep/startup compatibility and ordinary gameplay use the current localStorage schema rather than server saves.
+- Temperature uses a 20-hour cosine cycle rather than a full 24-hour model.
+- Day Center capacity is rerolled per service action rather than per admission.
+- Station sleep has roof/temperature handling and bench artwork but no dedicated station security/theft model beyond the current event system.
+- Night Shelter social-worker promises are saved but not verified against completed milestones; benefits remain informational; Schronisko referral is immediate.
+- Schronisko has no laundry action. Water cannot be stored. Ordinary storage accepts documents, medicine and cigarettes; food has its separate Schronisko shelf.
+- Most formal actions do not require documents; the documented transport/benefits/Hospital requirements do.
+- Not every custom action triggers a location event. Pending ordinary results/event choices are not generally persisted; first-night choices and closing notices have their own persistence.
+- History keeps at most 500 compact entries and cannot reconstruct actions from before history existed.
+- Life/support/referral/storage/discovery changes do not all have dedicated numeric result rows; text carries those outcomes.
+- Wetness/rain-cover decisions are deliberately disabled for the first release. Opt-in tests of retained code do not mean the feature is active for players.
+- Music/Video/Navigation/Plan launcher icons and playback toggles are hidden; automatic navigation, plan management and the music-walk narrative action are the current exposed behavior.
+
+## Validation and regression checks
+
+`npm test` runs the suites declared in `package.json`. Current coverage includes:
+
+| Suite | Scope |
+|---|---|
+| `check-phone.cjs` | Apps, legacy Journal migration, offline notes, plan payment/expiry, timed search/reload, work/clinic discovery and dead-phone travel. |
+| `check-sleep-illness.cjs` | Cumulative temperature/exposure risk, duration, roofs/beds, waking illness/result, legacy sleep/reload and hidden catch-up. |
+| `check-shelter-charging.cjs` | Background charge, quiet hours, caps, checkout, collection at the place, phone availability and informational Essentials. |
+| `check-food-inventory.cjs` | Portion freshness, slots, unsafe-food outcomes, probabilities, capacity, discard and storage. |
+| `check-medicine.cjs` | One dose, recovery acceleration, continuing penalties and saved effects. |
+| `check-wetness-disabled.cjs` | Release default: no moisture penalties/UI or stale-rain interruption. |
+| `check-wetness.cjs` | Explicit opt-in deferred-feature regression coverage. |
+| `check-mood.cjs` | Housing/physical caps, identical faces, actions/time and old saves. |
+| `check-save-compatibility.cjs`, `check-autosave.cjs` | Historical fixture migration/reload, zero values, reset, batched writes and lifecycle/error handling. |
+| `check-rendering.cjs` | Tick render isolation, live clocks, modal pause and stable intervals. |
+| `check-responsive-images.mjs`, `check-image-cache.mjs` | Variant selection, selective warmup, offline image reads and revision cleanup. |
+| `check-regressions.cjs`, `check-ui.cjs`, `check-results.cjs` | Schedules, queue, travel, D20, food/needs, first-night events, results, discovery and navigation flows. |
+
+Some historical regression suites explicitly enable deferred wetness; the separate disabled-feature suite verifies release behavior. Do not infer player-facing availability from those opt-in tests.
+
+Saves use `street-life-save-v3`, where v3 is a schema name, not the application build. Last-ten-published-build compatibility is checked with captured historical fixtures and repeated reloads, without clearing user storage. Fixtures currently cover v240–v249; they are not automatically refreshed for every build. `scripts/capture-recent-saves.cjs` refreshes the window when compatibility-sensitive work calls for it. The policy does not implement ten save slots or retain ten playable save snapshots.
+
+The latest v279 GitHub Pages workflow passed the full tests and production build before publication. This documentation audit changes no gameplay; Markdown/link/source checks apply to this edit rather than another gameplay test run.
+
+## Repository and hosting
+
+- Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
+- Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
+- Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
+- Last confirmed successful gameplay deployment: v279 on 2026-10-21, commit `3d3fc6c044624c6348da6b7c094181eb553e3d38` (includes the updated regression navigation).
+- Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
+
+## Design principles
+
+- Time creates pressure; real journeys and waits consume game time.
+- Health is lasting condition; Energy is short-term capacity. Work is gated by Energy, with Health affecting it indirectly.
+- Survival items, documents and equipment have concrete possession/capacity/condition consequences.
+- Events create choices; D20 is for explicit uncertainty, with actual need/context modifiers and pre-roll feasibility requirements.
+- Narrative choices leave feelings to the player; authored advice matches implemented services and never guarantees admission from an address alone.
+- Results show actual capped changes and pause for reading; a higher cap is not a free stat refill.
+
+## Future work — not implemented
+
+- Hostel: phone discovery before adding it to the map, price shown before payment, option to decline. Discussed prototype price: 40 zł for a shared bed; no Hostel location/booking/payment/checkout exists yet.
+- Room and Apartment: defined Mood ceiling states, without rental/location progression.
+- Revisit wetness and its rain/cover flow after tuning; it is intentionally excluded from the current first release.
+- Extend the first-night narrator/first-person choice style to the remaining service interfaces and event text where useful.
+- Consider consistent timed service actions and release/debug speed controls; this audit records the code's current timing rather than silently changing it.
