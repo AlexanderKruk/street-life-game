@@ -82,8 +82,10 @@ function measure(App) {
   assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
   assert.equal(document.querySelector('.travel-elapsed').textContent, '48m');
   assert(!document.querySelector('.travel-progress'));
-  setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 165 } });
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '1h 15m');
+  for (const [elapsed, expected] of [[60, '1h 00m'], [61, '1h 01m'], [75, '1h 15m']]) {
+    setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 - elapsed } });
+    assert.equal(document.querySelector('.travel-elapsed').textContent, expected);
+  }
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
   clearCounts(); advance(3); output.phoneSearch = counts();
