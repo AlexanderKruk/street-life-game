@@ -38,7 +38,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.21-284'
+const BUILD_VERSION = 'v2026.10.21-285'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -521,7 +521,7 @@ export default function App() {
   const ambientEventClock = useRef({ locationId: game.locationId, minutes: 0 })
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(() => {
     const event = STREET_EVENTS.find(event => event.id === (loadFirstNightEvents().pendingId ?? loadFirstNightEvents(ENCOUNTERS_KEY).pendingId))
-    return event ? illustrateStreetEvent(event, { housing: game.locationId === 'shelter' ? 'Night shelter' : 'Street', sleepKind: sleeping?.kind ?? (game.locationId === 'station' ? 'bench' : 'ground') }) : null
+    return event ? illustrateStreetEvent(event, { locationId: game.locationId, housing: game.locationId === 'shelter' ? 'Night shelter' : 'Street', sleepKind: sleeping?.kind ?? (game.locationId === 'station' ? 'bench' : 'ground') }) : null
   })
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(null)
   const [inventory, setInventory] = useState<Inventory>(() => {

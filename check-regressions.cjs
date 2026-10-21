@@ -1276,7 +1276,9 @@ setup({locationId:'station',minutes:1380});beginSleep(/Try to sleep/,2);assert.e
 advance(11000);const wakeRolls=[.99,0,.9];Math.random=()=>wakeRolls.shift()??.99;advance(1000);
 assert.equal(read(firstNightKey).pendingId,'first-night-bench-wake');ok();
 assert(screen.getByRole('dialog').textContent.includes('Someone needs the bench'));
-click('Sit up and gather my things');assert.equal(read(firstNightKey).pendingId,null);ok();
+assert(document.querySelector('.event-illustration').src.endsWith('event-first-night-station-bench-wake-480.webp'));
+click('Sit up and gather my things');
+assert(document.querySelector('.result-illustration').src.endsWith('event-station-wake-sit-480.webp'));assert.equal(read(firstNightKey).pendingId,null);ok();
 
 // Scene art survives restoration and each bench answer has its own result art.
 for(const [label,asset] of [['Ask how they get through the night','conversation'],['Watch quietly','watch'],['Give them some space','space']]) {

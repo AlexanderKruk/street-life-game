@@ -1,0 +1,67 @@
+{
+  "generation": "Built-in image_gen; one selected opening edit and three reference-based outcome calls.",
+  "date": "2026-10-21",
+  "hero": "docs/art/hero-reference.webp",
+  "assets": [
+    {
+      "file": "event-first-night-station-bench-wake",
+      "prompt": "Use case: precise-object-edit. Edit image 1, the station waiting-bench scene. Image 2 is ONLY the authoritative identity/wardrobe reference for the MALE PROTAGONIST lying on the bench: preserve him exactly. Change ONLY the secondary person on the right: REPLACE the older man with a clearly different ordinary female train passenger about 45, straight dark chin-length bob haircut, muted burgundy knee-length wool coat, light grey scarf, dark trousers and practical flat black shoes. She stands in the same position and politely gestures at the occupied bench with an open hand, asking the hero to sit up and make room. A single small dark-grey upright rolling suitcase stands immediately beside her. She is a different person from the outdoor event's old man: no cap, no glasses, no beard, no brown jacket. Keep the exact same protagonist face, tousled wavy brown hair, stubble, charcoal hooded jacket, jeans and boots, lying along the bench, and his exactly ONE black backpack beside him. Preserve the full indoor Warsaw station architecture, bench, camera, composition, warm amber lamps, cool tall arched windows, background travellers, painterly style, colors and 16:9 aspect ratio. Do not change the male protagonist or turn him into a woman. No police, cat, text, UI, watermarks or panels. One coherent image.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-be75fb9b-307a-4d46-a461-e59aaf489bf5.png",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-0f0fdd7a-2588-4e84-8a03-47c0598ee241.png",
+      "asset": "public/assets/event-first-night-station-bench-wake.webp",
+      "responsive": [
+        "public/assets/event-first-night-station-bench-wake-480.webp",
+        "public/assets/event-first-night-station-bench-wake-768.webp",
+        "public/assets/event-first-night-station-bench-wake-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-wake-sit",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration, a chosen-answer RESULT for 'Someone needs the bench'. Reference image 1 is ONLY the authoritative MALE protagonist identity and wardrobe. Reference image 2 is the exact INDOOR station opening scene: preserve the hall, wooden waiting bench, amber lamps, cool tall arched windows, and both characters while drawing a NEW result pose. Hero is the same 38-year-old lean ordinary man with tousled wavy dark brown hair, short stubble, long straight nose, hazel eyes, charcoal hooded jacket, dark sweater, blue jeans and dark walking boots. Other person is the SAME clearly different female passenger about 45 with straight dark bob, burgundy knee-length wool coat, light grey scarf, dark trousers, black flat shoes, small black shoulder purse and one small upright dark-grey rolling suitcase. This is not the outdoor scene's elderly man. Preserve her facial identity and outfit from image 2. Cinematic realistic painterly treatment, clear faces and natural hands, central mobile-friendly composition. Exactly ONE protagonist black backpack in the entire scene, either worn OR placed nearby. One coherent scene, no collage, text, readable signs, UI, watermark or border. Keep everyone INSIDE station; no park, riverside, tree, outdoor bench, police, cat, documents or train ticket. RESULT: Hero now sits upright at one end of the SAME bench, his ONE black backpack held on his lap with both hands. The same woman is now seated at the other end, her grey suitcase beside her feet and shoulder purse still hers. She has her seat; both people are calm and quiet and no conversation continues. Clearly two separate seated people, both recognizable, interior architecture behind.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-0f0fdd7a-2588-4e84-8a03-47c0598ee241.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1cdcb2a1-b33f-48e6-a468-1150fd387b5b.png",
+      "asset": "public/assets/event-station-wake-sit.webp",
+      "responsive": [
+        "public/assets/event-station-wake-sit-480.webp",
+        "public/assets/event-station-wake-sit-768.webp",
+        "public/assets/event-station-wake-sit-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-wake-move",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration, a chosen-answer RESULT for 'Someone needs the bench'. Reference image 1 is ONLY the authoritative MALE protagonist identity and wardrobe. Reference image 2 is the exact INDOOR station opening scene: preserve the hall, wooden waiting bench, amber lamps, cool tall arched windows, and both characters while drawing a NEW result pose. Hero is the same 38-year-old lean ordinary man with tousled wavy dark brown hair, short stubble, long straight nose, hazel eyes, charcoal hooded jacket, dark sweater, blue jeans and dark walking boots. Other person is the SAME clearly different female passenger about 45 with straight dark bob, burgundy knee-length wool coat, light grey scarf, dark trousers, black flat shoes, small black shoulder purse and one small upright dark-grey rolling suitcase. This is not the outdoor scene's elderly man. Preserve her facial identity and outfit from image 2. Cinematic realistic painterly treatment, clear faces and natural hands, central mobile-friendly composition. Exactly ONE protagonist black backpack in the entire scene, either worn OR placed nearby. One coherent scene, no collage, text, readable signs, UI, watermark or border. Keep everyone INSIDE station; no park, riverside, tree, outdoor bench, police, cat, documents or train ticket. RESULT: Hero has stood and is walking a few steps AWAY from this bench to another part of the SAME INDOOR hall. His recognizable three-quarter face looks tired and self-conscious. His ONE black backpack is now worn, no backpack left on the bench. Behind him the SAME woman is now sitting on the vacated bench with her grey suitcase beside her. Hero remains INSIDE the station, not approaching or crossing an exit. Show clear movement and a different position from opening.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-0f0fdd7a-2588-4e84-8a03-47c0598ee241.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-860c0b9d-908d-4b84-997a-3d6d873cbbad.png",
+      "asset": "public/assets/event-station-wake-move.webp",
+      "responsive": [
+        "public/assets/event-station-wake-move-480.webp",
+        "public/assets/event-station-wake-move-768.webp",
+        "public/assets/event-station-wake-move-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-wake-moment",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration, a chosen-answer RESULT for 'Someone needs the bench'. Reference image 1 is ONLY the authoritative MALE protagonist identity and wardrobe. Reference image 2 is the exact INDOOR station opening scene: preserve the hall, wooden waiting bench, amber lamps, cool tall arched windows, and both characters while drawing a NEW result pose. Hero is the same 38-year-old lean ordinary man with tousled wavy dark brown hair, short stubble, long straight nose, hazel eyes, charcoal hooded jacket, dark sweater, blue jeans and dark walking boots. Other person is the SAME clearly different female passenger about 45 with straight dark bob, burgundy knee-length wool coat, light grey scarf, dark trousers, black flat shoes, small black shoulder purse and one small upright dark-grey rolling suitcase. This is not the outdoor scene's elderly man. Preserve her facial identity and outfit from image 2. Cinematic realistic painterly treatment, clear faces and natural hands, central mobile-friendly composition. Exactly ONE protagonist black backpack in the entire scene, either worn OR placed nearby. One coherent scene, no collage, text, readable signs, UI, watermark or border. Keep everyone INSIDE station; no park, riverside, tree, outdoor bench, police, cat, documents or train ticket. RESULT: Hero is now upright on the edge of the SAME bench, still drowsy. His ONE backpack rests close beside his leg and he gathers it with one hand; his other hand is raised slightly in a polite 'give me a moment' gesture. The SAME woman stands patiently beside the bench holding the handle of her grey suitcase, waiting while he makes room. Her shoulder purse remains on her shoulder. Both faces clear. Hero no longer lies across the bench and the woman has NOT yet sat down, so this differs clearly from both opening and seated answer.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-0f0fdd7a-2588-4e84-8a03-47c0598ee241.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-c4ea1054-7509-482b-8348-a1b6bd81b156.png",
+      "asset": "public/assets/event-station-wake-moment.webp",
+      "responsive": [
+        "public/assets/event-station-wake-moment-480.webp",
+        "public/assets/event-station-wake-moment-768.webp",
+        "public/assets/event-station-wake-moment-1024.webp"
+      ]
+    }
+  ]
+}

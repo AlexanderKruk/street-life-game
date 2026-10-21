@@ -2,10 +2,16 @@ import type { EventContext, EventOutcome, StreetEvent } from './events'
 
 const asset = (name: string) => `/street-life-game/assets/${name}.webp`
 type ChoiceArt = string | { success: string; failure: string }
-type EventArt = { scene: string; choices: ChoiceArt[] }
+type EventArt = { scene: string; choices: ChoiceArt[]; locations?: Record<string, EventArt> }
 
 // Presentation only: eligibility, weights, checks and resource changes stay in events.ts.
 const art: Record<string, EventArt> = {
+  'first-night-bench-wake': {
+    scene: 'event-first-night-bench-wake', choices: ['event-wake-sit', 'event-wake-move', 'event-wake-moment'],
+    locations: {
+      station: { scene: 'event-first-night-station-bench-wake', choices: ['event-station-wake-sit', 'event-station-wake-move', 'event-station-wake-moment'] },
+    },
+  },
   'city-waking': { scene: 'event-city-waking', choices: ['event-city-plan', 'event-city-pause', 'event-city-move'] },
   'night-rustle': { scene: 'event-night-rustle', choices: ['event-rustle-cat', 'event-rustle-wait', 'event-rustle-leave'] },
   'cold-hands': { scene: 'event-cold-hands', choices: ['event-cold-rub', 'event-cold-walk', 'event-cold-endure'] },
@@ -25,9 +31,10 @@ const art: Record<string, EventArt> = {
   'night-theft': { scene: 'event-night-theft', choices: ['event-theft-check'] },
 }
 
-export function illustrateStreetEvent(event: StreetEvent, context: Pick<EventContext, 'housing' | 'sleepKind'>): StreetEvent {
-  const images = art[event.id]
-  if (!images) return event
+export function illustrateStreetEvent(event: StreetEvent, context: Pick<EventContext, 'locationId' | 'housing' | 'sleepKind'>): StreetEvent {
+  const defaults = art[event.id]
+  if (!defaults) return event
+  const images = defaults.locations?.[context.locationId] ?? defaults
   const scene = event.id === 'quiet-night'
     ? context.housing === 'Night shelter' ? 'event-quiet-shelter'
       : context.sleepKind === 'bench' ? 'event-quiet-bench' : 'event-quiet-ground'

@@ -1866,5 +1866,89 @@
         "file": "event-street-patrol-move-1024.webp"
       }
     ]
+  },
+  "event-first-night-station-bench-wake.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-first-night-station-bench-wake-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-first-night-station-bench-wake-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-first-night-station-bench-wake-1024.webp"
+      }
+    ]
+  },
+  "event-station-wake-sit.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-wake-sit-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-wake-sit-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-wake-sit-1024.webp"
+      }
+    ]
+  },
+  "event-station-wake-move.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-wake-move-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-wake-move-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-wake-move-1024.webp"
+      }
+    ]
+  },
+  "event-station-wake-moment.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-wake-moment-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-wake-moment-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-wake-moment-1024.webp"
+      }
+    ]
   }
 }

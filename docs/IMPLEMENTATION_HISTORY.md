@@ -1496,3 +1496,10 @@ Peaceful rest uses time-neutral wording. A useful tip reveals Night Shelter when
 Seven openings and all 21 answers have distinct illustrations generated with the authoritative hero reference, with corresponding opening scenes also used for outcome continuity. Project WebP masters and 480/768/1024-pixel variants load on demand. Pending scenes restore their scene and answer-art mapping after reload. `docs/art/ambient-patrol-generation.json` records the exact prompts, references and saved assets.
 
 Validation covers contextual eligibility, every new answer, pending-scene reload, document variants, actual station exits, mystery consistency, all responsive assets and unchanged gameplay when attaching art. Release publishing uses the existing full-test GitHub Pages workflow.
+
+
+## Bench waking follows the actual location — v285 (2026-10-21)
+
+Someone needs the bench previously reused its outdoor illustration when the hero woke at Station. The scene and all three answers now choose a location-specific set; the existing street set remains outdoors with its older male passer-by, while the new Station set stays inside the waiting hall and uses a distinct female passenger with a suitcase. The protagonist retains his authoritative reference identity. Choosing another place to sit remains within the current location. Pending-event restoration now passes the saved game location to artwork selection.
+
+Four new WebP masters and responsive 480/768/1024 variants cover the Station scene and every answer. Regression checks exercise both locations through completed sleep and all replies through pending-event reload; attaching location art preserves the original event consequences. Exact built-in image-generation prompts and references are recorded under docs/art/bench-wake-station-generation.json.

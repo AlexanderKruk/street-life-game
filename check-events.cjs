@@ -216,6 +216,37 @@ for(const locationId of ['street','station']){
  assert(read(encountersKey).seen.includes(id));assert.equal(read(encountersKey).pendingId,null);
 }
 
+// A bench wake uses the actual place for the scene and every reply, also after reload.
+const benchWake=STREET_EVENTS.find(event=>event.id==='first-night-bench-wake');
+const stripArtwork=value=>JSON.parse(JSON.stringify(value,(key,item)=>key==='illustration'?undefined:item));
+for(const locationId of ['street','station']){
+ const scene=locationId==='station'?'event-first-night-station-bench-wake':'event-first-night-bench-wake';
+ const prefix=locationId==='station'?'event-station-wake':'event-wake';
+ const selected=onlyScene(benchWake.id,{locationId,firstNight:true,sleepKind:'bench'});
+ assert.equal(selected.illustration,`/street-life-game/assets/${scene}.webp`);
+ assert.deepEqual(stripArtwork(selected),stripArtwork(benchWake),'location art preserves all gameplay');
+ for(const [index,suffix] of ['sit','move','moment'].entries()){
+  const choice=benchWake.choices[index];
+  setup({day:2,minutes:60,locationId},{[encountersKey]:complete,
+   'street-life-first-night-events-v1':{seen:openingSeen,lastAt:1500,pendingId:benchWake.id}});
+  assertEventImage('.event-illustration',scene);
+  cleanup();render(React.createElement(App));assertEventImage('.event-illustration',scene);
+  const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
+  click(choice.label);assertEventImage('.result-illustration',`${prefix}-${suffix}`);
+  assert(screen.getByRole('dialog').textContent.includes(choice.outcome.message));
+  assert.equal(read(stateKey).minutes,before.minutes+choice.outcome.minutes);
+  assert.equal(read(stateKey).locationId,locationId,'moving to another seat stays at the same place');
+  ok();assert.equal(read('street-life-first-night-events-v1').pendingId,null);
+ }
+ // Completed sleep follows the same contextual route before any reload occurs.
+ setup({day:2,minutes:60,locationId},{[encountersKey]:complete,
+  'street-life-first-night-events-v1':{seen:openingSeen.filter(id=>id!==benchWake.id),lastAt:null,pendingId:null},
+  'street-life-sleep-v1':{kind:'bench',total:120,remaining:0,startAbsolute:1380,realStartedAt:Date.now()-12001,realWakeAt:Date.now()-1}});
+ assert(screen.getByRole('dialog').textContent.includes('Sleep complete'));ok();
+ assertEventImage('.event-illustration',scene);
+ click('Sit up and gather my things');assertEventImage('.result-illustration',`${prefix}-sit`);ok();
+}
+
 // Opening scene appears on a new run without pressing an action, even on high RNG.
 setup({minutes:1320});Math.random=()=>.99;advance(14000);assert(!screen.queryByRole('dialog'));
 advance(1000);assert(screen.getByRole('dialog').textContent.includes('The door closes'));
