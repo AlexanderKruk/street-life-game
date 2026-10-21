@@ -1483,3 +1483,16 @@ Each scene appears once per run when its context is available. A shared 45-game-
 Daytime Street priorities expose walking/awake bench rest. Pavement/passers-by travel scenes require walking, ticket inspection requires transit, and leftover Station food is offered after 19:00 outside the first night. Two compact encounters add a request for change and a dropped glove, with disabled unaffordable choices and real resource consequences.
 
 `check-events.cjs` covers deterministic catalog reachability/context, opening idle visibility, action/result ordering, spacing, no repeats, reload, money/refusal and reset. Unrelated mechanic checks explicitly use a world whose catalog is complete rather than a high random draw to suppress encounters; focused scene, D20 and wake checks opt in as needed.
+
+
+## Contextual encounters and consistent artwork — v284 (2026-10-21)
+
+Five ambient scenes cover a waking city (05:00–07:00), an unexplained late-night rustle, cold hands after time outside, station cleaning and a traveller asking about a platform. Ordinary Street passers-by are limited to 06:00–22:00; the hero still looks like an ordinary person with a backpack. The rustle reveals a cat only when the player investigates. Waiting or leaving preserves the mystery in the scene, outcome, artwork and journal.
+
+Two patrol wake scenes check carried, missing or shelter-stored documents. Only the Station scene asks for a train ticket; a city transit pass is not treated as one. Missing carried ID takes extra time without fetching stored documents. Asking about overnight options can reveal Night Shelter; voluntarily leaving the Station moves the hero to Street. Opening-night bench waking retains priority and the shared once-per-run queue/cooldown still applies.
+
+Peaceful rest uses time-neutral wording. A useful tip reveals Night Shelter when heard, adds its map address only if unknown and otherwise reminds the hero to visit the familiar place.
+
+Seven openings and all 21 answers have distinct illustrations generated with the authoritative hero reference, with corresponding opening scenes also used for outcome continuity. Project WebP masters and 480/768/1024-pixel variants load on demand. Pending scenes restore their scene and answer-art mapping after reload. `docs/art/ambient-patrol-generation.json` records the exact prompts, references and saved assets.
+
+Validation covers contextual eligibility, every new answer, pending-scene reload, document variants, actual station exits, mystery consistency, all responsive assets and unchanged gameplay when attaching art. Release publishing uses the existing full-test GitHub Pages workflow.

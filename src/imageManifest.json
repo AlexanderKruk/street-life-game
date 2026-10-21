@@ -1278,5 +1278,593 @@
         "file": "ready-meal-480.webp"
       }
     ]
+  },
+  "event-night-rustle.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-night-rustle-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-night-rustle-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-night-rustle-1024.webp"
+      }
+    ]
+  },
+  "event-cold-hands.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-cold-hands-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-cold-hands-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-cold-hands-1024.webp"
+      }
+    ]
+  },
+  "event-station-cleaning.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-cleaning-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-cleaning-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-cleaning-1024.webp"
+      }
+    ]
+  },
+  "event-platform-question.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-platform-question-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-platform-question-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-platform-question-1024.webp"
+      }
+    ]
+  },
+  "event-street-patrol-wake.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-street-patrol-wake-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-street-patrol-wake-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-street-patrol-wake-1024.webp"
+      }
+    ]
+  },
+  "event-city-waking.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-city-waking-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-city-waking-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-city-waking-1024.webp"
+      }
+    ]
+  },
+  "event-station-patrol-wake.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-patrol-wake-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-patrol-wake-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-patrol-wake-1024.webp"
+      }
+    ]
+  },
+  "event-city-move.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-city-move-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-city-move-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-city-move-1024.webp"
+      }
+    ]
+  },
+  "event-city-pause.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-city-pause-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-city-pause-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-city-pause-1024.webp"
+      }
+    ]
+  },
+  "event-city-plan.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-city-plan-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-city-plan-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-city-plan-1024.webp"
+      }
+    ]
+  },
+  "event-cleaning-ask.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-cleaning-ask-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-cleaning-ask-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-cleaning-ask-1024.webp"
+      }
+    ]
+  },
+  "event-cleaning-move.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-cleaning-move-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-cleaning-move-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-cleaning-move-1024.webp"
+      }
+    ]
+  },
+  "event-cleaning-stretch.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-cleaning-stretch-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-cleaning-stretch-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-cleaning-stretch-1024.webp"
+      }
+    ]
+  },
+  "event-cold-endure.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-cold-endure-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-cold-endure-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-cold-endure-1024.webp"
+      }
+    ]
+  },
+  "event-cold-rub.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-cold-rub-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-cold-rub-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-cold-rub-1024.webp"
+      }
+    ]
+  },
+  "event-cold-walk.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-cold-walk-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-cold-walk-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-cold-walk-1024.webp"
+      }
+    ]
+  },
+  "event-platform-board.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-platform-board-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-platform-board-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-platform-board-1024.webp"
+      }
+    ]
+  },
+  "event-platform-point.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-platform-point-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-platform-point-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-platform-point-1024.webp"
+      }
+    ]
+  },
+  "event-platform-unsure.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-platform-unsure-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-platform-unsure-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-platform-unsure-1024.webp"
+      }
+    ]
+  },
+  "event-rustle-cat.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rustle-cat-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rustle-cat-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rustle-cat-1024.webp"
+      }
+    ]
+  },
+  "event-rustle-leave.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rustle-leave-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rustle-leave-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rustle-leave-1024.webp"
+      }
+    ]
+  },
+  "event-rustle-wait.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rustle-wait-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rustle-wait-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rustle-wait-1024.webp"
+      }
+    ]
+  },
+  "event-station-patrol-answer.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-patrol-answer-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-patrol-answer-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-patrol-answer-1024.webp"
+      }
+    ]
+  },
+  "event-station-patrol-exit.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-patrol-exit-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-patrol-exit-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-patrol-exit-1024.webp"
+      }
+    ]
+  },
+  "event-station-patrol-wait.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-station-patrol-wait-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-station-patrol-wait-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-station-patrol-wait-1024.webp"
+      }
+    ]
+  },
+  "event-street-patrol-answer.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-street-patrol-answer-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-street-patrol-answer-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-street-patrol-answer-1024.webp"
+      }
+    ]
+  },
+  "event-street-patrol-help.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-street-patrol-help-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-street-patrol-help-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-street-patrol-help-1024.webp"
+      }
+    ]
+  },
+  "event-street-patrol-move.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-street-patrol-move-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-street-patrol-move-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-street-patrol-move-1024.webp"
+      }
+    ]
   }
 }

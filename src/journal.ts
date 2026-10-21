@@ -121,10 +121,22 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = /decline|left it behind|no backpack room/.test(source) ? 'It was kind of them to ask. Being noticed still feels strange.' : 'I feel grateful. It means something that someone noticed me.'
   } else if (actionTitle === 'Coin on the pavement' || actionTitle === 'Coins on the pavement') {
     text = changed('Money', 'positive') ? 'I feel lucky for once. I needed a small break.' : 'I hope they help someone else. That thought feels good.'
+  } else if (actionTitle === 'Woken by a patrol' || actionTitle === 'A patrol in the waiting hall') {
+    text = /documents are stored at the shelter/.test(source) ? 'My papers are safe at the shelter. I wish I had them with me for that conversation.' : /documents are missing/.test(source) ? 'I felt exposed having to explain my missing documents. I need to get them sorted out.' : /step out into the street/.test(source) ? 'I am outside again. I need to work out where I can rest next.' : 'Being woken like that left me tense. I am glad the conversation is over.'
+  } else if (actionTitle === 'A rustle behind you') {
+    text = /a cat/.test(source) ? 'I feel relieved. I can still laugh at myself, even out here.' : 'I still wonder what made that noise. At least it did not follow me.'
+  } else if (actionTitle === 'Cold fingers') {
+    text = /put up|curl your fingers/.test(source) ? 'I keep thinking about somewhere warm. My hands remind me how long I have been outside.' : 'I feel a little warmer. Even small comforts matter out here.'
+  } else if (actionTitle === 'The city wakes up') {
+    text = 'A new day is starting around me. I need to decide what to do with mine.'
+  } else if (actionTitle === 'Cleaning the hall') {
+    text = 'It was just someone doing their job. I was relieved that I did not have to explain myself.'
+  } else if (actionTitle === 'Which platform?') {
+    text = /not sure either/.test(source) ? 'They just saw another traveller. For a moment, I felt like one.' : 'Being able to help someone made me feel a little more like myself.'
   } else if (actionTitle === 'A useful tip') {
     text = failed || negative ? 'I feel awkward about how that went. Asking isn’t getting easier.' : /not to stop/.test(source) ? 'I wasn’t ready to speak. I wonder if I missed a chance.' : 'I feel less alone. Maybe there’s still a way forward.'
-  } else if (actionTitle === 'A quiet night') {
-    text = 'I feel relieved. I hadn’t realised how tense I was before morning.'
+  } else if (actionTitle === 'Peaceful rest' || actionTitle === 'A quiet night') {
+    text = 'I feel relieved. I hadn’t realised how tense I was before resting.'
   } else if (actionTitle === 'Ticket inspection') {
     text = 'I can breathe again. I don’t need another thing to worry about.'
   } else if (/store|collect/.test(actionTitle.toLowerCase())) {

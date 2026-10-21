@@ -19,6 +19,7 @@ const assert=require('node:assert/strict');
 const App=require('./regression-app.cjs').default;
 const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
 const read=k=>JSON.parse(localStorage.getItem(k));
+const ambientSceneIds=['city-waking','night-rustle','cold-hands','station-cleaning','platform-question'];
 let openingEvents = false;
 function setup(s={},extra={}){
  cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage,!openingEvents);
@@ -766,8 +767,8 @@ click(/I still cannot afford housing/);click(/I am looking for work/);click(/Go 
 
 console.log('PASS: location, travel, coins, food and inventory scenarios.');
 // Full backpack rejects new stacks; a partial stack still accepts food.
-setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:[],lastAt:null,pendingId:null},[invKey]:{food:4,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);assert(screen.getByRole('dialog').textContent.includes('no backpack room'));
-setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:[],lastAt:null,pendingId:null},[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);
+setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:ambientSceneIds,lastAt:null,pendingId:null},[invKey]:{food:4,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);assert(screen.getByRole('dialog').textContent.includes('no backpack room'));
+setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:ambientSceneIds,lastAt:null,pendingId:null},[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);
 
 // Daily begging allowance survives reload and resets only on the next game day.
 setup({money:0});for(let i=0;i<3;i++){click(/Ask someone for change\? It’s hard, but I could try./);ok();}assert(!screen.queryByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}));
@@ -961,7 +962,7 @@ for(const debug of [false,true]) {
   if(!quiet)ordinary=woke;
   else {
    assert(document.querySelector('.result-illustration').src.includes('event-quiet-shelter'));
-   assert(screen.getByRole('dialog').textContent.includes('quiet night'));
+   assert(screen.getByRole('dialog').textContent.includes('peaceful rest'));
    assert(Math.abs(woke.energy-ordinary.energy-5)<1e-8);assert(Math.abs(woke.mood-ordinary.mood-5)<1e-8);
    assert.equal(read('street-life-journal-history-v1').filter(entry=>entry.actionTitle==='Sleep complete').length,1);
   }
@@ -1378,7 +1379,7 @@ const fs=require('node:fs');
 const stripArt=value=>JSON.parse(JSON.stringify(value,(key,item)=>key==='illustration'?undefined:item));
 for(const original of observationEvents) {
  const first=original.id.startsWith('first-night-');
- const artContext={locationId:original.id==='dropped-glove'||first&&original.trigger!=='location'?'street':'station',weather:'Rain',housing:'Street',documents:true,firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const artContext={locationId:['dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='night-rustle'?1380:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:'Street',documents:true,firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
  Math.random=()=>0;
  const chosen=eventModule.exports.nextStreetEvent(original.trigger,artContext);
  assert.equal(chosen?.id,original.id);

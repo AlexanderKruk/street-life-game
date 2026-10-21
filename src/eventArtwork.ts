@@ -6,6 +6,13 @@ type EventArt = { scene: string; choices: ChoiceArt[] }
 
 // Presentation only: eligibility, weights, checks and resource changes stay in events.ts.
 const art: Record<string, EventArt> = {
+  'city-waking': { scene: 'event-city-waking', choices: ['event-city-plan', 'event-city-pause', 'event-city-move'] },
+  'night-rustle': { scene: 'event-night-rustle', choices: ['event-rustle-cat', 'event-rustle-wait', 'event-rustle-leave'] },
+  'cold-hands': { scene: 'event-cold-hands', choices: ['event-cold-rub', 'event-cold-walk', 'event-cold-endure'] },
+  'station-cleaning': { scene: 'event-station-cleaning', choices: ['event-cleaning-move', 'event-cleaning-stretch', 'event-cleaning-ask'] },
+  'platform-question': { scene: 'event-platform-question', choices: ['event-platform-board', 'event-platform-point', 'event-platform-unsure'] },
+  'street-patrol-wake': { scene: 'event-street-patrol-wake', choices: ['event-street-patrol-answer', 'event-street-patrol-help', 'event-street-patrol-move'] },
+  'station-patrol-wake': { scene: 'event-station-patrol-wake', choices: ['event-station-patrol-answer', 'event-station-patrol-wait', 'event-station-patrol-exit'] },
   'phone-drop': { scene: 'event-phone-drop', choices: [{ success: 'event-phone-caught', failure: 'event-phone-fallen' }, 'event-phone-fallen'] },
   'rain-phone': { scene: 'event-rain-phone', choices: ['event-rain-protect', 'event-rain-moving'] },
   'found-coins': { scene: 'event-found-coin', choices: ['event-coin-take', 'event-coin-leave'] },
@@ -18,7 +25,7 @@ const art: Record<string, EventArt> = {
   'night-theft': { scene: 'event-night-theft', choices: ['event-theft-check'] },
 }
 
-export function illustrateStreetEvent(event: StreetEvent, context: EventContext): StreetEvent {
+export function illustrateStreetEvent(event: StreetEvent, context: Pick<EventContext, 'housing' | 'sleepKind'>): StreetEvent {
   const images = art[event.id]
   if (!images) return event
   const scene = event.id === 'quiet-night'

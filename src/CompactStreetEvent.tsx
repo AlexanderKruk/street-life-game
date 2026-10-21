@@ -3,6 +3,9 @@ import ChoiceOptions from './ChoiceOptions'
 import type { StreetEvent, StreetEventChoice } from './events'
 
 const eventIcons: Record<string, IconName> = {
+  'street-patrol-wake': 'documents', 'station-patrol-wake': 'ticket',
+  'night-rustle': 'search', 'cold-hands': 'thermometer', 'city-waking': 'sun',
+  'station-cleaning': 'shower', 'platform-question': 'station',
   'spare-change': 'coins', 'dropped-glove': 'person',
   'phone-drop': 'phone', 'rain-phone': 'rain', 'free-snack': 'food',
   'ticket-check': 'ticket', 'station-food': 'food', 'useful-tip': 'help',
@@ -10,6 +13,13 @@ const eventIcons: Record<string, IconName> = {
 }
 
 const choiceIcons: Record<string, IconName> = {
+  'Answer the officer': 'documents', 'Ask where I could spend the night': 'bed',
+  'Gather my things and move along': 'walk', 'Ask where I can wait': 'help', 'Gather my things and step outside': 'walk',
+  'Look to see what it is': 'search', 'Wait and listen': 'clock', 'Leave it alone and move on': 'walk',
+  'Rub my hands together': 'person', 'Walk a little to warm up': 'walk', 'Put up with it for now': 'thermometer',
+  'Think about my next step': 'map', 'Take a moment': 'clock',
+  'Move to another bench': 'bench', 'Stand up and stretch': 'person', 'Ask where I can sit for now': 'help',
+  'Look at the board together': 'search', 'Suggest checking the departure board': 'station', 'Say I’m not sure either': 'person',
   'Give 1 zł': 'coins', 'Sorry, I can’t': 'person', 'Keep my distance': 'walk', 'Call after them': 'person',
   'Let it fall': 'phone', 'Hide it under the jacket': 'person', 'Keep moving': 'walk',
   'Take it': 'food', 'No thanks': 'walk', 'Show your ticket': 'ticket',

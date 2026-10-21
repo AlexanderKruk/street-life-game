@@ -1,0 +1,447 @@
+{
+  "generation": "Built-in image_gen; one call per asset. Reference-based protagonist identity consistency.",
+  "date": "2026-10-21",
+  "assets": [
+    {
+      "file": "event-night-rustle",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative illustration for the existing Street Life game. Reference image 1 is ONLY the authoritative protagonist identity and wardrobe sheet; reference image 2 is ONLY the established cinematic realistic painterly style and autumn Warsaw environment. Render one new coherent scene, NOT a collage or reference sheet. Preserve the EXACT late-thirties male protagonist: tousled wavy dark brown hair, short stubble, long straight nose, hazel-brown eyes, lean ordinary office-worker build; charcoal hooded field jacket, dark sweater, dark blue jeans, dark boots and exactly ONE practical black backpack. Ordinary reasonably clean clothes, no caricature of homelessness. Safe central composition, face and story legible on mobile. Tactile fabric, restrained amber lamps and cool slate ambient light. No text, lettering, UI, logos, watermark or borders. SCENE: mysterious rustle behind a parked dark car on a completely empty Warsaw street late at night. Medium-wide shot of the same protagonist standing with his backpack on, turning his head towards a dark gap between two parked cars, alert but not terrified. The undercarriage is deep shadow. The cause of the sound is entirely UNKNOWN. ABSOLUTELY NO CAT, no animal, no animal silhouette, no eyes in the dark, no paw, no tail, no attacker, no other people. The picture must not reveal the later answer. Autumn pavement, faint amber streetlamp, closed dark windows, quiet blue-black night.",
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-8d5c39dc-4dbb-4fcf-bc96-378a69f6d87d.png",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/public/assets/event-quiet-ground.webp"
+      ],
+      "asset": "public/assets/event-night-rustle.webp",
+      "responsive": [
+        "public/assets/event-night-rustle-480.webp",
+        "public/assets/event-night-rustle-768.webp",
+        "public/assets/event-night-rustle-1024.webp"
+      ]
+    },
+    {
+      "file": "event-cold-hands",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is ONLY an environment/style reference. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: Opening event, cold fingers after time outside. Same protagonist on a quiet autumn pavement, close medium three-quarter portrait with both hands curled slightly from stiffness near his body, looking down at them, ONE backpack worn. Hands have NOT yet been rubbed or raised to his mouth. Cool diffuse overcast/blue-hour illumination, sheltered masonry background without a visible sky or sun so it can fit cold outdoor rest at different hours. Modest amber light from a nearby lamp, normal dry clothes; no snow, ice, visible illness, bandages, phone, other people or animals.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/public/assets/event-quiet-ground.webp"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-9bb27c31-4fad-4721-80ab-8bf0ce68e0c1.png",
+      "asset": "public/assets/event-cold-hands.webp",
+      "responsive": [
+        "public/assets/event-cold-hands-480.webp",
+        "public/assets/event-cold-hands-768.webp",
+        "public/assets/event-cold-hands-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-cleaning",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is ONLY an environment/style reference. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: Opening event INSIDE the same historic Warsaw station hall with wooden benches, tall arched masonry and warm practical lamps, cool reflected ambient light. Our same protagonist sits on a wooden bench, ONE black backpack beside his leg (not also worn). A clearly different older female cleaner in plain practical dark work clothes approaches with a compact floor-scrubbing machine and politely gestures at the floor near his bench, asking him to move so she can clean. He looks up, has not moved yet. Ordinary calm interaction, not expulsion. No police, no ticket or ID card, no animal, no readable signage.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/public/assets/event-first-night-station.webp"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-aed04d57-190e-4fc3-a2d6-cd1fe1563b3a.png",
+      "asset": "public/assets/event-station-cleaning.webp",
+      "responsive": [
+        "public/assets/event-station-cleaning-480.webp",
+        "public/assets/event-station-cleaning-768.webp",
+        "public/assets/event-station-cleaning-1024.webp"
+      ]
+    },
+    {
+      "file": "event-platform-question",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is ONLY an environment/style reference. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: Opening event INSIDE the same warm-lit historic Warsaw station hall, departure board blurred in the background with NO readable words or numbers. Our exact protagonist with ONE black backpack worn stands beside the benches. A distinct fair-haired traveller about 50 in a beige coat with a small wheeled suitcase turns towards him, holding their OWN plain small train-ticket slip while politely asking a question. The protagonist has NO ticket or ID card in his hands and has not yet answered or pointed at the board. They see him as another ordinary traveller. Sparse background passengers, no police, no outdoor street.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/public/assets/event-first-night-station.webp"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-c1531ebb-6067-4eca-8753-6faa47bcba1b.png",
+      "asset": "public/assets/event-platform-question.webp",
+      "responsive": [
+        "public/assets/event-platform-question-480.webp",
+        "public/assets/event-platform-question-768.webp",
+        "public/assets/event-platform-question-1024.webp"
+      ]
+    },
+    {
+      "file": "event-street-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is ONLY an environment/style reference. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: Opening event OUTDOORS on a quiet city pavement, same protagonist just waking and sitting up, two ordinary Polish-style police patrol officers at a respectful distance, one male and one female in plain navy uniforms. One officer makes a small open-hand gesture requesting ID while speaking. The hero looks sleepy and reaches towards his ONE black backpack beside him. CRITICAL framing: close medium crop from the hero's chest upward and officers' upper bodies; crop the actual surface on which he sits OUT of frame, so this SAME image can fit waking on ground OR on a bench. No visible bed or bench seat, no cardboard blanket, no second backpack, no visible ID or ticket card in ANY hands, no train, no station hall. Muted cool ambient with one warm wall lamp, no strong time-of-day cues. Calm welfare/document conversation, no aggression, grabbing, handcuffs, weapons pointed, caricature or assumptions from appearance.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/public/assets/event-quiet-ground.webp"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-de1f506e-f1f1-4282-a190-cd89b6170364.png",
+      "asset": "public/assets/event-street-patrol-wake.webp",
+      "responsive": [
+        "public/assets/event-street-patrol-wake-480.webp",
+        "public/assets/event-street-patrol-wake-768.webp",
+        "public/assets/event-street-patrol-wake-1024.webp"
+      ]
+    },
+    {
+      "file": "event-city-waking",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is ONLY an environment/style reference. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: Opening event, the city waking at first grey-blue dawn, around 05:30. The same protagonist pauses at a street corner, black backpack worn, watching a first city bus in the distance; a few apartment windows just lit and a shop shutter partly rising. Quiet nearly empty city, no crowds. No sunset, no full daylight, no readable signs or bus numbers. He has not yet chosen what to do, expression thoughtful and uncertain, recognisable three-quarter face.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/public/assets/event-quiet-ground.webp"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-00c3be78-dd02-4dc1-8cde-ea3bf756831c.png",
+      "asset": "public/assets/event-city-waking.webp",
+      "responsive": [
+        "public/assets/event-city-waking-480.webp",
+        "public/assets/event-city-waking-768.webp",
+        "public/assets/event-city-waking-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is ONLY an environment/style reference. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: Opening event INSIDE the warm-lit historic Warsaw station hall. Our exact protagonist has just woken and is sitting up on a wooden waiting bench, ONE black backpack beside his leg, sleepy three-quarter face clearly recognisable. Two ordinary Polish-style police patrol officers, one male and one female in navy uniforms, stand at respectful conversational distance; one speaks with a small open-hand gesture requesting documents and asking about a train. NO visible ticket, ID, papers or cards in anyone's hands; no arrest, handcuffs, aggressive weapon pose or crowd. Architecture and warm amber/cool slate mood match the station reference. Sparse distant passengers only, no readable lettering. The hero has not yet answered, stood up or left.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/public/assets/event-first-night-station.webp"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1cda5edc-9c9f-42fe-9fd9-9f95fccd9596.png",
+      "asset": "public/assets/event-station-patrol-wake.webp",
+      "responsive": [
+        "public/assets/event-station-patrol-wake-480.webp",
+        "public/assets/event-station-patrol-wake-768.webp",
+        "public/assets/event-station-patrol-wake-1024.webp"
+      ]
+    },
+    {
+      "file": "event-city-move",
+      "parent": "event-city-waking",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same dawn street with the first city bus distant behind him. The exact protagonist adjusts one strap of his ONE black backpack and walks along the pavement towards the waking city, three-quarter camera angle showing recognisable face and natural stride. Calm determination mixed with fatigue; not boarding a bus and not arriving at a shelter.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-00c3be78-dd02-4dc1-8cde-ea3bf756831c.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-041f4c33-0dc1-4bfc-a5ff-72949dc03029.png",
+      "asset": "public/assets/event-city-move.webp",
+      "responsive": [
+        "public/assets/event-city-move-480.webp",
+        "public/assets/event-city-move-768.webp",
+        "public/assets/event-city-move-1024.webp"
+      ]
+    },
+    {
+      "file": "event-city-pause",
+      "parent": "event-city-waking",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same dawn street. The exact protagonist stands quietly near the shop window watching a few apartment windows light up above the opposite building, ONE backpack worn, head angled up in a thoughtful side/three-quarter portrait. He simply pauses and breathes; no planning props, ticket, map, crowds, police or animals.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-00c3be78-dd02-4dc1-8cde-ea3bf756831c.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-2cb6da76-361b-4a1a-8a0d-76ad254c59cd.png",
+      "asset": "public/assets/event-city-pause.webp",
+      "responsive": [
+        "public/assets/event-city-pause-480.webp",
+        "public/assets/event-city-pause-768.webp",
+        "public/assets/event-city-pause-1024.webp"
+      ]
+    },
+    {
+      "file": "event-city-plan",
+      "parent": "event-city-waking",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same early blue-grey dawn street and bus setting as image 2. The exact protagonist sits briefly on a low stone ledge, his ONE black backpack resting beside him, thoughtful three-quarter face, looking towards the waking street while working out his next step. No phone, papers, new equipment or other people close to him. Quiet resolve, no dramatic triumph.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-00c3be78-dd02-4dc1-8cde-ea3bf756831c.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-bb2c72da-3db3-4b58-8e1d-aa9be687fa04.png",
+      "asset": "public/assets/event-city-plan.webp",
+      "responsive": [
+        "public/assets/event-city-plan-480.webp",
+        "public/assets/event-city-plan-768.webp",
+        "public/assets/event-city-plan-1024.webp"
+      ]
+    },
+    {
+      "file": "event-cleaning-ask",
+      "parent": "event-station-cleaning",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same station, SAME older female cleaner and cleaning machine as image 2. The exact protagonist stands holding the top handle of his ONE black backpack at his side, asks a practical question; the cleaner points calmly towards the next row of benches. Friendly plain everyday interaction, hero recognisable three-quarter face, no second backpack on shoulders, no police or expulsion.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-aed04d57-190e-4fc3-a2d6-cd1fe1563b3a.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-260a71a7-5df5-4cad-8021-cc4d44a34cf6.png",
+      "asset": "public/assets/event-cleaning-ask.webp",
+      "responsive": [
+        "public/assets/event-cleaning-ask-480.webp",
+        "public/assets/event-cleaning-ask-768.webp",
+        "public/assets/event-cleaning-ask-1024.webp"
+      ]
+    },
+    {
+      "file": "event-cleaning-move",
+      "parent": "event-station-cleaning",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same station, SAME older female cleaner and SAME compact floor-scrubbing machine from image 2. The exact protagonist has moved to a nearby different wooden bench, sits down with his ONE black backpack placed beside his leg. Cleaner in mid-background works on the original area. Hero face visible, quiet ordinary cooperation, no expulsion, police or luggage duplicates.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-aed04d57-190e-4fc3-a2d6-cd1fe1563b3a.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-fbd65d13-90c2-4433-b478-c67741d4de7b.png",
+      "asset": "public/assets/event-cleaning-move.webp",
+      "responsive": [
+        "public/assets/event-cleaning-move-480.webp",
+        "public/assets/event-cleaning-move-768.webp",
+        "public/assets/event-cleaning-move-1024.webp"
+      ]
+    },
+    {
+      "file": "event-cleaning-stretch",
+      "parent": "event-station-cleaning",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same station hall, SAME older female cleaner pushing the SAME machine across the floor behind the bench. The exact protagonist stands safely to the side and gently stretches his stiff back and legs, ONE black backpack now worn. Natural modest standing stretch rather than athletic pose, recognisable face, no new characters near him, no police.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-aed04d57-190e-4fc3-a2d6-cd1fe1563b3a.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-b74952b7-3297-43d0-aa1c-275240630a6b.png",
+      "asset": "public/assets/event-cleaning-stretch.webp",
+      "responsive": [
+        "public/assets/event-cleaning-stretch-480.webp",
+        "public/assets/event-cleaning-stretch-768.webp",
+        "public/assets/event-cleaning-stretch-1024.webp"
+      ]
+    },
+    {
+      "file": "event-cold-endure",
+      "parent": "event-cold-hands",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same cold street background. The exact protagonist stays where he is and curls his fingers into the ends of his jacket sleeves, arms held close against his body. Recognisable face looks uncomfortable and thoughtful, ONE backpack worn. Hands partly hidden in sleeves, natural anatomy, no gloves, phone, snow or extra characters. He is enduring cold, not yet taking an action to warm up.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-9bb27c31-4fad-4721-80ab-8bf0ce68e0c1.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-dd417df6-5911-43d2-a442-6141cb645d8a.png",
+      "asset": "public/assets/event-cold-endure.webp",
+      "responsive": [
+        "public/assets/event-cold-endure-480.webp",
+        "public/assets/event-cold-endure-768.webp",
+        "public/assets/event-cold-endure-1024.webp"
+      ]
+    },
+    {
+      "file": "event-cold-rub",
+      "parent": "event-cold-hands",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same quiet cold autumn pavement and masonry background as image 2. Medium close shot of the exact protagonist rubbing his bare palms together and bringing his loosely cupped hands towards his breath for warmth. Recognisable face, anatomically natural hands, ONE backpack worn. Cool diffuse light with a warm wall lamp; no snow, gloves magically appearing, other people, visible sickness or phone.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-9bb27c31-4fad-4721-80ab-8bf0ce68e0c1.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-942f8f33-9288-493d-bca4-5843cd9a361e.png",
+      "asset": "public/assets/event-cold-rub.webp",
+      "responsive": [
+        "public/assets/event-cold-rub-480.webp",
+        "public/assets/event-cold-rub-768.webp",
+        "public/assets/event-cold-rub-1024.webp"
+      ]
+    },
+    {
+      "file": "event-cold-walk",
+      "parent": "event-cold-hands",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same cold pavement and muted blue/amber light. The exact protagonist now walks around the quiet block with both hands tucked into his jacket pockets to warm them, ONE black backpack worn, recognisable three-quarter face looking ahead. Natural measured walking stride, tired but a little more comfortable, no new equipment or destination.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-9bb27c31-4fad-4721-80ab-8bf0ce68e0c1.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-c4e78c0a-c9a6-44d0-8c1d-a653d826e6ec.png",
+      "asset": "public/assets/event-cold-walk.webp",
+      "responsive": [
+        "public/assets/event-cold-walk-480.webp",
+        "public/assets/event-cold-walk-768.webp",
+        "public/assets/event-cold-walk-1024.webp"
+      ]
+    },
+    {
+      "file": "event-platform-board",
+      "parent": "event-platform-question",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same station and SAME fair-haired female traveller in beige coat and taupe scarf with her SAME small black wheeled suitcase as image 2. The exact protagonist and traveller now stand side by side looking up together at a blurred departure board. He indicates one row with a natural modest pointing gesture, ONE black backpack worn. Traveller retains her OWN small ticket slip; the protagonist holds NO ticket or ID. Face identities recognisable, no legible board text or numbers.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-c1531ebb-6067-4eca-8753-6faa47bcba1b.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-d3149124-533b-4831-8554-c866f33b0ac1.png",
+      "asset": "public/assets/event-platform-board.webp",
+      "responsive": [
+        "public/assets/event-platform-board-480.webp",
+        "public/assets/event-platform-board-768.webp",
+        "public/assets/event-platform-board-1024.webp"
+      ]
+    },
+    {
+      "file": "event-platform-point",
+      "parent": "event-platform-question",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same station and SAME fair-haired female traveller, beige coat, taupe scarf and black wheeled suitcase. The exact protagonist gives a helpful small pointing gesture towards the distant departure board, while the traveller turns her gaze to it and begins to understand. ONE protagonist backpack worn; any plain small ticket belongs only to the traveller, never the hero. Distinct wider angle from the look-together result, no readable text, no police.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-c1531ebb-6067-4eca-8753-6faa47bcba1b.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-9371061c-d1d9-488e-9862-24a2a638df7f.png",
+      "asset": "public/assets/event-platform-point.webp",
+      "responsive": [
+        "public/assets/event-platform-point-480.webp",
+        "public/assets/event-platform-point-768.webp",
+        "public/assets/event-platform-point-1024.webp"
+      ]
+    },
+    {
+      "file": "event-platform-unsure",
+      "parent": "event-platform-question",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same station and SAME fair-haired female traveller with beige coat, taupe scarf and suitcase. The exact protagonist answers with a small apologetic shrug and a relaxed open hand, indicating he does not know. The traveller nods politely and turns her attention back towards the distant board. ONE protagonist backpack worn, protagonist holds no ticket or document, no readable text, no hostile emotion.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-c1531ebb-6067-4eca-8753-6faa47bcba1b.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-2371977d-8537-441f-9cb6-a4732c7c9bad.png",
+      "asset": "public/assets/event-platform-unsure.webp",
+      "responsive": [
+        "public/assets/event-platform-unsure-480.webp",
+        "public/assets/event-platform-unsure-768.webp",
+        "public/assets/event-platform-unsure-1024.webp"
+      ]
+    },
+    {
+      "file": "event-rustle-cat",
+      "parent": "event-night-rustle",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same empty midnight pavement, parked dark cars and amber lamp as image 2. NOW REVEAL THE MYSTERY: the exact protagonist leans down beside the car with ONE backpack worn, and ONE ordinary small tabby cat squeezes out from under the car, pauses a short distance from him and looks at him with tail up. Both his recognisable relieved face with a faint almost-laugh and the clearly visible natural cat fit centrally in one frame. No other people, attackers or additional animals. This is the ONLY image in the rustle sequence containing a cat.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-8d5c39dc-4dbb-4fcf-bc96-378a69f6d87d.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-e0a77d8c-97b5-4b58-a1b7-286d989ed5de.png",
+      "asset": "public/assets/event-rustle-cat.webp",
+      "responsive": [
+        "public/assets/event-rustle-cat-480.webp",
+        "public/assets/event-rustle-cat-768.webp",
+        "public/assets/event-rustle-cat-1024.webp"
+      ]
+    },
+    {
+      "file": "event-rustle-leave",
+      "parent": "event-night-rustle",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same empty midnight street, cars now behind him. The exact protagonist walks away from the parked cars with ONE backpack worn, his recognisable face visible in a three-quarter glance ahead, alert but not panicked. ABSOLUTELY NO CAT, animal, tail, paws, bright animal eyes, attacker or other person anywhere. The unknown source is not revealed.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-8d5c39dc-4dbb-4fcf-bc96-378a69f6d87d.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-76e79fc5-87ef-4d0e-ab95-568574e23417.png",
+      "asset": "public/assets/event-rustle-leave.webp",
+      "responsive": [
+        "public/assets/event-rustle-leave-480.webp",
+        "public/assets/event-rustle-leave-768.webp",
+        "public/assets/event-rustle-leave-1024.webp"
+      ]
+    },
+    {
+      "file": "event-rustle-wait",
+      "parent": "event-night-rustle",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same empty midnight street and same two parked cars. The exact protagonist waits still and listens, ONE backpack worn, looking cautiously towards the fully dark gap beneath the car, three-quarter face recognisable. Nothing appears. ABSOLUTELY NO CAT OR ANY ANIMAL, no silhouette, eyes, paw or tail, no person hiding. The source of the rustle remains entirely unknown. Composition distinct from opening: slightly closer listening pose, hand relaxed on backpack strap.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-8d5c39dc-4dbb-4fcf-bc96-378a69f6d87d.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-87e0369d-7b2c-4312-a0bc-d92dea73caf8.png",
+      "asset": "public/assets/event-rustle-wait.webp",
+      "responsive": [
+        "public/assets/event-rustle-wait-480.webp",
+        "public/assets/event-rustle-wait-768.webp",
+        "public/assets/event-rustle-wait-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-patrol-answer",
+      "parent": "event-station-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same warm station hall, wooden bench, and SAME male/female navy-uniformed patrol as image 2. The exact protagonist is now sitting UPRIGHT on one end of the bench with his ONE backpack beside his leg, leaving the remaining seats clear, while the officers calmly begin moving on through the hall. Hero face clearly recognisable and fully awake. No visible tickets, IDs, cards or documents in ANY hands; this must fit both carried-ID and no-carried-ID dialogue. No expulsion or arrest.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1cda5edc-9c9f-42fe-9fd9-9f95fccd9596.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-ca0dd0b5-6eb0-423c-bdbe-b36a71174c7a.png",
+      "asset": "public/assets/event-station-patrol-answer.webp",
+      "responsive": [
+        "public/assets/event-station-patrol-answer-480.webp",
+        "public/assets/event-station-patrol-answer-768.webp",
+        "public/assets/event-station-patrol-answer-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-patrol-exit",
+      "parent": "event-station-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. The exact protagonist steps voluntarily through the station's glass exit doorway onto the quiet city pavement, ONE black backpack worn, recognisable three-quarter face tired but composed. Behind him INSIDE the hall the SAME male/female navy-uniformed patrol continues its own route without touching, following or escorting him. Warm station light behind and cool ambient outside. No train ticket, ID, card or papers visible, no force, arrest, chase, second backpack or crowd.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1cda5edc-9c9f-42fe-9fd9-9f95fccd9596.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-ace73225-984f-4036-8b58-7d59766f3611.png",
+      "asset": "public/assets/event-station-patrol-exit.webp",
+      "responsive": [
+        "public/assets/event-station-patrol-exit-480.webp",
+        "public/assets/event-station-patrol-exit-768.webp",
+        "public/assets/event-station-patrol-exit-1024.webp"
+      ]
+    },
+    {
+      "file": "event-station-patrol-wait",
+      "parent": "event-station-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same warm station hall and SAME male/female navy-uniformed patrol. Exact protagonist stands with his ONE black backpack worn, politely asking where he can wait; one officer points towards a different row of waiting benches, other stands calmly. Hero face recognisable, no train ticket, IDs, papers or cards in any hands, no arrest or station exit. They are directing him to a place to sit within the hall.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1cda5edc-9c9f-42fe-9fd9-9f95fccd9596.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-4553af6b-59e9-492e-bb65-c928779be927.png",
+      "asset": "public/assets/event-station-patrol-wait.webp",
+      "responsive": [
+        "public/assets/event-station-patrol-wait-480.webp",
+        "public/assets/event-station-patrol-wait-768.webp",
+        "public/assets/event-station-patrol-wait-1024.webp"
+      ]
+    },
+    {
+      "file": "event-street-patrol-answer",
+      "parent": "event-street-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same quiet outdoor masonry and lamp setting and SAME male/female navy-uniformed patrol as image 2. The exact protagonist is fully awake, now standing with his ONE black backpack worn, speaking calmly as the conversation ends. Officers relaxed and one starts turning to continue the patrol, hero face tense but relieved. CRITICAL: no ID, ticket, document, paper or card visible in ANY hands, so the picture works whether he showed carried documents or explained that they are missing/stored. No arrest, confrontation, grasping or threatening weapons.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-de1f506e-f1f1-4282-a190-cd89b6170364.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-9ce8f6d4-7b44-4d48-8fa5-f8ba8090ce1b.png",
+      "asset": "public/assets/event-street-patrol-answer.webp",
+      "responsive": [
+        "public/assets/event-street-patrol-answer-480.webp",
+        "public/assets/event-street-patrol-answer-768.webp",
+        "public/assets/event-street-patrol-answer-1024.webp"
+      ]
+    },
+    {
+      "file": "event-street-patrol-help",
+      "parent": "event-street-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same outdoor street and SAME male/female patrol as image 2. The exact protagonist stands with ONE backpack worn, asking a practical question; one officer points calmly down the street while explaining directions, other listens. Show the same recognisable hero face, not an elderly homeless stereotype. No shelter arrival or signs, no map/phone/documents/tickets/cards in any hands. This is a conversation after the hero asked for help, not pity prompted by his appearance.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-de1f506e-f1f1-4282-a190-cd89b6170364.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-ffce7f4b-90d9-45e9-b92c-f9159ae5e00d.png",
+      "asset": "public/assets/event-street-patrol-help.webp",
+      "responsive": [
+        "public/assets/event-street-patrol-help-480.webp",
+        "public/assets/event-street-patrol-help-768.webp",
+        "public/assets/event-street-patrol-help-1024.webp"
+      ]
+    },
+    {
+      "file": "event-street-patrol-move",
+      "parent": "event-street-patrol-wake",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone 16:9 landscape narrative game illustration. Input image 1 is ONLY the authoritative protagonist identity/wardrobe sheet; input image 2 is the corresponding existing opening scene: preserve its exact location, lighting, secondary characters and visual continuity while drawing a NEW result pose. Create one NEW coherent illustration, no collage or multiple panels. Match EXACTLY the same late-thirties man: wavy tousled dark brown hair, short stubble, straight long nose, hazel-brown eyes, lean ordinary office-worker build, charcoal hooded field jacket over a dark sweater, dark blue jeans, dark boots and ONE practical black backpack. Preserve facial identity and clothing; no elderly replacement, no rags, no exaggerated dirt. Cinematic realistic painterly rendering, tactile fabrics, restrained amber lamps and cool slate ambience, autumn Warsaw. Clear natural faces and hands, medium/wide framing legible on a phone, safe central composition for 16:9. No text, lettering, UI, logos, watermarks or borders. SCENE: This is the RESULT of one chosen action, not the unresolved opening. Same quiet street, the SAME male/female navy-uniformed patrol now moving on in the background. Exact protagonist walks further along the pavement with his ONE black backpack worn, recognisable three-quarter face tired and a little unsettled but calm. No other bag in his hands, no documents or tickets visible, no chase, arrest, force, station or shelter.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-de1f506e-f1f1-4282-a190-cd89b6170364.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-ed4f501b-b39b-4100-8aec-f9a4393100c4.png",
+      "asset": "public/assets/event-street-patrol-move.webp",
+      "responsive": [
+        "public/assets/event-street-patrol-move-480.webp",
+        "public/assets/event-street-patrol-move-768.webp",
+        "public/assets/event-street-patrol-move-1024.webp"
+      ]
+    }
+  ]
+}

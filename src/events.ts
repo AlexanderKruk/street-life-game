@@ -11,6 +11,9 @@ export function firstNightTime(state: { day: number; minutes: number }) {
 export type EventContext = {
   locationId: string
   minutes?: number
+  temperature?: number
+  observation?: 'idle' | 'action' | 'arrival'
+  elapsedMinutes?: number
   travelMode?: 'walk' | 'transit' | 'fare-dodge'
   weather: string
   housing: Housing
@@ -22,6 +25,8 @@ export type EventContext = {
 
 export type EventOutcome = {
   message: string
+  identityCheck?: boolean
+  moveToStreet?: boolean
   randomCoin?: boolean
   minutes?: number
   money?: number
@@ -44,7 +49,15 @@ export const FOUND_COIN_DENOMINATIONS = [
   { grosz: 100, weight: 5 }, { grosz: 200, weight: 2 }, { grosz: 500, weight: 1 },
 ] as const
 
-export function resolveEventOutcome(outcome: EventOutcome, random = Math.random): EventOutcome {
+export function resolveEventOutcome(outcome: EventOutcome, random = Math.random, documents = true, storedDocuments = false): EventOutcome {
+  if (outcome.identityCheck) {
+    const check = documents
+      ? 'You show your documents. The officer looks them over and hands them back.'
+      : storedDocuments
+        ? 'You explain that your documents are stored at the shelter and you do not have them with you. The officer asks for your name and details; the conversation takes longer.'
+        : 'You explain that your documents are missing. The officer asks for your name and details; the conversation takes longer.'
+    outcome = { ...outcome, identityCheck: false, minutes: (outcome.minutes ?? 0) + (documents ? 0 : 10), message: `${check} ${outcome.message}` }
+  }
   if (!outcome.randomCoin) return outcome
   let roll = random() * 100
   for (const coin of FOUND_COIN_DENOMINATIONS) {
@@ -86,7 +99,51 @@ export type StreetEvent = {
   choices: StreetEventChoice[]
 }
 
+// The opening bench wake keeps priority over subsequent patrol encounters.
+const openingBenchWakeDue = (context: EventContext) => context.firstNight && context.sleepKind === 'bench' && !context.seenEventIds?.includes('first-night-bench-wake')
+
+// Outside the station, ordinary passer-by encounters belong to waking hours.
+const streetHasPassersBy = (context: EventContext) => {
+  const minutes = context.minutes ?? 1200
+  return minutes >= 360 && minutes < 1320
+}
+
 export const STREET_EVENTS: StreetEvent[] = [
+  { id:'city-waking', trigger:'location', icon:'🌅', title:'The city wakes up', text:'The first buses pass. Lights come on behind windows, and a shop shutter rattles somewhere down the street. The city is starting its day. You are still outside, with your backpack beside you.', weight:1, eligible:c=>c.locationId==='street' && c.minutes!==undefined && c.minutes>=300 && c.minutes<420, choices:[
+    { label:'Think about my next step', outcome:{ minutes:5, mood:2, message:'You put the next few hours in order in your head. You cannot solve everything at once, but you can decide what to try first.' } },
+    { label:'Take a moment', outcome:{ minutes:5, message:'You watch the windows light up. For everyone inside, this may be an ordinary morning. You take a breath before joining it.' } },
+    { label:'Keep moving', outcome:{ minutes:5, energy:-1, mood:1, message:'You adjust your backpack and walk towards the waking streets. The night is over. You still need a plan for the day.' } },
+  ]},
+  { id:'night-rustle', trigger:'location', icon:'❔', title:'A rustle behind you', text:'Something scrapes behind a parked car. Then a short rustle, close to the pavement. You turn your head, but the gap between the cars is dark. The street is otherwise silent.', weight:1, eligible:c=>c.locationId==='street' && c.minutes!==undefined && (c.minutes>=1320 || c.minutes<300), choices:[
+    { label:'Look to see what it is', outcome:{ minutes:2, mood:2, message:'You lean far enough to see beneath the car. A cat squeezes out, pauses to look at you, then slips past with its tail up. You let out a breath. For a moment, you almost laugh at yourself.' } },
+    { label:'Wait and listen', outcome:{ minutes:3, message:'You stay still. Something brushes the underside of the car, then everything goes quiet. Nothing comes into view. After a while, you move on without finding out what it was.' } },
+    { label:'Leave it alone and move on', outcome:{ minutes:1, message:'You put some distance between yourself and the parked cars. The sound does not follow you. Whatever it was remains in the dark.' } },
+  ]},
+  { id:'cold-hands', trigger:'location', icon:'🌡️', title:'Cold fingers', text:'You have been outside for a while. Your fingers have grown stiff, and you keep curling them into your palms. The cold feels harder to ignore now that there is no warm room waiting for you.', weight:1, eligible:c=>c.locationId==='street' && c.temperature!==undefined && c.temperature<10 && (c.elapsedMinutes??0)>=15 && c.observation!=='arrival', choices:[
+    { label:'Rub my hands together', outcome:{ minutes:2, mood:1, message:'You rub your palms and breathe into your cupped hands. A little warmth returns. It is only temporary, but it helps.' } },
+    { label:'Walk a little to warm up', outcome:{ minutes:5, energy:-1, mood:1, message:'You tuck your hands into your pockets and walk around the block. Moving warms you a little, although your legs would rather rest.' } },
+    { label:'Put up with it for now', outcome:{ mood:-1, message:'You curl your fingers into your sleeves. You can manage for now, but you keep thinking about somewhere warm.' } },
+  ]},
+  { id:'station-cleaning', trigger:'location', icon:'🧹', title:'Cleaning the hall', text:'A cleaner approaches with a floor-cleaning machine and gestures towards the area where you are resting. “Could you move over for a few minutes? I need to clean here.”', weight:1, eligible:c=>c.locationId==='station' && (c.observation==='idle' || c.observation==='action') && (c.elapsedMinutes??0)>=15, choices:[
+    { label:'Move to another bench', outcome:{ minutes:3, message:'You lift your backpack and find a seat a little further along. The cleaner nods and gets on with the floor. Nobody asks why you are here.' } },
+    { label:'Stand up and stretch', outcome:{ minutes:5, energy:1, message:'You shoulder your backpack and stretch your stiff legs while the machine passes. When the cleaner moves on, you can sit again.' } },
+    { label:'Ask where I can sit for now', outcome:{ minutes:3, mood:1, message:'“Over there is fine,” the cleaner says, pointing to the next row of benches. It is a simple answer to a simple question. You thank them and move.' } },
+  ]},
+  { id:'platform-question', trigger:'location', icon:'🚉', title:'Which platform?', text:'A traveller stops beside you, glances from a ticket to the departure board and asks, “Sorry, do you know which platform this train leaves from?” They hold up the train number.', weight:1, eligible:c=>c.locationId==='station', choices:[
+    { label:'Look at the board together', outcome:{ minutes:3, mood:2, message:'You find the train number together and match it to a platform. They thank you and hurry away. For a moment, you were simply someone who could help.' } },
+    { label:'Suggest checking the departure board', outcome:{ minutes:1, mood:1, message:'You point out where the train numbers and platforms are listed. They look up, spot the right row and thank you.' } },
+    { label:'Say I’m not sure either', outcome:{ message:'“Sorry, I’m not sure either.” They nod and turn back to the board. You return to your own thoughts.' } },
+  ]},
+  { id:'street-patrol-wake', trigger:'wake', icon:'🪪', title:'Woken by a patrol', text:'A voice brings you out of sleep. Two police officers are standing a little way from your things. “Are you alright? Could you sit up and show us your documents?” You reach for your backpack, still trying to wake properly.', weight:1, eligible:c=>c.locationId==='street' && (c.sleepKind==='ground' || c.sleepKind==='bench') && !openingBenchWakeDue(c), choices:[
+    { label:'Answer the officer', outcome:{ identityCheck:true, minutes:5, mood:-1, message:'You say you are awake and feeling alright. After a few more words, the patrol moves on. You sit with your backpack close, waiting for your heartbeat to settle.' } },
+    { label:'Ask where I could spend the night', outcome:{ identityCheck:true, minutes:10, mood:1, discoverLocation:'shelter', message:'You explain that you have nowhere to stay tonight. Only then does the officer describe Night Shelter and its evening registration. You keep the directions in mind.' } },
+    { label:'Gather my things and move along', outcome:{ identityCheck:true, minutes:5, energy:-1, message:'When the conversation ends, you shoulder your backpack and move a little further along the street. You are awake now, although you would rather still be resting.' } },
+  ]},
+  { id:'station-patrol-wake', trigger:'wake', icon:'🎫', title:'A patrol in the waiting hall', text:'Someone calls to you until you wake. A police patrol is beside the bench. “Please sit up. Your documents, please. Are you waiting for a train — do you have a train ticket?” You pull your backpack closer and try to collect your thoughts.', weight:1, eligible:c=>c.locationId==='station' && c.sleepKind==='bench' && !openingBenchWakeDue(c), choices:[
+    { label:'Answer the officer', outcome:{ identityCheck:true, minutes:5, mood:-1, message:'You explain that you do not have a train ticket and needed somewhere to rest. The officer asks you to sit upright and leave space on the bench. The patrol continues through the hall.' } },
+    { label:'Ask where I can wait', outcome:{ identityCheck:true, minutes:10, message:'You say you have no train ticket and ask where you can wait. The officer points to another part of the waiting hall and asks you to sit rather than lie across the seats. You move there with your backpack.' } },
+    { label:'Gather my things and step outside', outcome:{ identityCheck:true, minutes:5, energy:-1, moveToStreet:true, message:'You say you have no train ticket, collect your backpack and step out into the street. The check is over, but your rest is over too.' } },
+  ]},
   { id:'phone-drop', trigger:'travel', icon:'📱', title:'The phone slips', text:'Your old phone slips from your hand while you are walking. You have a split second to react.', weight:3, eligible:c=>c.travelMode==='walk', choices:[
     { label:'Try to catch it · Reflex DC 11', check:{ stat:'reflex', dc:11, requirements:{ minEnergy:20, minHealth:20 },
       success:{ mood:2, message:'You catch the phone just before it hits the pavement.' },
@@ -104,7 +161,7 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Pick it up', outcome:{ randomCoin:true, message:'You pick up the coin.' } },
     { label:'Leave it', outcome:{ mood:1, message:'You leave it for someone who may need it more.' } }
   ]},
-  { id:'free-snack', trigger:'travel', icon:'🥪', title:'Someone offers food', text:'A passer-by offers you a packaged sandwich.', weight:3, eligible:c=>!c.firstNight && c.travelMode==='walk', choices:[
+  { id:'free-snack', trigger:'travel', icon:'🥪', title:'Someone offers food', text:'A passer-by offers you a packaged sandwich.', weight:3, eligible:c=>!c.firstNight && c.travelMode==='walk' && streetHasPassersBy(c), choices:[
     { label:'Take it', outcome:{ food:1, mood:2, message:'You put the sandwich in your backpack.' } },
     { label:'No thanks', outcome:{ message:'You politely decline and keep going.' } }
   ]},
@@ -115,32 +172,32 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Accept', outcome:{ food:1, mood:3, message:'You received some food for later.' } },
     { label:'Decline', outcome:{ message:'You thank them and decline.' } }
   ]},
-  { id:'useful-tip', trigger:'location', icon:'💬', title:'A useful tip', text:'Someone nearby mentions a place where people can get help, but seems ready to leave.', weight:4, eligible:c=>!c.firstNight, choices:[
+  { id:'useful-tip', trigger:'location', icon:'💬', title:'A useful tip', text:'Someone nearby mentions a place where people can get help, but seems ready to leave.', weight:4, eligible:c=>!c.firstNight && (c.locationId!=='street' || streetHasPassersBy(c)), choices:[
     { label:'Ask for details · Persuasion DC 12', check:{ stat:'persuasion', dc:12,
-      success:{ minutes:10, mood:5, message:'You keep the conversation going and get several useful details about where to find help.' },
+      success:{ minutes:10, mood:5, discoverLocation:'shelter', message:'You keep the conversation going. They explain where Night Shelter is and how evening registration works.' },
       failure:{ minutes:5, mood:-1, message:'You try to get more information, but the conversation ends quickly.' },
-      criticalSuccess:{ minutes:10, mood:7, message:'The conversation goes extremely well. You get clear directions and a genuinely useful tip.' },
+      criticalSuccess:{ minutes:10, mood:7, discoverLocation:'shelter', message:'The conversation goes extremely well. You get clear directions to Night Shelter and learn why arriving early for evening registration improves your chances of a bed.' },
       criticalFailure:{ minutes:5, mood:-3, message:'You come across badly and the person cuts the conversation short.' }
     }},
-    { label:'Just listen', outcome:{ minutes:10, mood:3, message:'You listen without pushing for more details. The conversation gives you some hope.' } },
+    { label:'Just listen', outcome:{ minutes:10, mood:3, discoverLocation:'shelter', message:'You listen without pushing for more details. They describe where Night Shelter is and mention evening registration. Knowing where you could try for a bed gives you some hope.' } },
     { label:'Keep going', outcome:{ message:'You decide not to stop.' } }
   ]},
   { id:'rough-crowd', trigger:'location', icon:'⚠️', title:'Trouble nearby', text:'An argument nearby is getting louder. Staying around feels risky.', weight:2, eligible:c=>c.locationId==='station', choices:[
     { label:'Move away', outcome:{ minutes:10, energy:-2, message:'You move to another part of the station and avoid trouble.' } },
     { label:'Stay where you are', outcome:{ mood:-5, message:'Nothing happens to you, but the situation leaves you tense.' } }
   ]},
-  { id:'quiet-night', trigger:'wake', icon:'🌙', title:'A quiet night', text:'For once, the night passes without trouble.', weight:5, choices:[
-    { label:'Get up', outcome:{ mood:5, energy:5, message:'A quiet night gave you a little extra strength.' } }
+  { id:'quiet-night', trigger:'wake', icon:'🌙', title:'Peaceful rest', text:'For once, you get some rest without trouble.', weight:5, choices:[
+    { label:'Get up', outcome:{ mood:5, energy:5, message:'A peaceful rest gave you a little extra strength.' } }
   ]},
   { id:'night-theft', trigger:'wake', icon:'🎒', title:'Something happened overnight', text:'You wake up and notice that someone went through your things.', weight:2, eligible:c=>c.housing==='Street', choices:[
     { label:'Check your things', outcome:{ money:-5, mood:-7, loseDocuments:true, message:'Some cash is gone, and your documents are missing.' } }
   ]},
-  { id:'spare-change', trigger:'location', icon:'🪙', title:'Have you got any change?', text:'A passer-by stops a few steps away. “Excuse me, could you spare a złoty?” They wait for your answer.', weight:2, eligible:c=>c.locationId==='street' || c.locationId==='station', choices:[
+  { id:'spare-change', trigger:'location', icon:'🪙', title:'Have you got any change?', text:'A passer-by stops a few steps away. “Excuse me, could you spare a złoty?” They wait for your answer.', weight:2, eligible:c=>c.locationId==='station' || (c.locationId==='street' && streetHasPassersBy(c)), choices:[
     { label:'Give 1 zł', moneyRequired:1, outcome:{ money:-1, mood:1, message:'You give them a złoty. They thank you and move on. You check what you have left.' } },
     { label:'Sorry, I can’t', outcome:{ message:'You say you cannot help. They nod and ask someone further down the pavement.' } },
     { label:'Keep my distance', outcome:{ message:'You keep your distance and carry on. They do not follow you.' } },
   ]},
-  { id:'dropped-glove', trigger:'location', icon:'👤', title:'Someone dropped a glove', text:'A glove slips from a passer-by’s pocket. They keep walking, unaware. You are close enough to call out.', weight:2, eligible:c=>c.locationId==='street', choices:[
+  { id:'dropped-glove', trigger:'location', icon:'👤', title:'Someone dropped a glove', text:'A glove slips from a passer-by’s pocket. They keep walking, unaware. You are close enough to call out.', weight:2, eligible:c=>c.locationId==='street' && streetHasPassersBy(c), choices:[
     { label:'Call after them', outcome:{ minutes:2, mood:2, message:'They turn around, pick up the glove and raise a hand in thanks. For a moment, it feels like an ordinary day.' } },
     { label:'Keep going', outcome:{ message:'You keep going. Someone else may notice it.' } },
   ]},

@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-283`.
+**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-284`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -16,6 +16,7 @@ Earlier version notes and superseded designs are preserved in [Implementation hi
 | Activity cards | Animated icon; muted route/context; elapsed time first; bold action with three animated dots. Starts at `01m`, then `1h 00m`; no reserved blank hour space. |
 | Map | Dark overhead city plan with scattered landmark anchors, Street and Nearest shop shortcuts, and no Map title. |
 | Results | Every Got it result uses a centered blocking modal with the shared blur/backdrop. |
+| Events | Five contextual ambient scenes and two patrol wake scenes add 28 consistent-hero illustrations. Cat reveal belongs only to the inspection answer; Station patrol alone asks for a train ticket. |
 | Time | Ordinary gameplay/queue ×1; phone search, travel and morning packing ×4; sleep currently debug ×10. Some actions still apply time immediately. |
 | Persistence | Existing localStorage progress is preserved; the last-ten-build compatibility window is a verification policy, not ten rotating save backups. |
 
@@ -548,28 +549,55 @@ First-night observations take priority over ordinary encounters, keep their no-r
 
 Wake scenes use the same no-repeat queue and interval. First-night bench waking prioritizes Someone needs the bench. Quiet rest merges into the sleep result; illness keeps its separate wake result and does not consume an unshown catalog scene. Food before closing is restricted to Station after 19:00 and outside the first-night window. Coin-on-pavement and passer-by food encounters require walking; ticket inspection requires paid transit.
 
-The catalog has twelve general events plus four opening-night observations (The door closes, Making a bed on a bench, The last departures, Someone needs the bench). The two new everyday scenes use compact icon cards. Ground/bench illness and closing notices remain separate system events.
+The catalog has nineteen general events plus four opening-night observations (The door closes, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
 
 General catalog events:
 
 1. **The phone slips** — walking only. D20 Reflex option or guaranteed drop/damage.
 2. **Caught in the rain** — walking in Rain/Showers. Protect with jacket or keep moving; damages phone/clothing.
 3. **Coin on the pavement** — pick up one weighted Polish coin, from 1 gr to 5 zł (5 zł: 1%; 1–50 gr: 92%), or leave it for +1 Mood.
-4. **Someone offers food** — take one Food and +2 Mood or decline.
+4. **Someone offers food** — walking, 06:00–22:00, outside the opening-night window; take one Food and +2 Mood or decline.
 5. **Ticket inspection** — public transport only; currently just show ticket.
 6. **Food before closing** — Station only; accept one Food and +3 Mood or decline.
-7. **A useful tip** — includes the Persuasion D20 example, safe listen and walk-away choices.
+7. **A useful tip** — successful/critical-success Persuasion D20 or Just listen reveals Night Shelter (`shelter`) on the map if unknown. A known address stays a single map entry; the result says the hero has heard of this shelter before and makes a mental note to go and see what it is like. Failed checks and Keep going reveal nothing. On Street the encounter requires 06:00–22:00, so it does not invent a passer-by in the empty late-night city. The discovery card shows Night Shelter hours/services and the existing evening registration reminder.
 8. **Trouble nearby** — Station only; move away at a time/Energy cost or stay and lose Mood.
-9. **A quiet night** — wake event; +5 Mood and +5 Energy.
+9. **Peaceful rest** — wake event after sleep at any time of day; +5 Mood and +5 Energy. Scene and outcome text are time-neutral; existing ground/bench/shelter artwork is retained. The internal `quiet-night` ID is preserved for saved encounter history.
 10. **Something happened overnight** — Street housing wake event; loses up to 5 zł through clamping, -7 Mood and documents.
-11. **Have you got any change?** — Street/Station passer-by asks for money; give 1 zł/+1 Mood, decline or keep distance.
-12. **Someone dropped a glove** — Street; call after the owner for 2 minutes/+2 Mood, or continue.
+11. **Have you got any change?** — Station at any hour, Street only 06:00–22:00; passer-by asks for money; give 1 zł/+1 Mood, decline or keep distance.
+12. **Someone dropped a glove** — Street, 06:00–22:00; call after the owner for 2 minutes/+2 Mood, or continue.
+
+
+### Ambient Street and Station scenes
+
+These scenes treat the hero as an ordinary person with a backpack. Nobody identifies homelessness from appearance or offers unsolicited homeless-specific help. Street passer-by scenes wait until 06:00–22:00; a traveller may approach at Station at any hour. The small Mood changes use existing caps and are displayed as actual changes in the result. Every scene is once per run and shares the existing interval and saved pending-choice behavior. Opening/outcome artwork uses the authoritative `docs/art/hero-reference.webp` identity sheet; pending encounters also restore their illustrations after reload. The mystery opening, waiting and leaving images contain no cat; only the look-under-the-car result reveals one. New art has on-demand WebP variants at 480/768/1024 pixels.
+
+| Scene / internal ID | Context | Choices and consequences |
+|---|---|---|
+| **The city wakes up** / `city-waking` | Street, 05:00–07:00, awake. | Think about my next step: 5 min, +2 Mood. Take a moment: 5 min. Keep moving: 5 min, −1 Energy, +1 Mood. No transport or automatic new location. |
+| **A rustle behind you** / `night-rustle` | Street, 22:00–05:00, awake. An unidentified sound behind a parked car; the description and choice labels do not reveal its source. | Look to see what it is: 2 min, +2 Mood, reveals a cat in this result only. Wait and listen: 3 min, source stays unknown. Leave it alone and move on: 1 min, source stays unknown. Journal reflections preserve the same information boundary. |
+| **Cold fingers** / `cold-hands` | Street, below 10°C, after at least 15 min in the triggering idle/rest action; never on arrival alone. No phone/search interruption or extra cold debuff. | Rub my hands together: 2 min, +1 Mood. Walk a little to warm up: 5 min, −1 Energy, +1 Mood. Put up with it for now: −1 Mood. |
+| **Cleaning the hall** / `station-cleaning` | Station after at least 15 min of idle/rest action, never immediately on arrival. A cleaner asks for space to clean; no expulsion or document check. | Move to another bench: 3 min. Stand up and stretch: 5 min, +1 Energy. Ask where I can sit for now: 3 min, +1 Mood. Hero remains at Station. |
+| **Which platform?** / `platform-question` | Station only, any hour, awake. A traveller asks another apparent traveller about a train number. | Look at the board together: 3 min, +2 Mood. Suggest checking the departure board: 1 min, +1 Mood. Say I’m not sure either: no resource change, still a blocking acknowledged result. No phone, data plan or knowledge of a specific train is required. |
+
+
+### Patrol waking and document checks
+
+Two once-per-run scenes follow outdoor/Station bench sleep: **Woken by a patrol** (`street-patrol-wake`, Street ground/bench) and **A patrol in the waiting hall** (`station-patrol-wake`, Station bench only). They do not trigger while merely walking past, sleeping in accommodation or awake. The existing first-night bench wake and newly acquired illness keep priority. Ordinary sleep gains and one acknowledged sleep result precede the encounter; patrol scenes do not simulate an earlier interruption of the chosen sleep duration.
+
+Every patrol answer includes an identity check. Carried documents are shown and returned. Documents left in shelter storage have their own explanation, distinct from missing documents. Either case without carried ID adds 10 min for explaining name/details; the scene neither restores documents nor takes documents from storage. No automatic fine, arrest or suspicion based on the hero's appearance is added.
+
+| Scene | Choices after waking |
+|---|---|
+| Street | Answer the officer: 5 min, −1 Mood. Ask where I could spend the night: 10 min, +1 Mood, reveals Night Shelter if unknown. Gather my things and move along: 5 min, −1 Energy, remains on Street. |
+| Station | Answer the officer: 5 min, −1 Mood, remains seated at Station. Ask where I can wait: 10 min, moves within the hall and remains at Station. Gather my things and step outside: 5 min, −1 Energy, actually changes location to Street. |
+
+Only the Station scene asks about a **train ticket**. The prototype has no train-journey ticket item, so answers explain its absence; a city transit ticket/pass is not substituted. The scene portrays this fictional patrol's response, not a universal railway access rule. Station choices have no automatic expulsion merely because the hero has no ticket. The Street scene never asks about a ticket. The 10-minute cost for having no carried ID is additional to each listed duration.
 
 Event outcomes can currently change time, money, Mood, Energy, Health, Hygiene, Food, Water, phone condition, clothing condition and document possession. Food/Water gains respect backpack capacity, including free space in existing stacks; excess supplies are left behind with an explanatory result. For an outcome giving both, Food is fitted first, then Water.
 
 ## D20 checks
 
-Visible D20 rolls are used only after the player knowingly chooses an uncertain/risky action. Event spawn probabilities remain hidden.
+Visible D20 rolls are used only after the player knowingly chooses an uncertain/risky action. Catalog appearance is deterministic; randomness is reserved for chosen checks and gameplay consequences.
 
 Resolution:
 `D20 + modifier >= DC`.
@@ -677,7 +705,7 @@ The top toolbar has Street and Nearest shop, with no Map/City map title. Street 
 
 All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped stat bars and consequences, animate gains/losses, and omit zero/consumed-item noise. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
 
-Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. The original 14 catalog events have artwork; the two v283 everyday encounters use compact icon cards; this is no longer an unillustrated future task. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
+Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. The original 14 catalog events and seven new ambient/patrol scenes have artwork; the two v283 everyday encounters use compact icon cards. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
 
 ## Phone Goals and History
 
@@ -741,14 +769,14 @@ Some historical regression suites explicitly enable deferred wetness; the separa
 
 Saves use `street-life-save-v3`, where v3 is a schema name, not the application build. Last-ten-published-build compatibility is checked with captured historical fixtures and repeated reloads, without clearing user storage. Fixtures currently cover v240–v249; they are not automatically refreshed for every build. `scripts/capture-recent-saves.cjs` refreshes the window when compatibility-sensitive work calls for it. The policy does not implement ten save slots or retain ten playable save snapshots.
 
-The latest v279 GitHub Pages workflow passed the full tests and production build before publication. This documentation audit changes no gameplay; Markdown/link/source checks apply to this edit rather than another gameplay test run.
+The v283 GitHub Pages workflow passed the full tests and production build before publication. The v284 event expansion passed focused event, artwork, responsive-image, cache and production-build checks; the existing deployment workflow runs the full suite again before publishing.
 
 ## Repository and hosting
 
 - Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
 - Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
 - Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
-- Last confirmed successful gameplay deployment: v279 on 2026-10-21, commit `3d3fc6c044624c6348da6b7c094181eb553e3d38` (includes the updated regression navigation).
+- Last confirmed successful gameplay deployment: v283 on 2026-10-21, commit `7fd81850f3819706bd52587a5c2ece8bf3eb2c1e` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39613556859)). The current source prepares v284; publication is verified separately from a local build.
 - Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
 
 ## Design principles
