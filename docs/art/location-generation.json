@@ -1,0 +1,160 @@
+{
+  "generation": "Built-in image_gen, compositing edits; one call per location. Each place has roughly 5\u201310 ordinary background visitors, residents, patients or workers, without the protagonist.",
+  "date": "2026-10-21",
+  "placement": "Main current-location tab",
+  "assets": [
+    {
+      "id": "station",
+      "file": "location-station",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 9 ordinary adult travellers spread across wooden benches and the aisle, some sitting with bags, one walking, two resting. Mixed practical autumn coats, varied ages. It must still clearly read as a station. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-55dc5c50-bbb1-4f0a-843b-4d53c114284c.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-9931ddc8-1d34-4a94-ad9a-9c05c83f54bf.png",
+      "asset": "public/assets/location-station.webp",
+      "responsive": [
+        "public/assets/location-station-480.webp",
+        "public/assets/location-station-768.webp",
+        "public/assets/location-station-1024.webp",
+        "public/assets/location-station-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-55dc5c50-bbb1-4f0a-843b-4d53c114284c.png"
+    },
+    {
+      "id": "shelter",
+      "file": "location-night-shelter",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 10 ordinary adults in a calm short queue outside the night shelter entrance, several holding bags; one person sitting on the bench. A sense of limited services and real demand. Varied practical coats and ages, respectful and unromantic, no ragged stereotypes. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1adb3ed7-b427-4366-8d03-1022f1c3b6b8.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-5e3c9298-24a0-4f8e-a3a4-49e77e79d8f2.png",
+      "asset": "public/assets/location-night-shelter.webp",
+      "responsive": [
+        "public/assets/location-night-shelter-480.webp",
+        "public/assets/location-night-shelter-768.webp",
+        "public/assets/location-night-shelter-1024.webp",
+        "public/assets/location-night-shelter-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1adb3ed7-b427-4366-8d03-1022f1c3b6b8.png"
+    },
+    {
+      "id": "residential-shelter",
+      "file": "location-residential-shelter",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 8 residents in ordinary everyday clothes distributed at the communal table and kitchenette, drinking tea, talking quietly or sitting. The room is shared and in use. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-3d7a170a-c2ea-4347-9c7f-8802d888fa09.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-d6226f85-40a9-459f-88c1-6fdcee649575.png",
+      "asset": "public/assets/location-residential-shelter.webp",
+      "responsive": [
+        "public/assets/location-residential-shelter-480.webp",
+        "public/assets/location-residential-shelter-768.webp",
+        "public/assets/location-residential-shelter-1024.webp",
+        "public/assets/location-residential-shelter-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-3d7a170a-c2ea-4347-9c7f-8802d888fa09.png"
+    },
+    {
+      "id": "support",
+      "file": "location-help-center",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 7 adult visitors waiting on the chairs or near the reception, one speaking with a social worker behind the desk (8 people total). Varied ages and practical coats, some folders and bags. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-3cc2d406-ba36-41f9-ba13-2a8ba080efe4.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-bf1b9581-4c06-49fb-824d-83849e8ce0b9.png",
+      "asset": "public/assets/location-help-center.webp",
+      "responsive": [
+        "public/assets/location-help-center-480.webp",
+        "public/assets/location-help-center-768.webp",
+        "public/assets/location-help-center-1024.webp",
+        "public/assets/location-help-center-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-3cc2d406-ba36-41f9-ba13-2a8ba080efe4.png"
+    },
+    {
+      "id": "hospital",
+      "file": "location-hospital",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 7 patients and accompanying adults waiting naturally in chairs, plus one nurse passing in the corridor. Modest everyday clothes, some older adults. No dramatic emergency or blood. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-a49d9ac9-e69d-4f7a-a110-1ab5ca8d5679.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-83a0f355-ae9c-4bb7-b07a-11ee118bbad9.png",
+      "asset": "public/assets/location-hospital.webp",
+      "responsive": [
+        "public/assets/location-hospital-480.webp",
+        "public/assets/location-hospital-768.webp",
+        "public/assets/location-hospital-1024.webp",
+        "public/assets/location-hospital-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-a49d9ac9-e69d-4f7a-a110-1ab5ca8d5679.png"
+    },
+    {
+      "id": "daycenter",
+      "file": "location-day-center",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 9 ordinary adults using this day center: people resting and drinking tea at tables, two waiting near the laundry with bags and towels, one staff member at tea counter. Everyone fully clothed. Real demand for a small shared service, no spa atmosphere. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-6fe7a12b-6732-4358-a01b-90f4330d70d8.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-1d4285e4-6969-4f19-ac3e-ff63eca8daba.png",
+      "asset": "public/assets/location-day-center.webp",
+      "responsive": [
+        "public/assets/location-day-center-480.webp",
+        "public/assets/location-day-center-768.webp",
+        "public/assets/location-day-center-1024.webp",
+        "public/assets/location-day-center-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-6fe7a12b-6732-4358-a01b-90f4330d70d8.png"
+    },
+    {
+      "id": "jobcenter",
+      "file": "location-job-center",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 7 adult jobseekers seated, checking papers or waiting by the appointments counter, plus one employee at a consultation desk. Ordinary varied street clothes, no uniform duplicated people. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-a6a59eaf-a611-44c3-b191-99dea9b612fa.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-90b2a7df-142a-4aa3-baa0-c05a47e9701f.png",
+      "asset": "public/assets/location-job-center.webp",
+      "responsive": [
+        "public/assets/location-job-center-480.webp",
+        "public/assets/location-job-center-768.webp",
+        "public/assets/location-job-center-1024.webp",
+        "public/assets/location-job-center-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-a6a59eaf-a611-44c3-b191-99dea9b612fa.png"
+    },
+    {
+      "id": "free-clinic",
+      "file": "location-free-clinic",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Reframe this same modest clinic as its small waiting/reception room, preserving the pale sage and warm white walls, modest furnishings and painterly style. Show 6 adult patients waiting on chairs and one receptionist, with the original examination couch and sink glimpsed through an open consultation-room doorway. Do not crowd patients into the exam room. No emergency or blood. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-4b1daf55-fa48-497c-b2b1-998b84ba6fa0.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-6577bf1d-1106-497e-b46f-3625951265ec.png",
+      "asset": "public/assets/location-free-clinic.webp",
+      "responsive": [
+        "public/assets/location-free-clinic-480.webp",
+        "public/assets/location-free-clinic-768.webp",
+        "public/assets/location-free-clinic-1024.webp",
+        "public/assets/location-free-clinic-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-4b1daf55-fa48-497c-b2b1-998b84ba6fa0.png"
+    },
+    {
+      "id": "work",
+      "file": "location-day-work",
+      "prompt": "Use case: compositing. Asset type: 16:9 main-location header illustration for the Street Life game. Input image 1 is the EDIT TARGET. Add 7 ordinary warehouse workers at the packing benches and shelves, taping boxes, sorting packages, carrying a modest box, or talking briefly. Practical safe work clothes and some high visibility vests, no heavy unsafe lifting. Preserve the architecture, furniture, cinematic realistic painterly rendering, muted slate and amber palette, perspective and lighting of this exact place, except the explicitly requested clinic reframing. The place remains the main subject; people are anonymous supporting figures in the midground, reasonably visible near the central/upper part for a cropped mobile header. No dominant foreground character, no protagonist, no recurring hero, no posed portrait or people facing the camera. Natural varied poses and clothing, believable scale and anatomy. Quiet normal activity, no narrative incident. Preserve a quiet lower third for app text overlay. No readable text, brands, logos, UI, border, watermark or collage. One coherent populated place.",
+      "references": [
+        "/workspace/scratch/3cbd2ba634a1/generated_images/exec-0881ed29-51f8-4960-bcc6-661154e5affc.png"
+      ],
+      "source": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-e77820da-cd22-4b75-83ef-571298a3daee.png",
+      "asset": "public/assets/location-day-work.webp",
+      "responsive": [
+        "public/assets/location-day-work-480.webp",
+        "public/assets/location-day-work-768.webp",
+        "public/assets/location-day-work-1024.webp",
+        "public/assets/location-day-work-1400.webp"
+      ],
+      "previousSource": "/workspace/scratch/3cbd2ba634a1/generated_images/exec-0881ed29-51f8-4960-bcc6-661154e5affc.png"
+    }
+  ]
+}

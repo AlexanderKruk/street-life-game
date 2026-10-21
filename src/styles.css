@@ -593,6 +593,10 @@ button.inventory-item { width:100%; }
 .location-summary .location-icon { display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0; filter:none; color:#d7b58a; }
 .location-summary .location-icon svg { width:38px; height:38px; }
 .location-summary h2 { font-size:var(--font-title); margin-bottom:3px; }
+.location-summary.location-hero { position:relative; isolation:isolate; min-height:clamp(210px,30svh,270px); margin:0 -18px 16px; padding:100px 18px 14px; overflow:hidden; background:#101416; }
+.location-hero-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:-2; }
+.location-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(16,20,22,.04) 0%,rgba(16,20,22,.28) 28%,rgba(16,20,22,.88) 58%,#101416 100%); pointer-events:none; }
+@media(max-width:520px) { .location-summary.location-hero { margin-left:-12px; margin-right:-12px; padding-left:14px; padding-right:14px; } }
 
 /* v1 map: simple rows prevent overlapping locations on mobile. */
 .city-map { height:auto; min-height:0; padding:14px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; overflow:visible; background:#11181e; }

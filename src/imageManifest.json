@@ -1950,5 +1950,239 @@
         "file": "event-station-wake-moment-1024.webp"
       }
     ]
+  },
+  "location-station.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-station-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-station-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-station-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-station-1400.webp"
+      }
+    ]
+  },
+  "location-night-shelter.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-night-shelter-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-night-shelter-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-night-shelter-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-night-shelter-1400.webp"
+      }
+    ]
+  },
+  "location-residential-shelter.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-residential-shelter-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-residential-shelter-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-residential-shelter-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-residential-shelter-1400.webp"
+      }
+    ]
+  },
+  "location-help-center.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-help-center-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-help-center-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-help-center-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-help-center-1400.webp"
+      }
+    ]
+  },
+  "location-hospital.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-hospital-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-hospital-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-hospital-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-hospital-1400.webp"
+      }
+    ]
+  },
+  "location-day-center.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-day-center-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-day-center-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-day-center-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-day-center-1400.webp"
+      }
+    ]
+  },
+  "location-job-center.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-job-center-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-job-center-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-job-center-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-job-center-1400.webp"
+      }
+    ]
+  },
+  "location-free-clinic.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-free-clinic-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-free-clinic-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-free-clinic-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-free-clinic-1400.webp"
+      }
+    ]
+  },
+  "location-day-work.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "location-day-work-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "location-day-work-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "location-day-work-1024.webp"
+      },
+      {
+        "width": 1400,
+        "height": 788,
+        "file": "location-day-work-1400.webp"
+      }
+    ]
   }
 }

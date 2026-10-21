@@ -6,6 +6,7 @@ const groups: Record<string, ImageGroup> = manifest
 const fileName = (url: string) => url.split('/').pop() ?? ''
 
 export function imageSizes(url: string) {
+  if (fileName(url).startsWith('location-')) return '(min-width: 760px) 760px, 100vw'
   if (fileName(url).startsWith('event-')) return '(min-width: 480px) 480px, calc(100vw - 24px)'
   switch (fileName(url)) {
     case 'city-map-dark.webp': return '(min-width: 760px) 760px, 100vw'
@@ -37,7 +38,7 @@ export function densityImageSet(name: 'inventory-equipment' | 'shop-products' | 
 // Match the rendered slot and density; never warm every responsive alternative.
 export function warmImageUrls(width: number, height: number, density: number) {
   const dpr = Math.max(1, density)
-  return Object.entries(groups).filter(([file]) => !file.startsWith('event-') && file !== 'ready-meal.webp').map(([file, group]) => {
+  return Object.entries(groups).filter(([file]) => !file.startsWith('event-') && !file.startsWith('location-') && file !== 'ready-meal.webp').map(([file, group]) => {
     const sprite = file === 'inventory-equipment.webp' || file === 'shop-products.webp'
     if (sprite) return base + group.variants[Math.min(2, Math.ceil(dpr) - 1)].file
     let slot = Math.min(width, 760)

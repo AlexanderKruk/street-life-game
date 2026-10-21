@@ -37,6 +37,9 @@ widths = {
 for source in sorted(assets.glob('event-*.webp')):
     if not re.search(r'-\d+\.webp$', source.name):
         widths.setdefault(source.stem, [480, 768, 1024])
+for source in sorted(assets.glob('location-*.webp')):
+    if not re.search(r'-\d+\.webp$', source.name):
+        widths.setdefault(source.stem, [480, 768, 1024, 1400])
 manifest = {}
 for name, sizes in widths.items():
     source = assets / f'{name}.webp'

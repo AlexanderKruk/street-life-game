@@ -1503,3 +1503,10 @@ Validation covers contextual eligibility, every new answer, pending-scene reload
 Someone needs the bench previously reused its outdoor illustration when the hero woke at Station. The scene and all three answers now choose a location-specific set; the existing street set remains outdoors with its older male passer-by, while the new Station set stays inside the waiting hall and uses a distinct female passenger with a suitcase. The protagonist retains his authoritative reference identity. Choosing another place to sit remains within the current location. Pending-event restoration now passes the saved game location to artwork selection.
 
 Four new WebP masters and responsive 480/768/1024 variants cover the Station scene and every answer. Regression checks exercise both locations through completed sleep and all replies through pending-event reload; attaching location art preserves the original event consequences. Exact built-in image-generation prompts and references are recorded under docs/art/bench-wake-station-generation.json.
+
+
+## Main-location environment artwork — v286 (2026-10-21)
+
+The main location tab previously illustrated only Street and Shop. Station, Night Shelter, Help Center, Schronisko, Day Center, Free Clinic, Hospital, Job Centre and Day Work now have their own place header images, with roughly 5–10 ordinary visitors, residents, patients or workers and no protagonist. Each place keeps its name, open/closed state, description and existing actions. The images are independent of catalog-event artwork.
+
+Nine WebP masters and 36 responsive variants cover mobile and desktop headers. The current place loads on demand; the other new place images are excluded from startup warmup. The memoized location summary continues to skip rendering on unchanged clock ticks. `check-location-art.cjs` covers distinct imagery for every place, responsive metadata/assets, Station actions, navigation away/back and reload; rendering and cache checks remain in the release suite. Exact built-in prompts and saved paths are under `docs/art/location-generation.json`.
