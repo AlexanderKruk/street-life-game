@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-279`.
+**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-280`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -638,6 +638,30 @@ The shared sticky header shows day/time, money, weather, Mood and actual phone B
 Street curates at most three direct thoughts: an information/understanding choice, a rest/movement choice and a practical response. Enabled choices come first and eligible choice order is seeded/shuffled rather than always placing the safe response first. There is no intention submenu or generic Other actions button. Opening-night money/work/bottle options are withheld until later; location knowledge arrives through observation, recall and authored phone answers. Narrator describes observable surroundings; first-person choices express possible intentions without prescribing the player's feelings.
 
 Street decisions themselves keep ordinary time running. Result/event/parameter modals pause it as described under Time. A music walk is a 30-minute direct action with normal walking costs and an explicit Mood bonus within the current Mood ceiling; there are no visible global music/video switches.
+
+### Visual style and typography (v280)
+
+Use one system sans-serif family everywhere: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`. Inter was previously listed without being loaded and is removed from the stack; the user's platform supplies the system font. Controls inherit the same family.
+
+| Text role | Token | Mobile / tablet below 768px | Desktop from 768px | Usage |
+|---|---|---:|---:|---|
+| Small | `--font-small` | 14px | 14px | Card descriptions, hints, times, metadata, tags and navigation labels. |
+| Body | `--font-body` | 16px | 16px | Main copy, action buttons and card names. |
+| Title | `--font-title` | 20px | 24px | Page/section/modal headings, highlighted time and values. |
+
+All text sizes reference those three CSS variables in `src/styles.css`; do not add screen-specific numeric text sizes. Existing emoji/icon/artwork glyph dimensions are geometry rather than text roles. One-line compact app/route labels can use Body even inside a heading element. Descriptions use line-height 1.45; titles use 1.25, with component-specific spacing where needed.
+
+| Neutral text role | Token | Color |
+|---|---|---|
+| Primary | `--text-primary` | `#ece9e3` |
+| Description | `--text-secondary` | `#b9bfc0` |
+| Muted metadata | `--text-muted` | `#9aa3a8` |
+
+Use the shared regular/semibold/bold weights: `--weight-regular` 400, `--weight-semibold` 600 and `--weight-bold` 700. Card names use 600 and descriptions 400. Colors for success, warnings, negative effects, selected navigation, inverse button text and app icons retain their semantic accents; they are not additional neutral body-text roles.
+
+Help Center service cards use 16px names and 14px descriptions in the secondary color, replacing 13px/10px. On viewports up to 520px they use one column; wider layouts use two. The service-section heading and its hint wrap naturally. Other cards retain their layouts with wrapping and enough space for the larger text; Essentials artwork uses a compact 48px mobile cell. At widths up to 360px the date block stacks its time above day/weekday, navigation uses compact spacing and Life situation/shop cards use one column rather than shrinking text.
+
+Reference: [mobile Help Center after typography unification](docs/typography-help-center-v280.jpg). Browser QA checked 320px/390px mobile frames and a 1280px desktop frame; this is Chromium verification, not a physical iPhone test.
 
 ### Map
 
