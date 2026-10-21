@@ -36,7 +36,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.20-272'
+const BUILD_VERSION = 'v2026.10.21-273'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -104,6 +104,13 @@ function formatTravelTime(minutes: number) {
   if (hours === 0) return `${mins}m`
   if (mins === 0) return `${hours}h`
   return `${hours}h ${mins}m`
+}
+
+function ActivityStatus({ elapsed, label, timeLabel }: { elapsed: number; label: string; timeLabel: string }) {
+  return <div className="activity-status">
+    <strong className="travel-elapsed" aria-label={timeLabel}>{String(Math.max(1, elapsed)).padStart(2, '0')} min</strong>
+    <span className="activity-phase travel-action-label">{label}</span>
+  </div>
 }
 
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
@@ -2507,8 +2514,8 @@ export default function App() {
     {phoneActivity && <div className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>
       <section className="travel-screen phone-activity" role="dialog" aria-modal="true" aria-labelledby="phone-activity-title" aria-busy="true" tabIndex={-1} ref={phoneSearchModalRef}>
         <PhoneSearchIcon />
-        <div className="travel-route-heading"><p>{underRainCover ? 'Browsing · under cover' : 'Browsing'}</p><h2 id="phone-activity-title">{phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Looking for information' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading through options' : 'Saving useful addresses'}</h2></div>
-        <div className="travel-elapsed phone-activity-meta" aria-label="Elapsed browsing time"><Icon name="clock" /><strong>{formatTravelTime(Math.max(0, phoneActivity.total - phoneActivity.remaining))}</strong></div>
+        <div className="travel-route-heading"><h2 id="phone-activity-title">Looking for information</h2></div>
+        <ActivityStatus elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel="Elapsed browsing time" label={phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Searching' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading options' : 'Saving addresses'} />
       </section>
     </div>}
 
@@ -2523,8 +2530,8 @@ export default function App() {
       const elapsed = Math.max(0, trip.total - trip.remaining)
       const phase = getTravelDisplayPhase(trip)
       return <div className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><section className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
-        {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} phaseLabel={phase.label} moving={phase.walking} />}
-        <div className="travel-elapsed" aria-label="Elapsed travel time"><Icon name="clock" /><strong>{formatTravelTime(elapsed)}</strong></div>
+        {underRainCover ? <><div className="travel-visual rain-cover-visual"><Icon name="umbrella" /></div><div className="travel-route-heading"><p>Journey paused</p><h2>Under cover</h2></div><p className="rain-travel-note">Your journey resumes when the rain stops.</p><button className="rain-resume" onClick={() => setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)}>Continue journey in the rain</button></> : <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} moving={phase.walking} />}
+        <ActivityStatus elapsed={elapsed} timeLabel="Elapsed travel time" label={underRainCover ? 'Under cover' : phase.label} />
       </section></div>
     })()}
 
