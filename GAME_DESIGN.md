@@ -2,7 +2,11 @@
 
 This document describes the current implementation and separately marked agreed narrative/design decisions. It is a living reference for gameplay rules and should be updated when mechanics change.
 
-**Last documentation sync:** 2026-10-21 · Neutral office-worker protagonist. Latest application build: `v2026.10.21-278`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+**Last documentation sync:** 2026-10-21 · Neutral office-worker protagonist. Latest application build: `v2026.10.21-279`. Current clinic, mood, condition, inventory, journal and Status rules are recorded below; older versioned sections describe their historical behavior. Current hosting status is recorded under Repository access and hosting. Startup/navigation measurements and extended-session QA are summarized below; journal batching is implemented in v156.
+
+### Informational essentials cards (v279)
+
+Phone and Clothing in Inventory are informational cards without tap actions. Phone shows Battery and Condition; active shelter charging is shown beside Battery. Phone apps open from the bottom navigation, and charging collection stays available at the Night Shelter. Clothing shows Clean and Condition without an extra details modal.
 
 ### Clothing wetness deferred for the first release (v278)
 

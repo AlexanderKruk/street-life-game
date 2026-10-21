@@ -37,7 +37,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.21-278'
+const BUILD_VERSION = 'v2026.10.21-279'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2586,12 +2586,12 @@ export default function App() {
 
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
       <div className="inventory-grid essentials-grid">
-        <button className="inventory-item usable" onClick={event => { event.currentTarget.focus({ preventScroll: true }); if (shelterPhoneCharging) toggleShelterPhoneCharging(); else { setPhoneApp('home'); setScreen('phone') } }}>
-          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%<br />{shelterPhoneCharging ? 'Charging · tap to collect' : 'tap to open'}</small></div>
-        </button>
-        <button className="inventory-item usable" onClick={() => setInfoModal({ title: 'Clothing', text: `Clean ${Math.round(inventory.clothingCleanliness)}%\nCondition ${Math.round(inventory.jacket)}%${CLOTHING_WETNESS_ENABLED ? `\nWetness ${Math.round(game.wetness ?? 0)}%` : ''}\n\nHygiene max ${hygieneLimit}. Washing your clothes improves cleanliness and the hygiene limit.${CLOTHING_WETNESS_ENABLED ? ' Wet clothes drain Energy and Mood, especially in cold wind, and reduce outdoor sleep recovery. Dry indoors; a canopy stops new rain but dries clothes slowly.' : ''}` })}>
+        <div className="inventory-item">
+          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%{shelterPhoneCharging ? ' · Charging' : ''}<br />Condition {Math.round(inventory.phoneCondition)}%</small></div>
+        </div>
+        <div className="inventory-item">
           <ItemArt id="clothing" /><div><strong>Clothing</strong><small>Clean {Math.round(inventory.clothingCleanliness)}%<br />Condition {Math.round(inventory.jacket)}%</small></div>
-        </button>
+        </div>
         <div className="inventory-item">
           <ItemArt id="documents" /><div><strong>Documents</strong><small>{inventory.documents ? 'With you' : 'Missing'}</small></div>
         </div>

@@ -56,8 +56,10 @@ try {
   fireEvent.click(screen.getByRole('button', { name: /^Status$/ }));
   assert(!document.querySelector('.wet-clothes'));
   fireEvent.click(screen.getByRole('button', { name: /^Inventory$/ }));
-  fireEvent.click(screen.getByRole('button', { name: /^Clothing/ }));
-  assert(!/Wetness|Wet clothes|Dry indoors/.test(screen.getByRole('dialog').textContent));
+  const clothing = screen.getByText('Clothing').closest('.inventory-item');
+  fireEvent.click(clothing);
+  assert(!screen.queryByRole('dialog'));
+  assert(!/Wetness|Wet clothes|Dry indoors/.test(clothing.textContent));
   setup({ 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 5, remaining: 5 } });
   assert(!screen.queryByRole('dialog', { name: 'Rain on the street' }));
   act(() => { for (const timer of [...timers.values()]) if (timer.delay === 250) timer.fn(); });
