@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-280`.
+**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-281`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -662,6 +662,8 @@ Use the shared regular/semibold/bold weights: `--weight-regular` 400, `--weight-
 Help Center service cards use 16px names and 14px descriptions in the secondary color, replacing 13px/10px. On viewports up to 520px they use one column; wider layouts use two. The service-section heading and its hint wrap naturally. Other cards retain their layouts with wrapping and enough space for the larger text; Essentials artwork uses a compact 48px mobile cell. At widths up to 360px the date block stacks its time above day/weekday, navigation uses compact spacing and Life situation/shop cards use one column rather than shrinking text.
 
 Reference: [mobile Help Center after typography unification](docs/typography-help-center-v280.jpg). Browser QA checked 320px/390px mobile frames and a 1280px desktop frame; this is Chromium verification, not a physical iPhone test.
+
+Result modals use a specific hierarchy (v281): place names and large meter percentages use Title (20px mobile, 24px desktop); narrative/reactions/memories, meter labels such as Battery and the Got it button use Body (16px). Narrative and meter labels use regular 400 weight and primary text color; the button uses semibold 600. Service descriptions, hours, On map, notices, costs and Mood summary stay Small (14px). The narrative is marked separately in `ResultCard.tsx` so compact-result styles cannot flatten it back into metadata. Expanded source details remain secondary text.
 
 ### Map
 

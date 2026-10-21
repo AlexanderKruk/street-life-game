@@ -773,7 +773,7 @@ button.inventory-item { width:100%; }
 .result-details[open] summary::after { transform:rotate(225deg); top:15px; }
 .result-details > .result-description { font-size:var(--font-small); margin-top:6px; }
 .result-details .result-change-list { margin:8px 0; }
-.result-confirm { appearance:none; -webkit-appearance:none; flex-shrink:0; width:100%; min-height:42px; margin-top:10px; border:1px solid #998a77; border-radius:10px; background:#b9a58b; color:#151a1c; font:inherit; font-size:var(--font-small); font-weight:var(--weight-semibold); cursor:pointer; }
+.result-confirm { appearance:none; -webkit-appearance:none; flex-shrink:0; width:100%; min-height:42px; margin-top:10px; border:1px solid #998a77; border-radius:10px; background:#b9a58b; color:#151a1c; font:inherit; font-size:var(--font-body); font-weight:var(--weight-semibold); cursor:pointer; }
 .result-confirm:active { background:#ab967b; }
 .compact-info-result { --result-heading-size:var(--font-title); --result-text-size:var(--font-small); font-size:var(--result-text-size); }
 .compact-info-heading { display:flex; flex-wrap:nowrap; align-items:center; gap:8px; }
@@ -797,8 +797,11 @@ button.inventory-item { width:100%; }
 .compact-info-mood.positive { color:#a6c7b2; }
 .compact-info-mood.negative { color:#d4a196; }
 .compact-info-result .result-details { border-top:0; margin-top:0; }
-.compact-info-result :is(.result-description,.result-lead,.result-notice,.compact-info-saved,.compact-info-summary,.result-change,.result-place-title,.result-place p,.result-place-title span,.status-stat-label strong,.status-stat-label small,.result-stat-delta) { font-size:var(--result-text-size); }
+.compact-info-result :is(.result-notice,.compact-info-saved,.compact-info-summary,.result-change,.result-place-title,.result-place p,.result-place-title span,.status-stat-label small,.result-stat-delta) { font-size:var(--result-text-size); }
 .compact-info-result .result-stat-panel .status-stat-value > span { font-size:var(--result-heading-size); }
+/* Narrative and actions use Body; place facts and costs stay Small. */
+.result-modal .result-narrative { font-size:var(--font-body); font-weight:var(--weight-regular); color:var(--text-primary); line-height:1.5; }
+.result-modal .result-stat-panel .status-stat-label strong { font-size:var(--font-body); font-weight:var(--weight-regular); color:var(--text-primary); }
 .result-modal :focus-visible { outline:2px solid #dcc2a2; outline-offset:2px; }
 .result-art-caption { position:absolute; top:10px; right:12px; border:1px solid #50585a; border-radius:6px; padding:4px 7px; background:rgba(18,23,25,.85); color:var(--text-secondary); font-size:var(--font-small); letter-spacing:.05em; }
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }

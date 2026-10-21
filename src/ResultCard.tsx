@@ -110,18 +110,18 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           {compactPlace ? <p className="result-description">{compactPlace.detail}</p> : !!presentation?.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>
           </div>)}</div>}
-          {presentation?.lead && <p className="result-description">{presentation.lead}</p>}
+          {presentation?.lead && <p className="result-description result-narrative">{presentation.lead}</p>}
           {!compactPlace && !!presentation?.places?.length && presentation.mapStatus && <p className="compact-info-saved"><Icon name="check" />{presentation.mapStatus}</p>}
           {presentation?.notice && <p className="result-notice">{presentation.notice}</p>}
-          {result.reflection && <p className="result-description">{result.reflection}</p>}
+          {result.reflection && <p className="result-description result-narrative">{result.reflection}</p>}
         </> : presentation ? <>
-          <p className="result-lead">{presentation.lead}</p>
+          <p className="result-lead result-narrative">{presentation.lead}</p>
           {!!presentation.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <Icon name="map" />
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
-        </> : <p className="result-description">{result.text}</p>}
+        </> : <p className="result-description result-narrative">{result.text}</p>}
         {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} />)}</div>}
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
