@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-21. **Application build:** `v2026.10.21-286`.
+**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-287`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -112,6 +112,8 @@ While the player reads the result, game time and travel progression stop. Pressi
 Current snapshot coverage includes game needs/money/intoxication, carried inventory and active-effect membership. Housing/employment/referrals, storage contents, discovered addresses, mobile-service duration and effect-duration extensions are described in outcome text where available; they do not have dedicated numeric result rows.
 
 ## Action availability
+
+Location headers omit the redundant “You are here · Open” line, and action sections omit “Actions move time forward”. Closed locations still show their next opening time. Standard action cards put the name and duration/cost in the first row; descriptions, unavailable reasons and effect tags span the full content width below, including Try to sleep and charging cards. Street thought choices and the emergency call retain their dedicated layouts.
 
 Location action lists show all currently enabled choices first, followed by a dimmed **Unavailable now** group. Within each group, choices use the existing seeded ordering; eligible choice order is not guaranteed to put a safe response first. Unavailable actions remain visible, cannot be clicked, and configured actions show the schedule or missing requirement. Unavailable sleep actions cannot open the duration chooser. Street curates at most three thoughts instead of listing every action; selected unavailable thoughts still appear last; support and phone choices use it too.
 
@@ -707,7 +709,7 @@ All Got it windows share centered blocking presentation, blur, control locks, fo
 
 Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. The original 14 catalog events and seven new ambient/patrol scenes have artwork; the two v283 everyday encounters use compact icon cards. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
 
-Main current-location headers also have dedicated environment imagery for Station, Night Shelter, Help Center, Schronisko, Day Center, Free Clinic, Hospital, Job Centre and Day Work. These nine place images show roughly 5–10 ordinary visitors, residents, patients or workers, without the protagonist and are independent of event artwork. The existing Street and Shop presentations remain. Main-place headers keep the location name, status and description over a dark gradient, with the normal actions below. Images load only for the visited place, use 480/768/1024/1400px WebP variants and stay outside startup image warmup. Exact prompts and paths are recorded in `docs/art/location-generation.json`. `check-location-art.cjs` covers all current places, Station actions, navigation and reload.
+Main current-location headers also have dedicated environment imagery for Station, Night Shelter, Help Center, Schronisko, Day Center, Free Clinic, Hospital, Job Centre and Day Work. These nine place images show roughly 5–10 ordinary visitors, residents, patients or workers, without the protagonist and are independent of event artwork. The existing Street and Shop presentations remain. Main-place headers keep the location name, closed-place opening notice and description over the image, with the normal actions below. The artwork keeps its 16:9 composition when space permits; text sits at the bottom over a transparent gradient (clear at the top, at most 78% dark at the bottom), with a subtle text shadow for readability. Shop uses the same transparent bottom treatment. Images load only for the visited place, use 480/768/1024/1400px WebP variants and stay outside startup image warmup. Exact prompts and paths are recorded in `docs/art/location-generation.json`. `check-location-art.cjs` covers all current places, Station actions, navigation and reload.
 
 ## Phone Goals and History
 
@@ -778,7 +780,7 @@ The v283 GitHub Pages workflow passed the full tests and production build before
 - Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
 - Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
 - Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
-- Last confirmed successful gameplay deployment: v285 on 2026-10-21, commit `3b0e53ea8379f402cb61e17fc8a5d6286c2aa8aa` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39654786118)). The current source prepares v286; publication is verified separately from a local build.
+- Last confirmed successful gameplay deployment: v286 on 2026-10-22, commit `f0f66608fad1aa9b20b78752bcce9380e771bd2f` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39724822199)). The current source prepares v288; publication is verified separately from a local build.
 - Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
 
 ## Design principles
