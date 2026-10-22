@@ -369,9 +369,9 @@ button.inventory-item { width:100%; }
 .shop-item:disabled { opacity:.38; }
 /* Compact illustrated shop; other location cards keep their existing layout. */
 .shop-screen .game-header { margin-bottom:0; }
-.shop-hero { position:relative; isolation:isolate; min-height:145px; margin:0 -18px 12px; padding:70px 18px 16px; background:#0b0f13; overflow:hidden; }
+.shop-hero { position:relative; isolation:isolate; min-height:145px; margin:0 -18px; padding:70px 18px 16px; background:#0b0f13; overflow:hidden; }
 .shop-hero-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2; }
-.shop-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,transparent 30%,rgba(11,15,19,.18) 50%,rgba(11,15,19,.78) 100%); pointer-events:none; }
+.shop-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,transparent 30%,rgba(11,15,19,.22) 50%,rgba(11,15,19,.78) 100%); pointer-events:none; }
 .shop-hero h2,.shop-hero p { text-shadow:0 1px 4px rgba(0,0,0,.8); }
 .shop-hero h2 { margin:0 0 4px; font-size:var(--font-title); color:var(--text-primary); }
 .shop-hero p { margin:0; font-size:var(--font-small); color:var(--text-secondary); }
@@ -601,9 +601,9 @@ button.inventory-item { width:100%; }
 .location-summary .location-icon { display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0; filter:none; color:#d7b58a; }
 .location-summary .location-icon svg { width:38px; height:38px; }
 .location-summary h2 { font-size:var(--font-title); margin-bottom:3px; }
-.location-summary.location-hero { position:relative; isolation:isolate; min-height:clamp(210px,30svh,270px); aspect-ratio:16 / 9; align-items:flex-end; margin:0 -18px 16px; padding:100px 18px 14px; overflow:hidden; background:#101416; }
+.location-summary.location-hero { position:relative; isolation:isolate; min-height:clamp(210px,30svh,270px); aspect-ratio:16 / 9; align-items:flex-end; margin:0 -18px; padding:100px 18px 14px; overflow:hidden; background:#101416; }
 .location-hero-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:-2; }
-.location-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,transparent 30%,rgba(11,15,19,.18) 50%,rgba(11,15,19,.78) 100%); pointer-events:none; }
+.location-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,transparent 30%,rgba(11,15,19,.22) 50%,rgba(11,15,19,.78) 100%); pointer-events:none; }
 .location-hero > div { text-shadow:0 1px 4px rgba(0,0,0,.8); }
 .location-hero > div:not(.location-icon) { min-width:0; }
 .location-hero .location-icon { align-self:flex-end; margin-bottom:3px; }
@@ -693,6 +693,7 @@ button.inventory-item { width:100%; }
 .nav-condition.very-bad { background:#cf7474; }
 .nav-condition.very-good { background:#8dc5a2; }
 .stat > span svg { width:24px; height:24px; color:var(--text-secondary); }
+.location-screen .game-header { margin-bottom:0; }
 .game-header + .event { margin-top:0; }
 .build-version { color:var(--text-muted); font-size:var(--font-small); font-variant-numeric:tabular-nums; }
 .street-screen { background:#101416; color:var(--text-primary); }
