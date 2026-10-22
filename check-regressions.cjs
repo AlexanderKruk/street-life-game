@@ -435,11 +435,12 @@ assert(!document.querySelector('.district-route path'), 'being outside has no fi
 click('Go →');assert(document.querySelector('.travel-sheet'));fireEvent.click(document.querySelector('.sheet-close'));
 assert.deepEqual(read(stateKey),mapBefore);
 
-// Street is an immediate exit; shops are nearby routes, with current-place shortcuts disabled.
+// Both shortcuts open routing directly, without a Go card; current-place shortcuts are disabled.
 const streetShortcut=within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Street',exact:true});
 assert(streetShortcut.disabled);
 fireEvent.click(streetShortcut);assert.deepEqual(read(stateKey),mapBefore);
 click('Nearest shop');assert(document.querySelector('.travel-sheet'));
+assert(!document.querySelector('.district-card'));
 assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
 assert.equal(read(stateKey).locationId,'street');
 fireEvent.click(document.querySelector('.sheet-close'));
@@ -448,8 +449,11 @@ assert(screen.getByRole('button',{name:'Nearest shop',exact:true}).disabled);
 const beforeExit=read(stateKey);
 fireEvent.click(screen.getByRole('button',{name:'Nearest shop',exact:true}));
 assert(!document.querySelector('.travel-sheet'));assert.deepEqual(read(stateKey),beforeExit);
-click('Street');assert.deepEqual(read(stateKey),{...beforeExit,locationId:'street'});
-assert(!document.querySelector('.travel-sheet'));assert(!read('street-life-trip-v1'));
+click('Street');assert(document.querySelector('.travel-sheet'));
+assert(!document.querySelector('.district-card'));assert.deepEqual(read(stateKey),beforeExit);
+fireEvent.click(document.querySelector('.sheet-close'));assert.deepEqual(read(stateKey),beforeExit);
+click('Street');click(/^Walk/);assert.equal(read('street-life-trip-v1').destinationId,'street');
+assert.equal(read(stateKey).locationId,'shop');
 setup({locationId:'station',minutes:600});click(/Map$/);
 assert(!screen.getByRole('button',{name:'Street',exact:true}).disabled);
 assert(!screen.getByRole('button',{name:'Nearest shop',exact:true}).disabled);
@@ -822,7 +826,7 @@ advance(19000);assert.equal(read(stateKey).minutes,1099);assert(!read(lifeKey).s
 advance(1000);assert.equal(read(lifeKey).shelterUntilDay,7);ok();
 
 // Leaving loses arrival priority, while vacancies remain fixed for the day.
-setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});click(/Map$/);click('Street');
+setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});click(/Map$/);click('Street');click(/^Walk/);advance(20000);
 assert.equal(read(stateKey).locationId,'street');assert(!read(arrivalKey));assert.equal(read(lifeKey).shelterVacancies,1);
 setup({locationId:'shelter',minutes:1110},{[lifeKey]:vacancyKey(1),[arrivalKey]:{day:0,minute:1020}});assert.equal(read(arrivalKey).minute,1110);click(/Join registration queue/);assert.equal(read('street-life-shelter-queue-v1').peopleAhead,2);advance(20000);assert(!read(lifeKey).shelterUntilDay);ok();
 

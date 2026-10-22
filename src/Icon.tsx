@@ -1,6 +1,11 @@
-import { memo, type ReactNode } from 'react'
+import { memo, useId, type ReactNode } from 'react'
 
-export type IconName = 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
+export type IconName = 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'building' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
+
+const WalkingGlyph = memo(function WalkingGlyph() {
+  const maskId = useId()
+  return <><defs><mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24" style={{ maskType: 'alpha' }}><image href="/street-life-game/assets/travel-walker.webp" width="24" height="24" /></mask></defs><rect width="24" height="24" fill="currentColor" stroke="none" mask={`url(#${maskId})`} /></>
+})
 
 const paths: Record<IconName, ReactNode> = {
   thought: <><path d="M7 16a6 6 0 1 1 10 0H7Z" /><circle cx="6" cy="19" r="1.5" /><path d="M3 22h.01" /></>,
@@ -36,6 +41,7 @@ const paths: Record<IconName, ReactNode> = {
   energy: <path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z" />,
   heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0l-1 1-1-1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />,
   shower: <><path d="M3 3h3l4 4m-3 3 6-6 4 4-6 6-4-4Zm7 6 1 1m3-5 1 1m-6 7 1 1m3-5 1 1m3-5 1 1m-4 7 1 1m3-5 1 1" /></>,
+  building: <><rect x="4" y="2" width="16" height="20" rx="1" /><path d="M2 22h20M9 22v-5h6v5M8 6h2m4 0h2M8 10h2m4 0h2M8 14h2m4 0h2" /></>,
   house: <><path d="m3 10 9-8 9 8M5 8v13h14V8M9 21v-8h6v8" /></>,
   documents: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6ZM14 2v6h6M8 12h8m-8 4h6" /></>,
   thermometer: <><path d="M9 15V5a3 3 0 0 1 6 0v10a5 5 0 1 1-6 0Z" /><path d="M12 8v10" /><circle cx="12" cy="18" r="1" /></>,
@@ -63,7 +69,7 @@ const paths: Record<IconName, ReactNode> = {
   moon: <path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z" />,
   bench: <><path d="M4 4h16v6H4zM2 13h20v4H2zM5 10v3m14-3v3M5 17v4m14-4v4" /></>,
   bottle: <path d="M10 2h4v4l2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10l2-4Z" />,
-  walk: <image href="/street-life-game/assets/travel-walker.webp" width="24" height="24" />,
+  walk: <WalkingGlyph />,
   bed: <><path d="M3 5v16m18-9v9M3 17h18M3 12h15a3 3 0 0 1 3 3v2H3z" /><path d="M6 9h5v3H6z" /></>,
   station: <><rect x="5" y="2" width="14" height="16" rx="3" /><path d="M5 7h14m-9-5v5m4-5v5M8 21l2-3m6 3-2-3M8 13h1m6 0h1" /></>,
   bus: <><path d="M8 6v6m7-6v6M2 12h19.6M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2v-2c0-.4-.1-.8-.2-1.2L20 5c-.3-.6-.8-1-1.4-1H5c-1.7 0-3 1.3-3 3v11h3M9 18h5" /><circle cx="7" cy="18" r="2" /><circle cx="16" cy="18" r="2" /></>,
@@ -119,5 +125,5 @@ export function choiceIcon(id: string, label = ''): IconName {
 }
 
 export function locationIcon(id: string): IconName {
-  return ({ street: 'walk', station: 'station', shop: 'shop', shelter: 'bed', 'residential-shelter': 'bed', support: 'help', jobcenter: 'work', work: 'work', hospital: 'hospital', 'free-clinic': 'hospital', daycenter: 'help' } as Record<string, IconName>)[id] ?? 'walk'
+  return ({ street: 'walk', station: 'station', shop: 'shop', shelter: 'bed', 'residential-shelter': 'bed', support: 'building', jobcenter: 'work', work: 'work', hospital: 'hospital', 'free-clinic': 'hospital', daycenter: 'building' } as Record<string, IconName>)[id] ?? 'building'
 }

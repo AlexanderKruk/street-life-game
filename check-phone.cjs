@@ -98,7 +98,7 @@ try {
   setup({locationId:'street',minutes:600},{[invKey]:phone});
   click('Phone');assert(screen.getByText('Phone unavailable'));assert(!document.querySelector('.phone-app-grid'));
   assert(!document.querySelector('.phone-app-content'));click('Map');assert(screen.getByRole('button',{name:'Nearest shop'}));
-  click('Nearest shop');click('Go →');click(/Walk/);assert(read('street-life-trip-v1'));
+  click('Nearest shop');click(/Walk/);assert(read('street-life-trip-v1'));
  }
  // Expiring service while Search is open disables its actions without hiding history.
  setup({locationId:'station',minutes:600},{'street-life-mobile-service-until':'602'});

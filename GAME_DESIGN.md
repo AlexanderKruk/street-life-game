@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-295`.
+**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-296`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -665,7 +665,7 @@ Several older generic shop/support actions still exist in `game.ts`, while the c
 
 The fixed bottom navigation is Map, Inventory, current place (raised center button), Status and Phone. The central button uses the current place's icon and name. Travel/events/results block background navigation. Map, Inventory, Status and Phone home omit redundant screen headings; internal phone apps retain back navigation and their own labels.
 
-The shared sticky header shows day/time, money, weather, Mood and actual phone Battery. Battery becomes red strictly below 30%. The version label and Reset save are in the footer. Dark responsive styling, safe-area spacing and one contour icon system are shared across screens. Street uses the same pedestrian artwork as walking travel.
+The shared sticky header shows day/time, money, weather, Mood and actual phone Battery. Battery becomes red strictly below 30%. The version label and Reset save are in the footer. Dark responsive styling, safe-area spacing and one contour icon system are shared across screens. Street uses the same pedestrian artwork as walking travel. Location icons are neutral gray in headers, map controls/cards, travel and phone notes. In the bottom menu, only the active tab uses the muted yellow accent; inactive icons stay gray. The shared pedestrian uses its original silhouette as an alpha mask and inherits the UI color, so it follows the same active-tab rule. Raster walking artwork stays gray during travel.
 
 Street curates at most three direct thoughts: an information/understanding choice, a rest/movement choice and a practical response. Enabled choices come first and eligible choice order is seeded/shuffled rather than always placing the safe response first. There is no intention submenu or generic Other actions button. Opening-night money/work/bottle options are withheld until later; location knowledge arrives through observation, recall and authored phone answers. Narrator describes observable surroundings; first-person choices express possible intentions without prescribing the player's feelings.
 
@@ -690,6 +690,14 @@ All text sizes reference those three CSS variables in `src/styles.css`; do not a
 | Muted metadata | `--text-muted` | `#9aa3a8` |
 
 Use the shared regular/semibold/bold weights: `--weight-regular` 400, `--weight-semibold` 600 and `--weight-bold` 700. Card names use 600 and descriptions 400. Colors for success, warnings, negative effects, selected navigation, inverse button text and app icons retain their semantic accents; they are not additional neutral body-text roles.
+
+All green and yellow interface accents follow the approved muted palette: sage green `--color-positive` **#7f9b87** and ochre `--color-warning` **#af9868**. Reuse these tokens for stat/result bars and loss trails, positive/warning text and chips, open hours, active navigation, controls, goals, map accents and phone apps. Pair them with muted semantic surfaces/borders (`--color-positive-surface` / `--color-positive-border`, `--color-warning-surface` / `--color-warning-border`); pressed ochre buttons use `--color-warning-pressed`. Red critical states, negative effects and capacity hatching keep their established colors. The stat thresholds and gameplay effects are unchanged.
+
+Backpack effect chips use Small (14px), regular 400 weight and compact 2px vertical / 4px horizontal padding. Keep each chip within the available text column and wrap long effects naturally. Medicine uses the compact label **Recovery×3** in Backpack; the hint and treatment result retain the Cold context. Do not reserve extra vertical space for the overlaid bottom-right discard button.
+
+Inline location notices (for example, eating food from the backpack) vertically center the status dot and message with equal top/bottom padding. The dot has no extra top margin; multi-line messages retain the same centered alignment.
+
+Help Center and Day Center use a shared outline building icon rather than a question mark. Use this building as the fallback for locations without a suitable specific icon. The shared location mapping applies to location headers, map cards, travel headings, phone notes and the central navigation button; keep the established specific icons for other facilities.
 
 Help Center service cards use 16px names and 14px descriptions in the secondary color, replacing 13px/10px. On viewports up to 520px they use one column; wider layouts use two. The service-section heading and its hint wrap naturally. Other cards retain their layouts with wrapping and enough space for the larger text; Essentials artwork uses a compact 48px mobile cell. At widths up to 360px the date block stacks its time above day/weekday, navigation uses compact spacing and Life situation/shop cards use one column rather than shrinking text.
 
@@ -742,7 +750,7 @@ Approximate durations round to the nearest five minutes (32 → ≈30m, 33 → �
 
 The dark overhead map fits between the header and bottom navigation, with the destination card in its own lower space. Real UI labels anchor to dispersed city-block/railway landmarks through the same cover projection as the artwork. Station is anchored at approximately 34.5% across / 65.8% down; Day Work's label sits to the left of its marker. Compact labels are 16px.
 
-The top toolbar has Street and Nearest shop, with no Map/City map title. Street steps outside without travel; Nearest shop opens the 5–15-minute route chooser. Each shortcut is disabled at that place. These two have no fixed map pins. Discovered facilities retain selectable markers and shared route anchors; opening hours appear on the destination card in compact green/red text. There is no global goal reminder or You are here line in that card.
+The top toolbar has Street and Nearest shop, with no Map/City map title. Both shortcuts open the walking/public-transport chooser immediately, without a destination card or extra Go step. Nearest shop keeps its 5–15-minute route. Each shortcut is disabled at that place. These two have no fixed map pins. Discovered facilities retain selectable markers, shared route anchors and a destination card with Go; opening hours appear on that card in compact green/red text. There is no global goal reminder or You are here line in that card.
 
 ### Results, illustrations and items
 
@@ -821,7 +829,7 @@ The v283 GitHub Pages workflow passed the full tests and production build before
 - Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
 - Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
 - Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
-- Last confirmed successful gameplay deployment: v292 on 2026-10-22, commit `6b8dd980cdddcb84cf39751c0d10720f08582819` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39737932963)). The current source prepares v294; publication is verified separately from a local build.
+- Last confirmed successful deployment: v295 on 2026-10-22, commit `8052e19f4dd6f204c7ba72fe5a9f8c3d79b59b03` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39778677358)). The current source prepares v296 with the accumulated chip, location-icon, direct-route, notice-alignment and muted UI accent changes; publication is verified separately from a local build.
 - Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
 
 ## Design principles

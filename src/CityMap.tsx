@@ -72,10 +72,10 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
       </div>
     </div>
     <DistrictScene places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />
-    <div className="district-card" aria-live="polite">
+    {selected.id !== 'street' && selected.id !== 'shop' && <div className="district-card" aria-live="polite">
       <div className="district-place-icon"><Icon name={locationIcon(selected.id)} /></div>
       <div className="district-place-copy"><div className="district-place-heading"><h3>{selected.name}</h3><p className={`district-hours ${isOpen(selected, minutes) ? 'open' : 'closed'}`}>{hours(selected)}</p></div><small>{selected.id === 'shelter' ? reservedBed ? 'Use your reserved bed during admission hours.' : 'A place is not guaranteed.' : selected.description}</small></div>
       <button className="district-route-button" onClick={() => onRoute(selected.id)}>Go →</button>
-    </div>
+    </div>}
   </section>
 }

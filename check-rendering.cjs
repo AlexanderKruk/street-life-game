@@ -114,7 +114,8 @@ function measure(App) {
   assert(screen.getByRole('button', { name: 'Nearest shop' }));
   clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Nearest shop' }));
   assert.equal(count('DistrictScene'), 1);
-  assert.equal(document.querySelector('.district-card h3').textContent, 'Cheap Shop');
+  assert(!document.querySelector('.district-card'));
+  assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
   setup(App, 'goals', { day: 2, minutes: 719 }); advance(1);
   assert(count('JournalGoals') > 0);
   assert(document.querySelector('.completed-goals .goal strong').textContent.includes('morning'));
