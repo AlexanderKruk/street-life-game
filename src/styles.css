@@ -694,6 +694,7 @@ button.inventory-item { width:100%; }
 .nav-condition.very-good { background:#8dc5a2; }
 .stat > span svg { width:24px; height:24px; color:var(--text-secondary); }
 .location-screen .game-header { margin-bottom:0; }
+.location-surface > .event { margin-top:16px; }
 .game-header + .event { margin-top:0; }
 .build-version { color:var(--text-muted); font-size:var(--font-small); font-variant-numeric:tabular-nums; }
 .street-screen { background:#101416; color:var(--text-primary); }
