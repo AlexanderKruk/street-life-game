@@ -826,6 +826,8 @@ Some historical regression suites explicitly enable deferred wetness; the separa
 
 Saves use `street-life-save-v3`, where v3 is a schema name, not the application build. Last-ten-published-build compatibility is checked with captured historical fixtures and repeated reloads, without clearing user storage. Fixtures currently cover v240–v249; they are not automatically refreshed for every build. `scripts/capture-recent-saves.cjs` refreshes the window when compatibility-sensitive work calls for it. The policy does not implement ten save slots or retain ten playable save snapshots.
 
+The v298 local production build and focused Phone regression check passed before publication. The GitHub Pages workflow runs the full suite again before deployment.
+
 The v283 GitHub Pages workflow passed the full tests and production build before publication. The v284 event expansion passed focused event, artwork, responsive-image, cache and production-build checks; the existing deployment workflow runs the full suite again before publishing.
 
 ## Repository and hosting
