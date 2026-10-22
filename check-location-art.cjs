@@ -33,6 +33,12 @@ try{
   assert(image,`${place.name} has a main-tab image`);
   assert(!seen.has(image.src),`${place.name} does not reuse another place's image`);seen.add(image.src);
   assert(!image.src.includes('/event-'),'place imagery is independent of event scenes');
+  if(place.id !== 'shop'){
+   const header=image.closest('.location-summary.location-hero');
+   assert(header && header.querySelector('h2')?.textContent===place.name,`${place.name} keeps its title over the artwork, including Street`);
+   assert.equal(document.querySelector('.location-surface > .street-art'),null,'Street artwork is not detached from its caption');
+  }
+  if(!['shop','work','support'].includes(place.id))assert(document.querySelector('.location-actions-title'),'every location action heading uses balanced spacing');
   if(!['street','shop'].includes(place.id)){
    assert(image.closest(`[data-location-id="${place.id}"]`),'image belongs to the current location header');
    assert(image.src.includes('/location-'));

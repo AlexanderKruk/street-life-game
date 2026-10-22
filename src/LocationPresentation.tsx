@@ -12,7 +12,7 @@ export const StreetArt = memo(function StreetArt({ phone, inline, illustration, 
   </div>
 })
 
-type SummaryProps = { id: string; name: string; description: string; open: boolean; opensAt: number }
+type SummaryProps = { id: string; name: string; description: string; open: boolean; opensAt: number; night?: boolean; streetIllustration?: string }
 const locationIllustrations: Record<string, string> = {
   station: 'location-station',
   shelter: 'location-night-shelter',
@@ -24,9 +24,10 @@ const locationIllustrations: Record<string, string> = {
   jobcenter: 'location-job-center',
   work: 'location-day-work',
 }
-export const LocationSummary = memo(function LocationSummary({ id, name, description, open, opensAt }: SummaryProps) {
+export const LocationSummary = memo(function LocationSummary({ id, name, description, open, opensAt, night = false, streetIllustration }: SummaryProps) {
   const illustration = locationIllustrations[id]
-  return <section className={`current location-summary${id === 'street' ? ' story-scene' : illustration ? ' location-hero' : ''}`} data-location-id={id}>
+  return <section className={`current location-summary${id === 'street' ? ' story-scene location-hero' : illustration ? ' location-hero' : ''}`} data-location-id={id}>
+    {id === 'street' && <StreetArt phone={false} inline={false} illustration={streetIllustration} night={night} />}
     {illustration && <img key={illustration} className="location-hero-image" {...responsiveImageProps(`/street-life-game/assets/${illustration}.webp`)} width="1600" height="900" alt="" aria-hidden="true" fetchPriority="high" />}
     {id !== 'street' && <div className="location-icon"><Icon name={locationIcon(id)} /></div>}
     <div>{id === 'street' ? <p className="eyebrow">A MOMENT ON THE STREET</p> : !open && <p className="eyebrow">CLOSED · OPENS AT {formatTime(opensAt)}</p>}<h2>{name}</h2><p>{description}</p></div>
