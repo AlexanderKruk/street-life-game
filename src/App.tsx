@@ -38,7 +38,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.22-292'
+const BUILD_VERSION = 'v2026.10.22-293'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -605,18 +605,6 @@ export default function App() {
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
   ], [activeGoal])
   const firstNight = firstNightTime(game) && life.housing === 'Street'
-  const openingScene = game.day === 1 && game.minutes < 1380
-    ? 'You stand on the street with your backpack. There is nowhere to go back to tonight. The station windows are still lit.'
-    : game.day === 1 ? 'The shops have lowered their shutters. Fewer people pass the station now. You are outside with your backpack; the waiting room is still lit.'
-    : game.minutes < 240 ? 'Most windows above the shops are dark. A bus passes without stopping. The station waiting room is still lit. Morning is several hours away.'
-    : 'The street is almost empty. Delivery vans have begun to pass the closed shops. The station lights are still on; the help centers will not open until eight.'
-  const streetScene = firstNight && game.day === 1 && game.minutes === 1320 ? openingScene : [
-    firstNight ? openingScene : '',
-    !firstNight && (game.minutes >= 1200 || game.minutes < 360) ? 'The street has grown quiet. Light spills from the station entrance, but it is no bed for the night.' : firstNight ? '' : game.minutes >= 1020 ? 'The daylight is fading. People hurry past the station while you decide where to spend the night.' : 'People pass the station, each on their way somewhere. You stop and think about your next step.',
-    weather.label === 'Rain' || weather.label === 'Showers' ? (CLOTHING_WETNESS_ENABLED ? 'Rain reaches your clothes; somewhere dry would make a difference.' : 'Rain falls on the pavement around you.') : temperature < 10 ? 'The air is cold against your face.' : 'The pavement is dry for now.',
-    game.energy < 30 ? 'Your legs feel heavy. Rest is becoming urgent.' : game.thirst < 30 ? 'Your mouth is dry. You need something to drink.' : game.hunger < 30 ? 'You have not eaten enough. Your stomach is empty.' : '',
-    shelterBooked ? 'You have a reserved shelter bed, if you can get there in time.' : discoveredLocations.includes('shelter') ? 'You know the shelter address, but a place is not guaranteed.' : 'You do not yet know where you can sleep safely.',
-  ].filter(Boolean).join(' ')
   const completedGoals = useMemo(() => goals.filter(goal => journalGoals[goal.id]), [goals, journalGoals])
   const pendingGoals = useMemo(() => goals.filter(goal => !journalGoals[goal.id])
     .sort((a, b) => Number(!!activeGoal && b.id === 'shelter') - Number(!!activeGoal && a.id === 'shelter')), [goals, journalGoals, activeGoal])
@@ -2462,7 +2450,7 @@ export default function App() {
     </header>
 
     {screen === 'location' && <div className="location-surface" inert={!!phoneActivity} aria-hidden={!!phoneActivity || undefined}>
-      {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} description={current.id === 'street' ? streetScene : current.description} open={open} opensAt={current.open} night={current.id === 'street' && (game.minutes >= 1200 || game.minutes < 360)} streetIllustration={current.id === 'street' && !infoModal?.illustration ? infoModal?.presentation?.illustration : undefined} />}
+      {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} description={current.description} open={open} opensAt={current.open} night={current.id === 'street' && (game.minutes >= 1200 || game.minutes < 360)} streetIllustration={current.id === 'street' && !infoModal?.illustration ? infoModal?.presentation?.illustration : undefined} />}
       {underRainCover && !trip && <p className="rain-cover-status"><Icon name="umbrella" />Under cover</p>}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       <ClosedContent closed={!open && current.id !== 'hospital' && !currentActions.some(action => actionUnavailableReason(action) === null)} opensAt={formatTime(current.open)}>

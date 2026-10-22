@@ -80,7 +80,7 @@ export type GameAction = {
 }
 
 export const locations: Location[] = [
-  { id: 'street', name: 'Street', icon: '🌆', description: 'An exposed city block. Free to stay, but there is little safety or real rest.', open: 0, close: 1440, travelMinutes: 60 },
+  { id: 'street', name: 'Street', icon: '🌆', description: 'Chance encounters, small opportunities and unexpected trouble.', open: 0, close: 1440, travelMinutes: 60 },
   { id: 'station', name: 'Station', icon: '🚉', description: 'Crowds, benches and small chances to earn.', open: 0, close: 1440, travelMinutes: 65 },
   { id: 'shop', name: 'Cheap Shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 10, travelRange: { min: 5, max: 15 } },
   { id: 'shelter', name: 'Night Shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 90 },
