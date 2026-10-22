@@ -697,6 +697,12 @@ Reference: [mobile Help Center after typography unification](docs/typography-hel
 
 Result modals use a specific hierarchy (v281): place names and large meter percentages use Title (20px mobile, 24px desktop); narrative/reactions/memories, meter labels such as Battery and the Got it button use Body (16px). Narrative and meter labels use regular 400 weight and primary text color; the button uses semibold 600. Service descriptions, hours, On map, notices, costs and Mood summary stay Small (14px). The narrative is marked separately in `ResultCard.tsx` so compact-result styles cannot flatten it back into metadata. Expanded source details remain secondary text.
 
+### Action and event choices (v294)
+
+Action alternatives and event answers share `ChoiceButton`: a 24px contour icon on the left, regular Body text in a flexible middle column and Small duration aligned to the right. The whole rounded card is clickable. Descriptions, prices, checks, effects and disabled reasons remain under the label; long labels wrap without overlapping duration. Choices use one column on mobile and desktop. This includes Street, location services/charging/work, shelter interviews, illustrated/compact events, rain responses, travel, phone searches, food freshness choices and sleep durations. Confirmation and navigation controls keep their own roles.
+
+Approximate durations round to the nearest five minutes (32 → ≈30m, 33 → ≈35m, 58 → ≈1h); a positive estimate below five minutes displays ≈5m. Longer estimates use hours and minutes. Ranges keep both endpoints and lower-bound estimates keep `+`. This changes presentation only: authored consequences, random travel/search lengths, game clocks, elapsed counters and opening hours retain exact values. New icons (thought, chat, hand, laundry) extend the existing contour system.
+
 ### Map
 
 The dark overhead map fits between the header and bottom navigation, with the destination card in its own lower space. Real UI labels anchor to dispersed city-block/railway landmarks through the same cover projection as the artwork. Station is anchored at approximately 34.5% across / 65.8% down; Day Work's label sits to the left of its marker. Compact labels are 16px.
@@ -780,7 +786,7 @@ The v283 GitHub Pages workflow passed the full tests and production build before
 - Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
 - Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
 - Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
-- Last confirmed successful gameplay deployment: v292 on 2026-10-22, commit `6b8dd980cdddcb84cf39751c0d10720f08582819` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39737932963)). The current source prepares v293; publication is verified separately from a local build.
+- Last confirmed successful gameplay deployment: v292 on 2026-10-22, commit `6b8dd980cdddcb84cf39751c0d10720f08582819` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39737932963)). The current source prepares v294; publication is verified separately from a local build.
 - Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
 
 ## Design principles

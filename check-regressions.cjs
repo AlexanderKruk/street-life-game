@@ -370,7 +370,7 @@ const openingText=document.querySelector('.story-scene div > p:last-child').text
 const phoneThought=screen.getByRole('button',{name:'Where can I get help in the morning?',exact:true});
 assert.equal(document.querySelectorAll('.story-actions .action small, .story-actions .action > span').length,3);assert.equal(phoneThought.querySelector('.choice-estimate').textContent,'≈15m');
 assert.equal(document.querySelector('[data-choice="music-walk"] .choice-duration').textContent,'≈30m');
-assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'≈32m+');
+assert.equal(document.querySelector('[data-choice="station-route"] .choice-duration').textContent,'≈30m+');
 assert(!phoneThought.querySelector('.choice-emoji'));assert.equal(phoneThought.querySelector('.story-action-icon').getAttribute('aria-hidden'),'true');
 assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));assert(!screen.queryByRole('button',{name:'Other actions',exact:true}));assert(!document.querySelector('.location-summary + .event'));
 assert(!document.querySelector('.story-choices').textContent.includes('TIME PAUSED'));
@@ -501,7 +501,7 @@ setup({locationId:'shop',health:20},{[invKey]:{phoneBattery:43,phoneCondition:72
 for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.999999]) {
  setup({}, {[invKey]:{transitCard:false},...(mode==='free'?{'street-life-effects-v1':[{id:'free-transit',expiresAt:5000}]}:{})});
  click('Map');click(/^.*Station/);click('Go →');
- assert(screen.getByRole('button',{name:/Public transport/}).textContent.includes('≈33m'));
+ assert(screen.getByRole('button',{name:/Public transport/}).textContent.includes('≈35m'));
  assert(screen.getByRole('button',{name:/Walk/}).textContent.includes('≈1h 5m'));
  if(mode==='fare-dodge') {
   click(/Ride without/);Math.random=()=>.99;click('Roll D20');Math.random=()=>draw;click('Continue');
@@ -982,8 +982,8 @@ setup({locationId:'residential-shelter',minutes:449});click(/Sleep safely/);choo
 for(const [energy,allowed] of [[100,[2]],[75.01,[2]],[75,[2,4]],[50.01,[2,4]],[50,[4,6]],[25.01,[4,6]],[25,[6,8]],[1,[6,8]]]) {
  setup({energy,minutes:1380});click(/Lie down here\? I’m not sure… But I could try./);
  const group=screen.getByRole('group',{name:'Sleep duration'});const options=within(group).getAllByRole('button');assert.equal(options.length,4);
- const enabled=options.filter(button=>!button.disabled).map(button=>Number(button.querySelector('strong').textContent.split(' ')[0]));assert.deepEqual(enabled,allowed);
- const selected=options.find(button=>button.getAttribute('aria-pressed')==='true');assert(allowed.includes(Number(selected.querySelector('strong').textContent.split(' ')[0])));
+ const enabled=options.filter(button=>!button.disabled).map(button=>Number(button.getAttribute('aria-label').split(' ')[0]));assert.deepEqual(enabled,allowed);
+ const selected=options.find(button=>button.getAttribute('aria-pressed')==='true');assert(allowed.includes(Number(selected.getAttribute('aria-label').split(' ')[0])));
  const disabled=options.find(button=>button.disabled);assert(disabled.title.includes(energy>50?'Not tired enough':'Too tired'));assert(disabled.querySelector('.sr-only').textContent.includes(disabled.title));
  fireEvent.click(disabled);assert.equal(group.querySelector('[aria-pressed="true"]'),selected);assert(!localStorage.getItem('street-life-sleep-v1'));
  chooseHours(allowed[0]);advance(3000);assert.equal(read(stateKey).minutes,1380);click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,allowed[0]*60);

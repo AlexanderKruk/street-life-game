@@ -23,6 +23,7 @@ import ResultCard, { type ResultCardData } from './ResultCard'
 import { locationPresentation, questionPresentation } from './resultPresentation'
 import { CHOICE_SEED_KEY, loadChoiceSeed, newChoiceSeed, shuffleChoiceOrder } from './streetChoiceOrder'
 import ChoiceOptions, { orderChoiceNodes } from './ChoiceOptions'
+import ChoiceButton, { approximateDuration, standardizeChoiceButton } from './ChoiceButton'
 import { LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
 import { useLatestAction } from './useLatestAction'
 import { getTravelPhase, getTravelDisplayPhase } from './travelPhases'
@@ -38,7 +39,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.22-293'
+const BUILD_VERSION = 'v2026.10.22-294'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -70,11 +71,6 @@ function loadRainResponse(): RainResponse | null {
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
 const PHONE_SEARCH_ESTIMATE = 15
-function approximateDuration(minutes: number) {
-  const hours = Math.floor(minutes / 60)
-  const remainder = minutes % 60
-  return `≈${hours ? `${hours}h` : ''}${remainder || !hours ? `${remainder}m` : ''}`
-}
 const PHONE_SEARCH_MIN = 10
 const PHONE_SEARCH_MAX = 25
 type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot }
@@ -371,13 +367,13 @@ function AvailableFirst({ children, className, tag = 'section', thoughtsOnly = f
     const ids = selected.map(node => isValidElement<{ 'data-choice'?: string }>(node) ? node.props['data-choice'] : '').join('|')
     const ordered = shuffleChoiceOrder(selected, orderSeed, `${decisionKey}|${ids}`)
     const Tag = tag
-    return <Tag className={className}>{ordered.filter(node => !disabled(node))}{ordered.filter(disabled)}</Tag>
+    return <Tag className={className}>{ordered.filter(node => !disabled(node)).map(standardizeChoiceButton)}{ordered.filter(disabled).map(standardizeChoiceButton)}</Tag>
   }
   const ordered = orderChoiceNodes(nodes, orderSeed, decisionKey)
   const available = ordered.filter(node => !disabled(node))
   const unavailable = ordered.filter(disabled)
   const Tag = tag
-  return <Tag className={className}>{available}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable}</Tag>
+  return <Tag className={className}>{available.map(standardizeChoiceButton)}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable.map(standardizeChoiceButton)}</Tag>
 }
 
 
@@ -2367,9 +2363,7 @@ export default function App() {
         <div className="sleep-duration-options" role="group" aria-label="Sleep duration">
           {SLEEP_HOURS.map(hours => {
             const reason = sleepDurationUnavailable(hours, game.energy)
-            return <button key={hours} className={hours === sleepHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === sleepHours} disabled={reason !== null} title={reason ?? undefined} autoFocus={hours === sleepHours} onClick={() => setSleepHours(hours)}>
-              <strong>{hours} h</strong><span className="sr-only"> · Wake {wakeLabel(hours, sleepChoice)}{reason && ` · ${reason}`}</span>
-            </button>
+            return <ChoiceButton icon="bed" label="Sleep" duration={`${hours}h`} aria-label={`${hours} h · Wake ${wakeLabel(hours, sleepChoice)}${reason ? ` · ${reason}` : ''}`} detail={<span className="sr-only"> · Wake {wakeLabel(hours, sleepChoice)}{reason && ` · ${reason}`}</span>} key={hours} className={hours === sleepHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === sleepHours} disabled={reason !== null} title={reason ?? undefined} autoFocus={hours === sleepHours} onClick={() => setSleepHours(hours)} />
           })}
         </div>
         {SLEEP_HOURS.some(hours => sleepDurationUnavailable(hours, game.energy)) && <p className="sleep-choice-note">Available sleep lengths depend on your fatigue.</p>}
@@ -2477,7 +2471,7 @@ export default function App() {
       </section>}
       {current.id === 'shop' && <section className="shop">
         <div className="shop-capacity"><Icon name="backpack" /><strong>Backpack</strong><span>{usedBackpackSlots} / {BACKPACK_CAPACITY} slots</span><div className="shop-capacity-bar" role="meter" aria-label="Backpack capacity" aria-valuenow={usedBackpackSlots} aria-valuemin={0} aria-valuemax={BACKPACK_CAPACITY}><i style={{ width: `${usedBackpackSlots / BACKPACK_CAPACITY * 100}%` }} /></div></div>
-        {inventory.bottles > 0 && <button className="shop-return" onClick={returnBottles} disabled={!open}><Icon name="bottle" /><span><strong>Return bottles & cans ×{inventory.bottles}</strong><small>Deposit return · 0.50 zł each</small></span><b>+{(inventory.bottles * BOTTLE_DEPOSIT).toFixed(2)} zł</b></button>}
+        {inventory.bottles > 0 && <ChoiceButton className="shop-return" onClick={returnBottles} disabled={!open} icon="bottle" label={`Return bottles & cans ×${inventory.bottles}`} detail={<small>Deposit return · 0.50 zł each · +{(inventory.bottles * BOTTLE_DEPOSIT).toFixed(2)} zł</small>} />}
         {[{ title: 'Food & drink', items: SHOP_ITEMS.slice(0, 5) }, { title: 'Care', items: SHOP_ITEMS.slice(5) }].map(group => <section className="shop-category" key={group.title} aria-label={group.title}>
           <h3>{group.title}</h3><div className="shop-grid supply-grid">{group.items.map(item => <ShopCard key={item.id} item={item} open={open} fits={canAddToBackpack(inventory, item)} affordable={game.money >= item.price} onBuy={buyShopItem} onSteal={stealShopItem} />)}</div>
         </section>)}
@@ -2501,12 +2495,12 @@ export default function App() {
           {current.id === 'residential-shelter' && <div><strong><Icon name="food" />Food ×{storage.food}/{SCHRONISKO_FOOD_CAPACITY}</strong><small>Separate food shelf · {storage.food > 0 ? `${foodFreshnessLabel(storage.foodFreshness)} · ${Math.round(storage.foodFreshness)}%` : 'empty'}</small><div className="freshness-bar"><i style={{ width: `${storage.food > 0 ? storage.foodFreshness : 0}%` }} /></div><button onClick={() => inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? storeFood() : takeStoredFood()} disabled={!open || ((inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) && storage.food <= 0)}>{inventory.food > 0 && storage.food < SCHRONISKO_FOOD_CAPACITY ? 'Store' : 'Take'}</button></div>}
         </div>
       </section>}
-      {(current.id === 'support' || current.id === 'residential-shelter') && <section className="charging-station">
+      {(current.id === 'support' || current.id === 'residential-shelter') && <AvailableFirst className="charging-station" orderSeed={choiceSeed} decisionKey="charge">
         <button className="action" onClick={chargePhone} disabled={!open || inventory.phoneBattery >= 100}>
           <div><strong><Icon name="plug" className="action-label-icon" />Charge phone</strong><small>Use a public socket for 30 minutes.</small></div><span>+25% · ~30 min</span>
         </button>
-      </section>}
-      {current.id === 'shelter' && <section className="charging-station" aria-label="Night shelter phone charging">
+      </AvailableFirst>}
+      {current.id === 'shelter' && <AvailableFirst className="charging-station" orderSeed={choiceSeed} decisionKey="shelter-charge">
         <button className="action" onClick={toggleShelterPhoneCharging} disabled={!insideNightShelter || (!shelterPhoneCharging && (inventory.phoneBattery >= 100 || inventory.phoneCondition <= 0))}>
           <div><strong><Icon name="plug" className="action-label-icon" />{shelterPhoneCharging ? 'Collect phone' : 'Leave phone charging'}</strong><small>{shelterPhoneCharging
             ? 'Charging while you do other things. Collect at any time.'
@@ -2514,7 +2508,7 @@ export default function App() {
             : inventory.phoneCondition <= 0 ? 'Your phone is not working.' : inventory.phoneBattery >= 100 ? 'Phone is fully charged.' : 'Leave it plugged in while you eat, shower or sleep. Also available during quiet hours.'}</small></div>
           <span>{shelterPhoneCharging ? `${Math.round(inventory.phoneBattery)}%` : '+60%/h · free'}</span>
         </button>
-      </section>}
+      </AvailableFirst>}
       {current.id === 'work' && <AvailableFirst className="actions" orderSeed={choiceSeed} decisionKey={`${choiceDecisionKey}|work`}>
         <button className="action" onClick={takeDayWork} disabled={!open || game.energy < dayWorkEnergyRequired}>
           <div><strong>Take a short shift</strong><small>{game.energy < dayWorkEnergyRequired ? `Need at least ${dayWorkEnergyRequired} Energy · current ${Math.floor(game.energy)}` : 'Three hours of physical work. Pays 35 zł.'}</small></div><span>+35 zł · ~180 min</span>
@@ -2715,15 +2709,14 @@ export default function App() {
             { id: 'supplies', title: 'Food & water', detail: 'Affordable supplies and meal times', icon: 'food' },
           ] as { id: string; title: string; detail: string; icon: IconName }[]).map(search => {
             const saved = search.id !== 'morning' && answeredQuestions.includes(search.id)
-            return <button className="phone-search-row" type="button" key={search.id} aria-label={search.title} data-choice={`question-${search.id}`} disabled={!mobileServiceActive || (!saved && inventory.phoneBattery < phoneSearchCost)} onClick={() => saved ? setPhoneApp('notes') : answerPracticalQuestion(search.id)}>
-              <Icon name={search.icon} /><span className="phone-search-copy"><strong>{search.title}</strong><small>{search.detail}</small></span><span className="phone-search-time">{saved ? 'Notes' : approximateDuration(PHONE_SEARCH_ESTIMATE)}</span>
-            </button>
+            return <ChoiceButton className="phone-search-row" type="button" key={search.id} aria-label={search.title} data-choice={`question-${search.id}`} disabled={!mobileServiceActive || (!saved && inventory.phoneBattery < phoneSearchCost)} onClick={() => saved ? setPhoneApp('notes') : answerPracticalQuestion(search.id)}
+              icon={search.icon} label={search.title} detail={<small>{search.detail}</small>} duration={saved ? 'Notes' : approximateDuration(PHONE_SEARCH_ESTIMATE)} />
           })}
         </div>
         <p className={`phone-search-hint${!mobileServiceActive ? ' warning' : ''}`}>{!mobileServiceActive ? 'Mobile internet is unpaid. Activate the 1 zł/day plan in the header to search.' : inventory.phoneBattery < phoneSearchCost ? 'Not enough battery to search. Charge your phone first.' : 'Searching uses time and battery.'}</p>
       </>}
     </PhoneScreen>}
-    {screen === 'phone' && phoneApp === 'home' && !phoneUnavailable && game.health <= 20 && <button className="action phone-emergency" aria-label="Call ambulance" onClick={callAmbulance}><Icon name="ambulance" /><div><strong>Call ambulance</strong><small>Emergency care · no internet required</small></div></button>}
+    {screen === 'phone' && phoneApp === 'home' && !phoneUnavailable && game.health <= 20 && <ChoiceButton className="action phone-emergency" aria-label="Call ambulance" onClick={callAmbulance} icon="ambulance" label="Call ambulance" detail={<small>Emergency care · no internet required</small>} />}
 
     </div>
 
@@ -2820,7 +2813,7 @@ export default function App() {
         <p>{activeEvent.text}</p>
         <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{activeEvent.choices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
-          return <button key={choice.label} aria-label={choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable}><span>{choice.label}</span>{unavailable ? <small>{unavailable}</small> : !!choice.outcome?.minutes && <small className="event-choice-time">≈{choice.outcome.minutes}m</small>}</button>
+          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={choice.outcome?.minutes ? approximateDuration(choice.outcome.minutes) : undefined} />
         })}</ChoiceOptions>
         </div>}
       </section>
