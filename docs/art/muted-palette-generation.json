@@ -1,0 +1,2575 @@
+{
+  "generation": "Built-in image_gen, one color-grade edit per existing asset; Pillow used only for size normalization and WebP encoding.",
+  "date": "2026-10-22",
+  "paletteReference": "docs/art/muted-palette-reference.webp",
+  "heroReference": "docs/art/hero-reference.webp",
+  "assets": [
+    {
+      "name": "city-night",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-586e75a3-439b-4ea6-b91c-df8efdd00907.png",
+      "references": [
+        "public/assets/city-night.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/city-night.webp",
+      "originalSha256": "0a2224d925a72cb05dd4fc0b191b4c4eada19d86e5e8aa97566ee83ed492991b",
+      "sha256": "642b6e22679eb42903d56318e4065d0b12aa90c511f87b8925a2c7a6785eed4e",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/city-night-1024.webp",
+        "public/assets/city-night-480.webp",
+        "public/assets/city-night-768.webp"
+      ]
+    },
+    {
+      "name": "event-bench-conversation",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-c2a7835e-b05f-4d69-beca-be16a4887fb6.png",
+      "references": [
+        "public/assets/event-bench-conversation.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-bench-conversation.webp",
+      "originalSha256": "5fac00e7470c7be45244e930d49acd5aba4bec36c0f2964179060b504d57b8e5",
+      "sha256": "4889d405c32c1dbec2c1b618a921e2163459be8f5c09d63ddcc0c983da77269d",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-bench-conversation-480.webp",
+        "public/assets/event-bench-conversation-768.webp",
+        "public/assets/event-bench-conversation-1024.webp"
+      ]
+    },
+    {
+      "name": "event-bench-space",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-8a430031-e913-45e2-bd78-c7e920c4d8e5.png",
+      "references": [
+        "public/assets/event-bench-space.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-bench-space.webp",
+      "originalSha256": "1d3a9cb1f1e4c3f26297e39881c137c42e0c558b26e8238eb6571a2b3ed78949",
+      "sha256": "7b25a0dae7019ecd5fa8c193a7c4f0d54e435c8f88880f6b1fa5eed7d8169ca5",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-bench-space-480.webp",
+        "public/assets/event-bench-space-768.webp",
+        "public/assets/event-bench-space-1024.webp"
+      ]
+    },
+    {
+      "name": "event-bench-watch",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-79b22899-6393-4aff-a07e-011c4a6a4f46.png",
+      "references": [
+        "public/assets/event-bench-watch.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-bench-watch.webp",
+      "originalSha256": "376d6015cb555d3b0b9ca01869ca62b2d7a60a7ff7f1cbb149b652857197f342",
+      "sha256": "a121100b7e49941f8e49ea29069b6c7d12afd11354e8290dd54283d77b89905b",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-bench-watch-480.webp",
+        "public/assets/event-bench-watch-768.webp",
+        "public/assets/event-bench-watch-1024.webp"
+      ]
+    },
+    {
+      "name": "event-city-move",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-b4e30605-8fe9-4158-9a9e-af8cc73e7a67.png",
+      "references": [
+        "public/assets/event-city-move.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-city-move.webp",
+      "originalSha256": "678ad6f25f2c7db6fd290e98541e1ec8e90225b1b9f1282180b84d2a1a072674",
+      "sha256": "678e604b6331787141eb1f313b06a0926fdcbfbe8725d069b2d9349f80d02d86",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-city-move-480.webp",
+        "public/assets/event-city-move-768.webp",
+        "public/assets/event-city-move-1024.webp"
+      ]
+    },
+    {
+      "name": "event-city-pause",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-d53f5b86-d2d1-44d5-91c2-f3e6979c6a95.png",
+      "references": [
+        "public/assets/event-city-pause.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-city-pause.webp",
+      "originalSha256": "d64861dd9e9921af6bd48bfba3658c06dbc5e4e91267bffb883a561561fdbb36",
+      "sha256": "fefeb2f9b3d43f297eb36c32be7ac5523e85d4a6c0adf06f73b54b54ad4e9e49",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-city-pause-480.webp",
+        "public/assets/event-city-pause-768.webp",
+        "public/assets/event-city-pause-1024.webp"
+      ]
+    },
+    {
+      "name": "event-city-plan",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-9accf506-af3d-4d90-ae24-ff8b95062e93.png",
+      "references": [
+        "public/assets/event-city-plan.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-city-plan.webp",
+      "originalSha256": "a1e8fb29ebca15ba4d797ae58e8bdf3b82e43484ee1ab063f9b38280d3649365",
+      "sha256": "95c2a99fa23f718923392759b00c7417560f1696696a57d55cdddd5d8e577b57",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-city-plan-480.webp",
+        "public/assets/event-city-plan-768.webp",
+        "public/assets/event-city-plan-1024.webp"
+      ]
+    },
+    {
+      "name": "event-city-waking",
+      "alpha": false,
+      "hero": true,
+      "source": "Approved standalone preview from this conversation, 2026-10-22",
+      "sourceGeneration": "exec-5aa4fd3b-7157-4d92-ba81-f4ea39d4e974.png",
+      "references": [],
+      "asset": "public/assets/event-city-waking.webp",
+      "originalSha256": "ae3bd5e709f00710b4c692b9918c55ae7c30a6d497a62216639b1d36d4e5d5e0",
+      "sha256": "614eb9fb0d233b60e5ae34053adcaad0c77b31cb0eb16da4929878583ff6493d",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-city-waking-480.webp",
+        "public/assets/event-city-waking-768.webp",
+        "public/assets/event-city-waking-1024.webp"
+      ]
+    },
+    {
+      "name": "event-cleaning-ask",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-c423ca1c-3405-46a2-b1b3-c15e07b9f0de.png",
+      "references": [
+        "public/assets/event-cleaning-ask.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-cleaning-ask.webp",
+      "originalSha256": "85118d5c211294f5399561c14702340471093b8b8fa95d759bcabb28c8b58942",
+      "sha256": "b1e76dba36353579dea652af35b4ffa580333880e0ba00684dd793d7e31ff22b",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-cleaning-ask-480.webp",
+        "public/assets/event-cleaning-ask-768.webp",
+        "public/assets/event-cleaning-ask-1024.webp"
+      ]
+    },
+    {
+      "name": "event-cleaning-move",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-a42222f4-4552-46c7-a09b-7bb91374bef8.png",
+      "references": [
+        "public/assets/event-cleaning-move.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-cleaning-move.webp",
+      "originalSha256": "a6b6a4b0fb0b88f89f7342fa6808b3f672b83bd098b49dfdee9a2bffd8ebe8a5",
+      "sha256": "0dc1d8be02b15c807f8eacdcb4d104987bead9a4200cd984285b666dc13053d8",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-cleaning-move-480.webp",
+        "public/assets/event-cleaning-move-768.webp",
+        "public/assets/event-cleaning-move-1024.webp"
+      ]
+    },
+    {
+      "name": "event-cleaning-stretch",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-4cef035c-cedc-4b51-8c3e-5ceb36cbb402.png",
+      "references": [
+        "public/assets/event-cleaning-stretch.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-cleaning-stretch.webp",
+      "originalSha256": "cbeecb05fc901e7042b875facc350a676747a90daddf6969f1bc47eba7969ec0",
+      "sha256": "4072e195a5d0fc5589ce1adaa7a5d2cae203c69f0f26125d962ff8de2300f7d7",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-cleaning-stretch-480.webp",
+        "public/assets/event-cleaning-stretch-768.webp",
+        "public/assets/event-cleaning-stretch-1024.webp"
+      ]
+    },
+    {
+      "name": "event-closing-time",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-ff84b6c7-95b2-4291-b3d0-0010ff771c69.png",
+      "references": [
+        "public/assets/event-closing-time.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-closing-time.webp",
+      "originalSha256": "60fd4dc39d3b2b013ff02ab3c2440a219137bc8b20e9365037a540b80ca16b70",
+      "sha256": "768b233bddac6c6d3df30eba10c5a874d4a254c8df9a44382b25a83c6f3c3512",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-closing-time-480.webp",
+        "public/assets/event-closing-time-768.webp",
+        "public/assets/event-closing-time-1024.webp"
+      ]
+    },
+    {
+      "name": "event-coin-leave",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-2db8cbfc-cae9-452f-8f4c-356cb64e5f43.png",
+      "references": [
+        "public/assets/event-coin-leave.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-coin-leave.webp",
+      "originalSha256": "3cda7cb8f0bb890e5af9d597b51c06c43934a83a5765af6837e3a91cad4df608",
+      "sha256": "1974984ccd76e442551ef9f59da70081a7b2567d45a849ca5f857e2f88dc74e3",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-coin-leave-480.webp",
+        "public/assets/event-coin-leave-768.webp",
+        "public/assets/event-coin-leave-1024.webp"
+      ]
+    },
+    {
+      "name": "event-coin-take",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-751cd8e5-220b-405a-8cb6-3ff8e835581c.png",
+      "references": [
+        "public/assets/event-coin-take.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-coin-take.webp",
+      "originalSha256": "038e7355794fd8170af41f73ee7b55dbcbde26703ed0a615e88b7c5906c193c3",
+      "sha256": "f40284ff3fa493553a453debf9244dee85f1ff97149e78c02c0051d5a27f8c17",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-coin-take-480.webp",
+        "public/assets/event-coin-take-768.webp",
+        "public/assets/event-coin-take-1024.webp"
+      ]
+    },
+    {
+      "name": "event-cold-endure",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-dae7f3d6-5218-4332-8991-905cf58ddf40.png",
+      "references": [
+        "public/assets/event-cold-endure.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-cold-endure.webp",
+      "originalSha256": "63c5fd6f350a624fd13d1a162c7849a4c80e48e9542c4a40dd109993db5028f9",
+      "sha256": "0ac0f7376bd5baad8984ffd96120097c8ec79509b9c4eec642d9a75e7491b921",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-cold-endure-480.webp",
+        "public/assets/event-cold-endure-768.webp",
+        "public/assets/event-cold-endure-1024.webp"
+      ]
+    },
+    {
+      "name": "event-cold-hands",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-f5a54a4a-abd3-4b9e-a1d2-e92b9a664c7b.png",
+      "references": [
+        "public/assets/event-cold-hands.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-cold-hands.webp",
+      "originalSha256": "eaa9949cdae1a46ad7565abfadf3b720e11d80a96dcfb4f3b084bf2b280afbf2",
+      "sha256": "ce91db967229753063bbc679ad0204bf8fe494dad9ca7f7bca87e67b0c40d08b",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-cold-hands-480.webp",
+        "public/assets/event-cold-hands-768.webp",
+        "public/assets/event-cold-hands-1024.webp"
+      ]
+    },
+    {
+      "name": "event-cold-rub",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-7658b9c4-d54e-4faf-9014-e0ecc1e5427e.png",
+      "references": [
+        "public/assets/event-cold-rub.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-cold-rub.webp",
+      "originalSha256": "036f3383073c82912d925109ace79f5aa699d7afbb5edd1985e5be6100758a17",
+      "sha256": "b0f6f7ec773439d3186d43930bfd75b23d0d3bc4a42ba6f6533e9da5032d1664",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-cold-rub-480.webp",
+        "public/assets/event-cold-rub-768.webp",
+        "public/assets/event-cold-rub-1024.webp"
+      ]
+    },
+    {
+      "name": "event-cold-walk",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-ff99eaef-3590-41c8-860b-d3326fd12704.png",
+      "references": [
+        "public/assets/event-cold-walk.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-cold-walk.webp",
+      "originalSha256": "b1ff107a73f193fa63e17e3841651d044f2bf107f79cb34621e08283d6e601f6",
+      "sha256": "311138ce68fd26dd0ee208743cc6555fff4d154c39014017b6070e533149b374",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-cold-walk-480.webp",
+        "public/assets/event-cold-walk-768.webp",
+        "public/assets/event-cold-walk-1024.webp"
+      ]
+    },
+    {
+      "name": "event-crowd-away",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-c22b04b3-1731-4531-bf19-dd73b68af4b7.png",
+      "references": [
+        "public/assets/event-crowd-away.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-crowd-away.webp",
+      "originalSha256": "f55bb8fe69d4db4dfa2ad388e1820de69db178cfb1bd16d121f97adcadd21da8",
+      "sha256": "88b48e7df37623127343c3429e769c141929a4ffc7df1fe61fc7a2e7b97a9e47",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-crowd-away-480.webp",
+        "public/assets/event-crowd-away-768.webp",
+        "public/assets/event-crowd-away-1024.webp"
+      ]
+    },
+    {
+      "name": "event-crowd-stay",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-54eacacd-f13d-41cd-ba5c-d80aac99a422.png",
+      "references": [
+        "public/assets/event-crowd-stay.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-crowd-stay.webp",
+      "originalSha256": "8223ca3a2ad4ed6911dcfdeb254dbf99b59ee673bc652bf985df6d7bac2b5de3",
+      "sha256": "cf3961e982445c1f2a9f68df4bd184ed4d3f5c81f216e351a2cb1c798ce0c537",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-crowd-stay-480.webp",
+        "public/assets/event-crowd-stay-768.webp",
+        "public/assets/event-crowd-stay-1024.webp"
+      ]
+    },
+    {
+      "name": "event-door-stay",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-5ebb6deb-c27d-42bf-8ba9-e2f1de0bb50c.png",
+      "references": [
+        "public/assets/event-door-stay.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-door-stay.webp",
+      "originalSha256": "9f6c8c8defd08fc80fa70bfe06ff2e7e7ca9fb6a8f2fca63544259db3bc83dac",
+      "sha256": "ee8e1d14815231abb82a8eb975d4463bd71d0a243855aaf8c5928f705b78da32",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-door-stay-480.webp",
+        "public/assets/event-door-stay-768.webp",
+        "public/assets/event-door-stay-1024.webp"
+      ]
+    },
+    {
+      "name": "event-door-think-call",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-3bfd30f5-aa87-417d-880a-eab936eba9c2.png",
+      "references": [
+        "public/assets/event-door-think-call.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-door-think-call.webp",
+      "originalSha256": "7018ef30c321d645768ef40037a023d79e51f1466e046cb79a1859b52978d925",
+      "sha256": "2cd9d1045ec6a9c04fcfa150b8465ea10a947bf7dbeca073832f5dbbcae35153",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-door-think-call-480.webp",
+        "public/assets/event-door-think-call-768.webp",
+        "public/assets/event-door-think-call-1024.webp"
+      ]
+    },
+    {
+      "name": "event-door-walk",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-fc165766-a10b-4f10-a769-56d95c2d19e6.png",
+      "references": [
+        "public/assets/event-door-walk.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-door-walk.webp",
+      "originalSha256": "b39713383c0d159442de6ee72113e0e0f046198b2e5ddb5247211759a12c3f48",
+      "sha256": "6b1f7f087ff0d68effae0eb96c3d2ef84b77cbfd9d00968d8723b2faec48cbbf",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-door-walk-480.webp",
+        "public/assets/event-door-walk-768.webp",
+        "public/assets/event-door-walk-1024.webp"
+      ]
+    },
+    {
+      "name": "event-first-night-bench-wake",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-362526b5-2595-4811-a85a-a5c37a3476be.png",
+      "references": [
+        "public/assets/event-first-night-bench-wake.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-first-night-bench-wake.webp",
+      "originalSha256": "b0f5f16d68a9412029d8ca7d8bf507bbfdc321835c8fc7d69fc7e231971bf458",
+      "sha256": "a4e19cedc91d5194cfbc661a0c0b0e59d2de46a2c358c27599ca2b49099dde1b",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-first-night-bench-wake-480.webp",
+        "public/assets/event-first-night-bench-wake-768.webp",
+        "public/assets/event-first-night-bench-wake-1024.webp"
+      ]
+    },
+    {
+      "name": "event-first-night-bench",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-2a2ec257-1965-4981-8ad7-158a77b13a02.png",
+      "references": [
+        "public/assets/event-first-night-bench.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-first-night-bench.webp",
+      "originalSha256": "cef3195bc00819083d8d64ee8a063d6d7ef4e0f9eaf28b54dc9b6342945254e3",
+      "sha256": "41130f0a98b7ca58ca741b284c7f0efef92784a2dfef822c9ee976ded0d93f27",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-first-night-bench-480.webp",
+        "public/assets/event-first-night-bench-768.webp",
+        "public/assets/event-first-night-bench-1024.webp"
+      ]
+    },
+    {
+      "name": "event-first-night-door",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-11a405d3-7f5f-4753-beb8-08e05412e9ec.png",
+      "references": [
+        "public/assets/event-first-night-door.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-first-night-door.webp",
+      "originalSha256": "777942c0abbc390638d50b8e5a332e863024d7057831aac69120fe4732533661",
+      "sha256": "2ae2766e94ad0ca2c812076f7ceb3f6fd60b833df96a571618b0168d09a13c15",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-first-night-door-480.webp",
+        "public/assets/event-first-night-door-768.webp",
+        "public/assets/event-first-night-door-1024.webp"
+      ]
+    },
+    {
+      "name": "event-first-night-station-bench-wake",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-ced09a10-bf7f-421c-aa12-1bed3058ceb7.png",
+      "references": [
+        "public/assets/event-first-night-station-bench-wake.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-first-night-station-bench-wake.webp",
+      "originalSha256": "e555e0f10f727eaa6dde05bfab10f979e2db2e02bf64ed2a4e292a2b03ffc1fc",
+      "sha256": "2ea1f1025baeb85518ceb23d714d798ef5d9ef70c78f0abbb4c1b833dfad4e5c",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-first-night-station-bench-wake-480.webp",
+        "public/assets/event-first-night-station-bench-wake-768.webp",
+        "public/assets/event-first-night-station-bench-wake-1024.webp"
+      ]
+    },
+    {
+      "name": "event-first-night-station",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-727a5865-2272-421c-9333-dc045d5c76ff.png",
+      "references": [
+        "public/assets/event-first-night-station.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-first-night-station.webp",
+      "originalSha256": "5166d72aec7d5a61308f33d1d5082ebfec78376c7b5e75300eceebc2a3eeb895",
+      "sha256": "0ae976da97809692020173be0b9f82231320a10dc0b0ea22a3b2cedde6be9ef9",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-first-night-station-480.webp",
+        "public/assets/event-first-night-station-768.webp",
+        "public/assets/event-first-night-station-1024.webp"
+      ]
+    },
+    {
+      "name": "event-food-fine",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-f73a364e-2cb3-48a5-87cd-45bfae75b3c3.png",
+      "references": [
+        "public/assets/event-food-fine.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-food-fine.webp",
+      "originalSha256": "126ac8c4ae6515a862defc47970eb0e2ef7e42fd27360a7bde6dc7f5f4cf1776",
+      "sha256": "90dd15d22d31aa055621b5de6c1854105401cc2219ca2840d4b7c7e1d5879a24",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-food-fine-480.webp",
+        "public/assets/event-food-fine-768.webp",
+        "public/assets/event-food-fine-1024.webp"
+      ]
+    },
+    {
+      "name": "event-food-nausea",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-6e92b601-3833-4ba0-b011-d8a3a8fe2c0e.png",
+      "references": [
+        "public/assets/event-food-nausea.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-food-nausea.webp",
+      "originalSha256": "b412be2ae8ac3cd23ae418c0ff773f002f24ec1faf4b32158e404fee127f983a",
+      "sha256": "0bdab3272b1132901a0ea03e0e04e1ed89d47513acf47ff2b8141e12be0ffeac",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-food-nausea-480.webp",
+        "public/assets/event-food-nausea-768.webp",
+        "public/assets/event-food-nausea-1024.webp"
+      ]
+    },
+    {
+      "name": "event-food-vomiting",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-29b046e0-d72d-4f12-80be-f4f82fe76b7d.png",
+      "references": [
+        "public/assets/event-food-vomiting.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-food-vomiting.webp",
+      "originalSha256": "2d23caa3782c4351aa9c006a29864698c2eb70b1b9f7975626397decc3b281f6",
+      "sha256": "6fcf75bf27b15fc1f7ea90b78820ca17ac3fcb6800da86b82857e888729955df",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-food-vomiting-480.webp",
+        "public/assets/event-food-vomiting-768.webp",
+        "public/assets/event-food-vomiting-1024.webp"
+      ]
+    },
+    {
+      "name": "event-found-coin",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-740d01c2-3757-454d-8adc-07b0ffc27ad8.png",
+      "references": [
+        "public/assets/event-found-coin.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-found-coin.webp",
+      "originalSha256": "8d428f495a60b3e0536bfd6e9e8f04af86d42d3622b6bd3da08fd4d3f63dd920",
+      "sha256": "c79da3d4010efc8d946f714b6c3f02fe5b52fe55854ca32343b8b0b139199e10",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-found-coin-480.webp",
+        "public/assets/event-found-coin-768.webp",
+        "public/assets/event-found-coin-1024.webp"
+      ]
+    },
+    {
+      "name": "event-free-snack",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e4087aed-c55b-4022-acb7-be56ba245ee1.png",
+      "references": [
+        "public/assets/event-free-snack.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-free-snack.webp",
+      "originalSha256": "9ea7b7f6b8eec6d8f8a37870dbf5235e43ff0b68e8c8f74cc2c7ea45c5a3bd6a",
+      "sha256": "a14752c87c17e18d6776b2ec454bbf957b5e1d9ce38a4b448d1b3e84bb615c99",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-free-snack-480.webp",
+        "public/assets/event-free-snack-768.webp",
+        "public/assets/event-free-snack-1024.webp"
+      ]
+    },
+    {
+      "name": "event-night-rustle",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-0f2f8141-f236-42ac-b09c-7a450e13f7ea.png",
+      "references": [
+        "public/assets/event-night-rustle.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-night-rustle.webp",
+      "originalSha256": "12b5226b2181e799d19ddfac4d2dcb734770e77a64d74719005b587cffd7b05c",
+      "sha256": "25c6f5c1209fdddbbaf775a77385d094f80662173710f623995366e28bc36514",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-night-rustle-480.webp",
+        "public/assets/event-night-rustle-768.webp",
+        "public/assets/event-night-rustle-1024.webp"
+      ]
+    },
+    {
+      "name": "event-night-theft",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-d23a3a50-166a-45ae-bcfb-e7f729fde147.png",
+      "references": [
+        "public/assets/event-night-theft.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-night-theft.webp",
+      "originalSha256": "84172846db4358aa517373bc4d6de4051d4b5ab1bb40f04df651f3037611cb0f",
+      "sha256": "48c174edb98abbe09a68d18fe75bc57ea272fe240169800a8095726ff1246cbf",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-night-theft-480.webp",
+        "public/assets/event-night-theft-768.webp",
+        "public/assets/event-night-theft-1024.webp"
+      ]
+    },
+    {
+      "name": "event-phone-caught",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-9102201a-9b2e-485d-be27-eb846f5e032f.png",
+      "references": [
+        "public/assets/event-phone-caught.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-phone-caught.webp",
+      "originalSha256": "0b5073e3dd26908ec0af502c057c00e1e4ad1f55c642091ab44b843d5f62660b",
+      "sha256": "6d834dcac27725d230aea91eb14d0097091d6f96d8903f1d1e5db2e0578ddcaa",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-phone-caught-480.webp",
+        "public/assets/event-phone-caught-768.webp",
+        "public/assets/event-phone-caught-1024.webp"
+      ]
+    },
+    {
+      "name": "event-phone-drop",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-87c043dc-0385-41d3-a82a-f22edbfc3c50.png",
+      "references": [
+        "public/assets/event-phone-drop.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-phone-drop.webp",
+      "originalSha256": "d83e89105220d3e0dd6a7bea0f16b15bcfa493744d88e6babaeaeea0ab5c4b88",
+      "sha256": "c749a555dd8fa09bc5124aa14a59e28cd7a52874bbd2f6d94d6130434c681b72",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-phone-drop-480.webp",
+        "public/assets/event-phone-drop-768.webp",
+        "public/assets/event-phone-drop-1024.webp"
+      ]
+    },
+    {
+      "name": "event-phone-fallen",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-76c09cc7-09e6-4a12-8b4a-41225dee56ed.png",
+      "references": [
+        "public/assets/event-phone-fallen.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-phone-fallen.webp",
+      "originalSha256": "400259f047a24170e258e2a5f4a4e9630b516ee3af5eda9306edfb1b989ffd94",
+      "sha256": "f7a0c80716e5fa34922a85f4add60538445341c8d10d799960bc7a89ecfd7cee",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-phone-fallen-480.webp",
+        "public/assets/event-phone-fallen-768.webp",
+        "public/assets/event-phone-fallen-1024.webp"
+      ]
+    },
+    {
+      "name": "event-platform-board",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e371945e-18c7-4056-91a4-39f272ac5f51.png",
+      "references": [
+        "public/assets/event-platform-board.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-platform-board.webp",
+      "originalSha256": "fa67453e8330a80d81e29db62ba41505f52c06ee3575f7aabc66b064139bd6fd",
+      "sha256": "d0365e6e9fe268bb9752146e0384aedfdc641bd16f8bafca46e3b0a467b49ef3",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-platform-board-480.webp",
+        "public/assets/event-platform-board-768.webp",
+        "public/assets/event-platform-board-1024.webp"
+      ]
+    },
+    {
+      "name": "event-platform-point",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-d4e58cd6-1377-4d33-8abe-f4e0f9181419.png",
+      "references": [
+        "public/assets/event-platform-point.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-platform-point.webp",
+      "originalSha256": "39d2f7653ce801f6b95a41a92c8d5038a2f182f36d0b31d9d1666329ae322c62",
+      "sha256": "ba49e1f7bd8e020e7ef3c82e17ef62a1db3dfd329e41ef61d0d7eebfcd0d53c6",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-platform-point-480.webp",
+        "public/assets/event-platform-point-768.webp",
+        "public/assets/event-platform-point-1024.webp"
+      ]
+    },
+    {
+      "name": "event-platform-question",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-6e2426cc-b112-4383-adcc-43ae3d53a22a.png",
+      "references": [
+        "public/assets/event-platform-question.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-platform-question.webp",
+      "originalSha256": "ecae2ec7e871a01203b13aa6239edc13c9562f274d4f6a54714f6c0a4f903a6d",
+      "sha256": "df18e2b41a070bd55284548f923bd1cc03a5505b5be3979101f3094b028536cf",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-platform-question-480.webp",
+        "public/assets/event-platform-question-768.webp",
+        "public/assets/event-platform-question-1024.webp"
+      ]
+    },
+    {
+      "name": "event-platform-unsure",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-9b367933-af37-4440-bc20-6799ff2f92db.png",
+      "references": [
+        "public/assets/event-platform-unsure.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-platform-unsure.webp",
+      "originalSha256": "01b6d8f141edd1d35c803d3305d3dd5fa9a5753d7fccda7698df2298452a293a",
+      "sha256": "6950fcbe2ba37e1dc97aff6d61d700dbdc6504890ff5fa7e1b2d76558dcb655f",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-platform-unsure-480.webp",
+        "public/assets/event-platform-unsure-768.webp",
+        "public/assets/event-platform-unsure-1024.webp"
+      ]
+    },
+    {
+      "name": "event-quiet-bench",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e29187cf-1cef-43e3-b679-3a948ff11f85.png",
+      "references": [
+        "public/assets/event-quiet-bench.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-quiet-bench.webp",
+      "originalSha256": "2abf4f192b65c59eabfe18569c3f681b6b192de6cb9a33fb78e59e4e12815d31",
+      "sha256": "fcf6cdc16e3e885adfbb94c1ef771e2429612bcb0f931a2939280b3cae38ce22",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-quiet-bench-480.webp",
+        "public/assets/event-quiet-bench-768.webp",
+        "public/assets/event-quiet-bench-1024.webp"
+      ]
+    },
+    {
+      "name": "event-quiet-ground",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-36f7cb80-3dc3-453d-ada6-d8916b463743.png",
+      "references": [
+        "public/assets/event-quiet-ground.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-quiet-ground.webp",
+      "originalSha256": "86152fd2ea61f228919240032317c4b58aebc07160955ac71b0f49a08cea20f1",
+      "sha256": "01e68a0a962c1890c4e1ff72b634070890a7aac8ca4125b875f0eada0bbe8845",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-quiet-ground-480.webp",
+        "public/assets/event-quiet-ground-768.webp",
+        "public/assets/event-quiet-ground-1024.webp"
+      ]
+    },
+    {
+      "name": "event-quiet-shelter",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-dc976285-900f-47d6-a7cc-4b804062255d.png",
+      "references": [
+        "public/assets/event-quiet-shelter.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-quiet-shelter.webp",
+      "originalSha256": "f050c3377be899f64a7c114abcb5a218455302bd26312ff40970a579d4c013bc",
+      "sha256": "23e00e8b419dfbe051ac935316bf711cf29ff104bb544a0432c8c0ae448db3c2",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-quiet-shelter-480.webp",
+        "public/assets/event-quiet-shelter-768.webp",
+        "public/assets/event-quiet-shelter-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rain-cover",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-2f8077be-5ef2-4cbb-b95b-fad33e005911.png",
+      "references": [
+        "public/assets/event-rain-cover.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rain-cover.webp",
+      "originalSha256": "18bd802de12b7538645363c744d1773140c1f8b9a13215f5e5ad1965f663bd9e",
+      "sha256": "9d6036ca3aa42c188c9f1c793bd98cb79c5a9bee976d3412d6cf12f2d5fbbbc4",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rain-cover-480.webp",
+        "public/assets/event-rain-cover-768.webp",
+        "public/assets/event-rain-cover-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rain-moving",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-b3c52069-0b4b-43ee-9a5e-01ccbb55b99a.png",
+      "references": [
+        "public/assets/event-rain-moving.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rain-moving.webp",
+      "originalSha256": "f9e2e9fa837a420cc6fa1b2a16589ced7c77fef4992be41daeabe236a6cf1fb0",
+      "sha256": "c9dfd403cc7b9c6fcc28ab9e52e3c715ab7b53044a628affee6e609c5d162ccc",
+      "size": [
+        1672,
+        940
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rain-moving-480.webp",
+        "public/assets/event-rain-moving-768.webp",
+        "public/assets/event-rain-moving-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rain-phone",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-772167d6-8094-4aa7-a527-0130047f0106.png",
+      "references": [
+        "public/assets/event-rain-phone.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rain-phone.webp",
+      "originalSha256": "ae9b0bcd26209cdb9b2124db2263dba197d97d1c5a62cc3ceac956b78c3441ce",
+      "sha256": "d18117f7b0a219f8a6862a7b50bc96e45d1ff2e9e24d9fa1b6687c3c5c849595",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rain-phone-480.webp",
+        "public/assets/event-rain-phone-768.webp",
+        "public/assets/event-rain-phone-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rain-protect",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-92455092-efc7-4df5-b31f-37404aa54c96.png",
+      "references": [
+        "public/assets/event-rain-protect.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rain-protect.webp",
+      "originalSha256": "83b4707fa047580f6fa277c8eda39efd75e5b7e9bfbc13b1aa8b43145045770a",
+      "sha256": "209eef69001a2e43ed9b07b3b08feb57a9ca965610fc97ac04849d769d59ac81",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rain-protect-480.webp",
+        "public/assets/event-rain-protect-768.webp",
+        "public/assets/event-rain-protect-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rain-street",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-9c0c3344-51de-4d84-b6f7-bf730c2d38b7.png",
+      "references": [
+        "public/assets/event-rain-street.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rain-street.webp",
+      "originalSha256": "2c188be413b0e207147b1b121028d8d43787d0d34883a0ce91e3d81c47fe5246",
+      "sha256": "a91402a6f2d83bf96a330176cf018d5751654693c58a28be956d99378b7300a9",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rain-street-480.webp",
+        "public/assets/event-rain-street-768.webp",
+        "public/assets/event-rain-street-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rough-crowd",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-dfae2be9-9eee-4ccf-9a02-7100ff1670b2.png",
+      "references": [
+        "public/assets/event-rough-crowd.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rough-crowd.webp",
+      "originalSha256": "8a358922a8c4a6eef53f621706ebfed6015ae72945025e13f9c982fdf5fa8452",
+      "sha256": "415d6c02abe241c895de8ae7fe4ca0ae38ee4b3b966128e505fb9ce438c91f2e",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rough-crowd-480.webp",
+        "public/assets/event-rough-crowd-768.webp",
+        "public/assets/event-rough-crowd-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rustle-cat",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-8f0a6b90-5ede-4cfc-92b8-004a1c2ce840.png",
+      "references": [
+        "public/assets/event-rustle-cat.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rustle-cat.webp",
+      "originalSha256": "c31be0fd12be53aa50ed681b88420d2c5987a4e9933f29c4484f3d910cf12b4b",
+      "sha256": "77d730d5ca419549208ebfbbd160e3fddbb7cbf94ea6ebef99c3b6ad63fa4951",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rustle-cat-480.webp",
+        "public/assets/event-rustle-cat-768.webp",
+        "public/assets/event-rustle-cat-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rustle-leave",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e44ad732-47d4-46c4-9ebd-f703cbea6e76.png",
+      "references": [
+        "public/assets/event-rustle-leave.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rustle-leave.webp",
+      "originalSha256": "eab2448c0dd57578b8c88766b897010853de0be5006cbb549b7669a0ae669a84",
+      "sha256": "88fb4a42d8d552400d0c1c684a3eb72c873ab55ac1f8aae2bc40ebddc9b8584b",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rustle-leave-480.webp",
+        "public/assets/event-rustle-leave-768.webp",
+        "public/assets/event-rustle-leave-1024.webp"
+      ]
+    },
+    {
+      "name": "event-rustle-wait",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-816a1095-c84b-4393-933f-186c9e0cf43b.png",
+      "references": [
+        "public/assets/event-rustle-wait.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-rustle-wait.webp",
+      "originalSha256": "77aab5c499c6c7935f2f5d5ba4d4125a8bba8af84b70c96af01c5856ca0cec7a",
+      "sha256": "e68b0271769a777a61be2aa8700a94d8c94343668cb737a68d3da4d4a74685f3",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-rustle-wait-480.webp",
+        "public/assets/event-rustle-wait-768.webp",
+        "public/assets/event-rustle-wait-1024.webp"
+      ]
+    },
+    {
+      "name": "event-sleep-cold-bench",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-ccf9d666-1197-4906-862e-ec7b251ac1e0.png",
+      "references": [
+        "public/assets/event-sleep-cold-bench.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-sleep-cold-bench.webp",
+      "originalSha256": "3b546ab81b87a2a0f046c6717ec45947a5aa389350113b70d86d62dbf72aecde",
+      "sha256": "46c5e6e407419b12558ee067df1423400ad616cbb2728f93bcfaf95b7592a008",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-sleep-cold-bench-480.webp",
+        "public/assets/event-sleep-cold-bench-768.webp",
+        "public/assets/event-sleep-cold-bench-1024.webp"
+      ]
+    },
+    {
+      "name": "event-sleep-cold-ground",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-49f47ed9-5d75-4924-a871-dcea42312e3c.png",
+      "references": [
+        "public/assets/event-sleep-cold-ground.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-sleep-cold-ground.webp",
+      "originalSha256": "0c495fc66274f0783fb728137bb4f2d74507cb2c95493361018a0ffc7da27227",
+      "sha256": "8c70e7ea48b239f54e06455a7c89493fe07742be391f43f7974907b3357fd7f7",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-sleep-cold-ground-480.webp",
+        "public/assets/event-sleep-cold-ground-768.webp",
+        "public/assets/event-sleep-cold-ground-1024.webp"
+      ]
+    },
+    {
+      "name": "event-snack-accept",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-9f1b6713-e159-41e9-9377-fc71b8b5c638.png",
+      "references": [
+        "public/assets/event-snack-accept.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-snack-accept.webp",
+      "originalSha256": "dced064b82ddfda8c207028d45e86ffb1c70d08aa9db4fa4adc568074e3f62c0",
+      "sha256": "d9bbca87e67b791766ac4ee6a675249ef964c74a38e0fcccad7f195d01ab2803",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-snack-accept-480.webp",
+        "public/assets/event-snack-accept-768.webp",
+        "public/assets/event-snack-accept-1024.webp"
+      ]
+    },
+    {
+      "name": "event-snack-decline",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-4f503425-974c-4d4b-8ff1-678ee441ac3c.png",
+      "references": [
+        "public/assets/event-snack-decline.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-snack-decline.webp",
+      "originalSha256": "5e63c61daa32db5b5d89c01bdb5a588194fc43593b9d910362c52905aee48d3f",
+      "sha256": "deed1b3bce0bae0ff7dda56972926a598096ca5e8596b32c03b1fed9dac032d3",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-snack-decline-480.webp",
+        "public/assets/event-snack-decline-768.webp",
+        "public/assets/event-snack-decline-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-accept",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-abde8552-32ba-4e44-b026-0d19bc22f4c4.png",
+      "references": [
+        "public/assets/event-station-accept.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-accept.webp",
+      "originalSha256": "9c30ad4dc7f10d0dc8e4aee935bae10f6821bc2a0cf900a7883fa4ac4804f725",
+      "sha256": "c8338c5f6af15507ecea83bf05274ef8670dc9b2bd7bdd4669a484eb8ba5987e",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-accept-480.webp",
+        "public/assets/event-station-accept-768.webp",
+        "public/assets/event-station-accept-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-cleaning",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-7d73005a-5b53-47b9-8805-605c514cd0e7.png",
+      "references": [
+        "public/assets/event-station-cleaning.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-cleaning.webp",
+      "originalSha256": "f2bed5c9c0ad48753acc045e00277bb4f657b2dd0ce849f9d22c0a9bfda26375",
+      "sha256": "3a3aee8c6b164447c360038dd32e1ec1828c2f95ca49669963f9020d851a01b5",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-cleaning-480.webp",
+        "public/assets/event-station-cleaning-768.webp",
+        "public/assets/event-station-cleaning-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-decline",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-878bb678-7a94-44f5-8d42-41968b99845a.png",
+      "references": [
+        "public/assets/event-station-decline.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-decline.webp",
+      "originalSha256": "3e30ba842d285e2f0c7b80b0981bcfbc4e80c7ef3e7298f700a526feb4c52e61",
+      "sha256": "dbf102f80f24463d32ae62cc30c6cf461203371019bee7b77d9fdaa1cc776f84",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-decline-480.webp",
+        "public/assets/event-station-decline-768.webp",
+        "public/assets/event-station-decline-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-food",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-52234f5c-0989-4a81-a48c-0a1680bda26a.png",
+      "references": [
+        "public/assets/event-station-food.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-food.webp",
+      "originalSha256": "ac9939509dca852ff3e476414762bf88e7eab083ae8ca76f0b33ba2b617171f9",
+      "sha256": "ee42b166602416a7730f49844afbdb2e940491b0596867061089e8e562facd46",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-food-480.webp",
+        "public/assets/event-station-food-768.webp",
+        "public/assets/event-station-food-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-night",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-83000531-3254-45ac-a4bf-9345ac69558c.png",
+      "references": [
+        "public/assets/event-station-night.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-night.webp",
+      "originalSha256": "b05db5df7daba98d8239f041bce569c57574b94017c56b0dcc8d430f62e637b2",
+      "sha256": "2eeff84b8870472a6f4abbd93d3efdcc1737c6f8863b268ded21f5180a203db9",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-night-480.webp",
+        "public/assets/event-station-night-768.webp",
+        "public/assets/event-station-night-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-patrol-answer",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-5a70ee9c-963d-4afd-b8b2-028a91c602bd.png",
+      "references": [
+        "public/assets/event-station-patrol-answer.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-patrol-answer.webp",
+      "originalSha256": "de31e12c0d8284d3a8e9448c436837985ab468ec1b301e19a18f381438a28533",
+      "sha256": "c01a65389a2428fea5db439719de5f203cd600556175f8a5b7d85e68db98ae82",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-patrol-answer-480.webp",
+        "public/assets/event-station-patrol-answer-768.webp",
+        "public/assets/event-station-patrol-answer-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-patrol-exit",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-a5091137-c418-4233-92e3-0767cffc7c07.png",
+      "references": [
+        "public/assets/event-station-patrol-exit.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-patrol-exit.webp",
+      "originalSha256": "dd7009821e14285121099339ddd6ace37dc6bdedd3e76ffac0bb74049d100fbe",
+      "sha256": "1e30ab5fb86ac936a2305102f555a60656b1c6669b2e7147d94c147031e3eeef",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-patrol-exit-480.webp",
+        "public/assets/event-station-patrol-exit-768.webp",
+        "public/assets/event-station-patrol-exit-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-patrol-wait",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-7e16ed9e-366f-443f-8985-6f2d2685cf30.png",
+      "references": [
+        "public/assets/event-station-patrol-wait.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-patrol-wait.webp",
+      "originalSha256": "85d8c5c5cd04ec9c07582d9f1e2d7238661432bbad1d9353a5a1990047bd3295",
+      "sha256": "58c2beda5e2dde006b7c1f02233e872537c09c91ab75d750500921316f395aa5",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-patrol-wait-480.webp",
+        "public/assets/event-station-patrol-wait-768.webp",
+        "public/assets/event-station-patrol-wait-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-patrol-wake",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-9ed9e2bc-3c72-4012-907b-03f968e6b4c5.png",
+      "references": [
+        "public/assets/event-station-patrol-wake.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-patrol-wake.webp",
+      "originalSha256": "b4935abb7ea57c177c9fb51b0549650bea132d66ebd3a703c63747da7269ecbb",
+      "sha256": "86ef920c87f481de63a01ab301bfc024db2cfff26cec14b6fcb14d82ddb65bbf",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-patrol-wake-480.webp",
+        "public/assets/event-station-patrol-wake-768.webp",
+        "public/assets/event-station-patrol-wake-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-quiet",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e0688b5e-0ece-406a-9cee-c6aa90157542.png",
+      "references": [
+        "public/assets/event-station-quiet.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-quiet.webp",
+      "originalSha256": "4da52ed9b9c9a39f96960ddff36983c49906a1556647557379a2697c0cb3df02",
+      "sha256": "c6344d09e36cfed7285f1f7ca38dba866cce3cce1340747a124c6c44f272ffaf",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-quiet-480.webp",
+        "public/assets/event-station-quiet-768.webp",
+        "public/assets/event-station-quiet-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-seat",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-363640f9-5eea-48e8-ae8f-63e49e8c79f7.png",
+      "references": [
+        "public/assets/event-station-seat.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-seat.webp",
+      "originalSha256": "602a9b1f1d4c2fbb612e813608b76f3afd68c50ea77ff4e2ddfe08bad4799ea4",
+      "sha256": "7b09be568f426fce096f74cf7d1d3062065e9544e74f54e51f3423cbb0440890",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-seat-480.webp",
+        "public/assets/event-station-seat-768.webp",
+        "public/assets/event-station-seat-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-wake-moment",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e630352a-dae7-4d50-aba5-519dbf329162.png",
+      "references": [
+        "public/assets/event-station-wake-moment.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-wake-moment.webp",
+      "originalSha256": "4260e6cb32e602e4b3a25c4a3b5b5d50d61c44d9abec1c76165f162670573347",
+      "sha256": "e62f51d7c82d5ff82bb4b4755477eeb3d6a65fdef5a3f470a00d879af69ecdea",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-wake-moment-480.webp",
+        "public/assets/event-station-wake-moment-768.webp",
+        "public/assets/event-station-wake-moment-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-wake-move",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-9a090305-3a3d-4e90-9cc3-516bf15fd0b5.png",
+      "references": [
+        "public/assets/event-station-wake-move.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-wake-move.webp",
+      "originalSha256": "34a464cd30335628633861a7f9571e50907e00b1f5dac98d58be57c3f6470dc7",
+      "sha256": "9bdf7106e0a0aceb69d138696c714adb2bc5caa1eca0a549234682be1f082916",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-wake-move-480.webp",
+        "public/assets/event-station-wake-move-768.webp",
+        "public/assets/event-station-wake-move-1024.webp"
+      ]
+    },
+    {
+      "name": "event-station-wake-sit",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-73e7a5c5-b090-49e5-be7e-3f4457712b84.png",
+      "references": [
+        "public/assets/event-station-wake-sit.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-station-wake-sit.webp",
+      "originalSha256": "8848e7dc3ad37b324098a670d25c939a84a54f57535b77337148a66a4f32ae50",
+      "sha256": "c4fa2b3a55d0fa66aa65f21cac12c37cc779ac2706d937941a7659bb607abbe1",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-station-wake-sit-480.webp",
+        "public/assets/event-station-wake-sit-768.webp",
+        "public/assets/event-station-wake-sit-1024.webp"
+      ]
+    },
+    {
+      "name": "event-street-patrol-answer",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-8be7e032-37a1-4683-949d-bdd86ceac5bb.png",
+      "references": [
+        "public/assets/event-street-patrol-answer.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-street-patrol-answer.webp",
+      "originalSha256": "06bf051c08748dd5b4be975b40b9838ee4fbce45d907e2dc51477acd595d0385",
+      "sha256": "501005d5ec32286ab493434f3527f9f88e9360928b968e3521a6be0252c2327a",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-street-patrol-answer-480.webp",
+        "public/assets/event-street-patrol-answer-768.webp",
+        "public/assets/event-street-patrol-answer-1024.webp"
+      ]
+    },
+    {
+      "name": "event-street-patrol-help",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e8d225e3-c2cf-4f24-84b9-9cb0644e65ed.png",
+      "references": [
+        "public/assets/event-street-patrol-help.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-street-patrol-help.webp",
+      "originalSha256": "136a5554c099d535eee88bf82011746b5beddfaa5df12bbf742e7d952722b23a",
+      "sha256": "83e2646f32fb400e8abf79e15a8640423633ab5e0d20b038993d33f9a4a2bba1",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-street-patrol-help-480.webp",
+        "public/assets/event-street-patrol-help-768.webp",
+        "public/assets/event-street-patrol-help-1024.webp"
+      ]
+    },
+    {
+      "name": "event-street-patrol-move",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-e2c40a7c-9c6a-467e-89ea-7bf40ea27b4a.png",
+      "references": [
+        "public/assets/event-street-patrol-move.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-street-patrol-move.webp",
+      "originalSha256": "4dd545e783455b57030e8d06a96403f3e149b28929e084de7f22473482790c11",
+      "sha256": "1c0fdf97c160e180a995b79a33e845e9394593ad34c209ff0706a2510b7b65ca",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-street-patrol-move-480.webp",
+        "public/assets/event-street-patrol-move-768.webp",
+        "public/assets/event-street-patrol-move-1024.webp"
+      ]
+    },
+    {
+      "name": "event-street-patrol-wake",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-3b5791b2-e044-4420-9d06-f25f2e1c8dde.png",
+      "references": [
+        "public/assets/event-street-patrol-wake.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-street-patrol-wake.webp",
+      "originalSha256": "1452b5776d6d386ec4d5f2ed6d9fd095c606dfdf4b5ca505226678b28a1875ff",
+      "sha256": "3a958e2fa76b3db4d40ba9538da1dab96fe186fd5dd6fb6f3c6ecae7710e6163",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-street-patrol-wake-480.webp",
+        "public/assets/event-street-patrol-wake-768.webp",
+        "public/assets/event-street-patrol-wake-1024.webp"
+      ]
+    },
+    {
+      "name": "event-theft-check",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-1ec2b583-0be8-4a53-93e6-f28e8a7d9c2b.png",
+      "references": [
+        "public/assets/event-theft-check.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-theft-check.webp",
+      "originalSha256": "2037ae3355651bd0d25f495b29d6582be0c4588c24b9c6a9da8b3180126a4397",
+      "sha256": "97c0164864c595a5122887a408d1f17ce97505a7a569944b13623e541bae838f",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-theft-check-480.webp",
+        "public/assets/event-theft-check-768.webp",
+        "public/assets/event-theft-check-1024.webp"
+      ]
+    },
+    {
+      "name": "event-ticket-check",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-308e1487-d893-4e37-bf03-5977a2da7db7.png",
+      "references": [
+        "public/assets/event-ticket-check.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-ticket-check.webp",
+      "originalSha256": "e08a3a7ae892ad31898b3f1ebefe731f8f887d4cc33ad3a1f2c7e2a47b790cd9",
+      "sha256": "aa80646b755b539f73f8eb004751c851a2cce00b5b31ef18b7e2572e98bf48ac",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-ticket-check-480.webp",
+        "public/assets/event-ticket-check-768.webp",
+        "public/assets/event-ticket-check-1024.webp"
+      ]
+    },
+    {
+      "name": "event-ticket-shown",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-5912ce72-a38d-4cd0-9511-dc101e7dc944.png",
+      "references": [
+        "public/assets/event-ticket-shown.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-ticket-shown.webp",
+      "originalSha256": "3c1646ca228974e9a338152a1e75a0471126281545e80ffb4b410b03066c65b7",
+      "sha256": "40a692ddfe256f2ca029020c43715163bbfeeb299c6868e0d182e40781e6dce5",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-ticket-shown-480.webp",
+        "public/assets/event-ticket-shown-768.webp",
+        "public/assets/event-ticket-shown-1024.webp"
+      ]
+    },
+    {
+      "name": "event-tip-conversation",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-1eb0982d-8eca-4687-b958-1d9ac8d5932f.png",
+      "references": [
+        "public/assets/event-tip-conversation.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-tip-conversation.webp",
+      "originalSha256": "4d3fe0a1be8a76bc1f6c2a90fa62788f5f3cf279d6677e00b01808de1d30ceb4",
+      "sha256": "40081971348da1696d2e8cb64f1a113047cdd4656efed01c0a10633c9586ddfd",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-tip-conversation-480.webp",
+        "public/assets/event-tip-conversation-768.webp",
+        "public/assets/event-tip-conversation-1024.webp"
+      ]
+    },
+    {
+      "name": "event-tip-ending",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-2ad7d223-d00a-489a-b966-c6ba135babb2.png",
+      "references": [
+        "public/assets/event-tip-ending.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-tip-ending.webp",
+      "originalSha256": "727aecf0df9bf110da53838f15bc06e5a7d6c236f070ba598752b29d53e423df",
+      "sha256": "ddeb9255fd006a7b061bf84b31684fd0cf60b0df82e4abb0f9e46f0ef7313312",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-tip-ending-480.webp",
+        "public/assets/event-tip-ending-768.webp",
+        "public/assets/event-tip-ending-1024.webp"
+      ]
+    },
+    {
+      "name": "event-useful-tip",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-7ebd2939-d4ff-429e-aeb6-269a2faa2d3f.png",
+      "references": [
+        "public/assets/event-useful-tip.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-useful-tip.webp",
+      "originalSha256": "ca71a8899eda71d2974a4df8f000c647814a4711bdc9ec5fb8769b9ceafadb96",
+      "sha256": "b8323c3aabca690a815183e7c04581a46fa38d8057ae2dc6a5ebdd29ab72fab2",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-useful-tip-480.webp",
+        "public/assets/event-useful-tip-768.webp",
+        "public/assets/event-useful-tip-1024.webp"
+      ]
+    },
+    {
+      "name": "event-wake-moment",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-50aada62-c75c-4060-a219-d95f2a787e01.png",
+      "references": [
+        "public/assets/event-wake-moment.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-wake-moment.webp",
+      "originalSha256": "e1660254f6e605c5a15bcc11cdc6f2db89e4343157f3906f7ac7135c78cb423f",
+      "sha256": "2feeb61115acbc4ba6b984a7f783f3cd78a0183508aa94ca1d9e60156b3c5566",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-wake-moment-480.webp",
+        "public/assets/event-wake-moment-768.webp",
+        "public/assets/event-wake-moment-1024.webp"
+      ]
+    },
+    {
+      "name": "event-wake-move",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-f7a77e7a-7b51-42ff-b8ed-f26fb8a5f514.png",
+      "references": [
+        "public/assets/event-wake-move.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-wake-move.webp",
+      "originalSha256": "150517bc49fc412f5314c8b6dfed8c4f87b6a05e8eefc406816332a6ca7c0310",
+      "sha256": "628dcd50e381bdaea819c22e3ec2dd1c551028b775c4a076c36061560fb81ff1",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-wake-move-480.webp",
+        "public/assets/event-wake-move-768.webp",
+        "public/assets/event-wake-move-1024.webp"
+      ]
+    },
+    {
+      "name": "event-wake-sit",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-8bd446c9-0fc6-4564-ae82-bd7c37157dbe.png",
+      "references": [
+        "public/assets/event-wake-sit.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/event-wake-sit.webp",
+      "originalSha256": "b8136c2d8bf4d0774e7270dd53d75facb45b577b56378e6844ede68143a7d6c0",
+      "sha256": "c604a4f79b91e2eb70e796c4ed298461bb1f65d12f70b6356aec041e6d9641a5",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/event-wake-sit-480.webp",
+        "public/assets/event-wake-sit-768.webp",
+        "public/assets/event-wake-sit-1024.webp"
+      ]
+    },
+    {
+      "name": "help-morning",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-fd242a7f-2eab-498b-8722-950e62a9f567.png",
+      "references": [
+        "public/assets/help-morning.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/help-morning.webp",
+      "originalSha256": "6b560dd771962d1efc3f7becd5daeb83fa099c44123c90cc09a5c781f5e81798",
+      "sha256": "8b68fc40e24005f9ae7bda872cad9dd378969a216037d86684597b10ec31d827",
+      "size": [
+        1400,
+        788
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/help-morning-480.webp",
+        "public/assets/help-morning-768.webp",
+        "public/assets/help-morning-1024.webp",
+        "public/assets/help-morning-1400.webp"
+      ]
+    },
+    {
+      "name": "inventory-equipment",
+      "alpha": true,
+      "note": "Muted neutral-light edit, actual alpha checked on charcoal",
+      "sourceGeneration": "exec-ff7a6717-aab9-4a7a-92ca-e980281a92fe.png",
+      "references": [
+        "public/assets/inventory-equipment.webp"
+      ],
+      "asset": "public/assets/inventory-equipment.webp",
+      "originalSha256": "2ee9464ebb391cf1ae1ab3a5963fffa870467f886c0f59a99928849878d1258f",
+      "sha256": "c3f0a699bdface3ccc1d934e2897ea080862c2feab1d299cbc92f5c7a981ce01",
+      "size": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA",
+      "responsive": [
+        "public/assets/inventory-equipment-256.webp",
+        "public/assets/inventory-equipment-512.webp",
+        "public/assets/inventory-equipment-768.webp"
+      ]
+    },
+    {
+      "name": "location-day-center",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-aa79eea7-3ec6-4757-8838-e59eec00f59c.png",
+      "references": [
+        "public/assets/location-day-center.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-day-center.webp",
+      "originalSha256": "aacb911edda9fed7f82cf1ca3f33abb26a683aa4cf445f155180ecae55e611a6",
+      "sha256": "388954c8b7ca776c7aa8bbbeee15037d5c7f11208ed30cd0ef555fa1f01c8b9f",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-day-center-480.webp",
+        "public/assets/location-day-center-768.webp",
+        "public/assets/location-day-center-1024.webp",
+        "public/assets/location-day-center-1400.webp"
+      ]
+    },
+    {
+      "name": "location-day-work",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-5344c97c-a305-45b3-8ef0-e39cd3bd5722.png",
+      "references": [
+        "public/assets/location-day-work.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-day-work.webp",
+      "originalSha256": "9159effe1a82541fb55ab6d5dabd5347073f12340fba7204c0df456766abe71b",
+      "sha256": "40fa9f1bee118f6194560d5426eb07f2efebe604397e4a474fd50c66b236a72d",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-day-work-480.webp",
+        "public/assets/location-day-work-768.webp",
+        "public/assets/location-day-work-1024.webp",
+        "public/assets/location-day-work-1400.webp"
+      ]
+    },
+    {
+      "name": "location-free-clinic",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-eda21b3c-99a1-483d-8ae2-98a5d96c2ed8.png",
+      "references": [
+        "public/assets/location-free-clinic.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-free-clinic.webp",
+      "originalSha256": "29f76101b09a7e5d4b8d49d2a3f36a257357aad3538993483a62d6015feb2dce",
+      "sha256": "5475e52d458024de474a089492dd507c477f58c52fb4c68cce9bdcf528dfc2c1",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-free-clinic-480.webp",
+        "public/assets/location-free-clinic-768.webp",
+        "public/assets/location-free-clinic-1024.webp",
+        "public/assets/location-free-clinic-1400.webp"
+      ]
+    },
+    {
+      "name": "location-help-center",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-b2c99635-fb7b-45ed-b756-6531b7ddef68.png",
+      "references": [
+        "public/assets/location-help-center.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-help-center.webp",
+      "originalSha256": "6c42d28fefce0b35381e2e0cc32ee8a4be5dbb88a40a1689db294f2a5c63a2d9",
+      "sha256": "71d775cbead738fc097934ef1532563f77279cd343e376a81c638a2dd7191287",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-help-center-480.webp",
+        "public/assets/location-help-center-768.webp",
+        "public/assets/location-help-center-1024.webp",
+        "public/assets/location-help-center-1400.webp"
+      ]
+    },
+    {
+      "name": "location-hospital",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-7c79ce86-d191-44a4-8df7-51c75e9b042e.png",
+      "references": [
+        "public/assets/location-hospital.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-hospital.webp",
+      "originalSha256": "2e5b10ee3e679c14fcbb2b32f3113951c945572fbb7f77813d7c516a9898cb5d",
+      "sha256": "d207b2b44a3fc655b197c2b7c3e604c702644dcfb7b7b6908634cdc9fc35c142",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-hospital-480.webp",
+        "public/assets/location-hospital-768.webp",
+        "public/assets/location-hospital-1024.webp",
+        "public/assets/location-hospital-1400.webp"
+      ]
+    },
+    {
+      "name": "location-job-center",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-f3f8d94e-8899-4ee0-963d-7ed5737763ee.png",
+      "references": [
+        "public/assets/location-job-center.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-job-center.webp",
+      "originalSha256": "15e52471b75a59159a2c212fb3f0027fbf0e5eb3daa6f7df11e8a2decd3afa5c",
+      "sha256": "566baac205b29e051406b01f5360c22c0fbd7c7a3a4b13dc90494225c36d0b52",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-job-center-480.webp",
+        "public/assets/location-job-center-768.webp",
+        "public/assets/location-job-center-1024.webp",
+        "public/assets/location-job-center-1400.webp"
+      ]
+    },
+    {
+      "name": "location-night-shelter",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-d4733be2-55fc-4d1b-a03f-cf9ed114d7b0.png",
+      "references": [
+        "public/assets/location-night-shelter.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-night-shelter.webp",
+      "originalSha256": "a05d45a2d8cb9c9cd6890e5ce230eabf2362b35d17297ea533558efb17480b5d",
+      "sha256": "7f96940e9a6b38ed178d25de3f7cff444d9c9a2adfd62ff2c582b1a3666bd65a",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-night-shelter-480.webp",
+        "public/assets/location-night-shelter-768.webp",
+        "public/assets/location-night-shelter-1024.webp",
+        "public/assets/location-night-shelter-1400.webp"
+      ]
+    },
+    {
+      "name": "location-residential-shelter",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-ae38b70d-b80d-4987-82a7-9e36856672e3.png",
+      "references": [
+        "public/assets/location-residential-shelter.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-residential-shelter.webp",
+      "originalSha256": "8407f419605d225bf83bca816f3837269d837d7d4e00d688279a4f5dcb557e6f",
+      "sha256": "6d4eebaadc09e454acaef4b55d0d0178502ff44159fa8b0d4ad304bf87053087",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-residential-shelter-480.webp",
+        "public/assets/location-residential-shelter-768.webp",
+        "public/assets/location-residential-shelter-1024.webp",
+        "public/assets/location-residential-shelter-1400.webp"
+      ]
+    },
+    {
+      "name": "location-station",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-d1b45141-33f6-4689-bb06-ce4c52c63e41.png",
+      "references": [
+        "public/assets/location-station.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/location-station.webp",
+      "originalSha256": "b7d4867718c15d1051d28c973cb1a7761cf3914daf0cb0515309a4c7a7de8c90",
+      "sha256": "1f3cf3e71beb9cd6f34d584c79ec18d4cfa263a2e9e2e005e19f401df4ddb77b",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/location-station-480.webp",
+        "public/assets/location-station-768.webp",
+        "public/assets/location-station-1024.webp",
+        "public/assets/location-station-1400.webp"
+      ]
+    },
+    {
+      "name": "phone-search",
+      "alpha": false,
+      "hero": true,
+      "sourceGeneration": "exec-7f70bd61-30df-4f6f-9e1b-4d26adb74ea1.png",
+      "references": [
+        "public/assets/phone-search.webp",
+        "docs/art/muted-palette-reference.webp",
+        "docs/art/hero-reference.webp"
+      ],
+      "asset": "public/assets/phone-search.webp",
+      "originalSha256": "c421a50def1a507776b729dfd7c677ef6f647750531df7eded49730f38007c3e",
+      "sha256": "89bc4574d5e81aacea05a0db4f580be9b2b827b2dff98961e4d765fc34562217",
+      "size": [
+        1400,
+        1050
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/phone-search-480.webp",
+        "public/assets/phone-search-768.webp",
+        "public/assets/phone-search-1024.webp",
+        "public/assets/phone-search-1400.webp"
+      ]
+    },
+    {
+      "name": "ready-meal",
+      "alpha": true,
+      "sourceGeneration": "exec-cc4fb112-187b-4b6d-bf4b-d971d3cf8095.png",
+      "references": [
+        "public/assets/ready-meal.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/ready-meal.webp",
+      "originalSha256": "dc4a7d36ffb18cc865f69784368f29a4556a826fd6c810a0b90738db6ae36a54",
+      "sha256": "a841667c8de13af02c3b30610ca455f37af5c0a023bb51dcfa91cc05a46454a9",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "responsive": [
+        "public/assets/ready-meal-160.webp",
+        "public/assets/ready-meal-320.webp",
+        "public/assets/ready-meal-480.webp"
+      ]
+    },
+    {
+      "name": "shop-interior",
+      "alpha": false,
+      "hero": false,
+      "sourceGeneration": "exec-c13e7d94-9fb0-421f-be77-76c162b198b9.png",
+      "references": [
+        "public/assets/shop-interior.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/shop-interior.webp",
+      "originalSha256": "16cc1b193663c50343e6599979d1367fb8d85a119e2d7f8e597264643ff47e7b",
+      "sha256": "46250ae84da9575f14c6496f2567505b6c223497655fe317cf51e0c2912447a0",
+      "size": [
+        2172,
+        724
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/shop-interior-480.webp",
+        "public/assets/shop-interior-768.webp",
+        "public/assets/shop-interior-1440.webp",
+        "public/assets/shop-interior-2172.webp"
+      ]
+    },
+    {
+      "name": "shop-products",
+      "alpha": true,
+      "sourceGeneration": "exec-305be07d-2fed-489e-be50-089acbdb8101.png",
+      "references": [
+        "public/assets/shop-products.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/shop-products.webp",
+      "originalSha256": "c69b61496af6a6128234784a4cc074a2aee7eaacd7dc05e70e7a6a34eac1391c",
+      "sha256": "94d1aef569f07cfbecf0720f601d15cc9f2dcd48feaf5a72010e4097167f815f",
+      "size": [
+        1024,
+        2048
+      ],
+      "mode": "RGBA",
+      "responsive": [
+        "public/assets/shop-products-256.webp",
+        "public/assets/shop-products-512.webp",
+        "public/assets/shop-products-768.webp"
+      ]
+    },
+    {
+      "name": "trash-bin",
+      "alpha": false,
+      "hero": false,
+      "note": "Subject-specific color-grade edit replaces a rejected scene.",
+      "sourceGeneration": "exec-5a43ff2d-ae62-44f4-8eb4-8cd9f880649a.png",
+      "references": [
+        "public/assets/trash-bin.webp"
+      ],
+      "asset": "public/assets/trash-bin.webp",
+      "originalSha256": "34a944ef7c7ad4d9f4e3d97912aa33eddeb1175f449d8d46af2904cedc8309e5",
+      "sha256": "e97b1d9e7080e8a7be3fbe4d872642783562366d40f44ad49f18f370ce5d1c50",
+      "size": [
+        768,
+        576
+      ],
+      "mode": "RGB",
+      "responsive": [
+        "public/assets/trash-bin-384.webp"
+      ]
+    },
+    {
+      "name": "trash-can-crushed",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-62c5a6ff-e61f-45c7-b62a-ffdd0ff9e8ab.png",
+      "references": [
+        "public/assets/trash-can-crushed.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-can-crushed.webp",
+      "originalSha256": "faaf3fb1cc5784e722384c210094b9e81dd73963dc21365120c08b0ff5b4180d",
+      "sha256": "6324685706acf5ab38d184585070f5f88d5b91f5c6f02dc4bbad3c67eaa5117c",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    },
+    {
+      "name": "trash-can",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-8deedf33-54c0-4732-ba28-6ece4db1dada.png",
+      "references": [
+        "public/assets/trash-can.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-can.webp",
+      "originalSha256": "ff337ccd7d56f88e58184bb8f9c32226fe46c3929fcf5705c3d2cfe0ba910293",
+      "sha256": "b642817f9802db82422b84d8c7976862f7f3d3c1ef1fcd30d8cd1277bf3924b9",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    },
+    {
+      "name": "trash-cup",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-9fb1e60a-a310-489e-a7a3-261c8e9860c3.png",
+      "references": [
+        "public/assets/trash-cup.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-cup.webp",
+      "originalSha256": "675194b521aa9b9eb1722b6c10db718a5eb07a1fe6d59dbc3eb4095c0a9a71b2",
+      "sha256": "353fe10ff1c88f4c49a441024e65d2549487931feb1d4581e4f0d5a5001cb812",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    },
+    {
+      "name": "trash-paper",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-f2108368-7a09-456c-8915-c6124ad7a85c.png",
+      "references": [
+        "public/assets/trash-paper.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-paper.webp",
+      "originalSha256": "99a49bc7542c3d192511889db9611ef5f5437914fad7f88e768d0b37b2c33085",
+      "sha256": "6ea52e1fb003e7e2f14d63761087b8883b9c42fc30774a5f27fd7fc61dc77b06",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    },
+    {
+      "name": "trash-plastic-crushed",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-250905a0-d09c-4c13-bfc6-042aa8d069cc.png",
+      "references": [
+        "public/assets/trash-plastic-crushed.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-plastic-crushed.webp",
+      "originalSha256": "d4dd6e4be4105006be33900faad196f52af05ff7754a8efee827f3b951cef9b7",
+      "sha256": "278b605106df2f2dbcf61cc08e7477fcee62ad330efebcb4c4a5e8955b2ce8d3",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    },
+    {
+      "name": "trash-plastic",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-2f960251-66c6-4e21-a16e-fc24adb5d45e.png",
+      "references": [
+        "public/assets/trash-plastic.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-plastic.webp",
+      "originalSha256": "78c880cd56a97df6412153896cae4a3973cbaa65d19c0c3788638777a6c745d0",
+      "sha256": "7d9cf72a953bf8cc5625f33b7555deccedf19f4c867661b70caa49930bb9efe1",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    },
+    {
+      "name": "trash-tray",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-b9dccffc-38fd-4136-9e55-8b1e926c5695.png",
+      "references": [
+        "public/assets/trash-tray.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-tray.webp",
+      "originalSha256": "2f9fc6ce1d43e008594879992ad2f786863cb074613601f4dfd60139c8bf8fec",
+      "sha256": "6933dbf96c22dcf8d5bdc8905f0bb2ac5d385b5bcb547fb565fb25cf75d1da09",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    },
+    {
+      "name": "trash-wrapper",
+      "alpha": true,
+      "hero": false,
+      "sourceGeneration": "exec-8a94010c-2017-4078-a718-0b20d15d316b.png",
+      "references": [
+        "public/assets/trash-wrapper.webp",
+        "docs/art/muted-palette-reference.webp"
+      ],
+      "asset": "public/assets/trash-wrapper.webp",
+      "originalSha256": "7e33cc8438a9ae5be5bc031bd4c1d41232733a84b6fe0bf1bd8491bafffce08d",
+      "sha256": "96161584e7ee43edde7c201c5b8d89370e169c3f3d481b3c9b8cdf70a12ebf36",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "responsive": []
+    }
+  ],
+  "prompts": "docs/art/muted-palette-prompts.json",
+  "sourceCommit": "dd710178a6f7e0d18637f2578a10e6aede0f6363"
+}

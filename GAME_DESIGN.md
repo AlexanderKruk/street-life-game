@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-287`.
+**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-295`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -699,7 +699,7 @@ Result modals use a specific hierarchy (v281): place names and large meter perce
 
 ### Application and illustration art direction — approved 2026-10-22
 
-**Status:** the user approved the subdued example for **The city wakes up** on 2026-10-22. These are the visual requirements for new artwork and for revising existing artwork; this documentation update does not mean that the existing image collection has already been recolored.
+**Status (v295):** the user approved the subdued example for **The city wakes up** on 2026-10-22. The illustration and item collection now follows that grade: 109 source assets, including event openings/results, location headers, phone/help/shop scenes, transparent shop/equipment atlases, ready meal and bottle/trash sprites. Responsive and density variants are regenerated from the selected edits. The original Street palette reference, already muted map and shared pedestrian icon are retained. The selected outputs and asset paths are recorded in [the generation manifest](docs/art/muted-palette-generation.json), with [the prompts](docs/art/muted-palette-prompts.json). Built-in imagegen performs the visual edits; the packaging script only normalizes dimensions and encodes WebP variants.
 
 #### Shared application style
 
@@ -707,7 +707,7 @@ Keep the application quiet, restrained and consistent with the illustrations: da
 
 #### Illustration palette, light and mood
 
-The primary palette and atmosphere reference is the existing [Street illustration](public/assets/street-hero.webp), as seen in the Street screen: **muted, sad and calm**. The approved recolored **The city wakes up** preview is the example of how brighter event artwork should move toward that reference.
+The primary palette and atmosphere reference is the existing [Street illustration](public/assets/street-hero.webp), as seen in the Street screen: **muted, sad and calm**. The approved standalone [The city wakes up reference](docs/art/muted-palette-reference.webp) is stored with the project and is the color-grade reference attached when revising other scenes and items. It is also used for the event's runtime illustration.
 
 - Use low-saturation slate blue-gray, charcoal, weathered gray-brown and subdued natural colors. Skin, clothing and surroundings should remain believable.
 - Keep lamps, windows and reflections softly warm, with restrained dull amber highlights. Reduce vivid orange/gold pavement reflections, bright orange foliage and saturated blue skies.
