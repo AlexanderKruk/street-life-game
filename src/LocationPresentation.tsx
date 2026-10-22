@@ -29,7 +29,7 @@ export const LocationSummary = memo(function LocationSummary({ id, name, descrip
   return <section className={`current location-summary${id === 'street' ? ' story-scene' : illustration ? ' location-hero' : ''}`} data-location-id={id}>
     {illustration && <img key={illustration} className="location-hero-image" {...responsiveImageProps(`/street-life-game/assets/${illustration}.webp`)} width="1600" height="900" alt="" aria-hidden="true" fetchPriority="high" />}
     {id !== 'street' && <div className="location-icon"><Icon name={locationIcon(id)} /></div>}
-    <div><p className="eyebrow">{id === 'street' ? 'A MOMENT ON THE STREET' : `YOU ARE HERE · ${open ? 'OPEN' : `CLOSED · OPENS AT ${formatTime(opensAt)}`}`} </p><h2>{name}</h2><p>{description}</p></div>
+    <div>{id === 'street' ? <p className="eyebrow">A MOMENT ON THE STREET</p> : !open && <p className="eyebrow">CLOSED · OPENS AT {formatTime(opensAt)}</p>}<h2>{name}</h2><p>{description}</p></div>
   </section>
 })
 
