@@ -68,7 +68,7 @@ export default function CityMap({ places, currentId, minutes, reservedBed, route
     <div className="district-map-heading">
       <div className="district-shortcuts" aria-label="Nearby places">
         <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} disabled={currentId === 'street'} onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span>Street</span></button>
-        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} disabled={currentId === 'shop'} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span>Nearest shop</span></button>
+        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} disabled={currentId === 'shop'} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span>Small Shop</span></button>
       </div>
     </div>
     <DistrictScene places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />

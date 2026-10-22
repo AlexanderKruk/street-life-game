@@ -111,8 +111,8 @@ function measure(App) {
   // Relevant changes must still render: opening hours, selected map pin, completed goal, journal day.
   setup(App, 'map', { minutes: 1319 }); advance(1);
   assert.equal(count('DistrictScene'), 1);
-  assert(screen.getByRole('button', { name: 'Nearest shop' }));
-  clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Nearest shop' }));
+  assert(screen.getByRole('button', { name: 'Small Shop' }));
+  clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
   assert.equal(count('DistrictScene'), 1);
   assert(!document.querySelector('.district-card'));
   assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
@@ -232,7 +232,7 @@ function measure(App) {
   setup(App, 'location', { locationId: 'street' }, { 'street-life-rain-choice-v1': true }); pauseAudit('rain choice', '.event-overlay');
   setup(App, 'status', { health: 0 }); pauseAudit('game over', '.game-over-overlay');
   setup(App, 'map', {}, { 'street-life-inventory-v1': { transitCard: false } });
-  fireEvent.click(screen.getByRole('button', { name: 'Nearest shop' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
   assert(document.querySelector('.travel-sheet')); clearCounts(); advance(3);
   modalAudit.push({ name: 'travel choices (time continues)', renders: counts() });
   fireEvent.click(screen.getByRole('button', { name: /Ride without ticket/ })); pauseAudit('dice check', '.dice-overlay');

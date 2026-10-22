@@ -25,11 +25,10 @@ export default function PhoneScreen({ busy = false, app, onApp, pendingGoals, un
   const selected = apps.find(entry => entry.id === app)
   return <section className="phone-screen" aria-label="Phone" inert={busy} aria-hidden={busy || undefined}>
     <header className={`phone-screen-header${app === 'home' ? ' phone-home-header' : ''}`}>
-      {selected && <div className="phone-screen-heading">
+      <div className="phone-screen-heading">
         {app !== 'home' && !unavailable && <button type="button" className="phone-back" aria-label="Back to phone" onClick={() => onApp('home')}><Icon name="chevron-left" /></button>}
-        <Icon name={selected.icon} className={`phone-app-symbol ${selected.id}`} />
-        <h2 ref={heading} tabIndex={-1}>{selected.label}</h2>
-      </div>}
+        <h2 ref={heading} tabIndex={-1}>{selected?.label ?? 'Phone'}</h2>
+      </div>
       <button type="button" className={`phone-plan-status ${serviceActive ? 'paid' : 'unpaid'}`} aria-label="Mobile plan" disabled={!!unavailable} onClick={event => { event.currentTarget.focus({ preventScroll: true }); onPlan() }} title={serviceActive ? `Mobile internet: ${serviceMinutesLeft >= 60 ? Math.ceil(serviceMinutesLeft / 60) + 'h' : serviceMinutesLeft + 'm'} left. Manage plan.` : 'Mobile internet is unpaid. Manage plan.'}>
         <span>1 zł/day</span><span aria-hidden="true">·</span><i aria-hidden="true" /><span>{serviceActive ? 'Paid' : 'Unpaid'}</span>
       </button>

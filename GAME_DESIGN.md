@@ -14,7 +14,7 @@ Earlier version notes and superseded designs are preserved in [Implementation hi
 | Essentials | Phone and Clothing are informational, non-clickable cards. Phone shows Battery and Condition; Clothing shows Clean and Condition. |
 | Wetness | Disabled by default. No moisture accumulation, penalties, wetness indicators or rain/cover decision modals. Rain/weather and rain-related equipment events remain. |
 | Activity cards | Animated icon; muted route/context; elapsed time first; bold action with three animated dots. Starts at `01m`, then `1h 00m`; no reserved blank hour space. |
-| Map | Dark overhead city plan with scattered landmark anchors, Street and Nearest shop shortcuts, and no Map title. |
+| Map | Dark overhead city plan with scattered landmark anchors, Street and Small Shop shortcuts, and no Map title. |
 | Results | Every Got it result uses a centered blocking modal with the shared blur/backdrop. |
 | Events | Five contextual ambient scenes and two patrol wake scenes add 28 consistent-hero illustrations. Cat reveal belongs only to the inspection answer; Station patrol alone asks for a train ticket. |
 | Time | Ordinary gameplay/queue ×1; phone search, travel and morning packing ×4; sleep currently debug ×10. Some actions still apply time immediately. |
@@ -223,7 +223,7 @@ Rain, ordinary weather costs, temperature and outdoor-sleep illness remain activ
 |---|---|
 | Street | 24/7; initial location; stepping outside is immediate. |
 | Station | 24/7. |
-| Cheap Shop | 07:00–22:00; Nearest shop map shortcut. |
+| Cheap Shop | 07:00–22:00; Small Shop map shortcut. |
 | Night Shelter | 18:00–08:00; entry/check-in 18:00–22:00; first registration 18:20–22:00. |
 | Help Center | 08:00–16:00. |
 | Schronisko | 24/7; referral required. |
@@ -663,7 +663,9 @@ Several older generic shop/support actions still exist in `game.ts`, while the c
 
 ## UI and presentation
 
-The fixed bottom navigation is Map, Inventory, current place (raised center button), Status and Phone. The central button uses the current place's icon and name. Travel/events/results block background navigation. Map, Inventory, Status and Phone home omit redundant screen headings; internal phone apps retain back navigation and their own labels.
+The fixed bottom navigation is Map, Inventory, current place (raised center button), Status and Phone. The central button uses the current place's icon and name. Travel/events/results block background navigation. Map, Inventory and Status omit redundant screen headings. Phone home uses a compact Phone title on the left and mobile-plan status on the right, with the same 44px header height, Title typography and bottom divider as internal phone apps. The home header has no back arrow or decorative icon; internal phone apps retain back navigation and their own labels.
+
+Internal Phone app headers use Title (20px mobile / 24px desktop), including Goals. Keep the back button, title and mobile-plan status vertically centered in the compact 44px header; offset only the back-arrow artwork down by 1px for optical alignment, preserving its hit area. App icons appear in the launcher, without a repeated decorative icon beside internal titles. Mobile-plan metadata stays Small (14px).
 
 The shared sticky header shows day/time, money, weather, Mood and actual phone Battery. Battery becomes red strictly below 30%. The version label and Reset save are in the footer. Dark responsive styling, safe-area spacing and one contour icon system are shared across screens. Street uses the same pedestrian artwork as walking travel. Location icons are neutral gray in headers, map controls/cards, travel and phone notes. In the bottom menu, only the active tab uses the muted yellow accent; inactive icons stay gray. The shared pedestrian uses its original silhouette as an alpha mask and inherits the UI color, so it follows the same active-tab rule. Raster walking artwork stays gray during travel.
 
@@ -693,7 +695,7 @@ Use the shared regular/semibold/bold weights: `--weight-regular` 400, `--weight-
 
 All green and yellow interface accents follow the approved muted palette: sage green `--color-positive` **#7f9b87** and ochre `--color-warning` **#af9868**. Reuse these tokens for stat/result bars and loss trails, positive/warning text and chips, open hours, active navigation, controls, goals, map accents and phone apps. Pair them with muted semantic surfaces/borders (`--color-positive-surface` / `--color-positive-border`, `--color-warning-surface` / `--color-warning-border`); pressed ochre buttons use `--color-warning-pressed`. Red critical states, negative effects and capacity hatching keep their established colors. The stat thresholds and gameplay effects are unchanged.
 
-Backpack effect chips use Small (14px), regular 400 weight and compact 2px vertical / 4px horizontal padding. Keep each chip within the available text column and wrap long effects naturally. Medicine uses the compact label **Recovery×3** in Backpack; the hint and treatment result retain the Cold context. Do not reserve extra vertical space for the overlaid bottom-right discard button.
+Backpack effect chips use Small (14px), regular 400 weight and compact 2px vertical / 4px horizontal padding. Keep each chip within the available text column and wrap long effects naturally. Medicine uses the label **Recovery ×3** in Backpack, with a space before the multiplier; the hint and treatment result retain the Cold context. Do not reserve extra vertical space for the overlaid bottom-right discard button.
 
 Inline location notices (for example, eating food from the backpack) vertically center the status dot and message with equal top/bottom padding. The dot has no extra top margin; multi-line messages retain the same centered alignment.
 
@@ -748,9 +750,9 @@ Approximate durations round to the nearest five minutes (32 → ≈30m, 33 → �
 
 ### Map
 
-The dark overhead map fits between the header and bottom navigation, with the destination card in its own lower space. Real UI labels anchor to dispersed city-block/railway landmarks through the same cover projection as the artwork. Station is anchored at approximately 34.5% across / 65.8% down; Day Work's label sits to the left of its marker. Compact labels are 16px.
+The dark overhead map fits between the header and bottom navigation, with the destination card in its own lower space. Real UI labels anchor to dispersed city-block/railway landmarks through the same cover projection as the artwork. Station is anchored at approximately 34.5% across / 65.8% down; Day Work's label sits to the left of its marker. Compact labels are 16px. Labels on either side keep at least 8px of clear space beyond the selected marker's outer ring (42px label offset within the 36px pin), so selection never overlaps the label background or text.
 
-The top toolbar has Street and Nearest shop, with no Map/City map title. Both shortcuts open the walking/public-transport chooser immediately, without a destination card or extra Go step. Nearest shop keeps its 5–15-minute route. Each shortcut is disabled at that place. These two have no fixed map pins. Discovered facilities retain selectable markers, shared route anchors and a destination card with Go; opening hours appear on that card in compact green/red text. There is no global goal reminder or You are here line in that card.
+The top toolbar has Street and Small Shop, with no Map/City map title. Both shortcuts use Body (16px), 22px icons, a minimum 48px height and 8px vertical / 10px horizontal padding; the icon/text gap and inter-button gap are 8px. Both shortcuts open the walking/public-transport chooser immediately, without a destination card or extra Go step. Small Shop keeps its 5–15-minute route. Each shortcut is disabled at that place. These two have no fixed map pins. Discovered facilities retain selectable markers, shared route anchors and a destination card with Go; opening hours appear on that card in compact green/red text. There is no global goal reminder or You are here line in that card.
 
 ### Results, illustrations and items
 
@@ -831,7 +833,7 @@ The v283 GitHub Pages workflow passed the full tests and production build before
 - Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
 - Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
 - Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
-- Last confirmed successful deployment: v296 on 2026-10-22, commit `afbae45b3e28e4eb70d2bf26e89cd6370b9a8689` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39786292479)). The current source prepares v297 with the centered, blurred travel chooser and the reordered Phone launcher (Find Help, Goals, Notes, History). History uses the shared secondary gray in the launcher and its internal heading. Publication is verified separately from a local build.
+- Last confirmed successful deployment: v297 on 2026-10-22, commit `b559004d313b9e6fb8bfd2442bf03b9c39d60fc5` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39792681220)). The v297 source includes the centered, blurred travel chooser and reordered Phone launcher (Find Help, Goals, Notes, History). The current source prepares v298: Title-sized internal Phone headings with the back arrow lowered by 1px, a compact Phone home header, larger Street / Small Shop map shortcuts, clear space around selected map markers, and Recovery ×3 spacing. Publication is verified separately from a local build.
 - Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
 
 ## Design principles

@@ -439,15 +439,15 @@ assert.deepEqual(read(stateKey),mapBefore);
 const streetShortcut=within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Street',exact:true});
 assert(streetShortcut.disabled);
 fireEvent.click(streetShortcut);assert.deepEqual(read(stateKey),mapBefore);
-click('Nearest shop');assert(document.querySelector('.travel-sheet'));
+click('Small Shop');assert(document.querySelector('.travel-sheet'));
 assert(!document.querySelector('.district-card'));
 assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
 assert.equal(read(stateKey).locationId,'street');
 fireEvent.click(document.querySelector('.sheet-close'));
 setup({locationId:'shop',minutes:600});click(/Map$/);
-assert(screen.getByRole('button',{name:'Nearest shop',exact:true}).disabled);
+assert(screen.getByRole('button',{name:'Small Shop',exact:true}).disabled);
 const beforeExit=read(stateKey);
-fireEvent.click(screen.getByRole('button',{name:'Nearest shop',exact:true}));
+fireEvent.click(screen.getByRole('button',{name:'Small Shop',exact:true}));
 assert(!document.querySelector('.travel-sheet'));assert.deepEqual(read(stateKey),beforeExit);
 click('Street');assert(document.querySelector('.travel-sheet'));
 assert(!document.querySelector('.district-card'));assert.deepEqual(read(stateKey),beforeExit);
@@ -456,7 +456,7 @@ click('Street');click(/^Walk/);assert.equal(read('street-life-trip-v1').destinat
 assert.equal(read(stateKey).locationId,'shop');
 setup({locationId:'station',minutes:600});click(/Map$/);
 assert(!screen.getByRole('button',{name:'Street',exact:true}).disabled);
-assert(!screen.getByRole('button',{name:'Nearest shop',exact:true}).disabled);
+assert(!screen.getByRole('button',{name:'Small Shop',exact:true}).disabled);
 
 // Cancelled routes must never count as a departure; actual walking does, once.
 setup({locationId:'shelter',minutes:540},{[lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,shelterStrikes:0}});
@@ -571,7 +571,7 @@ for(const mode of ['walk','transit','fare-dodge']) {
 
 // The nearby shop takes the same 5–15 minutes in each mode, including bus waits.
 for(const mode of ['walk','transit','fare-dodge']) {
- setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click('Nearest shop');
+ setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click('Small Shop');
  const options=document.querySelectorAll('.travel-option');assert.equal(options.length,3);for(const option of options)assert(option.textContent.includes('≈5–15m'));
  if(mode==='fare-dodge'){click(/Ride without ticket/);click('Roll D20');click('Continue');ok();}else click(mode==='walk'?/^Walk/:/Public transport/);
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
