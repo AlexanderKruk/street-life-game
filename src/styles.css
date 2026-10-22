@@ -371,7 +371,8 @@ button.inventory-item { width:100%; }
 .shop-screen .game-header { margin-bottom:0; }
 .shop-hero { position:relative; isolation:isolate; min-height:145px; margin:0 -18px 12px; padding:70px 18px 16px; background:#0b0f13; overflow:hidden; }
 .shop-hero-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2; }
-.shop-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(0deg,#0b0f13 0%,#0b0f1350 65%,#0b0f1320); }
+.shop-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,transparent 30%,rgba(11,15,19,.18) 50%,rgba(11,15,19,.78) 100%); pointer-events:none; }
+.shop-hero h2,.shop-hero p { text-shadow:0 1px 4px rgba(0,0,0,.8); }
 .shop-hero h2 { margin:0 0 4px; font-size:var(--font-title); color:var(--text-primary); }
 .shop-hero p { margin:0; font-size:var(--font-small); color:var(--text-secondary); }
 .shop-screen .shop { margin-top:10px; }
@@ -600,9 +601,14 @@ button.inventory-item { width:100%; }
 .location-summary .location-icon { display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0; filter:none; color:#d7b58a; }
 .location-summary .location-icon svg { width:38px; height:38px; }
 .location-summary h2 { font-size:var(--font-title); margin-bottom:3px; }
-.location-summary.location-hero { position:relative; isolation:isolate; min-height:clamp(210px,30svh,270px); margin:0 -18px 16px; padding:100px 18px 14px; overflow:hidden; background:#101416; }
+.location-summary.location-hero { position:relative; isolation:isolate; min-height:clamp(210px,30svh,270px); aspect-ratio:16 / 9; align-items:flex-end; margin:0 -18px 16px; padding:100px 18px 14px; overflow:hidden; background:#101416; }
 .location-hero-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:-2; }
-.location-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(16,20,22,.04) 0%,rgba(16,20,22,.28) 28%,rgba(16,20,22,.88) 58%,#101416 100%); pointer-events:none; }
+.location-hero::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,transparent 30%,rgba(11,15,19,.18) 50%,rgba(11,15,19,.78) 100%); pointer-events:none; }
+.location-hero > div { text-shadow:0 1px 4px rgba(0,0,0,.8); }
+.location-hero > div:not(.location-icon) { min-width:0; }
+.location-hero .location-icon { align-self:flex-end; margin-bottom:3px; }
+.location-hero h2 { color:var(--text-primary); }
+.location-hero p:last-child { color:#e0e3e3; }
 @media(max-width:520px) { .location-summary.location-hero { margin-left:-12px; margin-right:-12px; padding-left:14px; padding-right:14px; } }
 
 /* v1 map: simple rows prevent overlapping locations on mobile. */
