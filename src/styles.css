@@ -130,7 +130,9 @@ footer p { margin:0; }
 }
 
 /* Real-time travel */
-.travel-sheet { position:fixed; z-index:30; left:50%; bottom:max(88px,calc(env(safe-area-inset-bottom) + 78px)); transform:translateX(-50%); width:min(700px,calc(100% - 24px)); padding:20px; border:1px solid #46525d; border-radius:22px; background:#12191f; box-shadow:0 18px 60px rgba(0,0,0,.6); }
+.travel-choice-overlay { position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; padding:calc(16px + env(safe-area-inset-top,0px)) 12px calc(16px + env(safe-area-inset-bottom,0px)); background:rgba(4,7,10,.62); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); overscroll-behavior:contain; }
+.travel-sheet { position:relative; width:min(480px,100%); max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); overflow:auto; overscroll-behavior:contain; padding:20px; border:1px solid #46525d; border-radius:22px; background:#12191f; box-shadow:0 18px 60px rgba(0,0,0,.6); }
+.travel-sheet:focus { outline:none; }
 .travel-sheet h2 { margin-bottom:16px; }
 .sheet-close { position:absolute; right:14px; top:12px; width:34px; height:34px; border:0; border-radius:50%; background:#252e36; color:var(--text-primary); font-size:24px; }
 .travel-option { width:100%; display:flex; align-items:center; gap:14px; padding:15px; margin-top:9px; border:1px solid #35414c; border-radius:15px; background:#1a2229; color:var(--text-primary); text-align:left; }
@@ -1255,7 +1257,7 @@ body:has(.map-screen) { min-height:100dvh; }
 .phone-app-art > svg { display:block; width:38px; height:38px; }
 .phone-app.goals .phone-app-art, .phone-app-symbol.goals { color:var(--color-warning); }
 .phone-app.notes .phone-app-art, .phone-app-symbol.notes { color:var(--text-secondary); }
-.phone-app.history .phone-app-art, .phone-app-symbol.history { color:#baa0c9; }
+.phone-app.history .phone-app-art, .phone-app-symbol.history { color:var(--text-secondary); }
 .phone-app.search .phone-app-art, .phone-app-symbol.search { color:var(--color-positive); }
 .phone-app-badge { position:absolute; top:-9px; right:-15px; display:grid; place-items:center; min-width:20px; height:20px; padding:0 4px; border-radius:50%; background:var(--color-warning); color:#14191e; font-size:var(--font-small); font-weight:var(--weight-bold); }
 .phone-app:disabled { opacity:.42; }

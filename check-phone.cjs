@@ -43,7 +43,7 @@ try {
  setup({locationId:'station',minutes:600});
  click('Phone');
  assert.equal(document.querySelectorAll('.phone-app-grid button').length,4);
- assert.deepEqual([...document.querySelectorAll('.phone-app-grid button')].map(node=>node.getAttribute('aria-label')),['Goals','Notes','History','Search']);
+ assert.deepEqual([...document.querySelectorAll('.phone-app-grid button')].map(node=>node.getAttribute('aria-label')),['Find Help','Goals','Notes','History']);
  assert(!screen.queryByRole('button',{name:'Journal',exact:true}));
  assert(!screen.queryByRole('button',{name:'Music',exact:true}));
  assert(!screen.queryByRole('button',{name:'Video',exact:true}));
@@ -53,7 +53,7 @@ try {
  assert(!document.querySelector('.journal-goals'));assert(!document.querySelector('.journal-history'));
  assert(!document.querySelector('.phone-notes-list').textContent.includes('Free Clinic'));
  click('Back to phone');click('History');assert(document.querySelector('.journal-history'));assert(!document.querySelector('.journal-goals'));
- click('Back to phone');assert(screen.getByRole('button',{name:'Search',exact:true}));
+ click('Back to phone');assert(screen.getByRole('button',{name:'Find Help',exact:true}));
  // Legacy Journal selection opens the phone without rewriting goals/history.
  const entry={day:1,minute:500,title:'A saved thought',text:'I remember this.',reflection:true};
  setup({locationId:'station',minutes:600},{'street-life-screen':'journal','street-life-journal-history-v1':[entry],'street-life-journal-goals-v1':{morning:true,shelter:false,support:false,work:false}});
@@ -62,16 +62,16 @@ try {
  click('Back to phone');click('Goals');assert(document.querySelector('.completed-goals').textContent.includes('Get through the morning'));
  // No internet locks only Search; stored notes, goals, history stay accessible.
  setup({locationId:'station',money:0},{'street-life-mobile-service-until':'0'});
- click('Phone');assert(screen.getByRole('button',{name:'Search',exact:true}).disabled);
+ click('Phone');assert(screen.getByRole('button',{name:'Find Help',exact:true}).disabled);
  click('Notes');assert(screen.getByText('Saved information'));click('Back to phone');click('Goals');assert(document.querySelector('.journal-goals'));
  // Buying a day from the header activates Search and preserves the clock.
  setup({locationId:'station',minutes:600},{'street-life-mobile-service-until':'0'});
  click('Phone');const unpaidBefore=read(stateKey);click('Mobile plan');click('Add 24 hours of mobile service for 1 zł');ok();
  assert.equal(read(stateKey).money,unpaidBefore.money-1);assert.equal(read(stateKey).minutes,unpaidBefore.minutes);
- assert(!screen.getByRole('button',{name:'Search',exact:true}).disabled);
+ assert(!screen.getByRole('button',{name:'Find Help',exact:true}).disabled);
  // Searches use the existing timed flow indoors, save real results, and survive reload.
  setup({locationId:'station',minutes:600},{'street-life-discovered-v1':['street','station','shop']});
- click('Phone');click('Search');const beforeSearch=read(stateKey),beforeBattery=read(invKey).phoneBattery;
+ click('Phone');click('Find Help');const beforeSearch=read(stateKey),beforeBattery=read(invKey).phoneBattery;
  Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));
  assert(screen.getByRole('dialog',{name:'Looking for information'}));
  advance(249);assert.equal(read(stateKey).minutes,beforeSearch.minutes);assert.equal(read('street-life-phone-activity-v1').remaining,15);
@@ -91,7 +91,7 @@ try {
  click('Phone');click('Notes');assert(screen.getByRole('heading',{name:/Day Work/}));
  // New clinic search uses the same timing and saves an actual clinic note.
  setup({locationId:'station',minutes:600},{'street-life-discovered-v1':['street','station','shop']});
- click('Phone');click('Search');click('Medical help');assert(read('street-life-discovered-v1').includes('free-clinic'));ok();
+ click('Phone');click('Find Help');click('Medical help');assert(read('street-life-discovered-v1').includes('free-clinic'));ok();
  click('Back to phone');click('Notes');assert(screen.getByRole('heading',{name:/Free Clinic/}));
  // No battery or a broken device hides every app but leaves travel available.
  for(const phone of [{phoneBattery:0,phoneCondition:72},{phoneBattery:60,phoneCondition:0}]) {
@@ -102,12 +102,12 @@ try {
  }
  // Expiring service while Search is open disables its actions without hiding history.
  setup({locationId:'station',minutes:600},{'street-life-mobile-service-until':'602'});
- click('Phone');click('Search');advance(3000);
+ click('Phone');click('Find Help');advance(3000);
  assert([...document.querySelectorAll('.phone-search-row')].every(button=>button.disabled));
  assert(screen.getByText(/Mobile internet is unpaid/));click('Back to phone');click('History');assert(document.querySelector('.journal-history'));
  // Morning checkout interrupts a search before the departure dialog opens.
  setup({locationId:'shelter',day:2,minutes:449},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7,shelterLastStayDay:1},'street-life-mobile-service-until':'5000'});
- click('Phone');click('Search');Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));advance(1000);
+ click('Phone');click('Find Help');Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));advance(1000);
  assert(!read('street-life-phone-activity-v1'));assert.equal(screen.getAllByRole('dialog').length,1);
  assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));ok();
  assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));

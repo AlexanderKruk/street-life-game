@@ -39,7 +39,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.22-296'
+const BUILD_VERSION = 'v2026.10.22-297'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -447,6 +447,30 @@ export default function App() {
   const inventoryDialogOpen = !!discardItem || !!foodChoice
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const travelModalRef = useRef<HTMLElement>(null)
+  const travelChoiceRef = useRef<HTMLElement>(null)
+  const travelChoiceOpen = screen === 'map' && !!selectedDestination
+  useEffect(() => {
+    if (!travelChoiceOpen) return
+    const previous = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    travelChoiceRef.current?.focus({ preventScroll: true })
+    const trap = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setSelectedDestination(null); return }
+      if (event.key !== 'Tab') return
+      const buttons = Array.from(travelChoiceRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
+      if (!buttons.length) return
+      event.preventDefault()
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
+      buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus()
+    }
+    document.addEventListener('keydown', trap)
+    return () => {
+      document.body.style.overflow = overflow
+      document.removeEventListener('keydown', trap)
+      if (previous?.isConnected) previous.focus({ preventScroll: true })
+    }
+  }, [travelChoiceOpen])
   const phoneSearchModalRef = useRef<HTMLElement>(null)
   const travelling = screen === 'travel' && !!trip
   const activityOverlay = travelling || !!phoneActivity
@@ -2579,8 +2603,8 @@ export default function App() {
       if (!destination) return null
       const transitMinutes = Math.ceil(destination.travelMinutes * 0.5)
       const nearbyTime = destination.travelRange ? `${destination.travelRange.min}–${destination.travelRange.max}m` : null
-      return <div className="travel-sheet">
-        <button className="sheet-close" onClick={() => setSelectedDestination(null)}>×</button>
+      return <div className="travel-choice-overlay"><section className="travel-sheet" role="dialog" aria-modal="true" aria-label={`Travel to ${destination.name}`} tabIndex={-1} ref={travelChoiceRef}>
+        <button className="sheet-close" aria-label="Close travel options" onClick={() => setSelectedDestination(null)}>×</button>
         <p className="eyebrow">TRAVEL TO</p>
         <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
         <ChoiceOptions seed={choiceSeed} decision={`${choiceDecisionKey}|travel:${destination.id}`}>
@@ -2595,7 +2619,7 @@ export default function App() {
         </button>}
         </ChoiceOptions>
 
-      </div>
+      </section></div>
     })()}
 
     {screen === 'inventory' && <section className="inventory-screen" aria-label="Inventory">

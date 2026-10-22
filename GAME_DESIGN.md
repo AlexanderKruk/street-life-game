@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-296`.
+**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-297`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -10,7 +10,7 @@ Earlier version notes and superseded designs are preserved in [Implementation hi
 
 | Area | Current behavior |
 |---|---|
-| Navigation | Map, Inventory, current place, Status, Phone. Goals, Notes, History and Search are apps inside Phone. |
+| Navigation | Map, Inventory, current place, Status, Phone. Find Help, Goals, Notes and History are apps inside Phone. |
 | Essentials | Phone and Clothing are informational, non-clickable cards. Phone shows Battery and Condition; Clothing shows Clean and Condition. |
 | Wetness | Disabled by default. No moisture accumulation, penalties, wetness indicators or rain/cover decision modals. Rain/weather and rain-related equipment events remain. |
 | Activity cards | Animated icon; muted route/context; elapsed time first; bold action with three animated dots. Starts at `01m`, then `1h 00m`; no reserved blank hour space. |
@@ -334,7 +334,7 @@ Backpack/Essentials share transparent object artwork without picture backings. B
 
 ## Phone
 
-Phone is the last bottom-navigation destination. Its compact home header shows `1 zł/day · Paid/Unpaid`; app screens add a back button, icon and app title. The home launcher has Goals, Notes, History and Search. There is no standalone Journal tab or redundant Phone heading. The four additional Music/Video/Navigation/Plan launcher icons and playback toggles are hidden; Navigation is automatic when the phone and paid service work, and is suspended during sleep, charging and game over. Story walking-with-music remains available independently.
+Phone is the last bottom-navigation destination. Its compact home header shows `1 zł/day · Paid/Unpaid`; app screens add a back button, icon and app title. The home launcher shows Find Help first (top left), then Goals, Notes and History in reading order. Find Help is the information-search app; its internal heading uses the same name. There is no standalone Journal tab or redundant Phone heading. The four additional Music/Video/Navigation/Plan launcher icons and playback toggles are hidden; Navigation is automatic when the phone and paid service work, and is suspended during sleep, charging and game over. Story walking-with-music remains available independently.
 
 | App | Access / behavior |
 |---|---|
@@ -754,6 +754,8 @@ The top toolbar has Street and Nearest shop, with no Map/City map title. Both sh
 
 ### Results, illustrations and items
 
+The travel-method chooser uses a full-viewport dimmed, blurred backdrop (including the map, header and bottom menu), matching result-modal backdrop values: 5px blur and rgba(4,7,10,.62). The route sheet remains sharp and is centered horizontally and vertically like other dialogs, with a maximum width of 480px, safe-area padding and internal scrolling on short screens. Background pointer interaction and scrolling are covered; keyboard focus stays in the chooser. Close or Escape returns to the map to select another point. Choosing transport starts the journey as before; the game clock continues while choosing.
+
 All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped stat bars and consequences, animate gains/losses, and omit zero/consumed-item noise. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
 
 Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. The original 14 catalog events and seven new ambient/patrol scenes have artwork; the two v283 everyday encounters use compact icon cards. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
@@ -829,7 +831,7 @@ The v283 GitHub Pages workflow passed the full tests and production build before
 - Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
 - Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
 - Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
-- Last confirmed successful deployment: v295 on 2026-10-22, commit `8052e19f4dd6f204c7ba72fe5a9f8c3d79b59b03` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39778677358)). The current source prepares v296 with the accumulated chip, location-icon, direct-route, notice-alignment and muted UI accent changes; publication is verified separately from a local build.
+- Last confirmed successful deployment: v296 on 2026-10-22, commit `afbae45b3e28e4eb70d2bf26e89cd6370b9a8689` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39786292479)). The current source prepares v297 with the centered, blurred travel chooser and the reordered Phone launcher (Find Help, Goals, Notes, History). History uses the shared secondary gray in the launcher and its internal heading. Publication is verified separately from a local build.
 - Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
 
 ## Design principles

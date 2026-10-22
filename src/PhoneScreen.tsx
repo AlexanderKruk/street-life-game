@@ -3,10 +3,10 @@ import { Icon, type IconName } from './Icon'
 
 export type PhoneApp = 'home' | 'goals' | 'notes' | 'history' | 'search'
 const apps: { id: Exclude<PhoneApp, 'home'>; label: string; icon: IconName }[] = [
+  { id: 'search', label: 'Find Help', icon: 'search' },
   { id: 'goals', label: 'Goals', icon: 'target-arrow' },
   { id: 'notes', label: 'Notes', icon: 'notepad' },
   { id: 'history', label: 'History', icon: 'history' },
-  { id: 'search', label: 'Search', icon: 'search' },
 ]
 
 type Props = {
@@ -35,7 +35,7 @@ export default function PhoneScreen({ busy = false, app, onApp, pendingGoals, un
       </button>
     </header>
     {unavailable ? <div className="phone-unavailable" role="status"><Icon name="phone" /><h3>Phone unavailable</h3><p>{unavailable}</p><p>You can still use the map to reach places you know.</p></div>
-      : app === 'home' ? <div className="phone-app-grid" aria-label="Phone apps">{apps.map(entry => <button type="button" className={`phone-app ${entry.id}`} key={entry.id} ref={entry.id === 'goals' ? launcher : undefined} aria-label={entry.label} disabled={entry.id === 'search' && !serviceActive} onClick={() => onApp(entry.id)}>
+      : app === 'home' ? <div className="phone-app-grid" aria-label="Phone apps">{apps.map(entry => <button type="button" className={`phone-app ${entry.id}`} key={entry.id} ref={entry.id === (serviceActive ? 'search' : 'goals') ? launcher : undefined} aria-label={entry.label} disabled={entry.id === 'search' && !serviceActive} onClick={() => onApp(entry.id)}>
         <span className="phone-app-art"><Icon name={entry.icon} />{entry.id === 'goals' && pendingGoals > 0 && <span className="phone-app-badge" aria-label={`${pendingGoals} active goals`}>{pendingGoals}</span>}</span>
         <span>{entry.label}</span>{entry.id === 'search' && !serviceActive && <small>Internet unpaid</small>}
       </button>)}</div>
