@@ -38,7 +38,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.22-290'
+const BUILD_VERSION = 'v2026.10.22-291'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2536,7 +2536,7 @@ export default function App() {
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         {current.id === 'street' ? <section className="story-choices">
           <h2>What matters most right now?</h2>
-        </section> : <div className="section-title"><h2>What do you do?</h2></div>}
+        </section> : <div className="section-title location-actions-title"><h2>What do you do?</h2></div>}
         <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'} choiceGroups={streetChoiceGroups} orderSeed={choiceSeed} decisionKey={choiceDecisionKey}>
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong><Icon name="hospital" className="action-label-icon" />Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
