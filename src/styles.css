@@ -1227,8 +1227,8 @@ body:has(.map-screen) { min-height:100dvh; }
 .map-screen .district-scene { margin-top:10px; }
 .map-screen .district-pin { width:36px; }
 .map-screen .district-pin strong { font-size:var(--font-body); line-height:1.3; }
-.map-screen .district-label { left:42px; max-width:none; padding:1px 4px; border-radius:6px; background:#10171de0; white-space:nowrap; }
-.map-screen .district-pin.label-left .district-label { left:auto; right:42px; }
+.map-screen .district-label { left:38px; max-width:none; padding:1px 4px; border-radius:6px; background:#10171de0; white-space:nowrap; }
+.map-screen .district-pin.label-left .district-label { left:auto; right:38px; }
 @media(max-height:600px) {
   .map-screen .district-map-heading { padding-top:8px; padding-bottom:6px; }
   .map-screen .district-map-heading h2 { font-size:var(--font-title); }
