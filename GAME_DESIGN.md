@@ -697,6 +697,41 @@ Reference: [mobile Help Center after typography unification](docs/typography-hel
 
 Result modals use a specific hierarchy (v281): place names and large meter percentages use Title (20px mobile, 24px desktop); narrative/reactions/memories, meter labels such as Battery and the Got it button use Body (16px). Narrative and meter labels use regular 400 weight and primary text color; the button uses semibold 600. Service descriptions, hours, On map, notices, costs and Mood summary stay Small (14px). The narrative is marked separately in `ResultCard.tsx` so compact-result styles cannot flatten it back into metadata. Expanded source details remain secondary text.
 
+### Application and illustration art direction — approved 2026-10-22
+
+**Status:** the user approved the subdued example for **The city wakes up** on 2026-10-22. These are the visual requirements for new artwork and for revising existing artwork; this documentation update does not mean that the existing image collection has already been recolored.
+
+#### Shared application style
+
+Keep the application quiet, restrained and consistent with the illustrations: dark charcoal surfaces, subtle gray borders, warm off-white primary text, cool gray secondary text and a muted beige accent for the selected place/navigation. Retain the shared typography, three text sizes, contour icon system and choice-card layout specified above and below. Bright semantic colors remain reserved for meaningful status, warning and consequence indicators; the illustration palette must not reduce their clarity. Location headers, event scenes and result images should feel like parts of the same everyday city and the same game.
+
+#### Illustration palette, light and mood
+
+The primary palette and atmosphere reference is the existing [Street illustration](public/assets/street-hero.webp), as seen in the Street screen: **muted, sad and calm**. The approved recolored **The city wakes up** preview is the example of how brighter event artwork should move toward that reference.
+
+- Use low-saturation slate blue-gray, charcoal, weathered gray-brown and subdued natural colors. Skin, clothing and surroundings should remain believable.
+- Keep lamps, windows and reflections softly warm, with restrained dull amber highlights. Reduce vivid orange/gold pavement reflections, bright orange foliage and saturated blue skies.
+- Use soft light and controlled highlights/contrast. Retain detail and tonal depth in faces, clothing and surroundings; changing the palette is more than putting a uniform dark layer over an image.
+- Preserve each scene's actual time of day, weather and indoor/outdoor lighting. Daylight and service interiors can be lighter while retaining the same restrained palette; matching the Street mood does not require making every scene nighttime.
+- Aim for quiet melancholy and ordinary lived experience. Avoid glossy postcard lighting, glamorous staging, neon color, strong orange/teal grading, exaggerated HDR and dramatic spotlighting.
+- Keep the established realistic painterly rendering, recognizable Warsaw setting, natural anatomy and mobile-readable composition. For palette-only edits, preserve the scene, poses, objects and character identities.
+
+Apply these rules to location headers, event openings, answer/result illustrations and new narrative scenes. Keep the existing rules for populated service locations: roughly 5–10 ordinary people where appropriate, varied anonymous supporting characters and no protagonist inserted into those environment headers. Product/Essentials cutouts retain their transparent backgrounds and clear item recognition, with restrained colors consistent with the interface.
+
+#### Protagonist identity reference
+
+The authoritative visual identity and wardrobe reference is [the protagonist character sheet](docs/art/hero-reference.webp). **Attach this actual image as a reference whenever generating or redrawing a scene containing the protagonist; a text description alone is insufficient.** Use the Street artwork separately for palette and mood. The hero sheet establishes identity, not permission to copy a different scene's lighting.
+
+The protagonist remains the same man in his late thirties (the agreed narrative age range is 35–40): lean ordinary build, tousled wavy dark-brown hair, short stubble, a long straight nose and hazel eyes. Preserve his facial proportions, apparent age and build across scenes, viewpoints and expressions. The established outfit is a charcoal hooded jacket over a dark sweater, blue jeans and dark walking boots, with one black backpack. Carry exactly one backpack when the story calls for it: worn or placed nearby, never duplicated. Changes of pose, expression, fatigue, dirt or lighting must not turn him into another person; wardrobe/appearance changes need a story or gameplay reason.
+
+Secondary characters should be distinct from the protagonist and from unrelated encounters. Preserve the same secondary character across an event and its answer/result scenes, including face, clothing and belongings. Do not reuse one bystander's face as every passenger, worker or visitor.
+
+For each generation/edit, identify reference roles explicitly: **hero sheet = identity/wardrobe; Street image = palette/mood; event opening = scene and secondary-character continuity; edit target = composition to preserve**. Record the selected output, prompt and references in the relevant `docs/art/` manifest. Existing prompts describe historical generations; this art-direction section governs future work even when an older prompt asks for stronger cinematic amber lighting.
+
+Reusable art-direction wording for prompts:
+
+> Restrained realistic painterly illustration for Street Life. Match the supplied Street reference: muted, sad, calm atmosphere; low-saturation slate blue-gray, charcoal and weathered gray-brown, with soft dull amber lamps and subdued reflections. Natural readable detail, soft highlights, no vivid orange/blue or glossy postcard grading. Preserve the scene's actual time and lighting. When the protagonist is present, use the attached hero character sheet to preserve the exact same face, age, build, outfit and single black backpack.
+
 ### Action and event choices (v294)
 
 Action alternatives and event answers share `ChoiceButton`: a 24px contour icon on the left, regular Body text in a flexible middle column and Small duration aligned to the right. The whole rounded card is clickable. Descriptions, prices, checks, effects and disabled reasons remain under the label; long labels wrap without overlapping duration. Choices use one column on mobile and desktop. This includes Street, location services/charging/work, shelter interviews, illustrated/compact events, rain responses, travel, phone searches, food freshness choices and sleep durations. Confirmation and navigation controls keep their own roles.
