@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-22. **Application build:** `v2026.10.22-297`.
+**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-301`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -343,7 +343,7 @@ Phone is the last bottom-navigation destination. Its compact home header shows `
 | History | Newest-first reflections, day navigation, consecutive-action grouping and 30-entry batches; no internet needed. |
 | Search | Paid internet; Shelter, Help & hygiene, Work, Medical help, Food & water. New searches take 10–25 minutes; saved answers link to Notes. |
 
-All apps need a non-empty battery and Condition >0, and the phone must not be left charging at Night Shelter. With an unavailable phone the screen explains why; Map/travel remain usable. Scripted Street saved-answer/charging-memory choices can still be free recall rather than an app session. Search is authored game information, not a live AI/API integration. Indoors searching is supported.
+All apps need a non-empty battery and Condition >0, and the phone must not be left charging at Night Shelter. With an unavailable phone the screen explains why; Map/travel remain usable. Street has one phone choice that selects the Phone tab and opens Home without an action duration or resource cost; individual questions and direct searches appear only inside the phone. Search is authored game information, not a live AI/API integration. Indoors searching is supported.
 
 Phone has separate Battery and Condition. Screen-on drain is calculated for each elapsed minute, including dawn/dusk, weather changes and midnight. Daylight is 06:00–20:00.
 
@@ -669,7 +669,7 @@ Internal Phone app headers use Title (20px mobile / 24px desktop), including Goa
 
 The shared sticky header shows day/time, money, weather, Mood and actual phone Battery. Battery becomes red strictly below 30%. The version label and Reset save are in the footer. Dark responsive styling, safe-area spacing and one contour icon system are shared across screens. Street uses the same pedestrian artwork as walking travel. Location icons are neutral gray in headers, map controls/cards, travel and phone notes. In the bottom menu, only the active tab uses the muted yellow accent; inactive icons stay gray. The shared pedestrian uses its original silhouette as an alpha mask and inherits the UI color, so it follows the same active-tab rule. Raster walking artwork stays gray during travel.
 
-Street curates at most three direct thoughts: an information/understanding choice, a rest/movement choice and a practical response. Enabled choices come first and eligible choice order is seeded/shuffled rather than always placing the safe response first. There is no intention submenu or generic Other actions button. Opening-night money/work/bottle options are withheld until later; location knowledge arrives through observation, recall and authored phone answers. Narrator describes observable surroundings; first-person choices express possible intentions without prescribing the player's feelings.
+Street curates at most three direct thoughts: a single Phone/Home entry, a rest/movement choice and a practical response. Enabled choices come first and eligible choice order is seeded/shuffled rather than always placing the safe response first. There is no intention submenu or generic Other actions button. Opening-night money/work/bottle options are withheld until later; location knowledge arrives through observation, recall and authored phone answers. Narrator describes observable surroundings; first-person choices express possible intentions without prescribing the player's feelings.
 
 Street decisions themselves keep ordinary time running. Result/event/parameter modals pause it as described under Time. A music walk is a 30-minute direct action with normal walking costs and an explicit Mood bonus within the current Mood ceiling; there are no visible global music/video switches.
 
@@ -717,7 +717,7 @@ Keep the application quiet, restrained and consistent with the illustrations: da
 
 #### Illustration palette, light and mood
 
-The primary palette and atmosphere reference is the existing [Street illustration](public/assets/street-hero.webp), as seen in the Street screen: **muted, sad and calm**. The approved standalone [The city wakes up reference](docs/art/muted-palette-reference.webp) is stored with the project and is the color-grade reference attached when revising other scenes and items. It is also used for the event's runtime illustration.
+The primary palette and atmosphere reference is the preserved [original Street illustration](docs/art/street-palette-reference.webp), as seen in the Street screen: **muted, sad and calm**. The approved standalone [The city wakes up reference](docs/art/muted-palette-reference.webp) is stored with the project and is the color-grade reference attached when revising other scenes and items. It is also used for the event's runtime illustration.
 
 - Use low-saturation slate blue-gray, charcoal, weathered gray-brown and subdued natural colors. Skin, clothing and surroundings should remain believable.
 - Keep lamps, windows and reflections softly warm, with restrained dull amber highlights. Reduce vivid orange/gold pavement reflections, bright orange foliage and saturated blue skies.
@@ -854,3 +854,15 @@ The v283 GitHub Pages workflow passed the full tests and production build before
 - Revisit wetness and its rain/cover flow after tuning; it is intentionally excluded from the current first release.
 - Extend the first-night narrator/first-person choice style to the remaining service interfaces and event text where useful.
 - Consider consistent timed service actions and release/debug speed controls; this audit records the code's current timing rather than silently changing it.
+
+### First Street screen — v300 (2026-10-23)
+
+Street now uses the approved residential-neighborhood illustration: the same protagonist and one black backpack on a bench, inhabited apartment blocks, lit windows and sparse evening foot traffic. Its lighting matches the existing first-night art, retaining readable faces and localized warmth. The original downtown Street image remains in `docs/art/street-palette-reference.webp` as the historical palette reference. Generation provenance is in `docs/art/street-residential-generation.json`; 480/768/1024/1400px WebP variants retain existing responsive loading.
+
+During the first evening (22:00–midnight), Street reads: “Lights glow in the apartment windows. Someone walks a dog between the buildings. People are settling in for the night, and you haven’t decided where to spend yours.” The choice heading is “What would help right now?” Music walks read “Put on something familiar and walk for a while. Clear my head.” Station reads “Try the station. At least I’d be out of the cold.” The existing low-mood music preference, fatigue, sleep, rest and no-phone fallbacks are retained.
+
+The single phone choice reads “Look for help on my phone. There might be somewhere I can stay.” It selects the Phone tab and resets its app to Home. Opening it has no action duration, search, battery charge or discovery reward, and needs no paid internet. Broken/empty/charging phones show the existing Phone unavailable state. Individual question and direct-search choices are removed from Street; Find Help retains its existing searches and costs. Existing choice-card components, icon system, layout, typography, randomized ordering and available-first behavior are unchanged. The eviction/job-search mini-intro is deferred.
+
+### Contextual Map introduction — v301 (2026-10-23)
+
+The Street Station suggestion selects Map with Station highlighted and its normal place card visible. It does not open the transport selector or start travel; the player presses the existing Go button to choose how to travel. Other map markers remain selectable. This suggested initial focus clears when leaving Map, and opening Map normally retains its existing default behavior. Opening the map spends no action time or battery; ordinary global time still runs. Together with the Phone/Home suggestion, this introduces existing navigation through the narrative without adding tutorial overlays or changing the design.

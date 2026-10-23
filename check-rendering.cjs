@@ -16,6 +16,7 @@ window.setInterval = (fn, delay) => { const id = nextId++; timers.set(id, { fn, 
 window.clearInterval = id => timers.delete(id);
 const React = require('react');
 const { render, screen, fireEvent, act, cleanup, configure } = require('@testing-library/react');
+const phoneSearchButton=require('./test-fixtures/phone-search.cjs')({screen,fireEvent});
 configure({ getElementError: message => new Error(message) });
 const counts = () => ({ ...global.__uiRenders });
 const clearCounts = () => { global.__uiRenders = {}; };
@@ -71,6 +72,7 @@ function measure(App) {
   setup(App, 'status'); advance(10); output.status = counts();
   setup(App, 'inventory', {}, { 'street-life-inventory-v1': { water: 2, food: 2 } }); advance(10); output.inventory = counts();
   setup(App, 'location'); advance(10); output.location = counts();
+  setup(App, 'location', { locationId: 'street' }); advance(10); output.street = counts();
   setup(App, 'location', { locationId: 'shop' }); advance(10); output.shop = counts();
   setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 } });
   assert(screen.getByRole('dialog', { name: 'Time on the way' }).contains(document.querySelector('.travel-walker')));
@@ -88,7 +90,7 @@ function measure(App) {
     assert.equal(document.querySelector('.travel-elapsed').textContent, expected);
   }
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
-  fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
+  fireEvent.click(phoneSearchButton('Help & hygiene'));
   clearCounts(); advance(.75); output.phoneSearch = counts();
   assert.equal(document.querySelector('.phone-activity .travel-elapsed').textContent, '03m');
   setup(App, 'location', { locationId: 'station', minutes: 1380, energy: 20 });
@@ -103,7 +105,7 @@ function measure(App) {
 (async () => {
   const Baseline = await loadApp(true), App = await loadApp(false);
   const before = measure(Baseline), after = measure(App);
-  for (const [section, name] of [['goals', 'JournalGoals'], ['journal', 'JournalTimeline'], ['map', 'DistrictScene'], ['status', 'LifeSituation'], ['inventory', 'ItemArt'], ['location', 'LocationSummary'], ['shop', 'ShopHero'], ['shop', 'ShopCard'], ['phoneSearch', 'StreetArt'], ['sleep', 'SleepHeading']]) {
+  for (const [section, name] of [['goals', 'JournalGoals'], ['journal', 'JournalTimeline'], ['map', 'DistrictScene'], ['status', 'LifeSituation'], ['inventory', 'ItemArt'], ['location', 'LocationSummary'], ['shop', 'ShopHero'], ['shop', 'ShopCard'], ['street', 'StreetArt'], ['sleep', 'SleepHeading']]) {
     assert(before[section][name] > 0, `${name}: baseline must render during ticks`);
     assert.equal(after[section][name] ?? 0, 0, `${name}: unchanged data must skip rendering`);
   }
@@ -296,7 +298,7 @@ function measure(App) {
   timerAudit.push({ mode: 'ordinary ticks, tabs, background/foreground', intervalRestarts: nextId - clockCreations });
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   const phoneClockIds = [...timers.keys()];
-  fireEvent.click(screen.getByRole('button', { name: /Where can I get help in the morning/ }));
+  fireEvent.click(phoneSearchButton('Help & hygiene'));
   assert.equal(timers.size, phoneClockIds.length, 'phone searches replace the clock interval without adding a timer');
   const acceleratedPhoneClockIds = [...timers.keys()], phoneClockCreations = nextId;
   assert.notDeepEqual(acceleratedPhoneClockIds, phoneClockIds, 'entering search switches to the 250 ms interval');

@@ -39,6 +39,47 @@ function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('butt
 function advance(ms){const end=now+ms;while(true){const due=Math.min(...[...callbacks.values()].map(timer=>timer.nextAt));if(due>end)break;now=due;act(()=>{for(const[id,timer]of [...callbacks])if(callbacks.has(id)&&timer.nextAt<=now){timer.nextAt+=timer.delay;timer.fn()}})}now=end;fireEvent(window,new window.Event('pagehide'))}
 
 try {
+ // Street has one phone entry, with no search cost or advance on opening.
+ const phoneLabel='Look for help on my phone. There might be somewhere I can stay.';
+ for(const extra of [{}, {'street-life-mobile-service-until':'0'}, {[invKey]:{phoneBattery:0}}, {[invKey]:{phoneBattery:60,phoneCondition:0}}]){
+  setup({minutes:1320,mood:28},extra);
+  const actions=document.querySelector('.story-actions');
+  assert.equal(actions.querySelectorAll('[data-choice="phone-help"]').length,1);
+  assert.equal(actions.querySelectorAll('[data-choice^="question-"],[data-choice$="-search"]').length,0);
+  const entry=within(actions).getByRole('button',{name:phoneLabel});
+  assert(!entry.querySelector('.choice-duration'),'opening the launcher has no duration');
+  const before=read(stateKey),battery=read(invKey).phoneBattery,answers=read('street-life-answers-v1'),places=read('street-life-discovered-v1');
+  fireEvent.click(entry);
+  assert(screen.getByRole('button',{name:'Phone',exact:true}).getAttribute('aria-current')==='page');
+  assert.equal(read(stateKey).minutes,before.minutes);assert.equal(read(stateKey).money,before.money);
+  assert.equal(read(invKey).phoneBattery,battery);assert.deepEqual(read('street-life-answers-v1'),answers);assert.deepEqual(read('street-life-discovered-v1'),places);
+  assert(!read('street-life-phone-activity-v1'));assert(!screen.queryByRole('dialog'));
+  if(extra[invKey])assert(screen.getByText('Phone unavailable'));
+  else {
+   assert.equal(document.querySelectorAll('.phone-app-grid button').length,4);
+   assert.equal(screen.getByRole('button',{name:'Find Help',exact:true}).disabled,!!extra['street-life-mobile-service-until']);
+   click('Notes');click('Street');click(phoneLabel);
+   assert(document.querySelector('.phone-app-grid'),'Street always opens the phone home, not the previously viewed app');
+  }
+ }
+ // The Station suggestion teaches Map before opening the travel choices.
+ setup({minutes:1320,mood:28});
+ const beforeMap=read(stateKey),beforeMapBattery=read(invKey).phoneBattery;
+ click('Try the station. At least I’d be out of the cold.');
+ assert.equal(screen.getByRole('button',{name:'Map',exact:true}).getAttribute('aria-current'),'page');
+ assert(document.querySelector('.district-pin.selected').textContent.includes('Station'));
+ assert(document.querySelector('.district-card').textContent.includes('Station'));
+ assert(!document.querySelector('.travel-sheet'));assert(!read('street-life-trip-v1'));
+ assert.equal(read(stateKey).minutes,beforeMap.minutes);assert.equal(read(invKey).phoneBattery,beforeMapBattery);
+ click(/^Night Shelter Open/);
+ assert(document.querySelector('.district-pin.selected').textContent.includes('Night Shelter'),'other places remain selectable');
+ click(/^Station Open/);click('Go →');
+ assert(document.querySelector('.travel-sheet'));assert(screen.getByRole('button',{name:/Public transport/}));
+ assert.equal(read(stateKey).minutes,beforeMap.minutes);assert(!read('street-life-trip-v1'));
+ // Leaving the map clears the one-time suggested focus.
+ click('Close travel options');fireEvent.click(document.querySelector('.nav-item.home'));click('Map');assert(!document.querySelector('.district-pin.selected'));
+ fireEvent.click(document.querySelector('.nav-item.home'));click('Try the station. At least I’d be out of the cold.');
+ assert(!document.querySelector('.travel-sheet'));assert(document.querySelector('.district-pin.selected').textContent.includes('Station'));
  // Launcher: exactly four apps; internal screens have separate content.
  setup({locationId:'station',minutes:600});
  click('Phone');

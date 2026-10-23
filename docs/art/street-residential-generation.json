@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-23",
+  "asset": "public/assets/street-hero.webp",
+  "sourceGeneration": "exec-5ccec180-6c66-4890-bc78-a0369672f04a.png",
+  "generation": "Built-in imagegen; selected residential composition with moderate lighting refinement. Pillow only resizes and encodes WebP.",
+  "references": {
+    "identity": "docs/art/hero-reference.webp",
+    "lighting": "public/assets/event-first-night-bench.webp",
+    "originalPalette": "docs/art/street-palette-reference.webp"
+  },
+  "direction": "Preserve the exact protagonist, outfit and one black backpack. Ordinary Warsaw housing estate at 22:00, apartment windows lit, a few residents and a dog. Match existing first-night illumination: readable face and garments, cool slate-gray environment, localized warm lamps. Moderate orange reduction, preserve exposure; avoid the rejected excessively dark/desaturated grade. No downtown landmarks, metro, crowds, text or UI.",
+  "responsive": [
+    {
+      "width": 480,
+      "height": 270,
+      "file": "street-hero-480.webp"
+    },
+    {
+      "width": 768,
+      "height": 432,
+      "file": "street-hero-768.webp"
+    },
+    {
+      "width": 1024,
+      "height": 576,
+      "file": "street-hero-1024.webp"
+    },
+    {
+      "width": 1400,
+      "height": 788,
+      "file": "street-hero-1400.webp"
+    }
+  ],
+  "prompt": "Use case: lighting-weather/color-grade edit. Image 1 is the EDIT TARGET, the residential neighborhood scene. Image 2 is the approved in-game LIGHTING AND COLOR REFERENCE (two benches); use only its balance of illumination and saturation, NOT its scene objects, second seated character, downtown buildings, rain or wet pavement. Image 3 is the protagonist identity and wardrobe reference, keep this exact man.\nEdit image 1 with a MODERATE selective color adjustment, retaining its original overall exposure and readable detail. Aim for a midpoint between its golden lighting and an excessively dark desaturated grade. Match the established game illustration in image 2: readable natural skin, clear jacket folds and blue denim even at mobile size, gently cool slate-blue-gray environment and night sky, visibly warm cream/amber lamps and apartment windows. Reduce the excessive orange cast on the protagonist hair, skin, pavement, leaves and bushes modestly (roughly one third), softening the golden rim lighting. Keep luminous warm streetlamps and windows with natural pools of light. Lit neutral surfaces should be gray-brown, not uniformly orange. Retain tonal separation and natural local colors. Do not darken the whole frame, do not gray out the image, do not add a dull veil or brown monochrome wash. Keep the image lively enough to match image 2's clear face, garments and environmental detail. Restrained realistic painterly style, quiet melancholy, ordinary residential night at 22:00.\nLOCK COMPOSITION: preserve image 1's exact seated protagonist pose, face, expression, clothes, framing, bench, exactly one black backpack beside him, housing blocks, parked cars, two background residents and dog. Dry/matte pavement stays dry, architecture stays residential, no landmarks, no additional people or objects. This is a palette/light refinement only. Same landscape framing, no text, no UI, no watermark."
+}

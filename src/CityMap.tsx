@@ -57,10 +57,10 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
     </div></div></>
 })
 
-export default function CityMap({ places, currentId, minutes, reservedBed, routeId, onRoute }: {
-  places: Location[]; currentId: string; minutes: number; reservedBed: boolean; routeId: string | null; onRoute: (id: string) => void
+export default function CityMap({ places, currentId, initialFocusId, minutes, reservedBed, routeId, onRoute }: {
+  places: Location[]; currentId: string; initialFocusId?: string; minutes: number; reservedBed: boolean; routeId: string | null; onRoute: (id: string) => void
 }) {
-  const [focusedId, setFocusedId] = useState(currentId)
+  const [focusedId, setFocusedId] = useState(initialFocusId ?? currentId)
   const selected = places.find(place => place.id === (routeId ?? focusedId)) ?? places.find(place => place.id === currentId) ?? places[0]
   if (!selected) return null
   const openFlags = places.map(place => isOpen(place, minutes) ? '1' : '0').join('')
