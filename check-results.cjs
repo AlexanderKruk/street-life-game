@@ -74,7 +74,7 @@ try {
   assert.deepEqual([...document.querySelectorAll('[data-stat]')].map(node => node.dataset.stat), ['Energy', 'Hygiene', 'Mood', 'Health']);
   assert.equal(row('Energy').querySelector('.bar i').style.width, '34%');
   assert.equal(row('Energy').querySelector('.result-stat-delta').textContent, '+13');
-  assert(!row('Health').querySelector('.result-stat-delta'), 'losses do not have a separate minus label');
+  assert.equal(row('Health').querySelector('.result-stat-delta.negative').textContent, '−6', 'losses show their signed amount below the percentage');
   assert.equal(row('Health').querySelector('.bar-loss-trail').style.left, '84%');
   assert.equal(row('Health').querySelector('.bar-loss-trail').style.width, '6%');
   assert(row('Hygiene').querySelector('.bar-blocked'));
@@ -108,7 +108,7 @@ try {
   cleanup(); reduced = false;
   const batteryLoss = summarizeResult(before, { ...before, inventory: { ...before.inventory, phoneBattery: 37 } });
   render(React.createElement(ResultCard, { result: { title: 'Phone use', text: 'Phone use.', ...batteryLoss }, onClose: () => {} }));
-  assert(!row('Battery').querySelector('.result-stat-delta'));
+  assert.equal(row('Battery').querySelector('.result-stat-delta.negative').textContent, '−6%');
   assert.equal(row('Battery').querySelector('.status-stat-value > span').textContent, '43%');
   frame(0);frame(300);
   assert.equal(row('Battery').querySelector('.bar i').style.width, '43%', 'briefly holds the original value');
@@ -131,7 +131,7 @@ try {
     assert(!dialog.querySelector('.result-place'), 'location is not repeated');
     assert(!row('Mood'), 'search gain uses compact text instead of a stat bar');
     assert(row('Battery').querySelector('.bar-loss-trail'), 'search costs below 5% retain the animated battery meter and its loss trace');
-    assert(!row('Battery').querySelector('.result-stat-delta'));
+    assert.equal(row('Battery').querySelector('.result-stat-delta.negative').textContent, '−4.1%');
     assert(!dialog.querySelector('.result-card-label'));
     assert(dialog.querySelector('.compact-info-heading svg'), 'title has an information icon');
     assert(dialog.querySelector('.compact-info-hours').textContent);

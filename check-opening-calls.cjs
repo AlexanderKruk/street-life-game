@@ -46,6 +46,7 @@ function assertResult(mood,index,asset){
   const moodPanel = screen.getByRole('dialog').querySelector('[data-stat="Mood"]');
   assert(moodPanel?.querySelector('[role="meter"]'), 'call Mood has the same meter as event results');
   assert.equal(moodPanel?.querySelector('.status-stat-value > span')?.textContent, `${mood}%`);
+  assert.equal(moodPanel?.querySelector('.result-stat-delta.negative')?.textContent, `−${index === 1 ? 2 : 5}`);
   assert.equal(moodPanel?.querySelector('.bar-loss-trail')?.style.width, `${index === 1 ? 2 : 5}%`);
   assert.equal(moodPanel?.querySelector('.bar-loss-trail')?.style.left, `${mood}%`);
   const batteryCost = summary?.querySelector('[title="Battery"]');

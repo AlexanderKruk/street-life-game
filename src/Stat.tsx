@@ -40,6 +40,6 @@ export default memo(function Stat({ label, value, icon, cap = 100, capReason, fo
       <i className={level} style={{ width: `${displayed}%` }} />
       {blocked && <span className="bar-cap-marker" style={{ left: `${cap}%` }} aria-hidden="true" />}
     </div>
-    <b className="status-stat-value"><span>{Math.round(displayed)}%</span>{change && !loss && <small className={`result-stat-delta ${change.kind}`}>{change.value}</small>}</b>
+    <b className="status-stat-value"><span>{Math.round(displayed)}%</span>{change && <small className={`result-stat-delta ${change.kind}`}>{change.value}</small>}</b>
   </div>
 })
