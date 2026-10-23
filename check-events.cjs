@@ -59,7 +59,7 @@ const complete={seen:['street-patrol-wake','station-patrol-wake','city-waking','
 const esbuild=require('esbuild');const eventCode=esbuild.buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const eventModule={exports:{}};new Function('module','exports',eventCode)(eventModule,eventModule.exports);
 const {nextStreetEvent,STREET_EVENTS}=eventModule.exports;
-const context={locationId:'street',weather:'Clear',housing:'Street',documents:true,minutes:600};
+const context={locationId:'street',weather:'Clear',housing:'Street',documents:true,minutes:600,nearHome:true};
 Math.random=()=>{throw new Error('Spawn must not roll')};
 assert.equal(nextStreetEvent('travel',{...context,travelMode:'walk'}).id,'phone-drop');
 assert.equal(nextStreetEvent('travel',{...context,travelMode:'walk',seenEventIds:['phone-drop']}).id,'found-coins');
@@ -69,7 +69,7 @@ assert.equal(nextStreetEvent('location',{...context,locationId:'station',minutes
 // Every scene is reachable in a suitable context and exhausted queues return null.
 for(const original of STREET_EVENTS){
  const first=original.id.startsWith('first-night-');
- const c={...context,locationId:['dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='night-rustle'?1380:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const c={...context,locationId:['dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
  assert.equal(nextStreetEvent(original.trigger,c)?.id,original.id);
  assert.equal(nextStreetEvent(original.trigger,{...c,seenEventIds:STREET_EVENTS.map(e=>e.id)}),null);
 }
@@ -250,16 +250,116 @@ for(const locationId of ['street','station']){
 
 // Opening scene appears on a new run without pressing an action, even on high RNG.
 setup({minutes:1320});Math.random=()=>.99;advance(14000);assert(!screen.queryByRole('dialog'));
-advance(1000);assert(screen.getByRole('dialog').textContent.includes('The door closes'));
+advance(1000);assert(screen.getByRole('dialog').textContent.includes('A familiar face'));
 const stopped=read(stateKey);advance(5000);assert.deepEqual(read(stateKey),stopped);
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
-cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('The door closes'));
-click('Keep walking');ok();assert.equal(read(encountersKey).pendingId,null);
+cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('A familiar face'));
+click('No, thanks. Just going for a walk.');ok();assert.equal(read(encountersKey).pendingId,null);
 
 // A phone search cannot skip the due opening scene; its result stays first.
 setup({minutes:1320});click('Where can I get help in the morning?');
 assert(!document.querySelector('.event-overlay'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();
-assert(screen.getByRole('dialog').textContent.includes('The door closes'));click('Keep walking');ok();
+assert(screen.getByRole('dialog').textContent.includes('A familiar face'));click('No, thanks. Just going for a walk.');ok();
+
+// At-home choices preserve actual time, Mood, inventory and the selected art.
+const neighbour=STREET_EVENTS.find(event=>event.id==='first-night-door');
+for(const [id,end] of [['first-night-door',1380],['first-night-dog',1440]]) {
+ for(const minutes of [1320,end-1])assert(onlyScene(id,{firstNight:true,minutes}));
+ for(const minutes of [1319,end%1440,0,360,undefined])assert(!onlyScene(id,{firstNight:true,minutes}));
+}
+// Runtime idle observations use the actual clock, including the midnight wrap.
+for(const [day,start,title,display] of [[1,1364,'A familiar face','D0 Mo'],[1,1365,'An old friend','D0 Mo'],[1,1424,'An old friend','D0 Mo'],[1,1425,null,'D1 Tu'],[2,0,null,'D1 Tu'],[2,1320,null,'D1 Tu']]) {
+ setup({day,minutes:start,mood:30});advance(15000);
+ assert.equal(document.querySelector('.game-day').textContent,display);
+ assert.equal(read(stateKey).day,display.startsWith('D0')?1:2,'display conversion does not change stored days');
+ if(title)assert(screen.getByRole('dialog').textContent.includes(title),`Day ${day}, start ${start}: expected ${title}, got ${screen.getByRole('dialog').textContent}`);
+ else assert(!document.querySelector('.event-overlay'),'neither home meeting first appears at midnight or on Day 2');
+}
+// The opening interval crosses the displayed day boundary; station/bench scenes
+// still belong to the first night after midnight, while home scenes do not.
+const {firstNightTime}=eventModule.exports;
+for(const state of [{day:1,minutes:1320},{day:2,minutes:0},{day:2,minutes:359}])assert(firstNightTime(state));
+for(const state of [{day:1,minutes:1319},{day:2,minutes:360},{day:2,minutes:1320}])assert(!firstNightTime(state));
+assert(onlyScene('first-night-station',{firstNight:true,locationId:'station',minutes:30}));
+assert(onlyScene('first-night-bench',{firstNight:true,minutes:30}));
+assert(!onlyScene(neighbour.id,{firstNight:true,nearHome:false}));
+assert(!onlyScene(neighbour.id,{firstNight:true,locationId:'station'}));
+for(const [index,asset] of ['decline','help','supplies'].entries()) {
+ setup({minutes:1320,mood:30},{[invKey]:{food:0,water:0}});advance(15000);
+ const before=read(stateKey),supplies=read(invKey);
+ click(neighbour.choices[index].label);
+ assert.equal(read(stateKey).mood,30+[-2,2,3][index]);
+ assert.equal(read(stateKey).minutes,before.minutes+[0,5,5][index]);
+ assertEventImage('.result-illustration',`event-neighbour-${asset}`);
+ assert.equal(read(invKey).food,supplies.food+(index===2?1:0));
+ assert.equal(read(invKey).water,supplies.water+(index===2?1:0));
+ if(index===2)assert(screen.getByRole('dialog').textContent.includes('You need them more than I do.'));
+ ok();cleanup();render(React.createElement(App));advance(1000);
+ assert(!screen.queryByRole('dialog'),'completed neighbour does not replay');
+}
+// A short call does not force an encounter; the normal idle interval still applies.
+setup({minutes:1320,mood:30},{'street-life-opening-calls-v1':0});
+fireEvent.click(document.querySelector('[data-choice="phone-call"]'));
+advance(500);assert(screen.getByRole('dialog').textContent.includes('No answer'));ok();
+advance(14000);assert(!screen.queryByRole('dialog'),'no forced meeting after the short call');
+advance(1000);assert(screen.getByRole('dialog').textContent.includes('A familiar face'));
+click(neighbour.choices[0].label);ok();
+// Starting either real route leaves home immediately, even while game.locationId
+// still says Street; stopping/reloading/returning cannot re-enable the meeting.
+for(const mode of ['Walk','Public transport']) {
+ setup({minutes:1320});click('Map');click(/Station/);click('Go →');
+ advance(1000);assert(document.querySelector('.travel-sheet'));assert(!document.querySelector('.event-overlay'),'route selection is not interrupted');
+ assert.equal(read('street-life-left-home-v1'),false,'selecting a route alone does not leave home');
+ click(new RegExp('^'+mode));
+ assert.equal(read('street-life-left-home-v1'),true);
+ advance(1000);assert(!document.querySelector('.event-overlay'));
+ cleanup();render(React.createElement(App));assert(!document.querySelector('.event-overlay'));
+}
+for(const homeEventId of ['first-night-door','first-night-dog'])for(const extra of [
+ {'street-life-left-home-v1':true},
+ {'street-life-trip-v1':{destinationId:'station',mode:'walk',total:20,remaining:10}},
+ {'street-life-journal-history-v1':[{day:1,minute:1320,title:'Arrived',text:'Arrived at Station.',actionTitle:'Arrival',reflection:true}]},
+]) {
+ setup({minutes:1320},{...extra,'street-life-first-night-events-v1':{seen:[homeEventId],lastAt:1320,pendingId:homeEventId}});
+ assert(!document.querySelector('.event-overlay'),'stale at-home pending scene is discarded away from home');
+ assert.equal(read('street-life-first-night-events-v1').pendingId,null);
+}
+setup({minutes:1320},{'street-life-left-home-v1':true});advance(15000);
+assert(!screen.queryByRole('dialog'),'returning to Street does not restore the home meeting');
+
+// The familiar dog shares normal timing, home eligibility and the illustrated
+// result flow. Each real choice changes Mood once and survives pending reloads.
+const dog=STREET_EVENTS.find(event=>event.id==='first-night-dog');
+for(const changes of [{firstNight:false},{firstNight:true,nearHome:false},{firstNight:true,nearHome:undefined},{firstNight:true,locationId:'station'}]) {
+ assert(!onlyScene(dog.id,changes));
+}
+for(const [index,asset] of ['avoid','pass','greet'].entries()) {
+ setup({minutes:1320,mood:30},{'street-life-first-night-events-v1':{seen:['first-night-door'],lastAt:null,pendingId:null}});
+ advance(14000);assert(!screen.queryByRole('dialog'),'dog has no dedicated early timer');
+ advance(1000);assert(screen.getByRole('dialog').textContent.includes('An old friend'));
+ assertEventImage('.event-illustration','event-neighbour-dog-meeting');
+ const paused=read(stateKey).minutes;
+ advance(2000);assert.equal(read(stateKey).minutes,paused,'dog choice pauses global time');
+ cleanup();render(React.createElement(App));
+ assertEventImage('.event-illustration','event-neighbour-dog-meeting');
+ const before=read(stateKey),supplies=read(invKey);
+ click(dog.choices[index].label);
+ assert.equal(read(stateKey).mood,before.mood+[-2,-1,3][index]);
+ assert.equal(read(stateKey).minutes,before.minutes+[0,0,5][index]);
+ assertEventImage('.result-illustration',`event-neighbour-dog-${asset}`);
+ assert.equal(read(invKey).food,supplies.food);assert.equal(read(invKey).water,supplies.water);
+ const journal=read('street-life-journal-history-v1').find(entry=>entry.actionTitle===dog.title);
+ assert(journal?.text.includes(['ever see that dog again','kept walking','happy to see me'][index]),'history follows the selected response');
+ ok();cleanup();render(React.createElement(App));advance(1000);
+ assert(!screen.queryByRole('dialog'),'completed dog encounter does not replay');
+}
+// Both home scenes can occur in one run, with the shared 45-minute cooldown.
+setup({minutes:1320,mood:30});advance(15000);
+click(neighbour.choices[0].label);ok();
+advance(44000);assert(!screen.queryByRole('dialog'),'home scenes respect the shared cooldown');
+advance(1000);assert(screen.getByRole('dialog').textContent.includes('An old friend'));
+click(dog.choices[2].label);ok();
+assert(read('street-life-first-night-events-v1').seen.includes(dog.id));
 
 // Real wandering routes an unseen walking encounter after the action result.
 setup({day:3,minutes:600},{[encountersKey]:{seen:['phone-drop'],lastAt:null,pendingId:null}});
@@ -326,5 +426,5 @@ assert(screen.getByRole('dialog').textContent.includes('Someone dropped a glove'
 click(/Call after them/);assert.equal(read(stateKey).minutes,t+2);ok();
 // Reset permits a new run's opening; it also removes the ordinary seen queue.
 click('Reset save');assert.deepEqual(read(encountersKey).seen,[]);
-advance(15000);assert(screen.getByRole('dialog').textContent.includes('The door closes'));
+advance(15000);assert(screen.getByRole('dialog').textContent.includes('A familiar face'));
 cleanup();dom.window.close();console.log('PASS: contextual catalog, ambient choices and mystery, night/dawn/cold boundaries, idle/arrival gating, 45-minute spacing, pause, reload, discovery and reset.');

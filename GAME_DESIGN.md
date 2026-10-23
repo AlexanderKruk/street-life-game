@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-308`.
+**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-312`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -65,7 +65,7 @@ Street Life is currently a mobile-first location/map survival prototype. The pla
 The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending result windows are not persisted. Unresolved catalog-event choices, shown event IDs and the shared encounter cooldown are persisted; first-night observations retain their existing compatibility key. Answered phone questions, journal goal flags/history, closing notices and charging state are persisted; reset clears them. Deferred rain-choice keys are retained for compatibility but inactive in release-default gameplay.
 
 Initial state:
-- Day 1, Monday, 22:00, Street. Existing saves retain their own time. Reset/new run starts at 22:00.
+- D0, Monday, 22:00, Street (stored calendar day 1). Existing saves retain their own time. Reset/new run starts at 22:00.
 - A uniformly random whole amount from 25 to 50 zł inclusive, chosen once per new run or reset. Reloading keeps the saved amount, including older 100 zł test saves. Auto-renew is ON by default and can immediately spend 1 zł, so the first displayed balance can be 24–49 zł; this is a real service expense, not a lower starting roll.
 - Food 72, Thirst 66, Energy 68, Health 90, Hygiene 75, Mood 30. New runs have no initial Cold; existing saves retain their stats and effects.
 - Housing: Street. Employment: Unemployed. Income: None.
@@ -547,11 +547,11 @@ Catalog events follow a deterministic, saved queue. A scene appears at most once
 
 The shared minimum interval between catalog scenes is 45 game minutes. Awake Street/Station time checks every 15 idle game minutes during the opening night and every 30 thereafter, on all normal screens. Active travel, phone searches, sleep, queues and blocking dialogs do not accrue idle minutes. The idle check counter is session-local; the last presented time and seen/pending scene IDs persist through reload. Empty or ineligible queues do not force an unrelated scene.
 
-First-night observations take priority over ordinary encounters, keep their no-repeat flags, and appear on a matching walk, awake bench rest, station arrival or idle observation. The opening observation establishes the first night before ordinary encounters. Once the first 15 game minutes have passed it also becomes due after a phone search, and waits for the search result to be acknowledged. Location actions, awake bench rest, arrival and wandering also check the queue when the interval allows. Daytime Street choices offer walking or awake bench rest when the hero has enough energy.
+First-night observations take priority over ordinary encounters, keep their no-repeat flags, and appear on a matching walk, awake bench rest, station arrival or idle observation. The opening observation establishes the first night before ordinary encounters. A familiar face uses the ordinary first-night encounter flow while still at the old home: a matching walk, 15 minutes of idle observation, or a due observation after a phone search. Once the first 15 game minutes have passed an observation also becomes due after a phone search, and waits for the search result to be acknowledged. Location actions, awake bench rest, arrival and wandering also check the queue when the interval allows. Daytime Street choices offer walking or awake bench rest when the hero has enough energy.
 
 Wake scenes use the same no-repeat queue and interval. First-night bench waking prioritizes Someone needs the bench. Its scene and all three answers select artwork from the actual location: the outdoor bench has an older male passer-by, while the Station hall has a distinct female passenger with a suitcase. Pending-scene reload restores the same location variant. Quiet rest merges into the sleep result; illness keeps its separate wake result and does not consume an unshown catalog scene. Food before closing is restricted to Station after 19:00 and outside the first-night window. Coin-on-pavement and passer-by food encounters require walking; ticket inspection requires paid transit.
 
-The catalog has nineteen general events plus four opening-night observations (The door closes, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
+The catalog has nineteen general events plus five opening-night observations (A familiar face, An old friend, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
 
 General catalog events:
 
@@ -776,15 +776,15 @@ Main current-location headers also have dedicated environment imagery for Statio
 
 Daily history displays completed actions/events at their completion day and time, newest first. Each entry has an action heading and one or two short first-person sentences about the character's thoughts, feelings or physical sensations. Reflections respond to actual outcomes and can incorporate an action-linked memory. They do not repeat the action report or resource numbers; an entry can omit its description when there is no useful reflection. Full narrative and actual resource deltas remain in the action result. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed the shared completion pipeline. Starting an ongoing activity does not log its completion early.
 
-The selected day initially shows its latest 30 entries; `Show older entries` appends another 30 without jumping the reading position. Switching days or reopening History resets the display count; ordinary ticks preserve expanded entries. The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Phone → History opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on Day 1 and forward on the current day. Reopening History returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals and their progression retain their existing behavior.
+The selected day initially shows its latest 30 entries; `Show older entries` appends another 30 without jumping the reading position. Switching days or reopening History resets the display count; ordinary ticks preserve expanded entries. The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Phone → History opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on displayed Day 0 and forward on the current day. Reopening History returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals and their progression retain their existing behavior.
 
-Goals use persistent completion flags. First morning completes at noon of day 2 (or on a later day alive), after the opening night. Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state.
+Goals use persistent completion flags. First morning completes at noon of displayed Day 1 (stored day 2, or on a later day alive), after the opening night. Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state.
 
 Phone → Goals displays incomplete goals in priority order: morning, safe sleep, social support, work. A pending shelter appointment promotes safe sleep to the top and displays the appointment day/time within that goal's description, without duplicating it in a separate next-important panel. Only the first incomplete goal has a warm yellow border. Goals shows the incomplete count; Completed shows the completed count in a separate subsection below, collapsed by default. Completed cards have a green check, muted title and strikethrough. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
 
 | Goal | Completion condition |
 |---|---|
-| Get through the morning | Alive at noon on day 2, or alive on a later day |
+| Get through the morning | Alive at noon on displayed Day 1 (stored day 2), or alive on a later day |
 | Find a safe place to sleep | Active reserved shelter bed or living in Schronisko |
 | Visit social support | At an open Help Center; existing referral also proves progress |
 | Look for work | Successful online work search, visit to open Job Centre/Day Work, or existing employment |
@@ -908,3 +908,44 @@ Walk with music uses the same blocking illustrated ResultCard as calls, includin
 The authored Walk with music action is available once per run. Completion hides it and leaves ordinary walking available. `street-life-music-walk-used-v1` persists this state through reload and autosave; older saves with a Walk with music history entry migrate to used. Reset save restores the choice. Unavailable/failed starts do not consume it. The reward remains +3 within the current Mood ceiling.
 
 Shared result stat animations wait for their illustration's load/error event so a slow first download cannot finish the animation before the card is visible. Both gains and losses then hold their original percentage/fill for 300ms; the existing 1200ms gain and 1600ms loss animations follow. Percentage and meter move together, signed deltas remain visible, and reduced motion still presents the final value immediately.
+
+
+### Neighbour at the old home — v309 (2026-10-23)
+
+**A familiar face** replaces The door closes, including its opening and all three result illustrations. A neighbour returns from shopping and holds the entrance open: “Hi! Coming in?” She does not yet know the protagonist has been evicted. The internal `first-night-door` ID remains for seen-state compatibility; an already-seen old scene does not replay.
+
+The encounter is once per run, on displayed D0 (stored day 1) from 22:00 until 23:00 (exclusive), on Street while still in the starting neighbourhood. It uses the normal first-night event timing, with no dedicated early timer: a matching walk, 15 idle game minutes or the existing due-after-search flow. A short call does not force the encounter immediately afterward. Calls/searches, their results, sleep, queues and other blocking interfaces finish first. Opening Map or selecting a destination does not count as leaving. Starting an actual trip (walk, public transport or fare dodge) permanently closes this encounter's window, including after cancellation, reload or a return to Street. `street-life-left-home-v1` persists departure; reset restores it. Older saves infer departure from an active trip, another location, a completed first night or arrival/stopped-trip history. An obsolete pending at-home scene is discarded if the save already proves departure; unrelated progress and stats are retained.
+
+| Answer | Authored result |
+|---|---|
+| No, thanks. Just going for a walk. | She goes inside; −2 Mood, no action time. |
+| Let me help with those bags. | Carry groceries to her apartment door; 5 minutes, +2 Mood. |
+| I’ve been evicted. I have nowhere to stay. | She shares food and a bottle of water directly from her shopping bag at the entrance: “Here, take these. You need them more than I do.” 5 minutes, +3 Mood, +1 Food and +1 Water in inventory. |
+
+Mood uses current caps, supplies use existing backpack capacity, and the shared blocking result modal displays actual changes with the existing delayed meter animation. History reflects the selected answer. The approved muted `event-neighbour-meeting`, `event-neighbour-decline`, `event-neighbour-help` and `event-neighbour-supplies` images have on-demand 480/768/1024px variants. The former incoming-woman opening and its three old result images are removed from runtime assets/manifest. [Generation records](docs/art/neighbour-generation.json) retain reference roles and selected outputs.
+
+
+### Neighbour walking a familiar dog — v310 (2026-10-23)
+
+**An old friend** (`first-night-dog`) is a separate one-time first-night Street encounter near the former home. The hero notices his neighbour walking a familiar dog before either has seen him. The final prose was written directly in English; the avoidance outcome includes wondering whether he will ever see the dog again.
+
+| Choice | Outcome |
+|---|---|
+| Head the other way. | Avoid small talk, glance back at the dog; −2 Mood, no added action time. |
+| Keep walking. | Nod to the neighbour and walk on while the dog recognises him and tugs on its lead; −1 Mood, no added action time. |
+| Stop and say hello. | Crouch, scratch the dog’s ears and get a lick on the cheek while the neighbour smiles; +3 Mood, 5 minutes. |
+
+This uses the same ordinary walk/15-idle-minute/due-after-search observations as the neighbour with groceries, with the shared 45-game-minute encounter cooldown. Catalog order places it after that scene; neither is forced immediately on starting or finishing a call. As of v311, it can first appear only on displayed D0 (stored day 1) from 22:00 until midnight (exclusive), on Street before the first actual trip starts; the neighbour with groceries stops appearing at 23:00. Selecting a destination is allowed; starting any travel mode permanently closes both home encounters, including after cancellation, return or reload. A saved pending dog encounter restores at home and is discarded if departure is already established. Reset restores eligibility. Mood respects the existing cap and shared delayed result animation; History has distinct reflections for all three choices.
+
+Four approved illustrations retain the same protagonist, grey-haired neighbour, shaggy beige-grey dog and muted residential-night palette. `event-neighbour-dog-meeting`, `event-neighbour-dog-avoid`, `event-neighbour-dog-pass` and `event-neighbour-dog-greet` have on-demand 480/768/1024px variants, kept outside startup warmup. [Artwork records](docs/art/neighbour-dog-generation.json) retain selected sources and reference roles.
+
+Displayed D1 (stored day 2) begins at midnight, two game hours after the D0 22:00 start. Neither home encounter can first appear on D1; the broader first-night period through 06:00 still applies to other opening observations. Already displayed pending choices retain their normal paused-time reload behavior.
+
+
+### Displayed calendar starts at D0 — v312 (2026-10-23)
+
+The opening evening is displayed as D0; midnight changes it to D1, and later midnights continue D2, D3, etc. `src/gameDate.ts` supplies one display conversion for the header (including its accessible name), History heading/list, goals and shelter notices, sleep start/wake dates and game-over day. Weekdays stay attached to their existing calendar dates: D0 Monday → D1 Tuesday.
+
+Stored game days remain one-based. No save migration or rewrite of dates, history keys, effects, cooldowns, daily allowances, mobile renewal, shelter bookings or weekday schedules is required. The first-morning goal still completes at the same real game moment: displayed D1 at noon. Older saves display their day with the same conversion.
+
+Event audit: neighbour returning with shopping is D0 22:00–23:00; neighbour with dog is D0 22:00–00:00. Both require staying near home before any actual trip. The broader first-night context remains D0 22:00 through D1 06:00 (exclusive), preserving bench, station, wake and phone-call behavior after midnight. General events retain their existing time/weather/place restrictions. Idle observations now evaluate the clock after the elapsed tick, so a 23:00/00:00 boundary cannot admit an expired home meeting from the preceding minute.

@@ -10,6 +10,8 @@ export type JournalEntry = {
 }
 
 const titles: Record<string, string> = {
+  'A familiar face': 'Met my neighbour',
+  'An old friend': 'Saw my neighbour’s dog',
   'The door closes': 'Watched someone return home', 'Making a bed on a bench': 'Noticed someone settling in',
   'The last departures': 'Looked around the station', 'Someone needs the bench': 'Woken on a bench',
   'Drink water': 'Drank water', 'Eat food': 'Ate food', 'Refill water': 'Refilled water',
@@ -50,7 +52,20 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
   let title = titles[actionTitle] ?? (actionTitle.startsWith('Buy ') ? `Bought ${actionTitle.slice(4)}` : actionTitle)
   let text = ''
 
-  if (actionTitle === 'The door closes') {
+  if (actionTitle === 'A familiar face') {
+    text = failed ? 'I told her what happened. She offered food and water, but I had no room to carry everything.'
+      : /need them more|shopping bag/.test(source)
+      ? 'I told her what happened. She shared some groceries with me. I feel a little less alone.'
+      : /carry her bags|having helped/.test(source)
+        ? 'For a few minutes, I was just a neighbour helping with the shopping. It felt good to be useful.'
+        : 'I let her go inside without explaining. I’m still out here.'
+  } else if (actionTitle === 'An old friend') {
+    text = /wet tongue|good scratch/.test(source)
+      ? 'He was so happy to see me. For a few minutes, I could just enjoy being with him.'
+      : /different path/.test(source)
+        ? 'I turned away before they saw me. I wonder if I’ll ever see that dog again.'
+        : 'He recognised me and wanted to say hello. I kept walking.'
+  } else if (actionTitle === 'The door closes') {
     text = 'For everyone else, the evening still ends at a front door. I keep walking.'
   } else if (actionTitle === 'Making a bed on a bench') {
     text = 'I notice how carefully they keep their things close. I’m starting to understand why.'

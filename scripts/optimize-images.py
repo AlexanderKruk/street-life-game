@@ -8,9 +8,6 @@ from PIL import Image
 root = Path(__file__).resolve().parents[1]
 assets = root / 'public' / 'assets'
 widths = {
-    'event-door-walk': [480, 768, 1024],
-    'event-door-stay': [480, 768, 1024],
-    'event-door-think-call': [480, 768, 1024],
     'event-station-seat': [480, 768, 1024],
     'event-station-night': [480, 768, 1024],
     'event-station-quiet': [480, 768, 1024],
@@ -18,7 +15,6 @@ widths = {
     'event-wake-move': [480, 768, 1024],
     'event-wake-moment': [480, 768, 1024],
 
-    'event-first-night-door': [480, 768, 1024],
     'event-first-night-bench': [480, 768, 1024],
     'event-first-night-station': [480, 768, 1024],
     'event-first-night-bench-wake': [480, 768, 1024],

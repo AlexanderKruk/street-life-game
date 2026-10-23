@@ -21,3 +21,8 @@ Nine main-location environment images cover Station, Night Shelter, Help Center,
 ## Opening phone calls — prepared artwork
 
 [phone-call-generation.json](phone-call-generation.json) records three standalone split-screen images and their exact prompts: unanswered call with a quiet empty half and three dots, former colleague at home with family, and acquaintance renting one small room. The left half retains the same protagonist and residential bench. Each image has 480/768/1024px WebP variants. These assets are connected to the sequential opening-call results in v302.
+
+
+## Familiar dog — v310
+
+[neighbour-dog-generation.json](neighbour-dog-generation.json) records the four approved images: opening, avoiding the encounter, walking past and greeting the dog. All share the same hero, grey-haired neighbour, shaggy beige-grey dog, residential courtyard and muted evening palette. WebP masters plus 480/768/1024px variants load on demand for `first-night-dog`, outside startup warmup. Outcomes use their own illustrations in the shared blocking result modal. The opening remains eligible only before the first actual trip, like the neighbour returning with groceries.

@@ -112,7 +112,7 @@ export function choiceIcon(id: string, label = ''): IconName {
   if (/housing|accommodation/.test(value)) return 'house'
   if (/beg|give.*zł|change|benefits|afford/.test(value)) return 'coins'
   if (/hand|catch|grab/.test(value)) return 'hand'
-  if (/ask|answer|call after|listen|say|sorry|promise/.test(value)) return 'chat'
+  if (/ask|answer|call after|listen|say|sorry|promise|evicted/.test(value)) return 'chat'
   if (/think|nothing concrete/.test(value)) return 'thought'
   if (/look|check/.test(value)) return 'search'
   if (/wait|moment|stay|watch/.test(value)) return 'clock'
@@ -120,7 +120,7 @@ export function choiceIcon(id: string, label = ''): IconName {
   if (/cover/.test(value)) return 'umbrella'
   if (/stop/.test(value)) return 'pause'
   if (/help|support/.test(value)) return 'help'
-  if (/walk|move|going|keep|gather|leave|outside|decline|no thanks/.test(value)) return 'walk'
+  if (/walk|move|going|keep|gather|leave|outside|decline|no thanks|head the other way/.test(value)) return 'walk'
   return 'person'
 }
 

@@ -234,7 +234,8 @@ for(const [day,minutes,condition,rate,enabled] of [[1,600,100,18,true],[1,600,72
 setup({minutes:1320},{'street-life-mobile-service-until':'1322'});fireEvent.click(phoneSearchButton('Help & hygiene'));advance(2000);
 assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));assert(!read('street-life-answers-v1').includes('morning'));
 setup({minutes:1320});fireEvent.click(phoneSearchButton('Help & hygiene'));advance(3000);fireEvent.click(screen.getByRole('button',{name:'Reset save'}));advance(3000);
-assert(!document.querySelector('.phone-activity'));assert(!localStorage.getItem('street-life-phone-activity-v1'));assert.equal(read(stateKey).minutes,1323,'reset cancels the search and resumes the ordinary Street clock');
+assert(!document.querySelector('.phone-activity'));assert(!localStorage.getItem('street-life-phone-activity-v1'));
+assert.equal(read(stateKey).minutes,1323,'reset cancels the search and resumes the ordinary Street clock');
 
 // Street has three contextual choices; the test shortcut is gone. Bottle search
 // still opens through the ordinary action when normal priorities select it.
@@ -950,7 +951,7 @@ assert(screen.getByRole('dialog',{name:'How long do you want to sleep?'}));asser
 const planState=read(stateKey),planInventory=read(invKey);advance(12000);
 assert.deepEqual(read(stateKey),planState);assert.deepEqual(read(invKey),planInventory);assert(!localStorage.getItem('street-life-sleep-v1'));
 chooseHours(6);
-assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 05:30'));
+assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 1 Tu · 05:30'));
 assert(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:/^8 h.*07:30/}));advance(3000);assert.deepEqual(read(stateKey),planState);
 click('Cancel');assert(!screen.queryByRole('dialog'));assert.deepEqual(read(stateKey),planState);advance(1000);assert.equal(read(stateKey).minutes,1411,'cancelling sleep planning resumes the ordinary clock');
 setup({minutes:1410});click(/Lie down here\? I’m not sure… But I could try./);chooseHours(2);click('Start sleeping');
@@ -961,9 +962,9 @@ advance(1000);assert.equal(read(stateKey).minutes,1420);
 // duration shown in the chooser is exactly the duration that starts.
 const notAdmitted={...booking,housing:'Street',shelterLastStayDay:0};
 setup({day:2,locationId:'shelter',minutes:30,energy:20},{[lifeKey]:admitted});click(/Use your reserved bed/);
-chooseHours(6);assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 06:30'));
+chooseHours(6);assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 1 Tu · 06:30'));
 chooseHours(8);
-assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 2 Tu · 07:30'));assert(document.querySelector('.sleep-choice-modal').textContent.includes('Sleep time: 7h'));
+assert(document.querySelector('.sleep-choice-preview').textContent.includes('Day 1 Tu · 07:30'));assert(document.querySelector('.sleep-choice-modal').textContent.includes('Sleep time: 7h'));
 click('Start sleeping');assert.equal(read('street-life-sleep-v1').total,420);
 setup({locationId:'shelter',minutes:1140},{[lifeKey]:notAdmitted});click(/Use your reserved bed/);advance(10000);click('Cancel');assert.equal(read(lifeKey).shelterLastStayDay,1);assert.equal(read(lifeKey).housing,'Street');assert.equal(read(stateKey).minutes,1140);
 click(/Use your reserved bed/);fireEvent.keyDown(window,{key:'Escape'});assert(!screen.queryByRole('dialog'));assert.equal(read(lifeKey).shelterLastStayDay,1);
@@ -1162,13 +1163,13 @@ assert(screen.getByRole('button',{name:'Previous day'}).disabled);assert(screen.
 cleanup();render(React.createElement(App));assert.equal(read(historyKey).length,2);
 const yesterday=read(historyKey);
 setup({day:3},{[historyKey]:yesterday});click('Phone');click('History');
-assert(screen.getByRole('heading',{name:'Day 3 · We'}));assert(screen.getByText('No recorded actions today yet.'));
+assert(screen.getByRole('heading',{name:'Day 2 · We'}));assert(screen.getByText('No recorded actions today yet.'));
 assert(screen.getByRole('button',{name:'Next day'}).disabled);
-click('Previous day');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert(screen.getByText('No recorded actions on this day.'));
-click('Previous day');assert(screen.getByRole('heading',{name:'Day 1 · Mo'}));assert(document.querySelector('.timeline').textContent.includes('Bought Water'));
+click('Previous day');assert(screen.getByRole('heading',{name:'Day 1 · Tu'}));assert(screen.getByText('No recorded actions on this day.'));
+click('Previous day');assert(screen.getByRole('heading',{name:'Day 0 · Mo'}));assert(document.querySelector('.timeline').textContent.includes('Bought Water'));
 assert(screen.getByRole('button',{name:'Previous day'}).disabled);assert(!screen.getByRole('button',{name:'Next day'}).disabled);
-click('Next day');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));click('Next day');assert(screen.getByRole('heading',{name:'Day 3 · We'}));
-click('Previous day');click(/Inventory$/);click('Phone');click('History');assert(screen.getByRole('heading',{name:'Day 3 · We'}));
+click('Next day');assert(screen.getByRole('heading',{name:'Day 1 · Tu'}));click('Next day');assert(screen.getByRole('heading',{name:'Day 2 · We'}));
+click('Previous day');click(/Inventory$/);click('Phone');click('History');assert(screen.getByRole('heading',{name:'Day 2 · We'}));
 assert.equal(read(historyKey).length,2);click('Reset save');assert.deepEqual(read(historyKey),[]);
 setup({minutes:1380,energy:90});beginSleep(/Lie down here\? I’m not sure… But I could try./,2);assert.deepEqual(read(historyKey),[]);
 click('Wake up (debug)');assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].day,2);assert.equal(read(historyKey)[0].minute,60);assert.equal(read(historyKey)[0].title,'Woke up');
@@ -1177,7 +1178,7 @@ const oldReport={day:1,minute:600,title:'Drink water',text:'You drank water.',su
 setup({day:2},{[historyKey]:[oldReport,{day:0,minute:20,title:'Bad',text:'Bad'}]});click('Phone');click('History');click('Previous day');
 assert.equal(read(historyKey).length,1);assert.equal(read(historyKey)[0].minute,600);assert.equal(read(historyKey)[0].summary,undefined);
 assert.equal(read(historyKey)[0].actionTitle,'Drink water');assert(document.querySelector('.journal-thought').textContent.startsWith('I'));
-cleanup();render(React.createElement(App));click('History');assert(screen.getByRole('heading',{name:'Day 2 · Tu'}));assert.equal(read(historyKey).length,1);
+cleanup();render(React.createElement(App));click('History');assert(screen.getByRole('heading',{name:'Day 1 · Tu'}));assert.equal(read(historyKey).length,1);
 require('esbuild').buildSync({entryPoints:['src/journal.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:'journal-app.cjs'});
 const {journalReflection}=require('./journal-app.cjs');
 const refused=journalReflection('Shelter registration','No free places today.',{costs:[],changes:[{label:'🙂 Mood',value:'−5',kind:'negative'}]});
@@ -1199,7 +1200,7 @@ setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','
 setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click('Phone');click('Goals');assert.equal(document.querySelector('.journal-section-title > span').textContent,'0');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'4');assert(!document.querySelector('.main-goal'));assert(screen.getByText('All starting goals completed.'));
 click('Reset save');assert.deepEqual(read(journalKey),{morning:false,shelter:false,support:false,work:false});
 assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('Behind the lit windows, people are getting ready for bed.'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
-setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click('Phone');click('Goals');assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 2 at 18:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
+setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click('Phone');click('Goals');assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 1 at 18:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
 setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1080}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
 // Clothing caps every gain, migrates wear, and laundry cleans without repairing it.
 setup({hygiene:90},{[invKey]:{jacket:42}});assert.equal(read(invKey).jacket,42);assert.equal(read(invKey).clothingCleanliness,90);assert.equal(read(stateKey).hygiene,90);
@@ -1254,27 +1255,28 @@ console.log('PASS: shelter, sleep, journal and needs scenarios.');
 // First-night observations follow actions, survive reload and do not repeat.
 openingEvents=true;
 const firstNightKey='street-life-first-night-events-v1';
+// An obsolete at-home encounter cannot remain pending during an existing trip.
 setup({minutes:1385},{'street-life-trip-v1':{destinationId:'station',mode:'transit',total:33,remaining:20},[firstNightKey]:{seen:['first-night-door'],lastAt:1385,pendingId:'first-night-door'}});
-const eventPausedTrip=read('street-life-trip-v1'),eventPausedGame=read(stateKey);
-advance(2000);assert.deepEqual(read('street-life-trip-v1'),eventPausedTrip);assert.deepEqual(read(stateKey),eventPausedGame);
-click('Think of someone I could call');const resultPausedGame=read(stateKey);advance(2000);
-assert.deepEqual(read('street-life-trip-v1'),eventPausedTrip);assert.deepEqual(read(stateKey),resultPausedGame);
-ok();advance(250);assert.equal(read('street-life-trip-v1').remaining,19);
+assert(!document.querySelector('.event-overlay'));
+assert.equal(read(firstNightKey).pendingId,null);
+advance(250);assert.equal(read('street-life-trip-v1').remaining,19);
 setup({minutes:1320,energy:100});Math.random=()=>.4;
 click('Just one more street. I’m not ready to lie down.');
 assert(!document.querySelector('.event-overlay'),'read the action result before the observation');
 assert.equal(read(firstNightKey).pendingId,'first-night-door');ok();
-assert(screen.getByRole('dialog').textContent.includes('The door closes'));
+assert(screen.getByRole('dialog').textContent.includes('A familiar face'));
 const observingState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),observingState);
-cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('The door closes'));
-click('Think of someone I could call');assert.equal(read(firstNightKey).pendingId,null);ok();
+cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('A familiar face'));
+click('Let me help with those bags.');assert.equal(read(firstNightKey).pendingId,null);ok();
 Math.random=()=>.4;click('Just one more street. I’m not ready to lie down.');ok();assert(!document.querySelector('.event-overlay'));
-Math.random=()=>.4;click('Just one more street. I’m not ready to lie down.');ok();assert(!document.querySelector('.event-overlay'));
-assert.deepEqual(read(firstNightKey).seen,['first-night-door']);
+Math.random=()=>.4;click('Just one more street. I’m not ready to lie down.');ok();
+assert(screen.getByRole('dialog').textContent.includes('An old friend'),'another walk after the cooldown can meet the dog');
+click('Keep walking.');ok();assert(!document.querySelector('.event-overlay'));
+assert.deepEqual(read(firstNightKey).seen,['first-night-door','first-night-dog']);
 click('Reset save');assert.deepEqual(read(firstNightKey).seen,[]);assert.equal(read(firstNightKey).pendingId,null);
 
 // Sitting awake does not make a stranger assume the hero has no home.
-setup({minutes:1320,energy:100},{'street-life-answers-v1':['morning','bed'],'street-life-discovered-v1':['street','station','shop','support','daycenter','free-clinic'],'street-life-discovery-version':'2'});
+setup({minutes:1320,energy:100},{'street-life-left-home-v1':true,'street-life-answers-v1':['morning','bed'],'street-life-discovered-v1':['street','station','shop','support','daycenter','free-clinic'],'street-life-discovery-version':'2'});
 Math.random=()=>.4;click(/Is there a bench nearby/);ok();Math.random=()=>.4;click(/I’ll sit for a bit/);ok();
 assert(screen.getByRole('dialog').textContent.includes('Making a bed on a bench'));
 assert(!read('street-life-discovered-v1').includes('shelter'));
@@ -1324,12 +1326,12 @@ for(const [label,asset] of [['Ask how they get through the night','conversation'
  assert(read(firstNightKey).pendingId===null);ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
 for(const [id,assets,durations] of [
- ['door',['door-walk','door-stay','door-think-call'],[0,5,5]],
+ ['door',['neighbour-decline','neighbour-help','neighbour-supplies'],[0,5,5]],
  ['station',['station-seat','station-night','station-quiet'],[5,10,5]],
  ['bench-wake',['wake-sit','wake-move','wake-moment'],[5,10,5]],
 ]) for(let index=0;index<assets.length;index++) {
  setup({minutes:1385},{[firstNightKey]:{seen:[`first-night-${id}`],lastAt:1385,pendingId:`first-night-${id}`}});
- assert(document.querySelector('.event-illustration').src.endsWith(`event-first-night-${id}-480.webp`));
+ assert(document.querySelector('.event-illustration').src.endsWith(id==='door'?'event-neighbour-meeting-480.webp':`event-first-night-${id}-480.webp`));
  const eventDefinition=require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false}).outputFiles[0].text;
  const eventModule={exports:{}};new Function('module','exports',eventDefinition)(eventModule,eventModule.exports);
  const reply=eventModule.exports.STREET_EVENTS.find(event=>event.id===`first-night-${id}`).choices[index].label;
@@ -1361,8 +1363,8 @@ const backgroundAction=document.querySelector('.game-background .story-actions b
 assert(backgroundAction,'there must be a background action to test');fireEvent.click(backgroundAction);
 assert(!document.querySelector('.phone-activity'));
 advance(3000);assert.deepEqual(read(stateKey),lockedGame);assert.deepEqual(read(invKey),lockedInventory);
-assert(document.querySelector('.event-illustration').src.endsWith('event-first-night-door-480.webp'));
-click('Think of someone I could call');
+assert(document.querySelector('.event-illustration').src.endsWith('event-neighbour-meeting-480.webp'));
+click('Let me help with those bags.');
 assert(document.querySelector('.result-overlay'));
 assert(document.querySelector('.game-background[inert]'));
 assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
@@ -1405,7 +1407,7 @@ const fs=require('node:fs');
 const stripArt=value=>JSON.parse(JSON.stringify(value,(key,item)=>key==='illustration'?undefined:item));
 for(const original of observationEvents) {
  const first=original.id.startsWith('first-night-');
- const artContext={locationId:['dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='night-rustle'?1380:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:'Street',documents:true,firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const artContext={locationId:['dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:'Street',documents:true,firstNight:first,nearHome:true,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
  Math.random=()=>0;
  const chosen=eventModule.exports.nextStreetEvent(original.trigger,artContext);
  assert.equal(chosen?.id,original.id);

@@ -2,6 +2,7 @@ import { memo, useId, useMemo, useState } from 'react'
 import { Icon } from './Icon'
 import { formatTime } from './game'
 import type { JournalEntry } from './journal'
+import { displayDay } from './gameDate'
 
 export type JournalGoal = { id: string; title: string; description: string }
 type GoalsProps = { pending: JournalGoal[]; completed: JournalGoal[] }
@@ -53,7 +54,7 @@ function DayTimeline({ entries, day, today }: Omit<TimelineProps, 'entries'> & {
   const listId = useId()
   const visible = entries.slice(0, limit)
   return <>
-    <ol id={listId} className="timeline" aria-label={`Day ${day} history`}>
+    <ol id={listId} className="timeline" aria-label={`Day ${displayDay(day)} history`}>
       {visible.map((entry, index) => <li className="timeline-entry" key={`${entry.day}-${entry.minute}-${index}`}>
         <time dateTime={formatTime(entry.minute)}>{formatTime(entry.minute)}</time><span className="timeline-marker" aria-hidden="true" />
         <div><strong>{entry.title}{entry.count > 1 && ` ×${entry.count}`}</strong>{entry.text && <p className="journal-thought">{entry.text}</p>}</div>

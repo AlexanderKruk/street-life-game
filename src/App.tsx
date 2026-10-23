@@ -39,18 +39,34 @@ import CompactStreetEvent from './CompactStreetEvent'
 import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
+import { displayDay } from './gameDate'
 
-const BUILD_VERSION = 'v2026.10.23-308'
+const BUILD_VERSION = 'v2026.10.23-312'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
 const ENCOUNTERS_KEY = 'street-life-encounters-v1'
+const LEFT_HOME_KEY = 'street-life-left-home-v1'
+function loadLeftHome() {
+  const saved = readSavedGame(localStorage)
+  if (!saved) return false
+  if (saved.locationId !== 'street' || !firstNightTime(saved)) return true
+  try {
+    if (JSON.parse(localStorage.getItem(LEFT_HOME_KEY) ?? 'false') === true) return true
+    if (JSON.parse(localStorage.getItem('street-life-trip-v1') ?? 'null')) return true
+    // Older saves did not record departure explicitly; an arrival/stopped trip
+    // in History proves that the initial neighbourhood has already been left.
+    const history = JSON.parse(localStorage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
+    return Array.isArray(history) && history.some(entry => ['Arrival', 'Journey stopped'].includes(entry?.actionTitle))
+  } catch { return true }
+}
 type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
 function loadFirstNightEvents(key = FIRST_NIGHT_EVENTS_KEY): FirstNightEvents {
   try {
     const saved = JSON.parse(localStorage.getItem(key) ?? 'null')
     const ids = new Set(STREET_EVENTS.filter(event => key === ENCOUNTERS_KEY || event.id.startsWith('first-night-')).map(event => event.id))
-    const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId) ? saved.pendingId : null
+    const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId)
+      && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome()) ? saved.pendingId : null
     const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
     return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId }
   } catch { return { seen: [], lastAt: null, pendingId: null } }
@@ -547,6 +563,7 @@ export default function App() {
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
   const eventModalRef = useRef<HTMLElement>(null)
   const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(loadFirstNightEvents)
+  const [leftHome, setLeftHome] = useState(loadLeftHome)
   const [encounters, setEncounters] = useState<FirstNightEvents>(() => loadFirstNightEvents(ENCOUNTERS_KEY))
   const openingSearchObservation = useRef(false)
   const ambientEventClock = useRef({ locationId: game.locationId, minutes: 0 })
@@ -629,8 +646,8 @@ export default function App() {
   const currentExposure = underRainCover ? 'cover' : travelPhase?.exposure ?? weatherExposure(game)
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
-    { id: 'morning' as const, title: 'Get through the morning', description: 'Stay alive until Day 2, 12:00.' },
-    { id: 'shelter' as const, title: 'Find a safe place to sleep', description: activeGoal ? `Be at Night Shelter on Day ${activeGoal.day} at ${formatTime(activeGoal.minute)} for registration. A bed is not guaranteed.` : 'Register for a shelter bed or move into Schronisko.' },
+    { id: 'morning' as const, title: 'Get through the morning', description: `Stay alive until Day ${displayDay(2)}, 12:00.` },
+    { id: 'shelter' as const, title: 'Find a safe place to sleep', description: activeGoal ? `Be at Night Shelter on Day ${displayDay(activeGoal.day)} at ${formatTime(activeGoal.minute)} for registration. A bed is not guaranteed.` : 'Register for a shelter bed or move into Schronisko.' },
     { id: 'support' as const, title: 'Visit social support', description: 'Visit Help Center during opening hours.' },
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
   ], [activeGoal])
@@ -830,7 +847,7 @@ export default function App() {
   function observeFirstNight(trigger: Extract<EventTrigger, 'walk' | 'bench' | 'location'>, state: GameState, locationId = state.locationId) {
     if (!firstNightTime(state) || life.housing !== 'Street' || activeEvent || infoModal || firstNightEvents.pendingId) return
     if (!encounterDue(state)) return
-    const event = nextStreetEvent(trigger, { locationId, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: true, seenEventIds: [...firstNightEvents.seen, ...STREET_EVENTS.filter(event => !event.id.startsWith('first-night-')).map(event => event.id)] })
+    const event = nextStreetEvent(trigger, { locationId, minutes: state.minutes, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: true, nearHome: !leftHome && !trip, seenEventIds: [...firstNightEvents.seen, ...STREET_EVENTS.filter(event => !event.id.startsWith('first-night-')).map(event => event.id)] })
     if (event?.id.startsWith('first-night-')) { rememberFirstNightEvent(event, state); return true }
     return false
   }
@@ -1001,7 +1018,7 @@ export default function App() {
       const misses = missesBefore + (missed ? 1 : 0)
       if (misses >= 3) {
         const blockedUntil = (month + 1) * 30 + 1
-        setMessage(`You missed three shelter nights this month. Your place was cancelled; you can register again on Day ${blockedUntil}.`)
+        setMessage(`You missed three shelter nights this month. Your place was cancelled; you can register again on Day ${displayDay(blockedUntil)}.`)
         return { ...status, housing: 'Street', housingUntil: undefined, shelterUntilDay: undefined, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month, shelterBlockedUntilDay: blockedUntil }
       }
       return { ...status, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month }
@@ -1060,7 +1077,10 @@ export default function App() {
       clock.minutes += tickMinutes
       if (clock.minutes >= (firstNight ? 15 : 30)) {
         clock.minutes = 0
-        if (!observeFirstNight(current.id === 'station' ? 'location' : 'walk', game)) observeOrdinaryEvent('location', game, undefined, { observation: 'idle', elapsedMinutes: firstNight ? 15 : 30 })
+        // The tick is already queued above; eligibility must use its new clock,
+        // especially when this minute crosses an encounter deadline or midnight.
+        const observationState = applyAction(game, { minutes: tickMinutes })
+        if (!observeFirstNight(current.id === 'station' ? 'location' : 'walk', observationState)) observeOrdinaryEvent('location', observationState, undefined, { observation: 'idle', elapsedMinutes: firstNight ? 15 : 30 })
       }
     }
   })
@@ -1135,7 +1155,7 @@ export default function App() {
       const month = Math.floor((game.day - 1) / 30)
       const blockedUntil = (month + 1) * 30 + 1
       setLife((status) => ({ ...status, shelterStrikes: strikes, ...(evicted ? { housing: 'Street' as const, housingUntil: undefined, shelterUntilDay: undefined, shelterBlockedUntilDay: blockedUntil } : {}) }))
-      setMessage(evicted ? `Third shelter rule violation: your place was cancelled. You can register again on Day ${blockedUntil}.` : `You left the shelter after 08:00. Rule violation ${strikes}/3.`)
+      setMessage(evicted ? `Third shelter rule violation: your place was cancelled. You can register again on Day ${displayDay(blockedUntil)}.` : `You left the shelter after 08:00. Rule violation ${strikes}/3.`)
     }
   }
 
@@ -1171,7 +1191,7 @@ export default function App() {
   function wakeLabel(hours: number, kind: SleepState['kind']) {
     const wake = absoluteMinutes(game) + chosenSleepMinutes(hours, kind)
     const day = Math.floor(wake / 1440) + 1
-    return `Day ${day} ${weekday(day)} · ${formatTime(wake % 1440)}`
+    return `Day ${displayDay(day)} ${weekday(day)} · ${formatTime(wake % 1440)}`
   }
 
   useEffect(() => {
@@ -1658,6 +1678,7 @@ export default function App() {
       return
     }
     const total = randomTravelMinutes(destinationTravelTimeRange(destination, mode))
+    setLeftHome(true)
     recordShelterDeparture(destination.id)
     if (shelterPhoneCharging) setMessage('You collected your phone from the charger before leaving Night Shelter.')
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
@@ -1675,7 +1696,7 @@ export default function App() {
     if (current.id === 'shelter' && !shelterBooked && id !== 'shelter-rest') return 'Register for a place first.'
     if (current.id === 'shelter' && shelterBooked && !shelterAdmitted && id !== 'shelter-social-worker') return 'Entry 18:00–22:00. You are outside; missing entry counts as a missed night.'
     if (id === 'shelter-rest') {
-      if ((life.shelterBlockedUntilDay ?? 0) > game.day) return `Registration blocked until Day ${life.shelterBlockedUntilDay}.`
+      if ((life.shelterBlockedUntilDay ?? 0) > game.day) return `Registration blocked until Day ${displayDay(life.shelterBlockedUntilDay ?? game.day)}.`
       if (!shelterBooked) {
         if (life.shelterRegistrationAttemptDay === game.day) return 'You already queued today. Arrive before 18:00 tomorrow.'
         if (game.minutes < 480 || game.minutes >= 1320) return 'Come back during the day to queue. Doors 18:00 · registration 18:20–22:00.'
@@ -1782,7 +1803,7 @@ export default function App() {
     }
     if (actionId === 'shelter-rest') {
       const blocked = (life.shelterBlockedUntilDay ?? 0) > game.day
-      if (blocked) { setMessage(`You lost your shelter place. You can register again on Day ${life.shelterBlockedUntilDay}.`); return }
+      if (blocked) { setMessage(`You lost your shelter place. You can register again on Day ${displayDay(life.shelterBlockedUntilDay ?? game.day)}.`); return }
       const activeBooking = (life.shelterUntilDay ?? 0) >= game.day
       if (!activeBooking) {
         if (game.minutes < 480 || game.minutes >= 1320) { setMessage('Queue during the day. Doors open at 18:00; registration starts at 18:20.'); return }
@@ -1886,7 +1907,7 @@ export default function App() {
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
         ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcomeText,
-          ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${goalDay}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
+          ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
     }
     setEncounters(previous => ({ ...previous, pendingId: null }))
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
@@ -1978,6 +1999,7 @@ export default function App() {
       const destination = locations.find((entry) => entry.id === diceCheck.fareDodgeDestinationId)
       if (destination) {
         const total = randomTravelMinutes(destinationTravelTimeRange(destination, 'fare-dodge'))
+        setLeftHome(true)
         recordShelterDeparture(destination.id)
         setStreetBenchFound(false)
         setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } })
@@ -2257,6 +2279,8 @@ export default function App() {
     ambientEventClock.current = { locationId: 'street', minutes: 0 }
     openingSearchObservation.current = false
     setFirstNightEvents({ seen: [], lastAt: null, pendingId: null })
+    setLeftHome(false)
+    localStorage.removeItem(LEFT_HOME_KEY)
     localStorage.removeItem(FIRST_NIGHT_EVENTS_KEY)
     setEncounters({ seen: [], lastAt: null, pendingId: null })
     localStorage.removeItem(ENCOUNTERS_KEY)
@@ -2317,6 +2341,7 @@ export default function App() {
     'street-life-answers-v1': answeredQuestions,
     'street-life-memories-v1': seenMemories,
     [FIRST_NIGHT_EVENTS_KEY]: firstNightEvents,
+    [LEFT_HOME_KEY]: leftHome,
     [ENCOUNTERS_KEY]: encounters,
     'street-life-rain-choice-v1': rainChoice,
     [RAIN_RESPONSE_KEY]: rainResponse,
@@ -2330,7 +2355,7 @@ export default function App() {
     [SHELTER_ARRIVAL_KEY]: shelterArrival,
     'street-life-shelter-departure-v1': shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
-    discoveredLocations, activeGoal, journalGoals, journalEntries, musicWalkUsed, answeredQuestions, seenMemories, firstNightEvents, encounters, choiceSeed,
+    discoveredLocations, activeGoal, journalGoals, journalEntries, musicWalkUsed, answeredQuestions, seenMemories, firstNightEvents, leftHome, encounters, choiceSeed,
     rainChoice, rainResponse, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
     phoneActivity?.questionId ?? null, openingCallIndex, infoModal, shelterPhoneCharging, closingNotice,
@@ -2386,7 +2411,7 @@ export default function App() {
     {sleepChoice && <div className="phone-overlay result-overlay">
       <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
         <div className="timed-heading"><Icon name="moon" /><div><p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p><h2 id="sleep-choice-title">How long do you want to sleep?</h2></div></div>
-        <div className="sleep-choice-context"><span>{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</span><span>Day {game.day} {weekday(game.day)} · {formatTime(game.minutes)}</span></div>
+        <div className="sleep-choice-context"><span>{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</span><span>Day {displayDay(game.day)} {weekday(game.day)} · {formatTime(game.minutes)}</span></div>
         <p className="sleep-choice-energy"><Icon name="energy" />Energy {Math.round(game.energy)}% · {game.energy > 75 ? 'Rested' : game.energy > 50 ? 'Slightly tired' : game.energy > 25 ? 'Tired' : 'Exhausted'}</p>
         <div className="sleep-duration-options" role="group" aria-label="Sleep duration">
           {SLEEP_HOURS.map(hours => {
@@ -2461,7 +2486,7 @@ export default function App() {
     <div className={`game-background${eventInteractionBlocked ? ' event-background-blocked' : ''}`} inert={eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} onClickCapture={event => { if (eventInteractionBlocked) { event.preventDefault(); event.stopPropagation() } }}>
     <header className="game-header">
       <div className="header-state-row">
-        <h1 aria-label={`Day ${game.day} ${weekday(game.day)} ${formatTime(game.minutes)}`}><time>{formatTime(game.minutes)}</time><span className="game-day">D{game.day} <span className="weekday">{weekday(game.day)}</span></span></h1>
+        <h1 aria-label={`Day ${displayDay(game.day)} ${weekday(game.day)} ${formatTime(game.minutes)}`}><time>{formatTime(game.minutes)}</time><span className="game-day">D{displayDay(game.day)} <span className="weekday">{weekday(game.day)}</span></span></h1>
         <div className="weather" title={weather.label} aria-label={`${weather.label}, ${temperature}°C`}><Icon name={weather.label === 'Rain' || weather.label === 'Showers' ? 'rain' : weather.label === 'Clear' ? game.minutes >= 360 && game.minutes < 1200 ? 'sun' : 'moon' : 'cloud'} />{temperature}°</div>
         <div className="header-info">
           <span className={`header-condition ${moodBand.level}`} role="img" aria-label={`Mood: ${moodBand.label}`} title={`Mood: ${Math.round(game.mood)}% · ${moodBand.label}`}><MoodIcon value={game.mood} /></span>
@@ -2699,7 +2724,7 @@ export default function App() {
       <section className="journal-history" aria-labelledby="journal-day-heading">
         <div className="journal-day-switch" role="group" aria-label="Journal day">
           <button type="button" aria-label="Previous day" disabled={journalDay <= 1} onClick={() => setSelectedJournalDay(journalDay - 1)}><Icon name="chevron-left" /></button>
-          <h3 id="journal-day-heading" aria-live="polite">Day {journalDay} · {weekday(journalDay)}</h3>
+          <h3 id="journal-day-heading" aria-live="polite">Day {displayDay(journalDay)} · {weekday(journalDay)}</h3>
           <button type="button" aria-label="Next day" disabled={journalDay >= game.day} onClick={() => setSelectedJournalDay(journalDay + 1 === game.day ? null : journalDay + 1)}><Icon name="chevron-right" /></button>
         </div>
         <JournalTimeline entries={journalEntries} day={journalDay} today={journalDay === game.day} />
@@ -2746,7 +2771,7 @@ export default function App() {
         <p className="eyebrow">RUN OVER</p>
         <div className="game-over-emblem"><Icon name="heart-broken" /></div>
         <h2 id="game-over-title">Your health reached zero</h2>
-        <p className="game-over-day"><strong>Day {game.day}</strong><span>Your run ended here</span></p>
+        <p className="game-over-day"><strong>Day {displayDay(game.day)}</strong><span>Your run ended here</span></p>
         <p className="game-over-description">Food, water and medicine can stop causes of damage, but lost health needs proper recovery and care.</p>
         <button onClick={reset}>Start new run</button>
       </section>

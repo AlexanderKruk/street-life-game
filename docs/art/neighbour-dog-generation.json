@@ -1,0 +1,35 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "date": "2026-10-23",
+  "status": "Opening approved; three outcomes shown and accepted for integration.",
+  "references": {
+    "docs/art/hero-reference.webp": "Authoritative protagonist identity and outfit; exactly one black backpack.",
+    "docs/art/illustration-style-reference.webp": "Established realistic painterly rendering.",
+    "docs/art/muted-palette-reference.webp": "Primary authority for restrained cool palette and localized soft warm lights.",
+    "event-neighbour-dog-meeting": "Opening also attached to every outcome for neighbour, dog and courtyard continuity."
+  },
+  "assets": [
+    {
+      "name": "event-neighbour-dog-meeting",
+      "source": "exec-a42f7d6e-5dae-48f8-9f9c-4df8f184fb3b.png",
+      "scene": "Hero notices his neighbour walking the familiar dog, before either has seen him."
+    },
+    {
+      "name": "event-neighbour-dog-avoid",
+      "source": "exec-ca48cac9-8854-4639-bb13-304140dc94ee.png",
+      "scene": "Hero takes a different path and glances back at the dog; neither neighbour nor dog notices him."
+    },
+    {
+      "name": "event-neighbour-dog-pass",
+      "source": "exec-6124cc51-1d8b-4b8f-abe0-e81cb89899c4.png",
+      "scene": "Hero walks past; the familiar dog recognises him and tugs at its lead to reach him."
+    },
+    {
+      "name": "event-neighbour-dog-greet",
+      "source": "exec-b831edf9-2156-438e-a3ae-25fe60c29c59.png",
+      "scene": "Hero crouches to scratch the dog’s ears; it licks his cheek while the neighbour smiles."
+    }
+  ],
+  "generationBrief": "One standalone wide 16:9 event illustration per scene, no text or UI. Same late-thirties hero, charcoal jacket and black backpack; grey-haired neighbour around fifty in olive-grey jacket; same shaggy beige-grey mixed-breed dog with floppy ears. Ordinary Polish residential courtyard at night. Cool slate ambient palette, neutral skin, muted saturation, small warm window/lamp accents. Keep faces, clothing and dog readable. Opening: hero spots the pair 6–8m ahead before they notice him. Outcomes: divergent paths and wistful backward glance; walking past while the dog recognises him and tugs on its lead; crouching, ear scratching, a lick on the cheek and a brief unforced smile.",
+  "packaging": "RGB WebP masters (quality 90) plus proportional 480/768/1024px WebP variants (quality 80). No palette or content post-processing. Loaded on demand through imageManifest.json; optimize-images.py discovers event masters automatically."
+}

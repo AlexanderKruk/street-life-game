@@ -19,6 +19,7 @@ export type EventContext = {
   housing: Housing
   documents: boolean
   firstNight?: boolean
+  nearHome?: boolean
   sleepKind?: 'ground' | 'bench' | 'shelter' | 'residential'
   seenEventIds?: string[]
 }
@@ -201,10 +202,16 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Call after them', outcome:{ minutes:2, mood:2, message:'They turn around, pick up the glove and raise a hand in thanks. For a moment, it feels like an ordinary day.' } },
     { label:'Keep going', outcome:{ message:'You keep going. Someone else may notice it.' } },
   ]},
-  { id:'first-night-door', illustration:'/street-life-game/assets/event-first-night-door.webp', trigger:'walk', icon:'🏠', title:'The door closes', text:'Someone ahead of you slows down, takes out a key and slips into a lit entrance. The door clicks shut. You keep standing on the pavement. Nobody has noticed anything unusual about you.', weight:1, eligible:c=>!!c.firstNight && c.locationId==='street', choices:[
-    { label:'Keep walking', outcome:{ illustration:'/street-life-game/assets/event-door-walk.webp', message:'You turn towards the next crossing. Until recently, coming home still felt like an ordinary thing.' } },
-    { label:'Stay here for a moment', outcome:{ illustration:'/street-life-game/assets/event-door-stay.webp', minutes:5, mood:-1, message:'You watch the entrance until the light goes out. Then you move away. You do not want to spend the night watching other people come home.' } },
-    { label:'Think of someone I could call', outcome:{ illustration:'/street-life-game/assets/event-door-think-call.webp', minutes:5, mood:1, message:'You go through a few names in your head. You have not called anyone yet, but being alone feels a little less final.' } },
+  // Keep the ID so an already-seen opening does not replay after an update.
+  { id:'first-night-door', illustration:'/street-life-game/assets/event-neighbour-meeting.webp', trigger:'walk', icon:'🏠', title:'A familiar face', text:'Your neighbour returns from the shop carrying grocery bags. She spots you, smiles and holds the entrance door open. “Hi! Coming in?”', weight:1, eligible:c=>!!c.firstNight && !!c.nearHome && c.locationId==='street' && c.minutes!==undefined && c.minutes>=1320 && c.minutes<1380, choices:[
+    { label:'No, thanks. Just going for a walk.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-decline.webp', mood:-2, message:'She wishes you a good evening and heads inside. The door clicks shut. You stand there a moment before walking on.' } },
+    { label:'Let me help with those bags.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-help.webp', minutes:5, mood:2, message:'You carry her bags up the familiar stairs. She thanks you at her door. As you head back outside, you feel a little better for having helped.' } },
+    { label:'I’ve been evicted. I have nowhere to stay.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-supplies.webp', minutes:5, mood:3, food:1, water:1, message:'She pauses, then reaches into her shopping bag. “Here, take these. You need them more than I do.” She hands you some food and a bottle of water. You still have nowhere to sleep, but you feel a little less alone.' } },
+  ]},
+  { id:'first-night-dog', illustration:'/street-life-game/assets/event-neighbour-dog-meeting.webp', trigger:'walk', icon:'🐕', title:'An old friend', text:'You spot your neighbour out walking his dog. You know that dog well. Usually, he won’t let you past without a fuss. Neither of them has seen you yet.', weight:1, eligible:c=>!!c.firstNight && !!c.nearHome && c.locationId==='street' && c.minutes!==undefined && c.minutes>=1320 && c.minutes<1440, choices:[
+    { label:'Head the other way.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-dog-avoid.webp', mood:-2, message:'You take a different path. You don’t feel up to small talk tonight, especially if he asks how you’re doing. You glance back at the dog, wondering if you’ll ever see him again.' } },
+    { label:'Keep walking.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-dog-pass.webp', mood:-1, message:'You give your neighbour a quick nod. The dog spots you and starts wagging, tugging at the lead to reach you. You carry on before he gets close.' } },
+    { label:'Stop and say hello.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-dog-greet.webp', minutes:5, mood:3, message:'You crouch down, and the dog comes straight over. A quick sniff, then a wet tongue across your cheek. You laugh and give his ears a good scratch. “He’s missed you,” your neighbour says. You stay for a few minutes. When you get up to leave, you feel a little lighter.' } },
   ]},
   { id:'first-night-bench', illustration:'/street-life-game/assets/event-first-night-bench.webp', trigger:'bench', icon:'🪑', title:'Making a bed on a bench', text:'While you sit, someone on a nearby bench folds a jacket under their head and pulls a bag close. You had barely noticed them before. Now you recognise what they are preparing for. They have not approached you.', weight:1, eligible:c=>!!c.firstNight && c.locationId==='street', choices:[
     { label:'Ask how they get through the night', outcome:{ illustration:'/street-life-game/assets/event-bench-conversation.webp', minutes:10, mood:1, discoverLocation:'shelter', message:'You tell them you have nowhere to stay tonight. Only then do they mention Night Shelter: doors open at 18:00 and registration is 18:20–22:00; arriving early improves your queue position, so tonight is too late. They describe where it is. You save the place on your map for the next registration evening.' } },

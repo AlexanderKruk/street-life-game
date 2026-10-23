@@ -1,67 +1,4 @@
 {
-  "event-door-walk.webp": {
-    "width": 1400,
-    "height": 788,
-    "variants": [
-      {
-        "width": 480,
-        "height": 270,
-        "file": "event-door-walk-480.webp"
-      },
-      {
-        "width": 768,
-        "height": 432,
-        "file": "event-door-walk-768.webp"
-      },
-      {
-        "width": 1024,
-        "height": 576,
-        "file": "event-door-walk-1024.webp"
-      }
-    ]
-  },
-  "event-door-stay.webp": {
-    "width": 1400,
-    "height": 788,
-    "variants": [
-      {
-        "width": 480,
-        "height": 270,
-        "file": "event-door-stay-480.webp"
-      },
-      {
-        "width": 768,
-        "height": 432,
-        "file": "event-door-stay-768.webp"
-      },
-      {
-        "width": 1024,
-        "height": 576,
-        "file": "event-door-stay-1024.webp"
-      }
-    ]
-  },
-  "event-door-think-call.webp": {
-    "width": 1400,
-    "height": 788,
-    "variants": [
-      {
-        "width": 480,
-        "height": 270,
-        "file": "event-door-think-call-480.webp"
-      },
-      {
-        "width": 768,
-        "height": 432,
-        "file": "event-door-think-call-768.webp"
-      },
-      {
-        "width": 1024,
-        "height": 576,
-        "file": "event-door-think-call-1024.webp"
-      }
-    ]
-  },
   "event-station-seat.webp": {
     "width": 1400,
     "height": 788,
@@ -185,27 +122,6 @@
         "width": 1024,
         "height": 576,
         "file": "event-wake-moment-1024.webp"
-      }
-    ]
-  },
-  "event-first-night-door.webp": {
-    "width": 1400,
-    "height": 788,
-    "variants": [
-      {
-        "width": 480,
-        "height": 270,
-        "file": "event-first-night-door-480.webp"
-      },
-      {
-        "width": 768,
-        "height": 432,
-        "file": "event-first-night-door-768.webp"
-      },
-      {
-        "width": 1024,
-        "height": 576,
-        "file": "event-first-night-door-1024.webp"
       }
     ]
   },
@@ -2329,6 +2245,174 @@
         "width": 1024,
         "height": 576,
         "file": "event-music-walk-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-meeting.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-meeting-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-meeting-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-meeting-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-decline.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-decline-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-decline-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-decline-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-help.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-help-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-help-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-help-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-supplies.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-supplies-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-supplies-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-supplies-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-dog-meeting.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-dog-meeting-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-dog-meeting-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-dog-meeting-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-dog-avoid.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-dog-avoid-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-dog-avoid-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-dog-avoid-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-dog-pass.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-dog-pass-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-dog-pass-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-dog-pass-1024.webp"
+      }
+    ]
+  },
+  "event-neighbour-dog-greet.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-neighbour-dog-greet-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-neighbour-dog-greet-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-neighbour-dog-greet-1024.webp"
       }
     ]
   }
