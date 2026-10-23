@@ -41,7 +41,7 @@ import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 import { displayDay } from './gameDate'
 
-const BUILD_VERSION = 'v2026.10.23-313'
+const BUILD_VERSION = 'v2026.10.23-314'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -60,7 +60,7 @@ function loadLeftHome() {
     return Array.isArray(history) && history.some(entry => ['Arrival', 'Journey stopped'].includes(entry?.actionTitle))
   } catch { return true }
 }
-type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null }
+type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null }
 function loadFirstNightEvents(key = FIRST_NIGHT_EVENTS_KEY): FirstNightEvents {
   try {
     const saved = JSON.parse(localStorage.getItem(key) ?? 'null')
@@ -68,7 +68,8 @@ function loadFirstNightEvents(key = FIRST_NIGHT_EVENTS_KEY): FirstNightEvents {
     const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId)
       && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome()) ? saved.pendingId : null
     const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
-    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId }
+    const pendingRoll = pendingId === 'borrow-phone-slip' && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
+    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingRoll ? { pendingRoll } : {}) }
   } catch { return { seen: [], lastAt: null, pendingId: null } }
 }
 
@@ -571,7 +572,11 @@ export default function App() {
     const event = STREET_EVENTS.find(event => event.id === (loadFirstNightEvents().pendingId ?? loadFirstNightEvents(ENCOUNTERS_KEY).pendingId))
     return event ? illustrateStreetEvent(event, { locationId: game.locationId, housing: game.locationId === 'shelter' ? 'Night shelter' : 'Street', sleepKind: sleeping?.kind ?? (game.locationId === 'station' ? 'bench' : 'ground') }) : null
   })
-  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(null)
+  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(() => {
+    const roll = loadFirstNightEvents(ENCOUNTERS_KEY).pendingRoll
+    const choice = activeEvent?.id === 'borrow-phone-slip' ? activeEvent.choices[0] : undefined
+    return choice?.check && roll ? { choice, roll, modifier: checkModifier(choice), resolved: false } : null
+  })
   const [inventory, setInventory] = useState<Inventory>(() => {
     try {
       const raw = localStorage.getItem('street-life-inventory-v1')
@@ -854,11 +859,11 @@ export default function App() {
 
   function observeOrdinaryEvent(trigger: 'travel' | 'location', state: GameState, travelMode?: TravelMode, observation: Pick<EventContext, 'observation' | 'elapsedMinutes'> = {}) {
     if (activeEvent || firstNightEvents.pendingId || encounters.pendingId || !encounterDue(state)) return
-    // Opening observations keep priority; the D1+ rustle can occur away from home
+    // Opening observations keep priority; D1+ night encounters can occur away from home
     // even when the player skipped the at-home encounters on D0.
     const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(weather.temp, state.minutes), ...observation, travelMode, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
       seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
-    if (firstNightTime(state) && !firstNightEvents.seen.length && event?.id !== 'night-rustle') return
+    if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone'].includes(event?.id ?? '')) return
     if (event) rememberEncounter(event, state)
   }
 
@@ -921,7 +926,13 @@ export default function App() {
   function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
   function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(args[0]) ? ['showerGel'] : []) }
   function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
-  function applyEventOutcome(outcome: EventOutcome) { const resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents); runWithResult(activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true) }
+  function applyEventOutcome(outcome: EventOutcome) {
+    let resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents)
+    if (activeEvent?.id === 'borrow-phone-slip' && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
+      resolved = { ...resolved, message: resolved.message.replace('The screen still works.', 'You try the screen, but it stays black.') }
+    }
+    runWithResult(activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
+  }
   function storeItem(...args: Parameters<typeof storeItemImpl>) { runWithResult('Store belongings', () => storeItemImpl(...args)) }
   function takeStoredItem(...args: Parameters<typeof takeStoredItemImpl>) { runWithResult('Collect belongings', () => takeStoredItemImpl(...args)) }
   function storeFood(...args: Parameters<typeof storeFoodImpl>) { runWithResult('Store food', () => storeFoodImpl(...args)) }
@@ -1907,11 +1918,12 @@ export default function App() {
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
-        visibleStats: activeEvent?.id === 'night-rustle' && outcome.energy ? ['Energy'] : undefined,
+        visibleStats: activeEvent?.id === 'night-rustle' && outcome.energy ? ['Energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['Phone condition'] : undefined,
+        batteryInSummary: !!outcome.phoneBattery,
         ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcomeText,
           ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
     }
-    setEncounters(previous => ({ ...previous, pendingId: null }))
+    setEncounters(previous => ({ ...previous, pendingId: null, pendingRoll: null }))
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
     const foundPlace = locations.find(place => place.id === outcome.discoverLocation)
     if (foundPlace) {
@@ -1940,6 +1952,7 @@ export default function App() {
     setInventory((prev) => ({
       ...fitEventSupplies(prev, outcome).inventory,
       phoneCondition: Math.max(0, Math.min(100, prev.phoneCondition + (outcome.phoneCondition ?? 0))),
+      phoneBattery: Math.max(0, Math.min(100, prev.phoneBattery + (outcome.phoneBattery ?? 0))),
       jacket: Math.max(0, Math.min(100, prev.jacket + (outcome.jacketCondition ?? 0))),
       documents: outcome.loseDocuments ? false : prev.documents,
     }))
@@ -1961,6 +1974,10 @@ export default function App() {
 
   function checkUnavailableReason(choice: StreetEventChoice) {
     if (choice.moneyRequired !== undefined && game.money < choice.moneyRequired) return `Need ${choice.moneyRequired} zł`
+    if (choice.phoneBatteryRequired !== undefined) {
+      if (phoneUnavailable) return phoneUnavailable
+      if (inventory.phoneBattery < choice.phoneBatteryRequired) return `Need ${choice.phoneBatteryRequired}% battery`
+    }
     const requirements = choice.check?.requirements
     if (!requirements) return null
     if (requirements.minHealth !== undefined && game.health < requirements.minHealth) return `Too weak · need Health ${requirements.minHealth}`
@@ -1970,6 +1987,14 @@ export default function App() {
 
   function resolveStreetEvent(choice: StreetEventChoice) {
     if (checkUnavailableReason(choice)) return
+    if (choice.followUp && Math.random() < choice.followUp.chance) {
+      const event = STREET_EVENTS.find(event => event.id === choice.followUp!.eventId && event.continuationOnly)
+      if (event) {
+        setEncounters(previous => ({ ...previous, seen: [...new Set([...previous.seen, event.id])], pendingId: event.id, pendingRoll: null }))
+        setActiveEvent(illustrateStreetEvent(event, { locationId: game.locationId, housing: life.housing }))
+        return
+      }
+    }
     if (choice.check) {
       const unavailable = checkUnavailableReason(choice)
       if (unavailable) return
@@ -1984,6 +2009,7 @@ export default function App() {
     if (!diceCheck?.choice.check || diceCheck.roll !== null) return
     const roll = Math.floor(Math.random() * 20) + 1
     setDiceCheck({ ...diceCheck, roll, resolved: false })
+    if (activeEvent?.id === 'borrow-phone-slip') setEncounters(previous => ({ ...previous, pendingRoll: roll }))
   }
 
   function acceptDiceResult() {
@@ -2861,7 +2887,7 @@ export default function App() {
         <p>{activeEvent.text}</p>
         <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{activeEvent.choices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
-          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={choice.outcome?.minutes ? approximateDuration(choice.outcome.minutes) : undefined} />
+          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={choice.outcome?.minutes ? approximateDuration(choice.outcome.minutes) : undefined} />
         })}</ChoiceOptions>
         </div>}
       </section>

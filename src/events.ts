@@ -41,6 +41,7 @@ export type EventOutcome = {
   food?: number
   water?: number
   phoneCondition?: number
+  phoneBattery?: number
   jacketCondition?: number
   loseDocuments?: boolean
   illustration?: string
@@ -88,6 +89,8 @@ export type StreetEventChoice = {
   label: string
   icon?: IconName
   moneyRequired?: number
+  phoneBatteryRequired?: number
+  followUp?: { chance: number; eventId: string }
   outcome?: EventOutcome
   check?: DiceCheck
 }
@@ -100,6 +103,7 @@ export type StreetEvent = {
   title: string
   text: string
   weight: number
+  continuationOnly?: boolean
   eligible?: (context: EventContext) => boolean
   choices: StreetEventChoice[]
 }
@@ -123,6 +127,18 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Call out and step closer', icon:'search', outcome:{ minutes:5, mood:2, message:'“Hello? Anyone there?” You take a few careful steps towards the sound. A cat emerges from the bushes and stops to look at you. You let out a breath. “Just you, then.”' } },
     { label:'Stay still and listen', icon:'pause', outcome:{ minutes:5, message:'You stop and wait, listening for another sound. Nothing. After a few minutes, you move on, still unsure what you heard.' } },
     { label:'Walk away', icon:'walk', outcome:{ energy:-1, message:'You quicken your pace and take a longer route around the dark stretch.' } },
+  ]},
+  { id:'borrow-phone', trigger:'location', icon:'📱', title:'One quick call', text:'A man stands under a streetlight, looking down at his phone. As you approach, he looks up. “Sorry, my battery’s dead. Could I use yours? I just need to tell someone where to pick me up.”', weight:1, eligible:c=>c.locationId==='street' && c.day!==undefined && c.day>=2 && c.minutes!==undefined && (c.minutes>=1320 || c.minutes<180), choices:[
+    { label:'Hand him your phone', icon:'hand', phoneBatteryRequired:2, followUp:{ chance:0.5, eventId:'borrow-phone-slip' }, outcome:{ minutes:5, mood:3, phoneBattery:-2, message:'He makes a quick call and tells someone where he’s waiting. “They’re on their way. Thanks, you saved me a long walk.” He hands your phone back. It feels good to have helped.' } },
+    { label:'Offer to call on speaker', icon:'phone', phoneBatteryRequired:1, outcome:{ minutes:5, mood:2, phoneBattery:-1, message:'“I’ll hold it. What’s the number?” He reads it out, then leans closer to speak. The call is brief. “They’ll be here soon. Thanks for that.” You pocket your phone and carry on.' } },
+    { label:'Say no and move on', icon:'walk', outcome:{ message:'“Sorry, I can’t.” He nods. “All right.” As you walk away, he looks down the street for someone else to ask.' } },
+  ]},
+  // This stage is reached only by handing over the phone; it never spawns alone.
+  { id:'borrow-phone-slip', trigger:'location', continuationOnly:true, icon:'📱', title:'One quick call', text:'He finishes the call and holds your phone out. “Thanks, I really—” It slips from his fingers before you can take it. You reach for it.', weight:1, choices:[
+    { label:'Try to catch it · Reflex DC 11', icon:'hand', check:{ stat:'reflex', dc:11,
+      success:{ minutes:5, mood:3, phoneBattery:-2, message:'You catch it just above the pavement. For a second, neither of you speaks. “God, sorry,” he says. You check the screen before putting it safely away.' },
+      failure:{ minutes:5, mood:3, phoneBattery:-2, phoneCondition:-5, message:'Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. The screen still works. There’s a fresh dent in the corner. “I’m really sorry.” You take it back.' },
+    } },
   ]},
   { id:'cold-hands', trigger:'location', icon:'🌡️', title:'Cold fingers', text:'You have been outside for a while. Your fingers have grown stiff, and you keep curling them into your palms. The cold feels harder to ignore now that there is no warm room waiting for you.', weight:1, eligible:c=>c.locationId==='street' && c.temperature!==undefined && c.temperature<10 && (c.elapsedMinutes??0)>=15 && c.observation!=='arrival', choices:[
     { label:'Rub my hands together', outcome:{ minutes:2, mood:1, message:'You rub your palms and breathe into your cupped hands. A little warmth returns. It is only temporary, but it helps.' } },
@@ -237,6 +253,6 @@ export const STREET_EVENTS: StreetEvent[] = [
 // The prototype presents each eligible scene once, in catalog order. Spawn
 // selection consumes no randomness; D20 and consequence rolls remain separate.
 export function nextStreetEvent(trigger: EventTrigger, context: EventContext): StreetEvent | null {
-  const event = STREET_EVENTS.find(event => event.trigger === trigger && !context.seenEventIds?.includes(event.id) && (!event.eligible || event.eligible(context)))
+  const event = STREET_EVENTS.find(event => !event.continuationOnly && event.trigger === trigger && !context.seenEventIds?.includes(event.id) && (!event.eligible || event.eligible(context)))
   return event ? illustrateStreetEvent(event, context) : null
 }

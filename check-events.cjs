@@ -54,7 +54,7 @@ function advanceTravelMinutes(minutes) {
 }
 
 const encountersKey='street-life-encounters-v1';
-const complete={seen:['street-patrol-wake','station-patrol-wake','city-waking','night-rustle','cold-hands','station-cleaning','platform-question','phone-drop','rain-phone','found-coins','free-snack','ticket-check','station-food','useful-tip','rough-crowd','quiet-night','night-theft','spare-change','dropped-glove'],lastAt:null,pendingId:null};
+const complete={seen:['borrow-phone','borrow-phone-slip','street-patrol-wake','station-patrol-wake','city-waking','night-rustle','cold-hands','station-cleaning','platform-question','phone-drop','rain-phone','found-coins','free-snack','ticket-check','station-food','useful-tip','rough-crowd','quiet-night','night-theft','spare-change','dropped-glove'],lastAt:null,pendingId:null};
 // Spawn selection cannot depend on Math.random. Consequences still can.
 const esbuild=require('esbuild');const eventCode=esbuild.buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const eventModule={exports:{}};new Function('module','exports',eventCode)(eventModule,eventModule.exports);
@@ -68,8 +68,9 @@ assert(!nextStreetEvent('location',{...context,locationId:'station',minutes:600,
 assert.equal(nextStreetEvent('location',{...context,locationId:'station',minutes:1200,seenEventIds:STREET_EVENTS.filter(e=>e.id!=='station-food').map(e=>e.id)}).id,'station-food');
 // Every scene is reachable in a suitable context and exhausted queues return null.
 for(const original of STREET_EVENTS){
+ if(original.continuationOnly)continue;
  const first=original.id.startsWith('first-night-');
- const c={...context,locationId:['dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const c={...context,locationId:['borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:['night-rustle','borrow-phone'].includes(original.id)?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
  assert.equal(nextStreetEvent(original.trigger,c)?.id,original.id);
  assert.equal(nextStreetEvent(original.trigger,{...c,seenEventIds:STREET_EVENTS.map(e=>e.id)}),null);
 }
@@ -180,6 +181,94 @@ cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').tex
 click('Call out and step closer');assert.equal(read(stateKey).mood,50,'cat gain respects the street Mood ceiling');
 assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'),'result displays actual capped gain');
 ok();cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'seen rustle never repeats after reload');
+
+// A borrowed phone uses a single 50% slip decision followed by the shared D20.
+for(const day of [2,3,20])for(const minutes of [0,179,1320,1439])assert(onlyScene('borrow-phone',{day,minutes,nearHome:false}));
+for(const minutes of [180,720,1319])assert(!onlyScene('borrow-phone',{minutes}));
+for(const changes of [{day:1},{day:undefined},{locationId:'station'}])assert(!onlyScene('borrow-phone',changes));
+assert(!onlyScene('borrow-phone-slip'),'the catch stage never spawns on its own');
+const borrow=STREET_EVENTS.find(event=>event.id==='borrow-phone');
+const borrowSlip=STREET_EVENTS.find(event=>event.id==='borrow-phone-slip');
+assert.equal(borrowSlip.choices[0].check.dc,STREET_EVENTS.find(event=>event.id==='phone-drop').choices[0].check.dc);
+const borrowPending=(pendingId='borrow-phone',pendingRoll)=>({[encountersKey]:{...complete,pendingId,...(pendingRoll?{pendingRoll}:{})}});
+const borrowedState={day:3,minutes:1380,mood:30,energy:68};
+function checkBorrowResult(stem,before,battery,mood,damage=0){
+ assertEventImage('.result-illustration',stem);
+ assert.equal(read(stateKey).minutes,before.minutes+(battery?5:0));
+ assert.equal(read(stateKey).mood,before.mood+mood);
+ assert.equal(read(invKey).phoneBattery,62-battery);
+ assert.equal(read(invKey).phoneCondition,72-damage);
+ const dialog=screen.getByRole('dialog');
+ if(battery)assert(dialog.textContent.includes(`−${battery}%`),'authored battery cost remains visible');
+ if(damage){
+  const meter=dialog.querySelector('[data-stat="Phone condition"]');
+  assert(meter?.textContent.includes('−5'),'damage has the shared animated condition meter');
+  assert.equal(meter.querySelector('[role="meter"]').getAttribute('aria-valuenow'),'72','loss holds its starting value before animation');
+ }
+ assert.equal(read(encountersKey).pendingId,null);
+ assert.equal(read(encountersKey).pendingRoll,null);
+ const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after,'result pauses the clock');
+ ok();cleanup();render(React.createElement(App));
+ assert.equal(read(invKey).phoneBattery,62-battery,'reload does not charge twice');
+ assert.equal(read(invKey).phoneCondition,72-damage,'reload does not damage twice');
+ assert.equal(read(stateKey).mood,before.mood+mood,'reload does not reward twice');
+}
+for(const [index,stem,battery,mood] of [
+ [0,'return',2,3],[1,'speaker',1,2],[2,'decline',0,0]
+]){
+ setup(borrowedState,borrowPending());
+ assertEventImage('.event-illustration','event-borrow-phone');
+ const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
+ Math.random=()=>.5;click(borrow.choices[index].label);
+ checkBorrowResult(`event-borrow-phone-${stem}`,before,battery,mood);
+}
+// Boundary values cover ordinary success/failure, Energy modifiers and natural 1/20.
+for(const [energy,roll,success] of [[68,9,false],[68,10,true],[10,1,false],[10,20,true],[85,9,true]]){
+ setup({...borrowedState,energy},borrowPending());
+ const before=read(stateKey);Math.random=()=>.499999;click('Hand him your phone');
+ assertEventImage('.event-illustration','event-borrow-phone-slip');
+ assert.equal(read(encountersKey).pendingId,'borrow-phone-slip');
+ assert.equal(read(stateKey).minutes,before.minutes,'time and call effects settle once at the final result');
+ assert.equal(read(invKey).phoneBattery,62);
+ cleanup();render(React.createElement(App));
+ assertEventImage('.event-illustration','event-borrow-phone-slip');
+ advance(2000);assert.deepEqual(read(stateKey),before);
+ click(borrowSlip.choices[0].label);
+ assert(screen.getByText('REFLEX CHECK · DC 11'));
+ assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+ Math.random=()=>(roll-.5)/20;click('Roll D20');
+ assert.equal(read(encountersKey).pendingRoll,roll);
+ cleanup();Math.random=()=>{throw new Error('Reload must not reroll the slip or D20')};render(React.createElement(App));
+ assert.equal(document.querySelector('.d20').textContent,String(roll));
+ assert(!screen.queryByRole('button',{name:'Roll D20'}),'the saved roll cannot be repeated');
+ advance(2000);assert.deepEqual(read(stateKey),before);
+ click('Continue');
+ checkBorrowResult(`event-borrow-phone-${success?'caught':'dropped'}`,before,2,3,success?0:5);
+}
+// Like the existing opening calls, voice calls work without mobile internet.
+// They still require a usable device and enough battery; refusal stays available.
+for(const [inventory,service,allowed] of [
+ [{phoneBattery:0},5000,[false,false]],
+ [{phoneCondition:0},5000,[false,false]],
+ [{phoneBattery:1},5000,[false,true]],
+ [{},0,[true,true]],
+]){
+ setup(borrowedState,{...borrowPending(),[invKey]:inventory,'street-life-mobile-service-until':String(service)});
+ for(const [index,label]of ['Hand him your phone','Offer to call on speaker'].entries())assert.equal(screen.getByRole('button',{name:label,exact:true}).disabled,!allowed[index]);
+ assert(!screen.getByRole('button',{name:'Say no and move on',exact:true}).disabled);
+}
+setup(borrowedState,{...borrowPending('borrow-phone-slip'),[invKey]:{phoneCondition:3}});
+click(borrowSlip.choices[0].label);Math.random=()=>0;click('Roll D20');click('Continue');
+assert.equal(read(invKey).phoneCondition,0,'damage clamps at zero');
+assert(screen.getByRole('dialog').textContent.includes('screen, but it stays black'));
+assert(screen.getByRole('dialog').querySelector('[data-stat="Phone condition"]').textContent.includes('−3'),'the actual remaining condition loss remains visible');ok();
+// A completed call respects the Mood ceiling and Midnight is the first unlocked night.
+setup({...borrowedState,mood:49},borrowPending());Math.random=()=>.5;click('Hand him your phone');
+assert.equal(read(stateKey).mood,50);assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'));ok();
+setup({day:1,minutes:1425,mood:30},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='borrow-phone')},'street-life-left-home-v1':true});
+advance(14000);assert(!screen.queryByRole('dialog'));advance(1000);
+assertEventImage('.event-illustration','event-borrow-phone');
+click('Say no and move on');ok();advance(60000);assert(!screen.queryByRole('dialog'),'borrowed-phone encounter is once per run');
 
 // Real idle clocks supply temperature/duration; arrival alone cannot trigger cleaning.
 const openingSeen=STREET_EVENTS.filter(event=>event.id.startsWith('first-night-')).map(event=>event.id);

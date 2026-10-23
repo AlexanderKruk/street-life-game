@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-313`.
+**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-314`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -16,7 +16,7 @@ Earlier version notes and superseded designs are preserved in [Implementation hi
 | Activity cards | Animated icon; muted route/context; elapsed time first; bold action with three animated dots. Starts at `01m`, then `1h 00m`; no reserved blank hour space. |
 | Map | Dark overhead city plan with scattered landmark anchors, Street and Small Shop shortcuts, and no Map title. |
 | Results | Every Got it result uses a centered blocking modal with the shared blur/backdrop. |
-| Events | Five contextual ambient scenes and two patrol wake scenes add 28 consistent-hero illustrations. Cat reveal belongs only to the inspection answer; Station patrol alone asks for a train ticket. |
+| Events | Night encounters include the D1+ rustle and One quick call, with shared cards and contextual illustrations. Borrowing the phone has a 50% slip branch followed by the existing D20 Reflex check. |
 | Time | Ordinary gameplay/queue ×1; phone search, travel and morning packing ×4; sleep currently debug ×10. Some actions still apply time immediately. |
 | Persistence | Existing localStorage progress is preserved; the last-ten-build compatibility window is a verification policy, not ten rotating save backups. |
 
@@ -551,7 +551,7 @@ First-night observations take priority over ordinary encounters, keep their no-r
 
 Wake scenes use the same no-repeat queue and interval. First-night bench waking prioritizes Someone needs the bench. Its scene and all three answers select artwork from the actual location: the outdoor bench has an older male passer-by, while the Station hall has a distinct female passenger with a suitcase. Pending-scene reload restores the same location variant. Quiet rest merges into the sleep result; illness keeps its separate wake result and does not consume an unshown catalog scene. Food before closing is restricted to Station after 19:00 and outside the first-night window. Coin-on-pavement and passer-by food encounters require walking; ticket inspection requires paid transit.
 
-The catalog has nineteen general events plus five opening-night observations (A familiar face, An old friend, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
+The catalog has twenty general events, a continuation-only phone-catching stage, and five opening-night observations (A familiar face, An old friend, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
 
 General catalog events:
 
@@ -576,10 +576,13 @@ These scenes treat the hero as an ordinary person with a backpack. Nobody identi
 | Scene / internal ID | Context | Choices and consequences |
 |---|---|---|
 | **The city wakes up** / `city-waking` | Street, 05:00–07:00, awake. | Think about my next step: 5 min, +2 Mood. Take a moment: 5 min. Keep moving: 5 min, −1 Energy, +1 Mood. No transport or automatic new location. |
-| **A rustle behind you** / `night-rustle` | Street, 22:00–05:00, awake. An unidentified sound behind a parked car; the description and choice labels do not reveal its source. | Look to see what it is: 2 min, +2 Mood, reveals a cat in this result only. Wait and listen: 3 min, source stays unknown. Leave it alone and move on: 1 min, source stays unknown. Journal reflections preserve the same information boundary. |
+| **A rustle in the dark** / `night-rustle` | Street, displayed D1+, 22:00–05:00, awake; independent of home departure. The source of a sound on a dark path is unknown. | Call out and step closer: 5 min, +2 Mood, reveals a cat in this result only. Stay still and listen: 5 min. Walk away: −1 Energy with a visible meter. The other results never reveal the source. |
+| **One quick call** / `borrow-phone` | Street, displayed D1+, 22:00–03:00, awake; independent of home departure. | Hand him your phone: 5 min, +3 Mood, −2 Battery; 50% chance of a slip. The continuation uses the shared D20 Reflex DC 11 and Energy modifier: a catch preserves condition, failure costs 5 condition. Offer to call on speaker: 5 min, +2 Mood, −1 Battery. Say no and move on: no added time/effect. Calls require an available working phone and sufficient battery; like the opening voice calls, they work without mobile internet. |
 | **Cold fingers** / `cold-hands` | Street, below 10°C, after at least 15 min in the triggering idle/rest action; never on arrival alone. No phone/search interruption or extra cold debuff. | Rub my hands together: 2 min, +1 Mood. Walk a little to warm up: 5 min, −1 Energy, +1 Mood. Put up with it for now: −1 Mood. |
 | **Cleaning the hall** / `station-cleaning` | Station after at least 15 min of idle/rest action, never immediately on arrival. A cleaner asks for space to clean; no expulsion or document check. | Move to another bench: 3 min. Stand up and stretch: 5 min, +1 Energy. Ask where I can sit for now: 3 min, +1 Mood. Hero remains at Station. |
 | **Which platform?** / `platform-question` | Station only, any hour, awake. A traveller asks another apparent traveller about a train number. | Look at the board together: 3 min, +2 Mood. Suggest checking the departure board: 1 min, +1 Mood. Say I’m not sure either: no resource change, still a blocking acknowledged result. No phone, data plan or knowledge of a specific train is required. |
+
+One quick call is once per run and shares the 45-minute encounter interval. `borrow-phone-slip` is a saved continuation and never spawns independently. Its pending stage and rolled D20 survive reload; no call reward, battery cost or damage is applied until the final result, and each applies once. Natural 20/1 use the existing automatic success/failure rules. Seven approved images cover the opening, safe return, slip, catch, drop, speaker and refusal, with on-demand 480/768/1024px variants. Mood uses the existing cap; battery costs remain visible and the condition loss uses the shared animated result meter. See [art manifest](docs/art/borrow-phone-generation.json).
 
 
 ### Patrol waking and document checks

@@ -14,6 +14,8 @@ const art: Record<string, EventArt> = {
   },
   'city-waking': { scene: 'event-city-waking', choices: ['event-city-plan', 'event-city-pause', 'event-city-move'] },
   'night-rustle': { scene: 'event-night-rustle', choices: ['event-rustle-cat', 'event-rustle-wait', 'event-rustle-leave'] },
+  'borrow-phone': { scene: 'event-borrow-phone', choices: ['event-borrow-phone-return', 'event-borrow-phone-speaker', 'event-borrow-phone-decline'] },
+  'borrow-phone-slip': { scene: 'event-borrow-phone-slip', choices: [{ success: 'event-borrow-phone-caught', failure: 'event-borrow-phone-dropped' }] },
   'cold-hands': { scene: 'event-cold-hands', choices: ['event-cold-rub', 'event-cold-walk', 'event-cold-endure'] },
   'station-cleaning': { scene: 'event-station-cleaning', choices: ['event-cleaning-move', 'event-cleaning-stretch', 'event-cleaning-ask'] },
   'platform-question': { scene: 'event-platform-question', choices: ['event-platform-board', 'event-platform-point', 'event-platform-unsure'] },

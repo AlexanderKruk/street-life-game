@@ -2415,5 +2415,152 @@
         "file": "event-neighbour-dog-greet-1024.webp"
       }
     ]
+  },
+  "event-borrow-phone.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-borrow-phone-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-borrow-phone-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-borrow-phone-1024.webp"
+      }
+    ]
+  },
+  "event-borrow-phone-return.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-borrow-phone-return-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-borrow-phone-return-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-borrow-phone-return-1024.webp"
+      }
+    ]
+  },
+  "event-borrow-phone-slip.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-borrow-phone-slip-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-borrow-phone-slip-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-borrow-phone-slip-1024.webp"
+      }
+    ]
+  },
+  "event-borrow-phone-caught.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-borrow-phone-caught-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-borrow-phone-caught-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-borrow-phone-caught-1024.webp"
+      }
+    ]
+  },
+  "event-borrow-phone-dropped.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-borrow-phone-dropped-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-borrow-phone-dropped-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-borrow-phone-dropped-1024.webp"
+      }
+    ]
+  },
+  "event-borrow-phone-speaker.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-borrow-phone-speaker-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-borrow-phone-speaker-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-borrow-phone-speaker-1024.webp"
+      }
+    ]
+  },
+  "event-borrow-phone-decline.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-borrow-phone-decline-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-borrow-phone-decline-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-borrow-phone-decline-1024.webp"
+      }
+    ]
   }
 }

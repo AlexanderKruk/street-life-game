@@ -9,6 +9,7 @@ const eventIcons: Record<string, IconName> = {
   'station-cleaning': 'shower', 'platform-question': 'station',
   'spare-change': 'coins', 'dropped-glove': 'person',
   'phone-drop': 'phone', 'rain-phone': 'rain', 'free-snack': 'food',
+  'borrow-phone': 'phone', 'borrow-phone-slip': 'phone',
   'ticket-check': 'ticket', 'station-food': 'food', 'useful-tip': 'help',
   'rough-crowd': 'person', 'quiet-night': 'moon', 'night-theft': 'backpack',
 }

@@ -20,7 +20,7 @@ const assert=require('node:assert/strict');
 const App=require('./regression-app.cjs').default;
 const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
 const read=k=>JSON.parse(localStorage.getItem(k));
-const ambientSceneIds=['city-waking','night-rustle','cold-hands','station-cleaning','platform-question'];
+const ambientSceneIds=['borrow-phone','borrow-phone-slip','city-waking','night-rustle','cold-hands','station-cleaning','platform-question'];
 let openingEvents = false;
 function setup(s={},extra={}){
  phoneSearchButton.returnToLocation=false;
@@ -1406,8 +1406,9 @@ assert(!benchWake.eligible({...context,firstNight:false,sleepKind:'bench'}));
 const fs=require('node:fs');
 const stripArt=value=>JSON.parse(JSON.stringify(value,(key,item)=>key==='illustration'?undefined:item));
 for(const original of observationEvents) {
+ if(original.continuationOnly)continue; // Branch-only artwork is exercised in check-events.cjs.
  const first=original.id.startsWith('first-night-');
- const artContext={day:2,locationId:['dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:'Street',documents:true,firstNight:first,nearHome:true,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const artContext={day:2,locationId:['borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:['night-rustle','borrow-phone'].includes(original.id)?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:'Street',documents:true,firstNight:first,nearHome:true,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
  Math.random=()=>0;
  const chosen=eventModule.exports.nextStreetEvent(original.trigger,artContext);
  assert.equal(chosen?.id,original.id);

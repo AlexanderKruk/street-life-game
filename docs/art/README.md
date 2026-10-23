@@ -26,3 +26,8 @@ Nine main-location environment images cover Station, Night Shelter, Help Center,
 ## Familiar dog — v310
 
 [neighbour-dog-generation.json](neighbour-dog-generation.json) records the four approved images: opening, avoiding the encounter, walking past and greeting the dog. All share the same hero, grey-haired neighbour, shaggy beige-grey dog, residential courtyard and muted evening palette. WebP masters plus 480/768/1024px variants load on demand for `first-night-dog`, outside startup warmup. Outcomes use their own illustrations in the shared blocking result modal. The opening remains eligible only before the first actual trip, like the neighbour returning with groceries.
+
+
+## One quick call — v314
+
+[borrow-phone-generation.json](borrow-phone-generation.json) records the seven approved illustrations and outcome prompts. The opening fixes both men, their clothes, the residential Warsaw street and night lighting; catch/drop also reference the slip image. The hero retains the authoritative identity sheet. Each WebP master has on-demand 480/768/1024px variants. The safe return, speakerphone, refusal and D20 success/failure results use their own images in the shared result modal; the slipping image is a saved continuation before the existing Reflex check.
