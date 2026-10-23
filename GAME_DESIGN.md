@@ -728,6 +728,14 @@ The primary palette and atmosphere reference is the preserved [original Street i
 
 Apply these rules to location headers, event openings, answer/result illustrations and new narrative scenes. Keep the existing rules for populated service locations: roughly 5–10 ordinary people where appropriate, varied anonymous supporting characters and no protagonist inserted into those environment headers. Product/Essentials cutouts retain their transparent backgrounds and clear item recognition, with restrained colors consistent with the interface.
 
+#### Required visual style reference — established game rendering
+
+**Attach the actual [illustration style reference](docs/art/illustration-style-reference.webp) when generating a new narrative scene**, together with the hero sheet when the protagonist is present. This is the existing first-night bench artwork, retained as a stable reference for realistic painterly detail, readable faces/clothing, contrast, restrained saturation and the balance of cool ambient light with localized warm lamps. Its scene, downtown architecture, other character and wet pavement must not be copied into unrelated settings. Use the current Street artwork separately for residential-bench continuity.
+
+![Street Life illustration style reference](docs/art/illustration-style-reference.webp)
+
+Keep indoor rooms naturally warmer than the street while preserving the same rendering and controlled saturation. Avoid the two rejected extremes: an orange/gold cast across the whole frame, and an excessively dark, gray, flattened grade. Identity references establish the person; this style reference establishes rendering and light. The existing palette references above remain useful color guides.
+
 #### Protagonist identity reference
 
 The authoritative visual identity and wardrobe reference is [the protagonist character sheet](docs/art/hero-reference.webp). **Attach this actual image as a reference whenever generating or redrawing a scene containing the protagonist; a text description alone is insufficient.** Use the Street artwork separately for palette and mood. The hero sheet establishes identity, not permission to copy a different scene's lighting.
@@ -866,3 +874,9 @@ The single phone choice reads “Look for help on my phone. There might be somew
 ### Contextual Map introduction — v301 (2026-10-23)
 
 The Street Station suggestion selects Map with Station highlighted and its normal place card visible. It does not open the transport selector or start travel; the player presses the existing Go button to choose how to travel. Other map markers remain selectable. This suggested initial focus clears when leaving Map, and opening Map normally retains its existing default behavior. Opening the map spends no action time or battery; ordinary global time still runs. Together with the Phone/Home suggestion, this introduces existing navigation through the narrative without adding tutorial overlays or changing the design.
+
+### Prepared phone-call artwork — 2026-10-23 (not yet connected to gameplay)
+
+Three 16:9 split-screen illustrations are prepared for the opening calls. The protagonist sits on the residential bench in the left half. The unanswered call leaves the right half empty with three quiet dots; the university acquaintance is not shown or assigned an invented location. The former colleague appears at home with incidental family life in the background. The third acquaintance appears in a cramped rented room. The two answered callers have distinct faces, hair and clothing; neither is a duplicate of the protagonist. Domestic refusals are portrayed as ordinary awkward conversations, without hostile caricatures.
+
+Assets: `event-call-no-answer.webp`, `event-call-family.webp`, and `event-call-small-room.webp`, with 480/768/1024px variants registered in the responsive manifest. [Generation prompts and reference roles](docs/art/phone-call-generation.json) are retained. These files do not activate phone-call actions, Mood changes, revised narration or new progression rules; those remain a separate implementation step.

@@ -4,7 +4,7 @@ The authoritative protagonist reference is [hero-reference.webp](hero-reference.
 
 Keep his late-thirties face, tousled wavy dark brown hair, short stubble, lean ordinary build, charcoal hooded field jacket, dark sweater, blue jeans, dark walking boots and practical black backpack. He is a recently displaced office worker; avoid stereotyped ragged clothing. There is one backpack, either worn or placed nearby.
 
-New scenes use the same cinematic realistic painterly treatment, amber practical lights, slate ambient colors and autumn Warsaw setting. Event and outcome artwork is 16:9. Ordinary and critical D20 successes share a success image; failures share a failure image.
+New scenes must attach [illustration-style-reference.webp](illustration-style-reference.webp) for the established realistic painterly rendering and balanced light, alongside [hero-reference.webp](hero-reference.webp) for identity when needed. Use cool slate ambient colors with localized softly warm practical lights; preserve readable faces and clothing. Keep saturation restrained, avoiding both orange/gold grading across the entire image and an overly dark gray wash. The reference is also embedded in GAME_DESIGN.md. Event and outcome artwork is 16:9. Ordinary and critical D20 successes share a success image; failures share a failure image.
 
 Thirty new scene/outcome images cover all ten previously unillustrated catalog events and the separate rain/canopy flow. Quiet waking selects ground, bench or night-shelter artwork from the actual sleep context. The four existing first-night events and their twelve outcome images are retained.
 
@@ -17,3 +17,7 @@ The ambient/patrol expansion adds 28 images: seven openings and three distinct a
 Bench waking now has distinct Street and Station scene/answer sets. The existing outdoor set retains its older male passer-by. Four additional Station images use the same protagonist and a different female passenger with a suitcase inside the hall. Selection follows actual location, including a restored pending event. [bench-wake-station-generation.json](bench-wake-station-generation.json) records the selected prompts, references and assets; all new images have responsive 480/768/1024-pixel variants.
 
 Nine main-location environment images cover Station, Night Shelter, Help Center, Schronisko, Day Center, Free Clinic, Hospital, Job Centre and Day Work. These show the places in everyday use, with roughly 5–10 visitors, residents, patients or workers and no protagonist; they are not event illustrations. [location-generation.json](location-generation.json) retains exact built-in image-generation prompts, references and saved asset paths. Responsive 480/768/1024/1400px variants load only for the visited place and stay outside startup warmup. Street and Shop retain their existing artwork.
+
+## Opening phone calls — prepared artwork
+
+[phone-call-generation.json](phone-call-generation.json) records three standalone split-screen images and their exact prompts: unanswered call with a quiet empty half and three dots, former colleague at home with family, and acquaintance renting one small room. The left half retains the same protagonist and residential bench. Each image has 480/768/1024px WebP variants. These are prepared assets only; gameplay wiring is pending.

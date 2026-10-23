@@ -2184,5 +2184,68 @@
         "file": "location-day-work-1400.webp"
       }
     ]
+  },
+  "event-call-no-answer.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-call-no-answer-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-call-no-answer-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-call-no-answer-1024.webp"
+      }
+    ]
+  },
+  "event-call-family.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-call-family-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-call-family-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-call-family-1024.webp"
+      }
+    ]
+  },
+  "event-call-small-room.webp": {
+    "width": 1400,
+    "height": 788,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-call-small-room-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-call-small-room-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-call-small-room-1024.webp"
+      }
+    ]
   }
 }
