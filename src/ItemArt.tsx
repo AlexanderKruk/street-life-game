@@ -10,7 +10,8 @@ const positions = {
 export type ItemArtId = keyof typeof positions | 'readyMeal'
 const equipment = new Set<ItemArtId>(['phone', 'clothing', 'documents', 'transitCard', 'bottles', 'empty'])
 
-export default memo(function ItemArt({ id, className = 'inventory-art' }: { id: ItemArtId; className?: string }) {
+export default memo(function ItemArt({ id, className = 'inventory-art', condition = 100 }: { id: ItemArtId; className?: string; condition?: number }) {
+  if (id === 'phone') return <span className={className} aria-hidden="true" style={{ backgroundImage: densityImageSet(condition >= 60 ? 'item-phone-good' : condition >= 30 ? 'item-phone-worn' : 'item-phone-damaged'), backgroundPosition: 'center', backgroundSize: 'contain' }} />
   if (id === 'readyMeal') return <span className={className} aria-hidden="true" style={{ backgroundImage: densityImageSet('ready-meal'), backgroundPosition: 'center', backgroundSize: 'contain' }} />
   const essentials = equipment.has(id)
   if (id === 'bottles') return <span className={className} aria-hidden="true" style={{

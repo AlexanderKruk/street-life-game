@@ -1,0 +1,41 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "date": "2026-10-23",
+  "style": "Restrained realistic painterly transparent inventory cutouts; same device and camera angle across condition states.",
+  "thresholds": {
+    "good": "Condition >= 60 (starting Condition 72)",
+    "worn": "30 <= Condition < 60",
+    "damaged": "Condition < 30, including broken at 0"
+  },
+  "assets": [
+    {
+      "state": "good",
+      "asset": "public/assets/item-phone-good.webp",
+      "source": "exec-d179f2fd-7272-411e-a42c-d32afa6e6aa0.png",
+      "references": [
+        "Original generated intact phone; formerly the lightly worn preview, selected by user as the normal condition state"
+      ],
+      "prompt": "Use case: precise-object-edit. Asset type: one transparent inventory smartphone cutout, moderately worn condition, for Street Life Simulator. The provided image is the exact phone to edit. Preserve its exact model, silhouette, pose, camera angle, counterclockwise tilt, framing, size, earpiece/camera/notch/button positions, graphite screen and muted bronze-gray rim. Change ONLY wear: visible scuffing along the rim and a handful of fine surface scratches across the otherwise INTACT glass, subtle daily-use rubbed marks. This is a worn but still usable phone at 30–59% condition. No fractured or shattered glass, no spiderweb cracks, no missing pieces, no mud, no water, no luminous screen. Keep screen off with same soft reflection. Keep realistic lightly painterly game style and restrained gray/brown palette; retain enough edge contrast for charcoal UI. Genuinely transparent background with same clean alpha, no added backdrop, surface, cast shadow, halo, text or logo. ONE phone, full object visible in same square canvas. Edit only condition, keep everything else unchanged."
+    },
+    {
+      "state": "worn",
+      "asset": "public/assets/item-phone-worn.webp",
+      "source": "exec-508182b5-9c65-4965-8db9-c7fd5888fb74.png",
+      "references": [
+        "Selected good phone: same model, pose, scale and ordinary use wear"
+      ],
+      "prompt": "Use case: precise-object-edit. Asset: transparent inventory phone cutout for the medium condition state of Street Life Simulator. The supplied image is the exact base phone to edit and must stay recognizably identical. Preserve the exact device model, full outer silhouette, screen shape, earpiece/notch/cameras/buttons, front oblique view, counterclockwise tilt, object scale and position, muted bronze-gray rim, dark switched-off screen with the same reflection, and existing light everyday scuffing. Add ONLY ONE CLEAR NOTICEABLE GLASS CRACK: a single continuous slightly irregular diagonal fracture crossing the middle of the screen from near the right edge about one-third down toward the lower-left portion of the display. One connected simple fracture line, easy to recognise at small inventory-icon size. NO branching network, NO spiderweb, no extra cracks, no broken corners, no missing glass, no loose or sharp glass pieces, no holes or exposed electronics. The glass remains fully seated and smooth at its perimeter. Do not amplify dirt or distress beyond base image. Keep same realistic lightly painterly style and restrained gray/brown palette. Exactly one complete phone on genuinely transparent background; no backdrop, no surface, no drop shadow, no glow, no labels, no text, no logo. Preserve composition and everything except that one crack."
+    },
+    {
+      "state": "damaged",
+      "asset": "public/assets/item-phone-damaged.webp",
+      "source": "exec-e3e6446c-99b8-4798-8a6e-d6050935afa6.png",
+      "references": [
+        "Generated medium-condition image exec-508182b5-9c65-4965-8db9-c7fd5888fb74.png: preserve the original diagonal fracture and the exact same phone"
+      ],
+      "prompt": "Use case: precise-object-edit. The provided transparent phone is the EXACT MEDIUM-DAMAGE STATE which must be advanced to a worse state, NOT redrawn or replaced. ABSOLUTE INVARIANTS: keep the identical phone, outer contour, all hardware, earpiece/camera/notch, perspective, counterclockwise tilt, pixel framing, screen reflection, existing scuff marks and lighting. MOST IMPORTANT: PRESERVE THE EXISTING SINGLE LARGE DIAGONAL CRACK EXACTLY IN PLACE. It already runs from the screen's right edge around one-third of its height diagonally down-left to the left edge around two-thirds height. This same continuous crack and all its bends MUST remain visibly intact, unchanged, in the final image. Do not remove, shift, straighten, erase or redraw that original fracture. ONLY ADD a few secondary contained glass fractures on the RIGHT SIDE: 3–4 thinner jagged cracks branching from the RIGHT-HAND portion of that original diagonal crack and spreading down through the rightmost third toward the bottom-right glass area. The result reads as the same phone after additional damage: original long diagonal crack plus a small localized branch network at the right. Keep the rest of the display mostly intact, no full-screen web. NO new impact crater, NO missing glass, NO loose sharp fragments, NO chips in the silhouette, NO protruding pieces, NO exposed electronics. Outer glass perimeter and rim remain complete and smooth. Same restrained realistic painterly inventory style, dark switched-off screen, muted gray/bronze palette. Preserve genuine transparency and full phone in same square framing. No backdrop, surface, cast shadow, glow, text, labels or extra objects. This is a minimal additive edit of the supplied medium phone; change only by adding the few right-side cracks."
+    }
+  ],
+  "packaging": "scripts/pack-phone-art.py: alpha-preserving crop/padding, uniform resize and WebP encoding only; per-asset density variants 160/320/480px.",
+  "revision": "User revision: reuse the former lightly worn preview as the good state; medium has one visible diagonal crack; damaged derives from that exact medium image, preserving its crack and adding contained right-side branches, with intact glass edges."
+}

@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-303`.
+**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-304`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -890,3 +890,9 @@ Calls reuse the existing ×4 activity clock (one game minute every 250 ms), navi
 As of v303, Mood changes have no small-loss threshold in any result modal: even −1 is visible. Completed calls show the negative Mood delta and Battery expense beside elapsed time using the existing summary icons and colors, without duplicate Mood or Battery bars. Summary Mood and Battery deltas display whole numbers, rounded to the nearest point with a minimum magnitude of 1 for nonzero changes; underlying calculations retain full precision, with no special minimum charge for calls. Interrupted or stopped calls also show their expense. Other stats retain their existing passive-loss filter.
 
 After the third completed call, the phone thought returns to Phone/Home and the Station thought opens Map with Station highlighted. The bottom Map and Phone tabs remain available before the calls, so the sequence does not lock the player out of known places or help. Low-energy sleep fallbacks remain available. Call progress uses `street-life-opening-calls-v1` and joins the existing autosave; active calls use the existing resumable phone-activity state. Reset starts at contact zero and Mood 30. Existing saves without the call-progress key retain their stats and skip the new sequence rather than being rewound.
+
+### Inventory phone condition artwork — v304 (2026-10-23)
+
+The Phone Essentials card selects one of three transparent cutouts from actual `phoneCondition`: 60–100 uses `item-phone-good.webp` (normally used with light scuffing, based on the user-selected second preview), 30–59 uses `item-phone-worn.webp` (one noticeable screen crack), and below 30 uses `item-phone-damaged.webp` (the same original diagonal crack plus additional branches on the right side, with no missing glass or sharp protruding pieces). The same device, angle, scale and muted rendering are retained across all three images. Initial Condition remains 72, so a new game shows the intact phone; existing save values are preserved. Battery charge does not select the condition artwork, and existing broken-phone behavior at Condition 0 remains in effect.
+
+Each 512px WebP master has 160/320/480px density variants for mobile/desktop, loaded on demand rather than warming all conditions at startup. The old atlas is retained for its other equipment; Phone uses the new individual cutouts. [Generation prompts and asset paths](docs/art/phone-condition-generation.json) record the built-in imagegen edits and their references. `scripts/pack-phone-art.py` only normalizes transparent padding and encodes the selected images.

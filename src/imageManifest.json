@@ -2247,5 +2247,68 @@
         "file": "event-call-small-room-1024.webp"
       }
     ]
+  },
+  "item-phone-good.webp": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 160,
+        "height": 160,
+        "file": "item-phone-good-160.webp"
+      },
+      {
+        "width": 320,
+        "height": 320,
+        "file": "item-phone-good-320.webp"
+      },
+      {
+        "width": 480,
+        "height": 480,
+        "file": "item-phone-good-480.webp"
+      }
+    ]
+  },
+  "item-phone-worn.webp": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 160,
+        "height": 160,
+        "file": "item-phone-worn-160.webp"
+      },
+      {
+        "width": 320,
+        "height": 320,
+        "file": "item-phone-worn-320.webp"
+      },
+      {
+        "width": 480,
+        "height": 480,
+        "file": "item-phone-worn-480.webp"
+      }
+    ]
+  },
+  "item-phone-damaged.webp": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 160,
+        "height": 160,
+        "file": "item-phone-damaged-160.webp"
+      },
+      {
+        "width": 320,
+        "height": 320,
+        "file": "item-phone-damaged-320.webp"
+      },
+      {
+        "width": 480,
+        "height": 480,
+        "file": "item-phone-damaged-480.webp"
+      }
+    ]
   }
 }

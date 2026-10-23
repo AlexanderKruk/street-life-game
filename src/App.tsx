@@ -40,7 +40,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.23-303'
+const BUILD_VERSION = 'v2026.10.23-304'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2639,7 +2639,7 @@ export default function App() {
       <div className="inventory-section-heading essentials-heading"><strong>Essentials</strong></div>
       <div className="inventory-grid essentials-grid">
         <div className="inventory-item">
-          <ItemArt id="phone" /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%{shelterPhoneCharging ? ' · Charging' : ''}<br />Condition {Math.round(inventory.phoneCondition)}%</small></div>
+          <ItemArt id="phone" condition={inventory.phoneCondition} /><div><strong>Phone</strong><small>Battery {Math.round(inventory.phoneBattery)}%{shelterPhoneCharging ? ' · Charging' : ''}<br />Condition {Math.round(inventory.phoneCondition)}%</small></div>
         </div>
         <div className="inventory-item">
           <ItemArt id="clothing" /><div><strong>Clothing</strong><small>Clean {Math.round(inventory.clothingCleanliness)}%<br />Condition {Math.round(inventory.jacket)}%</small></div>
