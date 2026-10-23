@@ -40,7 +40,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.23-306'
+const BUILD_VERSION = 'v2026.10.23-307'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -855,7 +855,7 @@ export default function App() {
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime, pendingResult.consumedItems)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     const memories = [
-      { id: 'office-routine', titles: ['Walk through the city', 'Walk with music'], text: 'In your late thirties, you had a steady office job and a desk by the window. Then came the redundancy notice.' },
+      { id: 'office-routine', titles: ['Walk through the city'], text: 'In your late thirties, you had a steady office job and a desk by the window. Then came the redundancy notice.' },
       { id: 'redundancy-savings', titles: ['Rest on the bench', 'Sit and recover', 'Shelter from the rain'], text: 'After the redundancy, you expected to find another job in a few weeks. As the search dragged on, rent and ordinary expenses used up what you had put aside.' },
       { id: 'unanswered-applications', titles: ['Where can I get help in the morning?'], text: 'Your last job application still has no reply. The redundancy email is still in your inbox.' },
       { id: 'lost-home', titles: ['How can I get a shelter bed?'], text: 'Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning.' },
@@ -1436,26 +1436,29 @@ export default function App() {
   function walkCity(withMusic = false) {
     if (current.id !== 'street' || sleeping || trip || activeEvent || infoModal) return
     if (withMusic && !canWalkWithMusic) return
-    const playingMusic = withMusic || musicOn
+    // The authored music walk has one +3 reward, rather than stacked walking/music bonuses.
+    const passiveMusic = !withMusic && musicOn
+    const musicText = 'You walk with familiar music in your headphones. For a while, your thoughts feel less heavy.'
+    const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
     runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
       setRainChoice(false)
       setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
       const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
-      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: playingMusic })
+      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: passiveMusic })
       if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
-      next = applyGameAction(next, { minutes: 15, energy: -1, mood: 2 }, { ...moodContext(next), walking: true, music: playingMusic })
-      if (withMusic) next.mood = Math.min(moodLimit(next, moodContext(next)).cap, next.mood + 8)
+      next = applyGameAction(next, { minutes: 15, energy: -1, mood: withMusic ? 0 : 2 }, { ...moodContext(next), walking: true, music: passiveMusic })
+      if (withMusic) next.mood = Math.min(moodLimit(next, moodContext(next)).cap, next.mood + 3)
       const wet = (next.rainUntil ?? 0) > absoluteMinutes(next) || weather.label === 'Rain' || weather.label === 'Showers'
       setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440)) }))
       setGame(next)
-      const musicText = withMusic ? ' You put on familiar music. A few songs play as you pass the dark shop windows.' : ''
       if (CLOTHING_WETNESS_ENABLED && wet) {
         setRainChoice(rainResponse?.episode !== rainEpisode(next))
-        const rainText = (startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.') + musicText
-        setInfoModal({ title: withMusic ? 'Walk with music' : 'Walk through the city', text: rainText, illustration: '/street-life-game/assets/event-rain-street.webp', illustrationAlt: 'Rain grows heavier as you notice a canopy above a closed shop.' })
+        const rainText = withMusic ? 'Rain taps against your jacket. Familiar music helps you settle your thoughts.' : startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.'
+        setInfoModal({ title: withMusic ? 'Walk with music' : 'Walk through the city', text: rainText, illustration: withMusic ? musicIllustration : '/street-life-game/assets/event-rain-street.webp', illustrationAlt: withMusic ? 'You walk through the neighbourhood wearing full-size over-ear headphones.' : 'Rain grows heavier as you notice a canopy above a closed shop.', batteryInSummary: withMusic })
         setMessage(rainText)
       } else {
-        setMessage('You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.' + musicText)
+        setMessage(withMusic ? musicText : 'You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.')
+        if (withMusic) setInfoModal({ title: 'Walk with music', text: musicText, illustration: musicIllustration, illustrationAlt: 'You walk through the neighbourhood wearing full-size over-ear headphones.', batteryInSummary: true })
         if (!observeFirstNight('walk', next)) observeOrdinaryEvent('travel', next, 'walk')
       }
     }, resultSnapshot(), true, true)

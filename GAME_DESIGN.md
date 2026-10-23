@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-306`.
+**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-307`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -52,7 +52,7 @@ Keep the first narrator message to two or three short sentences about the presen
 | Checking the phone | Your last job application still has no reply. The redundancy email is still in your inbox. |
 | Looking for somewhere to sleep | Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning. |
 
-These examples guide the implemented action-linked fragments. A completed normal/music walk reveals office routine; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications; the shelter-bed question reveals the loss of accommodation. Each fragment is appended to the existing result text, logged in Phone → History, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
+These examples guide the implemented action-linked fragments. A completed ordinary walk reveals office routine; the illustrated music-walk result stays brief and does not append this fragment; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications; the shelter-bed question reveals the loss of accommodation. Each fragment is appended to the existing result text, logged in Phone → History, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
 
 ### Voice and knowledge
 
@@ -671,7 +671,7 @@ The shared sticky header shows day/time, money, weather, Mood and actual phone B
 
 Street curates at most three direct thoughts: a phone thought (the opening-call sequence, then Phone/Home), a rest/movement choice and a practical response. During pending opening calls the practical direction is withheld, leaving two thoughts. Enabled choices come first and eligible choice order is seeded/shuffled rather than always placing the safe response first. There is no intention submenu or generic Other actions button. Opening-night money/work/bottle options are withheld until later; location knowledge arrives through observation, recall and authored phone answers. Narrator describes observable surroundings; first-person choices express possible intentions without prescribing the player's feelings.
 
-Street decisions themselves keep ordinary time running. Result/event/parameter modals pause it as described under Time. A music walk is a 30-minute direct action with normal walking costs and an explicit Mood bonus within the current Mood ceiling; there are no visible global music/video switches.
+Street decisions themselves keep ordinary time running. Result/event/parameter modals pause it as described under Time. A music walk is a 30-minute direct action with normal walking costs and one explicit +3 Mood reward within the current Mood ceiling; it does not stack the ordinary walk’s +2 or passive music gain; there are no visible global music/video switches.
 
 ### Visual style and typography (v280)
 
@@ -896,3 +896,9 @@ After the third completed call, the phone thought returns to Phone/Home and the 
 The Phone Essentials card selects one of three transparent cutouts from actual `phoneCondition`: 60–100 uses `item-phone-good.webp` (normally used with light scuffing, based on the user-selected second preview), 30–59 uses `item-phone-worn.webp` (one noticeable screen crack), and below 30 uses `item-phone-damaged.webp` (the same original diagonal crack plus additional branches on the right side, with no missing glass or sharp protruding pieces). The same device, angle, scale and muted rendering are retained across all three images. Initial Condition remains 72, so a new game shows the intact phone; existing save values are preserved. Battery charge does not select the condition artwork, and existing broken-phone behavior at Condition 0 remains in effect.
 
 Each 512px WebP master has 160/320/480px density variants for mobile/desktop, loaded on demand rather than warming all conditions at startup. The old atlas is retained for its other equipment; Phone uses the new individual cutouts. [Generation prompts and asset paths](docs/art/phone-condition-generation.json) record the built-in imagegen edits and their references. `scripts/pack-phone-art.py` only normalizes transparent padding and encodes the selected images.
+
+### Illustrated music-walk result — v307 (2026-10-23)
+
+Walk with music uses the same blocking illustrated ResultCard as calls, including the shared animated Mood stat card and signed gain. The body reads: “You walk with familiar music in your headphones. For a while, your thoughts feel less heavy.” The office-routine backstory is omitted from this result. The authored reward is +3 Mood, capped by current limits (for example 49 → 50 displays +1); ordinary walking bonuses and passive music gains are not added to this action. Existing time (30 minutes), needs, battery cost, event observations and pause behavior remain. Existing illness/weather penalties still apply to actual net results. Time and rounded battery expense share the summary row.
+
+`event-music-walk.webp` shows the authoritative hero in full-size over-ear headphones in the first-night residential neighbourhood. Its 480/768/1024px variants load on demand. [Generation prompt and references](docs/art/music-walk-generation.json) record the identity sheet, established rendering and Street setting references.

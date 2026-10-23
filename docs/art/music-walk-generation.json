@@ -1,0 +1,18 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "date": "2026-10-23",
+  "asset": "public/assets/event-music-walk.webp",
+  "variants": [
+    480,
+    768,
+    1024
+  ],
+  "source": "exec-128ab75a-3800-4fa6-acc1-8f74e2709957.png",
+  "references": {
+    "docs/art/hero-reference.webp": "Authoritative hero identity and wardrobe",
+    "docs/art/illustration-style-reference.webp": "Established rendering and restrained lighting, not scene content",
+    "public/assets/street-hero.webp": "Residential first-night setting continuity"
+  },
+  "prompt": "Use case: illustration-story. Asset type: full-width 16:9 illustration at the top of the existing Walk with music result modal in Street Life Simulator. Input roles: image 1 is the authoritative protagonist identity and wardrobe sheet; image 2 is the established realistic painterly rendering and subdued light reference ONLY, not a scene to copy; image 3 is residential Warsaw neighbourhood / first-night setting continuity. Scene: the same protagonist walks slowly along an ordinary apartment-block footpath in a quiet Warsaw residential neighbourhood in the late evening, with a few softly glowing apartment windows and restrained warm streetlamps. Subject: exactly the same late-thirties man as hero sheet, wavy tousled dark-brown hair, short stubble, long straight nose, same facial proportions, charcoal hooded jacket over dark sweater, blue jeans, exactly ONE black backpack worn naturally. He is wearing LARGE FULL-SIZE OVER-EAR HEADPHONES ON HIS HEAD, thick padded black earcups completely covering both ears and visible padded headband over his hair. Clearly recognizable full headphones, not earbuds, not around neck. Three-quarter view at eye level, medium shot from upper thighs upward, walking rather than sitting. His expression remains tired but slightly calmer, shoulders easing as he listens; no grin, no triumphant pose. Phone stays in pocket, relaxed hands, no extra props. Composition: protagonist on left/center with head, headphones and backpack readable at mobile thumbnail sizes; residential path and apartment windows behind, at most a couple of distant ordinary pedestrians. No city-centre landmark, no metro station, no crowd. Rendering/palette: match references' detailed realistic painterly game illustration, muted slate blue-gray and charcoal with weathered neutral browns; soft localized warm lamps/windows, natural skin, controlled contrast. Quiet, sad and calm, a small moment of relief. Avoid glossy photography, stylized cartoon, cinematic orange/teal grading, bright gold pavement, oversaturated trees, heavy uniform darkness, smiling model, dramatic spotlights. One coherent landscape scene, full bleed, no split-screen, no UI, no borders, no text, no logos. Opaque background. Wide 16:9 framing.",
+  "packaging": "Alpha-free master WebP and proportional responsive encodes only; no manual visual edits."
+}

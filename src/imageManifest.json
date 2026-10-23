@@ -2310,5 +2310,26 @@
         "file": "item-phone-damaged-480.webp"
       }
     ]
+  },
+  "event-music-walk.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-music-walk-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-music-walk-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-music-walk-1024.webp"
+      }
+    ]
   }
 }
