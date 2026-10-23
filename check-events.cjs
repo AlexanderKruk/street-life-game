@@ -59,7 +59,7 @@ const complete={seen:['street-patrol-wake','station-patrol-wake','city-waking','
 const esbuild=require('esbuild');const eventCode=esbuild.buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const eventModule={exports:{}};new Function('module','exports',eventCode)(eventModule,eventModule.exports);
 const {nextStreetEvent,STREET_EVENTS}=eventModule.exports;
-const context={locationId:'street',weather:'Clear',housing:'Street',documents:true,minutes:600,nearHome:true};
+const context={locationId:'street',day:2,weather:'Clear',housing:'Street',documents:true,minutes:600,nearHome:true};
 Math.random=()=>{throw new Error('Spawn must not roll')};
 assert.equal(nextStreetEvent('travel',{...context,travelMode:'walk'}).id,'phone-drop');
 assert.equal(nextStreetEvent('travel',{...context,travelMode:'walk',seenEventIds:['phone-drop']}).id,'found-coins');
@@ -82,6 +82,8 @@ function onlyScene(id,changes={}){
 for(const minute of [1320,0,299])assert(onlyScene('night-rustle',{minutes:minute}));
 for(const minute of [300,720,1319])assert(!onlyScene('night-rustle',{minutes:minute}));
 assert(!onlyScene('night-rustle',{locationId:'station'}));
+for(const day of [0,1,undefined])for(const minutes of [0,299,1320,1439])assert(!onlyScene('night-rustle',{day,minutes}),'rustle starts at displayed D1');
+for(const day of [2,3,20])for(const minutes of [0,299,1320,1439])assert(onlyScene('night-rustle',{day,minutes,nearHome:false}),'rustle does not require the former home');
 for(const minute of [300,419])assert(onlyScene('city-waking',{minutes:minute}));
 for(const minute of [299,420,1380])assert(!onlyScene('city-waking',{minutes:minute}));
 assert(!onlyScene('city-waking',{minutes:330,locationId:'station'}));
@@ -96,6 +98,7 @@ for(const id of ['spare-change','dropped-glove','useful-tip','free-snack']){
 }
 assert(onlyScene('spare-change',{locationId:'station',minutes:60}));
 const rustle=STREET_EVENTS.find(event=>event.id==='night-rustle');
+assert(!/car|bush/i.test(rustle.text),'opening does not locate the sound');
 assert(!/\bcat\b/i.test(JSON.stringify({title:rustle.title,text:rustle.text,icon:rustle.icon,choices:rustle.choices.map(choice=>choice.label)})),'mystery opening must not reveal the cat');
 assert(/\bcat\b/i.test(rustle.choices[0].outcome.message));
 assert(rustle.choices.slice(1).every(choice=>!/\bcat\b/i.test(choice.outcome.message)));
@@ -129,7 +132,7 @@ const ambientIds=['city-waking','night-rustle','cold-hands','station-cleaning','
 for(const id of ambientIds){
  const event=STREET_EVENTS.find(event=>event.id===id);
  for(const choice of event.choices){
-  setup({day:3,minutes:id==='city-waking'?330:1380,locationId:id.startsWith('station')||id==='platform-question'?'station':'street'},
+  setup({day:3,mood:30,minutes:id==='city-waking'?330:1380,locationId:id.startsWith('station')||id==='platform-question'?'station':'street'},
    {[encountersKey]:{...complete,pendingId:id}});
   assert(screen.getByRole('dialog').textContent.includes(event.title));
   assertEventImage('.event-illustration',newEventArt[id][0]);
@@ -141,19 +144,47 @@ for(const id of ambientIds){
   assertEventImage('.result-illustration',answerArt);
   assert.equal(read(stateKey).minutes,paused.minutes+(choice.outcome.minutes??0));
   if(id==='night-rustle'){
-   const revealed=choice.label==='Look to see what it is';
+   const revealed=choice.label==='Call out and step closer';
    assert.equal(/\bcat\b/i.test(result),revealed);
    const journal=read('street-life-journal-history-v1').at(-1);
-   assert.equal(/laugh at myself/.test(journal.text),revealed);
+   assert.equal(/Just a cat/.test(journal.text),revealed);
+   assert.equal(read(stateKey).mood,paused.mood+(choice.outcome.mood??0));
+   if(revealed){
+    const stat=screen.getByRole('dialog').querySelector('[data-stat="Mood"]');
+    assert(stat,'cat reward uses the same animated stat card as neighbour results');
+    assert(stat.textContent.includes('+2'));
+    assert.equal(stat.querySelector('[role="meter"]').getAttribute('aria-valuenow'),String(paused.mood),'gain holds its starting value until the image loads');
+   }
+   if(choice.label==='Walk away'){
+    assert.equal(read(stateKey).energy,paused.energy-1);
+    const energy=screen.getByRole('dialog').querySelector('[data-stat="Energy"]');
+    assert(energy?.textContent.includes('−1'),'authored detour loss remains visible despite the passive-drain filter');
+    assert(journal.text.includes('longer way around'));
+   }
   }
   const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after);ok();
   assert(!screen.queryByRole('dialog'));assert.equal(read(encountersKey).pendingId,null);
  }
 }
+// Midnight unlocks the rustle away from home even if D0 home scenes were skipped.
+setup({day:1,minutes:1425,mood:49},{
+ [encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='night-rustle')},
+ 'street-life-first-night-events-v1':{seen:[],lastAt:null,pendingId:null},
+ 'street-life-left-home-v1':true,
+});
+advance(14000);assert(!screen.queryByRole('dialog'),'D0 does not admit the rustle');
+advance(1000);assert.equal(read(stateKey).day,2);assert.equal(read(stateKey).minutes,0);
+assert(screen.getByRole('dialog').textContent.includes(rustle.title));
+const midnightState=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),midnightState);
+cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes(rustle.title),'pending rustle survives reload');
+click('Call out and step closer');assert.equal(read(stateKey).mood,50,'cat gain respects the street Mood ceiling');
+assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'),'result displays actual capped gain');
+ok();cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'seen rustle never repeats after reload');
+
 // Real idle clocks supply temperature/duration; arrival alone cannot trigger cleaning.
 const openingSeen=STREET_EVENTS.filter(event=>event.id.startsWith('first-night-')).map(event=>event.id);
 for(const [id,state] of [
- ['night-rustle',{day:1,minutes:1380}],['city-waking',{day:2,minutes:300}],
+ ['night-rustle',{day:2,minutes:0}],['city-waking',{day:2,minutes:300}],
  ['cold-hands',{day:2,minutes:60}],['station-cleaning',{day:2,minutes:60,locationId:'station'}]
 ]){
  setup(state,{[encountersKey]:{...complete,seen:complete.seen.filter(seen=>seen!==id)},
@@ -269,7 +300,7 @@ for(const [id,end] of [['first-night-door',1380],['first-night-dog',1440]]) {
 }
 // Runtime idle observations use the actual clock, including the midnight wrap.
 for(const [day,start,title,display] of [[1,1364,'A familiar face','D0 Mo'],[1,1365,'An old friend','D0 Mo'],[1,1424,'An old friend','D0 Mo'],[1,1425,null,'D1 Tu'],[2,0,null,'D1 Tu'],[2,1320,null,'D1 Tu']]) {
- setup({day,minutes:start,mood:30});advance(15000);
+ setup({day,minutes:start,mood:30},{[encountersKey]:complete});advance(15000);
  assert.equal(document.querySelector('.game-day').textContent,display);
  assert.equal(read(stateKey).day,display.startsWith('D0')?1:2,'display conversion does not change stored days');
  if(title)assert(screen.getByRole('dialog').textContent.includes(title),`Day ${day}, start ${start}: expected ${title}, got ${screen.getByRole('dialog').textContent}`);

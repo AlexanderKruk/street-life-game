@@ -41,7 +41,7 @@ import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 import { displayDay } from './gameDate'
 
-const BUILD_VERSION = 'v2026.10.23-312'
+const BUILD_VERSION = 'v2026.10.23-313'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -854,10 +854,11 @@ export default function App() {
 
   function observeOrdinaryEvent(trigger: 'travel' | 'location', state: GameState, travelMode?: TravelMode, observation: Pick<EventContext, 'observation' | 'elapsedMinutes'> = {}) {
     if (activeEvent || firstNightEvents.pendingId || encounters.pendingId || !encounterDue(state)) return
-    // Let an opening observation establish the first night before ordinary encounters.
-    if (firstNightTime(state) && !firstNightEvents.seen.length) return
-    const event = nextStreetEvent(trigger, { locationId: state.locationId, minutes: state.minutes, temperature: temperatureAt(weather.temp, state.minutes), ...observation, travelMode, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
+    // Opening observations keep priority; the D1+ rustle can occur away from home
+    // even when the player skipped the at-home encounters on D0.
+    const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(weather.temp, state.minutes), ...observation, travelMode, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
       seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
+    if (firstNightTime(state) && !firstNightEvents.seen.length && event?.id !== 'night-rustle') return
     if (event) rememberEncounter(event, state)
   }
 
@@ -1906,6 +1907,7 @@ export default function App() {
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
+        visibleStats: activeEvent?.id === 'night-rustle' && outcome.energy ? ['Energy'] : undefined,
         ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcomeText,
           ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
     }

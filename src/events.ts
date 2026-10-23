@@ -1,5 +1,6 @@
 import { illustrateStreetEvent } from './eventArtwork'
 import type { Housing } from './game'
+import type { IconName } from './Icon'
 
 export type EventTrigger = 'travel' | 'location' | 'wake' | 'walk' | 'bench'
 
@@ -10,6 +11,8 @@ export function firstNightTime(state: { day: number; minutes: number }) {
 
 export type EventContext = {
   locationId: string
+  /** Stored one-based calendar day: displayed D1 is day 2. */
+  day?: number
   minutes?: number
   temperature?: number
   observation?: 'idle' | 'action' | 'arrival'
@@ -83,6 +86,7 @@ export type DiceCheck = {
 
 export type StreetEventChoice = {
   label: string
+  icon?: IconName
   moneyRequired?: number
   outcome?: EventOutcome
   check?: DiceCheck
@@ -115,10 +119,10 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Take a moment', outcome:{ minutes:5, message:'You watch the windows light up. For everyone inside, this may be an ordinary morning. You take a breath before joining it.' } },
     { label:'Keep moving', outcome:{ minutes:5, energy:-1, mood:1, message:'You adjust your backpack and walk towards the waking streets. The night is over. You still need a plan for the day.' } },
   ]},
-  { id:'night-rustle', trigger:'location', icon:'❔', title:'A rustle behind you', text:'Something scrapes behind a parked car. Then a short rustle, close to the pavement. You turn your head, but the gap between the cars is dark. The street is otherwise silent.', weight:1, eligible:c=>c.locationId==='street' && c.minutes!==undefined && (c.minutes>=1320 || c.minutes<300), choices:[
-    { label:'Look to see what it is', outcome:{ minutes:2, mood:2, message:'You lean far enough to see beneath the car. A cat squeezes out, pauses to look at you, then slips past with its tail up. You let out a breath. For a moment, you almost laugh at yourself.' } },
-    { label:'Wait and listen', outcome:{ minutes:3, message:'You stay still. Something brushes the underside of the car, then everything goes quiet. Nothing comes into view. After a while, you move on without finding out what it was.' } },
-    { label:'Leave it alone and move on', outcome:{ minutes:1, message:'You put some distance between yourself and the parked cars. The sound does not follow you. Whatever it was remains in the dark.' } },
+  { id:'night-rustle', trigger:'location', icon:'❔', title:'A rustle in the dark', text:'The streetlights barely reach this stretch of path. A rustle breaks the silence. A few seconds later, you hear it again.', weight:1, eligible:c=>c.locationId==='street' && c.day!==undefined && c.day>=2 && c.minutes!==undefined && (c.minutes>=1320 || c.minutes<300), choices:[
+    { label:'Call out and step closer', icon:'search', outcome:{ minutes:5, mood:2, message:'“Hello? Anyone there?” You take a few careful steps towards the sound. A cat emerges from the bushes and stops to look at you. You let out a breath. “Just you, then.”' } },
+    { label:'Stay still and listen', icon:'pause', outcome:{ minutes:5, message:'You stop and wait, listening for another sound. Nothing. After a few minutes, you move on, still unsure what you heard.' } },
+    { label:'Walk away', icon:'walk', outcome:{ energy:-1, message:'You quicken your pace and take a longer route around the dark stretch.' } },
   ]},
   { id:'cold-hands', trigger:'location', icon:'🌡️', title:'Cold fingers', text:'You have been outside for a while. Your fingers have grown stiff, and you keep curling them into your palms. The cold feels harder to ignore now that there is no warm room waiting for you.', weight:1, eligible:c=>c.locationId==='street' && c.temperature!==undefined && c.temperature<10 && (c.elapsedMinutes??0)>=15 && c.observation!=='arrival', choices:[
     { label:'Rub my hands together', outcome:{ minutes:2, mood:1, message:'You rub your palms and breathe into your cupped hands. A little warmth returns. It is only temporary, but it helps.' } },

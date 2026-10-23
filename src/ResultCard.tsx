@@ -6,7 +6,7 @@ import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
-export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; visibleStats?: string[]; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -86,7 +86,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
   const presentation = result.presentation
   const compactInfo = !!presentation?.compact
   const compactPlace = compactInfo && presentation?.places?.length === 1 ? presentation.places[0] : undefined
-  const changes = (result.changes ?? []).filter(isMajorChange)
+  const changes = (result.changes ?? []).filter(change => isMajorChange(change) || result.visibleStats?.includes(resultLabel(change.label)))
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive')
   const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || ((compactInfo || result.batteryInSummary) && resultLabel(cost.label) === 'Battery'))

@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-312`.
+**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-313`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -949,3 +949,18 @@ The opening evening is displayed as D0; midnight changes it to D1, and later mid
 Stored game days remain one-based. No save migration or rewrite of dates, history keys, effects, cooldowns, daily allowances, mobile renewal, shelter bookings or weekday schedules is required. The first-morning goal still completes at the same real game moment: displayed D1 at noon. Older saves display their day with the same conversion.
 
 Event audit: neighbour returning with shopping is D0 22:00–23:00; neighbour with dog is D0 22:00–00:00. Both require staying near home before any actual trip. The broader first-night context remains D0 22:00 through D1 06:00 (exclusive), preserving bench, station, wake and phone-call behavior after midnight. General events retain their existing time/weather/place restrictions. Idle observations now evaluate the clock after the elapsed tick, so a 23:00/00:00 boundary cannot admit an expired home meeting from the preceding minute.
+
+
+### Night rustle on a park path — v313 (2026-10-23)
+
+**A rustle in the dark** updates the existing `night-rustle` encounter without changing its ID or replaying it for saves that have already seen it. It can first appear from displayed D1 (stored day 2) onward, from 22:00 to 05:00 exclusive, at Street independently of the former-home/departure flag. It uses ordinary location observations and the shared 45-game-minute cooldown; there is no new map location or dedicated park travel requirement. The illustrated setting is a dim neighborhood park path with bushes. Opening prose does not locate the sound or reveal its source: “The streetlights barely reach this stretch of path. A rustle breaks the silence. A few seconds later, you hear it again.” A player who skipped D0 home encounters can still encounter it after midnight.
+
+| Choice | Result |
+|---|---|
+| Call out and step closer | “Hello? Anyone there?” The hero approaches and sees a cat emerge from the bushes; 5 minutes, +2 Mood within the current cap. |
+| Stay still and listen | Wait motionless; the sound does not return and the source stays unknown; 5 minutes, no authored stat effect. |
+| Walk away | Quicken the pace and take a longer route around the dark stretch; −1 Energy, no additional action time or Mood loss. |
+
+The opening and all three answers reuse the neighbour encounters’ shared illustrated blocking event/result modals, blur, contour choice icons and delayed stat animation. Explicit search, pause and walking icons identify the three choices. Actual capped changes appear in the existing result summary; the detour’s authored −1 Energy uses explicit stat visibility rather than being hidden as minor passive drain. Even the no-change waiting result is acknowledged with Got it. Time and background navigation pause for the event and result. Distinct History reflections describe the revealed cat, unexplained wait or longer detour. Existing pending choices and seen-state retain their reload behavior.
+
+Four approved images replace the former parked-car artwork under the existing `event-night-rustle`, `event-rustle-cat`, `event-rustle-wait` and `event-rustle-leave` asset names. Only inspection reveals the cat. RGB WebP masters and 480/768/1024px variants load on demand; existing content-hash caching invalidates the replaced images. [Generation records and reference roles](docs/art/night-rustle-generation.json) preserve the selected sources and art brief.

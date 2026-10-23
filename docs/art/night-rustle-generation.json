@@ -1,0 +1,35 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "date": "2026-10-23",
+  "status": "Opening and three outcomes approved for code integration.",
+  "references": {
+    "docs/art/hero-reference.webp": "Authoritative protagonist face, age, build and wardrobe; exactly one black backpack.",
+    "docs/art/illustration-style-reference.webp": "Established realistic painterly detail and soft localized light, without copying the square or its characters.",
+    "docs/art/muted-palette-reference.webp": "Approved restrained palette; attached to the opening.",
+    "public/assets/event-night-rustle.webp": "Approved park, bushes, path, night lighting and hero continuity; attached to every outcome."
+  },
+  "assets": [
+    {
+      "name": "event-night-rustle",
+      "source": "exec-76fc3ac4-60bd-4331-90e2-9b9d23ad0db3.png",
+      "scene": "The hero pauses on the dim park path after an unexplained rustle; no source is visible."
+    },
+    {
+      "name": "event-rustle-cat",
+      "source": "exec-3d2ed37b-138c-431e-8162-1e8d1ae4da82.png",
+      "scene": "The hero has called out and approached; a tabby emerges from the bushes and looks up at him."
+    },
+    {
+      "name": "event-rustle-wait",
+      "source": "exec-b582d235-f0f1-45fd-92cd-a4b6d777fb70.png",
+      "scene": "The hero stands still beside a tree and listens; the source remains unknown."
+    },
+    {
+      "name": "event-rustle-leave",
+      "source": "exec-6a6883be-7136-4d3e-8061-f83fd3ed1d4c.png",
+      "scene": "The hero walks briskly along a longer lamp-lit route around the dark stretch."
+    }
+  ],
+  "generationBrief": "One standalone landscape 16:9 illustration per moment, no text or UI. Preserve the same late-thirties hero, charcoal hooded jacket, jeans, dark boots and single worn black backpack. Ordinary Warsaw neighborhood park footpath after midnight, trees and low bushes, distant apartment windows and soft dull amber lamps. Muted slate blue-gray, charcoal, gray-brown and dull olive; readable face/clothes and tonal shadows. No horror, vivid orange foliage, theatrical spotlight, orange/teal grading, rain or fog effects. Opening: unexplained sound and alert turn, no visible source. Inspection: approach after calling out, then see one ordinary tabby at the edge of the bushes, slight relief. Waiting: stand motionless partly sheltered by a tree, listen without revealing the source. Departure: brisk natural stride on a longer lamp-lit path, no running or pursuit. Only the inspection result shows the cat.",
+  "packaging": "RGB WebP masters quality 90 plus proportional 480/768/1024px WebP variants quality 80; encoding/resizing only. Existing runtime asset names are replaced and registered in imageManifest.json. On-demand loading and content-hash cache invalidation remain unchanged."
+}

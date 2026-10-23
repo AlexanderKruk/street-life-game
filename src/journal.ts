@@ -138,8 +138,8 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = changed('Money', 'positive') ? 'I feel lucky for once. I needed a small break.' : 'I hope they help someone else. That thought feels good.'
   } else if (actionTitle === 'Woken by a patrol' || actionTitle === 'A patrol in the waiting hall') {
     text = /documents are stored at the shelter/.test(source) ? 'My papers are safe at the shelter. I wish I had them with me for that conversation.' : /documents are missing/.test(source) ? 'I felt exposed having to explain my missing documents. I need to get them sorted out.' : /step out into the street/.test(source) ? 'I am outside again. I need to work out where I can rest next.' : 'Being woken like that left me tense. I am glad the conversation is over.'
-  } else if (actionTitle === 'A rustle behind you') {
-    text = /a cat/.test(source) ? 'I feel relieved. I can still laugh at myself, even out here.' : 'I still wonder what made that noise. At least it did not follow me.'
+  } else if (actionTitle === 'A rustle behind you' || actionTitle === 'A rustle in the dark') {
+    text = /a cat/.test(source) ? 'Just a cat. I feel relieved now that I know what made the noise.' : /longer route/.test(source) ? 'I took the longer way around. I would rather keep moving than find out what was there.' : 'I waited, but the sound did not return. I still do not know what made it.'
   } else if (actionTitle === 'Cold fingers') {
     text = /put up|curl your fingers/.test(source) ? 'I keep thinking about somewhere warm. My hands remind me how long I have been outside.' : 'I feel a little warmer. Even small comforts matter out here.'
   } else if (actionTitle === 'The city wakes up') {
