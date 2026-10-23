@@ -4,7 +4,7 @@ import MoodIcon from './MoodIcon'
 
 type StatChange = { from: number; value: string; kind: 'positive' | 'negative' | 'neutral' }
 
-export default memo(function Stat({ label, value, icon, cap = 100, capReason, focus = false, change }: { label: string; value: number; icon: ReactNode; cap?: number; capReason?: string; focus?: boolean; change?: StatChange }) {
+export default memo(function Stat({ label, value, icon, cap = 100, capReason, focus = false, change, animationReady = true }: { label: string; value: number; icon: ReactNode; cap?: number; capReason?: string; focus?: boolean; change?: StatChange; animationReady?: boolean }) {
   const [animatedValue, setAnimatedValue] = useState(change?.from ?? value)
   const from = change?.from
   const loss = from !== undefined && from > value
@@ -15,18 +15,19 @@ export default memo(function Stat({ label, value, icon, cap = 100, capReason, fo
       return
     }
     setAnimatedValue(from)
+    if (!animationReady) return
     let frame = 0
     let started: number | undefined
     function animate(now: number) {
       started ??= now
-      const progress = Math.min(1, Math.max(0, (now - started - (loss ? 300 : 0)) / (loss ? 1600 : 1200)))
+      const progress = Math.min(1, Math.max(0, (now - started - 300) / (loss ? 1600 : 1200)))
       const eased = loss ? progress * progress * (3 - 2 * progress) : 1 - (1 - progress) ** 3
       setAnimatedValue(from! + (value - from!) * eased)
       if (progress < 1) frame = window.requestAnimationFrame(animate)
     }
     frame = window.requestAnimationFrame(animate)
     return () => window.cancelAnimationFrame(frame)
-  }, [from, value, loss])
+  }, [from, value, loss, animationReady])
   const displayed = change ? animatedValue : value
   const level = displayed > 60 ? 'good' : displayed > 30 ? 'warning' : 'critical'
   const blocked = (label === 'Hygiene' || label === 'Mood') && cap < 100

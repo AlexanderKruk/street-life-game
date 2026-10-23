@@ -40,7 +40,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.23-307'
+const BUILD_VERSION = 'v2026.10.23-308'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -71,6 +71,7 @@ function loadRainResponse(): RainResponse | null {
 }
 
 const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
+const MUSIC_WALK_USED_KEY = 'street-life-music-walk-used-v1'
 const PHONE_SEARCH_ESTIMATE = 15
 const PHONE_SEARCH_MIN = 10
 const PHONE_SEARCH_MAX = 25
@@ -404,6 +405,10 @@ export default function App() {
       const saved = JSON.parse(localStorage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
       return loadJournalEntries(saved)
     } catch { return [] }
+  })
+  const [musicWalkUsed, setMusicWalkUsed] = useState(() => {
+    const inHistory = journalEntries.some(entry => entry.actionTitle === 'Walk with music')
+    try { return localStorage.getItem(MUSIC_WALK_USED_KEY) === 'true' || inHistory } catch { return inHistory }
   })
   const lastRecordedResult = useRef<unknown>(null)
   const [journalGoals, setJournalGoals] = useState<JournalGoals>(() => {
@@ -1432,7 +1437,7 @@ export default function App() {
   }
 
   const walkMusicCost = 2 * phoneDrainMultiplier(inventory.phoneCondition)
-  const canWalkWithMusic = mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= walkMusicCost
+  const canWalkWithMusic = !musicWalkUsed && mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= walkMusicCost
   function walkCity(withMusic = false) {
     if (current.id !== 'street' || sleeping || trip || activeEvent || infoModal) return
     if (withMusic && !canWalkWithMusic) return
@@ -1441,6 +1446,7 @@ export default function App() {
     const musicText = 'You listen to your favorite songs as you walk. You feel a little better.'
     const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
     runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
+      if (withMusic) setMusicWalkUsed(true)
       setRainChoice(false)
       setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
       const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
@@ -2213,6 +2219,8 @@ export default function App() {
     setActiveGoal(null)
     setJournalGoals({ morning: false, shelter: false, support: false, work: false })
     setJournalEntries([])
+    setMusicWalkUsed(false)
+    localStorage.removeItem(MUSIC_WALK_USED_KEY)
     setSelectedJournalDay(null)
     setPhoneApp('home')
     lastRecordedResult.current = null
@@ -2296,6 +2304,7 @@ export default function App() {
     [GOAL_KEY]: activeGoal,
     [JOURNAL_GOALS_KEY]: journalGoals,
     [JOURNAL_HISTORY_KEY]: journalEntries,
+    [MUSIC_WALK_USED_KEY]: musicWalkUsed,
     [PHONE_ACTIVITY_KEY]: phoneActivity,
     [OPENING_CALLS_KEY]: openingCallIndex,
     'street-life-inventory-v1': inventory,
@@ -2321,7 +2330,7 @@ export default function App() {
     [SHELTER_ARRIVAL_KEY]: shelterArrival,
     'street-life-shelter-departure-v1': shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
-    discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents, encounters, choiceSeed,
+    discoveredLocations, activeGoal, journalGoals, journalEntries, musicWalkUsed, answeredQuestions, seenMemories, firstNightEvents, encounters, choiceSeed,
     rainChoice, rainResponse, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
     phoneActivity?.questionId ?? null, openingCallIndex, infoModal, shelterPhoneCharging, closingNotice,
@@ -2544,7 +2553,7 @@ export default function App() {
           {current.id === 'street' && <>
             {nextOpeningCall && <button className="action" data-choice="phone-call" onClick={startOpeningCall} disabled={!!phoneUnavailable || inventory.phoneBattery < nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)}><div><strong><Icon name="phone" className="action-label-icon" />{nextOpeningCall.label}</strong></div><span>~{nextOpeningCall.minutes} min</span></button>}
             <button className="action" data-choice="phone-help" onClick={() => { setPhoneApp('home'); setScreen('phone') }}><div><strong><Icon name="phone" className="action-label-icon" />Look for help on my phone. There might be somewhere I can stay.</strong></div></button>
-            {<button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Put on something familiar and walk for a while. Clear my head.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
+            {!musicWalkUsed && <button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Put on something familiar and walk for a while. Clear my head.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
             {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Arrive before 18:00 tomorrow; registration starts at 18:20. A place is not guaranteed.' : 'Doors open at 18:00; registration starts at 18:20. Arrive early; places are limited.'}</small></div><span>Choose route</span></button>}
             {!firstNight && discoveredLocations.includes('work') && <button className="action" data-choice="work-route" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}

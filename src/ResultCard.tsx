@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { responsiveImageProps } from './responsiveImages'
 import { BatteryIcon, Icon, type IconName } from './Icon'
 import Stat from './Stat'
@@ -25,12 +25,12 @@ export function isMajorChange(change: ResultChange) {
   return !passiveNeeds || !Number.isFinite(amount) || Math.abs(amount) >= 5
 }
 
-function ResultStat({ change }: { change: ResultChange }) {
+function ResultStat({ change, animationReady }: { change: ResultChange; animationReady: boolean }) {
   const label = resultLabel(change.label)
   const meter = change.meter!
   const icons: Record<string, IconName> = { Food: 'food', Water: 'water', Energy: 'energy', Health: 'heart', Hygiene: 'shower', Battery: 'phone', 'Phone condition': 'phone', 'Clothing cleanliness': 'shower', 'Clothing condition': 'person' }
   const icon = icons[label] ?? 'person'
-  return <Stat label={label === 'Water' ? 'Thirst' : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} capReason={meter.capReason} change={{ from: meter.before, value: change.value, kind: change.kind }} />
+  return <Stat label={label === 'Water' ? 'Thirst' : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} capReason={meter.capReason} change={{ from: meter.before, value: change.value, kind: change.kind }} animationReady={animationReady} />
 }
 
 function ChangeRows({ changes }: { changes: ResultChange[] }) {
@@ -38,6 +38,8 @@ function ChangeRows({ changes }: { changes: ResultChange[] }) {
 }
 
 export default memo(function ResultCard({ result, onClose }: { result: ResultCardData; onClose: () => void }) {
+  const [readyIllustration, setReadyIllustration] = useState<string | null>(null)
+  const animationReady = !result.illustration || readyIllustration === result.illustration
   const dialog = useRef<HTMLElement>(null)
   const confirm = useRef<HTMLButtonElement>(null)
   const close = useRef(onClose)
@@ -98,7 +100,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
 
   return <div className="phone-overlay result-overlay">
     <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactInfo ? ' compact-info-result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="result-title" ref={dialog}>
-      {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} />}
+      {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} onLoad={() => setReadyIllustration(result.illustration!)} onError={() => setReadyIllustration(result.illustration!)} />}
       <div className="result-card-heading">
         {!result.bottleSearch && !compactInfo && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}
         <div className={compactInfo ? 'compact-info-heading' : undefined}>
@@ -127,7 +129,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
         </> : <p className="result-description result-narrative">{result.text}</p>}
-        {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} />)}</div>}
+        {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} animationReady={animationReady} />)}</div>}
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
         {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={compactInfo || result.batteryInSummary ? 'Action summary' : 'Spent'}>
