@@ -1507,7 +1507,7 @@ export default function App() {
     runWithResult(call.title, () => {
       setOpeningCallIndex(index => index + 1)
       setGame(previous => ({ ...previous, mood: Math.max(0, previous.mood - call.moodLoss) }))
-      setInfoModal({ title: call.title, text: call.text, label: 'PHONE CALL', illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title, moodInSummary: true })
+      setInfoModal({ title: call.title, text: call.text, label: 'PHONE CALL', illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title, compactSummary: true })
     }, before, true, true)
   }
 
@@ -1557,7 +1557,7 @@ export default function App() {
         finishOpeningCall(activeCall.id, phoneActivity.before)
       } else if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0 || gameOver || shelterCheckoutDue) {
         setPhoneActivity(null)
-        runWithResult('Call interrupted', () => setInfoModal({ title: 'Call interrupted', text: 'The call ends before you can finish. Time and battery already spent are not returned. You can try again once your phone is working.', illustration: `/street-life-game/assets/${activeCall.illustration}.webp` }), phoneActivity.before, true, true)
+        runWithResult('Call interrupted', () => setInfoModal({ title: 'Call interrupted', text: 'The call ends before you can finish. Time and battery already spent are not returned. You can try again once your phone is working.', illustration: `/street-life-game/assets/${activeCall.illustration}.webp`, compactSummary: true }), phoneActivity.before, true, true)
       }
       return
     }
@@ -1587,7 +1587,7 @@ export default function App() {
       const before = phoneActivity.before
       setPhoneActivity(null)
       if (activeCall) {
-        runWithResult('Call stopped', () => setInfoModal({ title: 'Call stopped', text: 'You put the phone away before finishing the call. Time and battery already spent are not returned. You can try again later.' }), before, true, true)
+        runWithResult('Call stopped', () => setInfoModal({ title: 'Call stopped', text: 'You put the phone away before finishing the call. Time and battery already spent are not returned. You can try again later.', compactSummary: true }), before, true, true)
         return
       }
       runWithResult('Search stopped', () => setInfoModal({ title: 'Search stopped', text: 'You put your phone away. Time and battery already spent are not returned. No new information was saved.', presentation: { ...locationPresentation([]), heading: 'Search stopped', lead: 'You put your phone away. No new information was saved.' } }), before, true, true)
