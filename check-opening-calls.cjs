@@ -43,7 +43,7 @@ function assertResult(mood,index,asset){
   assert(summary?.textContent.includes(`${index === 1 ? 2 : 5} min`));
   assert.equal(summary?.querySelector('.compact-info-mood.negative')?.textContent, `Mood −${index === 1 ? 2 : 5}`);
   const batteryCost = summary?.querySelector('[title="Battery"]');
-  assert.equal(batteryCost?.textContent, `Battery −${index === 1 ? '0.2' : '0.6'}%`);
+  assert.equal(batteryCost?.textContent, 'Battery −1%');
   assert(batteryCost?.querySelector('.battery-icon'), 'battery expense uses the existing battery icon');
   assert(!screen.getByRole('dialog').querySelector('[data-stat="Battery"]'), 'call battery expense shares the summary without a duplicate bar');
   assert(!screen.getByRole('dialog').querySelector('[data-stat="Mood"]'), 'call Mood loss shares the time row without a duplicate bar');

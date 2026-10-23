@@ -12,6 +12,10 @@ export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
 }
 
+function wholeStatDelta(value: string) {
+  return value.replace(/\d+(?:\.\d+)?/, amount => String(Math.max(1, Math.round(Number(amount)))))
+}
+
 // Keep gains and meaningful consequences; omit small ongoing stat drain entirely.
 export function isMajorChange(change: ResultChange) {
   if (change.kind === 'negative' && change.consumed) return false
@@ -127,8 +131,8 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
         {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={compactInfo || result.compactSummary ? 'Action summary' : 'Spent'}>
-          {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}>{resultLabel(cost.label) === 'Battery' ? <BatteryIcon charge={cost.meter?.after ?? 0} /> : <Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} />}<span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}
-          {summaryMood && <span className={`compact-info-mood ${summaryMood.kind}`}><Icon name="face-fair" />Mood {summaryMood.value}</span>}
+          {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}>{resultLabel(cost.label) === 'Battery' ? <BatteryIcon charge={cost.meter?.after ?? 0} /> : <Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} />}<span className="sr-only">{resultLabel(cost.label)} </span>{resultLabel(cost.label) === 'Battery' ? wholeStatDelta(cost.value) : cost.value}</span>)}
+          {summaryMood && <span className={`compact-info-mood ${summaryMood.kind}`}><Icon name="face-fair" />Mood {wholeStatDelta(summaryMood.value)}</span>}
         </div>}
         {presentation && !compactInfo && <details className="result-details">
           <summary>Full answer & details</summary>
