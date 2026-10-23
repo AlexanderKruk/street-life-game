@@ -74,7 +74,7 @@ try {
   fireEvent.click(callButton());advance(1250);assertResult(18,3,'event-call-small-room');closeResult();
   assert(!callButton());assert(document.querySelector('[data-choice="station-route"]'));assert(document.querySelector('[data-choice="phone-help"]'));
   assert.equal(read(gameKey).minutes,initial.minutes+12);
-  assert(Math.abs(read(invKey).phoneBattery-(battery-12*.1*1.196))<1e-8,'voice battery uses elapsed minutes and phone wear');
+  assert(Math.abs(read(invKey).phoneBattery-(battery-12*.2*1.196))<1e-8,'voice battery uses 0.2% per elapsed minute and phone wear');
   reload();assert.equal(read(gameKey).mood,18);assert.equal(read(callKey),3);assert(!callButton());
 
   // A battery interruption preserves progression and does not apply the refusal twice.

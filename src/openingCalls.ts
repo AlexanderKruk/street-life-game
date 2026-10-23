@@ -1,5 +1,5 @@
 export const OPENING_CALLS_KEY = 'street-life-opening-calls-v1'
-export const CALL_BATTERY_PER_MINUTE = 0.1
+export const CALL_BATTERY_PER_MINUTE = 0.2
 
 export const OPENING_CALLS = [
   {
