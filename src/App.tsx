@@ -1,4 +1,5 @@
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
+import { OPENING_CALLS, OPENING_CALLS_KEY, CALL_BATTERY_PER_MINUTE, openingCall, loadOpeningCallIndex } from './openingCalls'
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, destinationTravelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
 import { nextStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventContext, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
@@ -39,7 +40,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.23-301'
+const BUILD_VERSION = 'v2026.10.23-302'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -78,12 +79,13 @@ type PhoneActivity = { questionId: string; total: number; remaining: number; bef
 function loadPhoneActivity(): PhoneActivity | null {
   try {
     const saved = JSON.parse(localStorage.getItem(PHONE_ACTIVITY_KEY) ?? 'null')
-    if (!saved || !['morning', 'bed', 'no-place', 'supplies', 'work', 'clinic'].includes(saved.questionId) || !Number.isInteger(saved.remaining) || saved.remaining < 0 || saved.remaining > 30 || !saved.before?.game || !saved.before?.inventory || !Array.isArray(saved.before?.effects)) return null
+    if (!saved || (!['morning', 'bed', 'no-place', 'supplies', 'work', 'clinic'].includes(saved.questionId) && !openingCall(saved.questionId)) || !Number.isInteger(saved.remaining) || saved.remaining < 0 || saved.remaining > 30 || !saved.before?.game || !saved.before?.inventory || !Array.isArray(saved.before?.effects)) return null
     // Older fixed searches retain the ten-minute migration; new searches keep
     // their originally selected duration across reloads.
     const elapsed = absoluteMinutes(loadGame()) - absoluteMinutes(saved.before.game)
     if (!Number.isFinite(elapsed) || elapsed < 0) return null
-    const total = Number.isInteger(saved.total) && saved.total >= PHONE_SEARCH_MIN && saved.total <= PHONE_SEARCH_MAX ? saved.total : 10
+    const call = openingCall(saved.questionId)
+    const total = call ? call.minutes : Number.isInteger(saved.total) && saved.total >= PHONE_SEARCH_MIN && saved.total <= PHONE_SEARCH_MAX ? saved.total : 10
     return { ...saved, total, remaining: Math.min(saved.remaining, Math.max(0, total - elapsed)) }
   } catch { return null }
 }
@@ -381,6 +383,8 @@ export default function App() {
   const [game, commitGame] = useState<GameState>(loadGame)
   const [choiceSeed, setChoiceSeed] = useState(loadChoiceSeed)
   const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(loadPhoneActivity)
+  const [openingCallIndex, setOpeningCallIndex] = useState(() => loadOpeningCallIndex(localStorage, !!readSavedGame(localStorage)))
+  const activeCall = phoneActivity ? openingCall(phoneActivity.questionId) : undefined
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
   const [closingNotice, setClosingNotice] = useState<string | null>(() => {
@@ -626,6 +630,8 @@ export default function App() {
     { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
   ], [activeGoal])
   const firstNight = firstNightTime(game) && life.housing === 'Street'
+  const openingCallsActive = firstNight && openingCallIndex < OPENING_CALLS.length
+  const nextOpeningCall = openingCallsActive ? OPENING_CALLS[openingCallIndex] : undefined
   const completedGoals = useMemo(() => goals.filter(goal => journalGoals[goal.id]), [goals, journalGoals])
   const pendingGoals = useMemo(() => goals.filter(goal => !journalGoals[goal.id])
     .sort((a, b) => Number(!!activeGoal && b.id === 'shelter') - Number(!!activeGoal && a.id === 'shelter')), [goals, journalGoals, activeGoal])
@@ -1023,9 +1029,9 @@ export default function App() {
     if (rainChoice) return
     if (phoneActivity) {
       if (phoneActivity.remaining <= 0 || gameOver || document.visibilityState !== 'visible') return
-      if (firstNight && absoluteMinutes(game) + 1 >= 1335) openingSearchObservation.current = true
+      if (!activeCall && firstNight && absoluteMinutes(game) + 1 >= 1335) openingSearchObservation.current = true
       setGame(previous => applyAction(previous, { minutes: 1 }))
-      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - phoneScreenDrain(game, previous.phoneCondition, 'browsing')) }))
+      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (activeCall ? CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(previous.phoneCondition) : phoneScreenDrain(game, previous.phoneCondition, 'browsing'))) }))
       setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
       return
     }
@@ -1471,6 +1477,7 @@ export default function App() {
   const justWalked = lastAction === 'Walk through the city' || lastAction === 'Walk with music'
   const wantsBench = answeredQuestions.includes('bed') && !exhausted && lastAction !== 'Rest on the bench' && !justWalked
   const bodyChoices = exhausted ? ['bench-sleep', 'street-sleep', 'bench-rest', 'find-bench']
+    : openingCallsActive ? ['music-walk', 'walk']
     : wantsBench ? [firstNight || (game.minutes >= 360 && game.minutes < 1380) ? 'bench-rest' : 'bench-sleep', 'find-bench', 'walk', 'street-sleep']
     : (game.minutes >= 1380 || game.minutes < 360) && !justWalked ? ['street-sleep', 'bench-sleep', 'walk']
     : game.mood <= 30 ? ['music-walk', 'walk'] : ['walk', 'music-walk']
@@ -1479,13 +1486,30 @@ export default function App() {
     : game.money < 50 ? ['beg', 'bottles', 'station-route']
     : ['bottles', 'station-route', 'work-route']
   const streetChoiceGroups = [
-    ['phone-help'],
+    [openingCallsActive ? 'phone-call' : 'phone-help'],
     bodyChoices,
-    practicalChoices,
+    ...(openingCallsActive ? [] : [practicalChoices]),
   ]
   const lastDecision = journalEntries.at(-1)
   const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
   const phoneSearchCost = phoneScreenDrain(game, inventory.phoneCondition, 'browsing', PHONE_SEARCH_MIN)
+
+  function startOpeningCall() {
+    if (!nextOpeningCall || current.id !== 'street' || phoneUnavailable || phoneActivity || eventInteractionBlocked || sleeping || trip || gameOver) return
+    const cost = nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
+    if (inventory.phoneBattery < cost) return
+    setPhoneActivity({ questionId: nextOpeningCall.id, total: nextOpeningCall.minutes, remaining: nextOpeningCall.minutes, before: resultSnapshot() })
+  }
+
+  function finishOpeningCall(id: string, before: ResultSnapshot) {
+    const call = openingCall(id)
+    if (!call || OPENING_CALLS[openingCallIndex]?.id !== id) return
+    runWithResult(call.title, () => {
+      setOpeningCallIndex(index => index + 1)
+      setGame(previous => ({ ...previous, mood: Math.max(0, previous.mood - call.moodLoss) }))
+      setInfoModal({ title: call.title, text: call.text, label: 'PHONE CALL', illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title })
+    }, before, true, true)
+  }
 
   function finishPracticalQuestion(id: string, before = resultSnapshot()) {
     const question = practicalQuestions.find(entry => entry.id === id)
@@ -1527,6 +1551,16 @@ export default function App() {
 
   useEffect(() => {
     if (!phoneActivity || inventoryAgedAt !== absoluteMinutes(game)) return
+    if (activeCall) {
+      if (phoneActivity.remaining === 0) {
+        setPhoneActivity(null)
+        finishOpeningCall(activeCall.id, phoneActivity.before)
+      } else if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0 || gameOver || shelterCheckoutDue) {
+        setPhoneActivity(null)
+        runWithResult('Call interrupted', () => setInfoModal({ title: 'Call interrupted', text: 'The call ends before you can finish. Time and battery already spent are not returned. You can try again once your phone is working.', illustration: `/street-life-game/assets/${activeCall.illustration}.webp` }), phoneActivity.before, true, true)
+      }
+      return
+    }
     if (shelterCheckoutDue) {
       setPhoneActivity(null)
       const text = 'It is time to leave Night Shelter. You put the phone away before finishing the search.'
@@ -1539,7 +1573,7 @@ export default function App() {
       const text = gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.'
       runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
     }
-  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, mobileServiceActive, gameOver, shelterCheckoutDue])
+  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, inventory.phoneCondition, mobileServiceActive, gameOver, shelterCheckoutDue])
 
   function respondToRain(choice: 'cover' | 'continue' | 'stop') {
     const response: RainResponse = { episode: currentRainEpisode ?? `weather:${game.day}`, locationId: current.id, sheltered: choice === 'cover' }
@@ -1552,6 +1586,10 @@ export default function App() {
     } else if (choice === 'stop' && phoneActivity) {
       const before = phoneActivity.before
       setPhoneActivity(null)
+      if (activeCall) {
+        runWithResult('Call stopped', () => setInfoModal({ title: 'Call stopped', text: 'You put the phone away before finishing the call. Time and battery already spent are not returned. You can try again later.' }), before, true, true)
+        return
+      }
       runWithResult('Search stopped', () => setInfoModal({ title: 'Search stopped', text: 'You put your phone away. Time and battery already spent are not returned. No new information was saved.', presentation: { ...locationPresentation([]), heading: 'Search stopped', lead: 'You put your phone away. No new information was saved.' } }), before, true, true)
     } else if (choice === 'stop' && trip) {
       const before = trip.before ?? resultSnapshot()
@@ -2185,6 +2223,7 @@ export default function App() {
     localStorage.removeItem(CLOSING_NOTICE_KEY)
     setEventResultOpen(false)
     setPhoneActivity(null)
+    setOpeningCallIndex(0)
     setDiscardItem(null)
     setFoodChoice(null)
     setPendingResult(null)
@@ -2255,6 +2294,7 @@ export default function App() {
     [JOURNAL_GOALS_KEY]: journalGoals,
     [JOURNAL_HISTORY_KEY]: journalEntries,
     [PHONE_ACTIVITY_KEY]: phoneActivity,
+    [OPENING_CALLS_KEY]: openingCallIndex,
     'street-life-inventory-v1': inventory,
     [SHELTER_PHONE_CHARGE_KEY]: shelterPhoneCharging || null,
     [CLOSING_NOTICE_KEY]: closingNotice,
@@ -2281,7 +2321,7 @@ export default function App() {
     discoveredLocations, activeGoal, journalGoals, journalEntries, answeredQuestions, seenMemories, firstNightEvents, encounters, choiceSeed,
     rainChoice, rainResponse, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
-    phoneActivity?.questionId ?? null, infoModal, shelterPhoneCharging, closingNotice,
+    phoneActivity?.questionId ?? null, openingCallIndex, infoModal, shelterPhoneCharging, closingNotice,
   ])
 
   function eatFromSlot(kind: FoodKind, slotIndex: number, condition?: FoodCondition) {
@@ -2420,7 +2460,7 @@ export default function App() {
     </header>
 
     {screen === 'location' && <div className="location-surface" inert={!!phoneActivity} aria-hidden={!!phoneActivity || undefined}>
-      {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} description={current.id === 'street' && firstNight && game.minutes >= 1320 ? 'Lights glow in the apartment windows. Someone walks a dog between the buildings. People are settling in for the night, and you haven’t decided where to spend yours.' : current.description} open={open} opensAt={current.open} night={current.id === 'street' && (game.minutes >= 1200 || game.minutes < 360)} streetIllustration={current.id === 'street' && !infoModal?.illustration ? infoModal?.presentation?.illustration : undefined} />}
+      {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} description={current.id === 'street' && firstNight && game.minutes >= 1320 ? 'Behind the lit windows, people are getting ready for bed. You sit outside with your backpack. You have nowhere to go, and no one is expecting you tonight.' : current.description} open={open} opensAt={current.open} night={current.id === 'street' && (game.minutes >= 1200 || game.minutes < 360)} streetIllustration={current.id === 'street' && !infoModal?.illustration ? infoModal?.presentation?.illustration : undefined} />}
       {underRainCover && !trip && <p className="rain-cover-status"><Icon name="umbrella" />Under cover</p>}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       <ClosedContent closed={!open && current.id !== 'hospital' && !currentActions.some(action => actionUnavailableReason(action) === null)} opensAt={formatTime(current.open)}>
@@ -2492,13 +2532,14 @@ export default function App() {
       </AvailableFirst>}
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
         {current.id === 'street' ? <section className="story-choices location-actions-title">
-          <h2>What would help right now?</h2>
+          <h2>What do you do now?</h2>
         </section> : <div className="section-title location-actions-title"><h2>What do you do?</h2></div>}
         <AvailableFirst className={current.id === 'street' ? 'actions story-actions' : 'actions'} thoughtsOnly={current.id === 'street'} choiceGroups={streetChoiceGroups} orderSeed={choiceSeed} decisionKey={choiceDecisionKey}>
           {current.id === 'hospital' && <>
             <button className="action" onClick={hospitalVisit} disabled={!open || !inventory.documents}><div><strong><Icon name="hospital" className="action-label-icon" />Regular medical appointment</strong><small>{!inventory.documents ? 'Documents required.' : open ? 'See a doctor and receive proper treatment.' : 'Regular care is closed.'}</small></div><span>~90 min</span></button>
           </>}
           {current.id === 'street' && <>
+            {nextOpeningCall && <button className="action" data-choice="phone-call" onClick={startOpeningCall} disabled={!!phoneUnavailable || inventory.phoneBattery < nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)}><div><strong><Icon name="phone" className="action-label-icon" />{nextOpeningCall.label}</strong></div><span>~{nextOpeningCall.minutes} min</span></button>}
             <button className="action" data-choice="phone-help" onClick={() => { setPhoneApp('home'); setScreen('phone') }}><div><strong><Icon name="phone" className="action-label-icon" />Look for help on my phone. There might be somewhere I can stay.</strong></div></button>
             {<button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Put on something familiar and walk for a while. Clear my head.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
@@ -2528,9 +2569,9 @@ export default function App() {
 
     {phoneActivity && <div className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>
       <section className="travel-screen phone-activity" role="dialog" aria-modal="true" aria-labelledby="phone-activity-title" aria-busy="true" tabIndex={-1} ref={phoneSearchModalRef}>
-        <PhoneSearchIcon />
-        <div className="travel-route-heading"><h2 id="phone-activity-title">Looking for information</h2></div>
-        <ActivityStatus elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel="Elapsed browsing time" label={phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Searching' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading options' : 'Saving addresses'} />
+        <PhoneSearchIcon calling={!!activeCall} />
+        <div className="travel-route-heading"><h2 id="phone-activity-title">{activeCall?.callingTitle ?? 'Looking for information'}</h2></div>
+        <ActivityStatus elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel={activeCall ? 'Elapsed call time' : 'Elapsed browsing time'} label={activeCall ? activeCall.id === 'call-university' || phoneActivity.remaining === phoneActivity.total ? 'Ringing' : 'Talking' : phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Searching' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading options' : 'Saving addresses'} />
       </section>
     </div>}
 

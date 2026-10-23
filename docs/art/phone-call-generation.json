@@ -1,6 +1,6 @@
 {
   "date": "2026-10-23",
-  "status": "Prepared artwork only; call mechanics and narrative changes are not implemented.",
+  "status": "Used by sequential opening-call results in v302; see src/openingCalls.ts.",
   "generator": "Built-in image_gen, one call per scene; Pillow only for resize/WebP encoding.",
   "styleReference": "docs/art/illustration-style-reference.webp",
   "heroReference": "docs/art/hero-reference.webp",

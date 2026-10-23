@@ -102,7 +102,7 @@ export const initialState: GameState = {
   energy: 68,
   health: 90,
   hygiene: 75,
-  mood: 28,
+  mood: 30,
   intoxication: 0,
   locationId: 'street',
 }

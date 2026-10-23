@@ -20,4 +20,4 @@ Nine main-location environment images cover Station, Night Shelter, Help Center,
 
 ## Opening phone calls — prepared artwork
 
-[phone-call-generation.json](phone-call-generation.json) records three standalone split-screen images and their exact prompts: unanswered call with a quiet empty half and three dots, former colleague at home with family, and acquaintance renting one small room. The left half retains the same protagonist and residential bench. Each image has 480/768/1024px WebP variants. These are prepared assets only; gameplay wiring is pending.
+[phone-call-generation.json](phone-call-generation.json) records three standalone split-screen images and their exact prompts: unanswered call with a quiet empty half and three dots, former colleague at home with family, and acquaintance renting one small room. The left half retains the same protagonist and residential bench. Each image has 480/768/1024px WebP variants. These assets are connected to the sequential opening-call results in v302.

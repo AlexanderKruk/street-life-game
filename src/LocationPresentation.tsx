@@ -54,10 +54,10 @@ export const TravelHeading = memo(function TravelHeading({ from, to, walking, mo
   </>
 })
 
-export const PhoneSearchIcon = memo(function PhoneSearchIcon() {
+export const PhoneSearchIcon = memo(function PhoneSearchIcon({ calling = false }: { calling?: boolean }) {
   return <div className="travel-visual phone-search-icon" aria-hidden="true">
     <Icon name="phone" className="phone-search-outline" />
-    <Icon name="globe" className="phone-search-globe" />
+    {!calling && <Icon name="globe" className="phone-search-globe" />}
     <span className="phone-activity-symbol"><span /><span /><span /></span>
   </div>
 })
