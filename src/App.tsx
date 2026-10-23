@@ -1438,7 +1438,7 @@ export default function App() {
     if (withMusic && !canWalkWithMusic) return
     // The authored music walk has one +3 reward, rather than stacked walking/music bonuses.
     const passiveMusic = !withMusic && musicOn
-    const musicText = 'Your favorite songs play in your headphones. For a while, your thoughts feel less heavy.'
+    const musicText = 'You listen to your favorite songs, and for a while, your thoughts feel less heavy.'
     const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
     runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
       setRainChoice(false)
