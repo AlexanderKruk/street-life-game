@@ -406,7 +406,7 @@ assert(musicResult.querySelector('.result-illustration').src.includes('event-mus
 assert.equal(musicResult.querySelector('[data-stat="Mood"] .result-stat-delta').textContent,'+3');
 assert(musicResult.querySelector('.result-cost-line').textContent.includes('30 min'));
 assert(musicResult.querySelector('.result-cost-line .battery-icon'));
-assert(musicResult.textContent.includes('familiar music'));
+assert(musicResult.textContent.includes('favorite songs'));
 assert(!musicResult.textContent.includes('redundancy notice'));
 assert(musicResult.querySelector('.result-description').textContent.length<110,'music result remains brief');
 assert(document.querySelector('.bottom-nav[inert]'));ok();

@@ -1438,7 +1438,7 @@ export default function App() {
     if (withMusic && !canWalkWithMusic) return
     // The authored music walk has one +3 reward, rather than stacked walking/music bonuses.
     const passiveMusic = !withMusic && musicOn
-    const musicText = 'You walk with familiar music in your headphones. For a while, your thoughts feel less heavy.'
+    const musicText = 'Your favorite songs play in your headphones. For a while, your thoughts feel less heavy.'
     const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
     runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
       setRainChoice(false)
@@ -1453,7 +1453,7 @@ export default function App() {
       setGame(next)
       if (CLOTHING_WETNESS_ENABLED && wet) {
         setRainChoice(rainResponse?.episode !== rainEpisode(next))
-        const rainText = withMusic ? 'Rain taps against your jacket. Familiar music helps you settle your thoughts.' : startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.'
+        const rainText = withMusic ? 'Rain taps against your jacket. Your favorite songs help you settle your thoughts.' : startsRain ? 'A few drops become steady rain as you walk. Your clothes begin to get wet. Water collects along the edge of the pavement.' : 'Rain darkens the shoulders of your clothes. A narrow canopy covers the entrance to a closed shop.'
         setInfoModal({ title: withMusic ? 'Walk with music' : 'Walk through the city', text: rainText, illustration: withMusic ? musicIllustration : '/street-life-game/assets/event-rain-street.webp', illustrationAlt: withMusic ? 'You walk through the neighbourhood wearing full-size over-ear headphones.' : 'Rain grows heavier as you notice a canopy above a closed shop.', batteryInSummary: withMusic })
         setMessage(rainText)
       } else {
