@@ -6,7 +6,7 @@ import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
-export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; compactSummary?: boolean; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -87,10 +87,10 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
   const changes = (result.changes ?? []).filter(isMajorChange)
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive')
-  const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || ((compactInfo || result.compactSummary) && resultLabel(cost.label) === 'Battery'))
+  const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || ((compactInfo || result.batteryInSummary) && resultLabel(cost.label) === 'Battery'))
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
-  const summaryMood = compactInfo || result.compactSummary ? meters.find(change => resultLabel(change.label) === 'Mood') : undefined
-  const summaryBattery = result.compactSummary ? costs.find(change => resultLabel(change.label) === 'Battery') : undefined
+  const summaryMood = compactInfo ? meters.find(change => resultLabel(change.label) === 'Mood') : undefined
+  const summaryBattery = result.batteryInSummary ? costs.find(change => resultLabel(change.label) === 'Battery') : undefined
   const statMeters = meters.filter(change => change !== summaryMood && change !== summaryBattery)
   const gainRows = gains.filter(change => !change.meter && !(result.bottleSearch && resultLabel(change.label) === 'Deposit containers'))
   const consequenceRows = consequences.filter(change => !change.meter)
@@ -130,7 +130,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
         {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} />)}</div>}
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
-        {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={compactInfo || result.compactSummary ? 'Action summary' : 'Spent'}>
+        {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={compactInfo || result.batteryInSummary ? 'Action summary' : 'Spent'}>
           {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}>{resultLabel(cost.label) === 'Battery' ? <BatteryIcon charge={cost.meter?.after ?? 0} /> : <Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} />}<span className="sr-only">{resultLabel(cost.label)} </span>{resultLabel(cost.label) === 'Battery' ? wholeStatDelta(cost.value) : cost.value}</span>)}
           {summaryMood && <span className={`compact-info-mood ${summaryMood.kind}`}><Icon name="face-fair" />Mood {wholeStatDelta(summaryMood.value)}</span>}
         </div>}

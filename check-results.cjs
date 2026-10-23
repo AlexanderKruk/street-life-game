@@ -50,9 +50,10 @@ try {
   for (const [loss, display] of [[0.2, 1], [0.6, 1], [1.2, 1], [1.6, 2]]) {
     const expense = summarizeResult(before, { ...before, game: { ...before.game, mood: before.game.mood - loss, money: before.game.money - 0.5 }, inventory: { ...before.inventory, phoneBattery: before.inventory.phoneBattery - loss } });
     const batteryValue = expense.costs.find(cost => cost.label.includes('Battery')).value;
-    render(React.createElement(ResultCard, { result: { title: 'Call', text: 'Call ended.', compactSummary: true, ...expense }, onClose: () => {} }));
+    render(React.createElement(ResultCard, { result: { title: 'Call', text: 'Call ended.', batteryInSummary: true, ...expense }, onClose: () => {} }));
     assert.equal(document.querySelector('[title="Battery"]').textContent, `Battery −${display}%`);
-    assert.equal(document.querySelector('.compact-info-mood').textContent, `Mood −${display}`);
+    assert(row('Mood')?.querySelector('.bar-loss-trail'), 'call Mood retains the shared event result meter, even for small losses');
+    assert(!document.querySelector('.compact-info-mood'), 'call Mood is not repeated in the cost summary');
     assert.equal(document.querySelector('[title="Money"]').textContent, 'Money −0.5 zł', 'money keeps its currency precision');
     assert.equal(expense.costs.find(cost => cost.label.includes('Battery')).value, batteryValue, 'rendering does not round the underlying expense');
     cleanup();

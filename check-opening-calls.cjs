@@ -5,6 +5,7 @@ for (const key of ['window','document','localStorage','HTMLElement','Node','Even
 Object.defineProperty(global,'navigator',{value:dom.window.navigator});
 global.IS_REACT_ACT_ENVIRONMENT=true;
 window.scrollTo=()=>{};
+window.matchMedia=()=>({matches:true});
 let now=1800000000000,nextId=1;
 Date.now=()=>now;
 const timers=new Map();
@@ -41,12 +42,16 @@ function assertResult(mood,index,asset){
   assert(document.querySelector('.result-illustration').src.includes(asset));
   const summary = screen.getByRole('dialog').querySelector('.result-cost-line');
   assert(summary?.textContent.includes(`${index === 1 ? 2 : 5} min`));
-  assert.equal(summary?.querySelector('.compact-info-mood.negative')?.textContent, `Mood −${index === 1 ? 2 : 5}`);
+  assert(!summary?.querySelector('.compact-info-mood'), 'call Mood uses the shared event stat card');
+  const moodPanel = screen.getByRole('dialog').querySelector('[data-stat="Mood"]');
+  assert(moodPanel?.querySelector('[role="meter"]'), 'call Mood has the same meter as event results');
+  assert.equal(moodPanel?.querySelector('.status-stat-value > span')?.textContent, `${mood}%`);
+  assert.equal(moodPanel?.querySelector('.bar-loss-trail')?.style.width, `${index === 1 ? 2 : 5}%`);
+  assert.equal(moodPanel?.querySelector('.bar-loss-trail')?.style.left, `${mood}%`);
   const batteryCost = summary?.querySelector('[title="Battery"]');
   assert.equal(batteryCost?.textContent, 'Battery −1%');
   assert(batteryCost?.querySelector('.battery-icon'), 'battery expense uses the existing battery icon');
   assert(!screen.getByRole('dialog').querySelector('[data-stat="Battery"]'), 'call battery expense shares the summary without a duplicate bar');
-  assert(!screen.getByRole('dialog').querySelector('[data-stat="Mood"]'), 'call Mood loss shares the time row without a duplicate bar');
   assert(document.querySelector('.bottom-nav[inert]'));
   const game=read(gameKey),inventory=read(invKey);advance(5000);
   assert.deepEqual(read(gameKey),game);assert.deepEqual(read(invKey),inventory);
