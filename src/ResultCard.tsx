@@ -17,7 +17,7 @@ export function isMajorChange(change: ResultChange) {
   if (change.kind === 'negative' && change.consumed) return false
   if (change.kind !== 'negative') return true
   const amount = Number(change.value.replace('−', '-').match(/^[+-]?\d+(?:\.\d+)?/)?.[0])
-  const passiveNeeds = ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Mood', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition'].includes(resultLabel(change.label))
+  const passiveNeeds = ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition'].includes(resultLabel(change.label))
   return !passiveNeeds || !Number.isFinite(amount) || Math.abs(amount) >= 5
 }
 
@@ -80,8 +80,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
   const presentation = result.presentation
   const compactInfo = !!presentation?.compact
   const compactPlace = compactInfo && presentation?.places?.length === 1 ? presentation.places[0] : undefined
-  // Deliberate call penalties remain visible even below the passive-drain threshold.
-  const changes = (result.changes ?? []).filter(change => isMajorChange(change) || (result.moodInSummary && resultLabel(change.label) === 'Mood'))
+  const changes = (result.changes ?? []).filter(isMajorChange)
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive')
   const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || (compactInfo && resultLabel(cost.label) === 'Battery'))

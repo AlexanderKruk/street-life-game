@@ -35,11 +35,18 @@ try {
   assert.equal(summary.changes.find(change => change.label.includes('Energy')).meter.before, 34);
   assert.equal(summary.changes.find(change => change.label.includes('Hygiene')).meter.cap, 80);
   assert(!summary.changes.some(change => change.value === '+0' || change.value === '−0'));
-  for (const label of ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Mood', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition']) {
+  for (const label of ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition']) {
     assert(!isMajorChange({ label, value: '−4.9', kind: 'negative' }));
     assert(isMajorChange({ label, value: '−5', kind: 'negative' }));
     assert(isMajorChange({ label, value: '+0.1', kind: 'positive' }));
   }
+  for (const label of ['Mood', '🙂 Mood']) {
+    for (const value of ['−0.1', '−1', '−2', '−4.9', '−5']) assert(isMajorChange({ label, value, kind: 'negative' }), 'Mood has no passive-loss threshold');
+  }
+  const smallMoodLoss = summarizeResult(before, { ...before, game: { ...before.game, mood: before.game.mood - 1 } });
+  render(React.createElement(ResultCard, { result: { title: 'Mood loss', text: 'A difficult moment.', ...smallMoodLoss }, onClose: () => {} }));
+  assert(row('Mood'), 'ordinary results retain even a one-point Mood loss');
+  cleanup();
   assert(isMajorChange({ label: 'Money', value: '−0.2 zł', kind: 'negative' }));
   for (const [key,label] of [['water','Water portions'],['food','Food portions'],['bread','Bread rolls'],['cannedFood','Canned food'],['readyMeal','Ready meals'],['wipes','Wet wipes'],['showerGel','3-in-1 gel uses'],['cigarettes','Cigarettes'],['medicines','Medicine']]) {
     const starting = { ...before, inventory: { ...before.inventory, [key]: 2 } };
