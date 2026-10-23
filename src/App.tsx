@@ -40,7 +40,7 @@ import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 
-const BUILD_VERSION = 'v2026.10.23-302'
+const BUILD_VERSION = 'v2026.10.23-303'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -1507,7 +1507,7 @@ export default function App() {
     runWithResult(call.title, () => {
       setOpeningCallIndex(index => index + 1)
       setGame(previous => ({ ...previous, mood: Math.max(0, previous.mood - call.moodLoss) }))
-      setInfoModal({ title: call.title, text: call.text, label: 'PHONE CALL', illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title })
+      setInfoModal({ title: call.title, text: call.text, label: 'PHONE CALL', illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title, moodInSummary: true })
     }, before, true, true)
   }
 

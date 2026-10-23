@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-302`.
+**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-303`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -886,5 +886,7 @@ Assets: `event-call-no-answer.webp`, `event-call-family.webp`, and `event-call-s
 New games start with Mood 30. During the first night, Street initially offers a call to an old university friend and a music walk (plain walking if music is unavailable). The phone choice changes after each completed call: university friend → former colleague → acquaintance helped with a move. The first call goes unanswered (2 game minutes, −2 Mood); the colleague cannot host because of family circumstances (5 minutes, −5 Mood); the acquaintance rents a cramped room (5 minutes, −5 Mood). Without intervening effects, Mood moves 30 → 28 → 23 → 18. Each call applies its loss once on completion, not on starting or reloading. The main narrator now says: “Behind the lit windows, people are getting ready for bed. You sit outside with your backpack. You have nowhere to go, and no one is expecting you tonight.” The Street question is “What do you do now?”
 
 Calls reuse the existing ×4 activity clock (one game minute every 250 ms), navigation lock and acknowledged result modal. Their result images are the prepared split-screen illustrations. Voice calls use 0.1 Battery point per game minute multiplied by the existing phone-wear multiplier; they do not use the browsing screen-brightness rate or require paid mobile internet. A working, collected phone and enough charge are required. Interrupted or stopped calls keep spent time/battery, do not advance the contact or apply the Mood loss, and can be retried.
+
+As of v303, completed calls show the negative Mood delta beside elapsed time using the existing compact summary icon and color. The deliberate −2 loss is visible despite the normal filter for small passive losses; −5 losses use the same row without a duplicate Mood bar.
 
 After the third completed call, the phone thought returns to Phone/Home and the Station thought opens Map with Station highlighted. The bottom Map and Phone tabs remain available before the calls, so the sequence does not lock the player out of known places or help. Low-energy sleep fallbacks remain available. Call progress uses `street-life-opening-calls-v1` and joins the existing autosave; active calls use the existing resumable phone-activity state. Reset starts at contact zero and Mood 30. Existing saves without the call-progress key retain their stats and skip the new sequence rather than being rewound.

@@ -6,7 +6,7 @@ import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
-export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; moodInSummary?: boolean; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
@@ -80,13 +80,14 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
   const presentation = result.presentation
   const compactInfo = !!presentation?.compact
   const compactPlace = compactInfo && presentation?.places?.length === 1 ? presentation.places[0] : undefined
-  const changes = (result.changes ?? []).filter(isMajorChange)
+  // Deliberate call penalties remain visible even below the passive-drain threshold.
+  const changes = (result.changes ?? []).filter(change => isMajorChange(change) || (result.moodInSummary && resultLabel(change.label) === 'Mood'))
   const gains = changes.filter(change => change.kind === 'positive')
-  const consequences = changes.filter(change => change.kind !== 'positive' && isMajorChange(change))
+  const consequences = changes.filter(change => change.kind !== 'positive')
   const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || (compactInfo && resultLabel(cost.label) === 'Battery'))
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
-  const compactMood = compactInfo ? meters.find(change => resultLabel(change.label) === 'Mood') : undefined
-  const statMeters = meters.filter(change => change !== compactMood)
+  const summaryMood = compactInfo || result.moodInSummary ? meters.find(change => resultLabel(change.label) === 'Mood') : undefined
+  const statMeters = meters.filter(change => change !== summaryMood)
   const gainRows = gains.filter(change => !change.meter && !(result.bottleSearch && resultLabel(change.label) === 'Deposit containers'))
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter)
@@ -125,9 +126,9 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
         {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} />)}</div>}
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
-        {(costRows.length > 0 || compactMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={compactInfo ? 'Action summary' : 'Spent'}>
+        {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={compactInfo || result.moodInSummary ? 'Action summary' : 'Spent'}>
           {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}><Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} /><span className="sr-only">{resultLabel(cost.label)} </span>{cost.value}</span>)}
-          {compactMood && <span className={`compact-info-mood ${compactMood.kind}`}><Icon name="face-fair" />Mood {compactMood.value}</span>}
+          {summaryMood && <span className={`compact-info-mood ${summaryMood.kind}`}><Icon name="face-fair" />Mood {summaryMood.value}</span>}
         </div>}
         {presentation && !compactInfo && <details className="result-details">
           <summary>Full answer & details</summary>

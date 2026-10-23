@@ -39,6 +39,10 @@ function assertResult(mood,index,asset){
   assert.equal(read(gameKey).mood,mood);assert.equal(read(callKey),index);
   assert(!read(activityKey));assert(screen.getByRole('dialog').textContent.includes(index===1?'No answer':index===2?'my wife':'single room'));
   assert(document.querySelector('.result-illustration').src.includes(asset));
+  const summary = screen.getByRole('dialog').querySelector('.result-cost-line');
+  assert(summary?.textContent.includes(`${index === 1 ? 2 : 5} min`));
+  assert.equal(summary?.querySelector('.compact-info-mood.negative')?.textContent, `Mood −${index === 1 ? 2 : 5}`);
+  assert(!screen.getByRole('dialog').querySelector('[data-stat="Mood"]'), 'call Mood loss shares the time row without a duplicate bar');
   assert(document.querySelector('.bottom-nav[inert]'));
   const game=read(gameKey),inventory=read(invKey);advance(5000);
   assert.deepEqual(read(gameKey),game);assert.deepEqual(read(invKey),inventory);
