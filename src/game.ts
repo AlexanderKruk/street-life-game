@@ -1,5 +1,6 @@
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { sleepIllnessHazard, type SleepKind } from './sleepIllness'
+import { RAIN, rainRisk, type RainEpisode } from './rain'
 
 export type Need = 'hunger' | 'thirst' | 'energy' | 'health' | 'hygiene' | 'mood'
 export type Housing = 'Street' | 'Night shelter' | 'Schronisko' | 'Hostel' | 'Room' | 'Apartment'
@@ -20,6 +21,12 @@ export type GameState = {
   intoxication: number
   locationId: string
   rainUntil?: number
+  rainSystemStarted?: boolean
+  nextRainAt?: number
+  rainScheduleDay?: number
+  rainStartsToday?: number
+  rain?: RainEpisode
+  rainResults?: RainEpisode[]
   wetness?: number
   wetSleepLoss?: number
   sleepIllnessDose?: number
@@ -181,9 +188,28 @@ export const WEATHER = [
   { icon: '🌦️', label: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
 ]
 
-// Calendar saves are 1-based: displayed D0 and D1 stay cloudy, including old rain overrides.
-export function weatherAt(state: Pick<GameState, 'day' | 'minutes' | 'rainUntil'>) {
-  if (state.day <= 2) return WEATHER[0]
+export function rainDailyLimit(day: number) {
+  if (day <= 1) return 0 // The opening two-hour evening remains dry.
+  const weather = WEATHER[(day - 1) % WEATHER.length].label
+  return weather === 'Cloudy' ? 1 : weather === 'Rain' || weather === 'Showers' ? Infinity : 0
+}
+
+// Calendar saves are 1-based. Release rain can start on the first full day (D1).
+export function weatherAt(state: Pick<GameState, 'day' | 'minutes' | 'rainUntil' | 'rain' | 'rainSystemStarted'>) {
+  if (state.day <= 1 || (state.day <= 2 && (!state.rainSystemStarted || CLOTHING_WETNESS_ENABLED))) return WEATHER[0]
+  if (state.rainSystemStarted) {
+    if (state.rain && state.rain.end > absoluteMinutes(state)) {
+      const level = state.rain.level
+      return { ...WEATHER[1], label: level === 'drizzle' ? 'Drizzle' : level === 'downpour' ? 'Downpour' : 'Rain', energyDrain: 0 }
+    }
+    const base = WEATHER[(state.day - 1) % WEATHER.length]
+    // The separate, experimental moisture model retains its legacy weather
+    // inputs for tuning. Release gameplay uses only temporary rain episodes.
+    if (CLOTHING_WETNESS_ENABLED) return base
+    // Rainy describes the day between showers, without applying rain exposure.
+    return base.label === 'Rain' ? { ...base, label: 'Rainy', energyDrain: 0 }
+      : base.label === 'Showers' ? { ...base, energyDrain: 0 } : base
+  }
   return (state.rainUntil ?? 0) > absoluteMinutes(state) ? WEATHER[1] : WEATHER[(state.day - 1) % WEATHER.length]
 }
 
@@ -254,6 +280,29 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
       intoxication: clamp(next.intoxication - step / 6),
     }
     next = limitMood(next, context)
+    // Rain has its own minute-by-minute exposure, entirely separate from the
+    // disabled clothing-moisture feature. Indoor/transit minutes are protected.
+    if (next.rain && next.rainSystemStarted) {
+      let rain = { ...next.rain }
+      const activeMinutes = Math.max(0, Math.min(step, rain.end - now))
+      const outside = exposure === 'outside' && !context.sleeping
+      const searching = rain.choice === 'proper' && rain.searchRemaining > 0
+      const protectedHere = rain.locationId === next.locationId
+      const fraction = !outside || !rain.choice ? 0 : rain.choice === 'nearby' && protectedHere ? 1 - rain.protection
+        : rain.choice === 'proper' && protectedHere ? Math.min(activeMinutes, rain.searchRemaining) / (activeMinutes || 1) : 1
+      const exposureMinutes = activeMinutes * fraction
+      const energyLoss = Math.min(next.energy, RAIN[rain.level].energy * exposureMinutes)
+      const moodLoss = Math.min(next.mood, RAIN[rain.level].mood * exposureMinutes)
+      rain = { ...rain, energyLoss: rain.energyLoss + energyLoss, moodLoss: rain.moodLoss + moodLoss,
+        exposure: rain.exposure + exposureMinutes * (temperature <= 10 ? 1 : temperature <= 15 ? .5 : .1),
+        searchRemaining: searching ? Math.max(0, rain.searchRemaining - activeMinutes) : rain.searchRemaining,
+        waited: rain.waited + (rain.choice === 'nearby' || rain.choice === 'proper' ? activeMinutes : 0) }
+      next = { ...next, energy: next.energy - energyLoss, mood: next.mood - moodLoss, rain }
+      if (absoluteMinutes(next) >= rain.end) {
+        const completed = { ...rain, cold: !active('cold') && rain.coldRoll < rainRisk(rain) }
+        next = { ...next, rain: undefined, rainResults: rain.choice ? [...(next.rainResults ?? []), completed] : next.rainResults }
+      }
+    }
   }
   return next
 }

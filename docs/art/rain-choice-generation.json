@@ -1,0 +1,157 @@
+{
+  "created": "2026-10-24",
+  "tool": "built-in image_gen",
+  "status": "Connected in v319; publication pending the user\u2019s command.",
+  "notes": {
+    "reliable_shelter_search_minutes": {
+      "min": 1,
+      "max": 5
+    },
+    "nearby_shelter": "Small shallow building/shop canopy or a street tree; partial rain protection.",
+    "proper_shelter": "Deep covered public passage; rain remains outside.",
+    "downpour": "Hero wears his jacket hood up in all scenes.",
+    "wetness": "No clothing wetness mechanic reintroduced."
+  },
+  "images": [
+    {
+      "intensity": "drizzle",
+      "choice": "nearby",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-32f79208-99da-4085-9d86-2675f7466d49.png",
+      "asset": "public/assets/event-rain-drizzle-nearby.webp",
+      "prompt": "Use case: illustration-story. Asset type: one standalone 16:9 landscape event-choice RESULT illustration for the game Street Life Simulator.\nInput images: image 1 = approved LIGHT DRIZZLE opening, use for the same Warsaw street, shopfront architecture, early evening overcast light and protagonist continuity. Image 2 = exact hero identity and wardrobe. Image 3 = established realistic painterly rendering, readable face and subtle detail, do not copy bench or other man. Image 4 = muted palette and quiet melancholy; do not copy its bus or setting.\nSame late-thirties man, wavy dark brown hair, short stubble, lean ordinary build, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly ONE black backpack worn on his back. Hood DOWN in this light drizzle. Restrained realistic painterly detail, natural anatomy, low-saturation slate blue-gray and weathered gray-brown, charcoal clothes, localized softly warm small lights, subdued reflections. No glossy HDR, no vivid orange/gold wash, no neon, no excessive dark flatness. Weather = very LIGHT DRIZZLE: sparse tiny drops, slight dampness, no heavy rain streaks, no sheets of rain or broad splashing. Mobile-readable hero face and action. Three-quarter view, not back-only. One full-frame illustration, no text, no UI, no panels, no collage, no watermark.\nCHOICE RESULT: TAKE COVER NEARBY. Show the protagonist now pressed close to the wall beneath the small shallow black shop awning from the opening. He has stopped to wait, hands in jacket pockets, looking out at the street. Clearly show the limited depth of the awning and its outer edge above and slightly in front of him. It provides PARTIAL protection: the body is mostly shielded but fine drops drift at the exposed outer shoulder and boots; a small drip falls near the edge, not a waterfall. Reframe from a few steps along the pavement to clearly distinguish from the opening; warm shop glass beside him, familiar sidewalk, a few ordinary distant pedestrians. Keep the full awning geometry legible. He is not walking, not searching, not under a deep passage.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-5df86447-0d9c-4f8a-ad11-9f070a32ef39.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "drizzle",
+      "choice": "proper",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-769c4055-e116-4631-bcf4-a1021793e0fc.png",
+      "asset": "public/assets/event-rain-drizzle-proper.webp",
+      "prompt": "Use case: illustration-story. Asset type: one standalone 16:9 landscape event-choice RESULT illustration for the game Street Life Simulator.\nInput images: image 1 = approved LIGHT DRIZZLE opening, use for the same Warsaw street, shopfront architecture, early evening overcast light and protagonist continuity. Image 2 = exact hero identity and wardrobe. Image 3 = established realistic painterly rendering, readable face and subtle detail, do not copy bench or other man. Image 4 = muted palette and quiet melancholy; do not copy its bus or setting.\nSame late-thirties man, wavy dark brown hair, short stubble, lean ordinary build, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly ONE black backpack worn on his back. Hood DOWN in this light drizzle. Restrained realistic painterly detail, natural anatomy, low-saturation slate blue-gray and weathered gray-brown, charcoal clothes, localized softly warm small lights, subdued reflections. No glossy HDR, no vivid orange/gold wash, no neon, no excessive dark flatness. Weather = very LIGHT DRIZZLE: sparse tiny drops, slight dampness, no heavy rain streaks, no sheets of rain or broad splashing. Mobile-readable hero face and action. Three-quarter view, not back-only. One full-frame illustration, no text, no UI, no panels, no collage, no watermark.\nCHOICE RESULT: FOUND PROPER SHELTER after searching. The protagonist has reached a DEEP covered public passage through the adjacent Warsaw apartment building on the same street. Show him standing safely a full body-length INSIDE the covered passage, relaxed shoulders, hands loosely resting on backpack straps, turned three-quarters toward the open street while waiting. The dry paving and masonry roof overhead extend well beyond him, a clear dry-to-damp boundary at the passage opening, light drizzle ONLY OUTSIDE. He has full protection; NO rain or drips fall on him or inside the passage. Framing from inside and to the side shows his recognizable face and the street beyond, matching street architecture and evening light. Ordinary publicly accessible passage, no home entry, no sleeping, no bench scene.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-5df86447-0d9c-4f8a-ad11-9f070a32ef39.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "drizzle",
+      "choice": "continue",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-cba6ca8e-0eff-4084-955e-e20cd55c13d8.png",
+      "asset": "public/assets/event-rain-drizzle-continue.webp",
+      "prompt": "Use case: illustration-story. Asset type: one standalone 16:9 landscape event-choice RESULT illustration for the game Street Life Simulator.\nInput images: image 1 = approved LIGHT DRIZZLE opening, use for the same Warsaw street, shopfront architecture, early evening overcast light and protagonist continuity. Image 2 = exact hero identity and wardrobe. Image 3 = established realistic painterly rendering, readable face and subtle detail, do not copy bench or other man. Image 4 = muted palette and quiet melancholy; do not copy its bus or setting.\nSame late-thirties man, wavy dark brown hair, short stubble, lean ordinary build, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly ONE black backpack worn on his back. Hood DOWN in this light drizzle. Restrained realistic painterly detail, natural anatomy, low-saturation slate blue-gray and weathered gray-brown, charcoal clothes, localized softly warm small lights, subdued reflections. No glossy HDR, no vivid orange/gold wash, no neon, no excessive dark flatness. Weather = very LIGHT DRIZZLE: sparse tiny drops, slight dampness, no heavy rain streaks, no sheets of rain or broad splashing. Mobile-readable hero face and action. Three-quarter view, not back-only. One full-frame illustration, no text, no UI, no panels, no collage, no watermark.\nCHOICE RESULT: CARRY ON. Show the protagonist continuing to WALK down the OPEN sidewalk several paces beyond the familiar shop awning, no shelter above his head. Natural mid-stride pose, both hands in jacket pockets, head slightly forward, composed but thoughtful expression, three-quarter front view. Sparse fine drizzle touches his hair and shoulders. Familiar shopfront and awning now behind him to the left, same street receding behind, a few ordinary pedestrians and distant cars. Both feet and a clear walking stride are visible. He is not looking for cover and not holding a phone or umbrella. No elevated hand from the opening.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-5df86447-0d9c-4f8a-ad11-9f070a32ef39.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "rain",
+      "choice": "nearby",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-5f4d15f1-551d-4536-a28a-bdfbb96423c9.png",
+      "asset": "public/assets/event-rain-rain-nearby.webp",
+      "prompt": "Asset type: standalone 16:9 landscape choice-result illustration for Street Life Simulator.\nReference 1 = corresponding drizzle ACTION scene, establishing the action and composition. Reference 2 = matching approved rain-intensity opening, establishing weather severity, clothing continuity, surrounding Warsaw street and time of day. Reference 3 = authoritative exact protagonist identity/wardrobe, Reference 4 = realistic painterly rendering, Reference 5 = subdued palette.\nSame lean late-thirties man, wavy dark-brown hair, short stubble, same facial proportions, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly one black backpack worn. Preserve character identity. Restrained realistic painterly detail, readable face, low-saturation slate blue-gray, charcoal and weathered gray-brown, small localized dull amber lights and subdued reflections. Soft natural depth, not glossy HDR, not vivid orange/gold, not neon, not dark flat wash. Same overcast early evening light across all weather levels. Single full-frame illustration, no panels or collage, no text, no UI, no watermark.\nWEATHER: steady moderate rain, clearly visible but separated rain streaks, small puddles and gentle splashes, ordinary umbrellas. Not a downpour. Hood DOWN, matching the moderate-rain opening.\nUse case: illustration-story. This is an ALTERNATIVE NEARBY makeshift shelter: instead of the shop awning from reference 1, the protagonist now stands close to the trunk of one of the autumn STREET TREES already present in reference 2. Compose a three-quarter front view including his recognizable face, the tree trunk beside him, dense remaining leaves overhead, the same familiar buildings/shopfront on the street behind. He is still on the ordinary sidewalk, not in a forest or park. Leafy branches intercept some rain, but separated large droplets fall from leaves near his shoulders and visible rain reaches the outer shoulder and boots. It is visibly imperfect cover, NOT a dry impenetrable canopy. Stopped to wait with hands in pockets, slight uncomfortable hunch. Clear ordinary moderate rain throughout street. No shelter roof above him, no giant tree, no extra backpack.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-32f79208-99da-4085-9d86-2675f7466d49.png",
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-d13779d6-4f7b-4ba1-b69b-b912e44a2a6e.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "downpour",
+      "choice": "nearby",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-c5e7fee7-f2c2-4368-83fb-e907bd9f622f.png",
+      "asset": "public/assets/event-rain-downpour-nearby.webp",
+      "prompt": "Asset type: standalone 16:9 landscape choice-result illustration for Street Life Simulator.\nReference 1 = corresponding drizzle ACTION scene, establishing the action and composition. Reference 2 = matching approved rain-intensity opening, establishing weather severity, clothing continuity, surrounding Warsaw street and time of day. Reference 3 = authoritative exact protagonist identity/wardrobe, Reference 4 = realistic painterly rendering, Reference 5 = subdued palette.\nSame lean late-thirties man, wavy dark-brown hair, short stubble, same facial proportions, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly one black backpack worn. Preserve character identity. Restrained realistic painterly detail, readable face, low-saturation slate blue-gray, charcoal and weathered gray-brown, small localized dull amber lights and subdued reflections. Soft natural depth, not glossy HDR, not vivid orange/gold, not neon, not dark flat wash. Same overcast early evening light across all weather levels. Single full-frame illustration, no panels or collage, no text, no UI, no watermark.\nWEATHER: HEAVY DOWNPOUR, dense heavy rain outside, many small pavement splashes, broad shallow puddles and flowing gutter water, reduced distant visibility. Protagonist's jacket HOOD MUST BE UP over top/back of head and ears, with a few dark curls at forehead and face clearly visible, exactly as in approved hooded opening. Keep early-evening light, no lightning, no flood disaster.\nUse case: lighting-weather. Edit corresponding nearby-cover scene into heavy downpour, preserving the same shop, sidewalk and hero by the wall. Make the nearby cover unmistakably SMALL: a shallow narrow building/shop ledge projecting only about half a metre, not a deep porch or arcade. Hero presses his back/one shoulder close to the wall, shoulders hunched, HOOD UP, hands in pockets. The little ledge partly protects head and upper torso but wind-driven rain still reaches his outer arm, trousers and boots; water runs off its outer edge just in front of him, without forming a waterfall on his face. Dense downpour and pavement splashes outside. Imperfect limited protection should be legible at mobile size. Keep the recognizable face visible.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-32f79208-99da-4085-9d86-2675f7466d49.png",
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-345d9572-43cb-4ca2-88a5-ba19207dc81c.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "rain",
+      "choice": "proper",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-be1e7ed6-f7c9-47de-a67c-29adb1b21027.png",
+      "asset": "public/assets/event-rain-rain-proper.webp",
+      "prompt": "Asset type: standalone 16:9 landscape choice-result illustration for Street Life Simulator.\nReference 1 = corresponding drizzle ACTION scene, establishing the action and composition. Reference 2 = matching approved rain-intensity opening, establishing weather severity, clothing continuity, surrounding Warsaw street and time of day. Reference 3 = authoritative exact protagonist identity/wardrobe, Reference 4 = realistic painterly rendering, Reference 5 = subdued palette.\nSame lean late-thirties man, wavy dark-brown hair, short stubble, same facial proportions, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly one black backpack worn. Preserve character identity. Restrained realistic painterly detail, readable face, low-saturation slate blue-gray, charcoal and weathered gray-brown, small localized dull amber lights and subdued reflections. Soft natural depth, not glossy HDR, not vivid orange/gold, not neon, not dark flat wash. Same overcast early evening light across all weather levels. Single full-frame illustration, no panels or collage, no text, no UI, no watermark.\nWEATHER: steady moderate rain, clearly visible but separated rain streaks, small puddles and gentle splashes, ordinary umbrellas. Not a downpour. Hood DOWN, matching the moderate-rain opening.\nUse case: lighting-weather. Preserve the exact deep covered public building passage and full-body hero standing well inside from reference 1, same relaxed posture and camera. Change ONLY outdoor weather beyond opening to steady MODERATE RAIN, with distinct rain streaks, small puddles/ripples, background pedestrians opening umbrellas. Entire passage roof, floor around hero, and protagonist remain protected: NO rain streaks, drips or splashes inside. Strong legible dry boundary at the opening. Hood stays DOWN. Warm interior lamps stay restrained. This is the RESULT after a short 1\u20135 minute shelter search; no text or clocks.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-769c4055-e116-4631-bcf4-a1021793e0fc.png",
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-d13779d6-4f7b-4ba1-b69b-b912e44a2a6e.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "downpour",
+      "choice": "proper",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-f715502a-5f3e-41e2-a65d-8e3f13c722ba.png",
+      "asset": "public/assets/event-rain-downpour-proper.webp",
+      "prompt": "Asset type: standalone 16:9 landscape choice-result illustration for Street Life Simulator.\nReference 1 = corresponding drizzle ACTION scene, establishing the action and composition. Reference 2 = matching approved rain-intensity opening, establishing weather severity, clothing continuity, surrounding Warsaw street and time of day. Reference 3 = authoritative exact protagonist identity/wardrobe, Reference 4 = realistic painterly rendering, Reference 5 = subdued palette.\nSame lean late-thirties man, wavy dark-brown hair, short stubble, same facial proportions, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly one black backpack worn. Preserve character identity. Restrained realistic painterly detail, readable face, low-saturation slate blue-gray, charcoal and weathered gray-brown, small localized dull amber lights and subdued reflections. Soft natural depth, not glossy HDR, not vivid orange/gold, not neon, not dark flat wash. Same overcast early evening light across all weather levels. Single full-frame illustration, no panels or collage, no text, no UI, no watermark.\nWEATHER: HEAVY DOWNPOUR, dense heavy rain outside, many small pavement splashes, broad shallow puddles and flowing gutter water, reduced distant visibility. Protagonist's jacket HOOD MUST BE UP over top/back of head and ears, with a few dark curls at forehead and face clearly visible, exactly as in approved hooded opening. Keep early-evening light, no lightning, no flood disaster.\nUse case: lighting-weather. Preserve the exact deep covered public building passage, camera, and full-body hero standing safely WELL INSIDE as in reference 1. Change outdoor weather beyond opening to dense HEAVY DOWNPOUR, with rain curtain and many pavement splashes outside, heavy water at the street gutter. Change protagonist hood to UP, matching reference 2, face remains recognizable. Keep his relaxed waiting posture and hands on backpack straps. Even during downpour the roof protects him fully: DRY floor and NO rain streaks, drips or rain spray inside the deep passage. Clear dry/wet boundary. Do not put him near the exposed lip of the roof. Interior illumination unchanged and muted.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-769c4055-e116-4631-bcf4-a1021793e0fc.png",
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-345d9572-43cb-4ca2-88a5-ba19207dc81c.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "rain",
+      "choice": "continue",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-2d89e14d-59a3-42e8-be24-0a4293dcfe45.png",
+      "asset": "public/assets/event-rain-rain-continue.webp",
+      "prompt": "Asset type: standalone 16:9 landscape choice-result illustration for Street Life Simulator.\nReference 1 = corresponding drizzle ACTION scene, establishing the action and composition. Reference 2 = matching approved rain-intensity opening, establishing weather severity, clothing continuity, surrounding Warsaw street and time of day. Reference 3 = authoritative exact protagonist identity/wardrobe, Reference 4 = realistic painterly rendering, Reference 5 = subdued palette.\nSame lean late-thirties man, wavy dark-brown hair, short stubble, same facial proportions, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly one black backpack worn. Preserve character identity. Restrained realistic painterly detail, readable face, low-saturation slate blue-gray, charcoal and weathered gray-brown, small localized dull amber lights and subdued reflections. Soft natural depth, not glossy HDR, not vivid orange/gold, not neon, not dark flat wash. Same overcast early evening light across all weather levels. Single full-frame illustration, no panels or collage, no text, no UI, no watermark.\nWEATHER: steady moderate rain, clearly visible but separated rain streaks, small puddles and gentle splashes, ordinary umbrellas. Not a downpour. Hood DOWN, matching the moderate-rain opening.\nUse case: lighting-weather. Preserve corresponding WALKING scene from reference 1: protagonist walking mid-stride on OPEN pavement, familiar shop awning behind him to the left, same three-quarter front camera, face, architecture and single backpack. Change weather to steady MODERATE RAIN with distinct rain streaks, jacket beads, shallow puddles, small splashes at boots and umbrellas on background walkers. Hood DOWN as reference 2, hands in jacket pockets, slight shoulder tension, determined ordinary expression. He is clearly beyond any cover, walking forward, not waiting or searching. No phone or umbrella in his hands.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-cba6ca8e-0eff-4084-955e-e20cd55c13d8.png",
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-d13779d6-4f7b-4ba1-b69b-b912e44a2a6e.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    },
+    {
+      "intensity": "downpour",
+      "choice": "continue",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-191aca05-d8fd-4ba2-901f-a3dbadb3f530.png",
+      "asset": "public/assets/event-rain-downpour-continue.webp",
+      "prompt": "Asset type: standalone 16:9 landscape choice-result illustration for Street Life Simulator.\nReference 1 = corresponding drizzle ACTION scene, establishing the action and composition. Reference 2 = matching approved rain-intensity opening, establishing weather severity, clothing continuity, surrounding Warsaw street and time of day. Reference 3 = authoritative exact protagonist identity/wardrobe, Reference 4 = realistic painterly rendering, Reference 5 = subdued palette.\nSame lean late-thirties man, wavy dark-brown hair, short stubble, same facial proportions, charcoal hooded field jacket, dark sweater, blue jeans, dark boots and exactly one black backpack worn. Preserve character identity. Restrained realistic painterly detail, readable face, low-saturation slate blue-gray, charcoal and weathered gray-brown, small localized dull amber lights and subdued reflections. Soft natural depth, not glossy HDR, not vivid orange/gold, not neon, not dark flat wash. Same overcast early evening light across all weather levels. Single full-frame illustration, no panels or collage, no text, no UI, no watermark.\nWEATHER: HEAVY DOWNPOUR, dense heavy rain outside, many small pavement splashes, broad shallow puddles and flowing gutter water, reduced distant visibility. Protagonist's jacket HOOD MUST BE UP over top/back of head and ears, with a few dark curls at forehead and face clearly visible, exactly as in approved hooded opening. Keep early-evening light, no lightning, no flood disaster.\nUse case: lighting-weather. Preserve corresponding WALKING scene from reference 1: protagonist walking mid-stride through fully EXPOSED sidewalk, same three-quarter front camera, architecture, shop awning behind to the left and one backpack. Turn weather into dense HEAVY DOWNPOUR, many splashes from boot steps and pavement, shallow running gutter water, distant pedestrians hurrying with umbrellas. Hero's HOOD IS UP matching reference 2, covering hair and ears but leaving face visible. Head a little lower and shoulders hunched against rain, hands in jacket pockets, pushing forward in a natural stride. No canopy above him, no umbrella, no phone. Same early-evening lighting, no disaster or night shift.",
+      "references": [
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-cba6ca8e-0eff-4084-955e-e20cd55c13d8.png",
+        "/workspace/scratch/ebd4d371736b/generated_images/exec-345d9572-43cb-4ca2-88a5-ba19207dc81c.png",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/hero-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/illustration-style-reference.webp",
+        "/workspace/scratch/ebd4d371736b/street-life-game/docs/art/muted-palette-reference.webp"
+      ]
+    }
+  ],
+  "openings": [
+    {
+      "intensity": "drizzle",
+      "asset": "public/assets/event-rain-drizzle-opening.webp",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-5df86447-0d9c-4f8a-ad11-9f070a32ef39.png"
+    },
+    {
+      "intensity": "rain",
+      "asset": "public/assets/event-rain-rain-opening.webp",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-d13779d6-4f7b-4ba1-b69b-b912e44a2a6e.png"
+    },
+    {
+      "intensity": "downpour",
+      "asset": "public/assets/event-rain-downpour-opening.webp",
+      "generated_source": "/workspace/scratch/ebd4d371736b/generated_images/exec-345d9572-43cb-4ca2-88a5-ba19207dc81c.png"
+    }
+  ]
+}

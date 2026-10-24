@@ -2751,5 +2751,278 @@
         "file": "event-night-patrol-declined-1024.webp"
       }
     ]
+  },
+  "event-rain-drizzle-opening.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-drizzle-opening-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-drizzle-opening-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-drizzle-opening-1024.webp"
+      }
+    ]
+  },
+  "event-rain-drizzle-nearby.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-drizzle-nearby-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-drizzle-nearby-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-drizzle-nearby-1024.webp"
+      }
+    ]
+  },
+  "event-rain-drizzle-proper.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-drizzle-proper-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-drizzle-proper-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-drizzle-proper-1024.webp"
+      }
+    ]
+  },
+  "event-rain-drizzle-continue.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-drizzle-continue-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-drizzle-continue-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-drizzle-continue-1024.webp"
+      }
+    ]
+  },
+  "event-rain-rain-opening.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-rain-opening-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-rain-opening-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-rain-opening-1024.webp"
+      }
+    ]
+  },
+  "event-rain-rain-nearby.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-rain-nearby-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-rain-nearby-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-rain-nearby-1024.webp"
+      }
+    ]
+  },
+  "event-rain-rain-proper.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-rain-proper-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-rain-proper-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-rain-proper-1024.webp"
+      }
+    ]
+  },
+  "event-rain-rain-continue.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-rain-continue-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-rain-continue-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-rain-continue-1024.webp"
+      }
+    ]
+  },
+  "event-rain-downpour-opening.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-downpour-opening-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-downpour-opening-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-downpour-opening-1024.webp"
+      }
+    ]
+  },
+  "event-rain-downpour-nearby.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-downpour-nearby-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-downpour-nearby-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-downpour-nearby-1024.webp"
+      }
+    ]
+  },
+  "event-rain-downpour-proper.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-downpour-proper-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-downpour-proper-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-downpour-proper-1024.webp"
+      }
+    ]
+  },
+  "event-rain-downpour-continue.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-downpour-continue-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-downpour-continue-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-downpour-continue-1024.webp"
+      }
+    ]
+  },
+  "event-rain-stopped-search.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-rain-stopped-search-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-rain-stopped-search-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-rain-stopped-search-1024.webp"
+      }
+    ]
   }
 }

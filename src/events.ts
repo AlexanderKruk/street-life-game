@@ -189,10 +189,6 @@ export const STREET_EVENTS: StreetEvent[] = [
     }},
     { label:'Let it fall', outcome:{ phoneCondition:-8, mood:-3, message:'You do not risk the grab. The phone hits the pavement and takes damage.' } }
   ]},
-  { id:'rain-phone', trigger:'travel', icon:'🌧️', title:'Caught in the rain', text:'Rain gets through your clothes and your phone gets damp.', weight:4, eligible:c=>c.travelMode==='walk' && (c.weather==='Rain' || c.weather==='Showers'), choices:[
-    { label:'Hide it under the jacket', outcome:{ jacketCondition:-2, phoneCondition:-3, mood:-2, message:'You protected it as best you could, but some moisture got inside.' } },
-    { label:'Keep moving', outcome:{ phoneCondition:-10, mood:-1, message:'You save time, but the wet phone starts behaving strangely.' } }
-  ]},
   { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the curb.', weight:4, eligible:c=>c.travelMode==='walk', choices:[
     { label:'Pick it up', outcome:{ randomCoin:true, message:'You pick up the coin.' } },
     { label:'Leave it', outcome:{ mood:1, message:'You leave it for someone who may need it more.' } }

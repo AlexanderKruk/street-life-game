@@ -231,7 +231,7 @@ function measure(App) {
   fireEvent.click(screen.getByRole('button', { name: 'Got it', exact: true })); assert(!document.querySelector('.result-modal'));
   setup(App, 'location', { minutes: 1380, energy: 20 });
   fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ })); pauseAudit('sleep planning', '.sleep-choice-modal');
-  setup(App, 'location', { locationId: 'street' }, { 'street-life-rain-choice-v1': true }); pauseAudit('rain choice', '.event-overlay');
+  setup(App, 'location', { locationId: 'street', day: 3, rainSystemStarted: true, nextRainAt: 999999, rain: { id: 'rain:3380', level: 'rain', start: 3380, end: 3440, choice: null, searchRemaining: 0, protection: .5, shelter: 'tree', exposure: 0, energyLoss: 0, moodLoss: 0, waited: 0, coldRoll: .99 } }); pauseAudit('rain choice', '.event-overlay');
   setup(App, 'status', { health: 0 }); pauseAudit('game over', '.game-over-overlay');
   setup(App, 'map', {}, { 'street-life-inventory-v1': { transitCard: false } });
   fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));

@@ -6,7 +6,7 @@ import type { ResultChange, ResultSummary } from './results'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
-export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; visibleStats?: string[]; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; visibleStats?: string[]; rainResultId?: string; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')

@@ -36,3 +36,10 @@ Nine main-location environment images cover Station, Night Shelter, Help Center,
 ## Room for one more — v316
 
 [park-company-generation.json](park-company-generation.json) records the selected opening and four final outcome illustrations. The opening keeps only the olive-jacket man addressing the hero. Supporting characters change their posture, gestures and gaze by outcome: listening to the conversation, reacting to the argument, returning to their evening after refusal, or chatting/drinking while the hero takes another path. Identity, wardrobe, park bench and night light stay consistent. Five WebP masters and 480/768/1024px variants load on demand in the same event/result components as the neighbour. D20 success/failure each has one illustration, also used for natural 20/1.
+
+
+## Timed rain — v319
+
+`rain-choice-generation.json` records three intensity openings and nine choice outcomes. Drizzle/Downpour nearby cover is a small shop awning; Rain nearby cover is an autumn street tree. Proper cover is a deep dry passage. Carry on depicts exposed walking. Downpour scenes consistently use the raised jacket hood. All twelve images have on-demand 480/768/1024px variants; scene-specific English copy in `src/rain.ts` describes the pictured cover.
+
+The shared `event-rain-stopped-search` result is exclusive to a shelter search interrupted by rain ending. It shows the hero looking at the cloudy sky, wet paving without large puddles, and no falling rain. The same image covers all three intensities; regular shelter/carry-on images are unchanged. `rain-stopped-search-generation.json` records the exact generation prompt and reference roles.

@@ -12,7 +12,7 @@ Earlier version notes and superseded designs are preserved in [Implementation hi
 |---|---|
 | Navigation | Map, Inventory, current place, Status, Phone. Find Help, Goals, Notes and History are apps inside Phone. |
 | Essentials | Phone and Clothing are informational, non-clickable cards. Phone shows Battery and Condition; Clothing shows Clean and Condition. |
-| Wetness | Disabled by default. No moisture accumulation, penalties, wetness indicators or rain/cover decision modals. Rain/weather and rain-related equipment events remain. |
+| Wetness | Disabled by default. No clothing moisture accumulation or wetness UI. Independent timed rain events use three intensities and shelter decisions without damaging equipment. |
 | Activity cards | Animated icon; muted route/context; elapsed time first; bold action with three animated dots. Starts at `01m`, then `1h 00m`; no reserved blank hour space. |
 | Map | Dark overhead city plan with scattered landmark anchors, Street and Small Shop shortcuts, and no Map title. |
 | Results | Every Got it result uses a centered blocking modal with the shared blur/backdrop. |
@@ -62,7 +62,7 @@ The narrator describes the surroundings, established memories and observable con
 
 Street Life is currently a mobile-first location/map survival prototype. The player manages time, money, physical condition, possessions, housing and access to work/support while moving around the city.
 
-The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Pending result windows are not persisted. Unresolved catalog-event choices, shown event IDs and the shared encounter cooldown are persisted; first-night observations retain their existing compatibility key. Answered phone questions, journal goal flags/history, closing notices and charging state are persisted; reset clears them. Deferred rain-choice keys are retained for compatibility but inactive in release-default gameplay.
+The game persists main game state, inventory, active effects, life situation, safe storage, discovered locations, the active discovery goal, mobile-service settings/expiry, an active sleep session, the active trip (including remaining time and departure result snapshot), the daily begging allowance, daily night-shelter vacancies/registration attempt, an active registration queue, and morning checkout progress in localStorage. The last normal screen is also saved. Reset restores the initial state and discovery list. Reloading resumes a trip without buying another ticket. Ordinary pending result windows are not persisted; unacknowledged rain results are retained in the game save. Unresolved catalog-event choices, shown event IDs and the shared encounter cooldown are persisted; first-night observations retain their existing compatibility key. Answered phone questions, journal goal flags/history, closing notices and charging state are persisted; reset clears them. Deferred rain-choice keys are retained for compatibility but inactive in release-default gameplay.
 
 Initial state:
 - D0, Monday, 22:00, Street (stored calendar day 1). Existing saves retain their own time. Reset/new run starts at 22:00.
@@ -201,21 +201,33 @@ Food, water and medicine are primarily designed to remove/prevent causes of Heal
 
 ## Weather
 
-Displayed D0 and D1 (stored calendar days 1 and 2) are always Cloudy, including existing saves with an active rain override. From D2 onward, the existing deterministic Cloudy, Rain, Clear, Windy and Showers cycle keeps its calendar positions. Base temperatures are 9°C, 7°C, 16°C, 6°C and 10°C. `temperatureAt` adds the time-of-day swing; the current formula has a 20-hour cosine period, an implementation limitation rather than an intended 24-hour model.
+The opening evening D0 (stored day 1, starting at 22:00) remains Cloudy and dry. Rain is enabled from the first full day, D1 (stored day 2). The existing daily weather calendar determines frequency: Rainy and Showers days use repeated episodes separated by 180–480 game minutes after the previous episode ends (roughly four episodes in a full rainy day); Cloudy permits at most one episode per calendar day; Clear and Windy start none. A carried-over episode already uses a Cloudy day's allowance. The saved daily counter resets at midnight and survives reload.
 
-A new run starts dry at 22:00. From displayed D2 onward, a 30-minute night walk can start rain halfway through with 35% probability when currently dry, between 20:00 and 06:00. The override lasts 180 game minutes from onset and persists through reload/midnight. Starting the game itself does not roll rain.
+The shared game clock checks the schedule regardless of whether the player is walking, standing, using the phone or indoors. The first rainy-day episode is normally 90–360 minutes after the day starts, while an existing later inter-episode deadline is preserved. A Cloudy day's one episode is scheduled at a random remaining minute of that day, respecting an existing later rain deadline; it can therefore have no new rain if the deadline lies beyond midnight. Duration is sampled once: 5–60 game minutes in five-minute steps. Drizzle, Rain and Downpour are equally likely and keep their intensity throughout an episode. The player is not told the remaining duration.
 
-| Weather | Additional elapsed-time cost |
-|---|---|
-| Cloudy | None |
-| Rain | Energy −0.025/min while awake |
-| Clear | +15% of baseline Thirst drain |
-| Windy | Energy −0.035/min while awake |
-| Showers | Energy −0.015/min while awake |
+`rainSystemStarted` migrates existing saves to episodic weather without reviving legacy wetness decisions or 180-minute overrides. `rainScheduleDay` and `rainStartsToday` retain the daily allowance. Between episodes, the header describes a rainy day as Rainy (or Showers); these labels cause no direct rain exposure/cost. Active episodes show Drizzle/Rain/Downpour and use base 7°C, without a second legacy rain Energy charge. Clear and Windy retain their existing calendar positions/costs. `temperatureAt` retains its existing time-of-day formula. The separate opt-in moisture tuning model preserves its earlier calendar-weather compatibility.
 
-**Clothing wetness is deferred for the first release.** The release default in `src/gameplayFeatures.ts` disables wetting/drying, wet-clothing Energy/Mood penalties, wet-sleep recovery loss and moisture's extra illness risk. Wetness UI/result rows, clothing guidance and the rain/cover decision flow are inactive. Existing wetness/sleep-loss fields are discarded; saved rain choices and canopy responses no longer pause travel/search. Cleanliness, condition and laundry still work.
+A blocking illustrated event appears only for an awake, exposed hero (including outdoor travel). Indoor/transit time is protected and shows no rain-choice modal. Going outside during an existing unhandled episode presents its remaining rain. No new rain choice appears while sleeping. The former `rain-phone` catalog encounter is removed, so rain no longer damages the phone or clothing.
 
-Rain, ordinary weather costs, temperature and outdoor-sleep illness remain active. The separate catalog event Caught in the rain can still damage phone/clothing condition; disabling accumulated clothing moisture does not remove that equipment event. The retained moisture implementation can be explicitly enabled with `VITE_CLOTHING_WETNESS_ENABLED=true` for later tuning; its old behavior is documented only in the history archive.
+| Choice | Time and protection | Presentation |
+|---|---|---|
+| Take cover nearby | Immediate; one saved protection roll of 30–80%. Wait until the episode ends, or leave early. | Drizzle/Downpour: small shop awning; Rain: street tree. Partial protection is reflected in the scene and text. |
+| Find proper shelter | Search takes 1–5 minutes with full rain exposure, then complete protection in a deep covered passage. | Normal blocking event/activity/result flow. The search and wait pause the interrupted phone activity or trip; they resume after result acknowledgement. |
+| Carry on | Continue ordinary gameplay with full rain exposure only while outdoors. Indoor/transit minutes stop that exposure. | No immediate result. The illustrated result appears at rain end, waiting behind any existing event/result. Only the rain's recorded costs appear, excluding unrelated actions, food, purchases or recovery. |
+
+Waiting uses the shared ×4 action speed (one game minute per 250 ms), with elapsed time only. Time and ordinary needs continue; route/search progress and browsing/navigation battery costs pause. Search pause minutes survive reload and cannot be counted as phone-search progress. Leaving cover switches to background exposure without rerolling duration, shelter quality or illness. From nearby cover the player can also search for a dry passage. If rain ends before the search finishes, its result uses the shared `event-rain-stopped-search` image: the hero notices rain has stopped, with a merely wet surface and no large puddles. This image is exclusive to unfinished shelter searches across all three intensity levels.
+
+| Rain intensity | Extra Energy per exposed hour | Extra Mood loss per exposed hour | Maximum Cold chance at 5–10°C |
+|---|---:|---:|---:|
+| Drizzle | 2 | 1 | 3% |
+| Rain | 6 | 4 | 12% |
+| Downpour | 12 | 8 | 25% |
+
+Rain costs accrue minute by minute, scaled by actual exposed time and shelter protection. Cold risk is zero for the first 20 equivalent exposed minutes, then grows linearly to the intensity's maximum at 60 equivalent minutes. Temperatures over 10°C halve exposure for illness; over 15°C use one tenth. Illness is rolled once per episode from a saved draw, never per choice/minute/reload. It uses the existing two-day Cold effect and does not replace or extend an existing Cold. Outdoor sleep retains its separate cumulative sleep-illness rules.
+
+All three openings and nine answer illustrations use responsive 480/768/1024px variants, loaded on demand. `src/rain.ts` owns matching per-intensity opening/result text and artwork selection; Downpour consistently shows the hero's hood up. The shared illustrated event and `ResultCard` match the neighbour encounter. Active episodes, search/wait progress, accumulated costs and unacknowledged results persist in the existing game save. Results are removed only on acknowledgement; history and illness are not reapplied after reload.
+
+**Clothing wetness remains disabled for release.** No moisture meters, wetness accumulation, wet-clothing penalties or wetness recovery loss are reintroduced. Cleanliness, condition and laundry are unchanged. The retained opt-in moisture model (`VITE_CLOTHING_WETNESS_ENABLED=true`) is separate from the release rain feature and retains legacy calendar-weather inputs for its tuning checks.
 
 ## Locations and opening hours
 
@@ -556,7 +568,7 @@ The catalog has twenty-one general events, a continuation-only phone-catching st
 General catalog events:
 
 1. **The phone slips** — walking only. D20 Reflex option or guaranteed drop/damage.
-2. **Caught in the rain** — walking in Rain/Showers. Protect with jacket or keep moving; damages phone/clothing.
+2. **Timed rain episodes** — independent of the catalog queue; see Weather. Replaces the removed phone/clothing-damage rain encounter.
 3. **Coin on the pavement** — pick up one weighted Polish coin, from 1 gr to 5 zł (5 zł: 1%; 1–50 gr: 92%), or leave it for +1 Mood.
 4. **Someone offers food** — walking, 06:00–22:00, outside the opening-night window; take one Food and +2 Mood or decline.
 5. **Ticket inspection** — public transport only; currently just show ticket.
@@ -816,7 +828,7 @@ These are implementation facts or defined future work, not claims that the whole
 - Not every custom action triggers a location event; ordinary location checks also occur on arrival, awake bench rest and periodic idle checks. Pending result windows are not generally persisted; catalog choices, seen IDs, encounter cooldowns, first-night choices and closing notices have persistence.
 - History keeps at most 500 compact entries and cannot reconstruct actions from before history existed.
 - Life/support/referral/storage/discovery changes do not all have dedicated numeric result rows; text carries those outcomes.
-- Wetness/rain-cover decisions are deliberately disabled for the first release. Opt-in tests of retained code do not mean the feature is active for players.
+- Clothing moisture remains disabled; the independent three-intensity rain/shelter flow is active without wetness mechanics.
 - Music/Video/Navigation/Plan launcher icons and playback toggles are hidden; automatic navigation, plan management and the music-walk narrative action are the current exposed behavior.
 
 ## Validation and regression checks
@@ -831,7 +843,7 @@ These are implementation facts or defined future work, not claims that the whole
 | `check-shelter-charging.cjs` | Background charge, quiet hours, caps, checkout, collection at the place, phone availability and informational Essentials. |
 | `check-food-inventory.cjs` | Portion freshness, slots, unsafe-food outcomes, probabilities, capacity, discard and storage. |
 | `check-medicine.cjs` | One dose, recovery acceleration, continuing penalties and saved effects. |
-| `check-wetness-disabled.cjs` | Release default: no moisture penalties/UI or stale-rain interruption. |
+| `check-wetness-disabled.cjs` | Release default: no moisture penalties/UI or stale legacy interruption. |
 | `check-wetness.cjs` | Explicit opt-in deferred-feature regression coverage. |
 | `check-mood.cjs` | Housing/physical caps, identical faces, actions/time and old saves. |
 | `check-save-compatibility.cjs`, `check-autosave.cjs` | Historical fixture migration/reload, zero values, reset, batched writes and lifecycle/error handling. |
@@ -973,3 +985,7 @@ Event audit: neighbour returning with shopping is D0 22:00–23:00; neighbour wi
 The opening and all three answers reuse the neighbour encounters’ shared illustrated blocking event/result modals, blur, contour choice icons and delayed stat animation. Explicit search, pause and walking icons identify the three choices. Actual capped changes appear in the existing result summary; the detour’s authored −1 Energy uses explicit stat visibility rather than being hidden as minor passive drain. Even the no-change waiting result is acknowledged with Got it. Time and background navigation pause for the event and result. Distinct History reflections describe the revealed cat, unexplained wait or longer detour. Existing pending choices and seen-state retain their reload behavior.
 
 Four approved images replace the former parked-car artwork under the existing `event-night-rustle`, `event-rustle-cat`, `event-rustle-wait` and `event-rustle-leave` asset names. Only inspection reveals the cat. RGB WebP masters and 480/768/1024px variants load on demand; existing content-hash caching invalidates the replaced images. [Generation records and reference roles](docs/art/night-rustle-generation.json) preserve the selected sources and art brief.
+
+## Timed rain — v319
+
+Three approved openings and nine choice results are connected to the shared event/result design. Each rain level has its own wording, matching the actual tree, small canopy or deep passage shown. Carry on runs in the background and reports once the episode ends; shelter choices wait with ordinary need costs and paused trip/phone progress. Search time is 1–5 minutes. Artwork provenance is in `docs/art/rain-choice-generation.json`; `check-rain.cjs` covers the nine branches, global-clock onset, costs, protection, Cold risk, persistence and interrupted activity resumption.

@@ -1,5 +1,6 @@
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { initialState, locations, type GameState } from './game'
+import { validRain } from './rain'
 
 // The last ten published builds share this storage schema. Build numbers and
 // storage versions are independent; updates must not clear this shared key.
@@ -24,6 +25,13 @@ export function readSavedGame(storage: SaveReader): GameState | null {
     const locationId = saved.locationId
     next.locationId = locations.some(location => location.id === locationId) ? locationId : initialState.locationId
     if (!Number.isFinite(next.rainUntil) || next.rainUntil! < 0) delete next.rainUntil
+    if (saved.rainSystemStarted !== true) delete next.rainSystemStarted
+    if (!Number.isFinite(next.nextRainAt) || next.nextRainAt! < 0) delete next.nextRainAt
+    if (!Number.isInteger(next.rainScheduleDay) || next.rainScheduleDay! < 1) delete next.rainScheduleDay
+    if (!Number.isInteger(next.rainStartsToday) || next.rainStartsToday! < 0 || next.rainStartsToday! > 1440) delete next.rainStartsToday
+    if (!validRain(saved.rain)) delete next.rain
+    if (saved.rainResults !== undefined) next.rainResults = Array.isArray(saved.rainResults) ? saved.rainResults.filter(validRain).slice(-10) : []
+    if (next.day <= 1) { delete next.rain; delete next.rainResults }
     for (const field of ['wetness', 'wetSleepLoss'] as const) {
       if (!CLOTHING_WETNESS_ENABLED || saved[field] === undefined) delete next[field]
       else next[field] = typeof saved[field] === 'number' && Number.isFinite(saved[field]) ? Math.max(0, Math.min(100, saved[field])) : 0

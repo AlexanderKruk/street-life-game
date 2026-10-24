@@ -38,7 +38,13 @@ for (const fixture of fixtures) {
   for (let reopen = 0; reopen < 3; reopen++) {
     // Compare all keys: game, inventory, journal, discoveries, goals and service.
     for (const [key, value] of Object.entries(fixture.entries)) {
-      if (key === 'street-life-inventory-v1') {
+      if (key === SAVE_KEY) {
+        const upgraded = JSON.parse(localStorage.getItem(key));
+        if (upgraded.nextRainAt !== undefined) assert(Number.isFinite(upgraded.nextRainAt), 'rain schedule is valid during migration');
+        delete upgraded.rainSystemStarted; delete upgraded.nextRainAt; delete upgraded.rainUntil; delete upgraded.rainScheduleDay; delete upgraded.rainStartsToday;
+        const original = JSON.parse(value); delete original.rainUntil;
+        assert.deepEqual(upgraded, original, `v${fixture.build}, reopen ${reopen}: needs, clock, funds and location retained during weather migration`);
+      } else if (key === 'street-life-inventory-v1') {
         assert.deepEqual(JSON.parse(localStorage.getItem(key)), { readyMeal: 0, readyMealFreshness: 100, ...JSON.parse(value) }, `v${fixture.build}, reopen ${reopen}: old inventory retained with empty ready-meal stock`);
       } else if (key === 'street-life-screen' && value === 'journal') {
         assert.equal(localStorage.getItem(key), 'phone', 'old Journal selection migrates to Phone');
