@@ -7,11 +7,19 @@ function bundled(path) {
   new Function('require', 'module', 'exports', code)(require, module, module.exports);
   return module.exports;
 }
-const { initialState, advanceTime, applySleepTime } = bundled('src/game.ts');
+const { initialState, advanceTime, applySleepTime, weatherAt } = bundled('src/game.ts');
 const { readSavedGame, SAVE_KEY } = bundled('src/saveCompatibility.ts');
 const { sleepIllnessHazard } = bundled('src/sleepIllness.ts');
 const { summarizeResult } = bundled('src/results.ts');
-const base = { ...initialState, day: 2, minutes: 600, energy: 80, mood: 45, hunger: 100, thirst: 100, health: 100 };
+const base = { ...initialState, day: 7, minutes: 600, energy: 80, mood: 45, hunger: 100, thirst: 100, health: 100 };
+for (const day of [1, 2]) for (const minutes of [0, 359, 600, 1200, 1439]) {
+  const opening = { ...base, day, minutes, rainUntil: 10000 };
+  assert.equal(weatherAt(opening).label, 'Cloudy', 'D0/D1 ignore legacy rain overrides');
+  assert.equal(weatherAt({ ...opening, rainUntil: undefined }).label, 'Cloudy');
+  assert.equal(advanceTime(opening, 1).energy, advanceTime({ ...opening, rainUntil: undefined }, 1).energy);
+}
+assert.equal(weatherAt({ ...base, day: 3 }).label, 'Clear', 'D2 keeps its original calendar weather');
+assert.equal(weatherAt({ ...base, day: 3, rainUntil: 10000 }).label, 'Rain', 'later rain overrides remain');
 const old = { ...base, wetness: 100, wetSleepLoss: 12 };
 const loaded = readSavedGame({ getItem: key => key === SAVE_KEY ? JSON.stringify(old) : null });
 assert.equal(loaded.wetness, undefined);
@@ -50,6 +58,15 @@ function setup(extras = {}) {
   render(React.createElement(App));
 }
 try {
+  for (const day of [1, 2]) {
+    setup({ [SAVE_KEY]: { ...base, day, minutes: 1320 } });
+    Math.random = () => 0;
+    fireEvent.click(screen.getByRole('button', { name: 'Just one more street. I’m not ready to lie down.' }));
+    fireEvent(window, new window.Event('pagehide'));
+    assert.equal(JSON.parse(localStorage.getItem(SAVE_KEY)).rainUntil, undefined, 'night walks cannot start rain on D0/D1');
+    assert(!screen.queryByRole('dialog', { name: 'Rain on the street' }));
+  }
+  Math.random = () => .99;
   setup();
   assert(!screen.queryByRole('dialog', { name: 'Rain on the street' }));
   assert(!document.querySelector('.rain-cover-status'));

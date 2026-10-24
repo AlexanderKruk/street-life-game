@@ -181,6 +181,12 @@ export const WEATHER = [
   { icon: '🌦️', label: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
 ]
 
+// Calendar saves are 1-based: displayed D0 and D1 stay cloudy, including old rain overrides.
+export function weatherAt(state: Pick<GameState, 'day' | 'minutes' | 'rainUntil'>) {
+  if (state.day <= 2) return WEATHER[0]
+  return (state.rainUntil ?? 0) > absoluteMinutes(state) ? WEATHER[1] : WEATHER[(state.day - 1) % WEATHER.length]
+}
+
 export function temperatureAt(base: number, minutes: number) {
   return Math.round(base - Math.cos(((minutes / 60 - 5) / 10) * Math.PI) * 4)
 }
@@ -211,7 +217,7 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const step = Math.min(1, left)
     left -= step
     const now = absoluteMinutes(next)
-    const weather = (next.rainUntil ?? 0) > now ? WEATHER[1] : WEATHER[(next.day - 1) % WEATHER.length]
+    const weather = weatherAt(next)
     const active = (id: string) => context.effects?.some(effect => effect.id === id && effect.expiresAt > now)
     const cold = active('cold')
     const wellFed = active('well-fed')
@@ -406,7 +412,7 @@ export const actions: GameAction[] = [
 ]
 
 
-export function absoluteMinutes(state: GameState) {
+export function absoluteMinutes(state: Pick<GameState, 'day' | 'minutes'>) {
   return (state.day - 1) * 1440 + state.minutes
 }
 

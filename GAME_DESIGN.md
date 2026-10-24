@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.24-317`.
+**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.24-318`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -201,9 +201,9 @@ Food, water and medicine are primarily designed to remove/prevent causes of Heal
 
 ## Weather
 
-Day weather cycles deterministically through Cloudy, Rain, Clear, Windy and Showers. Base temperatures are 9°C, 7°C, 16°C, 6°C and 10°C. `temperatureAt` adds the time-of-day swing; the current formula has a 20-hour cosine period, an implementation limitation rather than an intended 24-hour model.
+Displayed D0 and D1 (stored calendar days 1 and 2) are always Cloudy, including existing saves with an active rain override. From D2 onward, the existing deterministic Cloudy, Rain, Clear, Windy and Showers cycle keeps its calendar positions. Base temperatures are 9°C, 7°C, 16°C, 6°C and 10°C. `temperatureAt` adds the time-of-day swing; the current formula has a 20-hour cosine period, an implementation limitation rather than an intended 24-hour model.
 
-A new run starts dry at 22:00. A 30-minute night walk can start rain halfway through with 35% probability when currently dry, between 20:00 and 06:00. The override lasts 180 game minutes from onset and persists through reload/midnight. Starting the game itself does not roll rain.
+A new run starts dry at 22:00. From displayed D2 onward, a 30-minute night walk can start rain halfway through with 35% probability when currently dry, between 20:00 and 06:00. The override lasts 180 game minutes from onset and persists through reload/midnight. Starting the game itself does not roll rain.
 
 | Weather | Additional elapsed-time cost |
 |---|---|

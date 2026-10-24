@@ -6,7 +6,7 @@ function bundled(path) {
   const module={exports:{}};new Function('require','module','exports',code)(require,module,module.exports);return module.exports;
 }
 const {initialState,advanceTime,applySleepTime,weatherExposure}=bundled('src/game.ts');
-const base={...initialState,day:2,minutes:600,energy:100,mood:45,hunger:100,thirst:100,health:100,hygiene:90};
+const base={...initialState,day:7,minutes:600,energy:100,mood:45,hunger:100,thirst:100,health:100,hygiene:90};
 const rain=advanceTime(base,60);
 assert.equal(rain.wetness,60);
 assert.equal(advanceTime(base,200).wetness,100);

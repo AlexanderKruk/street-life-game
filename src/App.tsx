@@ -1,7 +1,7 @@
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { OPENING_CALLS, OPENING_CALLS_KEY, CALL_BATTERY_PER_MINUTE, openingCall, loadOpeningCallIndex } from './openingCalls'
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, WEATHER, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, destinationTravelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
+import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, weatherAt, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, destinationTravelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
 import { nextStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventContext, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { illustrateStreetEvent } from './eventArtwork'
 import { summarizeResult, type ConsumedItem, type ResultSnapshot } from './results'
@@ -41,7 +41,7 @@ import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 import { displayDay } from './gameDate'
 
-const BUILD_VERSION = 'v2026.10.24-317'
+const BUILD_VERSION = 'v2026.10.24-318'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -76,8 +76,9 @@ function loadFirstNightEvents(key = FIRST_NIGHT_EVENTS_KEY): FirstNightEvents {
 const RAIN_RESPONSE_KEY = 'street-life-rain-response-v1'
 type RainResponse = { episode: string; locationId: string; sheltered: boolean }
 function rainEpisode(state: GameState) {
+  if (!['Rain', 'Showers'].includes(weatherAt(state).label)) return null
   if ((state.rainUntil ?? 0) > absoluteMinutes(state)) return `shower:${state.rainUntil}`
-  return ['Rain', 'Showers'].includes(WEATHER[(state.day - 1) % WEATHER.length].label) ? `weather:${state.day}` : null
+  return `weather:${state.day}`
 }
 function loadRainResponse(): RainResponse | null {
   if (!CLOTHING_WETNESS_ENABLED) return null
@@ -226,7 +227,7 @@ function phoneScreenDrain(state: GameState, condition: number, usage: 'browsing'
     const minute = absolute % 1440
     const day = Math.floor(absolute / 1440) + 1
     const daylight = minute >= 360 && minute < 1200
-    const clear = (state.rainUntil ?? 0) <= absolute && WEATHER[(day - 1) % WEATHER.length].label === 'Clear'
+    const clear = weatherAt({ ...state, day, minutes: minute }).label === 'Clear'
     const hourly = (usage === 'browsing' ? 18 : 12) + (daylight ? clear ? 12 : 6 : 0)
     drain += hourly / 60 * phoneDrainMultiplier(condition) * Math.min(1, minutes - elapsed)
   }
@@ -644,7 +645,7 @@ export default function App() {
     setLife(status => ({ ...status, shelterEntry: { night: shelterNightDay, admitted: true }, shelterLastStayDay: shelterNightDay }))
   }, [insideNightShelter, shelterNightDay, life.shelterEntry?.night, life.shelterEntry?.admitted])
   const moodBand = conditionBand(game.mood)
-  const weather = (game.rainUntil ?? 0) > absoluteMinutes(game) ? WEATHER[1] : WEATHER[(game.day - 1) % WEATHER.length]
+  const weather = weatherAt(game)
   const currentRainEpisode = rainEpisode(game)
   const underRainCover = !!rainResponse?.sheltered && rainResponse.episode === currentRainEpisode && rainResponse.locationId === current.id
   const travelPhase = trip ? getTravelPhase(trip) : null
@@ -861,7 +862,8 @@ export default function App() {
     if (activeEvent || firstNightEvents.pendingId || encounters.pendingId || !encounterDue(state)) return
     // Opening observations keep priority; D1+ night encounters can occur away from home
     // even when the player skipped the at-home encounters on D0.
-    const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(weather.temp, state.minutes), ...observation, travelMode, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
+    const eventWeather = weatherAt(state)
+    const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(eventWeather.temp, state.minutes), ...observation, travelMode, weather: eventWeather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
       seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
     if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone', 'park-company', 'night-patrol'].includes(event?.id ?? '')) return
     if (event) rememberEncounter(event, state)
@@ -1285,7 +1287,7 @@ export default function App() {
     let wakeEvent: StreetEvent | null = null
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-      const sleepWeather = (wakeState.rainUntil ?? 0) > absoluteMinutes(wakeState) ? WEATHER[1] : WEATHER[(wakeState.day - 1) % WEATHER.length]
+      const sleepWeather = weatherAt(wakeState)
       const alreadyIll = effects.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))
       newlyIll = !alreadyIll && Math.random() < sleepIllnessChance(wakeState.sleepIllnessDose ?? 0)
       if (newlyIll) {
@@ -1481,12 +1483,12 @@ export default function App() {
       if (withMusic) setMusicWalkUsed(true)
       setRainChoice(false)
       setRainResponse(previous => previous ? { ...previous, sheltered: false } : null)
-      const startsRain = weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
+      const startsRain = game.day > 2 && weather.label !== 'Rain' && weather.label !== 'Showers' && (game.minutes >= 1200 || game.minutes < 360) && Math.random() < 0.35
       let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: passiveMusic })
       if (startsRain) next = { ...next, rainUntil: absoluteMinutes(next) + 180 }
       next = applyGameAction(next, { minutes: 15, energy: -1, mood: withMusic ? 0 : 2 }, { ...moodContext(next), walking: true, music: passiveMusic })
       if (withMusic) next.mood = Math.min(moodLimit(next, moodContext(next)).cap, next.mood + 3)
-      const wet = (next.rainUntil ?? 0) > absoluteMinutes(next) || weather.label === 'Rain' || weather.label === 'Showers'
+      const wet = ['Rain', 'Showers'].includes(weatherAt(next).label)
       setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440)) }))
       setGame(next)
       if (CLOTHING_WETNESS_ENABLED && wet) {
@@ -2147,7 +2149,7 @@ export default function App() {
     if (!open || current.id !== 'work') return
     if (game.energy < dayWorkEnergyRequired) { setMessage(`You need at least ${dayWorkEnergyRequired} Energy to start this shift.`); return }
     setGame((prev) => {
-      const weather = WEATHER[(prev.day - 1) % WEATHER.length]
+      const weather = weatherAt(prev)
       const temperature = temperatureAt(weather.temp, prev.minutes + 90)
       const heatMultiplier = temperature >= 25 ? 1.5 : temperature >= 18 ? 1.2 : 1
       return applyAction(prev, {
