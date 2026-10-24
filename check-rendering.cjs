@@ -113,7 +113,13 @@ function measure(App) {
   // Relevant changes must still render: opening hours, selected map pin, completed goal, journal day.
   setup(App, 'map', { minutes: 1319 }); advance(1);
   assert.equal(count('DistrictScene'), 1);
-  assert(screen.getByRole('button', { name: 'Small Shop' }));
+  assert(screen.getByRole('button', { name: 'Small Shop' }).disabled);
+  fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
+  assert(!document.querySelector('.travel-sheet'));
+  setup(App, 'map', { minutes: 419 });
+  assert(screen.getByRole('button', { name: 'Small Shop' }).disabled);
+  advance(1);
+  assert(!screen.getByRole('button', { name: 'Small Shop' }).disabled);
   clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
   assert.equal(count('DistrictScene'), 1);
   assert(!document.querySelector('.district-card'));

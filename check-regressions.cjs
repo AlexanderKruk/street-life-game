@@ -1292,7 +1292,7 @@ assert(document.querySelector('.result-illustration').src.endsWith('event-statio
 
 // Scene art survives restoration and each bench answer has its own result art.
 for(const [label,asset] of [['Ask how they get through the night','conversation'],['Watch quietly','watch'],['Give them some space','space']]) {
- setup({minutes:1385},{[firstNightKey]:{seen:['first-night-bench'],lastAt:1385,pendingId:'first-night-bench'}});
+ setup({minutes:1385},{'street-life-discovered-v1':['street','station','shop'],[firstNightKey]:{seen:['first-night-bench'],lastAt:1385,pendingId:'first-night-bench'}});
  const scene=document.querySelector('.event-illustration');assert(scene.src.endsWith('event-first-night-bench-480.webp'));assert.match(scene.srcset,/480w.*768w.*1024w/);
  assert(document.querySelector('.illustrated-event'));assert.equal(document.body.style.overflow,'hidden');
  const eventOrder=within(screen.getByRole('dialog')).getAllByRole('button').map(button=>button.getAttribute('aria-label'));
@@ -1313,7 +1313,7 @@ for(const [id,assets,durations] of [
  ['station',['station-seat','station-night','station-quiet'],[5,10,5]],
  ['bench-wake',['wake-sit','wake-move','wake-moment'],[5,10,5]],
 ]) for(let index=0;index<assets.length;index++) {
- setup({minutes:1385},{[firstNightKey]:{seen:[`first-night-${id}`],lastAt:1385,pendingId:`first-night-${id}`}});
+ setup({minutes:1385},{'street-life-discovered-v1':['street','station','shop'],[firstNightKey]:{seen:[`first-night-${id}`],lastAt:1385,pendingId:`first-night-${id}`}});
  assert(document.querySelector('.event-illustration').src.endsWith(id==='door'?'event-neighbour-meeting-480.webp':`event-first-night-${id}-480.webp`));
  const eventDefinition=require('esbuild').buildSync({entryPoints:['src/events.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false}).outputFiles[0].text;
  const eventModule={exports:{}};new Function('module','exports',eventDefinition)(eventModule,eventModule.exports);

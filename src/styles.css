@@ -1219,11 +1219,20 @@ body:has(.map-screen) { min-height:100dvh; }
 .map-screen .district-scene::after { content:none; }
 .map-screen .district-card { position:relative; flex-shrink:0; left:auto; bottom:auto; transform:none; width:calc(100% - 24px); margin:12px auto 0; }
 .district-shortcuts { position:relative; z-index:1; min-width:0; display:flex; justify-content:flex-end; gap:8px; }
-.district-shortcut { min-height:48px; display:flex; align-items:center; justify-content:center; gap:8px; padding:8px 10px; border:1px solid #6d7474; border-radius:10px; background:#131b20ee; color:var(--text-primary); font-size:var(--font-body); font-weight:var(--weight-semibold); white-space:nowrap; cursor:pointer; }
-.district-shortcut svg { width:22px; height:22px; flex-shrink:0; color:var(--text-secondary); }
+.district-shortcut { min-height:72px; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 10px; border:1px solid #6d7474; border-radius:10px; background:#131b20ee; color:var(--text-primary); font-size:var(--font-body); font-weight:var(--weight-semibold); white-space:nowrap; text-align:left; cursor:pointer; }
+.district-shortcut { padding-right:16px; }
+.district-shortcut svg { width:44px; height:44px; flex:0 0 44px; color:var(--text-secondary); }
+.district-shortcut-copy { display:flex; flex-direction:column; gap:4px; line-height:1.25; }
+.district-shortcut-copy small { font-size:var(--font-small); font-weight:var(--weight-regular); line-height:1.45; color:var(--text-secondary); }
 .district-shortcut.selected:not(:disabled) { color:#171b1e; border-color:var(--color-warning); background:var(--color-warning); }
+.district-shortcut.selected:not(:disabled) :is(svg,small) { color:inherit; }
 .district-shortcut:disabled { color:var(--text-muted); border-color:#465055; background:#192125d9; cursor:not-allowed; }
 .district-shortcut:focus-visible { outline:2px solid var(--color-warning); outline-offset:3px; }
+@media(max-width:400px) {
+  .map-screen .district-map-heading { padding-left:2px; padding-right:2px; }
+  .district-shortcuts { gap:4px; }
+  .district-shortcut { gap:4px; padding-left:8px; padding-right:16px; }
+}
 .map-screen .district-scene { margin-top:10px; }
 .map-screen .district-pin { width:36px; }
 .map-screen .district-pin strong { font-size:var(--font-body); line-height:1.3; }

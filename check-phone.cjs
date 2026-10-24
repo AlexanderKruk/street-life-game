@@ -3,7 +3,8 @@ const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'http://loc
 for(const k of ['window','document','localStorage','HTMLElement','Node','Event','MouseEvent'])global[k]=dom.window[k];
 Object.defineProperty(global,'navigator',{value:dom.window.navigator});
 global.IS_REACT_ACT_ENVIRONMENT=true;
-window.scrollTo=()=>{};
+const scrollCalls=[];
+window.scrollTo=(...args)=>scrollCalls.push(args);
 let now=1800000000000, nextId=1;
 Date.now=()=>now;
 const callbacks=new Map();
@@ -39,6 +40,12 @@ function ok(){fireEvent.click(within(screen.getByRole('dialog')).getByRole('butt
 function advance(ms){const end=now+ms;while(true){const due=Math.min(...[...callbacks.values()].map(timer=>timer.nextAt));if(due>end)break;now=due;act(()=>{for(const[id,timer]of [...callbacks])if(callbacks.has(id)&&timer.nextAt<=now){timer.nextAt+=timer.delay;timer.fn()}})}now=end;fireEvent(window,new window.Event('pagehide'))}
 
 try {
+ // Internal app links reset once; ordinary clock ticks and bottom navigation do not.
+ setup({minutes:1320,mood:28});click('Phone');scrollCalls.length=0;
+ click('Find Help');assert.deepEqual(scrollCalls.at(-1),[{top:0,left:0,behavior:'instant'}]);
+ scrollCalls.length=0;advance(1000);assert.equal(scrollCalls.length,0,'clock ticks preserve the reading position');
+ click('Back to phone');assert.deepEqual(scrollCalls.at(-1),[{top:0,left:0,behavior:'instant'}]);
+ scrollCalls.length=0;click('Map');assert.equal(scrollCalls.length,0,'lower-menu Map does not force a reset');
  // Street has one phone entry, with no search cost or advance on opening.
  const phoneLabel='Look for help on my phone. There might be somewhere I can stay.';
  for(const extra of [{}, {'street-life-mobile-service-until':'0'}, {[invKey]:{phoneBattery:0}}, {[invKey]:{phoneBattery:60,phoneCondition:0}}]){
@@ -49,7 +56,8 @@ try {
   const entry=within(actions).getByRole('button',{name:phoneLabel});
   assert(!entry.querySelector('.choice-duration'),'opening the launcher has no duration');
   const before=read(stateKey),battery=read(invKey).phoneBattery,answers=read('street-life-answers-v1'),places=read('street-life-discovered-v1');
-  fireEvent.click(entry);
+  scrollCalls.length=0;fireEvent.click(entry);
+  assert.deepEqual(scrollCalls.at(-1),[{top:0,left:0,behavior:'instant'}],'Street phone link opens at the top');
   assert(screen.getByRole('button',{name:'Phone',exact:true}).getAttribute('aria-current')==='page');
   assert.equal(read(stateKey).minutes,before.minutes);assert.equal(read(stateKey).money,before.money);
   assert.equal(read(invKey).phoneBattery,battery);assert.deepEqual(read('street-life-answers-v1'),answers);assert.deepEqual(read('street-life-discovered-v1'),places);
@@ -65,7 +73,8 @@ try {
  // The Station suggestion teaches Map before opening the travel choices.
  setup({minutes:1320,mood:28});
  const beforeMap=read(stateKey),beforeMapBattery=read(invKey).phoneBattery;
- click('Try the station. At least I’d be out of the cold.');
+ scrollCalls.length=0;click('Try the station. At least I’d be out of the cold.');
+ assert.deepEqual(scrollCalls.at(-1),[{top:0,left:0,behavior:'instant'}],'Station link opens Map at the top');
  assert.equal(screen.getByRole('button',{name:'Map',exact:true}).getAttribute('aria-current'),'page');
  assert(document.querySelector('.district-pin.selected').textContent.includes('Station'));
  assert(document.querySelector('.district-card').textContent.includes('Station'));
@@ -82,7 +91,8 @@ try {
  assert(!document.querySelector('.travel-sheet'));assert(document.querySelector('.district-pin.selected').textContent.includes('Station'));
  // Launcher: exactly four apps; internal screens have separate content.
  setup({locationId:'station',minutes:600});
- click('Phone');
+ scrollCalls.length=0;click('Phone');
+ assert.equal(scrollCalls.length,0,'bottom navigation retains existing scroll behavior');
  assert.equal(document.querySelectorAll('.phone-app-grid button').length,4);
  assert.deepEqual([...document.querySelectorAll('.phone-app-grid button')].map(node=>node.getAttribute('aria-label')),['Find Help','Goals','Notes','History']);
  assert(!screen.queryByRole('button',{name:'Journal',exact:true}));

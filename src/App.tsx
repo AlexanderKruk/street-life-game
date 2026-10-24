@@ -42,7 +42,7 @@ import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from 
 import { displayDay } from './gameDate'
 import { createRain, chooseRain, planRainDay, RAIN, rainArt, rainResultText, type RainChoice } from './rain'
 
-const BUILD_VERSION = 'v2026.10.24-319'
+const BUILD_VERSION = 'v2026.10.24-321'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -438,6 +438,21 @@ export default function App() {
     return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'phone' ? saved : 'location'
   })
   const [phoneApp, setPhoneApp] = useState<PhoneApp>('home')
+  const [scrollResetRequest, setScrollResetRequest] = useState(0)
+  useEffect(() => {
+    if (scrollResetRequest) window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [scrollResetRequest])
+  // Only links inside a page request this reset. Bottom navigation keeps the
+  // existing scroll behavior; ticks and closing a modal do not move the page.
+  function openPage(target: Screen) {
+    setScreen(target)
+    if (target === 'phone') setPhoneApp('home')
+    setScrollResetRequest(previous => previous + 1)
+  }
+  function openPhoneApp(app: PhoneApp) {
+    setPhoneApp(app)
+    setScrollResetRequest(previous => previous + 1)
+  }
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null)
   const [mapInitialFocus, setMapInitialFocus] = useState<string | undefined>()
   const [selectedJournalDay, setSelectedJournalDay] = useState<number | null>(null)
@@ -679,6 +694,7 @@ export default function App() {
   useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver || closingNotice)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
+  const visibleEventChoices = activeEvent?.choices.filter(choice => !choice.undiscoveredLocationRequired || !discoveredLocations.includes(choice.undiscoveredLocationRequired)) ?? []
   useEffect(() => {
     if (gameOver || (game.rainSystemStarted && game.rainScheduleDay === game.day)) return
     const plan = planRainDay(game, rainDailyLimit(game.day))
@@ -2354,7 +2370,7 @@ export default function App() {
   function discoverLocation(id: string, label: string) {
     setDiscoveredLocations((prev) => prev.includes(id) ? prev : [...prev, id])
     setMessage(`${label} added to your map.`)
-    setScreen('map')
+    openPage('map')
   }
 
   const nav = (target: Screen, icon: IconName, label: string) =>
@@ -2617,12 +2633,12 @@ export default function App() {
           </>}
           {current.id === 'street' && <>
             {nextOpeningCall && <button className="action" data-choice="phone-call" onClick={startOpeningCall} disabled={!!phoneUnavailable || inventory.phoneBattery < nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)}><div><strong><Icon name="phone" className="action-label-icon" />{nextOpeningCall.label}</strong></div><span>~{nextOpeningCall.minutes} min</span></button>}
-            <button className="action" data-choice="phone-help" onClick={() => { setPhoneApp('home'); setScreen('phone') }}><div><strong><Icon name="phone" className="action-label-icon" />Look for help on my phone. There might be somewhere I can stay.</strong></div></button>
+            <button className="action" data-choice="phone-help" onClick={() => openPage('phone')}><div><strong><Icon name="phone" className="action-label-icon" />Look for help on my phone. There might be somewhere I can stay.</strong></div></button>
             {!musicWalkUsed && <button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Put on something familiar and walk for a while. Clear my head.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
             {<button className="action" aria-label="Just one more street. I’m not ready to lie down." data-choice="walk" onClick={() => walkCity()}><div><strong><span className="choice-emoji" aria-hidden="true">🚶</span>Just one more street. I’m not ready to lie down.</strong><small>Closed shops, lit windows, another crossing. You can keep moving for half an hour.</small></div><span>~30 min</span></button>}
-            {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={() => { setScreen('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Arrive before 18:00 tomorrow; registration starts at 18:20. A place is not guaranteed.' : 'Doors open at 18:00; registration starts at 18:20. Arrive early; places are limited.'}</small></div><span>Choose route</span></button>}
-            {!firstNight && discoveredLocations.includes('work') && <button className="action" data-choice="work-route" onClick={() => { setScreen('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
-            {<button className="action" data-choice="station-route" aria-label="Try the station. At least I’d be out of the cold." onClick={() => { setSelectedDestination(null); setMapInitialFocus('station'); setScreen('map') }}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Try the station. At least I’d be out of the cold.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
+            {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={() => { openPage('map'); chooseDestination('shelter') }}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Arrive before 18:00 tomorrow; registration starts at 18:20. A place is not guaranteed.' : 'Doors open at 18:00; registration starts at 18:20. Arrive early; places are limited.'}</small></div><span>Choose route</span></button>}
+            {!firstNight && discoveredLocations.includes('work') && <button className="action" data-choice="work-route" onClick={() => { openPage('map'); chooseDestination('work') }}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
+            {<button className="action" data-choice="station-route" aria-label="Try the station. At least I’d be out of the cold." onClick={() => { setSelectedDestination(null); setMapInitialFocus('station'); openPage('map') }}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Try the station. At least I’d be out of the cold.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
             {!firstNight && <button className="action" data-choice="beg" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask someone for change? It’s hard, but I could try.</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
             {!firstNight && <button className="action" data-choice="bottles" onClick={searchStreetBottles}><div><strong>Maybe there are bottles I could return for a little money.</strong><small>Move rubbish aside. Collect intact deposit bottles and cans.</small></div><span>~10–60 min</span></button>}
             {!streetBenchFound && <button className="action" data-choice="find-bench" onClick={() => streetAction('find-bench')}><div><strong>🪑 Is there a bench nearby? My legs could use a break.</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
@@ -2758,7 +2774,7 @@ export default function App() {
       </div>
       <LifeSituation housing={life.housing} employment={life.employment} income={life.income} documents={inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing'} />
     </section>}
-    {screen === 'phone' && <PhoneScreen busy={!!phoneActivity} app={phoneApp} onApp={setPhoneApp} pendingGoals={pendingGoals.length} unavailable={phoneUnavailable} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} onPlan={() => setPhoneOpen(true)}>
+    {screen === 'phone' && <PhoneScreen busy={!!phoneActivity} app={phoneApp} onApp={openPhoneApp} pendingGoals={pendingGoals.length} unavailable={phoneUnavailable} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} onPlan={() => setPhoneOpen(true)}>
       {phoneApp === 'goals' && <JournalGoals pending={pendingGoals} completed={completedGoals} />}
       {phoneApp === 'history' && <>
       <section className="journal-history" aria-labelledby="journal-day-heading">
@@ -2795,7 +2811,7 @@ export default function App() {
             { id: 'supplies', title: 'Food & water', detail: 'Affordable supplies and meal times', icon: 'food' },
           ] as { id: string; title: string; detail: string; icon: IconName }[]).map(search => {
             const saved = search.id !== 'morning' && answeredQuestions.includes(search.id)
-            return <ChoiceButton className="phone-search-row" type="button" key={search.id} aria-label={search.title} data-choice={`question-${search.id}`} disabled={!mobileServiceActive || (!saved && inventory.phoneBattery < phoneSearchCost)} onClick={() => saved ? setPhoneApp('notes') : answerPracticalQuestion(search.id)}
+            return <ChoiceButton className="phone-search-row" type="button" key={search.id} aria-label={search.title} data-choice={`question-${search.id}`} disabled={!mobileServiceActive || (!saved && inventory.phoneBattery < phoneSearchCost)} onClick={() => saved ? openPhoneApp('notes') : answerPracticalQuestion(search.id)}
               icon={search.icon} label={search.title} detail={<small>{search.detail}</small>} duration={saved ? 'Notes' : approximateDuration(PHONE_SEARCH_ESTIMATE)} />
           })}
         </div>
@@ -2903,12 +2919,12 @@ export default function App() {
       <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ' compact-street-event'}`}>
         {activeEvent.illustration && <img className="event-illustration" {...responsiveImageProps(activeEvent.illustration)} alt={activeEvent.text} />}
         {!activeEvent.illustration
-          ? <CompactStreetEvent event={activeEvent} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} orderSeed={choiceSeed} decisionKey={choiceDecisionKey} />
+          ? <CompactStreetEvent event={{ ...activeEvent, choices: visibleEventChoices }} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} orderSeed={choiceSeed} decisionKey={choiceDecisionKey} />
           : <div className="event-body">
         <p className="eyebrow">STREET EVENT</p>
         <h2 id="street-event-title">{activeEvent.title}</h2>
         <p>{activeEvent.text}</p>
-        <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{activeEvent.choices.map((choice) => {
+        <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{visibleEventChoices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
           return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
         })}</ChoiceOptions>

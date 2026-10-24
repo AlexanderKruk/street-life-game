@@ -15,6 +15,10 @@ function hours(place: Location) {
   return place.open === 0 && place.close === 1440 ? '24/7' : `${shortTime(place.open)}-${shortTime(place.close)}`
 }
 
+function fullTime(minutes: number) {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
+}
+
 type SceneProps = { places: Location[]; currentId: string; selectedId: string; openFlags: string; onFocus: (id: string) => void }
 const DistrictScene = memo(function DistrictScene({ places, currentId, selectedId, openFlags, onFocus }: SceneProps) {
   const backdropRef = useRef<HTMLDivElement>(null)
@@ -63,12 +67,15 @@ export default function CityMap({ places, currentId, initialFocusId, minutes, re
   const [focusedId, setFocusedId] = useState(initialFocusId ?? currentId)
   const selected = places.find(place => place.id === (routeId ?? focusedId)) ?? places.find(place => place.id === currentId) ?? places[0]
   if (!selected) return null
+  const shop = places.find(place => place.id === 'shop')
+  const shopOpen = !!shop && isOpen(shop, minutes)
+  const shopHours = shop ? shopOpen ? `Open ${fullTime(shop.open)}–${fullTime(shop.close)}` : `Opens at ${fullTime(shop.open)}` : ''
   const openFlags = places.map(place => isOpen(place, minutes) ? '1' : '0').join('')
   return <section className="district-map" aria-label="City map">
     <div className="district-map-heading">
       <div className="district-shortcuts" aria-label="Nearby places">
-        <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} disabled={currentId === 'street'} onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span>Street</span></button>
-        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} disabled={currentId === 'shop'} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span>Small Shop</span></button>
+        <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} aria-label="Street" aria-describedby="street-shortcut-hours" disabled={currentId === 'street'} onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span className="district-shortcut-copy"><span>Street</span><small id="street-shortcut-hours">Open 24/7</small></span></button>
+        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} aria-label="Small Shop" aria-describedby="shop-shortcut-hours" disabled={currentId === 'shop' || !shopOpen} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span className="district-shortcut-copy"><span>Small Shop</span><small id="shop-shortcut-hours">{shopHours}</small></span></button>
       </div>
     </div>
     <DistrictScene places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />

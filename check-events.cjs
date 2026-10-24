@@ -200,18 +200,14 @@ for(const known of [false,true])for(const documents of [false,true])for(const in
  });
  assertEventImage('.event-illustration','event-night-patrol');
  assert(screen.getByRole('dialog').querySelector('.event-card.illustrated-event'));
- assert.equal(document.querySelectorAll('.event-card .choice-button').length,3);
+ assert.equal(document.querySelectorAll('.event-card .choice-button').length,known?2:3);
  assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
  const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
  cleanup();render(React.createElement(App));assertEventImage('.event-illustration','event-night-patrol');
- const ask=screen.getByRole('button',{name:patrol.choices[1].label,exact:true});
- assert.equal(ask.disabled,known);
- if(known)assert(ask.textContent.includes('You already know about the Night Shelter.'));
- else assert(ask.textContent.includes('≈10m'));
- if(known&&index===1){
-  fireEvent.click(ask);assert.deepEqual(read(stateKey),before);assertEventImage('.event-illustration','event-night-patrol');
-  continue;
- }
+ const ask=screen.queryByRole('button',{name:patrol.choices[1].label,exact:true});
+ if(known) assert.equal(ask,null,'known shelter questions are hidden, not disabled');
+ else {assert(ask && !ask.disabled);assert(ask.textContent.includes('≈10m'));}
+ if(known&&index===1) continue;
  const choice=patrol.choices[index];click(choice.label);
  assertEventImage('.result-illustration',`event-night-patrol-${['reassured','directions','declined'][index]}`);
  assert(screen.getByRole('dialog').classList.contains('illustrated-result'));
@@ -398,6 +394,29 @@ setup({day:3,minutes:1200},{
 advance(30000);assert(screen.getByRole('dialog').textContent.includes('Cleaning the hall'));
 click('Move to another bench');ok();
 
+// Questions that only reveal the shelter address disappear once it is known,
+// including restored first-night scenes; remaining choices retain their artwork.
+for(const id of ['first-night-station','first-night-bench','street-patrol-wake']) for(const known of [false,true]) {
+ const event=STREET_EVENTS.find(event=>event.id===id);
+ const ask=event.choices.find(choice=>choice.undiscoveredLocationRequired==='shelter');
+ assert(ask,id+' marks its shelter-discovery question');
+ const opening=id.startsWith('first-night-');
+ const extras={'street-life-discovered-v1':['street','station','shop',...(known?['shelter']:[])],
+  [encountersKey]:{...complete,pendingId:opening?null:id},
+  'street-life-first-night-events-v1':{seen:opening?[id]:openingSeen,lastAt:null,pendingId:opening?id:null}};
+ setup({day:opening?1:3,minutes:opening?1380:600,locationId:id==='first-night-station'?'station':'street'},extras);
+ assert.equal(!!screen.queryByRole('button',{name:ask.label,exact:true}),!known,id+' knowledge gate');
+ assert.equal(document.querySelectorAll('.event-card .choice-button').length,known?2:3);
+ const before=read(stateKey);cleanup();render(React.createElement(App));
+ assert.equal(!!screen.queryByRole('button',{name:ask.label,exact:true}),!known,id+' gate survives reload');
+ if(known) {
+  const remaining=event.choices.find(choice=>choice!==ask);
+  click(remaining.label);
+  assert.equal(read(stateKey).minutes,before.minutes+(remaining.outcome.minutes??0));
+  assert(document.querySelector('.result-illustration').getAttribute('src').includes((remaining.outcome.illustration??newEventArt[id][event.choices.indexOf(remaining)+1]).split('/').pop().replace('.webp','')),'filtering does not shift the remaining answer artwork');
+ }
+}
+
 // Patrol waking checks carried ID, and only Station asks for a train ticket.
 for(const locationId of ['street','station'])for(const [documents,storedDocuments] of [[true,false],[false,false],[false,true]]){
  const id=locationId==='street'?'street-patrol-wake':'station-patrol-wake';
@@ -405,7 +424,7 @@ for(const locationId of ['street','station'])for(const [documents,storedDocument
  assert.equal(/ticket/i.test(event.text),locationId==='station');
  for(const choice of event.choices){
   setup({day:3,minutes:600,locationId},{[invKey]:{documents,transitCard:true},
-   'street-life-storage-v1':{documents:storedDocuments},[encountersKey]:{...complete,pendingId:id}});
+   'street-life-storage-v1':{documents:storedDocuments},'street-life-discovered-v1':['street','station','shop'],[encountersKey]:{...complete,pendingId:id}});
   const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
   cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes(event.title));
   assertEventImage('.event-illustration',newEventArt[id][0]);
