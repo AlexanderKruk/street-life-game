@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-23. **Application build:** `v2026.10.23-314`.
+**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.24-315`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -577,7 +577,7 @@ These scenes treat the hero as an ordinary person with a backpack. Nobody identi
 |---|---|---|
 | **The city wakes up** / `city-waking` | Street, 05:00–07:00, awake. | Think about my next step: 5 min, +2 Mood. Take a moment: 5 min. Keep moving: 5 min, −1 Energy, +1 Mood. No transport or automatic new location. |
 | **A rustle in the dark** / `night-rustle` | Street, displayed D1+, 22:00–05:00, awake; independent of home departure. The source of a sound on a dark path is unknown. | Call out and step closer: 5 min, +2 Mood, reveals a cat in this result only. Stay still and listen: 5 min. Walk away: −1 Energy with a visible meter. The other results never reveal the source. |
-| **One quick call** / `borrow-phone` | Street, displayed D1+, 22:00–03:00, awake; independent of home departure. | Hand him your phone: 5 min, +3 Mood, −2 Battery; 50% chance of a slip. The continuation uses the shared D20 Reflex DC 11 and Energy modifier: a catch preserves condition, failure costs 5 condition. Offer to call on speaker: 5 min, +2 Mood, −1 Battery. Say no and move on: no added time/effect. Calls require an available working phone and sufficient battery; like the opening voice calls, they work without mobile internet. |
+| **One quick call** / `borrow-phone` | Street, displayed D1+, 00:00–04:00, awake; independent of home departure. | Hand him your phone: 5 min, +3 Mood, −2 Battery; 50% chance of a slip. The continuation uses the shared D20 Reflex DC 11 and Energy modifier: a catch preserves condition, failure costs 5 condition. Offer to call on speaker: 5 min, +2 Mood, −1 Battery. Say no and move on: no added time/effect. Calls require an available working phone and sufficient battery; like the opening voice calls, they work without mobile internet. |
 | **Cold fingers** / `cold-hands` | Street, below 10°C, after at least 15 min in the triggering idle/rest action; never on arrival alone. No phone/search interruption or extra cold debuff. | Rub my hands together: 2 min, +1 Mood. Walk a little to warm up: 5 min, −1 Energy, +1 Mood. Put up with it for now: −1 Mood. |
 | **Cleaning the hall** / `station-cleaning` | Station after at least 15 min of idle/rest action, never immediately on arrival. A cleaner asks for space to clean; no expulsion or document check. | Move to another bench: 3 min. Stand up and stretch: 5 min, +1 Energy. Ask where I can sit for now: 3 min, +1 Mood. Hero remains at Station. |
 | **Which platform?** / `platform-question` | Station only, any hour, awake. A traveller asks another apparent traveller about a train number. | Look at the board together: 3 min, +2 Mood. Suggest checking the departure board: 1 min, +1 Mood. Say I’m not sure either: no resource change, still a blocking acknowledged result. No phone, data plan or knowledge of a specific train is required. |

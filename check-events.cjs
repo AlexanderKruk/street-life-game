@@ -70,7 +70,7 @@ assert.equal(nextStreetEvent('location',{...context,locationId:'station',minutes
 for(const original of STREET_EVENTS){
  if(original.continuationOnly)continue;
  const first=original.id.startsWith('first-night-');
- const c={...context,locationId:['borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:['night-rustle','borrow-phone'].includes(original.id)?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const c={...context,locationId:['borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='borrow-phone'?60:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
  assert.equal(nextStreetEvent(original.trigger,c)?.id,original.id);
  assert.equal(nextStreetEvent(original.trigger,{...c,seenEventIds:STREET_EVENTS.map(e=>e.id)}),null);
 }
@@ -183,15 +183,16 @@ assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textConten
 ok();cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'seen rustle never repeats after reload');
 
 // A borrowed phone uses a single 50% slip decision followed by the shared D20.
-for(const day of [2,3,20])for(const minutes of [0,179,1320,1439])assert(onlyScene('borrow-phone',{day,minutes,nearHome:false}));
-for(const minutes of [180,720,1319])assert(!onlyScene('borrow-phone',{minutes}));
+for(const day of [2,3,20])for(const minutes of [0,179,180,239])assert(onlyScene('borrow-phone',{day,minutes,nearHome:false}));
+for(const minutes of [-1,240,720,1319,1320,1439])assert(!onlyScene('borrow-phone',{minutes}));
 for(const changes of [{day:1},{day:undefined},{locationId:'station'}])assert(!onlyScene('borrow-phone',changes));
+for(const day of [0,1,undefined])for(const minutes of [0,60,239])assert(!onlyScene('borrow-phone',{day,minutes}),'no borrowing on D0, even inside the clock window');
 assert(!onlyScene('borrow-phone-slip'),'the catch stage never spawns on its own');
 const borrow=STREET_EVENTS.find(event=>event.id==='borrow-phone');
 const borrowSlip=STREET_EVENTS.find(event=>event.id==='borrow-phone-slip');
 assert.equal(borrowSlip.choices[0].check.dc,STREET_EVENTS.find(event=>event.id==='phone-drop').choices[0].check.dc);
 const borrowPending=(pendingId='borrow-phone',pendingRoll)=>({[encountersKey]:{...complete,pendingId,...(pendingRoll?{pendingRoll}:{})}});
-const borrowedState={day:3,minutes:1380,mood:30,energy:68};
+const borrowedState={day:3,minutes:60,mood:30,energy:68};
 function checkBorrowResult(stem,before,battery,mood,damage=0){
  assertEventImage('.result-illustration',stem);
  assert.equal(read(stateKey).minutes,before.minutes+(battery?5:0));

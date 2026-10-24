@@ -1408,7 +1408,7 @@ const stripArt=value=>JSON.parse(JSON.stringify(value,(key,item)=>key==='illustr
 for(const original of observationEvents) {
  if(original.continuationOnly)continue; // Branch-only artwork is exercised in check-events.cjs.
  const first=original.id.startsWith('first-night-');
- const artContext={day:2,locationId:['borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:['night-rustle','borrow-phone'].includes(original.id)?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:'Street',documents:true,firstNight:first,nearHome:true,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const artContext={day:2,locationId:['borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='borrow-phone'?60:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:'Street',documents:true,firstNight:first,nearHome:true,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:observationEvents.filter(e=>e.id!==original.id).map(e=>e.id)};
  Math.random=()=>0;
  const chosen=eventModule.exports.nextStreetEvent(original.trigger,artContext);
  assert.equal(chosen?.id,original.id);
