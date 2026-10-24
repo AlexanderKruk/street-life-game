@@ -41,7 +41,7 @@ import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 import { displayDay } from './gameDate'
 
-const BUILD_VERSION = 'v2026.10.24-316'
+const BUILD_VERSION = 'v2026.10.24-317'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -863,7 +863,7 @@ export default function App() {
     // even when the player skipped the at-home encounters on D0.
     const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(weather.temp, state.minutes), ...observation, travelMode, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
       seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
-    if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone', 'park-company'].includes(event?.id ?? '')) return
+    if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone', 'park-company', 'night-patrol'].includes(event?.id ?? '')) return
     if (event) rememberEncounter(event, state)
   }
 
@@ -1973,6 +1973,10 @@ export default function App() {
   }
 
   function checkUnavailableReason(choice: StreetEventChoice) {
+    if (choice.undiscoveredLocationRequired && discoveredLocations.includes(choice.undiscoveredLocationRequired)) {
+      const place = locations.find(location => location.id === choice.undiscoveredLocationRequired)
+      return `You already know about the ${place?.name ?? 'location'}.`
+    }
     if (choice.moneyRequired !== undefined && game.money < choice.moneyRequired) return `Need ${choice.moneyRequired} zł`
     if (choice.phoneBatteryRequired !== undefined) {
       if (phoneUnavailable) return phoneUnavailable

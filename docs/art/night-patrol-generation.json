@@ -1,0 +1,34 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "date": "2026-10-24",
+  "status": "Approved opening and three outcomes integrated in v317.",
+  "references": {
+    "docs/art/hero-reference.webp": "Hero identity, wardrobe and one black backpack.",
+    "docs/art/illustration-style-reference.webp": "Realistic painterly rendering.",
+    "docs/art/muted-palette-reference.webp": "Muted slate night palette, restrained amber streetlights.",
+    "public/assets/event-night-patrol.webp": "Same Warsaw street and two officers across outcomes."
+  },
+  "assets": [
+    {
+      "name": "event-night-patrol",
+      "source": "exec-b116402e-46de-4af4-8487-d7ffd504475c.png",
+      "brief": "Opening: male officer addresses the hero; second officer stands back."
+    },
+    {
+      "name": "event-night-patrol-reassured",
+      "source": "exec-52d349bb-71b0-403a-a5c5-729a58031d3b.png",
+      "brief": "Relaxed conversation ending in a courteous nod."
+    },
+    {
+      "name": "event-night-patrol-directions",
+      "source": "exec-239aaa1b-e19a-4110-88ce-edf261d99e6d.png",
+      "brief": "Officer points down the street; hero follows the direction, second officer attentive."
+    },
+    {
+      "name": "event-night-patrol-declined",
+      "source": "exec-5510fcef-77da-4bd8-baf5-d96c5ef46e37.png",
+      "brief": "Hero and officers part in opposite directions, farewell nod."
+    }
+  ],
+  "packaging": "WebP masters quality 90, proportional 480/768/1024px variants quality 80. On demand, outside startup warmup."
+}

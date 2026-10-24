@@ -54,7 +54,7 @@ function advanceTravelMinutes(minutes) {
 }
 
 const encountersKey='street-life-encounters-v1';
-const complete={seen:['park-company','borrow-phone','borrow-phone-slip','street-patrol-wake','station-patrol-wake','city-waking','night-rustle','cold-hands','station-cleaning','platform-question','phone-drop','rain-phone','found-coins','free-snack','ticket-check','station-food','useful-tip','rough-crowd','quiet-night','night-theft','spare-change','dropped-glove'],lastAt:null,pendingId:null};
+const complete={seen:['night-patrol','park-company','borrow-phone','borrow-phone-slip','street-patrol-wake','station-patrol-wake','city-waking','night-rustle','cold-hands','station-cleaning','platform-question','phone-drop','rain-phone','found-coins','free-snack','ticket-check','station-food','useful-tip','rough-crowd','quiet-night','night-theft','spare-change','dropped-glove'],lastAt:null,pendingId:null};
 // Spawn selection cannot depend on Math.random. Consequences still can.
 const esbuild=require('esbuild');const eventCode=esbuild.buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const eventModule={exports:{}};new Function('module','exports',eventCode)(eventModule,eventModule.exports);
@@ -70,7 +70,7 @@ assert.equal(nextStreetEvent('location',{...context,locationId:'station',minutes
 for(const original of STREET_EVENTS){
  if(original.continuationOnly)continue;
  const first=original.id.startsWith('first-night-');
- const c={...context,locationId:['park-company','borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:['park-company','borrow-phone'].includes(original.id)?60:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const c={...context,locationId:['night-patrol','park-company','borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:['night-patrol','park-company','borrow-phone'].includes(original.id)?60:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
  assert.equal(nextStreetEvent(original.trigger,c)?.id,original.id);
  assert.equal(nextStreetEvent(original.trigger,{...c,seenEventIds:STREET_EVENTS.map(e=>e.id)}),null);
 }
@@ -107,6 +107,7 @@ assert(rustle.choices.slice(1).every(choice=>!/\bcat\b/i.test(choice.outcome.mes
 // Exact scene/answer assets remain distinct and responsive, including saved encounters.
 const newEventArt={
  'city-waking':['event-city-waking','event-city-plan','event-city-pause','event-city-move'],
+ 'night-patrol':['event-night-patrol','event-night-patrol-reassured','event-night-patrol-directions','event-night-patrol-declined'],
  'night-rustle':['event-night-rustle','event-rustle-cat','event-rustle-wait','event-rustle-leave'],
  'cold-hands':['event-cold-hands','event-cold-rub','event-cold-walk','event-cold-endure'],
  'station-cleaning':['event-station-cleaning','event-cleaning-move','event-cleaning-stretch','event-cleaning-ask'],
@@ -114,7 +115,7 @@ const newEventArt={
  'street-patrol-wake':['event-street-patrol-wake','event-street-patrol-answer','event-street-patrol-help','event-street-patrol-move'],
  'station-patrol-wake':['event-station-patrol-wake','event-station-patrol-answer','event-station-patrol-wait','event-station-patrol-exit'],
 };
-assert.equal(new Set(Object.values(newEventArt).flat()).size,28);
+assert.equal(new Set(Object.values(newEventArt).flat()).size,32);
 const imageManifest=require('./src/imageManifest.json');
 for(const stem of Object.values(newEventArt).flat()){
  assert(require('node:fs').existsSync(`public/assets/${stem}.webp`));
@@ -181,6 +182,63 @@ cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').tex
 click('Call out and step closer');assert.equal(read(stateKey).mood,50,'cat gain respects the street Mood ceiling');
 assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'),'result displays actual capped gain');
 ok();cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'seen rustle never repeats after reload');
+
+// Awake patrol: knowledge-gated directions, no documents or working phone needed.
+for(const day of [2,3,20])for(const minutes of [0,60,239])assert(onlyScene('night-patrol',{day,minutes,nearHome:false}));
+for(const day of [0,1,undefined])assert(!onlyScene('night-patrol',{day,minutes:60}));
+for(const minutes of [-1,240,720,1320,1439])assert(!onlyScene('night-patrol',{minutes}));
+assert(!onlyScene('night-patrol',{minutes:60,locationId:'station'}));
+const patrol=STREET_EVENTS.find(event=>event.id==='night-patrol');
+assert.equal(patrol.trigger,'location');
+assert(patrol.choices.every(choice=>!choice.outcome.identityCheck && !choice.check));
+for(const known of [false,true])for(const documents of [false,true])for(const index of [0,1,2]){
+ const places=['street','station',...(known?['shelter']:[])];
+ setup({day:3,minutes:60,mood:30},{
+  [encountersKey]:{...complete,pendingId:'night-patrol'},
+  [invKey]:{documents,phoneBattery:0,phoneCondition:0},
+  'street-life-discovered-v1':places,
+ });
+ assertEventImage('.event-illustration','event-night-patrol');
+ assert(screen.getByRole('dialog').querySelector('.event-card.illustrated-event'));
+ assert.equal(document.querySelectorAll('.event-card .choice-button').length,3);
+ assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+ const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
+ cleanup();render(React.createElement(App));assertEventImage('.event-illustration','event-night-patrol');
+ const ask=screen.getByRole('button',{name:patrol.choices[1].label,exact:true});
+ assert.equal(ask.disabled,known);
+ if(known)assert(ask.textContent.includes('You already know about the Night Shelter.'));
+ else assert(ask.textContent.includes('≈10m'));
+ if(known&&index===1){
+  fireEvent.click(ask);assert.deepEqual(read(stateKey),before);assertEventImage('.event-illustration','event-night-patrol');
+  continue;
+ }
+ const choice=patrol.choices[index];click(choice.label);
+ assertEventImage('.result-illustration',`event-night-patrol-${['reassured','directions','declined'][index]}`);
+ assert(screen.getByRole('dialog').classList.contains('illustrated-result'));
+ assert(screen.getByRole('dialog').textContent.includes(choice.outcome.message));
+ assert.equal(read(stateKey).minutes,before.minutes+(choice.outcome.minutes??0));
+ assert.equal(read(stateKey).mood,before.mood+(choice.outcome.mood??0));
+ assert.equal(read(invKey).documents,documents,'no ID check or document changes');
+ assert.equal(read(stateKey).locationId,'street','directions do not grant admission or move the hero');
+ assert.equal(read('street-life-discovered-v1').filter(id=>id==='shelter').length,known||index===1?1:0);
+ if(index===1){
+  assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:3,minute:1080});
+  assert(screen.getByRole('dialog').textContent.includes('Arrive before 18:00 on Day 2'));
+  assert(screen.getByRole('dialog').textContent.includes('registration starts at 18:20'));
+ }
+ const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after,'result pauses time');
+ assert.equal(read(encountersKey).pendingId,null);
+ const journal=read('street-life-journal-history-v1').at(-1);
+ assert.equal(journal.actionTitle,patrol.title);
+ assert(journal.text.includes(['quiet conversation','this evening','wished me a good night'][index]));
+ ok();cleanup();render(React.createElement(App));
+ assert.deepEqual(read(stateKey),after,'reload does not apply the result twice');
+ advance(60000);assert(!screen.queryByRole('dialog'),'patrol is once per run');
+}
+// D1 midnight unlocks this scene even if the home encounters were skipped.
+setup({day:1,minutes:1425,mood:30},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='night-patrol')},'street-life-left-home-v1':true});
+advance(14000);assert(!screen.queryByRole('dialog'));advance(1000);assertEventImage('.event-illustration','event-night-patrol');
+click(patrol.choices[2].label);ok();advance(30000);assert(!screen.queryByRole('dialog'));
 
 // The park company uses the neighbour's illustrated choice/result cards and shared Persuasion D20.
 for(const day of [2,3,20])for(const minutes of [0,60,239])assert(onlyScene('park-company',{day,minutes,nearHome:false}));

@@ -2667,5 +2667,89 @@
         "file": "event-park-company-detour-1024.webp"
       }
     ]
+  },
+  "event-night-patrol.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-night-patrol-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-night-patrol-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-night-patrol-1024.webp"
+      }
+    ]
+  },
+  "event-night-patrol-reassured.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-night-patrol-reassured-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-night-patrol-reassured-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-night-patrol-reassured-1024.webp"
+      }
+    ]
+  },
+  "event-night-patrol-directions.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-night-patrol-directions-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-night-patrol-directions-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-night-patrol-directions-1024.webp"
+      }
+    ]
+  },
+  "event-night-patrol-declined.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-night-patrol-declined-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-night-patrol-declined-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-night-patrol-declined-1024.webp"
+      }
+    ]
   }
 }

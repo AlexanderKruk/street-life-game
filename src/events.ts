@@ -90,6 +90,7 @@ export type StreetEventChoice = {
   icon?: IconName
   moneyRequired?: number
   phoneBatteryRequired?: number
+  undiscoveredLocationRequired?: string
   durationMinutes?: number
   followUp?: { chance: number; eventId: string }
   outcome?: EventOutcome
@@ -141,6 +142,11 @@ export const STREET_EVENTS: StreetEvent[] = [
     } },
     { label:'Say “No thanks” and keep walking', icon:'walk', outcome:{ message:'“Thanks, but I’m heading on.” He gives a loose wave. “Suit yourself!” Before you’ve gone much further, they’re already laughing about something else.' } },
     { label:'Take another path', icon:'navigation', outcome:{ minutes:5, energy:-1, message:'You turn onto a different path and take the long way round. Their voices fade behind the trees as you pick up your pace.' } },
+  ]},
+  { id:'night-patrol', trigger:'location', icon:'💬', title:'A quiet check-in', text:'Two police officers approach along the pavement. One slows as he reaches you. “Hello. Everything all right?”', weight:1, eligible:c=>c.locationId==='street' && c.day!==undefined && c.day>=2 && c.minutes!==undefined && c.minutes>=0 && c.minutes<240, choices:[
+    { label:'I’m fine. Just getting some air.', icon:'chat', outcome:{ minutes:5, mood:1, message:'You exchange a few words. There’s no urgency in his voice, and you find yourself relaxing a little. “All right. Take care of yourself.” They continue down the street.' } },
+    { label:'Is there somewhere I could stay tonight?', icon:'help', undiscoveredLocationRequired:'shelter', outcome:{ minutes:10, mood:3, discoverLocation:'shelter', message:'The officer gives you directions to a night shelter. They register new arrivals in the evening. “Get there before six. Places can go quickly.” You save the address. You still have tonight to get through, but now you know where to try.' } },
+    { label:'Thanks, but I don’t need any help.', icon:'walk', outcome:{ message:'“Fair enough. Have a good night.” They walk on, and you continue on your way.' } },
   ]},
   // This stage is reached only by handing over the phone; it never spawns alone.
   { id:'borrow-phone-slip', trigger:'location', continuationOnly:true, icon:'📱', title:'One quick call', text:'He finishes the call and holds your phone out. “Thanks, I really—” It slips from his fingers before you can take it. You reach for it.', weight:1, choices:[
