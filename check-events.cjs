@@ -252,12 +252,12 @@ for(const [hygiene,mood,roll,success]of [[55,30,9,false],[55,30,10,true],[80,30,
  assert(screen.getByRole('button',{name:company.choices[0].label,exact:true}).textContent.includes('≈10m'));
  const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
  cleanup();render(React.createElement(App));assertEventImage('.event-illustration','event-park-company');
- click(company.choices[0].label);assert(screen.getByText('PERSUASION CHECK · DC 10'));
+ click(company.choices[0].label);assert(screen.getByText('PERSUASION CHECK'));
  assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
- Math.random=()=>(roll-.5)/20;click('Roll D20');assert.equal(read(encountersKey).pendingRoll,roll);
+ Math.random=()=>(roll-.5)/20;fireEvent.click(document.querySelector('.dice-attempt'));assert.equal(read(encountersKey).pendingRoll,roll);
  cleanup();Math.random=()=>{throw new Error('Company check must restore the rolled D20')};render(React.createElement(App));
  assert.equal(document.querySelector('.d20').textContent,String(roll));
- assert(!screen.queryByRole('button',{name:'Roll D20'}));advance(2000);assert.deepEqual(read(stateKey),before);
+ assert(!document.querySelector('.dice-attempt'));advance(2000);assert.deepEqual(read(stateKey),before);
  click('Continue');
  assertEventImage('.result-illustration',`event-park-company-${success?'talk':'argument'}`);
  assert(screen.getByRole('dialog').classList.contains('illustrated-result'));
@@ -279,7 +279,7 @@ for(const [index,stem,minutes]of [[1,'decline',0],[2,'detour',5]]){
  const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after);ok();
  cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'company appears once per run');
 }
-setup({...companyState,mood:49},companyPending);click(company.choices[0].label);Math.random=()=>.99;click('Roll D20');click('Continue');
+setup({...companyState,mood:49},companyPending);click(company.choices[0].label);Math.random=()=>.99;fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
 assert.equal(read(stateKey).mood,50);assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'));ok();
 setup({day:1,minutes:1425,mood:30},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='park-company')},'street-life-left-home-v1':true});
 advance(14000);assert(!screen.queryByRole('dialog'));advance(1000);assertEventImage('.event-illustration','event-park-company');
@@ -338,13 +338,13 @@ for(const [energy,roll,success] of [[68,9,false],[68,10,true],[10,1,false],[10,2
  assertEventImage('.event-illustration','event-borrow-phone-slip');
  advance(2000);assert.deepEqual(read(stateKey),before);
  click(borrowSlip.choices[0].label);
- assert(screen.getByText('REFLEX CHECK · DC 11'));
+ assert(screen.getByText('REFLEX CHECK'));
  assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
- Math.random=()=>(roll-.5)/20;click('Roll D20');
+ Math.random=()=>(roll-.5)/20;fireEvent.click(document.querySelector('.dice-attempt'));
  assert.equal(read(encountersKey).pendingRoll,roll);
  cleanup();Math.random=()=>{throw new Error('Reload must not reroll the slip or D20')};render(React.createElement(App));
  assert.equal(document.querySelector('.d20').textContent,String(roll));
- assert(!screen.queryByRole('button',{name:'Roll D20'}),'the saved roll cannot be repeated');
+ assert(!document.querySelector('.dice-attempt'),'the saved roll cannot be repeated');
  advance(2000);assert.deepEqual(read(stateKey),before);
  click('Continue');
  checkBorrowResult(`event-borrow-phone-${success?'caught':'dropped'}`,before,2,3,success?0:5);
@@ -362,7 +362,7 @@ for(const [inventory,service,allowed] of [
  assert(!screen.getByRole('button',{name:'Say no and move on',exact:true}).disabled);
 }
 setup(borrowedState,{...borrowPending('borrow-phone-slip'),[invKey]:{phoneCondition:3}});
-click(borrowSlip.choices[0].label);Math.random=()=>0;click('Roll D20');click('Continue');
+click(borrowSlip.choices[0].label);Math.random=()=>0;fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
 assert.equal(read(invKey).phoneCondition,0,'damage clamps at zero');
 assert(screen.getByRole('dialog').textContent.includes('screen, but it stays black'));
 assert(screen.getByRole('dialog').querySelector('[data-stat="Phone condition"]').textContent.includes('−3'),'the actual remaining condition loss remains visible');ok();
@@ -643,7 +643,7 @@ for(const known of [false,true])for(const variant of ['listen','success','critic
  else{
   click('Ask for details · Persuasion DC 12');
   Math.random=()=>({'success':.7,'critical-success':.99,'failure':.1,'critical-failure':0})[variant];
-  click('Roll D20');click('Continue');
+  fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
  }
  const discovered=read('street-life-discovered-v1');
  assert.equal(discovered.filter(id=>id==='shelter').length,known||learns?1:0);

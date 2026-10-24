@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { isOpen, type Location } from './game'
 import { Icon, locationIcon } from './Icon'
 import { responsiveImageProps } from './responsiveImages'
@@ -66,16 +66,17 @@ export default function CityMap({ places, currentId, initialFocusId, minutes, re
 }) {
   const [focusedId, setFocusedId] = useState(initialFocusId ?? currentId)
   const selected = places.find(place => place.id === (routeId ?? focusedId)) ?? places.find(place => place.id === currentId) ?? places[0]
-  if (!selected) return null
   const shop = places.find(place => place.id === 'shop')
-  const shopOpen = !!shop && isOpen(shop, minutes)
+  const hour = Math.floor(minutes / 60)
+  const shopOpen = useMemo(() => !!shop && isOpen(shop, hour * 60), [shop, hour])
+  if (!selected) return null
   const shopHours = shop ? shopOpen ? `Open ${fullTime(shop.open)}–${fullTime(shop.close)}` : `Opens at ${fullTime(shop.open)}` : ''
-  const openFlags = places.map(place => isOpen(place, minutes) ? '1' : '0').join('')
+  const openFlags = places.map(place => (place.id === 'shop' ? shopOpen : isOpen(place, minutes)) ? '1' : '0').join('')
   return <section className="district-map" aria-label="City map">
     <div className="district-map-heading">
       <div className="district-shortcuts" aria-label="Nearby places">
-        <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} aria-label="Street" aria-describedby="street-shortcut-hours" disabled={currentId === 'street'} onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span className="district-shortcut-copy"><span>Street</span><small id="street-shortcut-hours">Open 24/7</small></span></button>
-        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} aria-label="Small Shop" aria-describedby="shop-shortcut-hours" disabled={currentId === 'shop' || !shopOpen} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span className="district-shortcut-copy"><span>Small Shop</span><small id="shop-shortcut-hours">{shopHours}</small></span></button>
+        <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} aria-label="Street" aria-describedby="street-shortcut-hours" onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span className="district-shortcut-copy"><span>Street</span><small id="street-shortcut-hours">Open 24/7</small></span></button>
+        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} aria-label="Small Shop" aria-describedby="shop-shortcut-hours" disabled={!shopOpen} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span className="district-shortcut-copy"><span>Small Shop</span><small id="shop-shortcut-hours">{shopHours}</small></span></button>
       </div>
     </div>
     <DistrictScene places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />

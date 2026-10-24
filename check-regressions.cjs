@@ -440,25 +440,42 @@ assert(!document.querySelector('.district-route path'), 'being outside has no fi
 click('Go →');assert(document.querySelector('.travel-sheet'));fireEvent.click(document.querySelector('.sheet-close'));
 assert.deepEqual(read(stateKey),mapBefore);
 
-// Both shortcuts open routing directly, without a Go card; current-place shortcuts are disabled.
+// Nearby shortcuts open the current location directly, or route to another place.
 const streetShortcut=within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Street',exact:true});
-assert(streetShortcut.disabled);
+assert(!streetShortcut.disabled);
 fireEvent.click(streetShortcut);assert.deepEqual(read(stateKey),mapBefore);
+assert(!document.querySelector('.district-map'));assert(!document.querySelector('.travel-sheet'));
+click(/Map$/);
 click('Small Shop');assert(document.querySelector('.travel-sheet'));
 assert(!document.querySelector('.district-card'));
 assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
 assert.equal(read(stateKey).locationId,'street');
 fireEvent.click(document.querySelector('.sheet-close'));
 setup({locationId:'shop',minutes:600});click(/Map$/);
-assert(screen.getByRole('button',{name:'Small Shop',exact:true}).disabled);
+assert(!screen.getByRole('button',{name:'Small Shop',exact:true}).disabled);
 const beforeExit=read(stateKey);
 fireEvent.click(screen.getByRole('button',{name:'Small Shop',exact:true}));
 assert(!document.querySelector('.travel-sheet'));assert.deepEqual(read(stateKey),beforeExit);
-click('Street');assert(document.querySelector('.travel-sheet'));
-assert(!document.querySelector('.district-card'));assert.deepEqual(read(stateKey),beforeExit);
-fireEvent.click(document.querySelector('.sheet-close'));assert.deepEqual(read(stateKey),beforeExit);
-click('Street');click(/^Walk/);assert.equal(read('street-life-trip-v1').destinationId,'street');
-assert.equal(read(stateKey).locationId,'shop');
+assert(!document.querySelector('.district-map'));assert(document.querySelector('.shop-hero'));
+click(/Map$/);
+click('Street');assert(!document.querySelector('.travel-sheet'));
+assert(screen.getByRole('dialog',{name:'Leave Cheap Shop?'}));
+assert(screen.getByText('TIME PAUSED'));assert(!screen.queryByText('You’ll step outside onto the street.'));
+advance(3000);assert.deepEqual(read(stateKey),beforeExit);
+click('Cancel');assert.deepEqual(read(stateKey),beforeExit);assert(!screen.queryByRole('dialog'));
+click('Street');fireEvent.keyDown(document,{key:'Escape'});assert(!screen.queryByRole('dialog'));assert.deepEqual(read(stateKey),beforeExit);
+click('Street');fireEvent.click(document.querySelector('.phone-overlay'));assert(!screen.queryByRole('dialog'));assert.deepEqual(read(stateKey),beforeExit);
+click('Street');click('Go to Street');
+assert(!document.querySelector('.district-card'));assert(!read('street-life-trip-v1'));
+assert.deepEqual(read(stateKey),{...beforeExit,locationId:'street'});
+assert(document.querySelector('.street-screen'));
+for(const origin of ['station','hospital','free-clinic','daycenter','support','jobcenter','work','residential-shelter']) {
+ setup({locationId:origin,minutes:600});click(/Map$/);
+ const beforeStreet=read(stateKey);click('Street');assert.equal(read(stateKey).locationId,origin);click('Go to Street');
+ assert.deepEqual(read(stateKey),{...beforeStreet,locationId:'street'});
+ assert(!document.querySelector('.travel-sheet'));assert(!read('street-life-trip-v1'));
+ assert(document.querySelector('.street-screen'));
+}
 setup({locationId:'station',minutes:600});click(/Map$/);
 assert(!screen.getByRole('button',{name:'Street',exact:true}).disabled);
 assert(!screen.getByRole('button',{name:'Small Shop',exact:true}).disabled);
@@ -473,7 +490,7 @@ click(/^.*Station/);click("Go →");click(/Walk/);assert.equal(read(lifeKey).she
 // D20 freezes time and prevents exhaustion, both before and after rolling.
 setup({locationId:'shop',energy:.15});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);const frozen=read(stateKey);advance(3000);
 assert.deepEqual(read(stateKey),frozen);assert(document.querySelector('.dice-overlay'));assert(!document.querySelector('.sleep-overlay'));
-click('Roll D20');advance(3000);assert.deepEqual(read(stateKey),frozen);click('Continue');assert(read(stateKey).minutes > frozen.minutes);
+fireEvent.click(document.querySelector('.dice-attempt'));advance(3000);assert.deepEqual(read(stateKey),frozen);click('Continue');assert(read(stateKey).minutes > frozen.minutes);
 setup({energy:.15},{[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Ride without/);const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
 
 // Auto renewal keeps prepaid time and money; expired service buys a full day.
@@ -513,7 +530,7 @@ for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.9
  assert(screen.getByRole('button',{name:/Public transport/}).textContent.includes('≈35m'));
  assert(screen.getByRole('button',{name:/Walk/}).textContent.includes('≈1h 5m'));
  if(mode==='fare-dodge') {
-  click(/Ride without/);Math.random=()=>.99;click('Roll D20');Math.random=()=>draw;click('Continue');
+  click(/Ride without/);Math.random=()=>.99;fireEvent.click(document.querySelector('.dice-attempt'));Math.random=()=>draw;click('Continue');
   if(screen.queryByRole('button',{name:'Got it',exact:true}))ok();
  } else {
   let draws=0;Math.random=()=>draws++===0?draw:.99;click(mode==='walk'?/Walk/:/Public transport/);
@@ -578,7 +595,7 @@ for(const mode of ['walk','transit','fare-dodge']) {
 for(const mode of ['walk','transit','fare-dodge']) {
  setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click('Small Shop');
  const options=document.querySelectorAll('.travel-option');assert.equal(options.length,3);for(const option of options)assert(option.textContent.includes('≈5–15m'));
- if(mode==='fare-dodge'){click(/Ride without ticket/);click('Roll D20');click('Continue');ok();}else click(mode==='walk'?/^Walk/:/Public transport/);
+ if(mode==='fare-dodge'){click(/Ride without ticket/);fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');ok();}else click(mode==='walk'?/^Walk/:/Public transport/);
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
  advanceTravelMinutes(15);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
 }
@@ -673,7 +690,27 @@ assert(!screen.queryByRole('button',{name:/Water.*tap to drink/}));
 setup({locationId:'shop'},{[invKey]:{water:1,food:4,medicines:24}});assert(!screen.getByRole('button',{name:'Buy Water for 3.00 zł'}).disabled);click('Buy Water for 3.00 zł');assert.equal(read(invKey).water,4);assert.equal(read(stateKey).money,97);
 setup({locationId:'shop'},{[invKey]:{water:2,food:4,medicines:24}});const fullPurchase=screen.getByRole('button',{name:'Buy Water for 3.00 zł'});assert(fullPurchase.disabled);fireEvent.click(fullPurchase);assert.equal(read(invKey).water,2);assert.equal(read(stateKey).money,100);
 // Stealing the same 1.5 L item also adds all three servings.
-setup({locationId:'shop'},{[invKey]:{water:0}});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);click('Roll D20');click('Continue');assert.equal(read(invKey).water,3);assert.equal(read(stateKey).money,100);
+setup({locationId:'shop'},{[invKey]:{water:0}});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');assert.equal(read(invKey).water,3);assert.equal(read(stateKey).money,100);
+
+// Cancelling a theft has no cost; failed attempts leave the shop without goods.
+setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});
+const cancelledTheftState=read(stateKey),cancelledTheftInventory=read(invKey);
+fireEvent.click(screen.getByTitle('Steal Water'));
+assert(document.querySelector('.dice-card svg'));
+assert(screen.getByRole('button',{name:'Try to steal'}));
+advance(3000);click('Cancel');
+assert(!document.querySelector('.dice-overlay'));
+assert.deepEqual(read(stateKey),cancelledTheftState);assert.deepEqual(read(invKey),cancelledTheftInventory);
+for(const draw of [0,.15]) {
+ setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});
+ fireEvent.click(screen.getByTitle('Steal Water'));Math.random=()=>draw;click('Try to steal');
+ assert(!screen.queryByRole('button',{name:'Cancel',exact:true}));
+ click('Continue');
+ assert.equal(read(stateKey).locationId,'street');assert.equal(read(invKey).water,0);
+ assert(screen.getByRole('dialog').textContent.includes('empty-handed'));
+ ok();assert(document.querySelector('.street-screen'));
+}
+Math.random=()=>.99;
 
 // New supplies migrate old saves, persist, and report actual gains/uses.
 // Discard is separate from use, pauses time, and removes only the selected slot.
@@ -715,12 +752,12 @@ for(const [freshness,gain] of [[100,12],[40,8],[0,4]]) {
 // New items occupy backpack slots, for both purchase and theft.
 for(const [name,price,key,quantity] of [['Bread roll','1.00','bread',1],['Canned food','10.00','cannedFood',1],['Ready meal','12.00','readyMeal',1],['Wet wipes','5.00','wipes',5]]) {
  setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:24}});const full=screen.getByRole('button',{name:`Buy ${name} for ${price} zł`});assert(full.disabled);assert(screen.getByTitle(`Steal ${name}`).disabled);fireEvent.click(full);assert.equal(read(invKey)[key],0);assert.equal(read(stateKey).money,100);
- setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:20}});assert(!screen.getByRole('button',{name:`Buy ${name} for ${price} zł`}).disabled);fireEvent.click(screen.getByTitle(`Steal ${name}`));click('Roll D20');click('Continue');assert.equal(read(invKey)[key],quantity);assert.equal(read(stateKey).money,100);assert(screen.getByRole('dialog').textContent.includes(`+${quantity}`));
+ setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:20}});assert(!screen.getByRole('button',{name:`Buy ${name} for ${price} zł`}).disabled);fireEvent.click(screen.getByTitle(`Steal ${name}`));fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');assert.equal(read(invKey)[key],quantity);assert.equal(read(stateKey).money,100);assert(screen.getByRole('dialog').textContent.includes(`+${quantity}`));
 }
 // Gel is twenty shower uses per bottle; older inventories acquire no free gel.
 setup({locationId:'shop'},{[invKey]:{water:2}});assert.equal(read(invKey).showerGel,0);click('Buy 3-in-1 shower gel for 10.00 zł');assert.equal(read(stateKey).money,90);assert.equal(read(invKey).showerGel,20);assert(screen.getByRole('dialog').textContent.includes('+20'));ok();click(/Inventory$/);assert(screen.getByText('3-in-1 shower gel').closest('.backpack-grid'));assert(!document.querySelector('.essentials-grid').textContent.includes('3-in-1 shower gel'));assert(!screen.queryByRole('button',{name:/^3-in-1 shower gel/}));cleanup();render(React.createElement(App));assert.equal(read(invKey).showerGel,20);
 setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:24}});assert(screen.getByRole('button',{name:'Buy 3-in-1 shower gel for 10.00 zł'}).disabled);assert(screen.getByTitle('Steal 3-in-1 shower gel').disabled);
-setup({locationId:'shop'},{[invKey]:{showerGel:0}});fireEvent.click(screen.getByTitle('Steal 3-in-1 shower gel'));click('Roll D20');click('Continue');assert.equal(read(invKey).showerGel,20);assert.equal(read(stateKey).money,100);
+setup({locationId:'shop'},{[invKey]:{showerGel:0}});fireEvent.click(screen.getByTitle('Steal 3-in-1 shower gel'));fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');assert.equal(read(invKey).showerGel,20);assert.equal(read(stateKey).money,100);
 setup({locationId:'shop'},{[invKey]:{water:4,food:4,medicines:20,showerGel:0}});click('Buy 3-in-1 shower gel for 10.00 zł');assert.equal(read(invKey).showerGel,20);ok();assert(screen.getByRole('button',{name:'Buy 3-in-1 shower gel for 10.00 zł'}).disabled);assert.equal(read(stateKey).money,90);
 // Both real showers use one gel only on success. Water-only repeats cannot exceed 70.
 for(const [locationId,minutes,buttonName,duration] of [['daycenter',480,/Take a shower/,40],['shelter',1140,/Ask for a shower/,35]]) {
@@ -831,7 +868,7 @@ advance(19000);assert.equal(read(stateKey).minutes,1099);assert(!read(lifeKey).s
 advance(1000);assert.equal(read(lifeKey).shelterUntilDay,7);ok();
 
 // Leaving loses arrival priority, while vacancies remain fixed for the day.
-setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});click(/Map$/);click('Street');click(/^Walk/);advance(20000);
+setup({locationId:'shelter',minutes:1020},{[lifeKey]:vacancyKey(1)});click(/Map$/);click('Street');assert(read(arrivalKey));click('Go to Street');
 assert.equal(read(stateKey).locationId,'street');assert(!read(arrivalKey));assert.equal(read(lifeKey).shelterVacancies,1);
 setup({locationId:'shelter',minutes:1110},{[lifeKey]:vacancyKey(1),[arrivalKey]:{day:0,minute:1020}});assert.equal(read(arrivalKey).minute,1110);click(/Join registration queue/);assert.equal(read('street-life-shelter-queue-v1').peopleAhead,2);advance(20000);assert(!read(lifeKey).shelterUntilDay);ok();
 
@@ -1412,7 +1449,7 @@ for(const [roll,art,damage] of [[.99,'caught',0],[0,'fallen',15]]) {
  const draws=[.2,0,0];Math.random=()=>draws.shift()??.99;click(/Walk/);
  assert(document.querySelector('.event-illustration').src.endsWith('event-phone-drop-480.webp'));
  const phoneBefore=read(invKey).phoneCondition;
- click('Try to catch it · Reflex DC 11');Math.random=()=>roll;click('Roll D20');click('Continue');
+ click('Try to catch it · Reflex DC 11');Math.random=()=>roll;fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
  assert(document.querySelector('.result-illustration').src.endsWith(`event-phone-${art}-480.webp`));
  assert.equal(read(invKey).phoneCondition,phoneBefore-damage);
  ok();

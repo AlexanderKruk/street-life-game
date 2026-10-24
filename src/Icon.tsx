@@ -1,6 +1,6 @@
 import { memo, useId, type ReactNode } from 'react'
 
-export type IconName = 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'building' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
+export type IconName = 'exit' | 'dice' | 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'building' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
 
 const WalkingGlyph = memo(function WalkingGlyph() {
   const maskId = useId()
@@ -8,6 +8,8 @@ const WalkingGlyph = memo(function WalkingGlyph() {
 })
 
 const paths: Record<IconName, ReactNode> = {
+  exit: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></>,
+  dice: <><rect x="2" y="2" width="13" height="13" rx="2" /><rect x="9" y="9" width="13" height="13" rx="2" fill="#11181e" /><path d="M6 6h.01M13 13h.01M18 13h.01M15.5 15.5h.01M13 18h.01M18 18h.01" /></>,
   thought: <><path d="M7 16a6 6 0 1 1 10 0H7Z" /><circle cx="6" cy="19" r="1.5" /><path d="M3 22h.01" /></>,
   hand: <><path d="M4 14h4l3-3h5a2 2 0 0 1 0 4h-4m-4-1 3 5h6l5-6M2 13h3v8H2z" /></>,
   chat: <path d="M21 11a8 8 0 0 1-8 8H8l-5 3V11a9 9 0 0 1 18 0ZM7 9h10M7 13h6" />,

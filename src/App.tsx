@@ -12,6 +12,7 @@ import ShopCard from './ShopCard'
 import ItemArt from './ItemArt'
 import InventorySlot from './InventorySlot'
 import DiscardDialog from './DiscardDialog'
+import InventoryDialog from './InventoryDialog'
 import FoodChoiceDialog from './FoodChoiceDialog'
 import { foodConsumption, FOOD_OUTCOME_PRESENTATION } from './foodConsumption'
 import { SHELTER_PHONE_CHARGE_KEY, SHELTER_CHARGE_PER_HOUR, shelterChargingMinutes } from './shelterCharging'
@@ -42,7 +43,7 @@ import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from 
 import { displayDay } from './gameDate'
 import { createRain, chooseRain, planRainDay, RAIN, rainArt, rainResultText, type RainChoice } from './rain'
 
-const BUILD_VERSION = 'v2026.10.24-321'
+const BUILD_VERSION = 'v2026.10.24-322'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -193,7 +194,7 @@ const SHOP_ITEMS: ShopItem[] = [
   { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene+'] },
   { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Hygiene+++'] },
   { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood+', 'Health−'] },
-  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'One dose per Cold · stack 4', impacts: ['Cold recovery ×3'] },
+  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'One dose per Cold · stack 4', impacts: ['Recovery ×3'] },
 ]
 
 function foodFreshnessLabel(value: number) {
@@ -478,7 +479,9 @@ export default function App() {
   const cancelDiscard = useCallback(() => setDiscardItem(null), [])
   const [foodChoice, setFoodChoice] = useState<{ kind: FoodKind; name: string; slotIndex: number } | null>(null)
   const cancelFoodChoice = useCallback(() => setFoodChoice(null), [])
-  const inventoryDialogOpen = !!discardItem || !!foodChoice
+  const [streetExitPending, setStreetExitPending] = useState(false)
+  const cancelStreetExit = useCallback(() => setStreetExitPending(false), [])
+  const inventoryDialogOpen = !!discardItem || !!foodChoice || streetExitPending
   const [trip, setTrip] = useState<Trip | null>(loadTrip)
   const travelModalRef = useRef<HTMLElement>(null)
   const travelChoiceRef = useRef<HTMLElement>(null)
@@ -975,12 +978,12 @@ export default function App() {
   function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
   function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(args[0]) ? ['showerGel'] : []) }
   function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
-  function applyEventOutcome(outcome: EventOutcome) {
+  function applyEventOutcome(outcome: EventOutcome, title?: string) {
     let resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents)
     if (activeEvent?.id === 'borrow-phone-slip' && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
       resolved = { ...resolved, message: resolved.message.replace('The screen still works.', 'You try the screen, but it stays black.') }
     }
-    runWithResult(activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
+    runWithResult(title ?? activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
   }
   function storeItem(...args: Parameters<typeof storeItemImpl>) { runWithResult('Store belongings', () => storeItemImpl(...args)) }
   function takeStoredItem(...args: Parameters<typeof takeStoredItemImpl>) { runWithResult('Collect belongings', () => takeStoredItemImpl(...args)) }
@@ -1232,10 +1235,29 @@ export default function App() {
   function chooseDestination(id: string) {
     if (sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
     if (id === game.locationId) {
-      setScreen('location')
+      setSelectedDestination(null)
+      openPage('location')
+      return
+    }
+    if (id === 'street') {
+      setSelectedDestination(null)
+      setStreetExitPending(true)
       return
     }
     setSelectedDestination(id)
+  }
+
+  function confirmStreetExit() {
+    if (!streetExitPending) return
+    setStreetExitPending(false)
+    setLeftHome(true)
+    recordShelterDeparture('street')
+    if (shelterPhoneCharging) setMessage('You collected your phone from the charger before leaving Night Shelter.')
+    setStreetBenchFound(false)
+    setShelterArrival(null)
+    ambientEventClock.current = { locationId: 'street', minutes: 0 }
+    setGame(previous => ({ ...previous, locationId: 'street' }))
+    openPage('location')
   }
 
   function canStartSleep(kind: SleepState['kind']) {
@@ -1972,7 +1994,7 @@ export default function App() {
     })
     if (outcome.moveToStreet) {
       ambientEventClock.current = { locationId: 'street', minutes: 0 }
-      setScreen('location')
+      openPage('location')
     }
     setInventory((prev) => ({
       ...fitEventSupplies(prev, outcome).inventory,
@@ -2051,7 +2073,7 @@ export default function App() {
       : roll === 1 && check.criticalFailure
         ? check.criticalFailure
         : success ? check.success : check.failure
-    applyEventOutcome(outcome)
+    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? 'Item stolen' : 'Caught stealing' : undefined)
     if (diceCheck.fareDodgeDestinationId) {
       const destination = locations.find((entry) => entry.id === diceCheck.fareDodgeDestinationId)
       if (destination) {
@@ -2215,9 +2237,9 @@ export default function App() {
       check: {
         stat: 'reflex', dc: 12,
         success: { minutes: 5, message: `You steal ${item.name} without being stopped.` },
-        failure: { minutes: 5, mood: -8, message: 'Store staff catch you trying to steal. You leave without the item.' },
+        failure: { minutes: 5, mood: -8, moveToStreet: true, message: 'The shopkeeper catches you and orders you out. You find yourself back on the street, empty-handed.' },
         criticalSuccess: { minutes: 3, mood: 2, message: `Perfect timing. You take ${item.name} without drawing attention.` },
-        criticalFailure: { minutes: 10, mood: -12, message: 'You make an obvious attempt and store staff stop you immediately.' },
+        criticalFailure: { minutes: 10, mood: -12, moveToStreet: true, message: 'The shopkeeper spots your attempt immediately and orders you out. You find yourself back on the street, empty-handed.' },
       },
     }
     setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })
@@ -2315,6 +2337,7 @@ export default function App() {
     setPhoneActivity(null)
     setOpeningCallIndex(0)
     setDiscardItem(null)
+    setStreetExitPending(false)
     setFoodChoice(null)
     setPendingResult(null)
     setScreen('location')
@@ -2462,6 +2485,9 @@ export default function App() {
   ]
 
   return <main className={`shell${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
+    {streetExitPending && <InventoryDialog icon="exit" label="TIME PAUSED" title={`Leave ${current.name}?`} onCancel={cancelStreetExit}>
+      <div className="sleep-choice-buttons"><button type="button" onClick={cancelStreetExit}>Cancel</button><button type="button" className="confirm-action" onClick={confirmStreetExit}>Go to Street</button></div>
+    </InventoryDialog>}
     {foodChoice && <FoodChoiceDialog name={foodChoice.name} counts={foodSlot(inventory, foodChoice.kind, foodChoice.slotIndex)} onCancel={cancelFoodChoice} onChoose={chooseFood} />}
     {discardItem && <DiscardDialog name={discardItem.name} quantity={discardItem.quantity} spoiledQuantity={discardItem.spoiledQuantity} onCancel={cancelDiscard} onConfirm={() => confirmDiscard(false)} onDiscardSpoiled={() => confirmDiscard(true)} />}
     {sleepChoice && <div className="phone-overlay result-overlay">
@@ -2858,13 +2884,15 @@ export default function App() {
         </div>
       </section>
     </div>}
-    {!gameOver && diceCheck?.choice.check && <div className="dice-overlay">
+    {!gameOver && diceCheck?.choice.check && <div className="dice-overlay" role="dialog" aria-modal="true" aria-labelledby="dice-action-title">
       <section className="dice-card">
-        <p className="eyebrow">{diceCheck.choice.check.stat.toUpperCase()} CHECK · DC {diceCheck.choice.check.dc}</p>
-        <div className={diceCheck.roll === null ? 'd20 rolling-ready' : diceCheck.roll === 20 ? 'd20 critical' : diceCheck.roll === 1 ? 'd20 critical-fail' : 'd20'}>{diceCheck.roll ?? 'D20'}</div>
-        <div className="dice-math">{diceCheck.roll === null ? `${diceCheck.choice.check.stat === 'persuasion' ? 'Hygiene + Mood' : 'Energy'} modifier ${diceCheck.modifier >= 0 ? '+' : ''}${diceCheck.modifier}` : `${diceCheck.roll} ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} = ${diceCheck.roll + diceCheck.modifier}`}</div>
+        <h2 id="dice-action-title">{diceCheck.stealItemId ? `Steal ${SHOP_ITEMS.find(item => item.id === diceCheck.stealItemId)?.name.toLowerCase()}?` : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</h2>
+        <p className="dice-description">{diceCheck.stealItemId ? 'Try to take it without being noticed. If you’re caught, you’ll be thrown out without the item.' : diceCheck.fareDodgeDestinationId ? 'Try to ride without a ticket. If an inspector catches you, you’ll have to pay a penalty.' : activeEvent?.text}</p>
+        <p className="eyebrow">{diceCheck.choice.check.stat.toUpperCase()} CHECK</p>
+        <div className={diceCheck.roll === null ? 'd20 rolling-ready' : diceCheck.roll === 20 ? 'd20 critical' : diceCheck.roll === 1 ? 'd20 critical-fail' : 'd20'} aria-label={diceCheck.roll === null ? 'D20' : `Rolled ${diceCheck.roll}`}><Icon name="dice" />{diceCheck.roll !== null && <span>{diceCheck.roll}</span>}</div>
+        <div className="dice-math" aria-label={`${diceCheck.choice.check.stat === 'persuasion' ? 'Hygiene and Mood' : 'Energy'} modifier ${diceCheck.modifier}; target ${diceCheck.choice.check.dc}`}>{diceCheck.roll === null ? `D20 ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} ≥ ${diceCheck.choice.check.dc}` : `${diceCheck.roll} ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} = ${diceCheck.roll + diceCheck.modifier}`}</div>
         {diceCheck.roll === null
-          ? <button onClick={rollDice}>Roll D20</button>
+          ? <div className="dice-actions"><button className="dice-attempt" onClick={rollDice}>{diceCheck.stealItemId ? 'Try to steal' : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</button><button className="dice-cancel" onClick={() => setDiceCheck(null)}>Cancel</button></div>
           : <><strong className="dice-result">{diceCheck.roll === 20 ? 'CRITICAL SUCCESS' : diceCheck.roll === 1 ? 'CRITICAL FAILURE' : diceCheck.roll + diceCheck.modifier >= diceCheck.choice.check.dc ? 'SUCCESS' : 'FAILURE'}</strong><button onClick={acceptDiceResult}>Continue</button></>}
       </section>
     </div>}

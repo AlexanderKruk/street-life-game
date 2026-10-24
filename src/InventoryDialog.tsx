@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon, type IconName } from './Icon'
 
-export default function InventoryDialog({ title, description, icon, onCancel, children }: { title: string; description: string; icon: IconName; onCancel: () => void; children: ReactNode }) {
+export default function InventoryDialog({ title, description, label = 'BACKPACK · TIME PAUSED', icon, onCancel, children }: { title: string; description?: string; label?: string; icon: IconName; onCancel: () => void; children: ReactNode }) {
   const dialog = useRef<HTMLElement>(null)
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null
@@ -25,9 +25,9 @@ export default function InventoryDialog({ title, description, icon, onCancel, ch
     }
   }, [onCancel])
   return <div className="phone-overlay result-overlay" onClick={event => { if (event.target === event.currentTarget) onCancel() }}>
-    <section ref={dialog} className="phone-modal discard-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-dialog-title" aria-describedby="inventory-dialog-description">
-      <div className="timed-heading"><Icon name={icon} /><div><p className="eyebrow">BACKPACK · TIME PAUSED</p><h2 id="inventory-dialog-title">{title}</h2></div></div>
-      <p id="inventory-dialog-description">{description}</p>
+    <section ref={dialog} className="phone-modal discard-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-dialog-title" aria-describedby={description ? 'inventory-dialog-description' : undefined}>
+      <div className="timed-heading"><Icon name={icon} /><div><p className="eyebrow">{label}</p><h2 id="inventory-dialog-title">{title}</h2></div></div>
+      {description && <p id="inventory-dialog-description">{description}</p>}
       {children}
     </section>
   </div>
