@@ -2562,5 +2562,110 @@
         "file": "event-borrow-phone-decline-1024.webp"
       }
     ]
+  },
+  "event-park-company.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-park-company-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-park-company-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-park-company-1024.webp"
+      }
+    ]
+  },
+  "event-park-company-talk.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-park-company-talk-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-park-company-talk-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-park-company-talk-1024.webp"
+      }
+    ]
+  },
+  "event-park-company-argument.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-park-company-argument-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-park-company-argument-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-park-company-argument-1024.webp"
+      }
+    ]
+  },
+  "event-park-company-decline.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-park-company-decline-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-park-company-decline-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-park-company-decline-1024.webp"
+      }
+    ]
+  },
+  "event-park-company-detour.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-park-company-detour-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-park-company-detour-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-park-company-detour-1024.webp"
+      }
+    ]
   }
 }

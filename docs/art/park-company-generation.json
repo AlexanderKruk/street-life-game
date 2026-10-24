@@ -1,0 +1,35 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "date": "2026-10-24",
+  "status": "User-approved opening and four revised outcomes, varied supporting-character poses, integrated in v316.",
+  "references": {
+    "docs/art/hero-reference.webp": "Hero identity and wardrobe, single black backpack.",
+    "docs/art/illustration-style-reference.webp": "Established realistic painterly detail and readable light.",
+    "docs/art/muted-palette-reference.webp": "Subdued palette.",
+    "public/assets/event-park-company.webp": "Same three companions, bench, park and night lights across outcomes."
+  },
+  "assets": [
+    {
+      "name": "event-park-company",
+      "source": "exec-0008ed40-8db2-4ae0-b94d-ab25e6a417e0.png",
+      "brief": "Approved opening v3: olive-jacket man addresses the hero, the woman and standing man look at each other in a private conversation. Preserve wary expressions and night park."
+    },
+    {
+      "name": "event-park-company-talk",
+      "source": "exec-7ce883e8-5de1-40e8-80b2-d2ef070683ca.png"
+    },
+    {
+      "name": "event-park-company-argument",
+      "source": "exec-490f7a25-b701-4700-a696-236c36035841.png"
+    },
+    {
+      "name": "event-park-company-decline",
+      "source": "exec-f5e66d65-7c42-46f3-ad32-f32781322449.png"
+    },
+    {
+      "name": "event-park-company-detour",
+      "source": "exec-988707d6-1661-448e-94be-504391b51791.png"
+    }
+  ],
+  "packaging": "WebP masters quality 90, on-demand proportional 480/768/1024px variants quality 80. No startup warmup."
+}

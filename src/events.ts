@@ -90,6 +90,7 @@ export type StreetEventChoice = {
   icon?: IconName
   moneyRequired?: number
   phoneBatteryRequired?: number
+  durationMinutes?: number
   followUp?: { chance: number; eventId: string }
   outcome?: EventOutcome
   check?: DiceCheck
@@ -132,6 +133,14 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Hand him your phone', icon:'hand', phoneBatteryRequired:2, followUp:{ chance:0.5, eventId:'borrow-phone-slip' }, outcome:{ minutes:5, mood:3, phoneBattery:-2, message:'He makes a quick call and tells someone where he’s waiting. “They’re on their way. Thanks, you saved me a long walk.” He hands your phone back. It feels good to have helped.' } },
     { label:'Offer to call on speaker', icon:'phone', phoneBatteryRequired:1, outcome:{ minutes:5, mood:2, phoneBattery:-1, message:'“I’ll hold it. What’s the number?” He reads it out, then leans closer to speak. The call is brief. “They’ll be here soon. Thanks for that.” You pocket your phone and carry on.' } },
     { label:'Say no and move on', icon:'walk', outcome:{ message:'“Sorry, I can’t.” He nods. “All right.” As you walk away, he looks down the street for someone else to ask.' } },
+  ]},
+  { id:'park-company', trigger:'location', icon:'💬', title:'Room for one more', text:'A few people are gathered around a park bench, drinking beer and talking over each other. A bag of bottles sits at their feet. One of them spots you and shuffles along the bench. “Hey, mate! Come sit with us!”', weight:1, eligible:c=>c.locationId==='street' && c.day!==undefined && c.day>=2 && c.minutes!==undefined && c.minutes>=0 && c.minutes<240, choices:[
+    { label:'Join them for a chat · Persuasion DC 10', icon:'chat', durationMinutes:10, check:{ stat:'persuasion', dc:10,
+      success:{ minutes:10, mood:3, message:'You sit down and join the conversation. Their stories get more ridiculous with each telling, and soon you’re laughing along. When you get up to leave, they wish you a good night. You feel a little less alone.' },
+      failure:{ minutes:10, mood:-2, message:'Something you say rubs one of them the wrong way. You try to explain, but he keeps talking over you, louder each time. You get up and leave with his last remark still ringing in your ears.' },
+    } },
+    { label:'Say “No thanks” and keep walking', icon:'walk', outcome:{ message:'“Thanks, but I’m heading on.” He gives a loose wave. “Suit yourself!” Before you’ve gone much further, they’re already laughing about something else.' } },
+    { label:'Take another path', icon:'navigation', outcome:{ minutes:5, energy:-1, message:'You turn onto a different path and take the long way round. Their voices fade behind the trees as you pick up your pace.' } },
   ]},
   // This stage is reached only by handing over the phone; it never spawns alone.
   { id:'borrow-phone-slip', trigger:'location', continuationOnly:true, icon:'📱', title:'One quick call', text:'He finishes the call and holds your phone out. “Thanks, I really—” It slips from his fingers before you can take it. You reach for it.', weight:1, choices:[

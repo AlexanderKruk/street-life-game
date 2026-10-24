@@ -54,7 +54,7 @@ function advanceTravelMinutes(minutes) {
 }
 
 const encountersKey='street-life-encounters-v1';
-const complete={seen:['borrow-phone','borrow-phone-slip','street-patrol-wake','station-patrol-wake','city-waking','night-rustle','cold-hands','station-cleaning','platform-question','phone-drop','rain-phone','found-coins','free-snack','ticket-check','station-food','useful-tip','rough-crowd','quiet-night','night-theft','spare-change','dropped-glove'],lastAt:null,pendingId:null};
+const complete={seen:['park-company','borrow-phone','borrow-phone-slip','street-patrol-wake','station-patrol-wake','city-waking','night-rustle','cold-hands','station-cleaning','platform-question','phone-drop','rain-phone','found-coins','free-snack','ticket-check','station-food','useful-tip','rough-crowd','quiet-night','night-theft','spare-change','dropped-glove'],lastAt:null,pendingId:null};
 // Spawn selection cannot depend on Math.random. Consequences still can.
 const esbuild=require('esbuild');const eventCode=esbuild.buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const eventModule={exports:{}};new Function('module','exports',eventCode)(eventModule,eventModule.exports);
@@ -70,7 +70,7 @@ assert.equal(nextStreetEvent('location',{...context,locationId:'station',minutes
 for(const original of STREET_EVENTS){
  if(original.continuationOnly)continue;
  const first=original.id.startsWith('first-night-');
- const c={...context,locationId:['borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:original.id==='borrow-phone'?60:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
+ const c={...context,locationId:['park-company','borrow-phone','dropped-glove','night-rustle','cold-hands','city-waking','street-patrol-wake'].includes(original.id)||first&&original.trigger!=='location'?'street':'station',minutes:original.id==='city-waking'?330:['park-company','borrow-phone'].includes(original.id)?60:original.id==='night-rustle'?1380:first?1350:1200,temperature:5,elapsedMinutes:30,observation:'idle',weather:'Rain',housing:original.id==='night-theft'?'Street':'Night shelter',firstNight:first,sleepKind:'bench',travelMode:original.id==='ticket-check'?'transit':'walk',seenEventIds:STREET_EVENTS.filter(e=>e.id!==original.id).map(e=>e.id)};
  assert.equal(nextStreetEvent(original.trigger,c)?.id,original.id);
  assert.equal(nextStreetEvent(original.trigger,{...c,seenEventIds:STREET_EVENTS.map(e=>e.id)}),null);
 }
@@ -181,6 +181,55 @@ cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').tex
 click('Call out and step closer');assert.equal(read(stateKey).mood,50,'cat gain respects the street Mood ceiling');
 assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'),'result displays actual capped gain');
 ok();cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'seen rustle never repeats after reload');
+
+// The park company uses the neighbour's illustrated choice/result cards and shared Persuasion D20.
+for(const day of [2,3,20])for(const minutes of [0,60,239])assert(onlyScene('park-company',{day,minutes,nearHome:false}));
+for(const day of [0,1,undefined])for(const minutes of [0,60,239])assert(!onlyScene('park-company',{day,minutes}));
+for(const minutes of [-1,240,720,1320,1439])assert(!onlyScene('park-company',{minutes}));
+assert(!onlyScene('park-company',{minutes:60,locationId:'station'}));
+const company=STREET_EVENTS.find(event=>event.id==='park-company');
+const companyState={day:3,minutes:60,mood:30};
+const companyPending={[encountersKey]:{...complete,pendingId:'park-company'}};
+for(const [hygiene,mood,roll,success]of [[55,30,9,false],[55,30,10,true],[80,30,8,true],[15,20,13,false],[15,20,14,true],[80,30,1,false],[15,20,20,true]]){
+ setup({...companyState,hygiene,mood},companyPending);
+ assertEventImage('.event-illustration','event-park-company');
+ const card=screen.getByRole('dialog').querySelector('.event-card.illustrated-event');
+ assert(card,'same illustrated modal as neighbour');assert.equal(card.querySelectorAll('.choice-button').length,3);
+ assert(screen.getByRole('button',{name:company.choices[0].label,exact:true}).textContent.includes('≈10m'));
+ const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
+ cleanup();render(React.createElement(App));assertEventImage('.event-illustration','event-park-company');
+ click(company.choices[0].label);assert(screen.getByText('PERSUASION CHECK · DC 10'));
+ assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+ Math.random=()=>(roll-.5)/20;click('Roll D20');assert.equal(read(encountersKey).pendingRoll,roll);
+ cleanup();Math.random=()=>{throw new Error('Company check must restore the rolled D20')};render(React.createElement(App));
+ assert.equal(document.querySelector('.d20').textContent,String(roll));
+ assert(!screen.queryByRole('button',{name:'Roll D20'}));advance(2000);assert.deepEqual(read(stateKey),before);
+ click('Continue');
+ assertEventImage('.result-illustration',`event-park-company-${success?'talk':'argument'}`);
+ assert(screen.getByRole('dialog').classList.contains('illustrated-result'));
+ assert(screen.getByRole('dialog').textContent.includes(company.choices[0].check[success?'success':'failure'].message));
+ assert.equal(read(stateKey).minutes,before.minutes+10);assert.equal(read(stateKey).mood,before.mood+(success?3:-2));
+ assert.equal(read(stateKey).intoxication,before.intoxication,'hero never drinks automatically');
+ const meter=screen.getByRole('dialog').querySelector('[data-stat="Mood"]');assert(meter);
+ assert.equal(meter.querySelector('[role="meter"]').getAttribute('aria-valuenow'),String(before.mood),'shared animation waits for the result image');
+ assert.equal(read(encountersKey).pendingId,null);assert.equal(read(encountersKey).pendingRoll,null);
+ const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after);ok();
+ cleanup();render(React.createElement(App));assert.deepEqual(read(stateKey),after,'reload cannot apply conversation twice');
+}
+for(const [index,stem,minutes]of [[1,'decline',0],[2,'detour',5]]){
+ setup(companyState,companyPending);const before=read(stateKey);click(company.choices[index].label);
+ assertEventImage('.result-illustration',`event-park-company-${stem}`);
+ assert.equal(read(stateKey).minutes,before.minutes+minutes);assert.equal(read(stateKey).mood,before.mood);
+ if(index===2){assert(read(stateKey).energy<before.energy-1 && read(stateKey).energy>before.energy-1.5,'detour costs one Energy plus ordinary five-minute drain');assert(screen.getByRole('dialog').querySelector('[data-stat="Energy"]').textContent.includes('−1'));}
+ else assert.equal(read(stateKey).energy,before.energy);
+ const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after);ok();
+ cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'company appears once per run');
+}
+setup({...companyState,mood:49},companyPending);click(company.choices[0].label);Math.random=()=>.99;click('Roll D20');click('Continue');
+assert.equal(read(stateKey).mood,50);assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'));ok();
+setup({day:1,minutes:1425,mood:30},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='park-company')},'street-life-left-home-v1':true});
+advance(14000);assert(!screen.queryByRole('dialog'));advance(1000);assertEventImage('.event-illustration','event-park-company');
+click(company.choices[1].label);ok();
 
 // A borrowed phone uses a single 50% slip decision followed by the shared D20.
 for(const day of [2,3,20])for(const minutes of [0,179,180,239])assert(onlyScene('borrow-phone',{day,minutes,nearHome:false}));

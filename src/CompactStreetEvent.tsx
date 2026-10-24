@@ -10,6 +10,7 @@ const eventIcons: Record<string, IconName> = {
   'spare-change': 'coins', 'dropped-glove': 'person',
   'phone-drop': 'phone', 'rain-phone': 'rain', 'free-snack': 'food',
   'borrow-phone': 'phone', 'borrow-phone-slip': 'phone',
+  'park-company': 'chat',
   'ticket-check': 'ticket', 'station-food': 'food', 'useful-tip': 'help',
   'rough-crowd': 'person', 'quiet-night': 'moon', 'night-theft': 'backpack',
 }
@@ -33,7 +34,7 @@ export default function CompactStreetEvent({ event, onChoose, unavailableReason,
       return <ChoiceButton key={choice.label} aria-label={choice.label} disabled={!!unavailable} onClick={() => onChoose(choice)}
         icon={choice.icon ?? choiceIcon('', choice.label)} label={label}
         detail={<>{choice.check && <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small>}{unavailable && <small>{unavailable}</small>}</>}
-        duration={choice.outcome?.minutes ? approximateDuration(choice.outcome.minutes) : undefined} />
+        duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
     })}</ChoiceOptions>
     <p className="compact-event-pause"><Icon name="pause" />Time paused</p>
   </div>

@@ -41,7 +41,7 @@ import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 import { displayDay } from './gameDate'
 
-const BUILD_VERSION = 'v2026.10.24-315'
+const BUILD_VERSION = 'v2026.10.24-316'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -68,7 +68,7 @@ function loadFirstNightEvents(key = FIRST_NIGHT_EVENTS_KEY): FirstNightEvents {
     const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId)
       && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome()) ? saved.pendingId : null
     const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
-    const pendingRoll = pendingId === 'borrow-phone-slip' && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
+    const pendingRoll = ['borrow-phone-slip', 'park-company'].includes(pendingId ?? '') && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
     return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingRoll ? { pendingRoll } : {}) }
   } catch { return { seen: [], lastAt: null, pendingId: null } }
 }
@@ -574,7 +574,7 @@ export default function App() {
   })
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(() => {
     const roll = loadFirstNightEvents(ENCOUNTERS_KEY).pendingRoll
-    const choice = activeEvent?.id === 'borrow-phone-slip' ? activeEvent.choices[0] : undefined
+    const choice = activeEvent && ['borrow-phone-slip', 'park-company'].includes(activeEvent.id) ? activeEvent.choices[0] : undefined
     return choice?.check && roll ? { choice, roll, modifier: checkModifier(choice), resolved: false } : null
   })
   const [inventory, setInventory] = useState<Inventory>(() => {
@@ -863,7 +863,7 @@ export default function App() {
     // even when the player skipped the at-home encounters on D0.
     const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(weather.temp, state.minutes), ...observation, travelMode, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
       seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
-    if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone'].includes(event?.id ?? '')) return
+    if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone', 'park-company'].includes(event?.id ?? '')) return
     if (event) rememberEncounter(event, state)
   }
 
@@ -1918,7 +1918,7 @@ export default function App() {
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
-        visibleStats: activeEvent?.id === 'night-rustle' && outcome.energy ? ['Energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['Phone condition'] : undefined,
+        visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['Energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['Phone condition'] : undefined,
         batteryInSummary: !!outcome.phoneBattery,
         ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcomeText,
           ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
@@ -2009,7 +2009,7 @@ export default function App() {
     if (!diceCheck?.choice.check || diceCheck.roll !== null) return
     const roll = Math.floor(Math.random() * 20) + 1
     setDiceCheck({ ...diceCheck, roll, resolved: false })
-    if (activeEvent?.id === 'borrow-phone-slip') setEncounters(previous => ({ ...previous, pendingRoll: roll }))
+    if (['borrow-phone-slip', 'park-company'].includes(activeEvent?.id ?? '')) setEncounters(previous => ({ ...previous, pendingRoll: roll }))
   }
 
   function acceptDiceResult() {
@@ -2887,7 +2887,7 @@ export default function App() {
         <p>{activeEvent.text}</p>
         <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{activeEvent.choices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
-          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={choice.outcome?.minutes ? approximateDuration(choice.outcome.minutes) : undefined} />
+          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
         })}</ChoiceOptions>
         </div>}
       </section>

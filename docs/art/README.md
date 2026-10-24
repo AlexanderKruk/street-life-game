@@ -31,3 +31,8 @@ Nine main-location environment images cover Station, Night Shelter, Help Center,
 ## One quick call — v314
 
 [borrow-phone-generation.json](borrow-phone-generation.json) records the seven approved illustrations and outcome prompts. The opening fixes both men, their clothes, the residential Warsaw street and night lighting; catch/drop also reference the slip image. The hero retains the authoritative identity sheet. Each WebP master has on-demand 480/768/1024px variants. The safe return, speakerphone, refusal and D20 success/failure results use their own images in the shared result modal; the slipping image is a saved continuation before the existing Reflex check.
+
+
+## Room for one more — v316
+
+[park-company-generation.json](park-company-generation.json) records the selected opening and four final outcome illustrations. The opening keeps only the olive-jacket man addressing the hero. Supporting characters change their posture, gestures and gaze by outcome: listening to the conversation, reacting to the argument, returning to their evening after refusal, or chatting/drinking while the hero takes another path. Identity, wardrobe, park bench and night light stay consistent. Five WebP masters and 480/768/1024px variants load on demand in the same event/result components as the neighbour. D20 success/failure each has one illustration, also used for natural 20/1.
