@@ -23,6 +23,9 @@ Linux environment are documented there; do not claim unrun CI or WebKit checks.
 - Exactly three text roles: Small = 14px; Body = 16px; Title = 20px below 768px
   and 24px at/above 768px. Use variables, never a new numeric text size or a
   screen-specific font family. Icon/art geometry is independent of text size.
+- Keep root `-webkit-text-size-adjust: 100%` and `text-size-adjust: 100%` so
+  iOS rotation cannot inflate individual paragraphs. Preserve browser zoom;
+  do not add viewport zoom restrictions or JavaScript font resets.
 - Main narrative, action labels and confirmation buttons use Body. Narrative is
   regular 400 and primary text; modal narratives use `modal-narrative`.
   Card/item names are semibold 600; hints, times, hours, prices, descriptions of
@@ -108,7 +111,8 @@ key names when increasing the build version. `useGameAutosave.ts` remains the
 writer, and `App.tsx` owns state, reset commands and process lifecycles. Keep
 restoration outside React callbacks and do not reintroduce storage parsing in
 App. Shared process-state types are in `stateTypes.ts`. Run the permanent
-`check-load-game-session.cjs` checks plus the full suite for restoration changes.
+`check-load-game-session.cjs` and relevant restoration regressions during development;
+reserve the full suite for publication.
 
 Inventory, shop purchases/redemption and safe-storage commands are extracted
 in v328 into `inventoryCommands.ts`. Resolve an `InventoryCommand` from the
@@ -136,6 +140,13 @@ reported only after access checks and the location's action duration succeed.
 Completion and automatic renewal use session transition guards against replayed
 StrictMode mount effects; reset clears the guards, without new save keys.
 Run `check-phone-controller.cjs` plus existing phone/call/charging regressions.
+
+As of v333, opening voice calls use ×1 (one game minute per 1000ms); phone
+search keeps ×4 (250ms). Select the interval in App's existing shared clock
+using the active call, including restored calls; do not slow other activities.
+As of v334, Street no longer offers ordinary wandering (`walk`) or uses it as
+a fallback after music. Keep the once-per-run music walk, bench/sleep choices,
+phone actions and destination travel. Do not reintroduce the removed choice.
 
 Event/travel/rain control is extracted in v330. `eventSession.ts` owns active
 scenes, encounter history and D20 state; `encounterQueue.ts` owns cooldowns,
@@ -187,9 +198,10 @@ world clock. Collection/completion guards prevent duplicate rewards. Reuse
 `hygieneRules.ts` for the clothing Hygiene ceiling in actions/status/results,
 and `controllerTypes.ts` for common state/result ports. App remains the explicit
 coordinator of shared clocks, pause/focus, aging, result/journal and persistence.
-Run `check-action-controllers.cjs`, `check-module-boundaries.cjs` and the full
-suite for shared changes. Runtime imports must remain acyclic; controllers must
-not import presentation, storage writers or App, or create a world timer.
+Run `check-action-controllers.cjs`, `check-module-boundaries.cjs` and relevant
+thematic checks for shared changes; reserve the full suite for publication.
+Runtime imports must remain acyclic; controllers must not import presentation,
+storage writers or App, or create a world timer.
 
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact
@@ -240,11 +252,15 @@ use existing responsive-image helpers for runtime artwork.
   stat changes, eligibility, pause/focus, saved progress and once-only outcomes.
   Add focused coverage for meaningful new mechanics or bug fixes. Do not add
   tests for every implementation detail or routine low-impact visual edit.
-- Use the thematic scripts in `TESTING.md` for isolated changes. Run full
-  `npm test` and `npm run build` for shared UI, clock/pause, persistence, result
-  lifecycle and architectural changes. The GitHub Pages workflow already gates
-  publication on the full suite and build. Do not repeat a successful unchanged
-  run without a new failure, change or unresolved concern.
+- User instruction (25 October 2026): run the full test suites only before
+  publication. During development, use the relevant thematic scripts in
+  `TESTING.md`, even for shared UI, clock/pause, persistence, result lifecycle
+  and architectural changes; select checks for the affected behavior and build
+  when appropriate. Use targeted browser cases for changed UI/flows rather
+  than the complete visual/smoke suite after each edit. The GitHub Pages
+  workflow already gates publication on the full Node suite and build; avoid
+  duplicating a successful unchanged run locally. Do not repeat checks without
+  a new change, failure or unresolved concern.
 - Documentation-only changes need diff/link/command verification, not a fresh
   game build or full suite. Do not describe previous runs as newly performed.
 - Node UI tests use jsdom. The separate Playwright suite tests the production
@@ -281,8 +297,9 @@ use existing responsive-image helpers for runtime artwork.
 1. Find and reuse the template above before adding markup or CSS.
 2. Check Small/Body/Title roles, wrapping, icons, button variants and common
    frame. Do not shrink text to make a narrow screen fit.
-3. Run relevant checks and `npm run build`. Run the full `npm test` for shared
-   modal/component changes because they cover many gameplay flows.
+3. Run relevant thematic checks and `npm run build`; for shared modal/component
+   changes, select affected gameplay and UI checks. Full suites run only before
+   publication, per the user instruction above.
 4. Visually inspect the changed variants when browser preview is available;
    include narrow mobile and desktop layouts where supported. Check long text,
    internal scrolling, image framing, keyboard focus and background blocking.

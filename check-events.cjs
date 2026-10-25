@@ -616,7 +616,7 @@ for(const [index,asset] of ['decline','help','supplies'].entries()) {
 // A short call does not force an encounter; the normal idle interval still applies.
 setup({minutes:1320,mood:30},{'street-life-opening-calls-v1':0});
 fireEvent.click(document.querySelector('[data-choice="phone-call"]'));
-advance(500);assert(screen.getByRole('dialog').textContent.includes('No answer'));ok();
+advance(2000);assert(screen.getByRole('dialog').textContent.includes('No answer'));ok();
 advance(14000);assert(!screen.queryByRole('dialog'),'no forced meeting after the short call');
 advance(1000);assert(screen.getByRole('dialog').textContent.includes('A familiar face'));
 click(neighbour.choices[0].label);ok();
@@ -677,9 +677,9 @@ advance(1000);assert(screen.getByRole('dialog').textContent.includes('An old fri
 click(dog.choices[2].label);ok();
 assert(read('street-life-first-night-events-v1').seen.includes(dog.id));
 
-// Real wandering routes an unseen walking encounter after the action result.
+// Music walking routes an unseen walking encounter after the action result.
 setup({day:3,minutes:600},{[encountersKey]:{seen:['phone-drop'],lastAt:null,pendingId:null}});
-Math.random=()=>.99;click('Just one more street. I’m not ready to lie down.');
+Math.random=()=>.99;click(/Put on something familiar and walk for a while. Clear my head./);
 assert(!document.querySelector('.event-overlay'));ok();
 assert(screen.getByRole('dialog').textContent.includes('Coin on the pavement'));
 cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('Coin on the pavement'));

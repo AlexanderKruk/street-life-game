@@ -30,6 +30,25 @@ test('Find Help spends resources once, adds a place and survives reload', async 
   await advance(page, 6500)
   await expect(page.getByRole('dialog', { name: 'Help Center', exact: true })).toBeVisible()
   await assertLocked(page)
+  // Exercise the shared discovery result through portrait → landscape → portrait.
+  // Chromium checks layout/inheritance; a physical iPhone is still needed to
+  // verify WebKit's orientation-specific text inflation itself.
+  const description = page.locator('.result-card-content > .result-description').first()
+  const typography = () => description.evaluate(node => {
+    const style = getComputedStyle(node)
+    return {
+      size: style.fontSize,
+      adjustment: style.getPropertyValue('-webkit-text-size-adjust') || style.getPropertyValue('text-size-adjust'),
+      height: node.getBoundingClientRect().height,
+    }
+  })
+  const portrait = page.viewportSize()
+  const beforeRotation = await typography()
+  expect(beforeRotation.adjustment).toBe('100%')
+  await page.setViewportSize({ width: portrait.height, height: portrait.width })
+  expect((await typography()).size).toBe(beforeRotation.size)
+  await page.setViewportSize(portrait)
+  await expect.poll(typography).toEqual(beforeRotation)
   const after = await read(page, keys.game)
   expect(after.minutes - before.minutes).toBe(pending.total)
   expect((await read(page, keys.inventory)).phoneBattery).toBeLessThan(battery)

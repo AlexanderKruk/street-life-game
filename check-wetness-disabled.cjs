@@ -61,7 +61,7 @@ try {
   for (const day of [1, 2]) {
     setup({ [SAVE_KEY]: { ...base, day, minutes: 1320 } });
     Math.random = () => 0;
-    fireEvent.click(screen.getByRole('button', { name: 'Just one more street. I’m not ready to lie down.' }));
+    fireEvent.click(screen.getByRole('button', { name: /Put on something familiar and walk for a while. Clear my head./ }));
     fireEvent(window, new window.Event('pagehide'));
     assert.equal(JSON.parse(localStorage.getItem(SAVE_KEY)).rainUntil, undefined, 'night walks cannot start rain on D0/D1');
     assert(!screen.queryByRole('dialog', { name: 'Rain on the street' }));

@@ -62,35 +62,48 @@ try {
   assert.equal(read(gameKey).mood,30);assert.equal(read(callKey),0);
   assert.equal(document.querySelectorAll('.story-actions > button').length,2);
   assert(callButton().textContent.includes('university'));
-  assert(document.querySelector('[data-choice="music-walk"],[data-choice="walk"]'));
+  assert(document.querySelector('[data-choice="music-walk"]'));assert(!document.querySelector('[data-choice="walk"]'));
   assert(!document.querySelector('[data-choice="station-route"],[data-choice="phone-help"]'));
   const initial=read(gameKey),battery=read(invKey).phoneBattery;
   fireEvent.click(callButton());assert(screen.getByRole('dialog',{name:'Calling a university friend'}));
   assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
   advance(249);assert.equal(read(gameKey).minutes,initial.minutes);assert.equal(read(invKey).phoneBattery,battery);
+  advance(750);assert.equal(read(gameKey).minutes,initial.minutes,'calls wait a full real second per game minute');assert.equal(read(activityKey).remaining,2);
   advance(1);assert.equal(read(gameKey).minutes,initial.minutes+1);assert.equal(read(gameKey).mood,30);
   assert(read(invKey).phoneBattery<battery);assert.equal(read(callKey),0);
   assert.equal(read(activityKey).remaining,1);
   reload();assert(screen.getByRole('dialog',{name:'Calling a university friend'}));assert.equal(read(activityKey).total,2);
-  advance(250);assertResult(28,1,'event-call-no-answer');closeResult();
+  advance(999);assert.equal(read(activityKey).remaining,1,'restored calls retain the ×1 speed');
+  advance(1);assertResult(28,1,'event-call-no-answer');closeResult();
   reload();assert.equal(read(gameKey).mood,28);assert.equal(read(callKey),1);assert(callButton().textContent.includes('old colleague'));
-  fireEvent.click(callButton());advance(1000);assert.equal(read(callKey),1);assert.equal(read(gameKey).mood,28);
-  advance(250);assertResult(23,2,'event-call-family');closeResult();
+  fireEvent.click(callButton());advance(2000);assert.equal(read(activityKey).remaining,3);
+  assert.equal(screen.getByLabelText('Elapsed call time').textContent,'02m','modal time follows actual elapsed call minutes');
+  advance(2999);assert.equal(read(activityKey).remaining,1);assert.equal(read(callKey),1);assert.equal(read(gameKey).mood,28);
+  advance(1);assertResult(23,2,'event-call-family');closeResult();
+  cleanup();localStorage.setItem('street-life-music-walk-used-v1','true');render(React.createElement(App));
+  assert.equal(document.querySelectorAll('.story-actions > button').length,1,'after music only the remaining call is offered');assert(!document.querySelector('[data-choice="walk"]'));
   assert(callButton().textContent.includes('helped him move'));
-  fireEvent.click(callButton());advance(1250);assertResult(18,3,'event-call-small-room');closeResult();
+  fireEvent.click(callButton());
+  Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});
+  advance(5000);assert.equal(read(activityKey).remaining,5,'calls still pause in the background');
+  Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
+  advance(4999);assert.equal(read(activityKey).remaining,1);
+  advance(1);assertResult(18,3,'event-call-small-room');closeResult();
   assert(!callButton());assert(document.querySelector('[data-choice="station-route"]'));assert(document.querySelector('[data-choice="phone-help"]'));
   assert.equal(read(gameKey).minutes,initial.minutes+12);
   assert(Math.abs(read(invKey).phoneBattery-(battery-12*.2*1.196))<1e-8,'voice battery uses 0.2% per elapsed minute and phone wear');
   reload();assert.equal(read(gameKey).mood,18);assert.equal(read(callKey),3);assert(!callButton());
+  const afterCalls=read(gameKey).minutes;advance(999);assert.equal(read(gameKey).minutes,afterCalls);
+  advance(1);assert.equal(read(gameKey).minutes,afterCalls+1,'ordinary Street time remains ×1 after calls');
 
   // A battery interruption preserves progression and does not apply the refusal twice.
-  setup();fireEvent.click(callButton());advance(250);
+  setup();fireEvent.click(callButton());advance(1000);
   const partial=read(activityKey),partialGame=read(gameKey);
   cleanup();localStorage.setItem(invKey,JSON.stringify({...read(invKey),phoneBattery:0}));render(React.createElement(App));
   assert(screen.getByRole('dialog',{name:'Call interrupted'}));assert.equal(read(callKey),0);assert.equal(read(gameKey).mood,partialGame.mood);
   assert(!read(activityKey));closeResult();assert(callButton().disabled);
   cleanup();localStorage.setItem(invKey,JSON.stringify({...read(invKey),phoneBattery:62}));render(React.createElement(App));
-  fireEvent.click(callButton());advance(500);assertResult(28,1,'event-call-no-answer');closeResult();
+  fireEvent.click(callButton());advance(2000);assertResult(28,1,'event-call-no-answer');closeResult();
   assert.equal(partial.remaining,1);
 
   // Existing saves retain their Mood and do not acquire a forced new prologue.

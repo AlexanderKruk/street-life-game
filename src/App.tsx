@@ -72,7 +72,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-332'
+const BUILD_VERSION = 'v2026.10.25-334'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -439,7 +439,6 @@ export default function App() {
       { id: 'office-routine', titles: ['Walk through the city'], text: 'In your late thirties, you had a steady office job and a desk by the window. Then came the redundancy notice.' },
       { id: 'redundancy-savings', titles: ['Rest on the bench', 'Sit and recover', 'Shelter from the rain'], text: 'After the redundancy, you expected to find another job in a few weeks. As the search dragged on, rent and ordinary expenses used up what you had put aside.' },
       { id: 'unanswered-applications', titles: ['Where can I get help in the morning?'], text: 'Your last job application still has no reply. The redundancy email is still in your inbox.' },
-      { id: 'lost-home', titles: ['How can I get a shelter bed?'], text: 'Until recently, you were looking for a place to live. Tonight, you need somewhere just until morning.' },
     ]
     const memory = memories.find(fragment => fragment.titles.includes(pendingResult.title) && !seenMemories.includes(fragment.id))
     const resultText = (infoModal?.text ?? message) + (memory ? `\n\n${memory.text}` : '')
@@ -509,7 +508,7 @@ export default function App() {
     if (!underRainCover) setTrip(active => advanceTrip(active, tickMinutes))
     if (!trip && !shelterQueue && !shelterDeparture) observeIdle(tickMinutes, () => applyAction(game, { minutes: tickMinutes }))
   })
-  const gameClockInterval = trip || shelterDeparture || phoneActivity || rainWaiting ? ACTIVITY_TICK_MS : 1000
+  const gameClockInterval = activeCall ? 1000 : trip || shelterDeparture || phoneActivity || rainWaiting ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
     const timer = window.setInterval(tickGameClock, gameClockInterval)
     return () => window.clearInterval(timer)
@@ -542,10 +541,10 @@ export default function App() {
   const justWalked = lastAction === 'Walk through the city' || lastAction === 'Walk with music'
   const wantsBench = answeredQuestions.includes('bed') && !exhausted && lastAction !== 'Rest on the bench' && !justWalked
   const bodyChoices = exhausted ? ['bench-sleep', 'street-sleep', 'bench-rest', 'find-bench']
-    : openingCallsActive ? ['music-walk', 'walk']
-    : wantsBench ? [firstNight || (game.minutes >= 360 && game.minutes < 1380) ? 'bench-rest' : 'bench-sleep', 'find-bench', 'walk', 'street-sleep']
-    : (game.minutes >= 1380 || game.minutes < 360) && !justWalked ? ['street-sleep', 'bench-sleep', 'walk']
-    : game.mood <= 30 ? ['music-walk', 'walk'] : ['walk', 'music-walk']
+    : openingCallsActive ? ['music-walk']
+    : wantsBench ? [firstNight || (game.minutes >= 360 && game.minutes < 1380) ? 'bench-rest' : 'bench-sleep', 'find-bench', 'street-sleep']
+    : (game.minutes >= 1380 || game.minutes < 360) && !justWalked ? ['street-sleep', 'bench-sleep']
+    : ['music-walk']
   const practicalChoices = shelterBooked ? ['shelter-route', 'station-route']
     : firstNight || !discoveredLocations.includes('work') ? ['station-route']
     : game.money < 50 ? ['beg', 'bottles', 'station-route']
