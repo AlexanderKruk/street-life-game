@@ -1,0 +1,46 @@
+{
+  "method": "built-in image_gen",
+  "date": "2026-10-24",
+  "status": "Connected to the first-morning city-waking event; replaces the retired dawn reflection",
+  "references": [
+    {
+      "path": "docs/art/daylight-reference.png",
+      "role": "morning opening, scene and daylight palette"
+    },
+    {
+      "path": "docs/art/hero-reference.webp",
+      "role": "identity and wardrobe"
+    },
+    {
+      "path": "docs/art/illustration-style-reference.webp",
+      "role": "rendering style, not evening illumination"
+    }
+  ],
+  "images": [
+    {
+      "key": "independent",
+      "prompt": "Use case: illustration-story. Create ONE wide 16:9 landscape result illustration for the first-morning event in Street Life. The three input images have distinct reference roles: image 1 is the approved morning opening, location continuity, DAYLIGHT and palette reference; image 2 is authoritative hero IDENTITY and WARDROBE only; image 3 is realistic painterly RENDERING reference only, NOT its evening time or bench scene. Depict the EXACT SAME recognizable lean ordinary man aged 35–40 with wavy dark-brown hair, short stubble, hazel eyes, charcoal hooded jacket over a dark sweater, blue jeans, dark walking boots, exactly ONE black backpack. Same Warsaw neighborhood, early autumn weekday at about 08:00: shops open, ordinary commuters in the middle/background, light gray overcast sky, clear soft diffuse DAYLIGHT, street lamps OFF. Keep the image as bright and readable as image 1, with subdued slate blue-gray, charcoal, gray-brown colors and natural skin. Ground slightly damp with no large puddles, restrained reflections. Calm, melancholy, everyday realistic painterly game illustration, mobile-readable composition, no exaggerated despair, no glamour, no vivid orange-teal grade, no added interface, labels, signs with readable writing, logos, text or watermark. This is a reflection after choosing an approach, NOT a completed job, new discovery, paid purchase or arrival at a service. Choice 1: 'I’ll try to manage on my own.' Text meaning: first he needs money coming in; finding work seems like a place to start. Show a medium-wide three-quarter view of the hero straightening up, adjusting one backpack shoulder strap and taking a deliberate first step along the pavement, his face tired but quietly resolved. A few commuters go about their own mornings behind him, and ordinary open shopfronts line the street. Hands empty except for the backpack strap; no phone, money, help-giver, job offer or readable job sign. This image communicates determination to try independently, not an achieved success. Change the pose and camera from the opening while preserving the same person and neighborhood.",
+      "selected_output": "docs/art/first-morning-v323/independent.png",
+      "source": "generated_images/exec-8ff44f95-fc27-4fc1-9d75-7d9814e7a4b2.png",
+      "runtime_asset": "public/assets/event-morning-independent.webp"
+    },
+    {
+      "key": "help",
+      "prompt": "Use case: illustration-story. Create ONE wide 16:9 landscape result illustration for the first-morning event in Street Life. The three input images have distinct reference roles: image 1 is the approved morning opening, location continuity, DAYLIGHT and palette reference; image 2 is authoritative hero IDENTITY and WARDROBE only; image 3 is realistic painterly RENDERING reference only, NOT its evening time or bench scene. Depict the EXACT SAME recognizable lean ordinary man aged 35–40 with wavy dark-brown hair, short stubble, hazel eyes, charcoal hooded jacket over a dark sweater, blue jeans, dark walking boots, exactly ONE black backpack. Same Warsaw neighborhood, early autumn weekday at about 08:00: shops open, ordinary commuters in the middle/background, light gray overcast sky, clear soft diffuse DAYLIGHT, street lamps OFF. Keep the image as bright and readable as image 1, with subdued slate blue-gray, charcoal, gray-brown colors and natural skin. Ground slightly damp with no large puddles, restrained reflections. Calm, melancholy, everyday realistic painterly game illustration, mobile-readable composition, no exaggerated despair, no glamour, no vivid orange-teal grade, no added interface, labels, signs with readable writing, logos, text or watermark. This is a reflection after choosing an approach, NOT a completed job, new discovery, paid purchase or arrival at a service. Choice 2: 'I need some help.' Text meaning: food, a shower, somewhere to rest; he decides to find out what support is available, through people or phone. Show an intimate medium-wide three-quarter view of the hero still near the same open shopfront in the approved morning setting. He has taken his ordinary smartphone out but holds it LOWERED near his waist, screen turned away/unreadable, not actively browsing or calling. His shoulders ease slightly; his face shows a hesitant but willing decision to seek help, gaze directed toward the ordinary people walking by. Exactly one backpack worn. Include a few varied commuters at believable distance, none speaking to or giving anything to him. No charity queue, aid centre signage, shelter arrival, handout, sad begging pose, completed search or map. This is the personal decision to reach out, not assistance already received. Distinct viewpoint and pose from choice 1.",
+      "selected_output": "docs/art/first-morning-v323/help.png",
+      "source": "generated_images/exec-55a3398b-0dc4-46fa-b15d-6fb12f3c6752.png",
+      "runtime_asset": "public/assets/event-morning-help.webp"
+    },
+    {
+      "key": "more-time",
+      "prompt": "Use case: illustration-story. Create ONE wide 16:9 landscape result illustration for the first-morning event in Street Life. The three input images have distinct reference roles: image 1 is the approved morning opening, location continuity, DAYLIGHT and palette reference; image 2 is authoritative hero IDENTITY and WARDROBE only; image 3 is realistic painterly RENDERING reference only, NOT its evening time or bench scene. Depict the EXACT SAME recognizable lean ordinary man aged 35–40 with wavy dark-brown hair, short stubble, hazel eyes, charcoal hooded jacket over a dark sweater, blue jeans, dark walking boots, exactly ONE black backpack. Same Warsaw neighborhood, early autumn weekday at about 08:00: shops open, ordinary commuters in the middle/background, light gray overcast sky, clear soft diffuse DAYLIGHT, street lamps OFF. Keep the image as bright and readable as image 1, with subdued slate blue-gray, charcoal, gray-brown colors and natural skin. Ground slightly damp with no large puddles, restrained reflections. Calm, melancholy, everyday realistic painterly game illustration, mobile-readable composition, no exaggerated despair, no glamour, no vivid orange-teal grade, no added interface, labels, signs with readable writing, logos, text or watermark. This is a reflection after choosing an approach, NOT a completed job, new discovery, paid purchase or arrival at a service. Choice 3: 'I need a little more time.' Text meaning: he watches people hurry past, everyone seems to know where they are going; he is not ready to decide what comes next and stays where he is. Show a wider observational composition: the hero pauses on a low stone ledge along the same Warsaw shopfront neighborhood, leaning slightly forward with loosely clasped hands, looking at the moving morning commuters with a weary, thoughtful expression. Exactly one black backpack set immediately beside him (NOT worn and on the ground simultaneously). His phone stays out of sight. Ordinary people with bags move purposefully past in the middle/background, while he remains still. Not sleeping, crying, injured or asking for anything. Quiet contrast between his uncertainty and the city continuing its day. Daylight is clearly bright overcast like reference 1; do not copy the dark bench scene of reference 3.",
+      "selected_output": "docs/art/first-morning-v323/more-time.png",
+      "source": "generated_images/exec-6452833e-93cb-4a80-a3ea-762e116a437b.png",
+      "runtime_asset": "public/assets/event-morning-pause.webp"
+    }
+  ],
+  "runtime_opening": {
+    "source": "docs/art/daylight-reference.png",
+    "asset": "public/assets/event-first-morning.webp"
+  }
+}

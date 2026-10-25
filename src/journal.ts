@@ -149,7 +149,10 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
   } else if (actionTitle === 'Cold fingers') {
     text = /put up|curl your fingers/.test(source) ? 'I keep thinking about somewhere warm. My hands remind me how long I have been outside.' : 'I feel a little warmer. Even small comforts matter out here.'
   } else if (actionTitle === 'The city wakes up') {
-    text = 'A new day is starting around me. I need to decide what to do with mine.'
+    text = /money coming in/.test(source) ? 'I want to try managing on my own. Finding work seems like somewhere to start.'
+      : /what support you can get/.test(source) ? 'I need some help. I want to find out what support is available.'
+      : /not ready to decide/.test(source) ? 'Everyone seems to know where they are going. I need a little more time.'
+      : 'A new day is starting around me. I need to decide what to do with mine.'
   } else if (actionTitle === 'Cleaning the hall') {
     text = 'It was just someone doing their job. I was relieved that I did not have to explain myself.'
   } else if (actionTitle === 'Which platform?') {

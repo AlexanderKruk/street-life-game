@@ -9,6 +9,10 @@ export function firstNightTime(state: { day: number; minutes: number }) {
   return minute >= 1320 && minute < 1800
 }
 
+export function firstMorningTime(state: { day?: number; minutes?: number }) {
+  return state.day === 2 && state.minutes !== undefined && state.minutes >= 480 && state.minutes < 600
+}
+
 export type EventContext = {
   locationId: string
   /** Stored one-based calendar day: displayed D1 is day 2. */
@@ -46,6 +50,8 @@ export type EventOutcome = {
   loseDocuments?: boolean
   illustration?: string
   discoverLocation?: string
+  /** List already-known places in this order; never discovers or visits them. */
+  knownLocations?: string[]
 }
 
 export const FOUND_COIN_DENOMINATIONS = [
@@ -120,10 +126,11 @@ const streetHasPassersBy = (context: EventContext) => {
 }
 
 export const STREET_EVENTS: StreetEvent[] = [
-  { id:'city-waking', trigger:'location', icon:'🌅', title:'The city wakes up', text:'The first buses pass. Lights come on behind windows, and a shop shutter rattles somewhere down the street. The city is starting its day. You are still outside, with your backpack beside you.', weight:1, eligible:c=>c.locationId==='street' && c.minutes!==undefined && c.minutes>=300 && c.minutes<420, choices:[
-    { label:'Think about my next step', outcome:{ minutes:5, mood:2, message:'You put the next few hours in order in your head. You cannot solve everything at once, but you can decide what to try first.' } },
-    { label:'Take a moment', outcome:{ minutes:5, message:'You watch the windows light up. For everyone inside, this may be an ordinary morning. You take a breath before joining it.' } },
-    { label:'Keep moving', outcome:{ minutes:5, energy:-1, mood:1, message:'You adjust your backpack and walk towards the waking streets. The night is over. You still need a plan for the day.' } },
+  // Replaces the old dawn reflection, retaining its once-per-run save history.
+  { id:'city-waking', trigger:'location', icon:'🌅', title:'The city wakes up', text:'The streets are getting busy. Shops and support centres are open, and people are heading to work. You’ve made it through the night. Now you need to decide where to start. You could try to manage on your own, or find out what help is available. You never thought you’d be making that choice.', weight:1, eligible:c=>c.locationId==='street' && firstMorningTime(c), choices:[
+    { label:'I’ll try to manage on my own.', icon:'work', outcome:{ knownLocations:['work','jobcenter'], message:'First, you need some money coming in. Finding work seems like a place to start.' } },
+    { label:'I need some help.', icon:'help', outcome:{ knownLocations:['shelter','support','daycenter'], message:'Food, a shower, somewhere to rest. You decide to find out what support you can get.' } },
+    { label:'I need a little more time.', icon:'pause', outcome:{ message:'You watch people hurry past. Everyone seems to know where they’re going. You’re not ready to decide what comes next. For now, you stay where you are.' } },
   ]},
   { id:'night-rustle', trigger:'location', icon:'❔', title:'A rustle in the dark', text:'The streetlights barely reach this stretch of path. A rustle breaks the silence. A few seconds later, you hear it again.', weight:1, eligible:c=>c.locationId==='street' && c.day!==undefined && c.day>=2 && c.minutes!==undefined && (c.minutes>=1320 || c.minutes<300), choices:[
     { label:'Call out and step closer', icon:'search', outcome:{ minutes:5, mood:2, message:'“Hello? Anyone there?” You take a few careful steps towards the sound. A cat emerges from the bushes and stops to look at you. You let out a breath. “Just you, then.”' } },
@@ -154,11 +161,6 @@ export const STREET_EVENTS: StreetEvent[] = [
       success:{ minutes:5, mood:3, phoneBattery:-2, message:'You catch it just above the pavement. For a second, neither of you speaks. “God, sorry,” he says. You check the screen before putting it safely away.' },
       failure:{ minutes:5, mood:3, phoneBattery:-2, phoneCondition:-5, message:'Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. The screen still works. There’s a fresh dent in the corner. “I’m really sorry.” You take it back.' },
     } },
-  ]},
-  { id:'cold-hands', trigger:'location', icon:'🌡️', title:'Cold fingers', text:'You have been outside for a while. Your fingers have grown stiff, and you keep curling them into your palms. The cold feels harder to ignore now that there is no warm room waiting for you.', weight:1, eligible:c=>c.locationId==='street' && c.temperature!==undefined && c.temperature<10 && (c.elapsedMinutes??0)>=15 && c.observation!=='arrival', choices:[
-    { label:'Rub my hands together', outcome:{ minutes:2, mood:1, message:'You rub your palms and breathe into your cupped hands. A little warmth returns. It is only temporary, but it helps.' } },
-    { label:'Walk a little to warm up', outcome:{ minutes:5, energy:-1, mood:1, message:'You tuck your hands into your pockets and walk around the block. Moving warms you a little, although your legs would rather rest.' } },
-    { label:'Put up with it for now', outcome:{ mood:-1, message:'You curl your fingers into your sleeves. You can manage for now, but you keep thinking about somewhere warm.' } },
   ]},
   { id:'station-cleaning', trigger:'location', icon:'🧹', title:'Cleaning the hall', text:'A cleaner approaches with a floor-cleaning machine and gestures towards the area where you are resting. “Could you move over for a few minutes? I need to clean here.”', weight:1, eligible:c=>c.locationId==='station' && (c.observation==='idle' || c.observation==='action') && (c.elapsedMinutes??0)>=15, choices:[
     { label:'Move to another bench', outcome:{ minutes:3, message:'You lift your backpack and find a seat a little further along. The cleaner nods and gets on with the floor. Nobody asks why you are here.' } },
@@ -203,16 +205,6 @@ export const STREET_EVENTS: StreetEvent[] = [
   { id:'station-food', trigger:'location', icon:'🥐', title:'Food before closing', text:'A worker has a small bag of unsold food and asks if you want it.', weight:3, eligible:c=>c.locationId==='station' && !c.firstNight && (c.minutes ?? 1200)>=1140, choices:[
     { label:'Accept', outcome:{ food:1, mood:3, message:'You received some food for later.' } },
     { label:'Decline', outcome:{ message:'You thank them and decline.' } }
-  ]},
-  { id:'useful-tip', trigger:'location', icon:'💬', title:'A useful tip', text:'Someone nearby mentions a place where people can get help, but seems ready to leave.', weight:4, eligible:c=>!c.firstNight && (c.locationId!=='street' || streetHasPassersBy(c)), choices:[
-    { label:'Ask for details · Persuasion DC 12', check:{ stat:'persuasion', dc:12,
-      success:{ minutes:10, mood:5, discoverLocation:'shelter', message:'You keep the conversation going. They explain where Night Shelter is and how evening registration works.' },
-      failure:{ minutes:5, mood:-1, message:'You try to get more information, but the conversation ends quickly.' },
-      criticalSuccess:{ minutes:10, mood:7, discoverLocation:'shelter', message:'The conversation goes extremely well. You get clear directions to Night Shelter and learn why arriving early for evening registration improves your chances of a bed.' },
-      criticalFailure:{ minutes:5, mood:-3, message:'You come across badly and the person cuts the conversation short.' }
-    }},
-    { label:'Just listen', outcome:{ minutes:10, mood:3, discoverLocation:'shelter', message:'You listen without pushing for more details. They describe where Night Shelter is and mention evening registration. Knowing where you could try for a bed gives you some hope.' } },
-    { label:'Keep going', outcome:{ message:'You decide not to stop.' } }
   ]},
   { id:'rough-crowd', trigger:'location', icon:'⚠️', title:'Trouble nearby', text:'An argument nearby is getting louder. Staying around feels risky.', weight:2, eligible:c=>c.locationId==='station', choices:[
     { label:'Move away', outcome:{ minutes:10, energy:-2, message:'You move to another part of the station and avoid trouble.' } },

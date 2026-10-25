@@ -3024,5 +3024,89 @@
         "file": "event-rain-stopped-search-1024.webp"
       }
     ]
+  },
+  "event-first-morning.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-first-morning-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-first-morning-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-first-morning-1024.webp"
+      }
+    ]
+  },
+  "event-morning-independent.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-morning-independent-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-morning-independent-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-morning-independent-1024.webp"
+      }
+    ]
+  },
+  "event-morning-help.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-morning-help-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-morning-help-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-morning-help-1024.webp"
+      }
+    ]
+  },
+  "event-morning-pause.webp": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "file": "event-morning-pause-480.webp"
+      },
+      {
+        "width": 768,
+        "height": 432,
+        "file": "event-morning-pause-768.webp"
+      },
+      {
+        "width": 1024,
+        "height": 576,
+        "file": "event-morning-pause-1024.webp"
+      }
+    ]
   }
 }

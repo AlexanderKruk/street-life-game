@@ -2,7 +2,7 @@ import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { OPENING_CALLS, OPENING_CALLS_KEY, CALL_BATTERY_PER_MINUTE, openingCall, loadOpeningCallIndex } from './openingCalls'
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { actions, applyAction as applyGameAction, applySleepTime as applyGameSleepTime, weatherAt, rainDailyLimit, weatherExposure, temperatureAt, energyCap, moodLimit, limitMood, formatTime, createInitialState, isOpen, locations, conditionBand, destinationTravelTimeRange, randomTravelMinutes, type ActionResult, type GameState, type Housing } from './game'
-import { nextStreetEvent, firstNightTime, STREET_EVENTS, resolveEventOutcome, type EventContext, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
+import { nextStreetEvent, firstNightTime, firstMorningTime, STREET_EVENTS, resolveEventOutcome, type EventContext, type EventTrigger, type EventOutcome, type StreetEvent, type StreetEventChoice } from './events'
 import { illustrateStreetEvent } from './eventArtwork'
 import { summarizeResult, type ConsumedItem, type ResultSnapshot } from './results'
 import { journalReflection, loadJournalEntries, type JournalEntry } from './journal'
@@ -43,7 +43,7 @@ import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from 
 import { displayDay } from './gameDate'
 import { createRain, chooseRain, planRainDay, RAIN, rainArt, rainResultText, type RainChoice } from './rain'
 
-const BUILD_VERSION = 'v2026.10.24-322'
+const BUILD_VERSION = 'v2026.10.24-323'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -67,8 +67,11 @@ function loadFirstNightEvents(key = FIRST_NIGHT_EVENTS_KEY): FirstNightEvents {
   try {
     const saved = JSON.parse(localStorage.getItem(key) ?? 'null')
     const ids = new Set(STREET_EVENTS.filter(event => key === ENCOUNTERS_KEY || event.id.startsWith('first-night-')).map(event => event.id))
+    // Old dawn saves must not open the new 08:00 scene before services open.
+    const state = readSavedGame(localStorage)
+    const morningPendingValid = saved?.pendingId !== 'city-waking' || !!state && state.locationId === 'street' && firstMorningTime(state)
     const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId)
-      && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome()) ? saved.pendingId : null
+      && morningPendingValid && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome()) ? saved.pendingId : null
     const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
     const pendingRoll = ['borrow-phone-slip', 'park-company'].includes(pendingId ?? '') && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
     return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingRoll ? { pendingRoll } : {}) }
@@ -875,12 +878,14 @@ export default function App() {
   }
 
   function observeOrdinaryEvent(trigger: 'travel' | 'location', state: GameState, travelMode?: TravelMode, observation: Pick<EventContext, 'observation' | 'elapsedMinutes'> = {}) {
-    if (activeEvent || firstNightEvents.pendingId || encounters.pendingId || !encounterDue(state)) return
+    if (activeEvent || firstNightEvents.pendingId || encounters.pendingId) return
     // Opening observations keep priority; D1+ night encounters can occur away from home
     // even when the player skipped the at-home encounters on D0.
     const eventWeather = weatherAt(state)
     const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(eventWeather.temp, state.minutes), ...observation, travelMode, weather: eventWeather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
       seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
+    // The first-morning decision takes priority over ordinary cooldowns.
+    if (event?.id !== 'city-waking' && !encounterDue(state)) return
     if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone', 'park-company', 'night-patrol'].includes(event?.id ?? '')) return
     if (event) rememberEncounter(event, state)
   }
@@ -1189,6 +1194,14 @@ export default function App() {
     if (document.visibilityState !== 'visible' || eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver) return
     observeFirstNight(current.id === 'station' ? 'location' : 'walk', game)
   }, [firstNight, firstNightEvents, game.day, game.minutes, current.id, eventInteractionBlocked, sleeping, sleepChoice, trip, phoneActivity, trashGame, shelterQueue, shelterDeparture, shelterInterview, gameOver])
+
+  // A key story scene does not wait for the 30-minute ambient observation tick.
+  // Existing activities/results finish first, then the scene opens immediately.
+  useEffect(() => {
+    if (!firstMorningTime(game) || current.id !== 'street' || encounters.seen.includes('city-waking')) return
+    if (document.visibilityState !== 'visible' || eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver) return
+    observeOrdinaryEvent('location', game)
+  }, [game.day, game.minutes, current.id, encounters, firstNightEvents, eventInteractionBlocked, sleeping, sleepChoice, trip, phoneActivity, trashGame, shelterQueue, shelterDeparture, shelterInterview, gameOver])
 
   function buyMobileServiceImpl() {
     if (game.money < 1) { setMessage('You need 1 zł to activate mobile service for 24 hours.'); return }
@@ -1956,10 +1969,11 @@ export default function App() {
 
   function applyEventOutcomeImpl(outcome: EventOutcome) {
     const { rejected } = fitEventSupplies(inventory, outcome)
-    const discoveryText = activeEvent?.id === 'useful-tip' && outcome.discoverLocation === 'shelter'
-      ? discoveredLocations.includes('shelter') ? ' You have heard of this Night Shelter before. You make a mental note to go and see what it’s like.' : ' You save its address on your map.'
+    const knownPlaces = outcome.knownLocations?.filter(id => discoveredLocations.includes(id)).map(id => locations.find(place => place.id === id)?.name).filter(Boolean)
+    const knowledgeText = knownPlaces
+      ? `\n\n${knownPlaces.length ? `You already know about: ${knownPlaces.join(', ')}.` : 'You’re not sure where to start yet.'}\n\nYou can find out more by asking around or searching on your phone.`
       : ''
-    const outcomeText = rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message + discoveryText
+    const outcomeText = rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message + knowledgeText
     if (activeEvent?.illustration || outcome.illustration) {
       const place = locations.find(location => location.id === outcome.discoverLocation)
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)

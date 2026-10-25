@@ -563,7 +563,9 @@ First-night observations take priority over ordinary encounters, keep their no-r
 
 Wake scenes use the same no-repeat queue and interval. First-night bench waking prioritizes Someone needs the bench. Its scene and all three answers select artwork from the actual location: the outdoor bench has an older male passer-by, while the Station hall has a distinct female passenger with a suitcase. Pending-scene reload restores the same location variant. Quiet rest merges into the sleep result; illness keeps its separate wake result and does not consume an unshown catalog scene. Food before closing is restricted to Station after 19:00 and outside the first-night window. Coin-on-pavement and passer-by food encounters require walking; ticket inspection requires paid transit.
 
-The catalog has twenty-one general events, a continuation-only phone-catching stage, and five opening-night observations (A familiar face, An old friend, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
+The catalog has nineteen standalone general events, a continuation-only phone-catching stage, and five opening-night observations (A familiar face, An old friend, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
+
+The unsolicited-help event **A useful tip** (`useful-tip`) is retired. It no longer spawns, including from saved pending scenes/checks. Existing discovered addresses and journal entries are retained. Other conversations and phone searches remain the ways to find help.
 
 General catalog events:
 
@@ -573,26 +575,24 @@ General catalog events:
 4. **Someone offers food** — walking, 06:00–22:00, outside the opening-night window; take one Food and +2 Mood or decline.
 5. **Ticket inspection** — public transport only; currently just show ticket.
 6. **Food before closing** — Station only; accept one Food and +3 Mood or decline.
-7. **A useful tip** — successful/critical-success Persuasion D20 or Just listen reveals Night Shelter (`shelter`) on the map if unknown. A known address stays a single map entry; the result says the hero has heard of this shelter before and makes a mental note to go and see what it is like. Failed checks and Keep going reveal nothing. On Street the encounter requires 06:00–22:00, so it does not invent a passer-by in the empty late-night city. The discovery card shows Night Shelter hours/services and the existing evening registration reminder.
-8. **Trouble nearby** — Station only; move away at a time/Energy cost or stay and lose Mood.
-9. **Peaceful rest** — wake event after sleep at any time of day; +5 Mood and +5 Energy. Scene and outcome text are time-neutral; existing ground/bench/shelter artwork is retained. The internal `quiet-night` ID is preserved for saved encounter history.
-10. **Something happened overnight** — Street housing wake event; loses up to 5 zł through clamping, -7 Mood and documents.
-11. **Have you got any change?** — Station at any hour, Street only 06:00–22:00; passer-by asks for money; give 1 zł/+1 Mood, decline or keep distance.
-12. **Someone dropped a glove** — Street, 06:00–22:00; call after the owner for 2 minutes/+2 Mood, or continue.
+7. **Trouble nearby** — Station only; move away at a time/Energy cost or stay and lose Mood.
+8. **Peaceful rest** — wake event after sleep at any time of day; +5 Mood and +5 Energy. Scene and outcome text are time-neutral; existing ground/bench/shelter artwork is retained. The internal `quiet-night` ID is preserved for saved encounter history.
+9. **Something happened overnight** — Street housing wake event; loses up to 5 zł through clamping, -7 Mood and documents.
+10. **Have you got any change?** — Station at any hour, Street only 06:00–22:00; passer-by asks for money; give 1 zł/+1 Mood, decline or keep distance.
+11. **Someone dropped a glove** — Street, 06:00–22:00; call after the owner for 2 minutes/+2 Mood, or continue.
 
 
 ### Ambient Street and Station scenes
 
-These scenes treat the hero as an ordinary person with a backpack. Nobody identifies homelessness from appearance or offers unsolicited homeless-specific help. Street passer-by scenes wait until 06:00–22:00; a traveller may approach at Station at any hour. The small Mood changes use existing caps and are displayed as actual changes in the result. Every scene is once per run and shares the existing interval and saved pending-choice behavior. Opening/outcome artwork uses the authoritative `docs/art/hero-reference.webp` identity sheet; pending encounters also restore their illustrations after reload. The mystery opening, waiting and leaving images contain no cat; only the look-under-the-car result reveals one. New art has on-demand WebP variants at 480/768/1024 pixels.
+These scenes treat the hero as an ordinary person with a backpack. Nobody identifies homelessness from appearance or offers unsolicited homeless-specific help. Street passer-by scenes wait until 06:00–22:00; a traveller may approach at Station at any hour. The small Mood changes use existing caps and are displayed as actual changes in the result. Every scene is once per run and shares the saved pending-choice behavior. The first-morning decision has priority: it opens at the first free moment on Street in its 08:00–10:00 window, without the ordinary 45-minute cooldown or 30-minute observation delay. Open scenes, results and activities finish first; subsequent ordinary encounters still respect their cooldown. Opening/outcome artwork uses the authoritative `docs/art/hero-reference.webp` identity sheet; pending encounters also restore their illustrations after reload. The mystery opening, waiting and leaving images contain no cat; only the look-under-the-car result reveals one. New art has on-demand WebP variants at 480/768/1024 pixels.
 
 | Scene / internal ID | Context | Choices and consequences |
 |---|---|---|
-| **The city wakes up** / `city-waking` | Street, 05:00–07:00, awake. | Think about my next step: 5 min, +2 Mood. Take a moment: 5 min. Keep moving: 5 min, −1 Energy, +1 Mood. No transport or automatic new location. |
+| **The city wakes up** / `city-waking` | Street, displayed D1 only (stored day 2), 08:00–10:00, awake. Help Center is already open. | I’ll try to manage on my own / I need some help / I need a little more time. Each opens a separate illustrated result using the same event/result modal as the neighbour. No time, stat, battery or inventory changes and no automatic navigation or discovery. Work/support results list only already-discovered relevant places and suggest asking people or searching on the phone. Replaces the retired 05:00–07:00 reflection; keeps its ID and completed history, and clears old pending scenes outside the new window. |
 | **A rustle in the dark** / `night-rustle` | Street, displayed D1+, 22:00–05:00, awake; independent of home departure. The source of a sound on a dark path is unknown. | Call out and step closer: 5 min, +2 Mood, reveals a cat in this result only. Stay still and listen: 5 min. Walk away: −1 Energy with a visible meter. The other results never reveal the source. |
 | **One quick call** / `borrow-phone` | Street, displayed D1+, 00:00–04:00, awake; independent of home departure. | Hand him your phone: 5 min, +3 Mood, −2 Battery; 50% chance of a slip. The continuation uses the shared D20 Reflex DC 11 and Energy modifier: a catch preserves condition, failure costs 5 condition. Offer to call on speaker: 5 min, +2 Mood, −1 Battery. Say no and move on: no added time/effect. Calls require an available working phone and sufficient battery; like the opening voice calls, they work without mobile internet. |
 | **Room for one more** / `park-company` | Street, displayed D1+, 00:00–04:00, awake; park bench encounter, independent of former home. | Join them for a chat: shared Persuasion DC 10 (Hygiene + Mood), 10 min, +3 Mood on success / −2 on failure. Say “No thanks” and keep walking: no added time or effect. Take another path: 5 min, −1 Energy shown explicitly. Hero never drinks automatically. |
 | **A quiet check-in** / `night-patrol` | Street, displayed D1+, 00:00–04:00, awake. | “I’m fine. Just getting some air.”: 5 min, +1 Mood. Ask where to stay: 10 min, +3 Mood, discover Night Shelter and set the existing evening registration goal; hidden if Night Shelter is already known. Decline help: no added time/effect. No document check, phone requirement, immediate bed or automatic admission. |
-| **Cold fingers** / `cold-hands` | Street, below 10°C, after at least 15 min in the triggering idle/rest action; never on arrival alone. No phone/search interruption or extra cold debuff. | Rub my hands together: 2 min, +1 Mood. Walk a little to warm up: 5 min, −1 Energy, +1 Mood. Put up with it for now: −1 Mood. |
 | **Cleaning the hall** / `station-cleaning` | Station after at least 15 min of idle/rest action, never immediately on arrival. A cleaner asks for space to clean; no expulsion or document check. | Move to another bench: 3 min. Stand up and stretch: 5 min, +1 Energy. Ask where I can sit for now: 3 min, +1 Mood. Hero remains at Station. |
 | **Which platform?** / `platform-question` | Station only, any hour, awake. A traveller asks another apparent traveller about a train number. | Look at the board together: 3 min, +2 Mood. Suggest checking the departure board: 1 min, +1 Mood. Say I’m not sure either: no resource change, still a blocking acknowledged result. No phone, data plan or knowledge of a specific train is required. |
 
@@ -738,7 +738,7 @@ Keep the application quiet, restrained and consistent with the illustrations: da
 
 #### Illustration palette, light and mood
 
-The primary palette and atmosphere reference is the preserved [original Street illustration](docs/art/street-palette-reference.webp), as seen in the Street screen: **muted, sad and calm**. The approved standalone [The city wakes up reference](docs/art/muted-palette-reference.webp) is stored with the project and is the color-grade reference attached when revising other scenes and items. It is also used for the event's runtime illustration.
+The primary palette and atmosphere reference is the preserved [original Street illustration](docs/art/street-palette-reference.webp), as seen in the Street screen: **muted, sad and calm**. The approved standalone [The city wakes up reference](docs/art/muted-palette-reference.webp) is stored with the project and is the color-grade reference attached when revising other scenes and items. It is retained as the original muted-palette reference; the revised first-morning event uses the approved daylight reference below.
 
 - Use low-saturation slate blue-gray, charcoal, weathered gray-brown and subdued natural colors. Skin, clothing and surroundings should remain believable.
 - Keep lamps, windows and reflections softly warm, with restrained dull amber highlights. Reduce vivid orange/gold pavement reflections, bright orange foliage and saturated blue skies.
@@ -748,6 +748,18 @@ The primary palette and atmosphere reference is the preserved [original Street i
 - Keep the established realistic painterly rendering, recognizable Warsaw setting, natural anatomy and mobile-readable composition. For palette-only edits, preserve the scene, poses, objects and character identities.
 
 Apply these rules to location headers, event openings, answer/result illustrations and new narrative scenes. Keep the existing rules for populated service locations: roughly 5–10 ordinary people where appropriate, varied anonymous supporting characters and no protagonist inserted into those environment headers. Product/Essentials cutouts retain their transparent backgrounds and clear item recognition, with restrained colors consistent with the interface.
+
+First-morning event artwork uses `event-first-morning` for the opening and `event-morning-independent`, `event-morning-help`, `event-morning-pause` for the three outcomes. The opening is the approved daylight reference; result originals and prompt provenance are in `docs/art/first-morning-v323/`. Runtime images use 480/768/1024px WebP variants and load on demand. Old dawn artwork is retained as unused source material.
+
+#### Approved daylight reference — 2026-10-24
+
+Use the approved [daylight reference](docs/art/daylight-reference.png) for outdoor daytime illustrations, including the first morning at approximately 08:00. Attach this actual image as the lighting and daytime-palette reference alongside the established rendering reference and, when the protagonist is present, the hero identity sheet.
+
+The reference establishes **light overcast daylight with the same muted, sad and calm palette**: a luminous gray sky, soft diffuse natural light, readable faces, clothing and building facades, and restrained slate blue-gray, charcoal and weathered gray-brown colors. Street lamps are off; open shops and ordinary commuters make the daytime city feel active. Keep shop-interior warmth localized and pavement reflections subdued. Preserve tonal depth and natural skin tones. Daytime scenes must retain this daylight brightness and the existing low saturation.
+
+Use the image for light, palette and rendering continuity. Each illustration keeps its own setting, weather, ground conditions, pose and narrative; the pictured bus, shopfront, damp pavement, autumn leaves and supporting people are scene-specific. The hero sheet remains authoritative for identity and wardrobe.
+
+![Street Life approved daylight reference](docs/art/daylight-reference.png)
 
 #### Required visual style reference — established game rendering
 
@@ -1002,3 +1014,5 @@ Shelter-discovery questions are hidden once Night Shelter is on the discovered m
 All D20 checks share the contour SVG dice icon, a concrete action title/button, contextual narrative, and compact D20 + modifier ≥ target notation. The action and Cancel buttons sit together in one centered row. Cancel is available only before a roll: shop theft returns to Shop, fare dodging returns to route choices, and event checks return to the original event choices, without time, resources or consequences. Rolled checks cannot be cancelled or rerolled; persisted rolls retain their existing behavior. The dice card scrolls on short screens.
 
 Theft confirmation names the item and warns of ejection. Both ordinary and critical failures grant no goods and move the hero to Street through the existing event outcome path; acknowledgement leaves the main Street screen visible. Existing time/Mood costs, success rewards, DC, modifiers and natural 1/20 rules remain in force.
+
+Cold fingers (`cold-hands`) was removed from the event catalog in v323. Existing pending/seen references are discarded by the catalog-based save reader; remaining events and their ordering are retained.
