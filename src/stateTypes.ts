@@ -1,3 +1,4 @@
+import type { StreetEventChoice } from './events'
 import type { ResultSnapshot } from './results'
 import type { Housing } from './game'
 import type { FoodPortionFields } from './foodInventory'
@@ -28,3 +29,5 @@ export type ShelterDeparture = { day: number; startAbsolute: number; before: Res
 export type ShelterArrival = { day: number; minute: number }
 export type ShelterQueue = { day: number; remaining: number; total?: number; arrivalMinute?: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
 export type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
+
+export type EventDiceState = { choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string }

@@ -36,6 +36,8 @@ each completed stage. Partial extraction is not a completed gameplay controller.
 | Travel, internet search or call in progress | `ActivityDialog` (`kind="travel"` or `kind="phone"`); elapsed/phase text uses `ActivityStatus` |
 | Authored event, with or without an illustration | `EventDialog`; use its `EventFrame` / `EventBody` for another event presentation |
 | Rain choices and waiting under cover | `RainEventDialog`, built on `EventFrame` / `EventBody` |
+| Travel mode planning | `TravelPlanningDialog` |
+| D20 roll and outcome confirmation | `DiceDialog` |
 | Sleep duration and wake-time planning | `SleepPlanningDialog` |
 | Event answer / action / transport / search / sleep option | `ChoiceButton`, grouped with `ChoiceOptions` |
 | Finished action / discovery / illustrated outcome | `ResultCard` |
@@ -58,9 +60,10 @@ stronger CSS override to repair one screen. Change the shared rule or introduce
 an explicit reusable variant with a documented purpose. Keep stacking order and
 each dialog's interaction lifecycle in its existing owner.
 
-The extracted dialogs above are presentation components (v325). `App.tsx` owns
-timers, visibility/pause rules, saved pending events, choice eligibility, seeded
-ordering inputs, dice/outcome handling and sleep duration/wake calculations.
+The dialogs above are presentation components. App and the extracted domain
+controllers own gameplay; App keeps the shared timer, visibility/global pause,
+result lifecycle and sleep calculations. Event/phone/travel controllers supply
+choice eligibility and handlers; seeded ordering inputs remain explicit.
 Pass calculated data and handlers to the template; do not duplicate its markup
 inside `App.tsx` or start a second timer inside a dialog. Preserve the existing
 modal refs so focus and keyboard behavior keep working. `ResultCard` remains
@@ -122,6 +125,23 @@ reported only after access checks and the location's action duration succeed.
 Completion and automatic renewal use session transition guards against replayed
 StrictMode mount effects; reset clears the guards, without new save keys.
 Run `check-phone-controller.cjs` plus existing phone/call/charging regressions.
+
+Event/travel/rain control is extracted in v330. `eventSession.ts` owns active
+scenes, encounter history and D20 state; `encounterQueue.ts` owns cooldowns,
+idle observations and mandatory-scene observers. `eventChecks.ts` shares choice
+eligibility/modifiers and D20 outcomes; `eventController.ts` resolves choices,
+follow-ups, consequences and theft. `useTravelController.ts` owns destination
+commands, trip progress/arrival and fare-dodge trips; phase calculations still
+use `travelPhases.ts`. `useRainController.ts` separates scheduling/cover choices
+from deferred result reporting, reusing `rain.ts`. App supplies explicit game,
+result and action ports; these modules do not import App, write saves or create
+a second clock. Keep observer/result effects in their current lifecycle order.
+Preserve the saved authored `pendingRoll` without rerolling; this extraction does
+not introduce persistence for additional D20 variants. Session/transition guards
+prevent duplicate D20 acceptance, restored arrival and rain report consequences.
+`TravelPlanningDialog` and `DiceDialog` own full markup; retain their owner's
+refs, focus and global blocking behavior. Run `check-event-travel-controllers.cjs`
+plus event/rain/travel/restore/result regressions for changes in these modules.
 
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact

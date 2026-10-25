@@ -4,13 +4,14 @@ import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
 import ActivityDialog from './ActivityDialog'
 import BottomNavigation from './BottomNavigation'
 import ChoiceButton from './ChoiceButton'
-import ChoiceOptions from './ChoiceOptions'
 import CityMap from './CityMap'
+import DiceDialog from './DiceDialog'
+import TravelPlanningDialog from './TravelPlanningDialog'
 import DiscardDialog from './DiscardDialog'
 import EventDialog from './EventDialog'
 import FoodChoiceDialog from './FoodChoiceDialog'
 import GameHeader from './GameHeader'
-import { Icon,locationIcon,type IconName } from './Icon'
+import { Icon,type IconName } from './Icon'
 import InventoryDialog from './InventoryDialog'
 import InventoryScreen from './InventoryScreen'
 import { JournalGoals } from './JournalSections'
@@ -27,21 +28,19 @@ import ResultCard,{ type ResultCardData } from './ResultCard'
 import SleepPlanningDialog from './SleepPlanningDialog'
 import StatusScreen from './StatusScreen'
 import TrashSearchTime,{ trashSearchMinutes } from './TrashSearchTime'
-import { illustrateStreetEvent } from './eventArtwork'
-import { STREET_EVENTS,firstMorningTime,firstNightTime,nextStreetEvent,resolveEventOutcome,type EventContext,type EventOutcome,type EventTrigger,type StreetEvent,type StreetEventChoice } from './events'
+import { firstNightTime,nextStreetEvent,type StreetEvent } from './events'
 import { ageFood,foodSlot,type FoodCondition,type FoodKind } from './foodInventory'
-import { actions,applyAction as applyGameAction,applySleepTime as applyGameSleepTime,conditionBand,createInitialState,destinationTravelTimeRange,energyCap,formatTime,isOpen,limitMood,locations,moodLimit,rainDailyLimit,randomTravelMinutes,temperatureAt,weatherAt,weatherExposure,type ActionResult,type GameState,type Housing } from './game'
+import { actions,applyAction as applyGameAction,applySleepTime as applyGameSleepTime,conditionBand,createInitialState,energyCap,formatTime,isOpen,limitMood,locations,moodLimit,temperatureAt,weatherAt,weatherExposure,type ActionResult,type GameState,type Housing } from './game'
 import { displayDay } from './gameDate'
 import { absoluteMinutes,formatTravelTime,weekday } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
-import { BACKPACK_CAPACITY,BOTTLE_STACK_SIZE,FREE_WATER_LIMIT,INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_STORAGE,SHOP_ITEMS,addShopItem,backpackSlots,canAddToBackpack,fitEventSupplies,storageSlots } from './inventory'
+import { BACKPACK_CAPACITY,BOTTLE_STACK_SIZE,FREE_WATER_LIMIT,INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_STORAGE,SHOP_ITEMS,backpackSlots,storageSlots } from './inventory'
 import { inventoryCommandResult,resolveInventoryCommand,type InventoryCommand } from './inventoryCommands'
 import { journalReflection,type JournalEntry } from './journal'
 import { limitingEffects } from './limitingEffects'
 import { CLOSING_NOTICE_KEY,locationClosedSince } from './locationClosing'
 import { OPENING_CALLS,OPENING_CALLS_KEY,openingCall } from './openingCalls'
 import { phoneDrainMultiplier } from './phonePower'
-import { chooseRain,createRain,planRainDay,rainArt,rainResultText,type RainChoice } from './rain'
 import { locationPresentation } from './resultPresentation'
 import { summarizeResult,type ConsumedItem,type ResultSnapshot } from './results'
 import { DISCOVERY_KEY,SAVE_KEY } from './saveCompatibility'
@@ -56,9 +55,14 @@ import { useGameAutosave } from './useGameAutosave'
 import { elapsedPhoneBattery,phoneUnavailableReason } from './phoneActivity'
 import { usePhoneSession } from './phoneSession'
 import { usePhoneController } from './usePhoneController'
+import { useEventSession } from './eventSession'
+import { createEncounterQueue,useEncounterObservers } from './encounterQueue'
+import { createEventController } from './eventController'
+import { useTravelController,advanceTrip } from './useTravelController'
+import { useRainScheduling,useRainResults } from './useRainController'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-329'
+const BUILD_VERSION = 'v2026.10.25-330'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -189,20 +193,9 @@ export default function App() {
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
   const eventModalRef = useRef<HTMLElement>(null)
-  const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(() => initial.firstNightEvents)
-  const [leftHome, setLeftHome] = useState(() => initial.leftHome)
-  const [encounters, setEncounters] = useState<FirstNightEvents>(() => initial.encounters)
-  const openingSearchObservation = useRef(false)
-  const ambientEventClock = useRef({ locationId: game.locationId, minutes: 0 })
-  const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(() => {
-    const event = STREET_EVENTS.find(event => event.id === (initial.firstNightEvents.pendingId ?? initial.encounters.pendingId))
-    return event ? illustrateStreetEvent(event, { locationId: game.locationId, housing: game.locationId === 'shelter' ? 'Night shelter' : 'Street', sleepKind: sleeping?.kind ?? (game.locationId === 'station' ? 'bench' : 'ground') }) : null
-  })
-  const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(() => {
-    const roll = initial.encounters.pendingRoll
-    const choice = activeEvent && ['borrow-phone-slip', 'park-company'].includes(activeEvent.id) ? activeEvent.choices[0] : undefined
-    return choice?.check && roll ? { choice, roll, modifier: checkModifier(choice), resolved: false } : null
-  })
+  const eventSession = useEventSession(initial, game)
+  const { firstNightEvents, leftHome, encounters, setEncounters, openingSearchObservation,
+    ambientEventClock, activeEvent, setActiveEvent, diceCheck, setDiceCheck, resetEventSession } = eventSession
   const [inventory, setInventory] = useState<Inventory>(() => initial.inventory)
   const [storage, setStorage] = useState<StoredItems>(() => initial.storage)
   const [life, setLife] = useState<LifeSituation>(() => initial.life)
@@ -283,26 +276,7 @@ export default function App() {
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver || closingNotice)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
   const visibleEventChoices = activeEvent?.choices.filter(choice => !choice.undiscoveredLocationRequired || !discoveredLocations.includes(choice.undiscoveredLocationRequired)) ?? []
-  useEffect(() => {
-    if (gameOver || (game.rainSystemStarted && game.rainScheduleDay === game.day)) return
-    const plan = planRainDay(game, rainDailyLimit(game.day))
-    setGame(previous => previous.rainSystemStarted && previous.rainScheduleDay === previous.day ? previous
-      : { ...previous, ...plan, rainSystemStarted: true, rainUntil: undefined })
-  }, [game.day, game.rainSystemStarted, game.rainScheduleDay, gameOver])
-  useEffect(() => {
-    const limit = rainDailyLimit(game.day)
-    if (!game.rainSystemStarted || game.rainScheduleDay !== game.day || (game.rainStartsToday ?? 0) >= limit || game.rain || game.rainResults?.length || gameOver || absoluteMinutes(game) < (game.nextRainAt ?? Infinity)) return
-    const rain = createRain(absoluteMinutes(game))
-    // Keep the inter-episode deadline across midnight even after a cloudy day
-    // uses its allowance. The daily counter blocks another episode today.
-    const nextRainAt = rain.end + 180 + Math.floor(Math.random() * 301)
-    setGame(previous => previous.rain || previous.rainResults?.length || (previous.rainStartsToday ?? 0) >= rainDailyLimit(previous.day) ? previous
-      : { ...previous, rain, nextRainAt, rainStartsToday: (previous.rainStartsToday ?? 0) + 1 })
-  }, [game.day, game.minutes, game.rainSystemStarted, game.rainScheduleDay, game.rainStartsToday, game.rain, game.rainResults, game.nextRainAt, gameOver])
-  useEffect(() => {
-    const eligible = !!game.rain && !game.rain.choice && currentExposure === 'outside' && !sleeping && !gameOver
-    setRainChoice(eligible)
-  }, [game.rain, currentExposure, sleeping, gameOver])
+  const { respondToRain, findProperShelter, continueInRain } = useRainScheduling({ game, gameOver, currentExposure, sleeping: !!sleeping, currentId: current.id }, setGame, setRainChoice)
   useEffect(() => {
     if ((!rainChoice && !rainWaiting) || infoModal || pendingResult || activeEvent || diceCheck) return
     const previous = document.activeElement as HTMLElement | null
@@ -427,43 +401,14 @@ export default function App() {
     return { game: { ...game }, housing: moodContext().housing, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
   }
 
-  function rememberFirstNightEvent(event: StreetEvent, state = game) {
-    setFirstNightEvents(previous => ({ seen: [...new Set([...previous.seen, event.id])], lastAt: absoluteMinutes(state), pendingId: event.id }))
-    openingSearchObservation.current = false
-    rememberEncounter(event, state)
-  }
-
-  function encounterDue(state: GameState) {
-    const previous = [firstNightEvents.lastAt, encounters.lastAt].filter((time): time is number => time !== null)
-    return !previous.length || absoluteMinutes(state) - Math.max(...previous) >= 45
-  }
-
-  function rememberEncounter(event: StreetEvent, state: GameState) {
-    setEncounters(previous => ({ seen: [...new Set([...previous.seen, event.id])], lastAt: absoluteMinutes(state), pendingId: event.id }))
-    ambientEventClock.current.minutes = 0
-    setActiveEvent(event)
-  }
-
-  function observeFirstNight(trigger: Extract<EventTrigger, 'walk' | 'bench' | 'location'>, state: GameState, locationId = state.locationId) {
-    if (!firstNightTime(state) || life.housing !== 'Street' || activeEvent || infoModal || firstNightEvents.pendingId) return
-    if (!encounterDue(state)) return
-    const event = nextStreetEvent(trigger, { locationId, minutes: state.minutes, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: true, nearHome: !leftHome && !trip, seenEventIds: [...firstNightEvents.seen, ...STREET_EVENTS.filter(event => !event.id.startsWith('first-night-')).map(event => event.id)] })
-    if (event?.id.startsWith('first-night-')) { rememberFirstNightEvent(event, state); return true }
-    return false
-  }
-
-  function observeOrdinaryEvent(trigger: 'travel' | 'location', state: GameState, travelMode?: TravelMode, observation: Pick<EventContext, 'observation' | 'elapsedMinutes'> = {}) {
-    if (activeEvent || firstNightEvents.pendingId || encounters.pendingId) return
-    // Opening observations keep priority; D1+ night encounters can occur away from home
-    // even when the player skipped the at-home encounters on D0.
-    const eventWeather = weatherAt(state)
-    const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(eventWeather.temp, state.minutes), ...observation, travelMode, weather: eventWeather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
-      seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
-    // The first-morning decision takes priority over ordinary cooldowns.
-    if (event?.id !== 'city-waking' && !encounterDue(state)) return
-    if (firstNightTime(state) && !firstNightEvents.seen.length && !['night-rustle', 'borrow-phone', 'park-company', 'night-patrol'].includes(event?.id ?? '')) return
-    if (event) rememberEncounter(event, state)
-  }
+  const encounterQueue = createEncounterQueue(eventSession, { game, life, inventory, weather, trip: !!trip, infoModal: !!infoModal, currentId: current.id, firstNight })
+  const { rememberFirstNightEvent, rememberEncounter, observeFirstNight, observeOrdinaryEvent, encounterDue, observeIdle } = encounterQueue
+  const { checkUnavailableReason, resolveStreetEvent, rollDice, acceptDiceResult, stealItem } = createEventController(eventSession, {
+    game, inventory, storage, life, discoveredLocations, phoneUnavailable, shelterBooked, currentId: current.id, open,
+  }, {
+    setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal,
+    openPage, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),
+  })
 
   function runWithResult(title: string, action: () => void, before = resultSnapshot(), includeTime = true, always = false, consumedItems: ConsumedItem[] = []) {
     if (sleepChoice && title !== 'Start sleeping') return
@@ -529,39 +474,9 @@ export default function App() {
     setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }))
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
-  useEffect(() => {
-    const rain = game.rainResults?.[0]
-    if (!rain || gameOver || activeEvent || diceCheck || infoModal || pendingResult || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterDeparture || closingNotice || inventoryDialogOpen || trashGame || trip?.remaining === 0 || phoneActivity?.remaining === 0) return
-    const granted = rain.coldGranted ?? (!!rain.cold && !effects.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(game)))
-    if (!rain.reported) {
-      if (granted) setEffects(previous => [...previous.filter(effect => effect.id !== 'cold'), { id: 'cold', expiresAt: absoluteMinutes(game) + 2 * 1440 }])
-      setGame(previous => ({ ...previous, rainResults: previous.rainResults?.map(item => item.id === rain.id ? { ...item, reported: true, coldGranted: granted } : item) }))
-    }
-    const title = rain.choice === 'proper' && rain.searchRemaining > 0 ? 'The rain has stopped' : rain.choice === 'continue' ? 'The rain has passed' : 'Shelter from the rain'
-    const text = rainResultText(rain) + (granted ? ' A chill lingers, and your throat feels sore. You have caught a cold.' : '')
-    const after = resultSnapshot()
-    const before = { ...after, game: { ...game, energy: Math.min(100, game.energy + rain.energyLoss), mood: Math.min(100, game.mood + rain.moodLoss) } }
-    const summary = summarizeResult(before, after, false)
-    if (rain.choice === 'continue') {
-      // Background costs may already have been offset by eating/resting. Report
-      // the recorded rain totals, without fabricating a before/after stat meter.
-      summary.changes = []
-      for (const [label, loss] of [['⚡ Energy', rain.energyLoss], ['🙂 Mood', rain.moodLoss]] as const) {
-        const amount = Number(loss.toFixed(1))
-        if (amount > 0) summary.changes.push({ label, value: `−${amount}`, kind: 'negative' })
-      }
-    }
-    // Only the rain's own losses belong here. Purchases, food, recovery and
-    // ordinary passive costs during a background episode are unrelated.
-    if (rain.choice !== 'continue' && rain.waited > 0) summary.costs.push({ label: '⏱ Time', value: `${Math.round(rain.waited)} min`, kind: 'neutral' })
-    if (granted) summary.changes.push({ label: '🤒 Cold', value: 'Started', kind: 'negative' })
-    const illustration = rain.choice === 'proper' && rain.searchRemaining > 0
-      ? '/street-life-game/assets/event-rain-stopped-search.webp'
-      : rainArt(rain, rain.choice ?? 'continue')
-    setInfoModal({ title, text, label: 'AFTER THE RAIN', illustration, illustrationAlt: text, visibleStats: ['Energy', 'Mood'], rainResultId: rain.id, ...summary })
-    setEventResultOpen(true)
-    if (!rain.reported) setJournalEntries(previous => [...previous, { day: game.day, minute: game.minutes, title, text, actionTitle: title, reflection: true as const }].slice(-500))
-  }, [game, effects, activeEvent, diceCheck, infoModal, pendingResult, sleeping, sleepChoice, shelterInterview, shelterQueue, shelterDeparture, closingNotice, inventoryDialogOpen, trashGame, trip?.remaining, phoneActivity?.remaining, gameOver])
+  useRainResults({ game, effects, blocked: !!(gameOver || activeEvent || diceCheck || infoModal || pendingResult || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterDeparture || closingNotice || inventoryDialogOpen || trashGame || trip?.remaining === 0 || phoneActivity?.remaining === 0) }, {
+    setGame, setEffects, setInfoModal, setEventResultOpen, setJournalEntries, resultSnapshot,
+  })
 
   const closingWatch = useRef({ id: game.locationId, minute: absoluteMinutes(game), travelling: !!trip })
   const locationIsClosing = !trip && !closingWatch.current.travelling && closingWatch.current.id === current.id && locationClosedSince(current, closingWatch.current.minute, absoluteMinutes(game))
@@ -585,13 +500,6 @@ export default function App() {
   function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
   function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(args[0]) ? ['showerGel'] : []) }
   function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
-  function applyEventOutcome(outcome: EventOutcome, title?: string) {
-    let resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents)
-    if (activeEvent?.id === 'borrow-phone-slip' && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
-      resolved = { ...resolved, message: resolved.message.replace('The screen still works.', 'You try the screen, but it stays black.') }
-    }
-    runWithResult(title ?? activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
-  }
   function socialSupport(...args: Parameters<typeof socialSupportImpl>) { runWithResult('Social support', () => socialSupportImpl(...args)) }
   function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
 
@@ -727,19 +635,8 @@ export default function App() {
     const tickMinutes = trip ? Math.min(1, trip.remaining) : 1
     if (shelterQueue) setShelterQueue(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
-    if (!underRainCover) setTrip(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
-    if (!trip && !shelterQueue && !shelterDeparture && ['street', 'station'].includes(current.id)) {
-      const clock = ambientEventClock.current
-      if (clock.locationId !== current.id) { clock.locationId = current.id; clock.minutes = 0 }
-      clock.minutes += tickMinutes
-      if (clock.minutes >= (firstNight ? 15 : 30)) {
-        clock.minutes = 0
-        // The tick is already queued above; eligibility must use its new clock,
-        // especially when this minute crosses an encounter deadline or midnight.
-        const observationState = applyAction(game, { minutes: tickMinutes })
-        if (!observeFirstNight(current.id === 'station' ? 'location' : 'walk', observationState)) observeOrdinaryEvent('location', observationState, undefined, { observation: 'idle', elapsedMinutes: firstNight ? 15 : 30 })
-      }
-    }
+    if (!underRainCover) setTrip(active => advanceTrip(active, tickMinutes))
+    if (!trip && !shelterQueue && !shelterDeparture) observeIdle(tickMinutes, () => applyAction(game, { minutes: tickMinutes }))
   })
   const gameClockInterval = trip || shelterDeparture || phoneActivity || rainWaiting ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
@@ -747,40 +644,17 @@ export default function App() {
     return () => window.clearInterval(timer)
   }, [tickGameClock, gameClockInterval])
 
-  useEffect(() => {
-    if (!trip || trip.remaining > 0) return
-    const destination = locations.find(location => location.id === trip.destinationId)
-    if (!destination) { setTrip(null); return }
-    runWithResult('Arrival', () => {
-      setGame(previous => ({ ...previous, locationId: destination.id }))
-      const shelterArrival = destination.id === 'shelter' && shelterBooked
-      const admitted = game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10
-      if (shelterArrival) setLife(status => ({ ...status, shelterEntry: { night: shelterNightDay, admitted }, ...(admitted ? { shelterLastStayDay: shelterNightDay, housing: 'Night shelter' as const } : {}) }))
-      setMessage(shelterArrival && !admitted
-        ? 'You are outside Night Shelter. Entry is 18:00–22:00. If you miss entry, this counts as a missed night.'
-        : `You arrived at ${destination.name} by ${trip.mode === 'walk' ? 'walking' : 'public transport'}.`)
-      setScreen('location')
-      setTrip(null)
-      const arrived = { ...game, locationId: destination.id }
-      if (!observeFirstNight('location', arrived)) observeOrdinaryEvent('location', arrived, undefined, { observation: 'arrival' })
-    }, trip.before ?? resultSnapshot(), true, true)
-  }, [trip])
+  const { chooseDestination, confirmStreetExit, attemptFareDodge, startTravel, startFareDodgeTrip } = useTravelController(eventSession, encounterQueue, {
+    game, trip, selectedDestination, streetExitPending, blocked: !!(sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue),
+    freeTransitActive, shelterPhoneCharging, shelterBooked, shelterNightDay,
+  }, {
+    setGame, setTrip, setSelectedDestination, setStreetExitPending, setStreetBenchFound, setShelterArrival, setLife, setScreen,
+    setMessage, openPage, recordShelterDeparture, resultSnapshot, runWithResult, applyAction,
+  })
 
-  // The opening observation becomes due during a search too, then waits for
-  // its result to be acknowledged instead of being silently skipped.
-  useEffect(() => {
-    if (!openingSearchObservation.current || !firstNight || firstNightEvents.seen.length || absoluteMinutes(game) < 1335 || !['street', 'station'].includes(current.id)) return
-    if (document.visibilityState !== 'visible' || eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver) return
-    observeFirstNight(current.id === 'station' ? 'location' : 'walk', game)
-  }, [firstNight, firstNightEvents, game.day, game.minutes, current.id, eventInteractionBlocked, sleeping, sleepChoice, trip, phoneActivity, trashGame, shelterQueue, shelterDeparture, shelterInterview, gameOver])
-
-  // A key story scene does not wait for the 30-minute ambient observation tick.
-  // Existing activities/results finish first, then the scene opens immediately.
-  useEffect(() => {
-    if (!firstMorningTime(game) || current.id !== 'street' || encounters.seen.includes('city-waking')) return
-    if (document.visibilityState !== 'visible' || eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver) return
-    observeOrdinaryEvent('location', game)
-  }, [game.day, game.minutes, current.id, encounters, firstNightEvents, eventInteractionBlocked, sleeping, sleepChoice, trip, phoneActivity, trashGame, shelterQueue, shelterDeparture, shelterInterview, gameOver])
+  useEncounterObservers(encounterQueue, eventSession, { game, currentId: current.id, firstNight,
+    blocked: !!(eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver),
+  })
 
   function recordShelterDeparture(id: string) {
     if (game.locationId === 'shelter' && id !== 'shelter') setShelterPhoneCharging(false)
@@ -792,34 +666,6 @@ export default function App() {
       setLife((status) => ({ ...status, shelterStrikes: strikes, ...(evicted ? { housing: 'Street' as const, housingUntil: undefined, shelterUntilDay: undefined, shelterBlockedUntilDay: blockedUntil } : {}) }))
       setMessage(evicted ? `Third shelter rule violation: your place was cancelled. You can register again on Day ${displayDay(blockedUntil)}.` : `You left the shelter after 08:00. Rule violation ${strikes}/3.`)
     }
-  }
-
-  function chooseDestination(id: string) {
-    if (sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
-    if (id === game.locationId) {
-      setSelectedDestination(null)
-      openPage('location')
-      return
-    }
-    if (id === 'street') {
-      setSelectedDestination(null)
-      setStreetExitPending(true)
-      return
-    }
-    setSelectedDestination(id)
-  }
-
-  function confirmStreetExit() {
-    if (!streetExitPending) return
-    setStreetExitPending(false)
-    setLeftHome(true)
-    recordShelterDeparture('street')
-    if (shelterPhoneCharging) setMessage('You collected your phone from the charger before leaving Night Shelter.')
-    setStreetBenchFound(false)
-    setShelterArrival(null)
-    ambientEventClock.current = { locationId: 'street', minutes: 0 }
-    setGame(previous => ({ ...previous, locationId: 'street' }))
-    openPage('location')
   }
 
   function canStartSleep(kind: SleepState['kind']) {
@@ -1145,13 +991,6 @@ export default function App() {
   const lastDecision = journalEntries.at(-1)
   const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
 
-  function respondToRain(choice: RainChoice) {
-    if (!game.rain || game.rain.choice) return
-    const rain = chooseRain(game.rain, choice, absoluteMinutes(game), current.id)
-    setRainChoice(false)
-    setGame(previous => previous.rain?.id === rain.id && !previous.rain.choice ? { ...previous, rain } : previous)
-  }
-
   function streetActionImpl(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
     if (activeEvent || current.id !== 'street') return
     if (kind === 'find-bench') {
@@ -1170,44 +1009,6 @@ export default function App() {
       return
     }
     requestSleep('bench')
-  }
-
-  function attemptFareDodge() {
-    if (freeTransitActive || sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
-    const destination = locations.find((x) => x.id === selectedDestination)
-    if (!destination) return
-    const choice: StreetEventChoice = {
-      label: 'Ride without a ticket · Reflex DC 12',
-      check: {
-        stat: 'reflex', dc: 12,
-        success: { message: 'No ticket inspection this time. You ride for free.' },
-        failure: { money: -20, mood: -8, message: 'A ticket inspector catches you. You receive a 20 zł penalty.' },
-        criticalSuccess: { mood: 2, message: 'You avoid inspection completely and ride for free.' },
-        criticalFailure: { money: -35, mood: -12, message: 'Bad luck: inspectors catch you immediately. The penalty is 35 zł.' },
-      },
-    }
-    setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, fareDodgeDestinationId: destination.id })
-  }
-
-  function startTravel(mode: TravelMode) {
-    if (sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue) return
-    const destination = locations.find((x) => x.id === selectedDestination)
-    if (!destination) return
-    const fare = freeTransitActive ? 0 : 4.4
-    if (mode === 'transit' && game.money < fare) {
-      setMessage('You do not have enough money for public transport.')
-      return
-    }
-    const total = randomTravelMinutes(destinationTravelTimeRange(destination, mode))
-    setLeftHome(true)
-    recordShelterDeparture(destination.id)
-    if (shelterPhoneCharging) setMessage('You collected your phone from the charger before leaving Night Shelter.')
-    if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
-    setStreetBenchFound(false)
-    setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot() })
-    setSelectedDestination(null)
-    setScreen('travel')
-    observeOrdinaryEvent('travel', game, mode)
   }
 
   function actionUnavailableReason(action: (typeof actions)[number]): string | null {
@@ -1408,147 +1209,6 @@ export default function App() {
     setShelterInterview(null)
   }
 
-  function applyEventOutcomeImpl(outcome: EventOutcome) {
-    const { rejected } = fitEventSupplies(inventory, outcome)
-    const knownPlaces = outcome.knownLocations?.filter(id => discoveredLocations.includes(id)).map(id => locations.find(place => place.id === id)?.name).filter(Boolean)
-    const knowledgeText = knownPlaces
-      ? `\n\n${knownPlaces.length ? `You already know about: ${knownPlaces.join(', ')}.` : 'You’re not sure where to start yet.'}\n\nYou can find out more by asking around or searching on your phone.`
-      : ''
-    const outcomeText = rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message + knowledgeText
-    if (activeEvent?.illustration || outcome.illustration) {
-      const place = locations.find(location => location.id === outcome.discoverLocation)
-      const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
-      const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
-      setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
-        visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['Energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['Phone condition'] : undefined,
-        batteryInSummary: !!outcome.phoneBattery,
-        ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcomeText,
-          ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
-    }
-    setEncounters(previous => ({ ...previous, pendingId: null, pendingRoll: null }))
-    if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
-    const foundPlace = locations.find(place => place.id === outcome.discoverLocation)
-    if (foundPlace) {
-      setDiscoveredLocations(previous => [...new Set([...previous, foundPlace.id])])
-      if (foundPlace.id === 'shelter' && !shelterBooked) {
-        const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
-        const day = Math.floor(end / 1440) + 1
-        setActiveGoal({ type: 'night-shelter', day: end % 1440 >= 1320 ? day + 1 : day, minute: SHELTER_ENTRY_OPEN })
-      }
-    }
-    setGame((prev) => {
-      const next = applyAction(prev, {
-        minutes: outcome.minutes ?? 0,
-        money: outcome.money,
-        mood: outcome.mood,
-        energy: outcome.energy,
-        health: outcome.health,
-        hygiene: outcome.hygiene,
-      })
-      return outcome.moveToStreet ? { ...next, locationId: 'street' } : next
-    })
-    if (outcome.moveToStreet) {
-      ambientEventClock.current = { locationId: 'street', minutes: 0 }
-      openPage('location')
-    }
-    setInventory((prev) => ({
-      ...fitEventSupplies(prev, outcome).inventory,
-      phoneCondition: Math.max(0, Math.min(100, prev.phoneCondition + (outcome.phoneCondition ?? 0))),
-      phoneBattery: Math.max(0, Math.min(100, prev.phoneBattery + (outcome.phoneBattery ?? 0))),
-      jacket: Math.max(0, Math.min(100, prev.jacket + (outcome.jacketCondition ?? 0))),
-      documents: outcome.loseDocuments ? false : prev.documents,
-    }))
-    setMessage(outcomeText)
-  }
-
-  function checkModifier(choice: StreetEventChoice) {
-    if (choice.check?.stat === 'persuasion') {
-      const hygiene = game.hygiene >= 80 ? 2 : game.hygiene >= 60 ? 1 : game.hygiene < 20 ? -3 : game.hygiene < 40 ? -2 : 0
-      const mood = game.mood >= 75 ? 1 : game.mood < 25 ? -1 : 0
-      return hygiene + mood
-    }
-    if (game.energy >= 80) return 2
-    if (game.energy >= 60) return 1
-    if (game.energy < 20) return -2
-    if (game.energy < 40) return -1
-    return 0
-  }
-
-  function checkUnavailableReason(choice: StreetEventChoice) {
-    if (choice.undiscoveredLocationRequired && discoveredLocations.includes(choice.undiscoveredLocationRequired)) {
-      const place = locations.find(location => location.id === choice.undiscoveredLocationRequired)
-      return `You already know about the ${place?.name ?? 'location'}.`
-    }
-    if (choice.moneyRequired !== undefined && game.money < choice.moneyRequired) return `Need ${choice.moneyRequired} zł`
-    if (choice.phoneBatteryRequired !== undefined) {
-      if (phoneUnavailable) return phoneUnavailable
-      if (inventory.phoneBattery < choice.phoneBatteryRequired) return `Need ${choice.phoneBatteryRequired}% battery`
-    }
-    const requirements = choice.check?.requirements
-    if (!requirements) return null
-    if (requirements.minHealth !== undefined && game.health < requirements.minHealth) return `Too weak · need Health ${requirements.minHealth}`
-    if (requirements.minEnergy !== undefined && game.energy < requirements.minEnergy) return `Too exhausted · need Energy ${requirements.minEnergy}`
-    return null
-  }
-
-  function resolveStreetEvent(choice: StreetEventChoice) {
-    if (checkUnavailableReason(choice)) return
-    if (choice.followUp && Math.random() < choice.followUp.chance) {
-      const event = STREET_EVENTS.find(event => event.id === choice.followUp!.eventId && event.continuationOnly)
-      if (event) {
-        setEncounters(previous => ({ ...previous, seen: [...new Set([...previous.seen, event.id])], pendingId: event.id, pendingRoll: null }))
-        setActiveEvent(illustrateStreetEvent(event, { locationId: game.locationId, housing: life.housing }))
-        return
-      }
-    }
-    if (choice.check) {
-      const unavailable = checkUnavailableReason(choice)
-      if (unavailable) return
-      setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false })
-      return
-    }
-    if (choice.outcome) applyEventOutcome(choice.outcome)
-    setActiveEvent(null)
-  }
-
-  function rollDice() {
-    if (!diceCheck?.choice.check || diceCheck.roll !== null) return
-    const roll = Math.floor(Math.random() * 20) + 1
-    setDiceCheck({ ...diceCheck, roll, resolved: false })
-    if (['borrow-phone-slip', 'park-company'].includes(activeEvent?.id ?? '')) setEncounters(previous => ({ ...previous, pendingRoll: roll }))
-  }
-
-  function acceptDiceResult() {
-    if (!diceCheck?.choice.check || diceCheck.roll === null) return
-    const check = diceCheck.choice.check
-    const roll = diceCheck.roll
-    const success = roll === 20 || (roll !== 1 && roll + diceCheck.modifier >= check.dc)
-    const outcome = roll === 20 && check.criticalSuccess
-      ? check.criticalSuccess
-      : roll === 1 && check.criticalFailure
-        ? check.criticalFailure
-        : success ? check.success : check.failure
-    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? 'Item stolen' : 'Caught stealing' : undefined)
-    if (diceCheck.fareDodgeDestinationId) {
-      const destination = locations.find((entry) => entry.id === diceCheck.fareDodgeDestinationId)
-      if (destination) {
-        const total = randomTravelMinutes(destinationTravelTimeRange(destination, 'fare-dodge'))
-        setLeftHome(true)
-        recordShelterDeparture(destination.id)
-        setStreetBenchFound(false)
-        setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } })
-        setSelectedDestination(null)
-        setScreen('travel')
-      }
-    }
-    if (diceCheck.stealItemId && success) {
-      const item = SHOP_ITEMS.find((entry) => entry.id === diceCheck.stealItemId)
-      if (item) setInventory((prev) => addShopItem(prev, item))
-    }
-    setDiceCheck(null)
-    setActiveEvent(null)
-  }
-
   function socialSupportImpl(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
     if (!open || current.id !== 'support') return
     if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
@@ -1608,25 +1268,6 @@ export default function App() {
     setMessage('You completed a 3-hour physical shift. +35 zł. Physical work increases hunger, thirst and hygiene loss, especially in warm weather.')
   }
 
-  function stealItem(item: ShopItem) {
-    if (!open || current.id !== 'shop') return
-    if (!canAddToBackpack(inventory, item)) {
-      setMessage('Backpack full. You have nowhere to hide the item.')
-      return
-    }
-    const choice: StreetEventChoice = {
-      label: `Steal ${item.name} · Reflex DC 12`,
-      check: {
-        stat: 'reflex', dc: 12,
-        success: { minutes: 5, message: `You steal ${item.name} without being stopped.` },
-        failure: { minutes: 5, mood: -8, moveToStreet: true, message: 'The shopkeeper catches you and orders you out. You find yourself back on the street, empty-handed.' },
-        criticalSuccess: { minutes: 3, mood: 2, message: `Perfect timing. You take ${item.name} without drawing attention.` },
-        criticalFailure: { minutes: 10, mood: -12, moveToStreet: true, message: 'The shopkeeper spots your attempt immediately and orders you out. You find yourself back on the street, empty-handed.' },
-      },
-    }
-    setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })
-  }
-
   function reset() {
     autosave.resetPending()
     setChoiceSeed(newChoiceSeed())
@@ -1670,13 +1311,9 @@ export default function App() {
     setShelterPhoneCharging(false)
     localStorage.removeItem(SHELTER_PHONE_CHARGE_KEY)
     setActiveEvent(null)
-    ambientEventClock.current = { locationId: 'street', minutes: 0 }
-    openingSearchObservation.current = false
-    setFirstNightEvents({ seen: [], lastAt: null, pendingId: null })
-    setLeftHome(false)
+    resetEventSession()
     localStorage.removeItem(LEFT_HOME_KEY)
     localStorage.removeItem(FIRST_NIGHT_EVENTS_KEY)
-    setEncounters({ seen: [], lastAt: null, pendingId: null })
     localStorage.removeItem(ENCOUNTERS_KEY)
     setDiceCheck(null)
     laundryCleanAt.current = -1
@@ -1879,29 +1516,9 @@ export default function App() {
       />
     })()}
 
-    {selectedDestination && screen === 'map' && (() => {
-      const destination = locations.find((x) => x.id === selectedDestination)
-      if (!destination) return null
-      const transitMinutes = Math.ceil(destination.travelMinutes * 0.5)
-      const nearbyTime = destination.travelRange ? `${destination.travelRange.min}–${destination.travelRange.max}m` : null
-      return <ModalOverlay className="travel-choice-overlay"><ModalPanel className="travel-sheet" role="dialog" aria-modal="true" aria-label={`Travel to ${destination.name}`} tabIndex={-1} ref={travelChoiceRef}>
-        <button className="sheet-close" aria-label="Close travel options" onClick={() => setSelectedDestination(null)}>×</button>
-        <p className="eyebrow">TRAVEL TO</p>
-        <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
-        <ChoiceOptions seed={choiceSeed} decision={`${choiceDecisionKey}|travel:${destination.id}`}>
-        <button className="travel-option" onClick={() => startTravel('walk')}>
-          <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>≈{nearbyTime ?? formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
-        </button>
-        <button className="travel-option" onClick={() => startTravel('transit')} disabled={!freeTransitActive && game.money < 4.4}>
-          <Icon name="bus" /><div><strong>Public transport</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · {nearbyTime ? 'includes waiting' : 'less physical strain'}</small></div>
-        </button>
-        {!freeTransitActive && <button className="travel-option" onClick={attemptFareDodge}>
-          <Icon name="coins" /><div><strong>Ride without ticket</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · free{nearbyTime ? ' · includes waiting' : ''}</small><small>Risk: 20–35 zł fine</small></div>
-        </button>}
-        </ChoiceOptions>
-
-      </ModalPanel></ModalOverlay>
-    })()}
+    {selectedDestination && screen === 'map' && <TravelPlanningDialog destination={locations.find(location => location.id === selectedDestination)}
+      panelRef={travelChoiceRef} choiceSeed={choiceSeed} choiceDecisionKey={choiceDecisionKey} freeTransitActive={freeTransitActive}
+      money={game.money} onClose={() => setSelectedDestination(null)} onStart={startTravel} onFareDodge={attemptFareDodge} />}
 
     {screen === 'inventory' && <InventoryScreen inventory={inventory} hygiene={game.hygiene} usedBackpackSlots={usedBackpackSlots} shelterPhoneCharging={shelterPhoneCharging}
       onUseItem={useItem} onUseSupply={useSupply} onSmoke={smokeCigarette} onMedicine={useMedicine} onRequestFood={requestFood} onDiscard={setDiscardItem} />}
@@ -1932,24 +1549,10 @@ export default function App() {
     {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <RainEventDialog
       rain={game.rain} waiting={rainWaiting} elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))}
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={rainModalRef} onChoose={respondToRain}
-      onFindProperShelter={() => {
-        const rain = chooseRain(game.rain!, 'proper', absoluteMinutes(game), current.id)
-        setGame(previous => previous.rain?.id === rain.id ? { ...previous, rain: { ...rain, choiceAt: previous.rain.choiceAt } } : previous)
-      }}
-      onContinue={() => setGame(previous => previous.rain ? { ...previous, rain: { ...previous.rain, choice: 'continue', searchRemaining: 0 } } : previous)}
+      onFindProperShelter={findProperShelter} onContinue={continueInRain}
     />}
-    {!gameOver && diceCheck?.choice.check && <ModalOverlay className="dice-overlay" role="dialog" aria-modal="true" aria-labelledby="dice-action-title">
-      <ModalPanel size="compact" className="dice-card">
-        <h2 id="dice-action-title">{diceCheck.stealItemId ? `Steal ${SHOP_ITEMS.find(item => item.id === diceCheck.stealItemId)?.name.toLowerCase()}?` : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</h2>
-        <p className="dice-description modal-narrative">{diceCheck.stealItemId ? 'Try to take it without being noticed. If you’re caught, you’ll be thrown out without the item.' : diceCheck.fareDodgeDestinationId ? 'Try to ride without a ticket. If an inspector catches you, you’ll have to pay a penalty.' : activeEvent?.text}</p>
-        <p className="eyebrow">{diceCheck.choice.check.stat.toUpperCase()} CHECK</p>
-        <div className={diceCheck.roll === null ? 'd20 rolling-ready' : diceCheck.roll === 20 ? 'd20 critical' : diceCheck.roll === 1 ? 'd20 critical-fail' : 'd20'} aria-label={diceCheck.roll === null ? 'D20' : `Rolled ${diceCheck.roll}`}><Icon name="dice" />{diceCheck.roll !== null && <span>{diceCheck.roll}</span>}</div>
-        <div className="dice-math" aria-label={`${diceCheck.choice.check.stat === 'persuasion' ? 'Hygiene and Mood' : 'Energy'} modifier ${diceCheck.modifier}; target ${diceCheck.choice.check.dc}`}>{diceCheck.roll === null ? `D20 ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} ≥ ${diceCheck.choice.check.dc}` : `${diceCheck.roll} ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} = ${diceCheck.roll + diceCheck.modifier}`}</div>
-        {diceCheck.roll === null
-          ? <div className="dice-actions"><ModalAction className="dice-attempt" onClick={rollDice}>{diceCheck.stealItemId ? 'Try to steal' : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</ModalAction><ModalAction variant="secondary" className="dice-cancel" onClick={() => setDiceCheck(null)}>Cancel</ModalAction></div>
-          : <><strong className="dice-result">{diceCheck.roll === 20 ? 'CRITICAL SUCCESS' : diceCheck.roll === 1 ? 'CRITICAL FAILURE' : diceCheck.roll + diceCheck.modifier >= diceCheck.choice.check.dc ? 'SUCCESS' : 'FAILURE'}</strong><ModalAction onClick={acceptDiceResult}>Continue</ModalAction></>}
-      </ModalPanel>
-    </ModalOverlay>}
+    {!gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck} eventText={activeEvent?.text}
+      onRoll={rollDice} onAccept={acceptDiceResult} onCancel={() => setDiceCheck(null)} />}
 
     {!gameOver && shelterQueue && <ModalOverlay className="sleep-overlay queue-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Shelter registration queue">
       <ModalPanel size="compact" className="sleep-card timed-card rest-card">

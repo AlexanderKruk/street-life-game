@@ -754,6 +754,19 @@ clears them. Ordinary behavior, search/call speed, prices, text and save keys
 are unchanged. Phone, opening-call, charging and controller regression suites
 cover restore/interruption, parallel charging and once-only transitions.
 
+Event/travel/rain control is extracted in v330: `eventSession.ts` owns scene
+and D20 state, `encounterQueue.ts` owns cooldowns/observations and mandatory
+scene priorities, `eventChecks.ts` owns check rules, and `eventController.ts`
+applies choices/consequences. `useTravelController.ts` handles destination,
+progress and arrival with existing travel phases; `useRainController.ts` handles
+scheduling, shelter choices and deferred rain results with existing rain rules.
+`TravelPlanningDialog` and `DiceDialog` preserve the original complete markup.
+The shared clock, global pause/focus, persistence and result settlement remain
+with the game owner. Supported authored saved D20 rolls retain their values;
+no new D20 persistence variants or save keys are added. Transition guards stop
+duplicate D20 acceptance, restored arrival and rain-report consequences under
+StrictMode. Ordinary gameplay, texts, costs and time rates are unchanged.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,
@@ -920,6 +933,7 @@ These are implementation facts or defined future work, not claims that the whole
 | Suite | Scope |
 |---|---|
 | `check-events.cjs` | Deterministic context/queue, opening after search, spacing, no repeats, restored choices, money/refusal and reset. |
+| `check-event-travel-controllers.cjs` | Critical/threshold outcomes, one-time D20 acceptance, immutable travel progress, restored arrival/roll/rain reporting under StrictMode. |
 | `check-phone.cjs` | Apps, legacy Journal migration, offline notes, plan payment/expiry, timed search/reload, work/clinic discovery and dead-phone travel. |
 | `check-phone-controller.cjs` | Phone tick/completion priorities, closure/charging bounds, once-only restored completion and renewal under StrictMode/reset. |
 | `check-sleep-illness.cjs` | Cumulative temperature/exposure risk, duration, roofs/beds, waking illness/result, legacy sleep/reload and hidden catch-up. |
