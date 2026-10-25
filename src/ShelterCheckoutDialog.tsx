@@ -4,7 +4,12 @@ import { formatTime } from './game'
 import { SHELTER_DEPARTURE_MINUTES } from './shelterRules'
 import type { ShelterDeparture } from './stateTypes'
 export function ShelterCheckoutWarning({ minute, onStart }: { minute: number; onStart: () => void }) {
-  return <ModalOverlay className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter">
+  return <ModalOverlay className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter" onKeyDown={event => {
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        event.currentTarget.querySelector<HTMLButtonElement>('button')?.focus()
+      }
+    }}>
       <ModalPanel size="compact" className="sleep-card timed-card">
         <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Time to leave the night shelter</h2></div></div>
         <p className="timed-description modal-narrative">You must leave by 08:00. Packing and leaving takes 30 minutes.</p>

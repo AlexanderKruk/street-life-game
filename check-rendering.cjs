@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { JSDOM } = require('jsdom');
-const { build } = require('esbuild');
+const { build } = require('./tests/helpers/build.cjs');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/street-life-game/', pretendToBeVisual: true });
 for (const name of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event', 'MouseEvent']) global[name] = dom.window[name];
 Object.defineProperty(global, 'navigator', { value: dom.window.navigator });

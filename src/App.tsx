@@ -283,7 +283,7 @@ export default function App() {
     document.addEventListener('keydown', trap)
     return () => { if (ownsScrollLock) document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
   }, [rainChoice, rainWaiting, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay])
-  const eventInteractionBlocked = inventoryDialogOpen || !!activeEvent || !!diceCheck || rainWaiting || (rainChoice && !infoModal && !pendingResult) || eventResultOpen || !!infoModal || !!pendingResult || !!closingNotice
+  const eventInteractionBlocked = (shelterCheckoutDue && !sleeping) || !!shelterDeparture || inventoryDialogOpen || !!activeEvent || !!diceCheck || rainWaiting || (rainChoice && !infoModal && !pendingResult) || eventResultOpen || !!infoModal || !!pendingResult || !!closingNotice
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null

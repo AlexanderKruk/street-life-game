@@ -8,7 +8,7 @@ Object.defineProperty(global,'navigator',{value:dom.window.navigator});
 global.IS_REACT_ACT_ENVIRONMENT=true;
 window.scrollTo=()=>{};
 window.setInterval=()=>1;window.clearInterval=()=>{};
-const esbuild=require('esbuild');
+const esbuild=require('./tests/helpers/build.cjs');
 esbuild.buildSync({entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{}'},platform:'node',format:'cjs',outfile:'location-art-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const gameCode=esbuild.buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const gameModule={exports:{}};new Function('module','exports',gameCode)(gameModule,gameModule.exports);

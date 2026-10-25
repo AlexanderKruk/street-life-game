@@ -10,6 +10,12 @@ The completed refactoring stages and remaining checklist are maintained in
 update the relevant checkboxes, baseline version and verification notes after
 each completed stage. Partial extraction is not a completed gameplay controller.
 
+The test inventory, verification limits and prioritized additions are maintained
+in [TESTING.md](TESTING.md). Read it before adding/changing tests or planning a
+verification pass. Keep its current-state inventory and completion checkboxes
+accurate when the test setup changes. Browser commands and their canonical
+Linux environment are documented there; do not claim unrun CI or WebKit checks.
+
 ## Use the existing design system
 
 - Use the system sans-serif family and existing `--font-*`, `--weight-*`,
@@ -227,6 +233,48 @@ Preserve secondary-character identity within a scene; do not copy reference
 settings/poses into unrelated scenes. Service interiors should look lived in
 and populated when appropriate. Record prompts/selected assets in `docs/art/`;
 use existing responsive-image helpers for runtime artwork.
+
+## Testing rules
+
+- Protect player-visible behavior and known regressions: costs/time, actual
+  stat changes, eligibility, pause/focus, saved progress and once-only outcomes.
+  Add focused coverage for meaningful new mechanics or bug fixes. Do not add
+  tests for every implementation detail or routine low-impact visual edit.
+- Use the thematic scripts in `TESTING.md` for isolated changes. Run full
+  `npm test` and `npm run build` for shared UI, clock/pause, persistence, result
+  lifecycle and architectural changes. The GitHub Pages workflow already gates
+  publication on the full suite and build. Do not repeat a successful unchanged
+  run without a new failure, change or unresolved concern.
+- Documentation-only changes need diff/link/command verification, not a fresh
+  game build or full suite. Do not describe previous runs as newly performed.
+- Node UI tests use jsdom. The separate Playwright suite tests the production
+  build: `npm run build` then `npm run test:browser` (or `test:visual` / `test:smoke`).
+  It includes 16 screenshots and 12 smoke/restore checks, pinned Chromium/fonts
+  on Ubuntu 24.04 Linux x64. Do not use a host browser with these baselines.
+  Browser CI runs separately for PRs/manual dispatch; it is not yet a deployment
+  gate. Legacy scripts in `scripts/` may target older UI. Report actual checks;
+  passing Chromium does not verify WebKit or a physical iPhone.
+- Keep new cases deterministic and isolated: control clock/randomness, reset
+  mocks/storage, and use synthetic saves. For lifecycle fixes cover remount or
+  reload and StrictMode where relevant. Preserve historical compatibility
+  fixtures when adding current-format examples.
+- Visual coverage uses 8 representative states at 390×844 and 1280×900,
+  not every event. Fix the rendering environment and wait for
+  fonts/images; disable CSS animation and settle JS meters on the controlled
+  clock for screenshots while retaining behavioral animation tests. Review image
+  diffs before accepting changed baselines.
+- Keep broad DOM snapshots optional and justified. Never auto-update snapshots,
+  remove assertions or adjust expected values merely to make a failure pass.
+  Confirm the intended behavior first. Treat coverage percentage as diagnostic,
+  not as a target that justifies redundant tests.
+- `tests/helpers/build.cjs` is the shared Node test build adapter; explicit
+  feature definitions override release defaults. `tests/run.cjs` keeps all
+  28 suites sequential and reports timings. `check-regressions.cjs` selects
+  isolated thematic groups (for example `node check-regressions.cjs map-travel`),
+  with shared setup in `tests/helpers/regression-env.cjs` and temporary bundles.
+  Preserve assertions when moving cases. Keep each browser test context fresh,
+  allow React to commit between mocked clock ticks, wait for final meters and
+  images before screenshots, and retain the zero-pixel comparison limit.
 
 ## Before finishing an interface change
 

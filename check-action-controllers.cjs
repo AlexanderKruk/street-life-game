@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');
-function bundle(path){const code=require('esbuild').buildSync({entryPoints:[path],bundle:true,platform:'node',format:'cjs',write:false,define:{'import.meta.env':'{}'},external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const m={exports:{}};new Function('require','module','exports',code)(require,m,m.exports);return m.exports}
+function bundle(path){const code=require('./tests/helpers/build.cjs').buildSync({entryPoints:[path],bundle:true,platform:'node',format:'cjs',write:false,define:{'import.meta.env':'{}'},external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const m={exports:{}};new Function('require','module','exports',code)(require,m,m.exports);return m.exports}
 const {initialState,applyAction,limitMood}=bundle('src/game.ts');const {INITIAL_INVENTORY,INITIAL_STORAGE}=bundle('src/inventory.ts');
 const {createMedicalController}=bundle('src/medicalController.ts');const {createSupportWorkController}=bundle('src/supportWorkController.ts');const {createStreetController}=bundle('src/streetController.ts');
 const base={...initialState,day:2,minutes:600,money:100,hunger:60,thirst:60,energy:70,health:20,hygiene:55,mood:28,locationId:'hospital',rainSystemStarted:true,rainScheduleDay:2,nextRainAt:10000};

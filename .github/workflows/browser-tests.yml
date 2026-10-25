@@ -1,0 +1,76 @@
+name: Browser regression checks
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'tests/**'
+      - 'test-fixtures/**'
+      - 'check-*.cjs'
+      - 'package*.json'
+      - 'playwright.config.js'
+      - 'vite.config.ts'
+      - 'index.html'
+      - '.github/workflows/browser-tests.yml'
+  workflow_dispatch:
+    inputs:
+      webkit:
+        description: Also run mobile smoke scenarios in WebKit
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium system libraries (binary and fonts come from npm)
+        run: npx playwright install-deps chromium
+      - run: npm run build
+      - run: npm run test:browser
+      - name: Preserve report, traces and actual/expected/diff images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-chromium-report
+          path: |
+            playwright-report/
+            test-results/browser/
+          retention-days: 14
+
+  webkit:
+    if: github.event_name == 'workflow_dispatch' && inputs.webkit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - run: npm run build
+      - run: npm run test:smoke:webkit
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-webkit-report
+          path: |
+            playwright-report/
+            test-results/browser/
+          retention-days: 14

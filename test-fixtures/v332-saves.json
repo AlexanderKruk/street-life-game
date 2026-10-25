@@ -1,0 +1,95 @@
+{
+  "build": 332,
+  "kind": "synthetic regression fixtures; not user saves",
+  "clock": 1800000000000,
+  "base": {
+    "street-life-save-v3": "{\"day\":3,\"minutes\":600,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+    "street-life-inventory-v1": "{\"clothingCleanliness\":80,\"showerGel\":0,\"bread\":4,\"breadFreshness\":100,\"cannedFood\":4,\"readyMeal\":0,\"readyMealFreshness\":100,\"wipes\":5,\"water\":2,\"food\":2,\"foodFreshness\":100,\"bottles\":8,\"phoneBattery\":48,\"phoneCondition\":72,\"jacket\":78,\"documents\":true,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false}",
+    "street-life-effects-v1": "[]",
+    "street-life-situation-v1": "{\"housing\":\"Street\",\"employment\":\"Unemployed\",\"income\":\"None\",\"shelterMisses\":0,\"shelterStrikes\":0}",
+    "street-life-choice-seed-v1": "1234",
+    "street-life-discovered-v1": "[\"street\",\"station\",\"shop\"]",
+    "street-life-discovery-version": "2",
+    "street-life-mobile-auto-renew": "false",
+    "street-life-mobile-service-until": "10000",
+    "street-life-mobile-renewed-day": "3",
+    "street-life-opening-calls-v1": "3",
+    "street-life-first-night-events-v1": "{\"seen\":[\"first-night-door\",\"first-night-dog\",\"first-night-bench\",\"first-night-station\",\"first-night-bench-wake\"],\"lastAt\":null,\"pendingId\":null}",
+    "street-life-encounters-v1": "{\"seen\":[\"night-patrol\",\"park-company\",\"borrow-phone\",\"borrow-phone-slip\",\"street-patrol-wake\",\"station-patrol-wake\",\"city-waking\",\"night-rustle\",\"station-cleaning\",\"platform-question\",\"phone-drop\",\"found-coins\",\"free-snack\",\"ticket-check\",\"station-food\",\"rough-crowd\",\"quiet-night\",\"night-theft\",\"spare-change\",\"dropped-glove\"],\"lastAt\":null,\"pendingId\":null}",
+    "street-life-left-home-v1": "true",
+    "street-life-journal-history-v1": "[]",
+    "street-life-memories-v1": "[\"office-routine\",\"redundancy-email\",\"housing\"]",
+    "street-life-screen": "location"
+  },
+  "cases": [
+    {
+      "id": "trip",
+      "processKey": "street-life-trip-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":3,\"minutes\":600,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+        "street-life-trip-v1": "{\"destinationId\":\"station\",\"mode\":\"transit\",\"total\":40,\"remaining\":24,\"before\":{\"game\":{\"day\":3,\"minutes\":584,\"money\":78,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999},\"inventory\":{\"clothingCleanliness\":80,\"showerGel\":0,\"bread\":4,\"breadFreshness\":100,\"cannedFood\":4,\"readyMeal\":0,\"readyMealFreshness\":100,\"wipes\":5,\"water\":2,\"food\":2,\"foodFreshness\":100,\"bottles\":8,\"phoneBattery\":48,\"phoneCondition\":72,\"jacket\":78,\"documents\":true,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false},\"effects\":[]}}"
+      }
+    },
+    {
+      "id": "search",
+      "processKey": "street-life-phone-activity-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":3,\"minutes\":600,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+        "street-life-phone-activity-v1": "{\"questionId\":\"morning\",\"total\":20,\"remaining\":15,\"pausedMinutes\":0,\"before\":{\"game\":{\"day\":3,\"minutes\":595,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999},\"inventory\":{\"clothingCleanliness\":80,\"showerGel\":0,\"bread\":4,\"breadFreshness\":100,\"cannedFood\":4,\"readyMeal\":0,\"readyMealFreshness\":100,\"wipes\":5,\"water\":2,\"food\":2,\"foodFreshness\":100,\"bottles\":8,\"phoneBattery\":48,\"phoneCondition\":72,\"jacket\":78,\"documents\":true,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false},\"effects\":[]}}"
+      }
+    },
+    {
+      "id": "call",
+      "processKey": "street-life-phone-activity-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":3,\"minutes\":600,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+        "street-life-phone-activity-v1": "{\"questionId\":\"call-university\",\"total\":2,\"remaining\":1,\"before\":{\"game\":{\"day\":3,\"minutes\":599,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999},\"inventory\":{\"clothingCleanliness\":80,\"showerGel\":0,\"bread\":4,\"breadFreshness\":100,\"cannedFood\":4,\"readyMeal\":0,\"readyMealFreshness\":100,\"wipes\":5,\"water\":2,\"food\":2,\"foodFreshness\":100,\"bottles\":8,\"phoneBattery\":48,\"phoneCondition\":72,\"jacket\":78,\"documents\":true,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false},\"effects\":[]}}",
+        "street-life-opening-calls-v1": "0"
+      }
+    },
+    {
+      "id": "sleep",
+      "processKey": "street-life-sleep-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":3,\"minutes\":600,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"station\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999,\"sleepIllnessDose\":0,\"sleepIllnessMinutes\":60}",
+        "street-life-sleep-v1": "{\"kind\":\"bench\",\"total\":120,\"remaining\":60,\"startAbsolute\":3420,\"realStartedAt\":1799999994000,\"realWakeAt\":1800000006000,\"before\":{\"game\":{\"day\":3,\"minutes\":540,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"station\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999},\"inventory\":{\"clothingCleanliness\":80,\"showerGel\":0,\"bread\":4,\"breadFreshness\":100,\"cannedFood\":4,\"readyMeal\":0,\"readyMealFreshness\":100,\"wipes\":5,\"water\":2,\"food\":2,\"foodFreshness\":100,\"bottles\":8,\"phoneBattery\":48,\"phoneCondition\":72,\"jacket\":78,\"documents\":true,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false},\"effects\":[]}}"
+      }
+    },
+    {
+      "id": "queue",
+      "processKey": "street-life-shelter-queue-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":3,\"minutes\":1090,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"shelter\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+        "street-life-shelter-queue-v1": "{\"day\":3,\"total\":20,\"remaining\":10,\"arrivalMinute\":1080,\"joinedAt\":1080,\"vacancies\":3,\"peopleAhead\":0,\"before\":{\"game\":{\"day\":3,\"minutes\":1080,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"shelter\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999},\"inventory\":{\"clothingCleanliness\":80,\"showerGel\":0,\"bread\":4,\"breadFreshness\":100,\"cannedFood\":4,\"readyMeal\":0,\"readyMealFreshness\":100,\"wipes\":5,\"water\":2,\"food\":2,\"foodFreshness\":100,\"bottles\":8,\"phoneBattery\":48,\"phoneCondition\":72,\"jacket\":78,\"documents\":true,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false},\"effects\":[]}}",
+        "street-life-situation-v1": "{\"housing\":\"Street\",\"employment\":\"Unemployed\",\"income\":\"None\",\"shelterMisses\":0,\"shelterStrikes\":0,\"shelterVacanciesDay\":3,\"shelterVacancies\":3}"
+      }
+    },
+    {
+      "id": "departure",
+      "processKey": "street-life-shelter-departure-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":3,\"minutes\":461,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"shelter\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+        "street-life-shelter-departure-v1": "{\"day\":3,\"startAbsolute\":3330,\"before\":{\"game\":{\"day\":3,\"minutes\":450,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"shelter\",\"rainSystemStarted\":true,\"rainScheduleDay\":3,\"rainStartsToday\":0,\"nextRainAt\":999999},\"inventory\":{\"clothingCleanliness\":80,\"showerGel\":0,\"bread\":4,\"breadFreshness\":100,\"cannedFood\":4,\"readyMeal\":0,\"readyMealFreshness\":100,\"wipes\":5,\"water\":2,\"food\":2,\"foodFreshness\":100,\"bottles\":8,\"phoneBattery\":48,\"phoneCondition\":72,\"jacket\":78,\"documents\":true,\"cigarettes\":0,\"medicines\":2,\"transitCard\":false},\"effects\":[]}}",
+        "street-life-situation-v1": "{\"housing\":\"Night shelter\",\"employment\":\"Unemployed\",\"income\":\"None\",\"shelterMisses\":0,\"shelterStrikes\":0,\"shelterRegisteredDay\":2,\"shelterUntilDay\":8,\"shelterLastStayDay\":2,\"shelterAuditDay\":2,\"shelterVacanciesDay\":3,\"shelterVacancies\":3}"
+      }
+    },
+    {
+      "id": "event",
+      "processKey": "street-life-first-night-events-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":1,\"minutes\":1335,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":1,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+        "street-life-first-night-events-v1": "{\"seen\":[\"first-night-door\",\"first-night-dog\",\"first-night-bench\",\"first-night-station\",\"first-night-bench-wake\"],\"lastAt\":1335,\"pendingId\":\"first-night-door\"}",
+        "street-life-encounters-v1": "{\"seen\":[\"night-patrol\",\"park-company\",\"borrow-phone\",\"borrow-phone-slip\",\"street-patrol-wake\",\"station-patrol-wake\",\"city-waking\",\"night-rustle\",\"station-cleaning\",\"platform-question\",\"phone-drop\",\"found-coins\",\"free-snack\",\"ticket-check\",\"station-food\",\"rough-crowd\",\"quiet-night\",\"night-theft\",\"spare-change\",\"dropped-glove\"],\"lastAt\":null,\"pendingId\":\"first-night-door\"}",
+        "street-life-left-home-v1": "false"
+      }
+    },
+    {
+      "id": "d20",
+      "processKey": "street-life-encounters-v1",
+      "entries": {
+        "street-life-save-v3": "{\"day\":2,\"minutes\":60,\"money\":73.6,\"hunger\":72,\"thirst\":48,\"energy\":65,\"health\":82,\"hygiene\":55,\"mood\":28,\"intoxication\":0,\"locationId\":\"street\",\"rainSystemStarted\":true,\"rainScheduleDay\":2,\"rainStartsToday\":0,\"nextRainAt\":999999}",
+        "street-life-encounters-v1": "{\"seen\":[\"night-patrol\",\"park-company\",\"borrow-phone\",\"borrow-phone-slip\",\"street-patrol-wake\",\"station-patrol-wake\",\"city-waking\",\"night-rustle\",\"station-cleaning\",\"platform-question\",\"phone-drop\",\"found-coins\",\"free-snack\",\"ticket-check\",\"station-food\",\"rough-crowd\",\"quiet-night\",\"night-theft\",\"spare-change\",\"dropped-glove\"],\"lastAt\":null,\"pendingId\":\"park-company\",\"pendingRoll\":17}"
+      }
+    }
+  ]
+}

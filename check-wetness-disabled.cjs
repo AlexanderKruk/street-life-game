@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { buildSync } = require('esbuild');
+const { buildSync } = require('./tests/helpers/build.cjs');
 function bundled(path) {
   const code = buildSync({ entryPoints: [path], bundle: true, platform: 'node', format: 'cjs', write: false,
     define: { 'import.meta.env': '{}' }, external: ['react', 'react-dom', 'react/jsx-runtime'] }).outputFiles[0].text;

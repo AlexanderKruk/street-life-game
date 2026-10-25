@@ -10,7 +10,7 @@ Date.now=()=>now;
 const timers=new Map();
 window.setInterval=(fn,delay)=>{const id=nextTimerId++;timers.set(id,{fn,delay,nextAt:now+delay});return id;};
 window.clearInterval=id=>timers.delete(id);
-require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:'qa-app.cjs',external:['react','react-dom','react/jsx-runtime']});
+require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:'qa-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup}=require('@testing-library/react');
 const phoneSearchButton=require('./test-fixtures/phone-search.cjs')({screen,fireEvent});

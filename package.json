@@ -7,22 +7,30 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node check-design-system.cjs && node check-module-boundaries.cjs && node check-action-controllers.cjs && node check-rain.cjs && node check-events.cjs && node check-event-travel-controllers.cjs && node check-phone.cjs && node check-phone-controller.cjs && node check-opening-calls.cjs && node check-sleep-illness.cjs && node check-rest-controllers.cjs && node check-shelter-charging.cjs && node check-food-inventory.cjs && node check-inventory-commands.cjs && node check-medicine.cjs && node check-wetness.cjs && node check-wetness-disabled.cjs && node check-mood.cjs && node check-save-compatibility.cjs && node check-load-game-session.cjs && node check-autosave.cjs && node check-rendering.cjs && node check-location-art.cjs && node check-responsive-images.mjs && node check-image-cache.mjs && node check-regressions.cjs && node check-ui.cjs && node check-results.cjs",
-    "test:design": "node check-design-system.cjs"
+    "test": "node tests/run.cjs",
+    "test:design": "node check-design-system.cjs",
+    "test:visual": "playwright test --project=visual-mobile --project=visual-desktop",
+    "test:visual:update": "playwright test --project=visual-mobile --project=visual-desktop --update-snapshots=all",
+    "test:smoke": "playwright test --project=smoke-chromium",
+    "test:smoke:webkit": "playwright test --project=smoke-webkit",
+    "test:browser": "playwright test --project=visual-mobile --project=visual-desktop --project=smoke-chromium"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.4",
-    "vite": "^7.1.7",
-    "typescript": "~5.9.3",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.57.0",
+    "@sparticuz/chromium": "143.0.4",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "esbuild": "^0.28.2",
     "jsdom": "^30.1.2",
-    "@testing-library/react": "^16.3.3",
-    "@testing-library/dom": "^10.4.2"
+    "tar-fs": "3.1.3"
   }
 }

@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const originalRandom=Math.random;
-require('esbuild').buildSync({entryPoints:['src/foodConsumption.ts'],bundle:true,platform:'node',format:'cjs',outfile:'food-consumption-app.cjs'});
+require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/foodConsumption.ts'],bundle:true,platform:'node',format:'cjs',outfile:'food-consumption-app.cjs'});
 const {foodConsumption}=require('./food-consumption-app.cjs');
 for(const [kind,gains] of [['food',[28,20,10]],['bread',[12,8,4]],['readyMeal',[48,34,16]]]) {
  const fresh=foodConsumption(kind,51,()=>{throw Error('Fresh food must not roll')});assert.equal(fresh.hunger,gains[0]);assert.equal(fresh.mood,kind==='food'?2:0);
@@ -19,7 +19,7 @@ for(const [kind,gains] of [['food',[28,20,10]],['bread',[12,8,4]],['readyMeal',[
  for(let loss=5;loss<=10;loss++) {let n=0;assert.equal(foodConsumption(kind,0,()=>n++===0?.99:(loss-5+.5)/6).energy,-loss)}
 }
 console.log('PASS: exact freshness/outcome boundaries, all food nutrition, 90/8/2 and 25/45/30 odds, vomiting losses and safe fresh food.');
-require('esbuild').buildSync({entryPoints:['src/foodInventory.ts'],bundle:true,platform:'node',format:'cjs',outfile:'food-inventory-app.cjs'});
+require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/foodInventory.ts'],bundle:true,platform:'node',format:'cjs',outfile:'food-inventory-app.cjs'});
 const {foodPortions,foodSlot,withFoodPortions,addFoodPortions,ageFood,consumeFood,discardFood}=require('./food-inventory-app.cjs');
 for(const kind of ['food','bread','readyMeal']) {
  const legacy={[kind]:5,[`${kind}Freshness`]:15};assert.deepEqual(foodPortions(legacy,kind),[15,15,15,15,15]);
@@ -46,7 +46,7 @@ console.log('PASS: per-slot groups, legacy migration, purchases, independent agi
 const {JSDOM}=require('jsdom');const dom=new JSDOM('<html><body></body></html>',{url:'http://localhost/street-life-game/',pretendToBeVisual:true});
 for(const k of ['window','document','localStorage','HTMLElement','Node','Event','MouseEvent'])global[k]=dom.window[k];Object.defineProperty(global,'navigator',{value:dom.window.navigator});global.IS_REACT_ACT_ENVIRONMENT=true;window.scrollTo=()=>{};
 let now=1800000000000,id=0;Date.now=()=>now;const timers=new Map();window.setInterval=(fn,delay)=>{const key=++id;timers.set(key,{fn,delay,next:now+delay});return key};window.clearInterval=key=>timers.delete(key);
-require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'food-ui-app.cjs',external:['react','react-dom','react/jsx-runtime']});
+require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'food-ui-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');const {render,screen,within,fireEvent,act,cleanup,configure}=require('@testing-library/react');configure({getElementError:message=>new Error(message)});const App=require('./food-ui-app.cjs').default;
 const invKey='street-life-inventory-v1',gameKey='street-life-save-v3',read=k=>JSON.parse(localStorage.getItem(k));
 function setup(stock={},state={},extra={},strict=false){cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);localStorage.setItem(gameKey,JSON.stringify({day:2,minutes:600,money:100,hunger:20,thirst:66,energy:68,health:82,hygiene:55,mood:28,intoxication:0,locationId:'station',...state}));localStorage.setItem('street-life-effects-v1','[]');localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-screen','inventory');localStorage.setItem(invKey,JSON.stringify({water:0,food:0,medicines:0,...stock}));for(const[k,v]of Object.entries(extra))localStorage.setItem(k,JSON.stringify(v));render(strict?React.createElement(React.StrictMode,null,React.createElement(App)):React.createElement(App));fireEvent(window,new window.Event('pagehide'))}

@@ -7,3 +7,6 @@ dist
 *-app.cjs
 regression-game.cjs
 review_runtime/
+
+playwright-report/
+test-results/

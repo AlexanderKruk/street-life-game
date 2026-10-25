@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const {JSDOM}=require('jsdom');
-const {buildSync}=require('esbuild');
+const {buildSync}=require('./tests/helpers/build.cjs');
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'http://localhost/street-life-game/',pretendToBeVisual:true});
 for(const key of ['window','document','localStorage','HTMLElement','Node','Event','MouseEvent'])global[key]=dom.window[key];
 Object.defineProperty(global,'navigator',{value:dom.window.navigator});global.IS_REACT_ACT_ENVIRONMENT=true;

@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-require('esbuild').buildSync({ entryPoints: ['src/autosave.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'autosave-app.cjs' });
+require('./tests/helpers/build.cjs').buildSync({ entryPoints: ['src/autosave.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'autosave-app.cjs' });
 const { createAutosave } = require('./autosave-app.cjs');
 let now = 0, writes = [], errors = false, results = [], encoded = [];
 const data = new Map();

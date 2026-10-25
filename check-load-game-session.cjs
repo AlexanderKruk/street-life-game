@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
-const esbuild = require('esbuild');
+const esbuild = require('./tests/helpers/build.cjs');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/street-life-game/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event', 'MouseEvent']) global[key] = dom.window[key];
 Object.defineProperty(global, 'navigator', { value: dom.window.navigator });
@@ -97,6 +97,26 @@ for (const broken of ['{broken', 'null', '[]', '{}', 'true', '42', '"invalid"'])
   cleanup(); render(React.createElement(App));
   assert.equal(JSON.parse(localStorage.getItem(gameKey)).day, 1, 'reset survives remount');
 }
+// Synthetic post-refactoring saves complement the historical v240–v249 fixtures.
+const currentFixtures = require('./test-fixtures/v332-saves.json');
+const currentFields = { trip: 'trip', search: 'phoneActivity', call: 'phoneActivity',
+  sleep: 'sleeping', queue: 'shelterQueue', departure: 'shelterDeparture',
+  event: 'firstNightEvents', d20: 'encounters' };
+assert.equal(currentFixtures.build, 332);
+assert.deepEqual(currentFixtures.cases.map(item => item.id).sort(), Object.keys(currentFields).sort());
+for (const fixture of currentFixtures.cases) {
+  const stored = { ...currentFixtures.base, ...fixture.entries };
+  const frozen = JSON.stringify(stored);
+  const restored = loadGameSession(storageForCurrent(stored));
+  assert.deepEqual(restored[currentFields[fixture.id]], JSON.parse(stored[fixture.processKey]), `${fixture.id}: retain pending state including original snapshot/roll`);
+  const original = JSON.parse(stored[gameKey]);
+  assert.equal(restored.game.money, original.money, `${fixture.id}: restoration never charges or rewards`);
+  assert.equal(restored.game.minutes, original.minutes, `${fixture.id}: restoration never advances time`);
+  assert.equal(restored.inventory.phoneBattery, JSON.parse(stored['street-life-inventory-v1']).phoneBattery);
+  assert.deepEqual(loadGameSession(storageForCurrent(stored)), restored, `${fixture.id}: repeated restoration is stable`);
+  assert.equal(JSON.stringify(stored), frozen, `${fixture.id}: source entries remain unchanged`);
+}
+function storageForCurrent(entries) { return { getItem: key => entries[key] ?? null }; }
 const denied = loadGameSession({ getItem() { throw new Error('storage unavailable'); } });
 assert.equal(denied.game.day, 1); assert.equal(denied.phoneActivity, null);
 cleanup(); dom.window.close();

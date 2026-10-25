@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const esbuild = require('esbuild');
+const esbuild = require('./tests/helpers/build.cjs');
 esbuild.buildSync({ entryPoints: ['src/saveCompatibility.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'save-compatibility-app.cjs' });
 const { readSavedGame, SAVE_KEY } = require('./save-compatibility-app.cjs');
 const storageFor = entries => ({ getItem: key => entries[key] ?? null });

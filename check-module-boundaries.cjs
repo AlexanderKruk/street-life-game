@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');const fs=require('node:fs');const ts=require('typescript');
-const {metafile}=require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,write:false,metafile:true,format:'esm',define:{'import.meta.env':'{}'},external:['react','react-dom','react/jsx-runtime']});
+const {metafile}=require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/App.tsx'],bundle:true,write:false,metafile:true,format:'esm',define:{'import.meta.env':'{}'},external:['react','react-dom','react/jsx-runtime']});
 const graph=new Map(Object.entries(metafile.inputs).filter(([name])=>name.startsWith('src/')).map(([name,info])=>[name,info.imports.filter(edge=>!edge.external&&edge.path.startsWith('src/')).map(edge=>edge.path)]));
 const visiting=new Set(),done=new Set();
 function walk(name,chain=[]){assert(!visiting.has(name),'Runtime import cycle: '+[...chain,name].join(' → '));if(done.has(name))return;visiting.add(name);for(const child of graph.get(name)??[])walk(child,[...chain,name]);visiting.delete(name);done.add(name)}

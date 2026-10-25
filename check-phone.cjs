@@ -10,7 +10,7 @@ Date.now=()=>now;
 const callbacks=new Map();
 window.setInterval=(fn,delay)=>{const id=nextId++;callbacks.set(id,{fn,delay,nextAt:now+delay});return id};
 window.clearInterval=id=>callbacks.delete(id);
-require('esbuild').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'phone-app.cjs',external:['react','react-dom','react/jsx-runtime']});
+require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',outfile:'phone-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup,configure}=require('@testing-library/react');
 configure({getElementError:message=>new Error(message)});
