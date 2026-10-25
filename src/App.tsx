@@ -1,5 +1,5 @@
 import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,RAIN_RESPONSE_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
-import { INITIAL_LIFE,PHONE_SEARCH_MIN,PHONE_SEARCH_MAX,SHELTER_DEPARTURE_MINUTES,loadGameSession } from './loadGameSession'
+import { INITIAL_LIFE,SHELTER_DEPARTURE_MINUTES,loadGameSession } from './loadGameSession'
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
 import ActivityDialog from './ActivityDialog'
 import BottomNavigation from './BottomNavigation'
@@ -39,24 +39,26 @@ import { inventoryCommandResult,resolveInventoryCommand,type InventoryCommand } 
 import { journalReflection,type JournalEntry } from './journal'
 import { limitingEffects } from './limitingEffects'
 import { CLOSING_NOTICE_KEY,locationClosedSince } from './locationClosing'
-import { CALL_BATTERY_PER_MINUTE,OPENING_CALLS,OPENING_CALLS_KEY,openingCall } from './openingCalls'
-import { phoneDrainMultiplier,phoneScreenDrain } from './phonePower'
-import { practicalQuestions } from './phoneQuestions'
+import { OPENING_CALLS,OPENING_CALLS_KEY,openingCall } from './openingCalls'
+import { phoneDrainMultiplier } from './phonePower'
 import { chooseRain,createRain,planRainDay,rainArt,rainResultText,type RainChoice } from './rain'
-import { locationPresentation,questionPresentation } from './resultPresentation'
+import { locationPresentation } from './resultPresentation'
 import { summarizeResult,type ConsumedItem,type ResultSnapshot } from './results'
 import { DISCOVERY_KEY,SAVE_KEY } from './saveCompatibility'
-import { SHELTER_CHARGE_PER_HOUR,SHELTER_PHONE_CHARGE_KEY,shelterChargingMinutes } from './shelterCharging'
+import { SHELTER_PHONE_CHARGE_KEY } from './shelterCharging'
 import { SHELTER_ENTRY_OPEN,SHELTER_QUEUE_MINUTES,SHELTER_REGISTRATION_OPEN,shelterPeopleAhead,shelterQueueMinutes } from './shelterRules'
 import { sleepIllnessChance } from './sleepIllness'
 import { DEBUG_SLEEP_SPEED,SHELTER_CHECKOUT_WARNING,SLEEP_HOURS,availableSleepHours,shelterSleepMinutes,sleepDurationUnavailable } from './sleepRules'
-import type { ActiveEffect,BackpackItemId,FirstNightEvents,Inventory,JournalGoals as JournalGoalState,LifeSituation,PhoneActivity,Screen,ShelterArrival,ShelterDeparture,ShelterQueue,ShopItem,SleepState,StoredItems,TravelMode,Trip } from './stateTypes'
+import type { ActiveEffect,BackpackItemId,FirstNightEvents,Inventory,JournalGoals as JournalGoalState,LifeSituation,Screen,ShelterArrival,ShelterDeparture,ShelterQueue,ShopItem,SleepState,StoredItems,TravelMode,Trip } from './stateTypes'
 import { CHOICE_SEED_KEY,newChoiceSeed } from './streetChoiceOrder'
 import { getTravelDisplayPhase,getTravelPhase } from './travelPhases'
 import { useGameAutosave } from './useGameAutosave'
+import { elapsedPhoneBattery,phoneUnavailableReason } from './phoneActivity'
+import { usePhoneSession } from './phoneSession'
+import { usePhoneController } from './usePhoneController'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-328'
+const BUILD_VERSION = 'v2026.10.25-329'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -80,8 +82,9 @@ export default function App() {
   const [initial] = useState(() => loadGameSession(localStorage))
   const [game, commitGame] = useState<GameState>(() => initial.game)
   const [choiceSeed, setChoiceSeed] = useState(() => initial.choiceSeed)
-  const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(() => initial.phoneActivity)
-  const [openingCallIndex, setOpeningCallIndex] = useState(() => initial.openingCallIndex)
+  const phone = usePhoneSession(initial)
+  const { phoneActivity, openingCallIndex, answeredQuestions, shelterPhoneCharging, setShelterPhoneCharging,
+    mobileServiceUntil, mobileAutoRenew, setMobileAutoRenew, mobileRenewedDay, resetPhoneSession } = phone
   const activeCall = phoneActivity ? openingCall(phoneActivity.questionId) : undefined
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
@@ -129,10 +132,8 @@ export default function App() {
   }, [screen, phoneApp])
   const [rainChoice, setRainChoice] = useState(false)
   const rainModalRef = useRef<HTMLElement>(null)
-  const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => initial.answeredQuestions)
   const [seenMemories, setSeenMemories] = useState<string[]>(() => initial.seenMemories)
   const [phoneOpen, setPhoneOpen] = useState(false)
-  const [shelterPhoneCharging, setShelterPhoneCharging] = useState(() => initial.shelterPhoneCharging)
   const [discardItem, setDiscardItem] = useState<{ id: BackpackItemId; name: string; quantity: number; slotIndex: number; spoiledQuantity?: number } | null>(null)
   const cancelDiscard = useCallback(() => setDiscardItem(null), [])
   const [foodChoice, setFoodChoice] = useState<{ kind: FoodKind; name: string; slotIndex: number } | null>(null)
@@ -176,9 +177,6 @@ export default function App() {
     return () => { document.body.style.overflow = overflow }
   }, [activityOverlay])
   const [musicOn, setMusicOn] = useState(false)
-  const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => initial.mobileServiceUntil)
-  const [mobileAutoRenew, setMobileAutoRenew] = useState<boolean>(() => initial.mobileAutoRenew)
-  const [mobileRenewedDay, setMobileRenewedDay] = useState<number>(() => initial.mobileRenewedDay)
   const [shelterQueue, setShelterQueue] = useState<ShelterQueue | null>(() => initial.shelterQueue)
   const [shelterArrival, setShelterArrival] = useState<ShelterArrival | null>(() => initial.shelterArrival)
   const [shelterDeparture, setShelterDeparture] = useState<ShelterDeparture | null>(() => initial.shelterDeparture)
@@ -346,22 +344,11 @@ export default function App() {
     life.shelterCheckoutDay !== game.day && game.minutes >= SHELTER_CHECKOUT_WARNING && game.minutes < 12 * 60 &&
     (game.minutes < 8 * 60 || life.shelterLastStayDay === game.day - 1)
   const shelterDepartureRemaining = shelterDeparture ? Math.max(0, SHELTER_DEPARTURE_MINUTES - (absoluteMinutes(game) - shelterDeparture.startAbsolute)) : 0
-  useEffect(() => {
-    if (!shelterPhoneCharging) return
-    setPhoneOpen(false)
-    setMusicOn(false)
-    if (!insideNightShelter && !shelterDeparture) setShelterPhoneCharging(false)
-  }, [shelterPhoneCharging, insideNightShelter, shelterDeparture])
   const freeTransitActive = inventory.transitCard || effects.some(effect => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
   const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
   const mobileServiceMinutesLeft = Math.max(0, mobileServiceUntil - absoluteMinutes(game))
-  const phoneUnavailable = shelterPhoneCharging ? 'Collect your phone from the charger at Night Shelter.'
-    : inventory.phoneCondition <= 0 ? 'Your phone is broken.'
-    : inventory.phoneBattery <= 0 ? 'The battery is empty. Find somewhere to charge it.' : null
+  const phoneUnavailable = phoneUnavailableReason(inventory, shelterPhoneCharging)
   const navigationOn = mobileServiceActive && !phoneUnavailable && !sleeping && !gameOver
-  useEffect(() => {
-    if (phoneUnavailable) { setPhoneApp('home'); setPhoneOpen(false) }
-  }, [phoneUnavailable])
   const dayWorkEnergyRequired = 55
   const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
   const usedStorageSlots = storageSlots(storage)
@@ -412,18 +399,22 @@ export default function App() {
     const groundWindow = groundSleepWindow.current
     const extraDirt = groundWindow ? Math.max(0, Math.min(now, groundWindow.end) - Math.max(now - elapsed, groundWindow.start)) * (40 / 1440) : 0
     const wornMinutes = Math.max(0, now - Math.max(now - elapsed, laundryCleanAt.current))
-    setInventory(prev => {
-      const multiplier = phoneDrainMultiplier(prev.phoneCondition)
-      const navigationDrain = trip && navigationOn && movingMinutes > 0 ? phoneScreenDrain({ ...game, minutes: game.minutes - movingMinutes }, prev.phoneCondition, 'navigation', movingMinutes) : 0
-      const musicDrain = musicOn ? 4 / 60 * multiplier * elapsed : 0
-      const chargingGain = shelterPhoneCharging && game.locationId === 'shelter' && !trip
-        ? shelterChargingMinutes(from, now) * SHELTER_CHARGE_PER_HOUR / 60 : 0
-      return { ...ageFood(prev, elapsed),
+    setInventory(prev => ({ ...ageFood(prev, elapsed),
         clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1 + .5 * movingMinutes / elapsed : 1) - extraDirt),
-        phoneBattery: Math.min(100, Math.max(0, prev.phoneBattery + chargingGain - navigationDrain - musicDrain)),
-      }
-    })
+        phoneBattery: elapsedPhoneBattery(prev, game, { from, now, movingMinutes, travelling: !!trip, navigationOn, musicOn, charging: shelterPhoneCharging }),
+    }))
   }, [game.day, game.minutes])
+
+  const { startOpeningCall, answerPracticalQuestion, buyMobileService, chargePhone, toggleShelterPhoneCharging,
+    tickPhoneActivity, pausePhone, phoneSearchCost, finishLocationPhoneCharge } = usePhoneController(phone, {
+    game, inventory, currentId: current.id, open, screen, firstNight, eventInteractionBlocked, sleeping: !!sleeping,
+    trip: !!trip, gameOver, insideNightShelter, shelterDeparture: !!shelterDeparture, shelterCheckoutDue, shelterBooked,
+    discoveredLocations, inventoryAgedAt,
+  }, {
+    setGame, setInventory, setMessage, setInfoModal, setPhoneOpen, setPhoneApp, setMusicOn, setDiscoveredLocations,
+    setJournalGoals, setActiveGoal, applyAction, moodCap: state => moodLimit(state, moodContext(state)).cap,
+    resultSnapshot, runWithResult, onOpeningSearch: () => { openingSearchObservation.current = true },
+  })
 
   // Repair older saves that already received a referral without its map address.
   useEffect(() => {
@@ -587,8 +578,6 @@ export default function App() {
     setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionTitle: 'Closing time', text: `${current.name} closed. You stepped outside onto the street.` }].slice(-500))
   }, [game.day, game.minutes, current, !!trip, gameOver])
 
-  function buyMobileService(...args: Parameters<typeof buyMobileServiceImpl>) { runWithResult('Mobile service', () => buyMobileServiceImpl(...args)) }
-  function chargePhone(...args: Parameters<typeof chargePhoneImpl>) { runWithResult('Charge phone', () => chargePhoneImpl(...args)) }
   function hospitalVisit(...args: Parameters<typeof hospitalVisitImpl>) { runWithResult('Medical appointment', () => hospitalVisitImpl(...args)) }
   function callAmbulance(...args: Parameters<typeof callAmbulanceImpl>) { runWithResult('Emergency care', () => callAmbulanceImpl(...args)) }
   function askForMoney(...args: Parameters<typeof askForMoneyImpl>) { runWithResult('Ask for money', () => askForMoneyImpl(...args)) }
@@ -606,17 +595,6 @@ export default function App() {
   function socialSupport(...args: Parameters<typeof socialSupportImpl>) { runWithResult('Social support', () => socialSupportImpl(...args)) }
   function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
 
-  useEffect(() => {
-    if (!mobileAutoRenew || mobileServiceUntil > absoluteMinutes(game) || mobileRenewedDay >= game.day) return
-    setMobileRenewedDay(game.day)
-    if (game.money < 1) {
-      setMessage('Mobile service auto-renewal failed: you need 1 zł.')
-      return
-    }
-    setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
-    setMobileServiceUntil(until => Math.max(until, absoluteMinutes(game)) + 1440)
-  }, [game.day, game.minutes, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
-  useEffect(() => { if (!mobileServiceActive) setMusicOn(false) }, [mobileServiceActive])
   useEffect(() => {
     if (current.id !== 'shelter' || life.shelterVacancyDay === game.day) return
     setLife(status => ({ ...status, shelterVacancyDay: game.day, shelterVacancies: Math.floor(Math.random() * 4) }))
@@ -728,15 +706,12 @@ export default function App() {
       if (infoModal || pendingResult || activeEvent || diceCheck || inventoryDialogOpen || gameOver || document.visibilityState !== 'visible') return
       pausedNavigationMinutes.current += 1
       setGame(previous => applyAction(previous, { minutes: 1 }))
-      setPhoneActivity(previous => previous ? { ...previous, pausedMinutes: (previous.pausedMinutes ?? 0) + 1 } : previous)
+      pausePhone()
       return
     }
     if (phoneActivity) {
       if (phoneActivity.remaining <= 0 || gameOver || activeEvent || diceCheck || infoModal || pendingResult || inventoryDialogOpen || document.visibilityState !== 'visible') return
-      if (!activeCall && firstNight && absoluteMinutes(game) + 1 >= 1335) openingSearchObservation.current = true
-      setGame(previous => applyAction(previous, { minutes: 1 }))
-      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (activeCall ? CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(previous.phoneCondition) : phoneScreenDrain(game, previous.phoneCondition, 'browsing'))) }))
-      setPhoneActivity(previous => previous ? { ...previous, remaining: Math.max(0, previous.remaining - 1) } : null)
+      tickPhoneActivity()
       return
     }
     if (inventoryDialogOpen || rainChoice || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
@@ -806,36 +781,6 @@ export default function App() {
     if (document.visibilityState !== 'visible' || eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver) return
     observeOrdinaryEvent('location', game)
   }, [game.day, game.minutes, current.id, encounters, firstNightEvents, eventInteractionBlocked, sleeping, sleepChoice, trip, phoneActivity, trashGame, shelterQueue, shelterDeparture, shelterInterview, gameOver])
-
-  function buyMobileServiceImpl() {
-    if (game.money < 1) { setMessage('You need 1 zł to activate mobile service for 24 hours.'); return }
-    const now = absoluteMinutes(game)
-    setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
-    setMobileServiceUntil((until) => Math.max(until, now) + 1440)
-    setMessage('Mobile service activated for another 24 hours. Cost: 1 zł.')
-  }
-
-  function chargePhoneImpl() {
-    if (inventory.phoneBattery >= 100) { setMessage('Phone is already fully charged.'); return }
-    if (current.id !== 'support' && current.id !== 'residential-shelter') return
-    if (!open) return
-    setInventory((prev) => ({ ...prev, phoneBattery: Math.min(100, prev.phoneBattery + 25) }))
-    setGame((prev) => applyAction(prev, { minutes: 30 }))
-    setMessage('You charged the phone for 30 minutes. Battery +25%.')
-  }
-
-  function toggleShelterPhoneCharging() {
-    if (!insideNightShelter || sleeping || shelterDeparture || shelterCheckoutDue || gameOver) return
-    if (!shelterPhoneCharging && (inventory.phoneBattery >= 100 || inventory.phoneCondition <= 0)) return
-    runWithResult(shelterPhoneCharging ? 'Collect phone' : 'Phone charging', () => {
-      setShelterPhoneCharging(!shelterPhoneCharging)
-      setPhoneOpen(false)
-      setMusicOn(false)
-      setMessage(shelterPhoneCharging
-        ? `You collected your phone. Battery: ${Math.round(inventory.phoneBattery)}%.`
-        : 'You left your phone plugged in at Night Shelter. It gains up to 60% battery per hour while you do other things or sleep. Collect it whenever you need it; you cannot use it while it is left charging.')
-    }, resultSnapshot(), true, true)
-  }
 
   function recordShelterDeparture(id: string) {
     if (game.locationId === 'shelter' && id !== 'shelter') setShelterPhoneCharging(false)
@@ -1179,7 +1124,6 @@ export default function App() {
   }
 
   // Street offers one phone entry; all individual searches live in Find Help.
-  const remainingHelpPlaces = practicalQuestions[0].locations.filter(id => !discoveredLocations.includes(id))
   const exhausted = game.energy <= 40
   const lastAction = journalEntries.at(-1)?.actionTitle
   const justWalked = lastAction === 'Walk through the city' || lastAction === 'Walk with music'
@@ -1200,88 +1144,6 @@ export default function App() {
   ]
   const lastDecision = journalEntries.at(-1)
   const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
-  const phoneSearchCost = phoneScreenDrain(game, inventory.phoneCondition, 'browsing', PHONE_SEARCH_MIN)
-
-  function startOpeningCall() {
-    if (!nextOpeningCall || current.id !== 'street' || phoneUnavailable || phoneActivity || eventInteractionBlocked || sleeping || trip || gameOver) return
-    const cost = nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
-    if (inventory.phoneBattery < cost) return
-    setPhoneActivity({ questionId: nextOpeningCall.id, total: nextOpeningCall.minutes, remaining: nextOpeningCall.minutes, before: resultSnapshot() })
-  }
-
-  function finishOpeningCall(id: string, before: ResultSnapshot) {
-    const call = openingCall(id)
-    if (!call || OPENING_CALLS[openingCallIndex]?.id !== id) return
-    runWithResult(call.title, () => {
-      setOpeningCallIndex(index => index + 1)
-      setGame(previous => ({ ...previous, mood: Math.max(0, previous.mood - call.moodLoss) }))
-      setInfoModal({ title: call.title, text: call.text, label: 'PHONE CALL', illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title, batteryInSummary: true })
-    }, before, true, true)
-  }
-
-  function finishPracticalQuestion(id: string, before = resultSnapshot()) {
-    const question = practicalQuestions.find(entry => entry.id === id)
-    if (!question) return
-    const memory = id === 'charging'
-    const foundPlace = id === 'morning' ? remainingHelpPlaces[0] : undefined
-    const foundPlaces = id === 'morning' ? foundPlace ? [foundPlace] : [] : question.locations
-    const presentation = questionPresentation(id, foundPlaces, false, foundPlaces.every(placeId => discoveredLocations.includes(placeId)))
-    const answerText = id === 'morning'
-      ? foundPlace && presentation?.places?.[0]
-        ? `${presentation.places[0].name} · ${presentation.places[0].hours}. ${presentation.places[0].detail}. The address is saved on your map.`
-        : 'You checked the available information again, but found no new places.'
-      : question.text
-    runWithResult(id === 'morning' && !foundPlace ? 'Searched for more help' : question.title, () => {
-      const next = { ...game }
-      if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(moodLimit(next, moodContext(next)).cap, before.game.mood + 3))
-      setGame(next)
-      setAnsweredQuestions(previous => [...new Set([...previous, id])])
-      setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
-      if (id === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
-      if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: SHELTER_ENTRY_OPEN })
-      setInfoModal({ title: id === 'morning' && !foundPlace ? 'No new information' : question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${answerText}`, presentation })
-    }, before)
-  }
-
-  function answerPracticalQuestion(id: string) {
-    const question = practicalQuestions.find(entry => entry.id === id)
-    if (!question || phoneActivity || screen !== 'phone' || phoneUnavailable) return
-    if (id !== 'morning' && answeredQuestions.includes(id)) {
-      setInfoModal({ title: question.title, text: `${id === 'charging' ? 'A remembered place' : 'AI · Saved answer'}\n\n${question.text}`, presentation: questionPresentation(id, question.locations, true), costs: [], changes: [] })
-      return
-    }
-    if (id === 'charging') { finishPracticalQuestion(id); return }
-    if (!mobileServiceActive || inventory.phoneCondition <= 0 || inventory.phoneBattery < phoneSearchCost) return
-    setPhoneOpen(false)
-    const total = PHONE_SEARCH_MIN + Math.floor(Math.random() * (PHONE_SEARCH_MAX - PHONE_SEARCH_MIN + 1))
-    setPhoneActivity({ questionId: id, total, remaining: total, before: resultSnapshot() })
-  }
-
-  useEffect(() => {
-    if (!phoneActivity || inventoryAgedAt !== absoluteMinutes(game)) return
-    if (activeCall) {
-      if (phoneActivity.remaining === 0) {
-        setPhoneActivity(null)
-        finishOpeningCall(activeCall.id, phoneActivity.before)
-      } else if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0 || gameOver || shelterCheckoutDue) {
-        setPhoneActivity(null)
-        runWithResult('Call interrupted', () => setInfoModal({ title: 'Call interrupted', text: 'The call ends before you can finish. Time and battery already spent are not returned. You can try again once your phone is working.', illustration: `/street-life-game/assets/${activeCall.illustration}.webp`, batteryInSummary: true }), phoneActivity.before, true, true)
-      }
-      return
-    }
-    if (shelterCheckoutDue) {
-      setPhoneActivity(null)
-      const text = 'It is time to leave Night Shelter. You put the phone away before finishing the search.'
-      runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
-    } else if (phoneActivity.remaining === 0) {
-      setPhoneActivity(null)
-      finishPracticalQuestion(phoneActivity.questionId, phoneActivity.before)
-    } else if (inventory.phoneBattery <= 0 || !mobileServiceActive || gameOver) {
-      setPhoneActivity(null)
-      const text = gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.'
-      runWithResult('Search interrupted', () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
-    }
-  }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, inventory.phoneCondition, mobileServiceActive, gameOver, shelterCheckoutDue])
 
   function respondToRain(choice: RainChoice) {
     if (!game.rain || game.rain.choice) return
@@ -1518,14 +1380,7 @@ export default function App() {
       const expiresAt = absoluteMinutes(next) + 240
       setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
     }
-    if (actionId === 'daycenter-charge') {
-      setInventory((prev) => ({ ...prev, phoneBattery: 100 }))
-      setMessage('You wait indoors while your phone charges to 100%.')
-    }
-    if (actionId === 'station-charge') {
-      setInventory((prev) => ({ ...prev, phoneBattery: Math.min(100, prev.phoneBattery + 60) }))
-      setMessage('You spend an hour charging your phone at the station.')
-    }
+    finishLocationPhoneCharge(actionId)
     if (actionId === 'daycenter-doctor') {
       setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
     }
@@ -1796,15 +1651,13 @@ export default function App() {
     setClosingNotice(null)
     localStorage.removeItem(CLOSING_NOTICE_KEY)
     setEventResultOpen(false)
-    setPhoneActivity(null)
-    setOpeningCallIndex(0)
+    resetPhoneSession()
     setDiscardItem(null)
     setStreetExitPending(false)
     setFoodChoice(null)
     setPendingResult(null)
     setScreen('location')
     setRainChoice(false)
-    setAnsweredQuestions([])
     setSeenMemories([])
     setTrip(null)
     setShelterQueue(null)
@@ -1844,9 +1697,6 @@ export default function App() {
     localStorage.removeItem(SAVE_KEYS.begging)
     localStorage.removeItem(SAVE_KEYS.shelterQueue)
     localStorage.removeItem(SAVE_KEYS.shelterDeparture)
-    setMobileServiceUntil(0)
-    setMobileAutoRenew(true)
-    setMobileRenewedDay(0)
     localStorage.removeItem(SAVE_KEYS.mobileServiceUntil)
     localStorage.removeItem(SAVE_KEYS.mobileAutoRenew)
     localStorage.removeItem(SAVE_KEYS.mobileRenewedDay)

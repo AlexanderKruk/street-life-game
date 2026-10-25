@@ -743,6 +743,17 @@ gel use stay with their event/location owners. Mechanics, texts, UI and save
 keys are unchanged. The permanent `check-inventory-commands.cjs` suite covers
 command boundaries, rejected costs, storage conservation and replayable updates.
 
+Phone lifecycle is extracted in v329 into `phoneSession.ts` (state),
+`usePhoneController.ts` (commands/completion) and `phoneActivity.ts` (tick/pause,
+completion priority and battery accounting). The shared game clock still drives
+all activity; persistence and global pause/visibility remain in App. Searches
+and calls wait for inventory aging before finishing, and location charging does
+not apply its duration again. Session guards prevent duplicate completed-call
+consequences or automatic renewal from replayed StrictMode mount effects; reset
+clears them. Ordinary behavior, search/call speed, prices, text and save keys
+are unchanged. Phone, opening-call, charging and controller regression suites
+cover restore/interruption, parallel charging and once-only transitions.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,
@@ -910,6 +921,7 @@ These are implementation facts or defined future work, not claims that the whole
 |---|---|
 | `check-events.cjs` | Deterministic context/queue, opening after search, spacing, no repeats, restored choices, money/refusal and reset. |
 | `check-phone.cjs` | Apps, legacy Journal migration, offline notes, plan payment/expiry, timed search/reload, work/clinic discovery and dead-phone travel. |
+| `check-phone-controller.cjs` | Phone tick/completion priorities, closure/charging bounds, once-only restored completion and renewal under StrictMode/reset. |
 | `check-sleep-illness.cjs` | Cumulative temperature/exposure risk, duration, roofs/beds, waking illness/result, legacy sleep/reload and hidden catch-up. |
 | `check-shelter-charging.cjs` | Background charge, quiet hours, caps, checkout, collection at the place, phone availability and informational Essentials. |
 | `check-food-inventory.cjs` | Portion freshness, slots, unsafe-food outcomes, probabilities, capacity, discard and storage. |

@@ -109,6 +109,20 @@ must not write storage or own clocks/React state. Theft/D20 and automatic shower
 gel consumption remain in their existing event/location flows. Run
 `check-inventory-commands.cjs` and the relevant UI checks for changes here.
 
+Phone control is extracted in v329: `phoneSession.ts` owns process/progression,
+answers, service and shelter-charge state; `usePhoneController.ts` manages
+start/completion/interruption, payment/renewal and charging commands.
+`phoneActivity.ts` owns tick/pause, completion priorities, unavailability and
+elapsed battery accounting. App calls tick/pause from its single shared clock,
+keeps global pause/visibility and autosave rules, and supplies the current game,
+result snapshots and action/mood ports. Never add a timer or storage writer to
+the phone controller. Keep the existing wait for inventory aging before process
+completion and the pending-result wait before summary. Location charging is
+reported only after access checks and the location's action duration succeed.
+Completion and automatic renewal use session transition guards against replayed
+StrictMode mount effects; reset clears the guards, without new save keys.
+Run `check-phone-controller.cjs` plus existing phone/call/charging regressions.
+
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact
 confirmations/timers use the compact frame. Content layout can differ by purpose;
@@ -168,3 +182,7 @@ use existing responsive-image helpers for runtime artwork.
 
 Publish through the existing GitHub Pages workflow after authorized changes;
 preserve the repository and the current hosting setup.
+
+Current refactoring batch (25 October 2026): the user requested collecting
+separate verified commits locally and publishing everything at the end. Do not
+push/deploy each refactoring stage individually during this batch.

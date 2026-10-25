@@ -14,8 +14,8 @@ import type { ResultSnapshot } from './results'
 import type { ActiveEffect,FirstNightEvents,Inventory,JournalGoals,LifeSituation,PhoneActivity,Screen,ShelterArrival,ShelterDeparture,ShelterQueue,SleepState,StoredItems,Trip } from './stateTypes'
 import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
 
-export const PHONE_SEARCH_MIN = 10
-export const PHONE_SEARCH_MAX = 25
+import { PHONE_SEARCH_MIN, PHONE_SEARCH_MAX } from './phoneActivity'
+export { PHONE_SEARCH_MIN, PHONE_SEARCH_MAX } from './phoneActivity'
 export const SHELTER_DEPARTURE_MINUTES = 30
 export const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
 
