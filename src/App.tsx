@@ -29,13 +29,13 @@ import StatusScreen from './StatusScreen'
 import TrashSearchTime,{ trashSearchMinutes } from './TrashSearchTime'
 import { illustrateStreetEvent } from './eventArtwork'
 import { STREET_EVENTS,firstMorningTime,firstNightTime,nextStreetEvent,resolveEventOutcome,type EventContext,type EventOutcome,type EventTrigger,type StreetEvent,type StreetEventChoice } from './events'
-import { FOOD_OUTCOME_PRESENTATION,foodConsumption } from './foodConsumption'
-import { addFoodPortions,ageFood,consumeFood,discardFood,foodPortionIndex,foodPortions,foodSlot,isPerishableFood,withFoodPortions,type FoodCondition,type FoodKind } from './foodInventory'
+import { ageFood,foodSlot,type FoodCondition,type FoodKind } from './foodInventory'
 import { actions,applyAction as applyGameAction,applySleepTime as applyGameSleepTime,conditionBand,createInitialState,destinationTravelTimeRange,energyCap,formatTime,isOpen,limitMood,locations,moodLimit,rainDailyLimit,randomTravelMinutes,temperatureAt,weatherAt,weatherExposure,type ActionResult,type GameState,type Housing } from './game'
 import { displayDay } from './gameDate'
 import { absoluteMinutes,formatTravelTime,weekday } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
-import { BACKPACK_CAPACITY,BOTTLE_DEPOSIT,BOTTLE_STACK_SIZE,FREE_WATER_LIMIT,INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_FOOD_CAPACITY,SCHRONISKO_STORAGE,SHOP_ITEMS,STACK_SIZE,addShopItem,backpackSlots,canAddToBackpack,fitEventSupplies,storageSlots } from './inventory'
+import { BACKPACK_CAPACITY,BOTTLE_STACK_SIZE,FREE_WATER_LIMIT,INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_STORAGE,SHOP_ITEMS,addShopItem,backpackSlots,canAddToBackpack,fitEventSupplies,storageSlots } from './inventory'
+import { inventoryCommandResult,resolveInventoryCommand,type InventoryCommand } from './inventoryCommands'
 import { journalReflection,type JournalEntry } from './journal'
 import { limitingEffects } from './limitingEffects'
 import { CLOSING_NOTICE_KEY,locationClosedSince } from './locationClosing'
@@ -56,7 +56,7 @@ import { getTravelDisplayPhase,getTravelPhase } from './travelPhases'
 import { useGameAutosave } from './useGameAutosave'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-327'
+const BUILD_VERSION = 'v2026.10.25-328'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -483,6 +483,36 @@ export default function App() {
     setPendingResult({ title, before, includeTime, always, consumedItems })
   }
 
+  // Resolve from the current render only after runWithResult accepts the action.
+  // Never resolve random food outcomes inside a state updater or an effect.
+  function executeInventoryCommand(command: InventoryCommand) {
+    const perform = () => {
+      const changes = resolveInventoryCommand({ game, inventory, storage, effects, locationId: current.id, open, insideNightShelter }, command)
+      if (changes.inventory) setInventory(changes.inventory)
+      if (changes.storage) setStorage(changes.storage)
+      if (changes.effects) setEffects(changes.effects)
+      if (changes.game) setGame(changes.game)
+      const action = changes.action
+      if (action) setGame(previous => applyAction(previous, action))
+      if (changes.message !== undefined) setMessage(changes.message)
+      if (changes.info) setInfoModal(changes.info)
+    }
+    const result = inventoryCommandResult(command)
+    if (result) runWithResult(result.title, perform, resultSnapshot(), true, result.always ?? false, result.consumedItems ?? [])
+    else perform()
+  }
+
+  function returnBottles() { executeInventoryCommand({ type: 'return-bottles' }) }
+  function storeItem(item: 'documents' | 'medicines' | 'cigarettes') { executeInventoryCommand({ type: 'store', item }) }
+  function takeStoredItem(item: 'documents' | 'medicines' | 'cigarettes') { executeInventoryCommand({ type: 'take', item }) }
+  function storeFood() { executeInventoryCommand({ type: 'store-food' }) }
+  function takeStoredFood() { executeInventoryCommand({ type: 'take-food' }) }
+  function buyItem(item: ShopItem) { executeInventoryCommand({ type: 'buy', item }) }
+  function useSupply(item: 'bread' | 'cannedFood' | 'readyMeal' | 'wipes', slotIndex = 0, condition?: FoodCondition) { executeInventoryCommand({ type: 'use', item, slotIndex, condition }) }
+  function useMedicine() { executeInventoryCommand({ type: 'medicine' }) }
+  function smokeCigarette() { executeInventoryCommand({ type: 'smoke' }) }
+  function useItem(item: 'water' | 'food', slotIndex = 0, condition?: FoodCondition) { executeInventoryCommand({ type: 'use', item, slotIndex, condition }) }
+
   useEffect(() => {
     if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit || game.mood > moodCeiling.cap) return
     setPendingResult(null)
@@ -563,7 +593,6 @@ export default function App() {
   function callAmbulance(...args: Parameters<typeof callAmbulanceImpl>) { runWithResult('Emergency care', () => callAmbulanceImpl(...args)) }
   function askForMoney(...args: Parameters<typeof askForMoneyImpl>) { runWithResult('Ask for money', () => askForMoneyImpl(...args)) }
   function finishTrashSearch(...args: Parameters<typeof finishTrashSearchImpl>) { runWithResult('Trash search results', () => finishTrashSearchImpl(...args), trashGame?.before ?? resultSnapshot()) }
-  function returnBottles(...args: Parameters<typeof returnBottlesImpl>) { runWithResult('Return containers', () => returnBottlesImpl(...args)) }
   function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
   function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(args[0]) ? ['showerGel'] : []) }
   function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
@@ -574,17 +603,8 @@ export default function App() {
     }
     runWithResult(title ?? activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
   }
-  function storeItem(...args: Parameters<typeof storeItemImpl>) { runWithResult('Store belongings', () => storeItemImpl(...args)) }
-  function takeStoredItem(...args: Parameters<typeof takeStoredItemImpl>) { runWithResult('Collect belongings', () => takeStoredItemImpl(...args)) }
-  function storeFood(...args: Parameters<typeof storeFoodImpl>) { runWithResult('Store food', () => storeFoodImpl(...args)) }
-  function takeStoredFood(...args: Parameters<typeof takeStoredFoodImpl>) { runWithResult('Collect food', () => takeStoredFoodImpl(...args)) }
   function socialSupport(...args: Parameters<typeof socialSupportImpl>) { runWithResult('Social support', () => socialSupportImpl(...args)) }
   function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
-  function buyItem(...args: Parameters<typeof buyItemImpl>) { runWithResult(`Buy ${args[0].name}`, () => buyItemImpl(...args)) }
-  function useSupply(...args: Parameters<typeof useSupplyImpl>) { runWithResult(args[0] === 'wipes' ? 'Use wet wipes' : 'Eat food', () => useSupplyImpl(...args), resultSnapshot(), true, false, [args[0]]) }
-  function useMedicine(...args: Parameters<typeof useMedicineImpl>) { runWithResult('Use medicine', () => useMedicineImpl(...args), resultSnapshot(), true, true) }
-  function smokeCigarette(...args: Parameters<typeof smokeCigaretteImpl>) { runWithResult('Smoke a cigarette', () => smokeCigaretteImpl(...args), resultSnapshot(), true, false, ['cigarettes']) }
-  function useItem(...args: Parameters<typeof useItemImpl>) { runWithResult(args[0] === 'water' ? 'Drink water' : 'Eat food', () => useItemImpl(...args), resultSnapshot(), true, false, [args[0]]) }
 
   useEffect(() => {
     if (!mobileAutoRenew || mobileServiceUntil > absoluteMinutes(game) || mobileRenewedDay >= game.day) return
@@ -1135,15 +1155,6 @@ export default function App() {
     if (trashGame && Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
   })
 
-  function returnBottlesImpl() {
-    if (!open || current.id !== 'shop' || inventory.bottles <= 0) return
-    const count = inventory.bottles
-    const payout = count * BOTTLE_DEPOSIT
-    setInventory((prev) => ({ ...prev, bottles: 0 }))
-    setGame((prev) => applyAction(prev, { minutes: 5, money: payout }))
-    setMessage(`Returned ${count} container${count === 1 ? '' : 's'} for ${payout.toFixed(2)} zł.`)
-  }
-
   const walkMusicCost = 2 * phoneDrainMultiplier(inventory.phoneCondition)
   const canWalkWithMusic = !musicWalkUsed && mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= walkMusicCost
   function walkCity(withMusic = false) {
@@ -1683,64 +1694,6 @@ export default function App() {
     setActiveEvent(null)
   }
 
-  function storeItemImpl(item: 'documents' | 'medicines' | 'cigarettes') {
-    if (current.id !== 'shelter' && current.id !== 'residential-shelter') return
-    if (!open || (current.id === 'shelter' && !insideNightShelter)) return
-    if (item === 'documents') {
-      if (!inventory.documents || storage.documents || usedStorageSlots >= storageCapacity) return
-      setInventory((prev) => ({ ...prev, documents: false }))
-      setStorage((prev) => ({ ...prev, documents: true }))
-      setMessage('Documents stored safely. They are no longer carried on the street.')
-      return
-    }
-    const amount = item === 'medicines' ? Math.min(4, inventory.medicines) : Math.min(20, inventory.cigarettes)
-    if (amount <= 0) return
-    const candidate = { ...storage, [item]: storage[item] + amount }
-    if (storageSlots(candidate) > storageCapacity) { setMessage('Storage is full.'); return }
-    setInventory((prev) => ({ ...prev, [item]: prev[item] - amount }))
-    setStorage(candidate)
-    setMessage(`Stored ${amount} ${item}.`)
-  }
-
-  function takeStoredItemImpl(item: 'documents' | 'medicines' | 'cigarettes') {
-    if (current.id !== 'shelter' && current.id !== 'residential-shelter') return
-    if (!open || (current.id === 'shelter' && !insideNightShelter)) return
-    if (item === 'documents') {
-      if (!storage.documents || inventory.documents) return
-      setStorage((prev) => ({ ...prev, documents: false }))
-      setInventory((prev) => ({ ...prev, documents: true }))
-      setMessage('You took your documents with you.')
-      return
-    }
-    const amount = item === 'medicines' ? Math.min(4, storage.medicines) : Math.min(20, storage.cigarettes)
-    if (amount <= 0) return
-    const candidate = { ...inventory, [item]: inventory[item] + amount }
-    if (backpackSlots(candidate) > BACKPACK_CAPACITY) { setMessage('Backpack full.'); return }
-    setStorage((prev) => ({ ...prev, [item]: prev[item] - amount }))
-    setInventory(candidate)
-    setMessage(`Took ${amount} ${item} from storage.`)
-  }
-
-  function storeFoodImpl() {
-    if (current.id !== 'residential-shelter' || inventory.food <= 0 || storage.food >= SCHRONISKO_FOOD_CAPACITY) return
-    const amount = Math.min(inventory.food, SCHRONISKO_FOOD_CAPACITY - storage.food)
-    const portions = foodPortions(inventory, 'food').slice(0, amount)
-    setInventory(prev => withFoodPortions(prev, 'food', foodPortions(prev, 'food').slice(amount)))
-    setStorage(prev => addFoodPortions(prev, 'food', portions))
-    setMessage(`Stored ${amount} food in Schronisko.`)
-  }
-
-  function takeStoredFoodImpl() {
-    if (current.id !== 'residential-shelter' || storage.food <= 0) return
-    const amount = Math.min(storage.food, STACK_SIZE)
-    const candidate = { ...inventory, food: inventory.food + amount }
-    if (backpackSlots(candidate) > BACKPACK_CAPACITY) { setMessage('Backpack full.'); return }
-    const portions = foodPortions(storage, 'food').slice(0, amount)
-    setStorage(prev => withFoodPortions(prev, 'food', foodPortions(prev, 'food').slice(amount)))
-    setInventory(prev => addFoodPortions(prev, 'food', portions))
-    setMessage(`Took ${amount} food from Schronisko storage.`)
-  }
-
   function socialSupportImpl(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
     if (!open || current.id !== 'support') return
     if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
@@ -1800,21 +1753,6 @@ export default function App() {
     setMessage('You completed a 3-hour physical shift. +35 zł. Physical work increases hunger, thirst and hygiene loss, especially in warm weather.')
   }
 
-  function buyItemImpl(item: ShopItem) {
-    if (!open || current.id !== 'shop') return
-    if (game.money < item.price) {
-      setMessage(`You need ${item.price.toFixed(2)} zł for that.`)
-      return
-    }
-    if (!canAddToBackpack(inventory, item)) {
-      setMessage('Backpack full. Use or remove something first.')
-      return
-    }
-    setInventory((prev) => addShopItem(prev, item))
-    setGame((prev) => applyAction(prev, { minutes: 3, money: -item.price }))
-    setMessage(`Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`)
-  }
-
   function stealItem(item: ShopItem) {
     if (!open || current.id !== 'shop') return
     if (!canAddToBackpack(inventory, item)) {
@@ -1832,71 +1770,6 @@ export default function App() {
       },
     }
     setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })
-  }
-
-  function useSupplyImpl(item: 'bread' | 'cannedFood' | 'readyMeal' | 'wipes', slotIndex = 0, condition?: FoodCondition) {
-    if (inventory[item] <= 0) return
-    if (item === 'wipes') {
-      if (game.hygiene >= 60) { setMessage('Wet wipes cannot improve Hygiene above 60. Find a shower.'); return }
-      setInventory(prev => ({ ...prev, wipes: prev.wipes - 1 }))
-      setGame(prev => ({ ...prev, hygiene: Math.min(60, prev.hygiene + 10) }))
-      setMessage('You cleaned up with wet wipes. Hygiene improves, up to 60.')
-      return
-    }
-    if (item === 'bread' || item === 'readyMeal') {
-      eatPerishable(item, slotIndex, condition)
-      return
-    }
-    setInventory(prev => ({ ...prev, cannedFood: prev.cannedFood - 1 }))
-    setGame(prev => applyAction(prev, { minutes: 0, hunger: 32, mood: 1 }))
-    setMessage('You opened the pull-tab can and ate the food.')
-  }
-
-  function useMedicineImpl() {
-    if (inventory.medicines <= 0) return
-    const explain = (title: string, text: string, label = 'MEDICINE') => {
-      setMessage(text)
-      setInfoModal({ title, text, label })
-    }
-    const now = absoluteMinutes(game)
-    const cold = effects.find((effect) => effect.id === 'cold' && effect.expiresAt > now)
-    if (!cold) {
-      explain('No fever', 'You have no fever. There is no need to take a tablet now.\n\nYour medicine has been kept for when you need it.')
-      return
-    }
-    if (cold.treated) {
-      explain('One dose is enough', 'The first tablet is already helping you recover faster.\n\nA second tablet will not speed things up or remove the symptoms. You kept it for later.')
-      return
-    }
-    setInventory((prev) => ({ ...prev, medicines: prev.medicines - 1 }))
-    setEffects((prev) => prev.map(effect => effect.id === 'cold' && effect.expiresAt > now && !effect.treated
-      ? { ...effect, treated: true, expiresAt: now + (effect.expiresAt - now) / 3 } : effect))
-    explain('Recovery accelerated', 'You took one tablet. It speeds up recovery from this cold by three times, but does not cure it immediately.\n\nSymptoms continue until you recover. One dose is enough for this illness.', 'AFTER THE ACTION')
-  }
-
-  function smokeCigaretteImpl() {
-    if (inventory.cigarettes <= 0) return
-    setInventory((prev) => ({ ...prev, cigarettes: prev.cigarettes - 1 }))
-    setGame((prev) => ({ ...prev, mood: Math.min(100, prev.mood + 5), health: Math.max(0, prev.health - 0.5) }))
-    setMessage('You smoked a cigarette. Mood+, health slightly worse.')
-  }
-
-  function eatPerishable(kind: FoodKind, slotIndex: number, condition?: FoodCondition) {
-    const freshness = foodPortions(inventory, kind)[foodPortionIndex(inventory, kind, slotIndex, condition)]
-    if (freshness === undefined) return
-    const result = foodConsumption(kind, freshness)
-    setInventory(prev => consumeFood(prev, kind, slotIndex, condition))
-    setGame(prev => applyAction(prev, result))
-    setMessage(result.message)
-    if (result.outcome) setInfoModal({ ...FOOD_OUTCOME_PRESENTATION[result.outcome], text: result.message, label: 'AFTER EATING' })
-  }
-
-  function useItemImpl(item: 'water' | 'food', slotIndex = 0, condition?: FoodCondition) {
-    if (inventory[item] <= 0) return
-    if (item === 'food') { eatPerishable(item, slotIndex, condition); return }
-    setInventory(prev => ({ ...prev, water: prev.water - 1 }))
-    setGame(prev => applyAction(prev, { minutes: 0, thirst: 38 }))
-    setMessage('You drank water.')
   }
 
   function reset() {
@@ -2047,13 +1920,7 @@ export default function App() {
 
   function confirmDiscard(spoiledOnly: boolean) {
     if (!discardItem) return
-    const { id, quantity, slotIndex } = discardItem
-    setInventory(previous => {
-      if (isPerishableFood(id)) return discardFood(previous, id, slotIndex, spoiledOnly)
-      if (spoiledOnly) return previous
-      const remaining = Math.max(0, previous[id] - quantity)
-      return { ...previous, [id]: remaining }
-    })
+    executeInventoryCommand({ type: 'discard', ...discardItem, spoiledOnly })
     setDiscardItem(null)
   }
 

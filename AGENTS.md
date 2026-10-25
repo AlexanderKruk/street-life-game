@@ -96,6 +96,19 @@ restoration outside React callbacks and do not reintroduce storage parsing in
 App. Shared process-state types are in `stateTypes.ts`. Run the permanent
 `check-load-game-session.cjs` checks plus the full suite for restoration changes.
 
+Inventory, shop purchases/redemption and safe-storage commands are extracted
+in v328 into `inventoryCommands.ts`. Resolve an `InventoryCommand` from the
+current snapshot only after `runWithResult` accepts the action; resolve food
+randomness once there, never in a React updater/effect. The returned inventory,
+storage, effect and direct-stat updates are deterministic; `action` declares
+time/money/need changes and must use App's existing `applyAction` context.
+`inventoryCommandResult` supplies titles, consumed-item hints and medicine's
+always-show flag. Keep the existing pending-result wait for food aging and caps.
+Discard uses the command after confirmation without a second result. Commands
+must not write storage or own clocks/React state. Theft/D20 and automatic shower
+gel consumption remain in their existing event/location flows. Run
+`check-inventory-commands.cjs` and the relevant UI checks for changes here.
+
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact
 confirmations/timers use the compact frame. Content layout can differ by purpose;

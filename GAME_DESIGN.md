@@ -732,6 +732,17 @@ clocks, reset and completion handlers. `check-load-game-session.cjs` permanently
 covers session restoration and corrupt/partial data in addition to the existing
 reload, event, phone, sleep and autosave regressions.
 
+Inventory, purchase/redemption and safe-storage actions are extracted in v328
+into `inventoryCommands.ts`. Typed commands declare deterministic state updates,
+action costs and result presentation. App resolves commands from the current
+snapshot after the existing action guard, applies costs through the existing
+clock/context, and retains the pending-result wait for food aging and stat caps.
+Random food outcomes are resolved once outside React update functions. Discard
+keeps its confirmation without a second result; theft/D20 and automatic shower
+gel use stay with their event/location owners. Mechanics, texts, UI and save
+keys are unchanged. The permanent `check-inventory-commands.cjs` suite covers
+command boundaries, rejected costs, storage conservation and replayable updates.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,
@@ -902,6 +913,7 @@ These are implementation facts or defined future work, not claims that the whole
 | `check-sleep-illness.cjs` | Cumulative temperature/exposure risk, duration, roofs/beds, waking illness/result, legacy sleep/reload and hidden catch-up. |
 | `check-shelter-charging.cjs` | Background charge, quiet hours, caps, checkout, collection at the place, phone availability and informational Essentials. |
 | `check-food-inventory.cjs` | Portion freshness, slots, unsafe-food outcomes, probabilities, capacity, discard and storage. |
+| `check-inventory-commands.cjs` | Command boundaries/costs, rejected actions, storage conservation, replayable updates and once-only food outcomes. |
 | `check-medicine.cjs` | One dose, recovery acceleration, continuing penalties and saved effects. |
 | `check-wetness-disabled.cjs` | Release default: no moisture penalties/UI or stale legacy interruption. |
 | `check-wetness.cjs` | Explicit opt-in deferred-feature regression coverage. |
