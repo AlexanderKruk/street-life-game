@@ -16,7 +16,8 @@ import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,PHONE_ACTIVITY_KEY,
 
 import { PHONE_SEARCH_MIN, PHONE_SEARCH_MAX } from './phoneActivity'
 export { PHONE_SEARCH_MIN, PHONE_SEARCH_MAX } from './phoneActivity'
-export const SHELTER_DEPARTURE_MINUTES = 30
+import { SHELTER_DEPARTURE_MINUTES } from './shelterRules'
+export { SHELTER_DEPARTURE_MINUTES } from './shelterRules'
 export const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
 
 function isRecord(value: unknown): value is Record<string, any> {

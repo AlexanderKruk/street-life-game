@@ -38,6 +38,9 @@ each completed stage. Partial extraction is not a completed gameplay controller.
 | Rain choices and waiting under cover | `RainEventDialog`, built on `EventFrame` / `EventBody` |
 | Travel mode planning | `TravelPlanningDialog` |
 | D20 roll and outcome confirmation | `DiceDialog` |
+| Sleep in progress | `SleepProgressDialog` |
+| Shelter registration queue | `ShelterQueueDialog` |
+| Morning warning / packing and departure | `ShelterCheckoutWarning` / `ShelterDepartureDialog` |
 | Sleep duration and wake-time planning | `SleepPlanningDialog` |
 | Event answer / action / transport / search / sleep option | `ChoiceButton`, grouped with `ChoiceOptions` |
 | Finished action / discovery / illustrated outcome | `ResultCard` |
@@ -62,7 +65,7 @@ each dialog's interaction lifecycle in its existing owner.
 
 The dialogs above are presentation components. App and the extracted domain
 controllers own gameplay; App keeps the shared timer, visibility/global pause,
-result lifecycle and sleep calculations. Event/phone/travel controllers supply
+result lifecycle. Sleep/shelter/event/phone/travel controllers supply
 choice eligibility and handlers; seeded ordering inputs remain explicit.
 Pass calculated data and handlers to the template; do not duplicate its markup
 inside `App.tsx` or start a second timer inside a dialog. Preserve the existing
@@ -142,6 +145,24 @@ prevent duplicate D20 acceptance, restored arrival and rain report consequences.
 `TravelPlanningDialog` and `DiceDialog` own full markup; retain their owner's
 refs, focus and global blocking behavior. Run `check-event-travel-controllers.cjs`
 plus event/rain/travel/restore/result regressions for changes in these modules.
+
+Sleep/shelter control is extracted in v331. `restSessions.ts` owns sleep and
+shelter process/interview state. `sleepController.ts` handles planning, forced
+sleep, shared-clock progress, recovery/illness and wake scenes; reuse
+`sleepRules.ts` for duration, 07:30 truncation and elapsed wall-time progress.
+`shelterController.ts` owns registration/extension, service bookkeeping and
+checkout; `useShelterLifecycle.ts` retains admission/process/attendance effect
+positions. `shelterRules.ts` supplies access/checkout and idempotent attendance,
+and `locationActionRules.ts` supplies the existing location eligibility reasons.
+App retains one clock, pause/focus/Escape, persistence, inventory aging and result
+settlement. Do not add timers/storage access to these controllers or put the
+sleep/queue/checkout markup back in App. Reuse the full presentation components
+listed above. Phone charging remains parallel to sleep/packing via the existing
+phone controller. Keep one-time completion guards, one vacancy roll per day
+outside React updaters, and reset all session guards. The debug wake command
+still finishes the planned period; partial/random sleep interruption is a
+separate gameplay change. Run `check-rest-controllers.cjs` plus sleep/illness,
+shelter/charging, rendering, persistence and result regressions.
 
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact

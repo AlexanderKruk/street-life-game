@@ -52,7 +52,7 @@ async function loadApp(disableMemo) {
         let source = fs.readFileSync(path, 'utf8').replace(/memo\(function (\w+)\(([\s\S]*?)\) \{/g,
           (match, name) => `${match} globalThis.__uiRenders['${name}'] = (globalThis.__uiRenders['${name}'] ?? 0) + 1;`);
         source = source.replace('export default function App() {', "export default function App() { globalThis.__uiRenders.App = (globalThis.__uiRenders.App ?? 0) + 1;");
-        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview, setGame, searchStreetBottles, setTrashGame };\n  return <main className=');
+        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview: shelterSession.setShelterInterview, setGame, searchStreetBottles, setTrashGame };\n  return <main className=');
         if (disableMemo) source = source.replace(/memo\(function /g, '((component) => component)(function ');
         return { contents: source, loader: 'tsx' };
       });

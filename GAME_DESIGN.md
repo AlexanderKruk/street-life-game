@@ -767,6 +767,20 @@ no new D20 persistence variants or save keys are added. Transition guards stop
 duplicate D20 acceptance, restored arrival and rain-report consequences under
 StrictMode. Ordinary gameplay, texts, costs and time rates are unchanged.
 
+Sleep/shelter control is extracted in v331: `restSessions.ts` owns process
+states, `sleepController.ts` owns planning/progress/recovery and wake scenes,
+`shelterController.ts` owns registration/extension/services/checkout, and
+`useShelterLifecycle.ts` runs admission/process/attendance effects at the existing
+lifecycle positions. Sleep progress still follows elapsed wall time through the
+single shared clock. Rules reuse `sleepRules.ts`, `shelterRules.ts` and
+`sleepIllness.ts`; charging remains in the phone subsystem. Location eligibility
+is in `locationActionRules.ts`. `SleepProgressDialog`, `ShelterQueueDialog` and
+`ShelterCheckoutWarning` / `ShelterDepartureDialog` own their original full markup.
+Guards prevent repeated registration rewards, wake/checkout completion and night
+audits; daily vacancies resolve outside React updaters. Reset clears the guards.
+Save keys, balance, text and time rates are unchanged; the existing debug wake
+still completes the selected period, without adding partial sleep interruption.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,
@@ -937,6 +951,7 @@ These are implementation facts or defined future work, not claims that the whole
 | `check-phone.cjs` | Apps, legacy Journal migration, offline notes, plan payment/expiry, timed search/reload, work/clinic discovery and dead-phone travel. |
 | `check-phone-controller.cjs` | Phone tick/completion priorities, closure/charging bounds, once-only restored completion and renewal under StrictMode/reset. |
 | `check-sleep-illness.cjs` | Cumulative temperature/exposure risk, duration, roofs/beds, waking illness/result, legacy sleep/reload and hidden catch-up. |
+| `check-rest-controllers.cjs` | Access/checkout and month boundaries, one-time audits/vacancies/registration, immutable sleep timing, restored sleep/checkout under StrictMode. |
 | `check-shelter-charging.cjs` | Background charge, quiet hours, caps, checkout, collection at the place, phone availability and informational Essentials. |
 | `check-food-inventory.cjs` | Portion freshness, slots, unsafe-food outcomes, probabilities, capacity, discard and storage. |
 | `check-inventory-commands.cjs` | Command boundaries/costs, rejected actions, storage conservation, replayable updates and once-only food outcomes. |

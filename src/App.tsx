@@ -15,7 +15,6 @@ import { Icon,type IconName } from './Icon'
 import InventoryDialog from './InventoryDialog'
 import InventoryScreen from './InventoryScreen'
 import { JournalGoals } from './JournalSections'
-import { SleepHeading } from './LocationPresentation'
 import LocationScreen from './LocationScreen'
 import { ModalAction,ModalOverlay,ModalPanel } from './Modal'
 import PhoneDialog from './PhoneDialog'
@@ -25,12 +24,15 @@ import PhoneScreen,{ type PhoneApp } from './PhoneScreen'
 import PhoneSearchScreen from './PhoneSearchScreen'
 import RainEventDialog from './RainEventDialog'
 import ResultCard,{ type ResultCardData } from './ResultCard'
+import SleepProgressDialog from './SleepProgressDialog'
+import ShelterQueueDialog from './ShelterQueueDialog'
+import { ShelterCheckoutWarning,ShelterDepartureDialog } from './ShelterCheckoutDialog'
 import SleepPlanningDialog from './SleepPlanningDialog'
 import StatusScreen from './StatusScreen'
 import TrashSearchTime,{ trashSearchMinutes } from './TrashSearchTime'
-import { firstNightTime,nextStreetEvent,type StreetEvent } from './events'
+import { firstNightTime } from './events'
 import { ageFood,foodSlot,type FoodCondition,type FoodKind } from './foodInventory'
-import { actions,applyAction as applyGameAction,applySleepTime as applyGameSleepTime,conditionBand,createInitialState,energyCap,formatTime,isOpen,limitMood,locations,moodLimit,temperatureAt,weatherAt,weatherExposure,type ActionResult,type GameState,type Housing } from './game'
+import { actions,applyAction as applyGameAction,conditionBand,createInitialState,energyCap,formatTime,isOpen,limitMood,locations,moodLimit,temperatureAt,weatherAt,weatherExposure,type ActionResult,type GameState,type Housing } from './game'
 import { displayDay } from './gameDate'
 import { absoluteMinutes,formatTravelTime,weekday } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
@@ -45,10 +47,9 @@ import { locationPresentation } from './resultPresentation'
 import { summarizeResult,type ConsumedItem,type ResultSnapshot } from './results'
 import { DISCOVERY_KEY,SAVE_KEY } from './saveCompatibility'
 import { SHELTER_PHONE_CHARGE_KEY } from './shelterCharging'
-import { SHELTER_ENTRY_OPEN,SHELTER_QUEUE_MINUTES,SHELTER_REGISTRATION_OPEN,shelterPeopleAhead,shelterQueueMinutes } from './shelterRules'
-import { sleepIllnessChance } from './sleepIllness'
-import { DEBUG_SLEEP_SPEED,SHELTER_CHECKOUT_WARNING,SLEEP_HOURS,availableSleepHours,shelterSleepMinutes,sleepDurationUnavailable } from './sleepRules'
-import type { ActiveEffect,BackpackItemId,FirstNightEvents,Inventory,JournalGoals as JournalGoalState,LifeSituation,Screen,ShelterArrival,ShelterDeparture,ShelterQueue,ShopItem,SleepState,StoredItems,TravelMode,Trip } from './stateTypes'
+import { SHELTER_ENTRY_OPEN,shelterAccess } from './shelterRules'
+import { SLEEP_HOURS,sleepDurationUnavailable } from './sleepRules'
+import type { ActiveEffect,BackpackItemId,Inventory,JournalGoals as JournalGoalState,LifeSituation,Screen,ShopItem,StoredItems,TravelMode,Trip } from './stateTypes'
 import { CHOICE_SEED_KEY,newChoiceSeed } from './streetChoiceOrder'
 import { getTravelDisplayPhase,getTravelPhase } from './travelPhases'
 import { useGameAutosave } from './useGameAutosave'
@@ -60,9 +61,14 @@ import { createEncounterQueue,useEncounterObservers } from './encounterQueue'
 import { createEventController } from './eventController'
 import { useTravelController,advanceTrip } from './useTravelController'
 import { useRainScheduling,useRainResults } from './useRainController'
+import { useSleepSession,useShelterSession } from './restSessions'
+import { createSleepController,useForcedSleep,useSleepCompletion } from './sleepController'
+import { createShelterController } from './shelterController'
+import { useShelterAdmission,useShelterProcesses,useShelterAttendance } from './useShelterLifecycle'
+import { locationActionUnavailable } from './locationActionRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-330'
+const BUILD_VERSION = 'v2026.10.25-331'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -74,18 +80,14 @@ const TRASH_ITEM_SCALE: Record<TrashArt, number> = {
 }
 type TrashItem = { id: number; layer: number; art: TrashArt; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
 
-function clearSleepIllness(game: GameState): GameState {
-  if (game.sleepIllnessDose === undefined && game.sleepIllnessMinutes === undefined) return game
-  const next = { ...game }
-  delete next.sleepIllnessDose
-  delete next.sleepIllnessMinutes
-  return next
-}
-
 export default function App() {
   const [initial] = useState(() => loadGameSession(localStorage))
   const [game, commitGame] = useState<GameState>(() => initial.game)
   const [choiceSeed, setChoiceSeed] = useState(() => initial.choiceSeed)
+  const sleepSession = useSleepSession(initial)
+  const { sleeping, sleepChoice, setSleepChoice, sleepHours, setSleepHours, groundSleepWindow, resetSleepSession } = sleepSession
+  const shelterSession = useShelterSession(initial)
+  const { shelterQueue, shelterArrival, setShelterArrival, shelterDeparture, shelterInterview, resetShelterSession } = shelterSession
   const phone = usePhoneSession(initial)
   const { phoneActivity, openingCallIndex, answeredQuestions, shelterPhoneCharging, setShelterPhoneCharging,
     mobileServiceUntil, mobileAutoRenew, setMobileAutoRenew, mobileRenewedDay, resetPhoneSession } = phone
@@ -107,7 +109,6 @@ export default function App() {
   const lastRecordedResult = useRef<unknown>(null)
   const [journalGoals, setJournalGoals] = useState<JournalGoalState>(() => initial.journalGoals)
   const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => initial.activeGoal)
-  const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
   const [screen, setScreen] = useState<Screen>(() => initial.screen)
   const [phoneApp, setPhoneApp] = useState<PhoneApp>('home')
   const [scrollResetRequest, setScrollResetRequest] = useState(0)
@@ -181,20 +182,13 @@ export default function App() {
     return () => { document.body.style.overflow = overflow }
   }, [activityOverlay])
   const [musicOn, setMusicOn] = useState(false)
-  const [shelterQueue, setShelterQueue] = useState<ShelterQueue | null>(() => initial.shelterQueue)
-  const [shelterArrival, setShelterArrival] = useState<ShelterArrival | null>(() => initial.shelterArrival)
-  const [shelterDeparture, setShelterDeparture] = useState<ShelterDeparture | null>(() => initial.shelterDeparture)
   const [streetBenchFound, setStreetBenchFound] = useState(false)
-  const [sleepHours, setSleepHours] = useState(8)
-  const [sleepChoice, setSleepChoice] = useState<SleepState['kind'] | null>(null)
-  const [sleeping, setSleeping] = useState<SleepState | null>(() => initial.sleeping)
   const [begging, setBegging] = useState<{ day: number; attempts: number }>(() => initial.begging)
-  const lastFinishedSleep = useRef<SleepState | null>(null)
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
   const eventModalRef = useRef<HTMLElement>(null)
   const eventSession = useEventSession(initial, game)
-  const { firstNightEvents, leftHome, encounters, setEncounters, openingSearchObservation,
+  const { firstNightEvents, leftHome, encounters, openingSearchObservation,
     ambientEventClock, activeEvent, setActiveEvent, diceCheck, setDiceCheck, resetEventSession } = eventSession
   const [inventory, setInventory] = useState<Inventory>(() => initial.inventory)
   const [storage, setStorage] = useState<StoredItems>(() => initial.storage)
@@ -216,21 +210,11 @@ export default function App() {
   // Reconcile existing saves and changes of accommodation/effects without a gain.
   useEffect(() => { setGame(previous => previous) }, [moodCeiling.cap])
   const current = useMemo(() => locations.find((x) => x.id === game.locationId) ?? locations[0], [game.locationId])
-  const shelterNightDay = game.minutes < 480 ? game.day - 1 : game.day
-  const shelterBooked = (life.shelterUntilDay ?? 0) > 0 && (life.shelterUntilDay ?? 0) >= shelterNightDay
+  const open = isOpen(current, game.minutes)
+  const { shelterNightDay, shelterBooked, shelterAdmitted, insideNightShelter, shelterCheckoutDue } = shelterAccess(game, life, current.id, !!trip, open, !!shelterDeparture)
   const currentActions = useMemo(() => actions.filter(x => x.locationId === current.id && (current.id !== 'shelter' || shelterBooked || x.id === 'shelter-rest')), [current.id, shelterBooked])
   const mapPlaces = useMemo(() => locations.filter(location => discoveredLocations.includes(location.id) && (location.id !== 'residential-shelter' || life.schroniskoReferral || life.housing === 'Schronisko')), [discoveredLocations, life.schroniskoReferral, life.housing])
-  const open = isOpen(current, game.minutes)
-  // Old saves at this location already represent a guest inside. New arrivals
-  // explicitly record admission (or refusal), independently of using the bed.
-  const shelterCanEnterNow = game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10
-  const shelterAdmitted = shelterBooked && (shelterCanEnterNow || life.shelterEntry?.night !== shelterNightDay || life.shelterEntry.admitted)
-  const insideNightShelter = current.id === 'shelter' && !trip && open && game.intoxication <= 10 &&
-    shelterAdmitted
-  useEffect(() => {
-    if (!insideNightShelter || (life.shelterEntry?.night === shelterNightDay && life.shelterEntry.admitted)) return
-    setLife(status => ({ ...status, shelterEntry: { night: shelterNightDay, admitted: true }, shelterLastStayDay: shelterNightDay }))
-  }, [insideNightShelter, shelterNightDay, life.shelterEntry?.night, life.shelterEntry?.admitted])
+  useShelterAdmission(insideNightShelter, shelterNightDay, life, setLife)
   const weather = weatherAt(game)
   const rainWaiting = !!game.rain && (game.rain.choice === 'nearby' || game.rain.choice === 'proper') && game.rain.end > absoluteMinutes(game)
   const underRainCover = rainWaiting
@@ -314,9 +298,6 @@ export default function App() {
     return () => { document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected && !document.querySelector('.result-modal')) previous.focus({ preventScroll: true }) }
   }, [streetEventVisible])
   useEffect(() => { if (phoneSearchVisible) phoneSearchModalRef.current?.focus({ preventScroll: true }) }, [phoneSearchVisible])
-  const shelterCheckoutDue = current.id === 'shelter' && shelterAdmitted && !shelterDeparture && !trip &&
-    life.shelterCheckoutDay !== game.day && game.minutes >= SHELTER_CHECKOUT_WARNING && game.minutes < 12 * 60 &&
-    (game.minutes < 8 * 60 || life.shelterLastStayDay === game.day - 1)
   const shelterDepartureRemaining = shelterDeparture ? Math.max(0, SHELTER_DEPARTURE_MINUTES - (absoluteMinutes(game) - shelterDeparture.startAbsolute)) : 0
   const freeTransitActive = inventory.transitCard || effects.some(effect => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
   const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
@@ -328,7 +309,6 @@ export default function App() {
   const usedStorageSlots = storageSlots(storage)
 
   const laundryCleanAt = useRef(-1)
-  const groundSleepWindow = useRef<{ start: number; end: number } | null>(sleeping?.kind === 'ground' ? { start: sleeping.startAbsolute, end: sleeping.startAbsolute + sleeping.total } : null)
   const clothingHygieneCap = (cleanliness: number) => cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60
   const hygieneLimit = clothingHygieneCap(inventory.clothingCleanliness)
   const statusNeeds = [
@@ -350,11 +330,6 @@ export default function App() {
 
   function applyAction(state: GameState, result: ActionResult) {
     return applyGameAction(state, result, { ...moodContext(state), walking: !!travelPhase?.walking && !underRainCover, ...(rainWaiting ? { exposure: 'outside' as const } : travelPhase ? { exposure: travelPhase.exposure } : {}), music: musicOn })
-  }
-
-  function applySleepTime(state: GameState, minutes: number) {
-    const kind = sleeping?.kind ?? sleepChoice
-    return applyGameSleepTime(state, minutes, { ...moodContext(state), ...(kind ? { sleepKind: kind, exposure: kind === 'ground' || (kind === 'bench' && state.locationId === 'street') ? underRainCover ? 'cover' as const : 'outside' as const : 'indoors' as const } : {}) })
   }
 
   const [inventoryAgedAt, setInventoryAgedAt] = useState(absoluteMinutes(game))
@@ -402,7 +377,18 @@ export default function App() {
   }
 
   const encounterQueue = createEncounterQueue(eventSession, { game, life, inventory, weather, trip: !!trip, infoModal: !!infoModal, currentId: current.id, firstNight })
-  const { rememberFirstNightEvent, rememberEncounter, observeFirstNight, observeOrdinaryEvent, encounterDue, observeIdle } = encounterQueue
+  const { observeFirstNight, observeOrdinaryEvent, observeIdle } = encounterQueue
+  const shelterController = createShelterController(shelterSession, { game, life, current, shelterCheckoutDue,
+    departureBlocked: !!(sleeping || infoModal || pendingResult || activeEvent || diceCheck || gameOver), shelterPhoneCharging, shelterBooked,
+  }, { setGame, setLife, setMessage, setMusicOn, setPhoneOpen, setShelterPhoneCharging, setSelectedDestination, setScreen, setActiveGoal,
+    applyAction, moodContext, requestSleep: kind => requestSleep(kind), resultSnapshot, runWithResult })
+  const { recordShelterDeparture, startShelterDeparture, answerShelterInterview, beginShelterInterview, prepareShelterAction, tickShelterQueue } = shelterController
+  const sleepController = createSleepController(sleepSession, eventSession, encounterQueue, { game, inventory, effects, current, weather, underRainCover,
+    insideNightShelter, streetBenchFound, blocked: !!(activeEvent || shelterQueue || shelterDeparture || shelterCheckoutDue || trip || screen === 'travel' || gameOver),
+  }, { setGame, setLife, setEffects, setMessage, setInfoModal, setMusicOn, setTrip, setSelectedDestination, setPhoneOpen, setScreen,
+    recordShelterDeparture, moodContext, applyAction, resultSnapshot, runWithResult })
+  const { requestSleep, chosenSleepMinutes, wakeLabel, sleep, finishSleep, tickSleep, finishRestAction } = sleepController
+
   const { checkUnavailableReason, resolveStreetEvent, rollDice, acceptDiceResult, stealItem } = createEventController(eventSession, {
     game, inventory, storage, life, discoveredLocations, phoneUnavailable, shelterBooked, currentId: current.id, open,
   }, {
@@ -499,111 +485,17 @@ export default function App() {
   function finishTrashSearch(...args: Parameters<typeof finishTrashSearchImpl>) { runWithResult('Trash search results', () => finishTrashSearchImpl(...args), trashGame?.before ?? resultSnapshot()) }
   function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
   function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(args[0]) ? ['showerGel'] : []) }
-  function answerShelterInterview(...args: Parameters<typeof answerShelterInterviewImpl>) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(...args)) }
   function socialSupport(...args: Parameters<typeof socialSupportImpl>) { runWithResult('Social support', () => socialSupportImpl(...args)) }
   function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
 
-  useEffect(() => {
-    if (current.id !== 'shelter' || life.shelterVacancyDay === game.day) return
-    setLife(status => ({ ...status, shelterVacancyDay: game.day, shelterVacancies: Math.floor(Math.random() * 4) }))
-  }, [current.id, game.day, life.shelterVacancyDay])
-  useEffect(() => {
-    const waitingHere = current.id === 'shelter' && !trip && !shelterBooked && game.minutes >= 480 && game.minutes < 1320
-    setShelterArrival(previous => waitingHere
-      ? previous?.day === game.day ? previous : { day: game.day, minute: game.minutes }
-      : previous === null ? previous : null)
-  }, [current.id, !!trip, shelterBooked, game.day, game.minutes])
-
-  useEffect(() => {
-    if (!shelterDeparture || shelterDepartureRemaining > 0 || gameOver) return
-    const departure = shelterDeparture
-    runWithResult('Shelter checkout', () => {
-      setShelterDeparture(null)
-      setGame(previous => ({ ...previous, locationId: 'street' }))
-      setLife(previous => ({ ...previous, housing: 'Street', housingUntil: undefined, shelterCheckoutDay: departure.day }))
-      setSelectedDestination(null)
-      setPhoneOpen(false)
-      setShelterPhoneCharging(false)
-      setScreen('location')
-      setMessage('You packed your things and left the night shelter. After 30 minutes you are on the street.' + (shelterPhoneCharging ? ' You collected your phone from the charger.' : '') + (shelterBooked ? ' Your reserved place remains available for tonight.' : ''))
-    }, departure.before, true, true)
-  }, [shelterDeparture, shelterDepartureRemaining, gameOver])
-
-  function startShelterDeparture() {
-    if (!shelterCheckoutDue || sleeping || infoModal || pendingResult || activeEvent || diceCheck || gameOver) return
-    setMusicOn(false)
-    setPhoneOpen(false)
-    setShelterDeparture({ day: game.day, startAbsolute: absoluteMinutes(game), before: resultSnapshot() })
-    setMessage('Packing your things and leaving the night shelter. This takes 30 minutes.')
-  }
-
-  useEffect(() => {
-    if (!shelterQueue || shelterQueue.remaining > 0 || gameOver) return
-    const queued = shelterQueue
-    runWithResult('Shelter registration', () => {
-      setShelterQueue(null)
-      if (queued.vacancies > queued.peopleAhead) {
-        setLife(status => ({ ...status, housing: 'Night shelter', shelterRegisteredDay: queued.day,
-          shelterUntilDay: queued.day + 6, shelterLastStayDay: queued.day, shelterAuditDay: queued.day, shelterEntry: { night: queued.day, admitted: true },
-          shelterMisses: 0, shelterMissMonth: Math.floor((queued.day - 1) / 30), shelterStrikes: 0 }))
-        setGame(prev => applyGameAction(prev, { minutes: 0, mood: 3 }, moodContext(prev, 'Night shelter')), 'Night shelter')
-        setActiveGoal(goal => goal?.type === 'night-shelter' ? null : goal)
-        setMessage('After waiting in the queue, a place is available. You are registered for 7 days. Shelter services and your bed are now available.')
-      } else {
-        setGame(prev => applyAction(prev, { minutes: 0, mood: -5 }))
-        setMessage(queued.vacancies === 0 ? 'You waited, but there are no free places today. Try arriving before 18:00 tomorrow; registration starts at 18:20.' :
-          'You waited, but people ahead of you took the remaining places. Try arriving before 18:00 tomorrow; registration starts at 18:20.')
-      }
-      setScreen('location')
-    }, queued.before, true, true)
-  }, [shelterQueue, gameOver])
-  useEffect(() => {
-    if (life.housing === 'Night shelter' && life.housingUntil !== undefined && absoluteMinutes(game) >= life.housingUntil) {
-      setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-    }
-  }, [game.day, game.minutes, life.housing, life.housingUntil])
+  useShelterProcesses(shelterSession, shelterController, { game, life, current, trip: !!trip, shelterBooked, shelterDepartureRemaining, gameOver }, setLife)
   useEffect(() => {
     const now = absoluteMinutes(game)
     setEffects((prev) => { const next = prev.filter((effect) => effect.expiresAt > now); return next.length === prev.length ? prev : next })
   }, [game.day, game.minutes])
-  useEffect(() => {
-    if (!life.shelterRegisteredDay || !life.shelterUntilDay) return
-    const previousDay = game.day - 1
-    if (previousDay < life.shelterRegisteredDay || (life.shelterAuditDay ?? 0) >= previousDay) return
-    setLife((status) => {
-      const month = Math.floor((previousDay - 1) / 30)
-      const missesBefore = status.shelterMissMonth === month ? (status.shelterMisses ?? 0) : 0
-      const missed = status.shelterLastStayDay !== previousDay
-      const misses = missesBefore + (missed ? 1 : 0)
-      if (misses >= 3) {
-        const blockedUntil = (month + 1) * 30 + 1
-        setMessage(`You missed three shelter nights this month. Your place was cancelled; you can register again on Day ${displayDay(blockedUntil)}.`)
-        return { ...status, housing: 'Street', housingUntil: undefined, shelterUntilDay: undefined, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month, shelterBlockedUntilDay: blockedUntil }
-      }
-      return { ...status, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month }
-    })
-  }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
+  useShelterAttendance(game, life, setLife, setMessage)
 
-  useEffect(() => {
-    if (locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || game.energy > 0 || sleeping || sleepChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult) return
-    const safeKind = current.id === 'residential-shelter' ? 'residential' : insideNightShelter ? 'shelter' : 'ground'
-    const hours = 8
-    const realStartedAt = Date.now()
-    setGame(clearSleepIllness)
-    setMusicOn(false)
-    setTrip(null)
-    if (safeKind === 'ground' && current.id !== 'street') {
-      recordShelterDeparture('street')
-      setGame((prev) => ({ ...prev, locationId: 'street' }))
-      setSelectedDestination(null)
-      setPhoneOpen(false)
-      setScreen('location')
-    }
-    const total = safeKind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
-    groundSleepWindow.current = safeKind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
-    setSleeping({ kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true })
-    setMessage(safeKind === 'ground' ? `${current.id !== 'street' ? `You leave ${current.name} and step outside. ` : ''}You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep in your bed.')
-  }, [game.energy, sleeping, sleepChoice, gameOver, activeEvent, diceCheck, shelterInterview, shelterQueue, shelterCheckoutDue, shelterDeparture, shelterBooked, trip, current.id, open, game.intoxication, infoModal, pendingResult, rainChoice, phoneActivity, inventoryDialogOpen, closingNotice, locationIsClosing])
+  useForcedSleep(sleepSession, game, !!(locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult), sleepController)
 
   const tickGameClock = useLatestAction(() => {
     if (closingNotice) return
@@ -623,17 +515,10 @@ export default function App() {
       return
     }
     if (inventoryDialogOpen || rainChoice || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
-    if (sleeping) {
-      const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
-      const targetAbsolute = sleeping.startAbsolute + elapsed
-      setGame((prev) => {
-        const delta = Math.max(0, targetAbsolute - absoluteMinutes(prev))
-        return delta > 0 ? applySleepTime(prev, delta) : prev
-      })
-    }
+    if (sleeping) tickSleep()
     if (sleeping) return
     const tickMinutes = trip ? Math.min(1, trip.remaining) : 1
-    if (shelterQueue) setShelterQueue(active => active ? { ...active, remaining: Math.max(0, active.remaining - tickMinutes) } : null)
+    if (shelterQueue) tickShelterQueue(tickMinutes)
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
     if (!underRainCover) setTrip(active => advanceTrip(active, tickMinutes))
     if (!trip && !shelterQueue && !shelterDeparture) observeIdle(tickMinutes, () => applyAction(game, { minutes: tickMinutes }))
@@ -656,44 +541,6 @@ export default function App() {
     blocked: !!(eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver),
   })
 
-  function recordShelterDeparture(id: string) {
-    if (game.locationId === 'shelter' && id !== 'shelter') setShelterPhoneCharging(false)
-    if (game.locationId === 'shelter' && id !== 'shelter' && game.minutes > 480 && game.minutes < 1080 && (life.shelterUntilDay ?? 0) >= game.day) {
-      const strikes = (life.shelterStrikes ?? 0) + 1
-      const evicted = strikes >= 3
-      const month = Math.floor((game.day - 1) / 30)
-      const blockedUntil = (month + 1) * 30 + 1
-      setLife((status) => ({ ...status, shelterStrikes: strikes, ...(evicted ? { housing: 'Street' as const, housingUntil: undefined, shelterUntilDay: undefined, shelterBlockedUntilDay: blockedUntil } : {}) }))
-      setMessage(evicted ? `Third shelter rule violation: your place was cancelled. You can register again on Day ${displayDay(blockedUntil)}.` : `You left the shelter after 08:00. Rule violation ${strikes}/3.`)
-    }
-  }
-
-  function canStartSleep(kind: SleepState['kind']) {
-    if (activeEvent || shelterQueue || shelterDeparture || shelterCheckoutDue || sleeping || trip || screen === 'travel' || gameOver) return false
-    if (kind === 'bench' && current.id !== 'station' && (!streetBenchFound || current.id !== 'street')) return false
-    if (kind === 'ground' && current.id !== 'street') return false
-    if (kind === 'shelter' && !insideNightShelter) return false
-    if (kind === 'residential' && current.id !== 'residential-shelter') return false
-    return true
-  }
-
-  function requestSleep(kind: SleepState['kind']) {
-    if (sleepChoice || !canStartSleep(kind)) return
-    const available = availableSleepHours(game.energy)
-    setSleepHours(previous => available.includes(previous) ? previous : available[available.length - 1])
-    setSleepChoice(kind)
-  }
-
-  function chosenSleepMinutes(hours: number, kind: SleepState['kind']) {
-    return kind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
-  }
-
-  function wakeLabel(hours: number, kind: SleepState['kind']) {
-    const wake = absoluteMinutes(game) + chosenSleepMinutes(hours, kind)
-    const day = Math.floor(wake / 1440) + 1
-    return `Day ${displayDay(day)} ${weekday(day)} · ${formatTime(wake % 1440)}`
-  }
-
   useEffect(() => {
     if (!sleepChoice) return
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSleepChoice(null) }
@@ -701,105 +548,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', close)
   }, [sleepChoice])
 
-  function sleep(hours: number, kind: SleepState['kind']) {
-    if (!canStartSleep(kind) || sleepDurationUnavailable(hours, game.energy)) return
-    setSleepChoice(null)
-    if (kind === 'shelter') {
-      const stayNightDay = game.minutes < 480 ? game.day - 1 : game.day
-      setLife(status => ({ ...status, shelterLastStayDay: stayNightDay, housing: 'Night shelter' }))
-    }
-    setMusicOn(false)
-    const realStartedAt = Date.now()
-    setGame(clearSleepIllness)
-    const total = chosenSleepMinutes(hours, kind)
-    groundSleepWindow.current = kind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
-    setSleeping({ kind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot() })
-    setMessage('You are sleeping.')
-  }
-
-  useEffect(() => {
-    if (!sleeping || absoluteMinutes(game) < sleeping.startAbsolute + sleeping.total) return
-    finishSleep(sleeping)
-  }, [sleeping, game.day, game.minutes])
-
-  function finishSleep(sleep: SleepState) {
-    if (lastFinishedSleep.current === sleep) return
-    lastFinishedSleep.current = sleep
-    setSleeping(null)
-    const before = sleep.before ?? { ...resultSnapshot(), game: { ...game, day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 } }
-    runWithResult('Sleep complete', () => {
-      setGame(previous => applySleepTime(previous, Math.max(0, sleep.startAbsolute + sleep.total - absoluteMinutes(previous))))
-      finishSleepImpl(sleep)
-    }, before, false, true)
-  }
-
-  function presentWakeEvent(event: StreetEvent | null, title: string, completionText: string, state = game) {
-    if (!event) return
-    const outcome = event.choices[0]?.outcome
-    rememberEncounter(event, state)
-    if (event.id !== 'quiet-night' || !outcome) return
-    setActiveEvent(null)
-    setEncounters(previous => ({ ...previous, pendingId: null }))
-    // Peaceful rest has no decision to make: fold its bonus and artwork into
-    // the existing sleep result instead of asking for another confirmation.
-    const text = `${completionText} ${outcome.message}`
-    setGame(previous => applyAction(previous, { minutes: outcome.minutes ?? 0, energy: outcome.energy, mood: outcome.mood }))
-    setMessage(text)
-    setInfoModal({ title, text, label: 'AFTER REST', illustration: outcome.illustration ?? event.illustration, illustrationAlt: event.text })
-  }
-
-  function finishSleepImpl(sleep: SleepState) {
-    const hours = sleep.total / 60
-    const scale = hours / 8
-    const wakeState = applySleepTime(game, Math.max(0, sleep.startAbsolute + sleep.total - absoluteMinutes(game)))
-    const fed = wakeState.hunger > 20 && wakeState.thirst > 20
-    const result = sleep.kind === 'ground'
-      ? { minutes: 0, energy: 52 * scale, hygiene: -12 * scale, mood: -9 * scale }
-      : sleep.kind === 'bench'
-        ? { minutes: 0, energy: 66 * scale, hygiene: -7 * scale, mood: -5 * scale }
-        : sleep.kind === 'shelter'
-          ? { minutes: 0, energy: 100 * scale, health: fed ? 2 * scale : 0, hygiene: 5 * scale, mood: 10 * scale }
-          : { minutes: 0, energy: 100 * scale, health: fed ? 3 * scale : 0, hygiene: 3 * scale, mood: 8 * scale }
-    const wetRestLoss = CLOTHING_WETNESS_ENABLED ? Math.max(0, (wakeState.wetSleepLoss ?? 0) - (sleep.before?.game.wetSleepLoss ?? 0)) : 0
-    setGame((prev) => {
-      const next = applyAction(prev, { ...result, energy: Math.max(0, result.energy - wetRestLoss) })
-      delete next.wetSleepLoss
-      delete next.sleepIllnessDose
-      delete next.sleepIllnessMinutes
-      return next
-    })
-    let illnessText = ''
-    let newlyIll = false
-    let wakeEvent: StreetEvent | null = null
-    if (sleep.kind === 'ground' || sleep.kind === 'bench') {
-      setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-      const sleepWeather = weatherAt(wakeState)
-      const alreadyIll = effects.some(effect => effect.id === 'cold' && effect.expiresAt > absoluteMinutes(wakeState))
-      newlyIll = !alreadyIll && Math.random() < sleepIllnessChance(wakeState.sleepIllnessDose ?? 0)
-      if (newlyIll) {
-        setEffects(active => [...active.filter(effect => effect.id !== 'cold'), { id: 'cold', expiresAt: absoluteMinutes(wakeState) + 2 * 1440 }])
-        illnessText = ' Your throat feels sore, your nose is blocked, and a chill runs through you as you sit up. You feel unwell — you have caught a cold.'
-      }
-      const sleepStart = { day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 }
-      wakeEvent = newlyIll || !encounterDue(wakeState) ? null : nextStreetEvent('wake', { locationId: current.id, weather: sleepWeather.label, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: [...firstNightEvents.seen, ...encounters.seen, ...(firstNightTime(sleepStart) && sleep.kind === 'bench' && !firstNightEvents.seen.includes('first-night-bench-wake') ? ['quiet-night','night-theft'] : [])] })
-      if (wakeEvent?.id.startsWith('first-night-')) { rememberFirstNightEvent(wakeEvent, wakeState); wakeEvent = null }
-    } else if (sleep.kind === 'shelter') {
-      const sleepStartDay = Math.floor(sleep.startAbsolute / 1440) + 1
-      const stayNightDay = sleep.startAbsolute % 1440 < 480 ? sleepStartDay - 1 : sleepStartDay
-      setLife((status) => ({ ...status, housing: 'Night shelter', shelterLastStayDay: Math.max(status.shelterLastStayDay ?? 0, stayNightDay) }))
-      const event = !encounterDue(wakeState) ? null : nextStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents, sleepKind: sleep.kind, seenEventIds: [...encounters.seen, ...firstNightEvents.seen] })
-      if (wakeState.minutes < SHELTER_CHECKOUT_WARNING) wakeEvent = event
-    } else {
-      setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
-    }
-    const completionText = `You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${wetRestLoss >= 0.5 ? ' Wet clothes made it harder to rest.' : ''}${illnessText}`
-    setMessage(completionText)
-    if (newlyIll) setInfoModal({ title: 'Feeling unwell', label: 'WAKE-UP EVENT', text: completionText,
-      illustration: `/street-life-game/assets/event-sleep-cold-${sleep.kind === 'bench' ? 'bench' : 'ground'}.webp`,
-      illustrationAlt: sleep.kind === 'bench' ? 'You wake on a bench with a sore throat and a blocked nose.' : 'You wake on the pavement, chilled and feeling unwell.',
-    })
-    else presentWakeEvent(wakeEvent, 'Sleep complete', completionText, wakeState)
-  }
+  useSleepCompletion(sleepSession, game, sleepController)
 
   function hospitalVisitImpl() {
     if (activeEvent || current.id !== 'hospital') return
@@ -1011,51 +760,8 @@ export default function App() {
     requestSleep('bench')
   }
 
-  function actionUnavailableReason(action: (typeof actions)[number]): string | null {
-    const id = action.id
-    if (action.locationId !== current.id) return 'This action is available at another location.'
-    if (current.id === 'shelter' && !shelterBooked && id !== 'shelter-rest') return 'Register for a place first.'
-    if (current.id === 'shelter' && shelterBooked && !shelterAdmitted && id !== 'shelter-social-worker') return 'Entry 18:00–22:00. You are outside; missing entry counts as a missed night.'
-    if (id === 'shelter-rest') {
-      if ((life.shelterBlockedUntilDay ?? 0) > game.day) return `Registration blocked until Day ${displayDay(life.shelterBlockedUntilDay ?? game.day)}.`
-      if (!shelterBooked) {
-        if (life.shelterRegistrationAttemptDay === game.day) return 'You already queued today. Arrive before 18:00 tomorrow.'
-        if (game.minutes < 480 || game.minutes >= 1320) return 'Come back during the day to queue. Doors 18:00 · registration 18:20–22:00.'
-        return null // Waiting outside is possible before the doors open.
-      } else {
-        if (!open) return 'Night shelter opens at 18:00.'
-        if (!shelterAdmitted) return 'Entry 18:00–22:00. You are outside; missing entry counts as a missed night.'
-        if (game.intoxication > 10) return 'Too intoxicated: sober up before using your bed.'
-      }
-    }
-    if (id === 'shelter-social-worker') {
-      if ((weekday(game.day) !== 'Tu' && weekday(game.day) !== 'Fr') || game.minutes < 960 || game.minutes >= 1200) return 'Social worker: Tuesday / Friday, 16:00–20:00.'
-      return null // Appointment hours are separate from overnight opening hours.
-    }
-    if (id === 'shelter-dinner') {
-      if (game.minutes < 1140 || game.minutes >= 1230) return 'Dinner 19:00–20:30.'
-      if (life.shelterDinnerDay === game.day) return 'You already had dinner today.'
-    }
-    if (id === 'shelter-breakfast') {
-      if (game.minutes < 390 || game.minutes >= 420) return 'Breakfast 06:30–07:00.'
-      if (life.shelterBreakfastDay === game.day) return 'You already had breakfast today.'
-    }
-    if (id === 'shelter-laundry-drop') {
-      if (weekday(game.day) !== 'Th' || game.minutes < 390 || game.minutes >= 480) return 'Leave laundry: Thursday, 06:30–08:00.'
-      if (life.shelterLaundryDropDay === game.day) return 'Your clothes are already in the laundry.'
-    }
-    if (id === 'shelter-laundry-pickup') {
-      if (weekday(game.day) !== 'Th' || game.minutes < 1080 || game.minutes >= 1320) return 'Collect laundry: Thursday, 18:00–22:00.'
-      if (life.shelterLaundryDropDay !== game.day) return 'Leave your clothes for laundry first.'
-    }
-    if (!open && action.requiresOpen !== false) return `Closed · opens at ${formatTime(current.open)}.`
-    if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && id !== 'shelter-rest') return 'Quiet hours 22:00–06:00 · sleeping only.'
-    if (id.endsWith('-refill-water')) {
-      if (inventory.water >= FREE_WATER_LIMIT) return 'You already carry 4 or more water portions.'
-      if (backpackSlots({ ...inventory, water: FREE_WATER_LIMIT }) > BACKPACK_CAPACITY) return 'Backpack full · make room for water.'
-    }
-    if (action.cost && game.money < action.cost) return `Need ${action.cost.toFixed(2)} zł.`
-    return null
+  function actionUnavailableReason(action: (typeof actions)[number]) {
+    return locationActionUnavailable(action, { game, inventory, life, current, open, shelterBooked, shelterAdmitted })
   }
 
   function actImpl(actionId: string) {
@@ -1063,20 +769,7 @@ export default function App() {
     if (!action || action.locationId !== current.id || activeEvent || shelterQueue) return
     const unavailable = actionUnavailableReason(action)
     if (unavailable) { setMessage(unavailable); return }
-    if (actionId === 'shelter-social-worker') {
-      const workerDay = weekday(game.day)
-      if ((workerDay !== 'Tu' && workerDay !== 'Fr') || game.minutes < 960 || game.minutes >= 1200) {
-        setMessage('The shelter social worker is available Tuesdays and Fridays from 16:00 to 20:00.')
-        return
-      }
-      if ((life.shelterUntilDay ?? 0) < game.day) {
-        setMessage('There is no active shelter booking to extend. Register at the shelter first.')
-        return
-      }
-      setShelterInterview({ step: 'reason' })
-      setMessage('The social worker asks why you still need the shelter place.')
-      return
-    }
+    if (actionId === 'shelter-social-worker') { beginShelterInterview(); return }
     if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
     if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && actionId !== 'shelter-rest') {
       setMessage('Quiet hours are 22:00–06:00. Only sleeping is allowed right now.')
@@ -1102,48 +795,7 @@ export default function App() {
 
     if (actionId === 'street-sleep') { requestSleep('ground'); return }
     if (actionId === 'station-sleep') { requestSleep('bench'); return }
-    if (actionId === 'shelter-dinner') {
-      if (game.minutes < 1140 || game.minutes >= 1230) { setMessage('Dinner is served from 19:00 to 20:30.'); return }
-      if (life.shelterDinnerDay === game.day) { setMessage('You already had dinner here today.'); return }
-      setLife((status) => ({ ...status, shelterDinnerDay: game.day }))
-    }
-    if (actionId === 'shelter-breakfast') {
-      if (game.minutes < 390 || game.minutes >= 420) { setMessage('Breakfast is served from 06:30 to 07:00.'); return }
-      if (life.shelterBreakfastDay === game.day) { setMessage('You already had breakfast here today.'); return }
-      setLife((status) => ({ ...status, shelterBreakfastDay: game.day }))
-    }
-    if (actionId === 'shelter-laundry-drop') {
-      if (weekday(game.day) !== 'Th' || game.minutes < 390 || game.minutes >= 480) { setMessage('Laundry can be left on Thursday morning, 06:30–08:00.'); return }
-      if (life.shelterLaundryDropDay === game.day) { setMessage('Your clothes are already in the laundry. Collect them this evening.'); return }
-      setLife((status) => ({ ...status, shelterLaundryDropDay: game.day }))
-    }
-    if (actionId === 'shelter-laundry-pickup') {
-      if (weekday(game.day) !== 'Th' || game.minutes < 1080 || game.minutes >= 1320) { setMessage('Clean laundry can be collected Thursday evening, 18:00–22:00.'); return }
-      if (life.shelterLaundryDropDay !== game.day) { setMessage('You did not leave clothes for laundry this morning.'); return }
-      setLife((status) => ({ ...status, shelterLaundryDropDay: undefined }))
-    }
-    if (actionId === 'shelter-rest') {
-      const blocked = (life.shelterBlockedUntilDay ?? 0) > game.day
-      if (blocked) { setMessage(`You lost your shelter place. You can register again on Day ${displayDay(life.shelterBlockedUntilDay ?? game.day)}.`); return }
-      const activeBooking = (life.shelterUntilDay ?? 0) >= game.day
-      if (!activeBooking) {
-        if (game.minutes < 480 || game.minutes >= 1320) { setMessage('Queue during the day. Doors open at 18:00; registration starts at 18:20.'); return }
-        if (life.shelterRegistrationAttemptDay === game.day) { setMessage('You already waited for registration today. Arrive before 18:00 tomorrow.'); return }
-        // Arrival, rather than the time the registration button is pressed,
-        // fixes priority while the player stays here. Vacancies never reroll.
-        const vacancies = life.shelterVacancyDay === game.day ? life.shelterVacancies ?? 0 : Math.floor(Math.random() * 4)
-        const arrivalMinute = shelterArrival?.day === game.day ? shelterArrival.minute : game.minutes
-        const peopleAhead = shelterPeopleAhead(arrivalMinute)
-        const total = shelterQueueMinutes(game.minutes)
-        setLife(status => ({ ...status, shelterVacancyDay: game.day, shelterVacancies: vacancies, shelterRegistrationAttemptDay: game.day }))
-        setShelterQueue({ day: game.day, remaining: total, total, arrivalMinute, joinedAt: game.minutes, vacancies, peopleAhead, before: resultSnapshot() })
-        setMusicOn(false)
-        setMessage('You join the queue. Doors open at 18:00; registration starts at 18:20. Your arrival time keeps your priority while you stay here.')
-        return
-      }
-      requestSleep('shelter')
-      return
-    }
+    if (prepareShelterAction(actionId)) return
     if (actionId === 'residential-sleep') { requestSleep('residential'); return }
 
     const isShower = actionId === 'shelter-shower' || actionId === 'daycenter-shower'
@@ -1165,15 +817,7 @@ export default function App() {
     setGame(next, actionId === 'residential-stay' ? 'Schronisko' : undefined)
     setMessage((result.message ?? 'Time passes.') + (isShower && hygieneLimit < 100 ? ` Dirty clothes limit Hygiene to ${hygieneLimit}. Wash your clothes to raise the limit.` : ''))
 
-    if (actionId === 'street-sleep') {
-      setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-      const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Street', documents: inventory.documents, sleepKind: current.id === 'station' ? 'bench' : 'ground', seenEventIds: encounters.seen })
-      presentWakeEvent(wakeEvent, action.name, result.message ?? 'Time passes.')
-    } else if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
-      setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
-      const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents, seenEventIds: encounters.seen })
-      presentWakeEvent(wakeEvent, action.name, result.message ?? 'Time passes.')
-    } else {
+    if (!finishRestAction(actionId, action.name, result, next)) {
       if (!observeFirstNight('location', next)) observeOrdinaryEvent('location', next, undefined, { observation: 'action', elapsedMinutes: result.minutes })
     }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
@@ -1185,28 +829,6 @@ export default function App() {
     if (actionId === 'daycenter-doctor') {
       setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
     }
-  }
-
-  function answerShelterInterviewImpl(value: string) {
-    if (!shelterInterview) return
-    if (shelterInterview.step === 'reason') {
-      setShelterInterview({ ...shelterInterview, reason: value, step: 'action' })
-      return
-    }
-    if (shelterInterview.step === 'action') {
-      setShelterInterview({ ...shelterInterview, action: value, step: 'plan' })
-      return
-    }
-    const renewals = life.shelterRenewals ?? 0
-    const realProgress = life.employment === 'Day work' || life.schroniskoReferral || shelterInterview.action === 'documents'
-    const constructive = value !== 'nothing'
-    let extension = renewals === 0 ? 30 : realProgress && constructive ? 30 : constructive ? 14 : 7
-    if (renewals >= 2 && !realProgress) extension = constructive ? 14 : 7
-    const plan = value === 'jobcenter' || value === 'daywork' || value === 'documents' || value === 'benefits' ? value : undefined
-    setLife((status) => ({ ...status, shelterUntilDay: game.day + extension - 1, shelterRenewals: renewals + 1, shelterPlan: plan }))
-    setGame((prev) => applyAction(prev, { minutes: 30, mood: extension >= 14 ? 3 : -2 }))
-    setMessage(`After the interview, your shelter place is extended for ${extension} days.${plan ? ' The social worker expects you to follow the plan you agreed to.' : ''}`)
-    setShelterInterview(null)
   }
 
   function socialSupportImpl(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
@@ -1301,9 +923,7 @@ export default function App() {
     setRainChoice(false)
     setSeenMemories([])
     setTrip(null)
-    setShelterQueue(null)
-    setShelterArrival(null)
-    setShelterDeparture(null)
+    resetShelterSession()
     setSelectedDestination(null)
     setMusicOn(false)
     setStreetBenchFound(false)
@@ -1322,9 +942,7 @@ export default function App() {
     setStorage(INITIAL_STORAGE)
     setLife(INITIAL_LIFE)
     setEffects([])
-    setSleeping(null)
-    setSleepChoice(null)
-    setSleepHours(8)
+    resetSleepSession()
     localStorage.removeItem(SAVE_KEYS.inventory)
     localStorage.removeItem(SAVE_KEYS.storage)
     localStorage.removeItem(SAVE_KEYS.effects)
@@ -1554,51 +1172,14 @@ export default function App() {
     {!gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck} eventText={activeEvent?.text}
       onRoll={rollDice} onAccept={acceptDiceResult} onCancel={() => setDiceCheck(null)} />}
 
-    {!gameOver && shelterQueue && <ModalOverlay className="sleep-overlay queue-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Shelter registration queue">
-      <ModalPanel size="compact" className="sleep-card timed-card rest-card">
-        <div className="timed-heading"><Icon name="clock" /><div><p className="eyebrow">NIGHT SHELTER</p><h2>Registration queue</h2></div></div>
-        <p className="timed-description modal-narrative">{game.minutes < SHELTER_ENTRY_OPEN ? 'Waiting outside. Doors open at 18:00.' : game.minutes < SHELTER_REGISTRATION_OPEN ? 'Waiting inside. Registration starts at 18:20.' : 'Waiting for your turn. A bed isn’t guaranteed.'}</p>
-        <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterQueue.remaining} min remaining</span></div>
-        <div className="sleep-progress" role="progressbar" aria-label="Registration queue progress" aria-valuemin={0} aria-valuemax={shelterQueue.total ?? SHELTER_QUEUE_MINUTES} aria-valuenow={(shelterQueue.total ?? SHELTER_QUEUE_MINUTES) - shelterQueue.remaining}><i style={{ width: `${(1 - shelterQueue.remaining / (shelterQueue.total ?? SHELTER_QUEUE_MINUTES)) * 100}%` }} /></div>
-        <p className="timed-footnote">Arrived at {formatTime(shelterQueue.arrivalMinute ?? shelterQueue.joinedAt)} · {shelterQueue.peopleAhead} ahead of you. Today’s availability: 0–3 places.</p>
-      </ModalPanel>
-    </ModalOverlay>}
+    {!gameOver && shelterQueue && <ShelterQueueDialog shelterQueue={shelterQueue} minute={game.minutes} />}
 
-    {!gameOver && shelterCheckoutDue && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <ModalOverlay className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter">
-      <ModalPanel size="compact" className="sleep-card timed-card">
-        <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Time to leave the night shelter</h2></div></div>
-        <p className="timed-description modal-narrative">You must leave by 08:00. Packing and leaving takes 30 minutes.</p>
-        <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>On the street at {formatTime((game.minutes + SHELTER_DEPARTURE_MINUTES) % 1440)}</span></div>
-        <ModalAction className="checkout-start" autoFocus onClick={startShelterDeparture}>Leave the night shelter · 30 min</ModalAction>
-      </ModalPanel>
-    </ModalOverlay>}
+    {!gameOver && shelterCheckoutDue && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <ShelterCheckoutWarning minute={game.minutes} onStart={startShelterDeparture} />}
 
-    {!gameOver && shelterDeparture && <ModalOverlay className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leaving the night shelter">
-      <ModalPanel size="compact" className="sleep-card timed-card">
-        <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Leaving the night shelter</h2></div></div>
-        <p className="timed-description modal-narrative">Packing your things and heading outside.{shelterPhoneCharging && ' Your phone keeps charging until you collect it on the way out.'}</p>
-        <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterDepartureRemaining} min remaining</span></div>
-        <div className="sleep-progress" role="progressbar" aria-label="Packing progress" aria-valuemin={0} aria-valuemax={SHELTER_DEPARTURE_MINUTES} aria-valuenow={SHELTER_DEPARTURE_MINUTES - shelterDepartureRemaining}><i style={{ width: `${(1 - shelterDepartureRemaining / SHELTER_DEPARTURE_MINUTES) * 100}%` }} /></div>
-        <p className="timed-footnote"><Icon name="clock" />On the street at {formatTime((shelterDeparture.startAbsolute + SHELTER_DEPARTURE_MINUTES) % 1440)}</p>
-      </ModalPanel>
-    </ModalOverlay>}
+    {!gameOver && shelterDeparture && <ShelterDepartureDialog minute={game.minutes} shelterDeparture={shelterDeparture}
+      shelterDepartureRemaining={shelterDepartureRemaining} shelterPhoneCharging={shelterPhoneCharging} />}
 
-    {sleeping && <ModalOverlay className="sleep-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Sleeping">
-      <ModalPanel size="compact" className="sleep-card timed-card rest-card">
-        <SleepHeading kind={sleeping.kind} />
-        <p className="timed-description modal-narrative">{sleeping.kind === 'shelter' ? 'Resting in your reserved bed.' : sleeping.kind === 'residential' ? 'Resting in your room.' : sleeping.kind === 'bench' ? 'Resting on a bench, still exposed.' : 'Resting on the ground, out in the open.'}</p>
-        <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>Wake at {formatTime((sleeping.startAbsolute + sleeping.total) % 1440)}</span></div>
-        {(() => {
-          const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
-          return <>
-            <div className="sleep-progress" role="progressbar" aria-label="Sleep progress" aria-valuemin={0} aria-valuemax={sleeping.total} aria-valuenow={elapsed}><i style={{ width: `${(elapsed / sleeping.total) * 100}%` }} /></div>
-            <div className="timed-progress-detail"><span>{Math.floor(elapsed / 60)}h {elapsed % 60}m of {formatTravelTime(sleeping.total)}</span><span>×{DEBUG_SLEEP_SPEED}</span></div>
-          </>
-        })()}
-        <p className="timed-footnote">{sleeping.kind === 'shelter' ? 'Sleep ends by 07:30 for morning checkout.' : 'You cannot perform other actions until you wake up.'}</p>
-        <button className="sleep-debug-wake" onClick={() => { const active = sleeping; setSleeping(null); finishSleep(active) }}>Wake up (debug)</button>
-      </ModalPanel>
-    </ModalOverlay>}
+    {sleeping && <SleepProgressDialog sleeping={sleeping} minute={game.minutes} onWake={() => finishSleep(sleeping)} />}
 
     {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <EventDialog
       event={activeEvent} choices={visibleEventChoices} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason}

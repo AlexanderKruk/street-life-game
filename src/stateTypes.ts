@@ -31,3 +31,5 @@ export type ShelterQueue = { day: number; remaining: number; total?: number; arr
 export type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
 
 export type EventDiceState = { choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string }
+
+export type ShelterInterview = { step: 'reason' | 'action' | 'plan'; reason?: string; action?: string }

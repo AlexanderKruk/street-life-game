@@ -1,3 +1,5 @@
+import type { GameState } from './game'
+import type { SleepState } from './stateTypes'
 
 export const SLEEP_HOURS = [2, 4, 6, 8] as const
 
@@ -28,3 +30,15 @@ export function sleepDurationUnavailable(hours: number, energy: number) {
   return hours < available[0] ? 'Too tired for a short sleep.' : 'Not tired enough for a long sleep.'
 }
 
+
+export function clearSleepIllness(game: GameState): GameState {
+  if (game.sleepIllnessDose === undefined && game.sleepIllnessMinutes === undefined) return game
+  const next = { ...game }
+  delete next.sleepIllnessDose
+  delete next.sleepIllnessMinutes
+  return next
+}
+
+export function sleepElapsed(sleep: SleepState, now = Date.now()) {
+  return Math.min(sleep.total, Math.max(0, Math.floor(((now - sleep.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
+}
