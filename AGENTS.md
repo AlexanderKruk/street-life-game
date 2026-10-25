@@ -5,6 +5,11 @@ content, also consult [GAME_DESIGN.md](GAME_DESIGN.md). Preserve existing game
 behavior during visual changes: pause rules, time multipliers, saved progress,
 focus, navigation blocking and delayed stat animations are part of the product.
 
+The completed refactoring stages and remaining checklist are maintained in
+[REFACTORING.md](REFACTORING.md). Read it before continuing structural work and
+update the relevant checkboxes, baseline version and verification notes after
+each completed stage. Partial extraction is not a completed gameplay controller.
+
 ## Use the existing design system
 
 - Use the system sans-serif family and existing `--font-*`, `--weight-*`,
