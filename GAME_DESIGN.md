@@ -703,6 +703,15 @@ and the actual art references. Shared modal visuals are defined once in
 from `src/Modal.tsx` (v324). Individual modal styles contain content layout only;
 do not reintroduce local frame themes or compensate with stronger CSS overrides.
 
+The complete presentation templates are extracted from `App.tsx` in v325:
+`ActivityDialog` covers travel, internet search and calls with `ActivityStatus`;
+`EventDialog` handles illustrated and compact authored encounters, with
+`EventFrame` / `EventBody` also reused by `RainEventDialog`;
+`SleepPlanningDialog` renders the sleep options and selected wake-time preview.
+They reuse the existing modal/choice primitives and CSS. Timers, pause and save
+rules, focus refs, eligibility, outcomes and sleep calculations remain with the
+game owner. This refactor does not alter gameplay, text, layout or time rates.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,

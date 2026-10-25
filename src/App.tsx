@@ -27,7 +27,7 @@ import { locationPresentation, questionPresentation } from './resultPresentation
 import { CHOICE_SEED_KEY, loadChoiceSeed, newChoiceSeed, shuffleChoiceOrder } from './streetChoiceOrder'
 import ChoiceOptions, { orderChoiceNodes } from './ChoiceOptions'
 import ChoiceButton, { approximateDuration, standardizeChoiceButton } from './ChoiceButton'
-import { LocationSummary, ShopHero, TravelHeading, PhoneSearchIcon, SleepHeading } from './LocationPresentation'
+import { LocationSummary, ShopHero, SleepHeading } from './LocationPresentation'
 import { useLatestAction } from './useLatestAction'
 import { getTravelPhase, getTravelDisplayPhase } from './travelPhases'
 import { JournalGoals, JournalTimeline } from './JournalSections'
@@ -37,14 +37,17 @@ import MoodIcon from './MoodIcon'
 import { limitingEffects } from './limitingEffects'
 import PhoneDialog from './PhoneDialog'
 import PhoneScreen, { type PhoneApp } from './PhoneScreen'
-import CompactStreetEvent from './CompactStreetEvent'
+import EventDialog from './EventDialog'
+import RainEventDialog from './RainEventDialog'
+import ActivityDialog from './ActivityDialog'
+import SleepPlanningDialog from './SleepPlanningDialog'
 import TrashSearchTime, { trashSearchMinutes } from './TrashSearchTime'
 import { useGameAutosave } from './useGameAutosave'
 import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from './saveCompatibility'
 import { displayDay } from './gameDate'
-import { createRain, chooseRain, planRainDay, RAIN, rainArt, rainResultText, type RainChoice } from './rain'
+import { createRain, chooseRain, planRainDay, rainArt, rainResultText, type RainChoice } from './rain'
 
-const BUILD_VERSION = 'v2026.10.25-324'
+const BUILD_VERSION = 'v2026.10.25-325'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -118,15 +121,6 @@ function formatTravelTime(minutes: number) {
   if (hours === 0) return `${mins}m`
   if (mins === 0) return `${hours}h`
   return `${hours}h ${mins}m`
-}
-
-function ActivityStatus({ elapsed, label, timeLabel }: { elapsed: number; label: string; timeLabel: string }) {
-  const minutes = Math.max(1, elapsed)
-  const time = minutes < 60 ? `${String(minutes).padStart(2, '0')}m` : `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m`
-  return <div className="activity-status">
-    <strong className="travel-elapsed" aria-label={timeLabel}>{time}</strong>
-    <span className="activity-phase travel-action-label">{label}<span className="travel-phase-dots" aria-hidden="true"><i /><i /><i /></span></span>
-  </div>
 }
 
 type Screen = 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
@@ -2505,31 +2499,14 @@ export default function App() {
     </InventoryDialog>}
     {foodChoice && <FoodChoiceDialog name={foodChoice.name} counts={foodSlot(inventory, foodChoice.kind, foodChoice.slotIndex)} onCancel={cancelFoodChoice} onChoose={chooseFood} />}
     {discardItem && <DiscardDialog name={discardItem.name} quantity={discardItem.quantity} spoiledQuantity={discardItem.spoiledQuantity} onCancel={cancelDiscard} onConfirm={() => confirmDiscard(false)} onDiscardSpoiled={() => confirmDiscard(true)} />}
-    {sleepChoice && <ModalOverlay className="phone-overlay result-overlay">
-      <ModalPanel size="compact" className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
-        <div className="timed-heading"><Icon name="moon" /><div><p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p><h2 id="sleep-choice-title">How long do you want to sleep?</h2></div></div>
-        <div className="sleep-choice-context"><span>{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</span><span>Day {displayDay(game.day)} {weekday(game.day)} · {formatTime(game.minutes)}</span></div>
-        <p className="sleep-choice-energy"><Icon name="energy" />Energy {Math.round(game.energy)}% · {game.energy > 75 ? 'Rested' : game.energy > 50 ? 'Slightly tired' : game.energy > 25 ? 'Tired' : 'Exhausted'}</p>
-        <div className="sleep-duration-options" role="group" aria-label="Sleep duration">
-          {SLEEP_HOURS.map(hours => {
-            const reason = sleepDurationUnavailable(hours, game.energy)
-            return <ChoiceButton icon="bed" label="Sleep" duration={`${hours}h`} aria-label={`${hours} h · Wake ${wakeLabel(hours, sleepChoice)}${reason ? ` · ${reason}` : ''}`} detail={<span className="sr-only"> · Wake {wakeLabel(hours, sleepChoice)}{reason && ` · ${reason}`}</span>} key={hours} className={hours === sleepHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === sleepHours} disabled={reason !== null} title={reason ?? undefined} autoFocus={hours === sleepHours} onClick={() => setSleepHours(hours)} />
-          })}
-        </div>
-        {SLEEP_HOURS.some(hours => sleepDurationUnavailable(hours, game.energy)) && <p className="sleep-choice-note">Available sleep lengths depend on your fatigue.</p>}
-        {CLOTHING_WETNESS_ENABLED && (sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.label === 'Rain' || weather.label === 'Showers') && <p className="sleep-choice-note">Wet clothes reduce outdoor sleep recovery. Somewhere dry would help.</p>}
-        <div className="sleep-choice-preview" aria-live="polite">
-          <small>Wake up · {wakeLabel(sleepHours, sleepChoice).split(' · ')[0]}</small><span className="sr-only"> · </span><strong>{wakeLabel(sleepHours, sleepChoice).split(' · ')[1]}</strong>
-        </div>
-        <p className="sleep-choice-note">Sleep time: {formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}.</p>
-        {(sleepChoice === 'ground' || sleepChoice === 'bench') && <p className="sleep-choice-note">Cold and {CLOTHING_WETNESS_ENABLED ? 'wet clothes and ' : ''}longer exposure increase illness risk. Your belongings may also be stolen.</p>}
-        {sleepChoice === 'shelter' && <p className="sleep-choice-note">Sleep ends by 07:30 for morning checkout. Longer choices are shortened.</p>}
-        <div className="sleep-choice-buttons">
-          <ModalAction variant="secondary" onClick={() => setSleepChoice(null)}>Cancel</ModalAction>
-          <ModalAction className="trash-stop" disabled={sleepDurationUnavailable(sleepHours, game.energy) !== null} onClick={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}>Start sleeping</ModalAction>
-        </div>
-      </ModalPanel>
-    </ModalOverlay>}
+    {sleepChoice && <SleepPlanningDialog
+      kind={sleepChoice} dateLabel={`Day ${displayDay(game.day)} ${weekday(game.day)} · ${formatTime(game.minutes)}`} energy={game.energy}
+      options={SLEEP_HOURS.map(hours => ({ hours, wakeLabel: wakeLabel(hours, sleepChoice), unavailableReason: sleepDurationUnavailable(hours, game.energy) }))}
+      selectedHours={sleepHours} durationLabel={formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}
+      wetClothesWarning={CLOTHING_WETNESS_ENABLED && (sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.label === 'Rain' || weather.label === 'Showers')}
+      wetnessEnabled={CLOTHING_WETNESS_ENABLED} onSelect={setSleepHours} onCancel={() => setSleepChoice(null)}
+      onConfirm={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}
+    />}
     {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: `${locations.find(place => place.id === closingNotice)?.name} has closed`,
@@ -2701,14 +2678,11 @@ export default function App() {
       </ClosedContent>
     </div>}
 
-    {phoneActivity && <ModalOverlay className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>
-      <ModalPanel className="travel-screen phone-activity" role="dialog" aria-modal="true" aria-labelledby="phone-activity-title" aria-busy="true" tabIndex={-1} ref={phoneSearchModalRef}>
-        <PhoneSearchIcon calling={!!activeCall} />
-        <div className="travel-route-heading"><h2 id="phone-activity-title">{activeCall?.callingTitle ?? 'Looking for information'}</h2></div>
-        <ActivityStatus elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel={activeCall ? 'Elapsed call time' : 'Elapsed browsing time'} label={activeCall ? activeCall.id === 'call-university' || phoneActivity.remaining === phoneActivity.total ? 'Ringing' : 'Talking' : phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Searching' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading options' : 'Saving addresses'} />
-      </ModalPanel>
-    </ModalOverlay>}
-
+    {phoneActivity && <ActivityDialog kind="phone" visible={phoneSearchVisible} panelRef={phoneSearchModalRef}
+      calling={!!activeCall} title={activeCall?.callingTitle ?? 'Looking for information'}
+      elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel={activeCall ? 'Elapsed call time' : 'Elapsed browsing time'}
+      phase={activeCall ? activeCall.id === 'call-university' || phoneActivity.remaining === phoneActivity.total ? 'Ringing' : 'Talking' : phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Searching' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading options' : 'Saving addresses'}
+    />}
 
     {(screen === 'map' || travelling) && <div className="map-surface" inert={travelling} aria-hidden={travelling || undefined}><CityMap
       places={mapPlaces}
@@ -2719,10 +2693,10 @@ export default function App() {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const elapsed = Math.max(0, trip.total - trip.remaining)
       const phase = getTravelDisplayPhase(trip)
-      return <ModalOverlay className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><ModalPanel className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
-        <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} moving={phase.walking} />
-        <ActivityStatus elapsed={elapsed} timeLabel="Elapsed travel time" label={underRainCover ? 'Under cover' : phase.label} />
-      </ModalPanel></ModalOverlay>
+      return <ActivityDialog kind="travel" visible={travelVisible} panelRef={travelModalRef}
+        from={current.name} to={destination?.name} walking={trip.mode === 'walk'} moving={phase.walking}
+        elapsed={elapsed} phase={underRainCover ? 'Under cover' : phase.label}
+      />
     })()}
 
     {selectedDestination && screen === 'map' && (() => {
@@ -2874,31 +2848,15 @@ export default function App() {
       </ModalPanel>
     </ModalOverlay>}
 
-    {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <ModalOverlay className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="rain-event-title">
-      <ModalPanel className="event-card illustrated-event" ref={rainModalRef}>
-        <img className="event-illustration" {...responsiveImageProps(rainArt(game.rain, rainWaiting ? game.rain.choice! : 'opening'))} alt={rainWaiting ? game.rain.choice === 'proper' ? 'You find a deep covered passage on the rainy street.' : game.rain.shelter === 'tree' ? 'You take partial cover beneath a street tree.' : 'You wait beneath a small shop awning.' : RAIN[game.rain.level].text} />
-        <div className="event-body">
-          <p className="eyebrow">{rainWaiting ? 'WAITING OUT THE RAIN' : 'STREET EVENT'}</p>
-          <h2 id="rain-event-title">{RAIN[game.rain.level].title}</h2>
-          {rainWaiting ? <>
-            <p className="modal-narrative">{game.rain.choice === 'proper' ? game.rain.searchRemaining > 0 ? 'You head along the street, looking for a roof that will keep the rain off.' : 'You stand well inside the covered passage, watching the rain outside.' : game.rain.shelter === 'tree' ? 'The leaves catch some of the rain, but drops still fall onto your shoulders.' : 'You stand close to the wall beneath the little awning. Some rain still reaches you.'}</p>
-            <ActivityStatus elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))} timeLabel="Elapsed waiting time" label={game.rain.searchRemaining > 0 ? 'Looking for shelter' : 'Waiting for the rain to stop'} />
-            {game.rain.choice === 'nearby' && <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" duration="~5m" onClick={() => {
-              const rain = chooseRain(game.rain!, 'proper', absoluteMinutes(game), current.id)
-              setGame(previous => previous.rain?.id === rain.id ? { ...previous, rain: { ...rain, choiceAt: previous.rain.choiceAt } } : previous)
-            }} detail={<small>Leave this cover and look for a dry passage</small>} />}
-            <ChoiceButton icon="walk" aria-label="Carry on" label="Carry on" onClick={() => setGame(previous => previous.rain ? { ...previous, rain: { ...previous.rain, choice: 'continue', searchRemaining: 0 } } : previous)} detail={<small>Leave cover and continue in the rain</small>} />
-          </> : <>
-            <p className="modal-narrative">{RAIN[game.rain.level].text}</p>
-            <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|rain:${game.rain.id}`}>
-              <ChoiceButton icon="umbrella" aria-label="Take cover nearby" label="Take cover nearby" onClick={() => respondToRain('nearby')} detail={<small>Quick shelter, but it may offer little protection</small>} />
-              <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" onClick={() => respondToRain('proper')} duration="~5m" detail={<small>Stay in the rain while you look for somewhere dry</small>} />
-              <ChoiceButton icon="walk" aria-label="Carry on" label="Carry on" onClick={() => respondToRain('continue')} detail={<small>Continue what you were doing, exposed to the rain</small>} />
-            </ChoiceOptions>
-          </>}
-        </div>
-      </ModalPanel>
-    </ModalOverlay>}
+    {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <RainEventDialog
+      rain={game.rain} waiting={rainWaiting} elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))}
+      orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={rainModalRef} onChoose={respondToRain}
+      onFindProperShelter={() => {
+        const rain = chooseRain(game.rain!, 'proper', absoluteMinutes(game), current.id)
+        setGame(previous => previous.rain?.id === rain.id ? { ...previous, rain: { ...rain, choiceAt: previous.rain.choiceAt } } : previous)
+      }}
+      onContinue={() => setGame(previous => previous.rain ? { ...previous, rain: { ...previous.rain, choice: 'continue', searchRemaining: 0 } } : previous)}
+    />}
     {!gameOver && diceCheck?.choice.check && <ModalOverlay className="dice-overlay" role="dialog" aria-modal="true" aria-labelledby="dice-action-title">
       <ModalPanel size="compact" className="dice-card">
         <h2 id="dice-action-title">{diceCheck.stealItemId ? `Steal ${SHOP_ITEMS.find(item => item.id === diceCheck.stealItemId)?.name.toLowerCase()}?` : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</h2>
@@ -2958,22 +2916,10 @@ export default function App() {
       </ModalPanel>
     </ModalOverlay>}
 
-    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <ModalOverlay className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="street-event-title">
-      <ModalPanel size={activeEvent.illustration ? 'regular' : 'compact'} ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ' compact-street-event'}`}>
-        {activeEvent.illustration && <img className="event-illustration" {...responsiveImageProps(activeEvent.illustration)} alt={activeEvent.text} />}
-        {!activeEvent.illustration
-          ? <CompactStreetEvent event={{ ...activeEvent, choices: visibleEventChoices }} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} orderSeed={choiceSeed} decisionKey={choiceDecisionKey} />
-          : <div className="event-body">
-        <p className="eyebrow">STREET EVENT</p>
-        <h2 id="street-event-title">{activeEvent.title}</h2>
-        <p className="modal-narrative">{activeEvent.text}</p>
-        <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{visibleEventChoices.map((choice) => {
-          const unavailable = checkUnavailableReason(choice)
-          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
-        })}</ChoiceOptions>
-        </div>}
-      </ModalPanel>
-    </ModalOverlay>}
+    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <EventDialog
+      event={activeEvent} choices={visibleEventChoices} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason}
+      orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={eventModalRef}
+    />}
 
     {autosave.saveFailed && <p role="alert" className="save-warning">Progress could not be saved on this device. Keep the game open and try again.</p>}
     <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>

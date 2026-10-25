@@ -16,6 +16,7 @@ for (const name of fs.readdirSync('src').filter(name => name.endsWith('.tsx'))) 
       for (const attr of node.attributes.properties) {
         if (!ts.isJsxAttribute(attr) || attr.name.getText(ast) !== 'className' || !attr.initializer) continue;
         const value = attr.initializer.getText(ast);
+        if (name === 'App.tsx') assert(!/\b(?:travel-screen|event-card|sleep-choice-modal)\b/.test(value), 'App.tsx: reuse ActivityDialog, EventDialog or SleepPlanningDialog instead of duplicating their markup');
         if (overlayClasses.test(value)) assert.equal(tag, 'ModalOverlay', `${name}: backdrop must use ModalOverlay`);
         if (panelClasses.test(value)) assert.equal(tag, 'ModalPanel', `${name}: frame must use ModalPanel`);
       }

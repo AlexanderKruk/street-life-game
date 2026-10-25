@@ -28,6 +28,10 @@ focus, navigation blocking and delayed stat animations are part of the product.
 | Any modal backdrop | `ModalOverlay` from `src/Modal.tsx` |
 | Modal frame | `ModalPanel`: regular 480px or compact 408px |
 | Confirm/cancel/destructive button | `ModalAction`: primary, secondary or danger |
+| Travel, internet search or call in progress | `ActivityDialog` (`kind="travel"` or `kind="phone"`); elapsed/phase text uses `ActivityStatus` |
+| Authored event, with or without an illustration | `EventDialog`; use its `EventFrame` / `EventBody` for another event presentation |
+| Rain choices and waiting under cover | `RainEventDialog`, built on `EventFrame` / `EventBody` |
+| Sleep duration and wake-time planning | `SleepPlanningDialog` |
 | Event answer / action / transport / search / sleep option | `ChoiceButton`, grouped with `ChoiceOptions` |
 | Finished action / discovery / illustrated outcome | `ResultCard` |
 | Inventory choice or confirmation | `InventoryDialog`, `FoodChoiceDialog`, `DiscardDialog` |
@@ -45,6 +49,14 @@ Do not duplicate these properties in individual dialog selectors or append a
 stronger CSS override to repair one screen. Change the shared rule or introduce
 an explicit reusable variant with a documented purpose. Keep stacking order and
 each dialog's interaction lifecycle in its existing owner.
+
+The extracted dialogs above are presentation components (v325). `App.tsx` owns
+timers, visibility/pause rules, saved pending events, choice eligibility, seeded
+ordering inputs, dice/outcome handling and sleep duration/wake calculations.
+Pass calculated data and handlers to the template; do not duplicate its markup
+inside `App.tsx` or start a second timer inside a dialog. Preserve the existing
+modal refs so focus and keyboard behavior keep working. `ResultCard` remains
+the shared screen for completed events/actions and information discoveries.
 
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact
