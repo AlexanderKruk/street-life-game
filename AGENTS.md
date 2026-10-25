@@ -36,6 +36,9 @@ focus, navigation blocking and delayed stat animations are part of the product.
 | Finished action / discovery / illustrated outcome | `ResultCard` |
 | Inventory choice or confirmation | `InventoryDialog`, `FoodChoiceDialog`, `DiscardDialog` |
 | Phone app and header | `PhoneScreen` |
+| Inventory / Status / current location page | `InventoryScreen`, `StatusScreen`, `LocationScreen` |
+| Phone History / Notes / Find Help page | `PhoneHistoryScreen`, `PhoneNotesScreen`, `PhoneSearchScreen`; Goals reuses `JournalGoals` |
+| Shared HUD and bottom menu | `GameHeader`, `BottomNavigation` |
 | Location illustration and description | `LocationSummary` / `ShopHero` in `LocationPresentation.tsx` |
 | Item cards | `InventorySlot` and `ShopCard`; Backpack is the typography reference |
 | Stat bars and animated changes | `Stat`, including the existing delay and cap display |
@@ -57,6 +60,23 @@ Pass calculated data and handlers to the template; do not duplicate its markup
 inside `App.tsx` or start a second timer inside a dialog. Preserve the existing
 modal refs so focus and keyboard behavior keep working. `ResultCard` remains
 the shared screen for completed events/actions and information discoveries.
+
+The full main pages are extracted in v326. `App.tsx` selects the page and passes
+state plus commands; page components own their complete markup. Do not put a
+copy of their layouts back into `App.tsx`. `LocationScreen` receives a typed
+view state and handlers; its choices still use `AvailableFirst` for the existing
+seeded, available-first ordering. Bottom navigation intentionally calls the
+existing screen setter, preserving its scroll behavior; internal links keep the
+separate `openPage` path that resets scroll.
+
+Reuse the domain modules instead of copying calculations into screens:
+`inventory.ts` (items, stacks, capacity and supply fitting), `phonePower.ts`
+(screen/activity battery drain), `sleepRules.ts` / `shelterRules.ts` (duration and
+registration rules), `statusEffects.ts` / `limitingEffects.ts` (effect display),
+`gameTime.ts` (time formatting/conversion), `phoneQuestions.ts` (shared help
+content), and `stateTypes.ts` (shared model types). These helpers do not import
+`App.tsx` or mutate React state. Active timers, pending outcomes and persistence
+remain with the game owner until a separately verified controller extraction.
 
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact

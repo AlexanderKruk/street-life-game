@@ -712,6 +712,15 @@ They reuse the existing modal/choice primitives and CSS. Timers, pause and save
 rules, focus refs, eligibility, outcomes and sleep calculations remain with the
 game owner. This refactor does not alter gameplay, text, layout or time rates.
 
+Main pages and shared shell are extracted in v326: `InventoryScreen`,
+`StatusScreen`, `LocationScreen`, `PhoneHistoryScreen`, `PhoneNotesScreen`,
+`PhoneSearchScreen`, `GameHeader` and `BottomNavigation`. Map remains `CityMap`,
+and Goals remains `JournalGoals` inside the shared `PhoneScreen`. App selects
+pages and supplies state/commands. The existing DOM, styles, action ordering,
+navigation/scroll behavior and save keys are preserved. Pure inventory, phone
+power, sleep/shelter, effect and time helpers live in their corresponding domain
+modules (see AGENTS.md); they do not own timers or React state.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,
