@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createAutosave, type SaveSnapshot } from './autosave'
 
-const rawKeys = new Set(['street-life-screen', 'street-life-rain-choice-v1', 'street-life-mobile-service-until', 'street-life-mobile-auto-renew', 'street-life-mobile-renewed-day'])
+import { RAW_SAVE_KEYS } from './saveKeys'
 
 export function useGameAutosave(snapshot: SaveSnapshot, ready: boolean, critical: unknown[]) {
   const [saveFailed, setSaveFailed] = useState(false)
   const failed = useRef(false)
   const [saver] = useState(() => createAutosave(window.localStorage, {
-    encode: (key, value) => value === null ? null : rawKeys.has(key) ? String(value) : JSON.stringify(value),
+    encode: (key, value) => value === null ? null : RAW_SAVE_KEYS.has(key) ? String(value) : JSON.stringify(value),
     onResult: success => {
       if (failed.current === !success) return
       failed.current = !success

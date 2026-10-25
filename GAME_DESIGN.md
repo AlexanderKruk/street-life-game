@@ -721,6 +721,17 @@ navigation/scroll behavior and save keys are preserved. Pure inventory, phone
 power, sleep/shelter, effect and time helpers live in their corresponding domain
 modules (see AGENTS.md); they do not own timers or React state.
 
+Save restoration is extracted in v327 into `loadGameSession.ts`, which reads
+each key once per mount and returns initial data without writing saves or
+applying gameplay costs/rewards. It preserves the v3 compatibility migrations,
+legacy fixed phone searches, outdoor-sleep illness recovery, pending encounters
+and already rolled D20 values. `saveKeys.ts` shares existing key names and raw
+value encoding with autosave. Malformed activity/state shapes use safe fallbacks
+without clearing valid neighbouring progress. App still owns the live state,
+clocks, reset and completion handlers. `check-load-game-session.cjs` permanently
+covers session restoration and corrupt/partial data in addition to the existing
+reload, event, phone, sleep and autosave regressions.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,

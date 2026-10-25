@@ -6,7 +6,7 @@ import { validRain } from './rain'
 // storage versions are independent; updates must not clear this shared key.
 export const SAVE_KEY = 'street-life-save-v3'
 export const DISCOVERY_KEY = 'street-life-discovered-v1'
-type SaveReader = Pick<Storage, 'getItem'>
+export type SaveReader = Pick<Storage, 'getItem'>
 
 export function readSavedGame(storage: SaveReader): GameState | null {
   try {

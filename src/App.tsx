@@ -1,3 +1,5 @@
+import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,RAIN_RESPONSE_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
+import { INITIAL_LIFE,PHONE_SEARCH_MIN,PHONE_SEARCH_MAX,SHELTER_DEPARTURE_MINUTES,loadGameSession } from './loadGameSession'
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
 import ActivityDialog from './ActivityDialog'
 import BottomNavigation from './BottomNavigation'
@@ -34,94 +36,29 @@ import { displayDay } from './gameDate'
 import { absoluteMinutes,formatTravelTime,weekday } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { BACKPACK_CAPACITY,BOTTLE_DEPOSIT,BOTTLE_STACK_SIZE,FREE_WATER_LIMIT,INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_FOOD_CAPACITY,SCHRONISKO_STORAGE,SHOP_ITEMS,STACK_SIZE,addShopItem,backpackSlots,canAddToBackpack,fitEventSupplies,storageSlots } from './inventory'
-import { journalReflection,loadJournalEntries,type JournalEntry } from './journal'
+import { journalReflection,type JournalEntry } from './journal'
 import { limitingEffects } from './limitingEffects'
 import { CLOSING_NOTICE_KEY,locationClosedSince } from './locationClosing'
-import { CALL_BATTERY_PER_MINUTE,OPENING_CALLS,OPENING_CALLS_KEY,loadOpeningCallIndex,openingCall } from './openingCalls'
+import { CALL_BATTERY_PER_MINUTE,OPENING_CALLS,OPENING_CALLS_KEY,openingCall } from './openingCalls'
 import { phoneDrainMultiplier,phoneScreenDrain } from './phonePower'
 import { practicalQuestions } from './phoneQuestions'
 import { chooseRain,createRain,planRainDay,rainArt,rainResultText,type RainChoice } from './rain'
 import { locationPresentation,questionPresentation } from './resultPresentation'
 import { summarizeResult,type ConsumedItem,type ResultSnapshot } from './results'
-import { DISCOVERY_KEY,SAVE_KEY,loadDiscoveredLocations,readSavedGame } from './saveCompatibility'
+import { DISCOVERY_KEY,SAVE_KEY } from './saveCompatibility'
 import { SHELTER_CHARGE_PER_HOUR,SHELTER_PHONE_CHARGE_KEY,shelterChargingMinutes } from './shelterCharging'
 import { SHELTER_ENTRY_OPEN,SHELTER_QUEUE_MINUTES,SHELTER_REGISTRATION_OPEN,shelterPeopleAhead,shelterQueueMinutes } from './shelterRules'
 import { sleepIllnessChance } from './sleepIllness'
 import { DEBUG_SLEEP_SPEED,SHELTER_CHECKOUT_WARNING,SLEEP_HOURS,availableSleepHours,shelterSleepMinutes,sleepDurationUnavailable } from './sleepRules'
-import type { ActiveEffect,BackpackItemId,Inventory,LifeSituation,Screen,ShopItem,StoredItems } from './stateTypes'
-import { CHOICE_SEED_KEY,loadChoiceSeed,newChoiceSeed } from './streetChoiceOrder'
+import type { ActiveEffect,BackpackItemId,FirstNightEvents,Inventory,JournalGoals as JournalGoalState,LifeSituation,PhoneActivity,Screen,ShelterArrival,ShelterDeparture,ShelterQueue,ShopItem,SleepState,StoredItems,TravelMode,Trip } from './stateTypes'
+import { CHOICE_SEED_KEY,newChoiceSeed } from './streetChoiceOrder'
 import { getTravelDisplayPhase,getTravelPhase } from './travelPhases'
 import { useGameAutosave } from './useGameAutosave'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-326'
+const BUILD_VERSION = 'v2026.10.25-327'
 const ACTIVITY_TICK_MS = 250
 
-const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
-const ENCOUNTERS_KEY = 'street-life-encounters-v1'
-const LEFT_HOME_KEY = 'street-life-left-home-v1'
-function loadLeftHome() {
-  const saved = readSavedGame(localStorage)
-  if (!saved) return false
-  if (saved.locationId !== 'street' || !firstNightTime(saved)) return true
-  try {
-    if (JSON.parse(localStorage.getItem(LEFT_HOME_KEY) ?? 'false') === true) return true
-    if (JSON.parse(localStorage.getItem('street-life-trip-v1') ?? 'null')) return true
-    // Older saves did not record departure explicitly; an arrival/stopped trip
-    // in History proves that the initial neighbourhood has already been left.
-    const history = JSON.parse(localStorage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
-    return Array.isArray(history) && history.some(entry => ['Arrival', 'Journey stopped'].includes(entry?.actionTitle))
-  } catch { return true }
-}
-type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null }
-function loadFirstNightEvents(key = FIRST_NIGHT_EVENTS_KEY): FirstNightEvents {
-  try {
-    const saved = JSON.parse(localStorage.getItem(key) ?? 'null')
-    const ids = new Set(STREET_EVENTS.filter(event => key === ENCOUNTERS_KEY || event.id.startsWith('first-night-')).map(event => event.id))
-    // Old dawn saves must not open the new 08:00 scene before services open.
-    const state = readSavedGame(localStorage)
-    const morningPendingValid = saved?.pendingId !== 'city-waking' || !!state && state.locationId === 'street' && firstMorningTime(state)
-    const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId)
-      && morningPendingValid && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome()) ? saved.pendingId : null
-    const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
-    const pendingRoll = ['borrow-phone-slip', 'park-company'].includes(pendingId ?? '') && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
-    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingRoll ? { pendingRoll } : {}) }
-  } catch { return { seen: [], lastAt: null, pendingId: null } }
-}
-
-const RAIN_RESPONSE_KEY = 'street-life-rain-response-v1'
-const PHONE_ACTIVITY_KEY = 'street-life-phone-activity-v1'
-const MUSIC_WALK_USED_KEY = 'street-life-music-walk-used-v1'
-const PHONE_SEARCH_MIN = 10
-const PHONE_SEARCH_MAX = 25
-type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot; pausedMinutes?: number }
-
-function loadPhoneActivity(): PhoneActivity | null {
-  try {
-    const saved = JSON.parse(localStorage.getItem(PHONE_ACTIVITY_KEY) ?? 'null')
-    if (!saved || (!['morning', 'bed', 'no-place', 'supplies', 'work', 'clinic'].includes(saved.questionId) && !openingCall(saved.questionId)) || !Number.isInteger(saved.remaining) || saved.remaining < 0 || saved.remaining > 30 || !saved.before?.game || !saved.before?.inventory || !Array.isArray(saved.before?.effects)) return null
-    // Older fixed searches retain the ten-minute migration; new searches keep
-    // their originally selected duration across reloads.
-    const pausedMinutes = Number.isFinite(saved.pausedMinutes) && saved.pausedMinutes >= 0 ? saved.pausedMinutes : 0
-    const elapsed = absoluteMinutes(loadGame()) - absoluteMinutes(saved.before.game) - pausedMinutes
-    if (!Number.isFinite(elapsed) || elapsed < 0) return null
-    const call = openingCall(saved.questionId)
-    const total = call ? call.minutes : Number.isInteger(saved.total) && saved.total >= PHONE_SEARCH_MIN && saved.total <= PHONE_SEARCH_MAX ? saved.total : 10
-    return { ...saved, total, remaining: Math.min(saved.remaining, Math.max(0, total - elapsed)) }
-  } catch { return null }
-}
-
-const GOAL_KEY = 'street-life-goal-v1'
-const JOURNAL_GOALS_KEY = 'street-life-journal-goals-v1'
-const JOURNAL_HISTORY_KEY = 'street-life-journal-history-v1'
-type JournalGoals = { morning: boolean; shelter: boolean; support: boolean; work: boolean }
-
-type TravelMode = 'walk' | 'transit' | 'fare-dodge'
-type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
-type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
-type ShelterArrival = { day: number; minute: number }
-type ShelterQueue = { day: number; remaining: number; total?: number; arrivalMinute?: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
-type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
 // Physical proportions follow the object, never whether its deposit is valid.
 const TRASH_ITEM_SCALE: Record<TrashArt, number> = {
@@ -130,38 +67,6 @@ const TRASH_ITEM_SCALE: Record<TrashArt, number> = {
   cup: 1.55, paper: 2, tray: 2.1, wrapper: 1.9,
 }
 type TrashItem = { id: number; layer: number; art: TrashArt; x: number; y: number; rotation: number; scale: number; bottle: boolean; returnable: boolean; collected?: boolean; cleared?: boolean }
-
-const INITIAL_LIFE: LifeSituation = { housing: 'Street', employment: 'Unemployed', income: 'None', shelterMisses: 0, shelterStrikes: 0 }
-const SHELTER_DEPARTURE_MINUTES = 30
-const SHELTER_ARRIVAL_KEY = 'street-life-shelter-arrival-v1'
-
-function loadTrip(): Trip | null {
-  try {
-    const raw = localStorage.getItem('street-life-trip-v1')
-    if (!raw) return null
-    const saved = JSON.parse(raw) as Trip
-    return locations.some(location => location.id === saved.destinationId) &&
-      ['walk', 'transit', 'fare-dodge'].includes(saved.mode) &&
-      Number.isFinite(saved.total) && saved.total > 0 && Number.isFinite(saved.remaining) &&
-      saved.remaining >= 0 && saved.remaining <= saved.total ? saved : null
-  } catch { return null }
-}
-
-function loadGame(): GameState {
-  const game = readSavedGame(localStorage) ?? createInitialState()
-  try {
-    const sleep = JSON.parse(localStorage.getItem('street-life-sleep-v1') ?? 'null') as SleepState | null
-    if (sleep && (sleep.kind === 'ground' || sleep.kind === 'bench') && game.sleepIllnessDose === undefined) {
-      const elapsed = Math.min(sleep.total, Math.max(0, absoluteMinutes(game) - sleep.startAbsolute))
-      if (Number.isFinite(elapsed) && elapsed > 0) {
-        const start = { ...(sleep.before?.game ?? game), day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440, locationId: game.locationId }
-        const restored = applyGameSleepTime(start, elapsed, { sleepKind: sleep.kind, exposure: sleep.kind === 'bench' && game.locationId !== 'street' ? 'indoors' : 'outside' })
-        return { ...game, sleepIllnessDose: restored.sleepIllnessDose, sleepIllnessMinutes: elapsed }
-      }
-    }
-  } catch { /* Existing saves without an active outdoor sleep need no migration. */ }
-  return game
-}
 
 function clearSleepIllness(game: GameState): GameState {
   if (game.sleepIllnessDose === undefined && game.sleepIllnessMinutes === undefined) return game
@@ -172,19 +77,15 @@ function clearSleepIllness(game: GameState): GameState {
 }
 
 export default function App() {
-  const [game, commitGame] = useState<GameState>(loadGame)
-  const [choiceSeed, setChoiceSeed] = useState(loadChoiceSeed)
-  const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(loadPhoneActivity)
-  const [openingCallIndex, setOpeningCallIndex] = useState(() => loadOpeningCallIndex(localStorage, !!readSavedGame(localStorage)))
+  const [initial] = useState(() => loadGameSession(localStorage))
+  const [game, commitGame] = useState<GameState>(() => initial.game)
+  const [choiceSeed, setChoiceSeed] = useState(() => initial.choiceSeed)
+  const [phoneActivity, setPhoneActivity] = useState<PhoneActivity | null>(() => initial.phoneActivity)
+  const [openingCallIndex, setOpeningCallIndex] = useState(() => initial.openingCallIndex)
   const activeCall = phoneActivity ? openingCall(phoneActivity.questionId) : undefined
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
-  const [closingNotice, setClosingNotice] = useState<string | null>(() => {
-    try {
-      const id = JSON.parse(localStorage.getItem(CLOSING_NOTICE_KEY) ?? 'null')
-      return locations.some(place => place.id === id && place.id !== 'shelter' && !(place.open === 0 && place.close === 1440)) ? id : null
-    } catch { return null }
-  })
+  const [closingNotice, setClosingNotice] = useState<string | null>(() => initial.closingNotice)
   const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean; consumedItems: ConsumedItem[] } | null>(null)
   const [eventResultOpen, setEventResultOpen] = useState(false)
   const closeResult = useCallback(() => {
@@ -193,35 +94,14 @@ export default function App() {
   }, [infoModal?.rainResultId])
   const buyShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) buyItem(item) })
   const stealShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) stealItem(item) })
-  const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => loadDiscoveredLocations(localStorage))
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
-      return loadJournalEntries(saved)
-    } catch { return [] }
-  })
-  const [musicWalkUsed, setMusicWalkUsed] = useState(() => {
-    const inHistory = journalEntries.some(entry => entry.actionTitle === 'Walk with music')
-    try { return localStorage.getItem(MUSIC_WALK_USED_KEY) === 'true' || inHistory } catch { return inHistory }
-  })
+  const [discoveredLocations, setDiscoveredLocations] = useState<string[]>(() => initial.discoveredLocations)
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => initial.journalEntries)
+  const [musicWalkUsed, setMusicWalkUsed] = useState(() => initial.musicWalkUsed)
   const lastRecordedResult = useRef<unknown>(null)
-  const [journalGoals, setJournalGoals] = useState<JournalGoals>(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(JOURNAL_GOALS_KEY) ?? '{}')
-      return { morning: raw.morning === true, shelter: raw.shelter === true, support: raw.support === true, work: raw.work === true }
-    } catch { return { morning: false, shelter: false, support: false, work: false } }
-  })
-  const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => {
-    try { const raw = localStorage.getItem(GOAL_KEY); return raw ? { ...JSON.parse(raw), minute: SHELTER_ENTRY_OPEN } : null } catch { return null }
-  })
+  const [journalGoals, setJournalGoals] = useState<JournalGoalState>(() => initial.journalGoals)
+  const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => initial.activeGoal)
   const [shelterInterview, setShelterInterview] = useState<{ step: 'reason' | 'action' | 'plan'; reason?: string; action?: string } | null>(null)
-  const [screen, setScreen] = useState<Screen>(() => {
-    if (loadPhoneActivity()) return 'location'
-    if (loadTrip()) return 'travel'
-    const saved = localStorage.getItem('street-life-screen')
-    if (saved === 'journal') return 'phone'
-    return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'phone' ? saved : 'location'
-  })
+  const [screen, setScreen] = useState<Screen>(() => initial.screen)
   const [phoneApp, setPhoneApp] = useState<PhoneApp>('home')
   const [scrollResetRequest, setScrollResetRequest] = useState(0)
   useEffect(() => {
@@ -249,16 +129,10 @@ export default function App() {
   }, [screen, phoneApp])
   const [rainChoice, setRainChoice] = useState(false)
   const rainModalRef = useRef<HTMLElement>(null)
-  const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => {
-    try { const saved = JSON.parse(localStorage.getItem('street-life-answers-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
-  })
-  const [seenMemories, setSeenMemories] = useState<string[]>(() => {
-    try { const saved = JSON.parse(localStorage.getItem('street-life-memories-v1') ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }
-  })
+  const [answeredQuestions, setAnsweredQuestions] = useState<string[]>(() => initial.answeredQuestions)
+  const [seenMemories, setSeenMemories] = useState<string[]>(() => initial.seenMemories)
   const [phoneOpen, setPhoneOpen] = useState(false)
-  const [shelterPhoneCharging, setShelterPhoneCharging] = useState(() => {
-    try { return localStorage.getItem(SHELTER_PHONE_CHARGE_KEY) === 'true' } catch { return false }
-  })
+  const [shelterPhoneCharging, setShelterPhoneCharging] = useState(() => initial.shelterPhoneCharging)
   const [discardItem, setDiscardItem] = useState<{ id: BackpackItemId; name: string; quantity: number; slotIndex: number; spoiledQuantity?: number } | null>(null)
   const cancelDiscard = useCallback(() => setDiscardItem(null), [])
   const [foodChoice, setFoodChoice] = useState<{ kind: FoodKind; name: string; slotIndex: number } | null>(null)
@@ -266,7 +140,7 @@ export default function App() {
   const [streetExitPending, setStreetExitPending] = useState(false)
   const cancelStreetExit = useCallback(() => setStreetExitPending(false), [])
   const inventoryDialogOpen = !!discardItem || !!foodChoice || streetExitPending
-  const [trip, setTrip] = useState<Trip | null>(loadTrip)
+  const [trip, setTrip] = useState<Trip | null>(() => initial.trip)
   const travelModalRef = useRef<HTMLElement>(null)
   const travelChoiceRef = useRef<HTMLElement>(null)
   const travelChoiceOpen = screen === 'map' && !!selectedDestination
@@ -302,108 +176,39 @@ export default function App() {
     return () => { document.body.style.overflow = overflow }
   }, [activityOverlay])
   const [musicOn, setMusicOn] = useState(false)
-  const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-service-until') ?? 0))
-  const [mobileAutoRenew, setMobileAutoRenew] = useState<boolean>(() => localStorage.getItem('street-life-mobile-auto-renew') !== 'false')
-  const [mobileRenewedDay, setMobileRenewedDay] = useState<number>(() => Number(localStorage.getItem('street-life-mobile-renewed-day') ?? 0))
-  const [shelterQueue, setShelterQueue] = useState<ShelterQueue | null>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-shelter-queue-v1')
-      if (!raw) return null
-      const saved = JSON.parse(raw) as ShelterQueue
-      const total = saved.total ?? SHELTER_QUEUE_MINUTES
-      return saved.day === game.day && game.locationId === 'shelter' && Number.isInteger(total) && total >= SHELTER_QUEUE_MINUTES && total <= SHELTER_REGISTRATION_OPEN - 480 && saved.remaining >= 0 && saved.remaining <= total && saved.before ? saved : null
-    } catch { return null }
-  })
-  const [shelterArrival, setShelterArrival] = useState<ShelterArrival | null>(() => {
-    if (game.locationId !== 'shelter' || trip || game.minutes < 480 || game.minutes >= 1320) return null
-    try {
-      const saved = JSON.parse(localStorage.getItem(SHELTER_ARRIVAL_KEY) ?? 'null')
-      if (saved?.day === game.day && Number.isInteger(saved.minute) && saved.minute >= 480 && saved.minute <= game.minutes) return saved
-    } catch { /* Older saves start with their current arrival time. */ }
-    return { day: game.day, minute: game.minutes }
-  })
-  const [shelterDeparture, setShelterDeparture] = useState<ShelterDeparture | null>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-shelter-departure-v1')
-      if (!raw) return null
-      const saved = JSON.parse(raw) as ShelterDeparture
-      const elapsed = absoluteMinutes(game) - saved.startAbsolute
-      return saved.day === game.day && game.locationId === 'shelter' && Number.isFinite(elapsed) && elapsed >= 0 && elapsed <= SHELTER_DEPARTURE_MINUTES && saved.before ? saved : null
-    } catch { return null }
-  })
+  const [mobileServiceUntil, setMobileServiceUntil] = useState<number>(() => initial.mobileServiceUntil)
+  const [mobileAutoRenew, setMobileAutoRenew] = useState<boolean>(() => initial.mobileAutoRenew)
+  const [mobileRenewedDay, setMobileRenewedDay] = useState<number>(() => initial.mobileRenewedDay)
+  const [shelterQueue, setShelterQueue] = useState<ShelterQueue | null>(() => initial.shelterQueue)
+  const [shelterArrival, setShelterArrival] = useState<ShelterArrival | null>(() => initial.shelterArrival)
+  const [shelterDeparture, setShelterDeparture] = useState<ShelterDeparture | null>(() => initial.shelterDeparture)
   const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [sleepHours, setSleepHours] = useState(8)
   const [sleepChoice, setSleepChoice] = useState<SleepState['kind'] | null>(null)
-  const [sleeping, setSleeping] = useState<SleepState | null>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-sleep-v1')
-      if (!raw) return null
-      const saved = JSON.parse(raw) as SleepState
-      if (saved.kind !== 'shelter') return saved
-      const total = shelterSleepMinutes(saved.startAbsolute, saved.total)
-      return { ...saved, total, remaining: Math.min(saved.remaining, total), realWakeAt: saved.realStartedAt + total * 1000 / DEBUG_SLEEP_SPEED }
-    } catch { return null }
-  })
-  const [begging, setBegging] = useState<{ day: number; attempts: number }>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-begging-v1')
-      const saved = raw ? JSON.parse(raw) : null
-      return saved && Number.isInteger(saved.day) && saved.day >= 1 && Number.isInteger(saved.attempts) && saved.attempts >= 0
-        ? { day: saved.day, attempts: Math.min(3, saved.attempts) } : { day: game.day, attempts: 0 }
-    } catch { return { day: game.day, attempts: 0 } }
-  })
+  const [sleeping, setSleeping] = useState<SleepState | null>(() => initial.sleeping)
+  const [begging, setBegging] = useState<{ day: number; attempts: number }>(() => initial.begging)
   const lastFinishedSleep = useRef<SleepState | null>(null)
   const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; before: ResultSnapshot } | null>(null)
   const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
   const eventModalRef = useRef<HTMLElement>(null)
-  const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(loadFirstNightEvents)
-  const [leftHome, setLeftHome] = useState(loadLeftHome)
-  const [encounters, setEncounters] = useState<FirstNightEvents>(() => loadFirstNightEvents(ENCOUNTERS_KEY))
+  const [firstNightEvents, setFirstNightEvents] = useState<FirstNightEvents>(() => initial.firstNightEvents)
+  const [leftHome, setLeftHome] = useState(() => initial.leftHome)
+  const [encounters, setEncounters] = useState<FirstNightEvents>(() => initial.encounters)
   const openingSearchObservation = useRef(false)
   const ambientEventClock = useRef({ locationId: game.locationId, minutes: 0 })
   const [activeEvent, setActiveEvent] = useState<StreetEvent | null>(() => {
-    const event = STREET_EVENTS.find(event => event.id === (loadFirstNightEvents().pendingId ?? loadFirstNightEvents(ENCOUNTERS_KEY).pendingId))
+    const event = STREET_EVENTS.find(event => event.id === (initial.firstNightEvents.pendingId ?? initial.encounters.pendingId))
     return event ? illustrateStreetEvent(event, { locationId: game.locationId, housing: game.locationId === 'shelter' ? 'Night shelter' : 'Street', sleepKind: sleeping?.kind ?? (game.locationId === 'station' ? 'bench' : 'ground') }) : null
   })
   const [diceCheck, setDiceCheck] = useState<{ choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string } | null>(() => {
-    const roll = loadFirstNightEvents(ENCOUNTERS_KEY).pendingRoll
+    const roll = initial.encounters.pendingRoll
     const choice = activeEvent && ['borrow-phone-slip', 'park-company'].includes(activeEvent.id) ? activeEvent.choices[0] : undefined
     return choice?.check && roll ? { choice, roll, modifier: checkModifier(choice), resolved: false } : null
   })
-  const [inventory, setInventory] = useState<Inventory>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-inventory-v1')
-      if (!raw) return INITIAL_INVENTORY
-      const saved = JSON.parse(raw)
-      return { ...INITIAL_INVENTORY, ...saved, clothingCleanliness: typeof saved.clothingCleanliness === 'number' && Number.isFinite(saved.clothingCleanliness) ? Math.max(0, Math.min(100, saved.clothingCleanliness)) : Math.max(80, loadGame().hygiene) }
-    } catch {
-      return INITIAL_INVENTORY
-    }
-  })
-  const [storage, setStorage] = useState<StoredItems>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-storage-v1')
-      return raw ? { ...INITIAL_STORAGE, ...JSON.parse(raw) } : INITIAL_STORAGE
-    } catch {
-      return INITIAL_STORAGE
-    }
-  })
-  const [life, setLife] = useState<LifeSituation>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-situation-v1')
-      return raw ? { ...INITIAL_LIFE, ...JSON.parse(raw) } : INITIAL_LIFE
-    } catch {
-      return INITIAL_LIFE
-    }
-  })
-  const [effects, setEffects] = useState<ActiveEffect[]>(() => {
-    try {
-      const raw = localStorage.getItem('street-life-effects-v1')
-      return raw ? JSON.parse(raw) : []
-    } catch {
-      return []
-    }
-  })
+  const [inventory, setInventory] = useState<Inventory>(() => initial.inventory)
+  const [storage, setStorage] = useState<StoredItems>(() => initial.storage)
+  const [life, setLife] = useState<LifeSituation>(() => initial.life)
+  const [effects, setEffects] = useState<ActiveEffect[]>(() => initial.effects)
   function moodContext(state = game, housing?: Housing) {
     return { effects, housing: housing ?? (life.housing === 'Street' && (life.shelterUntilDay ?? 0) >= state.day ? 'Night shelter' as const : life.housing) }
   }
@@ -2099,7 +1904,7 @@ export default function App() {
     setChoiceSeed(newChoiceSeed())
     localStorage.removeItem(SAVE_KEY)
     localStorage.removeItem(DISCOVERY_KEY)
-    localStorage.removeItem('street-life-discovery-version')
+    localStorage.removeItem(SAVE_KEYS.discoveryVersion)
     setDiscoveredLocations(['street', 'station', 'shop'])
     setActiveGoal(null)
     setJournalGoals({ morning: false, shelter: false, support: false, work: false })
@@ -2157,21 +1962,21 @@ export default function App() {
     setSleeping(null)
     setSleepChoice(null)
     setSleepHours(8)
-    localStorage.removeItem('street-life-inventory-v1')
-    localStorage.removeItem('street-life-storage-v1')
-    localStorage.removeItem('street-life-effects-v1')
-    localStorage.removeItem('street-life-situation-v1')
-    localStorage.removeItem('street-life-sleep-v1')
-    localStorage.removeItem('street-life-trip-v1')
-    localStorage.removeItem('street-life-begging-v1')
-    localStorage.removeItem('street-life-shelter-queue-v1')
-    localStorage.removeItem('street-life-shelter-departure-v1')
+    localStorage.removeItem(SAVE_KEYS.inventory)
+    localStorage.removeItem(SAVE_KEYS.storage)
+    localStorage.removeItem(SAVE_KEYS.effects)
+    localStorage.removeItem(SAVE_KEYS.situation)
+    localStorage.removeItem(SAVE_KEYS.sleep)
+    localStorage.removeItem(SAVE_KEYS.trip)
+    localStorage.removeItem(SAVE_KEYS.begging)
+    localStorage.removeItem(SAVE_KEYS.shelterQueue)
+    localStorage.removeItem(SAVE_KEYS.shelterDeparture)
     setMobileServiceUntil(0)
     setMobileAutoRenew(true)
     setMobileRenewedDay(0)
-    localStorage.removeItem('street-life-mobile-service-until')
-    localStorage.removeItem('street-life-mobile-auto-renew')
-    localStorage.removeItem('street-life-mobile-renewed-day')
+    localStorage.removeItem(SAVE_KEYS.mobileServiceUntil)
+    localStorage.removeItem(SAVE_KEYS.mobileAutoRenew)
+    localStorage.removeItem(SAVE_KEYS.mobileRenewedDay)
   }
 
   function discoverLocation(id: string, label: string) {
@@ -2184,36 +1989,36 @@ export default function App() {
     [SAVE_KEY]: game,
     [CHOICE_SEED_KEY]: choiceSeed,
     [DISCOVERY_KEY]: discoveredLocations,
-    'street-life-discovery-version': 2,
+    [SAVE_KEYS.discoveryVersion]: 2,
     [GOAL_KEY]: activeGoal,
     [JOURNAL_GOALS_KEY]: journalGoals,
     [JOURNAL_HISTORY_KEY]: journalEntries,
     [MUSIC_WALK_USED_KEY]: musicWalkUsed,
     [PHONE_ACTIVITY_KEY]: phoneActivity,
     [OPENING_CALLS_KEY]: openingCallIndex,
-    'street-life-inventory-v1': inventory,
+    [SAVE_KEYS.inventory]: inventory,
     [SHELTER_PHONE_CHARGE_KEY]: shelterPhoneCharging || null,
     [CLOSING_NOTICE_KEY]: closingNotice,
-    'street-life-storage-v1': storage,
-    'street-life-effects-v1': effects,
-    'street-life-situation-v1': life,
-    'street-life-begging-v1': begging,
-    'street-life-answers-v1': answeredQuestions,
-    'street-life-memories-v1': seenMemories,
+    [SAVE_KEYS.storage]: storage,
+    [SAVE_KEYS.effects]: effects,
+    [SAVE_KEYS.situation]: life,
+    [SAVE_KEYS.begging]: begging,
+    [SAVE_KEYS.answers]: answeredQuestions,
+    [SAVE_KEYS.memories]: seenMemories,
     [FIRST_NIGHT_EVENTS_KEY]: firstNightEvents,
     [LEFT_HOME_KEY]: leftHome,
     [ENCOUNTERS_KEY]: encounters,
-    'street-life-rain-choice-v1': rainChoice,
+    [SAVE_KEYS.rainChoice]: rainChoice,
     [RAIN_RESPONSE_KEY]: null,
-    'street-life-screen': screen === 'travel' ? undefined : screen,
-    'street-life-mobile-service-until': mobileServiceUntil,
-    'street-life-mobile-auto-renew': mobileAutoRenew,
-    'street-life-mobile-renewed-day': mobileRenewedDay,
-    'street-life-trip-v1': trip,
-    'street-life-sleep-v1': sleeping,
-    'street-life-shelter-queue-v1': shelterQueue,
+    [SAVE_KEYS.screen]: screen === 'travel' ? undefined : screen,
+    [SAVE_KEYS.mobileServiceUntil]: mobileServiceUntil,
+    [SAVE_KEYS.mobileAutoRenew]: mobileAutoRenew,
+    [SAVE_KEYS.mobileRenewedDay]: mobileRenewedDay,
+    [SAVE_KEYS.trip]: trip,
+    [SAVE_KEYS.sleep]: sleeping,
+    [SAVE_KEYS.shelterQueue]: shelterQueue,
     [SHELTER_ARRIVAL_KEY]: shelterArrival,
-    'street-life-shelter-departure-v1': shelterDeparture,
+    [SAVE_KEYS.shelterDeparture]: shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
     discoveredLocations, activeGoal, journalGoals, journalEntries, musicWalkUsed, answeredQuestions, seenMemories, firstNightEvents, leftHome, encounters, choiceSeed,
     rainChoice, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,

@@ -1,12 +1,13 @@
+import type { SaveReader } from './saveCompatibility'
 export const CHOICE_SEED_KEY = 'street-life-choice-seed-v1'
 
 export function newChoiceSeed(): number {
   return window.crypto?.getRandomValues?.(new Uint32Array(1))?.[0] ?? (Date.now() >>> 0)
 }
 
-export function loadChoiceSeed(): number {
+export function loadChoiceSeed(storage: SaveReader = localStorage): number {
   try {
-    const saved = JSON.parse(localStorage.getItem(CHOICE_SEED_KEY) ?? 'null')
+    const saved = JSON.parse(storage.getItem(CHOICE_SEED_KEY) ?? 'null')
     if (Number.isInteger(saved) && saved >= 0 && saved <= 0xffffffff) return saved
   } catch { /* Older or invalid saves receive a new presentation seed. */ }
   return newChoiceSeed()

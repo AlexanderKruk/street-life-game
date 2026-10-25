@@ -83,6 +83,19 @@ content), and `stateTypes.ts` (shared model types). These helpers do not import
 `App.tsx` or mutate React state. Active timers, pending outcomes and persistence
 remain with the game owner until a separately verified controller extraction.
 
+Save restoration is extracted in v327: `loadGameSession.ts` reads one cached
+snapshot per mount and supplies initial values to the game owner. It reuses
+`saveCompatibility.ts` for v3 game/discovery migration and keeps pending trips,
+searches/calls, sleep, shelter processes and saved D20 rolls. Loaders accept a
+`SaveReader`; they never write storage, advance the clock or apply action costs
+or rewards. `saveKeys.ts` is the shared key/encoding registry for keys without
+an existing domain owner; reuse existing domain key constants too. Do not change
+key names when increasing the build version. `useGameAutosave.ts` remains the
+writer, and `App.tsx` owns state, reset commands and process lifecycles. Keep
+restoration outside React callbacks and do not reintroduce storage parsing in
+App. Shared process-state types are in `stateTypes.ts`. Run the permanent
+`check-load-game-session.cjs` checks plus the full suite for restoration changes.
+
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact
 confirmations/timers use the compact frame. Content layout can differ by purpose;

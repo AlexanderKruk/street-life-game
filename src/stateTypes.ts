@@ -1,3 +1,4 @@
+import type { ResultSnapshot } from './results'
 import type { Housing } from './game'
 import type { FoodPortionFields } from './foodInventory'
 
@@ -17,3 +18,13 @@ export type StoredItems = { documents: boolean; medicines: number; cigarettes: n
 
 
 export type Screen = 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
+
+export type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null }
+export type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot; pausedMinutes?: number }
+export type JournalGoals = { morning: boolean; shelter: boolean; support: boolean; work: boolean }
+export type TravelMode = 'walk' | 'transit' | 'fare-dodge'
+export type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
+export type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
+export type ShelterArrival = { day: number; minute: number }
+export type ShelterQueue = { day: number; remaining: number; total?: number; arrivalMinute?: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
+export type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
