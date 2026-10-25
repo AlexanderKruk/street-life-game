@@ -89,15 +89,15 @@ export type GameAction = {
 export const locations: Location[] = [
   { id: 'street', name: 'Street', icon: '🌆', description: 'Chance encounters, small opportunities and unexpected trouble.', open: 0, close: 1440, travelMinutes: 60 },
   { id: 'station', name: 'Station', icon: '🚉', description: 'Crowds, benches and small chances to earn.', open: 0, close: 1440, travelMinutes: 65 },
-  { id: 'shop', name: 'Cheap Shop', icon: '🛒', description: 'Cheap food and water, if you can afford them.', open: 420, close: 1320, travelMinutes: 10, travelRange: { min: 5, max: 15 } },
+  { id: 'shop', name: 'Small Shop', icon: '🛒', description: 'Affordable food, water and everyday supplies.', open: 420, close: 1320, travelMinutes: 10, travelRange: { min: 5, max: 15 } },
   { id: 'shelter', name: 'Night Shelter', icon: '🛏️', description: 'Overnight accommodation. Open from 18:00 until 08:00; places are limited.', open: 1080, close: 480, travelMinutes: 90 },
   { id: 'support', name: 'Help Center', icon: '🤝', description: 'Social workers can help with documents, benefits, accommodation and other support.', open: 480, close: 960, travelMinutes: 105 },
-  { id: 'residential-shelter', name: 'Schronisko', icon: '🏠', description: '24/7 supported accommodation. Access requires a referral from the help center.', open: 0, close: 1440, travelMinutes: 120 },
+  { id: 'residential-shelter', name: 'Schronisko', icon: '🏠', description: '24/7 supported accommodation. Access requires a referral from Help Center.', open: 0, close: 1440, travelMinutes: 120 },
   { id: 'daycenter', name: 'Day Center', icon: '🧼', description: 'A warm place indoors with free showers, laundry and phone charging.', open: 480, close: 960, travelMinutes: 90 },
   { id: 'free-clinic', name: 'Free Clinic', icon: '🩺', description: 'Free basic medical care. No insurance needed.', open: 480, close: 960, travelMinutes: 90 },
   { id: 'hospital', name: 'Hospital', icon: '🏥', description: 'Regular medical care requires documents. Emergency care is available for critical conditions.', open: 480, close: 1080, travelMinutes: 105 },
   { id: 'jobcenter', name: 'Job Centre', icon: '📋', description: 'Vacancies and appointments.', open: 480, close: 900, travelMinutes: 105 },
-  { id: 'work', name: 'Day Work', icon: '📦', description: 'Short shifts. Pay is not guaranteed.', open: 420, close: 1080, travelMinutes: 120 },
+  { id: 'work', name: 'Day Work', icon: '📦', description: 'Short shifts of physical work, paid when you finish.', open: 420, close: 1080, travelMinutes: 120 },
 ]
 
 export const initialState: GameState = {
@@ -342,47 +342,47 @@ export const actions: GameAction[] = [
   },
   {
     id: 'station-rest', locationId: 'station', name: 'Sit and recover',
-    description: 'Rest on a bench. Free, but the day keeps moving.', minutes: 40, requiresOpen: false,
-    resolve: () => ({ minutes: 40, energy: 13, mood: 2, message: 'You rested for a while. Your legs feel a little better.' }),
+    description: 'Rest on a bench and recover some Energy.', minutes: 40, requiresOpen: false,
+    resolve: () => ({ minutes: 40, energy: 13, mood: 2, message: 'You sit for a while. Your legs feel a little better.' }),
   },
   {
     id: 'station-charge', locationId: 'station', name: 'Charge phone',
-    description: 'Use a public power outlet for an hour.', minutes: 60, requiresOpen: false,
+    description: 'Use the outlet in the waiting room.', minutes: 60, requiresOpen: false,
     resolve: () => ({ minutes: 60, energy: 5, mood: 1, message: 'You spend an hour near a power outlet at the station.' }),
   },
   {
     id: 'station-sleep', locationId: 'station', name: 'Try to sleep',
-    description: 'Try to get some sleep on a station bench. Risks will be added later.', minutes: 8 * 60, requiresOpen: false,
+    description: 'Rest on a station bench. You may be disturbed, and your belongings are still at risk.', minutes: 8 * 60, requiresOpen: false,
     resolve: () => ({ minutes: 0, message: 'You try to sleep on a station bench.' }),
   },
   {
     id: 'shop-water', locationId: 'shop', name: 'Buy water',
     description: 'A bottle of water. Cheap and immediately useful.', minutes: 5, cost: 3,
-    resolve: () => ({ minutes: 5, money: -3, thirst: 38, message: 'You drank a bottle of water. 3 zł spent.' }),
+    resolve: () => ({ minutes: 5, money: -3, thirst: 38, message: 'You drink a bottle of water.' }),
   },
   {
     id: 'shop-roll', locationId: 'shop', name: 'Buy bread and a roll',
     description: 'Cheap calories. Enough to keep going.', minutes: 10, cost: 5,
-    resolve: () => ({ minutes: 10, money: -5, hunger: 22, mood: 1, message: 'You spent 5 zł on cheap food and ate outside.' }),
+    resolve: () => ({ minutes: 10, money: -5, hunger: 22, mood: 1, message: 'You buy some food and eat outside.' }),
   },
   {
     id: 'shop-meal', locationId: 'shop', name: 'Buy a filling meal',
     description: 'Costs more, but buys you breathing room.', minutes: 15, cost: 8,
-    resolve: () => ({ minutes: 15, money: -8, hunger: 48, thirst: 8, mood: 5, message: 'A proper meal helps. 8 zł gone, but you feel much better.' }),
+    resolve: () => ({ minutes: 15, money: -8, hunger: 48, thirst: 8, mood: 5, message: 'You sit down to a filling meal. It helps to have something warm to eat.' }),
   },
   {
     id: 'daycenter-stay', locationId: 'daycenter', name: 'Stay indoors',
-    description: 'Spend some time somewhere warm and safe during the day.', minutes: 60,
+    description: 'Warm up and rest indoors.', minutes: 60,
     resolve: () => ({ minutes: 60, energy: 10, mood: 5, message: 'You spend an hour indoors, warm up and get off your feet.' }),
   },
   {
     id: 'daycenter-shower', locationId: 'daycenter', name: 'Take a shower',
     description: 'Use the free shower. There may be a short wait.', minutes: 40,
-    resolve: () => ({ minutes: 40, hygiene: 50, hygieneCap: 70, mood: 4, message: 'You showered with water only. Hygiene improves up to 70; gel helps clean more thoroughly.' }),
+    resolve: () => ({ minutes: 40, hygiene: 50, hygieneCap: 70, mood: 4, message: 'You rinse off with water only. Shower gel would help you get cleaner.' }),
   },
   {
     id: 'daycenter-laundry', locationId: 'daycenter', name: 'Do laundry',
-    description: 'Wash and dry your clothes while you are here.', minutes: 90,
+    description: 'Wash and dry your clothes.', minutes: 90,
     resolve: () => ({ minutes: 90, hygiene: 18, mood: 5, message: 'Your clothes are washed and dried.' }),
   },
   {
@@ -403,7 +403,7 @@ export const actions: GameAction[] = [
   {
     id: 'support-worker', locationId: 'support', name: 'Talk to a social worker',
     description: 'Explain your situation and find out what support you can apply for.', minutes: 30,
-    resolve: () => ({ minutes: 30, mood: 4, message: 'The social worker listened to your situation and explained what help may be available. More support options will unlock here as you progress.' }),
+    resolve: () => ({ minutes: 30, mood: 4, message: 'The social worker listens as you explain your situation, then talks you through the help available.' }),
   },
   {
     id: 'residential-stay', locationId: 'residential-shelter', name: 'Settle into your place',
@@ -412,7 +412,7 @@ export const actions: GameAction[] = [
   },
   {
     id: 'residential-sleep', locationId: 'residential-shelter', name: 'Sleep safely',
-    description: 'Sleep for eight hours in your assigned place. Recovery is better when fed and hydrated.', minutes: 8 * 60,
+    description: 'Rest in your assigned bed. Recovery is better when fed and hydrated.', minutes: 8 * 60,
     resolve: (state) => ({ minutes: 8 * 60, energy: 90, health: state.hunger > 20 && state.thirst > 20 ? 3 : 0, hygiene: 3, mood: 8, message: state.hunger > 20 && state.thirst > 20 ? 'A safe full night restores some health.' : 'You sleep safely, but hunger or dehydration prevents physical recovery.' }),
   },
   {
@@ -428,17 +428,17 @@ export const actions: GameAction[] = [
   {
     id: 'shelter-shower', locationId: 'shelter', name: 'Ask for a shower',
     description: 'There may be a queue, but it restores hygiene.', minutes: 35,
-    resolve: () => ({ minutes: 35, hygiene: 55, hygieneCap: 70, energy: 4, mood: 4, message: 'You got a shower with water only. Hygiene improves up to 70; gel helps clean more thoroughly.' }),
+    resolve: () => ({ minutes: 35, hygiene: 55, hygieneCap: 70, energy: 4, mood: 4, message: 'You rinse off with water only. Shower gel would help you get cleaner.' }),
   },
   {
     id: 'shelter-dinner', locationId: 'shelter', name: 'Dinner',
-    description: 'Free evening meal with tea, served from 19:00 to 20:30.', minutes: 20,
+    description: 'Free meal with tea · 19:00–20:30.', minutes: 20,
     impacts: ['Food+++', 'Thirst+++', 'Mood+'],
     resolve: () => ({ minutes: 20, hunger: 48, thirst: 38, mood: 4, message: 'You eat the free shelter dinner and drink tea.' }),
   },
   {
     id: 'shelter-breakfast', locationId: 'shelter', name: 'Breakfast',
-    description: 'Free breakfast with tea, served from 06:30 to 07:00.', minutes: 15,
+    description: 'Free meal with tea · 06:30–07:00.', minutes: 15,
     impacts: ['Food++', 'Thirst+++', 'Mood+'],
     resolve: () => ({ minutes: 15, hunger: 28, thirst: 38, mood: 3, message: 'You eat breakfast and drink tea before leaving the shelter.' }),
   },

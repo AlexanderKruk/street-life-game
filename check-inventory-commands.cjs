@@ -72,7 +72,7 @@ assert.equal(treated.changes.info.title, 'Recovery accelerated');
 for (const effects of [[], [{ id: 'cold', expiresAt: now }], treated.next.effects]) {
   const { next, changes } = run(context({ inventory: { medicines: 2 }, effects }), { type: 'medicine' });
   assert.equal(next.inventory.medicines, 2); assert.deepEqual(next.effects, effects);
-  assert.equal(changes.info.title, effects[0]?.treated ? 'One dose is enough' : 'No fever');
+  assert.equal(changes.info.title, effects[0]?.treated ? 'One dose is enough' : 'No cold');
 }
 
 for (const locationId of ['shelter', 'residential-shelter']) {

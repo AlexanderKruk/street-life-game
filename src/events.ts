@@ -127,7 +127,7 @@ const streetHasPassersBy = (context: EventContext) => {
 
 export const STREET_EVENTS: StreetEvent[] = [
   // Replaces the old dawn reflection, retaining its once-per-run save history.
-  { id:'city-waking', trigger:'location', icon:'🌅', title:'The city wakes up', text:'The streets are getting busy. Shops and support centres are open, and people are heading to work. You’ve made it through the night. Now you need to decide where to start. You could try to manage on your own, or find out what help is available. You never thought you’d be making that choice.', weight:1, eligible:c=>c.locationId==='street' && firstMorningTime(c), choices:[
+  { id:'city-waking', trigger:'location', icon:'🌅', title:'The city wakes up', text:'The streets are filling with people on their way to work. You’ve made it through the night. Now there’s a whole day ahead of you.', weight:1, eligible:c=>c.locationId==='street' && firstMorningTime(c), choices:[
     { label:'I’ll try to manage on my own.', icon:'work', outcome:{ knownLocations:['work','jobcenter'], message:'First, you need some money coming in. Finding work seems like a place to start.' } },
     { label:'I need some help.', icon:'help', outcome:{ knownLocations:['shelter','support','daycenter'], message:'Food, a shower, somewhere to rest. You decide to find out what support you can get.' } },
     { label:'I need a little more time.', icon:'pause', outcome:{ message:'You watch people hurry past. Everyone seems to know where they’re going. You’re not ready to decide what comes next. For now, you stay where you are.' } },
@@ -138,7 +138,7 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Walk away', icon:'walk', outcome:{ energy:-1, message:'You quicken your pace and take a longer route around the dark stretch.' } },
   ]},
   { id:'borrow-phone', trigger:'location', icon:'📱', title:'One quick call', text:'A man stands under a streetlight, looking down at his phone. As you approach, he looks up. “Sorry, my battery’s dead. Could I use yours? I just need to tell someone where to pick me up.”', weight:1, eligible:c=>c.locationId==='street' && c.day!==undefined && c.day>=2 && c.minutes!==undefined && c.minutes>=0 && c.minutes<240, choices:[
-    { label:'Hand him your phone', icon:'hand', phoneBatteryRequired:2, followUp:{ chance:0.5, eventId:'borrow-phone-slip' }, outcome:{ minutes:5, mood:3, phoneBattery:-2, message:'He makes a quick call and tells someone where he’s waiting. “They’re on their way. Thanks, you saved me a long walk.” He hands your phone back. It feels good to have helped.' } },
+    { label:'Hand him my phone', icon:'hand', phoneBatteryRequired:2, followUp:{ chance:0.5, eventId:'borrow-phone-slip' }, outcome:{ minutes:5, mood:3, phoneBattery:-2, message:'He makes a quick call and tells someone where he’s waiting. “They’re on their way. Thanks, you saved me a long walk.” He hands your phone back. It feels good to have helped.' } },
     { label:'Offer to call on speaker', icon:'phone', phoneBatteryRequired:1, outcome:{ minutes:5, mood:2, phoneBattery:-1, message:'“I’ll hold it. What’s the number?” He reads it out, then leans closer to speak. The call is brief. “They’ll be here soon. Thanks for that.” You pocket your phone and carry on.' } },
     { label:'Say no and move on', icon:'walk', outcome:{ message:'“Sorry, I can’t.” He nods. “All right.” As you walk away, he looks down the street for someone else to ask.' } },
   ]},
@@ -191,7 +191,7 @@ export const STREET_EVENTS: StreetEvent[] = [
     }},
     { label:'Let it fall', outcome:{ phoneCondition:-8, mood:-3, message:'You do not risk the grab. The phone hits the pavement and takes damage.' } }
   ]},
-  { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the curb.', weight:4, eligible:c=>c.travelMode==='walk', choices:[
+  { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the kerb.', weight:4, eligible:c=>c.travelMode==='walk', choices:[
     { label:'Pick it up', outcome:{ randomCoin:true, message:'You pick up the coin.' } },
     { label:'Leave it', outcome:{ mood:1, message:'You leave it for someone who may need it more.' } }
   ]},
@@ -200,21 +200,21 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'No thanks', outcome:{ message:'You politely decline and keep going.' } }
   ]},
   { id:'ticket-check', trigger:'travel', icon:'🎫', title:'Ticket inspection', text:'Inspectors enter the vehicle and start checking tickets.', weight:3, eligible:c=>c.travelMode==='transit', choices:[
-    { label:'Show your ticket', outcome:{ message:'Everything is in order. You continue the trip.' } }
+    { label:'Show my ticket', outcome:{ message:'Everything is in order. You continue the trip.' } }
   ]},
   { id:'station-food', trigger:'location', icon:'🥐', title:'Food before closing', text:'A worker has a small bag of unsold food and asks if you want it.', weight:3, eligible:c=>c.locationId==='station' && !c.firstNight && (c.minutes ?? 1200)>=1140, choices:[
-    { label:'Accept', outcome:{ food:1, mood:3, message:'You received some food for later.' } },
+    { label:'Accept', outcome:{ food:1, mood:3, message:'You put the food in your backpack for later.' } },
     { label:'Decline', outcome:{ message:'You thank them and decline.' } }
   ]},
   { id:'rough-crowd', trigger:'location', icon:'⚠️', title:'Trouble nearby', text:'An argument nearby is getting louder. Staying around feels risky.', weight:2, eligible:c=>c.locationId==='station', choices:[
     { label:'Move away', outcome:{ minutes:10, energy:-2, message:'You move to another part of the station and avoid trouble.' } },
-    { label:'Stay where you are', outcome:{ mood:-5, message:'Nothing happens to you, but the situation leaves you tense.' } }
+    { label:'Stay here', outcome:{ mood:-5, message:'Nothing happens to you, but the situation leaves you tense.' } }
   ]},
   { id:'quiet-night', trigger:'wake', icon:'🌙', title:'Peaceful rest', text:'For once, you get some rest without trouble.', weight:5, choices:[
-    { label:'Get up', outcome:{ mood:5, energy:5, message:'A peaceful rest gave you a little extra strength.' } }
+    { label:'Get up', outcome:{ mood:5, energy:5, message:'You get up with a little more strength after a peaceful rest.' } }
   ]},
-  { id:'night-theft', trigger:'wake', icon:'🎒', title:'Something happened overnight', text:'You wake up and notice that someone went through your things.', weight:2, eligible:c=>c.housing==='Street', choices:[
-    { label:'Check your things', outcome:{ money:-5, mood:-7, loseDocuments:true, message:'Some cash is gone, and your documents are missing.' } }
+  { id:'night-theft', trigger:'wake', icon:'🎒', title:'While you were asleep', text:'You wake up and notice that someone went through your things.', weight:2, eligible:c=>c.housing==='Street', choices:[
+    { label:'Check my things', outcome:{ money:-5, mood:-7, loseDocuments:true, message:'Some cash is gone, and your documents are missing.' } }
   ]},
   { id:'spare-change', trigger:'location', icon:'🪙', title:'Have you got any change?', text:'A passer-by stops a few steps away. “Excuse me, could you spare a złoty?” They wait for your answer.', weight:2, eligible:c=>c.locationId==='station' || (c.locationId==='street' && streetHasPassersBy(c)), choices:[
     { label:'Give 1 zł', moneyRequired:1, outcome:{ money:-1, mood:1, message:'You give them a złoty. They thank you and move on. You check what you have left.' } },
@@ -236,17 +236,17 @@ export const STREET_EVENTS: StreetEvent[] = [
     { label:'Keep walking.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-dog-pass.webp', mood:-1, message:'You give your neighbour a quick nod. The dog spots you and starts wagging, tugging at the lead to reach you. You carry on before he gets close.' } },
     { label:'Stop and say hello.', outcome:{ illustration:'/street-life-game/assets/event-neighbour-dog-greet.webp', minutes:5, mood:3, message:'You crouch down, and the dog comes straight over. A quick sniff, then a wet tongue across your cheek. You laugh and give his ears a good scratch. “He’s missed you,” your neighbour says. You stay for a few minutes. When you get up to leave, you feel a little lighter.' } },
   ]},
-  { id:'first-night-bench', illustration:'/street-life-game/assets/event-first-night-bench.webp', trigger:'bench', icon:'🪑', title:'Making a bed on a bench', text:'While you sit, someone on a nearby bench folds a jacket under their head and pulls a bag close. You had barely noticed them before. Now you recognise what they are preparing for. They have not approached you.', weight:1, eligible:c=>!!c.firstNight && c.locationId==='street', choices:[
-    { label:'Ask how they get through the night', undiscoveredLocationRequired:'shelter', outcome:{ illustration:'/street-life-game/assets/event-bench-conversation.webp', minutes:10, mood:1, discoverLocation:'shelter', message:'You tell them you have nowhere to stay tonight. Only then do they mention Night Shelter: doors open at 18:00 and registration is 18:20–22:00; arriving early improves your queue position, so tonight is too late. They describe where it is. You save the place on your map for the next registration evening.' } },
+  { id:'first-night-bench', illustration:'/street-life-game/assets/event-first-night-bench.webp', trigger:'bench', icon:'🪑', title:'Making a bed on a bench', text:'While you sit, someone on a nearby bench folds a jacket under their head and pulls a bag close. You had barely noticed them before. Now you recognise what they are preparing for.', weight:1, eligible:c=>!!c.firstNight && c.locationId==='street', choices:[
+    { label:'Ask how they get through the night', undiscoveredLocationRequired:'shelter', outcome:{ illustration:'/street-life-game/assets/event-bench-conversation.webp', minutes:10, mood:1, discoverLocation:'shelter', message:'You explain that you have nowhere to stay. They tell you about Night Shelter. “Try to get there before six in the evening. Places go quickly.” You save the address on your map.' } },
     { label:'Watch quietly', outcome:{ illustration:'/street-life-game/assets/event-bench-watch.webp', minutes:5, message:'They arrange their belongings without looking around. You wonder how many times you have walked past this same scene without really seeing it.' } },
     { label:'Give them some space', outcome:{ illustration:'/street-life-game/assets/event-bench-space.webp', minutes:5, message:'You keep your distance. You are not ready to talk about your own night, and they have not asked.' } },
   ]},
-  { id:'first-night-station', illustration:'/street-life-game/assets/event-first-night-station.webp', trigger:'location', icon:'🚉', title:'The last departures', text:'A few passengers leave through the doors, checking their phones as they go. Further along the benches, someone has tucked their feet under a coat. You look at the departure board, then at the people who do not seem to be waiting for a train. To everyone else, you are another traveller with a bag.', weight:1, eligible:c=>!!c.firstNight && c.locationId==='station', choices:[
+  { id:'first-night-station', illustration:'/street-life-game/assets/event-first-night-station.webp', trigger:'location', icon:'🚉', title:'The last departures', text:'A few passengers leave through the doors, checking their phones as they go. Further along the benches, someone has tucked their feet under a coat. You look at the departure board, then at the people who do not seem to be waiting for a train.', weight:1, eligible:c=>!!c.firstNight && c.locationId==='station', choices:[
     { label:'Ask if the seat next to them is free', outcome:{ illustration:'/street-life-game/assets/event-station-seat.webp', minutes:5, mood:1, message:'They move their bag and say yes. You thank them and sit for a moment. Neither of you asks why the other is here.' } },
-    { label:'Ask where I could spend the night', undiscoveredLocationRequired:'shelter', outcome:{ illustration:'/street-life-game/assets/event-station-night.webp', minutes:10, mood:1, discoverLocation:'shelter', message:'You explain that you cannot go home tonight. They tell you where Night Shelter is and that doors open at 18:00 and registration runs 18:20–22:00; arriving early improves your queue position. Tonight is too late, but you save the address for the next registration evening.' } },
+    { label:'Ask where I could spend the night', undiscoveredLocationRequired:'shelter', outcome:{ illustration:'/street-life-game/assets/event-station-night.webp', minutes:10, mood:1, discoverLocation:'shelter', message:'You explain that you cannot go home. They give you directions to Night Shelter and suggest arriving before six in the evening. You save the address on your map.' } },
     { label:'Find a quiet seat on my own', outcome:{ illustration:'/street-life-game/assets/event-station-quiet.webp', minutes:5, message:'You choose a seat away from the doors. For now, you can just sit here without explaining anything.' } },
   ]},
-  { id:'first-night-bench-wake', illustration:'/street-life-game/assets/event-first-night-bench-wake.webp', trigger:'wake', icon:'🪑', title:'Someone needs the bench', text:'A voice wakes you: “Could you sit up? I need a seat.” You are lying across the bench with your bag beside you. It is what you are doing that has drawn attention; nobody has asked where you live.', weight:3, eligible:c=>!!c.firstNight && c.sleepKind==='bench', choices:[
+  { id:'first-night-bench-wake', illustration:'/street-life-game/assets/event-first-night-bench-wake.webp', trigger:'wake', icon:'🪑', title:'Someone needs the bench', text:'A voice wakes you: “Could you sit up? I need a seat.” You are lying across the bench with your bag beside you.', weight:3, eligible:c=>!!c.firstNight && c.sleepKind==='bench', choices:[
     { label:'Sit up and gather my things', outcome:{ illustration:'/street-life-game/assets/event-wake-sit.webp', minutes:5, message:'You sit up and pull your bag onto your lap. The person takes the other end of the bench. The conversation goes no further.' } },
     { label:'Move somewhere else', outcome:{ illustration:'/street-life-game/assets/event-wake-move.webp', minutes:10, energy:-1, message:'You pick up your things and move away from the bench. You feel exposed after waking up in front of someone.' } },
     { label:'Ask for a moment to wake up', outcome:{ illustration:'/street-life-game/assets/event-wake-moment.webp', minutes:5, message:'“Just a moment,” you say. They wait while you put your things together. You make room for them.' } },

@@ -129,7 +129,7 @@ for(const [state,extra,expected] of [
 ]){setup(state,extra);assertStoryChoices(expected);assert.equal(storyIds().filter(id=>id==='phone-help').length,1);assert(!storyIds().some(id=>id.startsWith('question-')||id.endsWith('-search')));}
 
 // One-level choices react immediately; result reading pauses the clock.
-setup({minutes:1320});assert(document.querySelector('[data-choice="phone-help"]').textContent.includes('Look for help on my phone'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();discoverHelp();assert(document.querySelector('[data-choice="phone-help"]'));
+setup({minutes:1320});assert(document.querySelector('[data-choice="phone-help"]').textContent.includes('Look for more help on my phone'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('last job application'));ok();discoverHelp();assert(document.querySelector('[data-choice="phone-help"]'));
 setup({minutes:1320});assert(!document.querySelector('[data-choice="walk"]'));click('Where can I get help in the morning?');assert(screen.getByRole('dialog').textContent.includes('redundancy email'));ok();discoverHelp();click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('A bed for the night, meals and a shower.'));assert(screen.getByRole('dialog').textContent.includes('Try to arrive before 18:00'));assert(!screen.getByRole('dialog').textContent.includes('a place to live'),'shelter discovery no longer appends biography');assert(!read('street-life-memories-v1').includes('lost-home'),'removed shelter memory is not recorded');ok();Math.random=()=>0;click(/Is there a bench nearby\?/);ok();click(/I’ll sit for a bit/);assert(screen.getByRole('dialog').textContent.includes('ordinary expenses'));ok();if(document.querySelector('.event-overlay')){fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button')[0]);ok();}fireEvent.click(screen.getByRole('button',{name:'Reset save'}));assert.deepEqual(read('street-life-memories-v1'),[]);assert(!document.querySelector('.story-scene').textContent.includes('office'));
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});
 const openingText=document.querySelector('.story-scene div > p:last-child').textContent;assert.equal(openingText,'Behind the lit windows, people are getting ready for bed. You sit outside with your backpack. You have nowhere to go, and no one is expecting you tonight.');
@@ -143,6 +143,27 @@ assert(!document.querySelector('.story-choices').textContent.includes('TIME PAUS
 click('Where can I get help in the morning?');assert(screen.getByRole('dialog'));assert.equal(read(stateKey).minutes,1335);assert(Math.abs(read(stateKey).mood-31)<1e-8);const answerState=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),answerState);ok();discoverHelp();assert(document.querySelector('[data-choice="phone-help"]'));assert(!screen.queryByRole('button',{name:'Choose another approach',exact:true}));
 setup({minutes:1320});assert(!screen.queryByRole('button',{name:/What about Night Shelter\? Maybe there is a place./}));
 setup({minutes:1320});click(/Try the station. At least I’d be out of the cold./);assert(document.querySelector('.district-pin.selected').textContent.includes('Station'));assert(!document.querySelector('.travel-sheet'));click('Go →');assert(screen.getByRole('button',{name:/Public transport/}));assert.equal(read(stateKey).minutes,1320);
+// Street thoughts respect known help and a current booking without changing routes.
+const placesKey='street-life-discovered-v1';
+setup({minutes:1320},{[placesKey]:['street','station','shop']});
+assert(document.querySelector('[data-choice="phone-help"]').textContent.includes('There might be somewhere I can stay.'));
+assert(!document.querySelector('[data-choice="shelter-route"]'));
+for(const known of ['support','daycenter','free-clinic','shelter','residential-shelter']) {
+ setup({day:2,minutes:600},{[placesKey]:['street','station','shop',known]});
+ assert(document.querySelector('[data-choice="phone-help"]').textContent.includes('Look for more help on my phone.'));
+ assert(!document.querySelector('[data-choice="phone-help"]').textContent.includes('somewhere I can stay'));
+}
+setup({day:2,minutes:30},{[placesKey]:['street','station','shop','shelter']});
+assert(!document.querySelector('[data-choice="shelter-route"]'),'the opening night still prioritises the station when no bed is reserved');
+setup({day:2,minutes:600},{[lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterAuditDay:1,shelterLastStayDay:1}});
+cleanup();render(React.createElement(App));
+const bookedRoute=document.querySelector('[data-choice="shelter-route"]');
+assert(bookedRoute.textContent.includes('I have a bed there.'));assert(!bookedRoute.disabled);
+assert(!bookedRoute.textContent.includes('Maybe there is a place'));
+assert(document.querySelector('[data-choice="phone-help"]').textContent.includes('Look for more help'));
+const beforeBookedRoute=read(stateKey);fireEvent.click(bookedRoute);
+assert(document.querySelector('.district-pin.selected').textContent.includes('Night Shelter'));
+assert.equal(read(stateKey).minutes,beforeBookedRoute.minutes);assert.equal(read(stateKey).money,beforeBookedRoute.money);
 // Music walking retains its time/need costs; ordinary wandering is no longer offered.
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop'],[invKey]:{clothingCleanliness:80}});assert(!screen.queryByRole('button',{name:'Earn something for food',exact:true}));assert(screen.getByRole('button',{name:'Try the station. At least I’d be out of the cold.',exact:true}));const dryEnergy=read(stateKey).energy;click(/Put on something familiar and walk for a while. Clear my head./);assert.equal(read(stateKey).minutes,1350);assert(read(stateKey).energy<dryEnergy);assert(!read(stateKey).rainUntil);assert(Math.abs(read(invKey).clothingCleanliness-(80-30*30/1440))<1e-8);ok();assert(!screen.queryByRole('dialog',{name:'Rain on the street'}));
 // Episodic rain, short shelter searches and interrupted phone/trip progress
@@ -153,7 +174,7 @@ assert(musicResult.querySelector('.result-illustration').src.includes('event-mus
 assert.equal(musicResult.querySelector('[data-stat="Mood"] .result-stat-delta').textContent,'+3');
 assert(musicResult.querySelector('.result-cost-line').textContent.includes('30 min'));
 assert(musicResult.querySelector('.result-cost-line .battery-icon'));
-assert(musicResult.textContent.includes('favorite songs'));
+assert(musicResult.textContent.includes('favourite songs'));
 assert(!musicResult.textContent.includes('redundancy notice'));
 assert(musicResult.querySelector('.result-description').textContent.length<110,'music result remains brief');
 assert(document.querySelector('.bottom-nav[inert]'));ok();
@@ -177,7 +198,7 @@ for(const extra of [{}, {[invKey]:{phoneBattery:0}}, {'street-life-mobile-servic
 }
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
 for (const name of ['Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.district-scene strong')].some(node=>node.textContent===name));
-assert(![...document.querySelectorAll('.district-pin')].some(pin=>/Cheap Shop|Street/.test(pin.textContent)));
+assert(![...document.querySelectorAll('.district-pin')].some(pin=>/Small Shop|Street/.test(pin.textContent)));
 assert(read(lifeKey).schroniskoReferral);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
 setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
 

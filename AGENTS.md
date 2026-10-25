@@ -5,6 +5,15 @@ content, also consult [GAME_DESIGN.md](GAME_DESIGN.md). Preserve existing game
 behavior during visual changes: pause rules, time multipliers, saved progress,
 focus, navigation blocking and delayed stat animations are part of the product.
 
+Player-facing writing follows [TEXT_STYLE.md](TEXT_STYLE.md): restrained British
+English, second-person present-tense scenes/results, first-person thoughts and
+History, concise factual hints, and the canonical place-name glossary. Preserve
+agreed proper names (including Help Center and Day Center), use Small Shop
+everywhere, and keep detailed service rules at their relevant action or in
+Notes. Copy must match implemented mechanics. Never expose development plans
+inside story text. Before editing action titles/outcome phrases, check their
+dispatch, memory and History consumers and preserve saved-text compatibility.
+
 The completed refactoring stages and remaining checklist are maintained in
 [REFACTORING.md](REFACTORING.md). Read it before continuing structural work and
 update the relevant checkboxes, baseline version and verification notes after
@@ -28,8 +37,11 @@ Linux environment are documented there; do not claim unrun CI or WebKit checks.
   do not add viewport zoom restrictions or JavaScript font resets.
 - Main narrative, action labels and confirmation buttons use Body. Narrative is
   regular 400 and primary text; modal narratives use `modal-narrative`.
-  Card/item names are semibold 600; hints, times, hours, prices, descriptions of
-  services and metadata are Small in secondary/muted text. Titles use Title/600.
+  Card/item names are semibold 600. Important action descriptions, access
+  conditions, Find Help descriptions and Notes prose/expandable summaries use
+  Body/400; Notes prose uses primary text. `choice-description` marks readable
+  action copy inside `ChoiceButton`; keep times, hours, prices, effect chips
+  and short metadata Small in secondary/muted text. Titles use Title/600.
 - Keep charcoal surfaces, off-white primary text and cool gray secondary text.
   Positive sage is `--color-positive` (#7f9b87); warning/selected ochre is
   `--color-warning` (#af9868). Use their surface/border tokens. Preserve the

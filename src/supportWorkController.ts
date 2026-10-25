@@ -38,7 +38,7 @@ export function createSupportWorkController(context: Context, host: Host) {
       }
       setGame((prev) => applyAction(prev, { minutes: 35, mood: 3 }))
       setLife((status) => ({ ...status, schroniskoReferral: true }))
-      setMessage('The social worker issued a referral. Schronisko 24/7 is now available on the map.')
+      setMessage('The social worker gives you a referral to Schronisko. The address is saved on your map.')
       return
     }
     if (kind === 'documents') {
@@ -48,18 +48,18 @@ export function createSupportWorkController(context: Context, host: Host) {
       }
       setGame((prev) => applyAction(prev, { minutes: 60, mood: 3 }))
       setInventory((prev) => ({ ...prev, documents: true }))
-      setMessage('The social worker helped you restore your basic documents.')
+      setMessage('The social worker helps you replace your missing documents.')
       return
     }
     if (kind === 'transport') {
       const expiresAt = absoluteMinutes(game) + 3 * 1440
       setGame((prev) => applyAction(prev, { minutes: 25 }))
       setEffects((active) => [...active.filter((effect) => effect.id !== 'free-transit'), { id: 'free-transit', expiresAt }])
-      setMessage('You received free public transport for 3 days.')
+      setMessage('You receive a pass for 3 days of free public transport.')
       return
     }
     setGame((prev) => applyAction(prev, { minutes: 30, mood: 2 }))
-    setMessage('The social worker explained which benefits may be available. Applications will be added as the progression expands.')
+    setMessage('The social worker explains which benefits may be available. You leave with information about your options.')
   }
 
   function takeDayWorkImpl() {
@@ -80,7 +80,7 @@ export function createSupportWorkController(context: Context, host: Host) {
       })
     })
     setLife((status) => ({ ...status, employment: 'Day work', income: 'Irregular' }))
-    setMessage('You completed a 3-hour physical shift. +35 zł. Physical work increases hunger, thirst and hygiene loss, especially in warm weather.')
+    setMessage('You finish the shift and collect your pay. After three hours of physical work, you could use something to eat and drink.')
   }
 
   function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') { runWithResult('Social support', () => socialSupportImpl(kind)) }

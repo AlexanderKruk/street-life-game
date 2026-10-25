@@ -72,7 +72,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-334'
+const BUILD_VERSION = 'v2026.10.25-335'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -469,7 +469,7 @@ export default function App() {
     setSelectedDestination(null)
     setPhoneOpen(false)
     setScreen('location')
-    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionTitle: 'Closing time', text: `${current.name} closed. You stepped outside onto the street.` }].slice(-500))
+    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionTitle: 'Closing time', text: `${current.name} closed, and I had to leave. I need to work out where to go next.` }].slice(-500))
   }, [game.day, game.minutes, current, !!trip, gameOver])
 
 

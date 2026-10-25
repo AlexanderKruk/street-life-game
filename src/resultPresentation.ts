@@ -15,9 +15,9 @@ const answers: Record<string, Pick<ResultPresentation, 'heading' | 'lead' | 'not
   bed: { heading: 'A place for the night', lead: '' },
   'no-place': { heading: 'If there is no bed', lead: 'Try registration earlier the next evening. Ask Help Center about accommodation and a Schronisko referral.', notice: 'Day Center is daytime only. Station benches and outdoor cover do not guarantee safe sleep.' },
   supplies: { heading: 'Food and water', lead: '' },
-  work: { heading: 'Day work', lead: '', notice: 'A shift and payment are not guaranteed.' },
+  work: { heading: 'Day work', lead: '', notice: 'Check the opening hours and arrive with enough energy for a shift.' },
   clinic: { heading: 'Free medical help', lead: '', notice: 'No insurance needed for basic care.' },
-  charging: { heading: 'An outlet at the station', lead: '', notice: 'No internet needed. The station is available tonight.' },
+  charging: { heading: 'An outlet at the station', lead: '', notice: 'No internet needed. The station is open around the clock.' },
 }
 
 export function locationPresentation(placeIds: string[], mapStatus = 'On map'): ResultPresentation {

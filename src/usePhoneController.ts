@@ -79,7 +79,7 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
     if (!open) return
     setInventory((prev) => ({ ...prev, phoneBattery: Math.min(100, prev.phoneBattery + 25) }))
     setGame((prev) => applyAction(prev, { minutes: 30 }))
-    setMessage('You charged the phone for 30 minutes. Battery +25%.')
+    setMessage('You spend half an hour by the socket while your phone charges.')
   }
 
   function toggleShelterPhoneCharging() {
@@ -90,8 +90,8 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
       setPhoneOpen(false)
       setMusicOn(false)
       setMessage(shelterPhoneCharging
-        ? `You collected your phone. Battery: ${Math.round(inventory.phoneBattery)}%.`
-        : 'You left your phone plugged in at Night Shelter. It gains up to 60% battery per hour while you do other things or sleep. Collect it whenever you need it; you cannot use it while it is left charging.')
+        ? 'You collect your phone from the charger.'
+        : 'You leave your phone plugged in at Night Shelter. It charges while you do other things or sleep. Collect it when you need to use it.')
     }, resultSnapshot(), true, true)
   }
 
@@ -160,7 +160,7 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
         finishOpeningCall(activeCall.id, phoneActivity.before)
       } else if (end === 'interrupted') {
         setPhoneActivity(null)
-        runWithResult('Call interrupted', () => setInfoModal({ title: 'Call interrupted', text: 'The call ends before you can finish. Time and battery already spent are not returned. You can try again once your phone is working.', illustration: `/street-life-game/assets/${activeCall.illustration}.webp`, batteryInSummary: true }), phoneActivity.before, true, true)
+        runWithResult('Call interrupted', () => setInfoModal({ title: 'Call interrupted', text: 'The call cuts off before you can finish. You can try again once your phone is working.', illustration: `/street-life-game/assets/${activeCall.illustration}.webp`, batteryInSummary: true }), phoneActivity.before, true, true)
       }
       return
     }

@@ -113,7 +113,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
       <div className="result-card-content">
         {result.bottleSearch ? <>
           <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <>+{result.bottleSearch.found} <span className="sr-only">returnable </span>container{result.bottleSearch.found === 1 ? '' : 's'}</> : 'Nothing useful found'}</p>
-          {result.bottleSearch.found > 0 && <p className="result-description">Return at Cheap Shop · {(result.bottleSearch.found * .5).toFixed(2)} zł</p>}
+          {result.bottleSearch.found > 0 && <p className="result-description">Return at Small Shop · {(result.bottleSearch.found * .5).toFixed(2)} zł</p>}
         </> : compactInfo ? <>
           {compactPlace ? <p className="result-description">{compactPlace.detail}</p> : !!presentation?.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>

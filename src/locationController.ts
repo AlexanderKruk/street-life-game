@@ -46,10 +46,9 @@ export function createLocationController(context: Context, host: Host, queue: En
     }
     if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
     if (actionId.endsWith('-refill-water')) {
-      const added = FREE_WATER_LIMIT - inventory.water
       setInventory(previous => ({ ...previous, water: Math.max(previous.water, FREE_WATER_LIMIT) }))
       setGame(previous => applyAction(previous, { minutes: action.minutes }))
-      setMessage(`You refilled your water for free. Backpack: ${FREE_WATER_LIMIT} portions (+${added}).`)
+      setMessage(`You refill your water for free. You now carry ${FREE_WATER_LIMIT} portions.`)
       return
     }
     if ((current.id === 'daycenter' || current.id === 'free-clinic') && actionId.startsWith('daycenter-')) {
@@ -57,7 +56,7 @@ export function createLocationController(context: Context, host: Host, queue: En
       const chance = hour < 10 ? 0.9 : hour < 12 ? 0.75 : hour < 14 ? 0.55 : 0.35
       if (Math.random() > chance) {
         setGame((prev) => applyAction(prev, { minutes: 15, mood: -2 }))
-        setMessage(current.id === 'free-clinic' ? 'The free clinic is full right now. You wait for a while, but no appointment opens up.' : 'The day center is full right now. You wait for a while, but no place opens up.')
+        setMessage(current.id === 'free-clinic' ? 'The free clinic is full right now. You wait for a while, but no appointment opens up.' : 'Day Center is full right now. You wait for a while, but no place opens up.')
         return
       }
     }
@@ -71,7 +70,7 @@ export function createLocationController(context: Context, host: Host, queue: En
     const useGel = isShower && inventory.showerGel > 0
     const baseResult = action.resolve(game)
     const result = useGel ? { ...baseResult, hygiene: (baseResult.hygiene ?? 0) * 1.5, hygieneCap: 100,
-      message: 'You showered with 3-in-1 gel. Hygiene gain ×1.5, up to 100. One use spent.' } : baseResult
+      message: 'You wash with 3-in-1 shower gel and rinse it off. It helps you get cleaner.' } : baseResult
     if (useGel) setInventory(prev => ({ ...prev, showerGel: prev.showerGel - 1 }))
     const washedClothes = actionId === 'daycenter-laundry' || actionId === 'shelter-laundry-pickup'
     const next = actionId === 'residential-stay' ? applyGameAction(game, result, moodContext(game, 'Schronisko')) : applyAction(game, result)

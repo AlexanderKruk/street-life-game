@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.24-318`.
+**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.25-335`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -54,6 +54,12 @@ Keep the first narrator message to two or three short sentences about the presen
 These examples guide the implemented action-linked fragments. The removed ordinary-walk action previously revealed office routine; its saved memories/history are retained; the illustrated music-walk result stays brief and does not append this fragment; street-bench rest, station rest or waiting under cover reveals redundancy and depleted savings; the first morning-help AI answer reveals unanswered applications. The shelter-bed discovery stays practical: hours 18:00–08:00 in the heading, “A bed for the night, meals and a shower.” and “Try to arrive before 18:00 for a better chance of getting a bed.” The discovery omits the registration timetable. It no longer appends the loss-of-accommodation fragment or the extra queue/vacancy/seven-night notice; existing saved history and memories remain compatible. Each active fragment is appended to the existing result text, logged in Phone → History, and saved once per run under `street-life-memories-v1`. Reset clears seen fragments. There is no separate biography screen or extra time/stat cost.
 
 ### Voice and knowledge
+
+The shared editorial contract is [TEXT_STYLE.md](TEXT_STYLE.md). It defines
+scene/choice/result/History voices, British spelling with retained proper place
+names, concise discovery copy, truthful service descriptions and safe editing
+of phrases used by History and saved progress. Runtime copy uses Small Shop
+consistently; stored historical wording is not rewritten.
 
 The narrator describes the surroundings, established memories and observable consequences. Choice text carries the player's possible emotions, hesitation or resolve. Early thoughts come from unfamiliarity: "Can I just sit at the station all night?", "Where do people ask for help in this situation?", "Am I really going to sleep here?" Practical knowledge about shelters, charging and assistance arrives through the existing discovery and question flows. Use small ordinary details to connect the former office routine to the current night, while leaving room for the player to choose their response.
 
@@ -234,7 +240,7 @@ All three openings and nine answer illustrations use responsive 480/768/1024px v
 |---|---|
 | Street | 24/7; initial location; stepping outside is immediate. |
 | Station | 24/7. |
-| Cheap Shop | 07:00–22:00; Small Shop map shortcut. |
+| Small Shop | 07:00–22:00; Small Shop map shortcut. |
 | Night Shelter | 18:00–08:00; entry/check-in 18:00–22:00; first registration 18:20–22:00. |
 | Help Center | 08:00–16:00. |
 | Schronisko | 24/7; referral required. |
@@ -248,7 +254,7 @@ Travelling to a closed destination is allowed; closed services are disabled bene
 
 ### Gradual location discovery
 
-A new run initially knows Street, Station and Cheap Shop. Phone Search offers Shelter, Help & hygiene, Work, Medical help, Food & water. Help searches reveal Help Center, Day Center and Free Clinic one at a time; work search reveals Day Work, and medical search reveals Free Clinic. Saved question/Notes and no-new-information flows retain prior discoveries. A referral unlocks Schronisko; old saves with a referral/housing repair a missing address. Hospital is also reached through the emergency call. Legacy saves without a discovery list retain the existing full-list migration.
+A new run initially knows Street, Station and Small Shop. Phone Search offers Shelter, Help & hygiene, Work, Medical help, Food & water. Help searches reveal Help Center, Day Center and Free Clinic one at a time; work search reveals Day Work, and medical search reveals Free Clinic. Saved question/Notes and no-new-information flows retain prior discoveries. A referral unlocks Schronisko; old saves with a referral/housing repair a missing address. Hospital is also reached through the emergency call. Legacy saves without a discovery list retain the existing full-list migration.
 
 Normal new information searches estimate about 15 minutes and sample 10–25 game minutes once, with per-minute battery costs and reload persistence. Older direct Street search handlers still apply 15 minutes immediately and use the same lighting/condition battery calculation; they are not flat 2%-battery searches. Reading a saved answer or a low-battery memory adds no new discovery reward/time cost, subject to the access rules below.
 
@@ -258,7 +264,7 @@ Searching for a shelter after registration has closed creates the saved next-day
 
 Travel is not teleportation. The player chooses walking or public transport.
 
-Ordinary destinations have walking bases of 65–120 minutes; public transport uses half the walking base, rounded up. Actual duration is sampled uniformly once from ceil(base × 0.95) through floor(base × 1.2), then saved. Cheap Shop explicitly uses 5–15 minutes for walking and bus alike because reaching/waiting at stops cancels the short ride advantage. Transit time includes walking to/from stops, waiting and riding.
+Ordinary destinations have walking bases of 65–120 minutes; public transport uses half the walking base, rounded up. Actual duration is sampled uniformly once from ceil(base × 0.95) through floor(base × 1.2), then saved. Small Shop explicitly uses 5–15 minutes for walking and bus alike because reaching/waiting at stops cancels the short ride advantage. Transit time includes walking to/from stops, waiting and riding.
 
 Public transport normally costs 4.40 zł. An active Transit card or an unexpired Free transport effect reduces the fare to 0. UI pricing, money requirements and fare payment use the same entitlement check. Since v218 a new run starts without a Transit card.
 
@@ -375,7 +381,7 @@ Phone/clothing condition can be damaged by equipment events. The emergency Call 
 
 ## Shop
 
-The Cheap Shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
+The Small Shop accepts returnable bottles for a 0.50 zł deposit refund per bottle (5 minutes to return the carried batch).
 
 Product-effect badges use only the width needed by their text. Multiple badges share a row when space permits, wrap to the next row when needed, and wrap long text within the card. This applies to both shelf products and the hot meal.
 
@@ -435,7 +441,7 @@ Street has its own small survival loop. Its economy is deliberately capped aroun
 - **Look for a bench** — 20 minutes, small Energy cost, 70% chance to find a usable bench. A failed search costs time and Mood.
 - Once a bench is found, **Sit on the bench** becomes available: 45 minutes, +18 Energy and +2 Mood before normal elapsed-time drain.
 - Once a bench is found, **Sleep on the bench** becomes available: fatigue-dependent 2/4/6/8 hours. At 8 hours: +66 Energy, -7 Hygiene, -5 Mood, no direct Health recovery, plus elapsed-time needs loss. Street wake-event attempt: min(90%, 65% × hours / 8).
-- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Cheap Shop for 0.50 zł each. Search time is at least 10 and at most 60 game minutes, based on interaction duration (`trashSearchMinutes`); it is applied at completion. Valid plastic bottles and cans can be tapped to collect; ordinary rubbish must be dragged out, not removed by a tap.
+- **Search bins for bottles** — now uses an interactive top-down trash-bin minigame rather than instant random earnings. The bin is built from multiple visual depth layers with large overlapping objects. The player drags visible trash aside/out of the bin to uncover lower objects and taps/drags accessible returnable bottles. Ordinary trash can be discarded across the rim; bottles are retained. Returnable bottles are inventory items rather than instant cash, stack 8 per backpack slot, respect backpack capacity, and can be returned at the Small Shop for 0.50 zł each. Search time is at least 10 and at most 60 game minutes, based on interaction duration (`trashSearchMinutes`); it is applied at completion. Valid plastic bottles and cans can be tapped to collect; ordinary rubbish must be dragged out, not removed by a tap.
 - The found bench is local/temporary and is forgotten when the player starts travelling to another destination.
 
 ## Variable sleep duration
@@ -810,8 +816,8 @@ Use one system sans-serif family everywhere: `ui-sans-serif, system-ui, -apple-s
 
 | Text role | Token | Mobile / tablet below 768px | Desktop from 768px | Usage |
 |---|---|---:|---:|---|
-| Small | `--font-small` | 14px | 14px | Card descriptions, hints, times, metadata, tags and navigation labels. |
-| Body | `--font-body` | 16px | 16px | Main copy, action buttons and card names. |
+| Small | `--font-small` | 14px | 14px | Times, prices, short metadata, effect tags, product captions and navigation labels. |
+| Body | `--font-body` | 16px | 16px | Main copy, action buttons, important action descriptions/conditions, Find Help descriptions, Notes prose/expandable summaries and card names. |
 | Title | `--font-title` | 20px | 24px | Page/section/modal headings, highlighted time and values. |
 
 All text sizes reference those three CSS variables in `src/styles.css`; do not add screen-specific numeric text sizes. Existing emoji/icon/artwork glyph dimensions are geometry rather than text roles. One-line compact app/route labels can use Body even inside a heading element. Descriptions use line-height 1.45; titles use 1.25, with component-specific spacing where needed.
@@ -913,7 +919,7 @@ The travel-method chooser uses a full-viewport dimmed, blurred backdrop (includi
 
 All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped stat bars and consequences, animate gains/losses, and omit zero/consumed-item noise. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
 
-The Cheap Shop / Food & water discovery uses one description paragraph in the shared Small role and secondary color: “A small shop selling affordable food and water. Registered Night Shelter guests can also get free meals.” It omits the price list, backpack reminder and shelter meal schedules; shop hours remain in the heading.
+The Small Shop / Food & water discovery uses one description paragraph in the shared Small role and secondary color: “A small shop selling affordable food and water. Registered Night Shelter guests can also get free meals.” It omits the price list, backpack reminder and shelter meal schedules; shop hours remain in the heading.
 
 Catalog events, first-night choices/outcomes, ground/bench illness, unsafe-food outcomes and closing-time departure have illustrations. The original 14 catalog events and seven new ambient/patrol scenes have artwork; the two v283 everyday encounters use compact icon cards. Assets use selective loading, responsive WebP variants and revision-aware image caching. Products/Essentials use transparent cutouts; Ready meal has 160/320/480px density variants. Asset prompts/manifests live under `docs/`.
 
@@ -1052,7 +1058,7 @@ Each 512px WebP master has 160/320/480px density variants for mobile/desktop, lo
 
 ### Illustrated music-walk result — v307 (2026-10-23)
 
-Walk with music uses the same blocking illustrated ResultCard as calls, including the shared animated Mood stat card and signed gain. The body reads: “You listen to your favorite songs as you walk. You feel a little better.” The office-routine backstory is omitted from this result. The authored reward is +3 Mood, capped by current limits (for example 49 → 50 displays +1); ordinary walking bonuses and passive music gains are not added to this action. Existing time (30 minutes), needs, battery cost, event observations and pause behavior remain. Existing illness/weather penalties still apply to actual net results. Time and rounded battery expense share the summary row.
+Walk with music uses the same blocking illustrated ResultCard as calls, including the shared animated Mood stat card and signed gain. The body reads: “You listen to your favourite songs as you walk. You feel a little better.” The office-routine backstory is omitted from this result. The authored reward is +3 Mood, capped by current limits (for example 49 → 50 displays +1); ordinary walking bonuses and passive music gains are not added to this action. Existing time (30 minutes), needs, battery cost, event observations and pause behavior remain. Existing illness/weather penalties still apply to actual net results. Time and rounded battery expense share the summary row.
 
 `event-music-walk.webp` shows the authoritative hero in full-size over-ear headphones in the first-night residential neighbourhood. Its 480/768/1024px variants load on demand. [Generation prompt and references](docs/art/music-walk-generation.json) record the identity sheet, established rendering and Street setting references.
 

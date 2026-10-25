@@ -54,20 +54,20 @@ export default function LocationScreen({ state, handlers }: { state: ViewState; 
         <div className="shop-heading"><div><p className="eyebrow">SOCIAL WORKER</p><h2>{shelterInterview.step === 'reason' ? 'Why do you still need a place?' : shelterInterview.step === 'action' ? 'What are you doing about your situation?' : 'What will you do next?'}</h2></div></div>
         <ChoiceOptions className="shop-grid" seed={choiceSeed} decision={`${choiceDecisionKey}|interview:${shelterInterview.step}`}>
           {shelterInterview.step === 'reason' && <>
-            <button className="shop-item" onClick={() => answerShelterInterview('work')}><div><strong>I still cannot afford housing</strong><small>I am trying to get enough stable income.</small></div></button>
-            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I am sorting out documents/support</strong><small>The process is not finished yet.</small></div></button>
-            <button className="shop-item" onClick={() => answerShelterInterview('health')}><div><strong>Health is making things difficult</strong><small>I need more time to stabilize.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('work')}><div><strong>I still can’t afford a place to live</strong><small>I’m trying to find a steady income.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I need help with my paperwork</strong><small>I haven’t finished it yet.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('health')}><div><strong>I’m struggling with my health</strong><small>I need more time to recover.</small></div></button>
           </>}
           {shelterInterview.step === 'action' && <>
-            <button className="shop-item" onClick={() => answerShelterInterview('job')}><div><strong>I am looking for work</strong><small>Applications and job-search activity.</small></div></button>
-            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I am working on documents or benefits</strong><small>Administrative steps are already underway.</small></div></button>
-            <button className="shop-item" onClick={() => answerShelterInterview('nothing')}><div><strong>Nothing concrete yet</strong><small>I have not made much progress.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('job')}><div><strong>I’m looking for work</strong><small>I’ve been sending applications.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I’m sorting out my documents or benefits</strong><small>I’ve started the paperwork.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('nothing')}><div><strong>Nothing concrete yet</strong><small>I haven’t made much progress.</small></div></button>
           </>}
           {shelterInterview.step === 'plan' && <>
-            <button className="shop-item" onClick={() => answerShelterInterview('jobcenter')}><div><strong>Go to the Job Centre</strong><small>Take a concrete step toward regular work.</small></div></button>
-            <button className="shop-item" onClick={() => answerShelterInterview('daywork')}><div><strong>Take available day work</strong><small>Start earning while looking for something stable.</small></div></button>
-            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>Finish document/support matters</strong><small>Continue the administrative process.</small></div></button>
-            <button className="shop-item" onClick={() => answerShelterInterview('nothing')}><div><strong>I cannot promise anything yet</strong><small>No concrete next step.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('jobcenter')}><div><strong>I’ll go to the Job Centre</strong><small>They might help me find regular work.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('daywork')}><div><strong>I’ll try day work</strong><small>I can earn something while looking for a steady job.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('documents')}><div><strong>I’ll finish the paperwork</strong><small>Then I can work out the next step.</small></div></button>
+            <button className="shop-item" onClick={() => answerShelterInterview('nothing')}><div><strong>I can’t promise anything yet</strong><small>I don’t know what I can manage yet.</small></div></button>
           </>}
         </ChoiceOptions>
       </section>}
@@ -99,7 +99,7 @@ export default function LocationScreen({ state, handlers }: { state: ViewState; 
       </section>}
       {(current.id === 'support' || current.id === 'residential-shelter') && <AvailableFirst className="charging-station" orderSeed={choiceSeed} decisionKey="charge">
         <button className="action" onClick={chargePhone} disabled={!open || inventory.phoneBattery >= 100}>
-          <div><strong><Icon name="plug" className="action-label-icon" />Charge phone</strong><small>Use a public socket for 30 minutes.</small></div><span>+25% · ~30 min</span>
+          <div><strong><Icon name="plug" className="action-label-icon" />Charge phone</strong><small>Use a public power outlet.</small></div><span>+25% · ~30 min</span>
         </button>
       </AvailableFirst>}
       {current.id === 'shelter' && <AvailableFirst className="charging-station" orderSeed={choiceSeed} decisionKey="shelter-charge">
@@ -113,7 +113,7 @@ export default function LocationScreen({ state, handlers }: { state: ViewState; 
       </AvailableFirst>}
       {current.id === 'work' && <AvailableFirst className="actions" orderSeed={choiceSeed} decisionKey={`${choiceDecisionKey}|work`}>
         <button className="action" onClick={takeDayWork} disabled={!open || game.energy < dayWorkEnergyRequired}>
-          <div><strong>Take a short shift</strong><small>{game.energy < dayWorkEnergyRequired ? `Need at least ${dayWorkEnergyRequired} Energy · current ${Math.floor(game.energy)}` : 'Three hours of physical work. Pays 35 zł.'}</small></div><span>+35 zł · ~180 min</span>
+          <div><strong>Take a short shift</strong><small>{game.energy < dayWorkEnergyRequired ? `Need at least ${dayWorkEnergyRequired} Energy · current ${Math.floor(game.energy)}` : 'Physical work; collect your pay at the end.'}</small></div><span>+35 zł · ~180 min</span>
         </button>
       </AvailableFirst>}
       {current.id !== 'shop' && current.id !== 'work' && current.id !== 'support' && <>
@@ -126,15 +126,15 @@ export default function LocationScreen({ state, handlers }: { state: ViewState; 
           </>}
           {current.id === 'street' && <>
             {nextOpeningCall && <button className="action" data-choice="phone-call" onClick={startOpeningCall} disabled={!!phoneUnavailable || inventory.phoneBattery < nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)}><div><strong><Icon name="phone" className="action-label-icon" />{nextOpeningCall.label}</strong></div><span>~{nextOpeningCall.minutes} min</span></button>}
-            <button className="action" data-choice="phone-help" onClick={openPhone}><div><strong><Icon name="phone" className="action-label-icon" />Look for help on my phone. There might be somewhere I can stay.</strong></div></button>
-            {!musicWalkUsed && <button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Put on something familiar and walk for a while. Clear my head.</strong><small>{canWalkWithMusic ? 'You have a few familiar songs on your phone. The walk still takes time and uses battery.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
-            {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={goToShelter}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>What about Night Shelter? Maybe there is a place.</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed tonight. Arrive before 18:00 tomorrow; registration starts at 18:20. A place is not guaranteed.' : 'Doors open at 18:00; registration starts at 18:20. Arrive early; places are limited.'}</small></div><span>Choose route</span></button>}
+            <button className="action" data-choice="phone-help" onClick={openPhone}><div><strong><Icon name="phone" className="action-label-icon" />{shelterBooked || discoveredLocations.some(id => ['shelter', 'support', 'daycenter', 'free-clinic', 'residential-shelter'].includes(id)) ? 'Look for more help on my phone.' : 'Look for help on my phone. There might be somewhere I can stay.'}</strong></div></button>
+            {!musicWalkUsed && <button className="action" data-choice="music-walk" onClick={() => walkCity(true)} disabled={!canWalkWithMusic}><div><strong><span className="choice-emoji" aria-hidden="true">🎧</span>Put on something familiar and walk for a while. Clear my head.</strong><small>{canWalkWithMusic ? 'Listen to a few familiar songs.' : 'Needs a working phone, mobile service and enough battery.'}</small></div><span>~30 min · −{walkMusicCost.toFixed(1)}% battery</span></button>}
+            {discoveredLocations.includes('shelter') && <button className="action" data-choice="shelter-route" disabled={firstNight && !shelterBooked} onClick={goToShelter}><div><strong><span className="choice-emoji" aria-hidden="true">🛏️</span>{shelterBooked ? 'Go back to Night Shelter. I have a bed there.' : 'What about Night Shelter? Maybe there is a place.'}</strong><small>{shelterBooked ? 'You have a reserved bed.' : firstNight ? 'Registration is closed. Try to arrive before 18:00 for the next intake; places are limited.' : 'Try to arrive before 18:00; places are limited.'}</small></div><span>Choose route</span></button>}
             {!firstNight && discoveredLocations.includes('work') && <button className="action" data-choice="work-route" onClick={goToWork}><div><strong>Go to Day Work</strong><small>Ask about a short shift.</small></div><span>Choose route</span></button>}
             {<button className="action" data-choice="station-route" aria-label="Try the station. At least I’d be out of the cold." onClick={goToStation}><div><strong><span className="choice-emoji" aria-hidden="true">🚉</span>Try the station. At least I’d be out of the cold.</strong><small>A place to sit; safe sleep is not guaranteed.</small></div><span>Choose route</span></button>}
-            {!firstNight && <button className="action" data-choice="beg" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask someone for change? It’s hard, but I could try.</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No useful attempts left today.' : `Spend time asking for small change · ${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
+            {!firstNight && <button className="action" data-choice="beg" onClick={askForMoney} disabled={(begging.day === game.day ? begging.attempts : 0) >= 3}><div><strong>🤲 Ask someone for change? It’s hard, but I could try.</strong><small>{(begging.day === game.day ? begging.attempts : 0) >= 3 ? 'No attempts left today.' : `${3 - (begging.day === game.day ? begging.attempts : 0)}/3 attempts left today.`}</small></div><span>~45 min</span></button>}
             {!firstNight && <button className="action" data-choice="bottles" onClick={searchStreetBottles}><div><strong>Maybe there are bottles I could return for a little money.</strong><small>Move rubbish aside. Collect intact deposit bottles and cans.</small></div><span>~10–60 min</span></button>}
-            {!streetBenchFound && <button className="action" data-choice="find-bench" onClick={() => streetAction('find-bench')}><div><strong>🪑 Is there a bench nearby? My legs could use a break.</strong><small>Search nearby for somewhere usable to sit or sleep.</small></div><span>~20 min</span></button>}
-            {streetBenchFound && <button className="action" data-choice="bench-rest" onClick={() => streetAction('bench-rest')}><div><strong>🪑 I’ll sit for a bit. Just get off my feet.</strong><small>Get off your feet and recover some Energy.</small></div><span>~45 min</span></button>}
+            {!streetBenchFound && <button className="action" data-choice="find-bench" onClick={() => streetAction('find-bench')}><div><strong>🪑 Is there a bench nearby? My legs could use a break.</strong><small>Find somewhere to sit or sleep.</small></div><span>~20 min</span></button>}
+            {streetBenchFound && <button className="action" data-choice="bench-rest" onClick={() => streetAction('bench-rest')}><div><strong>🪑 I’ll sit for a bit. Just get off my feet.</strong><small>Recover some Energy.</small></div><span>~45 min</span></button>}
             {streetBenchFound && <button className="action" data-choice="bench-sleep" onClick={() => streetAction('bench-sleep')}><div><strong>😴 Could I sleep here? What about my backpack…</strong><small>Still exposed, but better than sleeping on the ground.</small></div><span>Choose duration</span></button>}
           </>}
           {currentActions.length ? currentActions.map((action) => {

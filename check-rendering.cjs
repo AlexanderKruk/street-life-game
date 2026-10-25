@@ -123,7 +123,7 @@ function measure(App) {
   clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
   assert.equal(count('DistrictScene'), 1);
   assert(!document.querySelector('.district-card'));
-  assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
+  assert(document.querySelector('.travel-sheet').textContent.includes('Small Shop'));
   setup(App, 'goals', { day: 2, minutes: 719 }); advance(1);
   assert(count('JournalGoals') > 0);
   assert(document.querySelector('.completed-goals .goal strong').textContent.includes('morning'));
@@ -213,7 +213,7 @@ function measure(App) {
   act(() => global.__auditSetters.setGame(previous => ({ ...previous, health: 10, energy: 10, mood: 0 })));
   assert.notEqual(document.querySelector('.header-condition svg').innerHTML, oldFace, 'memoized icons update when condition changes');
   setup(App, 'location', { locationId: 'shop', minutes: 1319 }); advance(1);
-  assert(screen.getByRole('dialog', { name: 'Cheap Shop has closed' }));
+  assert(screen.getByRole('dialog', { name: 'Small Shop has closed' }));
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).locationId, 'street');
   assert.equal(count('ShopCard'), 9, 'all shop cards update when the shop closes');
   setup(App, 'location', { locationId: 'shop', money: 100 }, { 'street-life-mobile-auto-renew': false }); advance(1);

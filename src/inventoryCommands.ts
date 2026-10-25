@@ -66,7 +66,7 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       if (!canAddToBackpack(inventory, item)) return { message: 'Backpack full. Use or remove something first.' }
       return {
         inventory: previous => addShopItem(previous, item), action: { minutes: 3, money: -item.price },
-        message: `Bought ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} for ${item.price.toFixed(2)} zł.`,
+        message: 'You pay for your supplies and put them in your backpack.',
       }
     }
     case 'return-bottles': {
@@ -75,7 +75,7 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       const payout = count * BOTTLE_DEPOSIT
       return {
         inventory: previous => ({ ...previous, bottles: 0 }), action: { minutes: 5, money: payout },
-        message: `Returned ${count} container${count === 1 ? '' : 's'} for ${payout.toFixed(2)} zł.`,
+        message: `You return ${count} deposit container${count === 1 ? '' : 's'} and collect the money.`,
       }
     }
     case 'use': {
@@ -95,15 +95,15 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
         return {
           inventory: previous => ({ ...previous, wipes: previous.wipes - 1 }),
           game: previous => ({ ...previous, hygiene: Math.min(60, previous.hygiene + 10) }),
-          message: 'You cleaned up with wet wipes. Hygiene improves, up to 60.',
+          message: 'You clean up with wet wipes. A shower would help you get cleaner.',
         }
       }
       if (item === 'cannedFood') return {
         inventory: previous => ({ ...previous, cannedFood: previous.cannedFood - 1 }), action: { minutes: 0, hunger: 32, mood: 1 },
-        message: 'You opened the pull-tab can and ate the food.',
+        message: 'You open the pull-tab can and eat the food.',
       }
       return {
-        inventory: previous => ({ ...previous, water: previous.water - 1 }), action: { minutes: 0, thirst: 38 }, message: 'You drank water.',
+        inventory: previous => ({ ...previous, water: previous.water - 1 }), action: { minutes: 0, thirst: 38 }, message: 'You drink some water.',
       }
     }
     case 'medicine': {
@@ -111,13 +111,13 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       const explain = (title: string, text: string, label = 'MEDICINE'): InventoryCommandChanges => ({ message: text, info: { title, text, label } })
       const now = absoluteMinutes(game)
       const cold = effects.find(effect => effect.id === 'cold' && effect.expiresAt > now)
-      if (!cold) return explain('No fever', 'You have no fever. There is no need to take a tablet now.\n\nYour medicine has been kept for when you need it.')
-      if (cold.treated) return explain('One dose is enough', 'The first tablet is already helping you recover faster.\n\nA second tablet will not speed things up or remove the symptoms. You kept it for later.')
+      if (!cold) return explain('No cold', 'You have no cold to treat. You keep the medicine for when you need it.')
+      if (cold.treated) return explain('One dose is enough', 'The first tablet is already helping. Another will not speed up recovery, so you keep it for later.')
       return {
         inventory: previous => ({ ...previous, medicines: previous.medicines - 1 }),
         effects: previous => previous.map(effect => effect.id === 'cold' && effect.expiresAt > now && !effect.treated
           ? { ...effect, treated: true, expiresAt: now + (effect.expiresAt - now) / 3 } : effect),
-        ...explain('Recovery accelerated', 'You took one tablet. It speeds up recovery from this cold by three times, but does not cure it immediately.\n\nSymptoms continue until you recover. One dose is enough for this illness.', 'AFTER THE ACTION'),
+        ...explain('Recovery accelerated', 'You take one tablet. Recovery from this cold is three times faster, but the symptoms will take time to pass. One dose is enough.', 'AFTER THE ACTION'),
       }
     }
     case 'smoke':
@@ -125,7 +125,7 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       return {
         inventory: previous => ({ ...previous, cigarettes: previous.cigarettes - 1 }),
         game: previous => ({ ...previous, mood: Math.min(100, previous.mood + 5), health: Math.max(0, previous.health - 0.5) }),
-        message: 'You smoked a cigarette. Mood+, health slightly worse.',
+        message: 'You smoke a cigarette. The brief break takes the edge off your thoughts.',
       }
     case 'store':
     case 'take': {
@@ -138,17 +138,18 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
         if (storing ? !inventory.documents || storage.documents || storageSlots(storage) >= capacity : !storage.documents || inventory.documents) return {}
         return {
           inventory: previous => ({ ...previous, documents: !storing }), storage: previous => ({ ...previous, documents: storing }),
-          message: storing ? 'Documents stored safely. They are no longer carried on the street.' : 'You took your documents with you.',
+          message: storing ? 'You leave your documents in safe storage. Take them with you when you need them.' : 'You take your documents with you.',
         }
       }
       const amount = Math.min(item === 'medicines' ? 4 : 20, storing ? inventory[item] : storage[item])
       if (amount <= 0) return {}
       if (storing && storageSlots({ ...storage, [item]: storage[item] + amount }) > capacity) return { message: 'Storage is full.' }
       if (!storing && backpackSlots({ ...inventory, [item]: inventory[item] + amount }) > BACKPACK_CAPACITY) return { message: 'Backpack full.' }
+      const description = `${amount} ${item === 'medicines' ? 'tablet' : 'cigarette'}${amount === 1 ? '' : 's'}`
       return {
         inventory: previous => ({ ...previous, [item]: previous[item] + (storing ? -amount : amount) }),
         storage: previous => ({ ...previous, [item]: previous[item] + (storing ? amount : -amount) }),
-        message: storing ? `Stored ${amount} ${item}.` : `Took ${amount} ${item} from storage.`,
+        message: storing ? `You put ${description} in storage.` : `You take ${description} from storage.`,
       }
     }
     case 'store-food': {
@@ -157,7 +158,7 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       const portions = foodPortions(inventory, 'food').slice(0, amount)
       return {
         inventory: previous => withFoodPortions(previous, 'food', foodPortions(previous, 'food').slice(amount)),
-        storage: previous => addFoodPortions(previous, 'food', portions), message: `Stored ${amount} food in Schronisko.`,
+        storage: previous => addFoodPortions(previous, 'food', portions), message: `You put ${amount} food portion${amount === 1 ? '' : 's'} on the shelf in Schronisko.`,
       }
     }
     case 'take-food': {
@@ -167,7 +168,7 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       const portions = foodPortions(storage, 'food').slice(0, amount)
       return {
         storage: previous => withFoodPortions(previous, 'food', foodPortions(previous, 'food').slice(amount)),
-        inventory: previous => addFoodPortions(previous, 'food', portions), message: `Took ${amount} food from Schronisko storage.`,
+        inventory: previous => addFoodPortions(previous, 'food', portions), message: `You take ${amount} food portion${amount === 1 ? '' : 's'} from storage.`,
       }
     }
     case 'discard': {

@@ -59,7 +59,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
     if (withMusic && !canWalkWithMusic) return
     // The authored music walk has one +3 reward, rather than stacked walking/music bonuses.
     const passiveMusic = !withMusic && musicOn
-    const musicText = 'You listen to your favorite songs as you walk. You feel a little better.'
+    const musicText = 'You listen to your favourite songs as you walk. You feel a little better.'
     const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
     runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
       if (withMusic) setMusicWalkUsed(true)
@@ -81,7 +81,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
       const found = Math.random() < 0.7
       setGame((prev) => applyGameAction(prev, { minutes: 20, energy: -2, mood: found ? 1 : -2 }, { ...moodContext(prev), exposure: 'outside', music: musicOn }))
       setStreetBenchFound(found)
-      setMessage(found ? 'You found a usable bench nearby.' : 'You looked around, but every decent place to sit is occupied or unusable.')
+      setMessage(found ? 'You find a bench nearby with room to sit.' : 'You look around, but every decent place to sit is occupied or unusable.')
       return
     }
     if (!streetBenchFound) return

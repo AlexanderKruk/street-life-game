@@ -11,6 +11,8 @@ assert(screen.getByRole('dialog').textContent.includes('−3 zł'));
 ok();click(/Inventory$/);click(/Water.*tap to drink/);assert.equal(read(historyKey).length,2);ok();click('Phone');click('History');
 assert.deepEqual([...document.querySelectorAll('.timeline-entry strong')].map(node=>node.textContent),['Drank water','Bought Water']);
 assert(document.querySelector('.timeline').textContent.includes('I didn’t realise how thirsty I was.'));
+const purchaseEntry=[...document.querySelectorAll('.timeline-entry')].find(entry=>entry.querySelector('strong').textContent==='Bought Water');
+assert(!purchaseEntry.querySelector('.journal-thought'),'routine purchase keeps its heading without a filler reflection');
 assert(!document.querySelector('.timeline').textContent.includes('You drank water'));
 assert(!document.querySelector('.timeline').textContent.includes('Current situation'));
 assert(!document.querySelector('.journal-result-changes'));assert(!document.querySelector('.journal-heading > span'));
@@ -36,10 +38,41 @@ assert.equal(read(historyKey)[0].actionTitle,'Drink water');assert(document.quer
 cleanup();render(React.createElement(App));click('History');assert(screen.getByRole('heading',{name:'Day 1 · Tu'}));assert.equal(read(historyKey).length,1);
 require('../helpers/build.cjs').buildSync({entryPoints:['src/journal.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:process.env.STREET_REGRESSION_JOURNAL});
 const {journalReflection}=require(process.env.STREET_REGRESSION_JOURNAL);
+// Laundry drop-off must not claim clothes are already clean, and unavailable
+// care/support must not imply treatment or a successful application.
+const laundryDrop=journalReflection('Leave clothes for laundry','You leave your clothes for the Thursday laundry.');
+const laundryDone=journalReflection('Collect clean laundry','You collect your clean clothes.');
+const laundryFull=journalReflection('Do laundry','Day Center is full right now. You wait for a while, but no place opens up.');
+assert(!/clean clothes/.test(laundryDrop.text));assert(laundryDrop.text.includes('come back'));
+assert(laundryDone.text.includes('clean clothes'));assert(!/clean clothes again/.test(laundryFull.text));
+const treated=journalReflection('Recovery accelerated','You take one tablet. Recovery from this cold is three times faster, but the symptoms will take time to pass. One dose is enough.');
+assert(treated.text.includes('medicine'));assert(!/cured|recovered|no longer ill/.test(treated.text));
+const supportBlocked=journalReflection('Social support','Your documents are stored at the shelter. Take them with you for this application.');
+const supportReferral=journalReflection('Social support','The social worker gives you a referral to Schronisko. The address is saved on your map.');
+assert(supportBlocked.text.includes('papers'));assert(!supportBlocked.text.includes('referral'));
+assert(supportReferral.text.includes('still need to go there'),'a referral does not imply admission');
 const refused=journalReflection('Shelter registration','No free places today.',{costs:[],changes:[{label:'🙂 Mood',value:'−5',kind:'negative'}]});
 const admittedReflection=journalReflection('Shelter registration','A place is available.',{costs:[],changes:[{label:'🙂 Mood',value:'+3',kind:'positive'}]});
 assert.notEqual(refused.text,admittedReflection.text);assert(!refused.text.includes('let my shoulders drop'));
 assert(!/\d|[+−]/.test(refused.text+admittedReflection.text));
+// Reusable discoveries and rain History do not invent a wait until morning
+// or an unbooked night; these same actions can finish during the day.
+for(const actionTitle of ['Where can I get help in the morning?','Help Center found','Where can I get food and water?','Shelter from the rain']) {
+ const reflection=journalReflection(actionTitle,'You find useful help.');
+ assert(reflection.text.length>0);
+ assert(!/tonight|until morning|spend the night/i.test(reflection.text),actionTitle+' stays valid by day and with a reserved bed');
+}
+// A daytime sleep must not invent a night outside; saved reflections stay intact.
+setup({locationId:'residential-shelter',minutes:600,energy:90},{[historyKey]:yesterday});
+beginSleep(/Sleep safely/,2);click('Wake up (debug)');
+const rested=read(historyKey).at(-1);
+assert.equal(rested.actionTitle,'Sleep complete');assert.equal(rested.minute,720);
+assert(rested.text.startsWith('My head feels clearer.'));
+assert(!/night|morning/i.test(rested.text),'sleep reflection works at any time of day');
+assert.deepEqual(read(historyKey).slice(0,yesterday.length),yesterday,'copy changes do not rewrite saved reflections');
+const stolen=journalReflection('While you were asleep','Some cash is gone, and your documents are missing.');
+assert.equal(stolen.title,'Belongings stolen');assert(!/overnight/i.test(stolen.title));
+assert.deepEqual(journalReflection('Something happened overnight','Some cash is gone, and your documents are missing.'),stolen,'legacy event titles retain their reflection');
 // Journal goals follow real progress, stay completed, and reminders expire sensibly.
 const journalKey='street-life-journal-goals-v1',reminderKey='street-life-goal-v1';
 setup({minutes:600});click('Phone');click('Goals');assert.equal(document.querySelector('.phone-goals-count').textContent,'4');assert(!document.querySelector('.completed-goals'));assert.equal(document.querySelector('.main-goal strong').textContent,'Get through the morning');assert(!document.querySelector('.next-event'));

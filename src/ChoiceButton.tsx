@@ -63,7 +63,7 @@ export function standardizeChoiceButton(node: ReactNode): ReactNode {
     if (time) duration ??= roundDurationLabel(time)
     const remainder = time ? value.replace(time, '').replace(/^\s*·\s*|\s*·\s*$/g, '').trim() : null
     if (remainder) details.push(<small key={details.length}>{remainder}</small>)
-    else if (!time) details.push(cloneElement(part, { key: details.length }))
+    else if (!time) details.push(cloneElement(part, { key: details.length, className: `${part.props.className ?? ''} choice-description`.trim() }))
   }
   // Legacy actions store price, duration and benefits in a trailing span.
   if (heading) for (const part of Children.toArray(node.props.children)) {

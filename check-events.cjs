@@ -398,7 +398,7 @@ for(const [index,stem,battery,mood] of [
 // Boundary values cover ordinary success/failure, Energy modifiers and natural 1/20.
 for(const [energy,roll,success] of [[68,9,false],[68,10,true],[10,1,false],[10,20,true],[85,9,true]]){
  setup({...borrowedState,energy},borrowPending());
- const before=read(stateKey);Math.random=()=>.499999;click('Hand him your phone');
+ const before=read(stateKey);Math.random=()=>.499999;click('Hand him my phone');
  assertEventImage('.event-illustration','event-borrow-phone-slip');
  assert.equal(read(encountersKey).pendingId,'borrow-phone-slip');
  assert.equal(read(stateKey).minutes,before.minutes,'time and call effects settle once at the final result');
@@ -427,7 +427,7 @@ for(const [inventory,service,allowed] of [
  [{},0,[true,true]],
 ]){
  setup(borrowedState,{...borrowPending(),[invKey]:inventory,'street-life-mobile-service-until':String(service)});
- for(const [index,label]of ['Hand him your phone','Offer to call on speaker'].entries())assert.equal(screen.getByRole('button',{name:label,exact:true}).disabled,!allowed[index]);
+ for(const [index,label]of ['Hand him my phone','Offer to call on speaker'].entries())assert.equal(screen.getByRole('button',{name:label,exact:true}).disabled,!allowed[index]);
  assert(!screen.getByRole('button',{name:'Say no and move on',exact:true}).disabled);
 }
 setup(borrowedState,{...borrowPending('borrow-phone-slip'),[invKey]:{phoneCondition:3}});
@@ -436,7 +436,7 @@ assert.equal(read(invKey).phoneCondition,0,'damage clamps at zero');
 assert(screen.getByRole('dialog').textContent.includes('screen, but it stays black'));
 assert(screen.getByRole('dialog').querySelector('[data-stat="Phone condition"]').textContent.includes('−3'),'the actual remaining condition loss remains visible');ok();
 // A completed call respects the Mood ceiling and Midnight is the first unlocked night.
-setup({...borrowedState,mood:49},borrowPending());Math.random=()=>.5;click('Hand him your phone');
+setup({...borrowedState,mood:49},borrowPending());Math.random=()=>.5;click('Hand him my phone');
 assert.equal(read(stateKey).mood,50);assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'));ok();
 setup({day:1,minutes:1425,mood:30},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='borrow-phone')},'street-life-left-home-v1':true});
 advance(14000);assert(!screen.queryByRole('dialog'));advance(1000);

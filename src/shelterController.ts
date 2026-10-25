@@ -49,7 +49,7 @@ export function createShelterController(session: ShelterSession, context: Contex
       setPhoneOpen(false)
       setShelterPhoneCharging(false)
       setScreen('location')
-      setMessage('You packed your things and left the night shelter. After 30 minutes you are on the street.' + (shelterPhoneCharging ? ' You collected your phone from the charger.' : '') + (shelterBooked ? ' Your reserved place remains available for tonight.' : ''))
+      setMessage('You pack your things and step outside. The night shelter is behind you for now.' + (shelterPhoneCharging ? ' You collect your phone from the charger.' : '') + (shelterBooked ? ' Your reserved place remains available for tonight.' : ''))
     }, departure.before, true, true)
   }
   function completeShelterQueue() {
@@ -64,7 +64,7 @@ export function createShelterController(session: ShelterSession, context: Contex
           shelterMisses: 0, shelterMissMonth: Math.floor((queued.day - 1) / 30), shelterStrikes: 0 }))
         setGame(prev => applyGameAction(prev, { minutes: 0, mood: 3 }, moodContext(prev, 'Night shelter')), 'Night shelter')
         setActiveGoal(goal => goal?.type === 'night-shelter' ? null : goal)
-        setMessage('After waiting in the queue, a place is available. You are registered for 7 days. Shelter services and your bed are now available.')
+        setMessage('When your turn comes, there is a place left. You have a bed for the next seven nights, with access to meals and other shelter services.')
       } else {
         setGame(prev => applyAction(prev, { minutes: 0, mood: -5 }))
         setMessage(queued.vacancies === 0 ? 'You waited, but there are no free places today. Try arriving before 18:00 tomorrow; registration starts at 18:20.' :

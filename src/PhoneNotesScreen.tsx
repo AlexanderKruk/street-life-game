@@ -14,7 +14,7 @@ export default function PhoneNotesScreen({ mapPlaces, answeredQuestions }: Props
             <div className="phone-note-heading"><h3><Icon name={locationIcon(place.id)} className="action-label-icon" />{place.name}</h3></div>
             <div className="phone-note-meta"><span>{note?.hours}</span><span className="on-map">On map</span></div>
             <p>{note?.detail ?? place.description}</p>
-            {details.map(question => <details key={question.id}><summary>{question.title}</summary><p>{question.text}</p></details>)}
+            {details.map(question => <details key={question.id}><summary>{question.noteTitle}</summary><p>{question.text}</p></details>)}
           </article>
         })}
         {answeredQuestions.includes('no-place') && <article className="phone-note"><div className="phone-note-heading"><h3>If there is no shelter bed</h3></div><p>{practicalQuestions.find(question => question.id === 'no-place')?.text}</p></article>}

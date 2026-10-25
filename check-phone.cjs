@@ -47,7 +47,7 @@ try {
  click('Back to phone');assert.deepEqual(scrollCalls.at(-1),[{top:0,left:0,behavior:'instant'}]);
  scrollCalls.length=0;click('Map');assert.equal(scrollCalls.length,0,'lower-menu Map does not force a reset');
  // Street has one phone entry, with no search cost or advance on opening.
- const phoneLabel='Look for help on my phone. There might be somewhere I can stay.';
+ const phoneLabel='Look for more help on my phone.';
  for(const extra of [{}, {'street-life-mobile-service-until':'0'}, {[invKey]:{phoneBattery:0}}, {[invKey]:{phoneBattery:60,phoneCondition:0}}]){
   setup({minutes:1320,mood:28},extra);
   const actions=document.querySelector('.story-actions');

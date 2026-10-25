@@ -13,10 +13,12 @@ for(const [id,close] of [['shop',1320],['support',960],['daycenter',960],['free-
  cleanup();render(React.createElement(App));assert(screen.getByRole('dialog').textContent.includes('has closed'));
  ok();assert.equal(read(closingKey),null);advance(1000);assert.equal(read(stateKey).minutes,close+1);
  assert.equal(read('street-life-journal-history-v1').filter(entry=>entry.actionTitle==='Closing time').length,1);
+ const closingEntry=read('street-life-journal-history-v1').find(entry=>entry.actionTitle==='Closing time');
+ assert(/\bI\b/.test(closingEntry.text));assert(!/\bYou\b/.test(closingEntry.text),'History keeps the hero’s first-person voice');
 }
 setup({locationId:'shop',minutes:1319},{[invKey]:{water:0}});click('Buy Water for 3.00 zł');
 assert.equal(read(stateKey).locationId,'street');assert.equal(read(invKey).water,3);assert.equal(read(stateKey).money,97);
-assert(screen.getByRole('dialog').textContent.includes('Bought Water'));ok();assert(screen.getByRole('dialog').textContent.includes('has closed'));ok();
+assert(screen.getByRole('dialog').textContent.includes('You pay for your supplies'));ok();assert(screen.getByRole('dialog').textContent.includes('has closed'));ok();
 setup({locationId:'shop',minutes:1321});advance(1000);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(closingKey),null,'arriving at a closed door is not a closing event');
 setup({locationId:'shop',minutes:1319,energy:0.01});advance(1000);assert(screen.getByRole('dialog').textContent.includes('has closed'));assert(!document.querySelector('.sleep-overlay'));ok();assert(document.querySelector('.sleep-overlay'),'forced sleep starts outside after acknowledging closure');
 setup({locationId:'shop',minutes:1319});click('Map');advance(1000);assert(screen.getByRole('dialog').textContent.includes('has closed'));assert.equal(read(stateKey).locationId,'street');

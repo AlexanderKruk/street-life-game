@@ -73,8 +73,8 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = 'I used to look at the departures. Tonight I’m looking for somewhere to stay.'
   } else if (actionTitle === 'Someone needs the bench') {
     text = 'Waking up in front of a stranger makes me feel exposed. They only wanted a seat.'
-  } else if (actionTitle === 'Something happened overnight') {
-    title = 'Belongings stolen overnight'
+  } else if (actionTitle === 'While you were asleep' || actionTitle === 'Something happened overnight') {
+    title = 'Belongings stolen'
     text = 'My stomach sank when I checked my bag. I don’t feel safe here anymore.'
   } else if (actionTitle === 'Search interrupted') {
     text = 'I was so close to finding an answer. I feel more cut off now.'
@@ -85,7 +85,7 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
   } else if (actionTitle === 'Sleep complete' || /sleep/.test(actionTitle.toLowerCase())) {
     text = rows.some(row => row.label.includes('Cold') && row.value === 'Started')
       ? 'My throat feels rough and I’m shivering. Being ill out here scares me.'
-      : negative ? 'Everything feels stiff. I’m relieved to be awake, but I still don’t feel rested.' : 'My head feels clearer. I’m relieved to have made it through the night.'
+      : negative ? 'Everything feels stiff. I’m relieved to be awake, but I still don’t feel rested.' : 'My head feels clearer. It helps to have had some rest.'
   } else if (memoryId && memories[memoryId]) {
     text = memories[memoryId]
   } else if (actionTitle === 'Drink water') {
@@ -98,32 +98,57 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = /rain|wet/.test(outcome.toLowerCase()) ? 'I feel cold and exposed. I want somewhere dry to stop.' : 'I keep looking at the lit windows. I miss having somewhere to return to.'
   } else if (/bench nearby/.test(actionTitle)) {
     text = failed ? 'My legs ache. Even finding somewhere to sit feels difficult.' : 'I’m relieved to have somewhere to get off my feet.'
+  } else if (actionTitle === 'Recovery accelerated') {
+    text = 'I still need to rest while the medicine does its work.'
   } else if (/rest|recover|indoors/.test(actionTitle.toLowerCase())) {
     text = failed ? 'I was hoping for a little relief. I’m not sure where to try next.' : 'My legs feel less heavy. It helps to stop for a while.'
   } else if (actionTitle === 'Shelter from the rain') {
-    text = 'It feels better to be dry. I’m still uneasy about where I’ll spend the night.'
+    text = 'It helps to be out of the rain. I can stop worrying about getting soaked for a moment.'
   } else if (actionTitle === 'Searched for more help' || actionTitle === 'No new information') {
     text = 'I keep seeing the same places. I need to decide what to do with what I already know.'
   } else if (/morning|help center found/.test(actionTitle.toLowerCase())) {
-    text = 'I feel less lost with somewhere to turn. Waiting until morning still worries me.'
+    text = 'I have an address now. It helps to know where I can ask for support.'
   } else if (/shelter bed|night shelter found/.test(actionTitle.toLowerCase())) {
     text = 'I’m glad to have a plan. I’m afraid to count on a bed before I have one.'
   } else if (/no places/.test(actionTitle.toLowerCase())) {
     text = 'I feel uneasy about relying on one place. I need another option in mind.'
   } else if (/food and water/.test(actionTitle.toLowerCase())) {
-    text = 'I feel a little less helpless knowing where to look. I still have to get through tonight.'
+    text = 'At least I know where to look for food and water. That’s one less thing to work out.'
   } else if (/charge my phone|charge phone/.test(actionTitle.toLowerCase())) {
     text = 'I feel less cut off. This phone is my link to people and places I need.'
-  } else if (/shower|wipes|laundry/.test(actionTitle.toLowerCase())) {
-    text = failed ? 'I was looking forward to feeling clean. It’s hard not to feel discouraged.' : 'I feel more like myself. I hadn’t realised how much I needed that.'
+  } else if (/laundry/.test(actionTitle.toLowerCase())) {
+    text = failed ? 'I’ll have to keep wearing these clothes until I can get them washed.'
+      : /leave clothes/i.test(actionTitle) ? 'I’ll need to come back for my clothes.'
+      : 'It’s a relief to have clean clothes again.'
+  } else if (/shower|wipes/.test(actionTitle.toLowerCase())) {
+    text = failed ? 'I was looking forward to washing. I’ll have to try again.'
+      : /wipes/.test(actionTitle.toLowerCase()) ? 'That helps, though I could still use a shower.'
+      : 'For a moment, I can stop thinking about the dirt on my skin.'
   } else if (/medicine|doctor|medical|emergency/.test(actionTitle.toLowerCase())) {
-    text = failed ? 'I’m worried about feeling worse. I don’t want to face this alone.' : 'I feel less alone with this. I hope my body has a chance to recover.'
+    text = failed ? 'I still need care. I’ll have to find another way to get it.'
+      : actionTitle === 'Use medicine' ? 'I still need to rest while the medicine does its work.'
+      : 'It helps to have someone look after me. I need to give myself time to recover.'
   } else if (/trash|bottles|containers|money/.test(actionTitle.toLowerCase())) {
-    text = failed ? 'It’s hard not to feel discouraged. I was counting on a little breathing room.' : changed('Money', 'positive') || changed('Deposit containers', 'positive') || changed('Returnable bottles', 'positive') ? 'I feel a little less cornered. Even something small gives me room to think.' : 'I feel worn out. I’m not sure this is getting me anywhere.'
+    text = failed ? 'I was counting on getting something for the time I spent.'
+      : changed('Money', 'positive') ? 'I’m already thinking about what I need to spend it on.'
+      : changed('Deposit containers', 'positive') || changed('Returnable bottles', 'positive') ? 'I’ll have to carry these until I can return them.'
+      : 'All that time, and nothing I can use.'
   } else if (actionTitle.startsWith('Buy ')) {
-    text = failed ? 'I feel frustrated. I thought I could make this work.' : 'I feel a little more prepared. I’m still worried about making what I have last.'
+    // The purchase heading is enough for a routine successful transaction.
+    text = failed ? 'I’ll have to rethink what I can buy and carry.' : ''
+  } else if (actionTitle === 'Day work') {
+    text = failed ? 'I need work, but I can’t manage a shift like this.'
+      : 'My body aches after the shift, but I’ve earned something I can use.'
+  } else if (actionTitle === 'Social support') {
+    text = /take them with you|need basic documents/.test(source) ? 'I need my papers before I can go ahead with this.'
+      : /replace your missing documents/.test(source) ? 'Having my papers again means I can ask for things I couldn’t before.'
+      : /already have a referral|currently complete/.test(source) ? ''
+      : /referral to schronisko/.test(source) ? 'I have somewhere to take the referral. I still need to go there.'
+      : /free public transport/.test(source) ? 'I can get to the places I need without worrying about the fare for a while.'
+      : /benefits/.test(source) ? 'I have a better idea of what I can apply for. There’s still paperwork ahead.'
+      : ''
   } else if (/support|social worker|job|work|shift|schronisko|shelter extension/.test(actionTitle.toLowerCase())) {
-    text = failed || negative ? 'I feel discouraged, but I’m not ready to give up.' : 'I feel a little more hopeful. It helps to have a next step.'
+    text = failed || negative ? 'I need to work out what I can try next.' : 'I have a next step to follow up on.'
   } else if (actionTitle === 'Arrival') {
     const place = outcome.match(/You arrived at (.+?) by /)?.[1]
     if (place) title = `Arrived at ${place}`
@@ -164,7 +189,7 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
   } else if (actionTitle === 'Ticket inspection') {
     text = 'I can breathe again. I don’t need another thing to worry about.'
   } else if (/store|collect/.test(actionTitle.toLowerCase())) {
-    text = failed ? 'I feel frustrated by how little room I have.' : 'I feel a little more organised. Keeping track of my things matters now.'
+    text = failed ? 'There’s only so much I can carry or leave here.' : ''
   } else if (/videos|cigarette/.test(actionTitle.toLowerCase())) {
     text = 'I needed a moment away from my thoughts. They’re still there when I stop.'
   } else if (actionTitle === 'Shelter checkout') {

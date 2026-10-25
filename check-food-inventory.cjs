@@ -71,7 +71,7 @@ try {
     assert(screen.getByRole('dialog').textContent.includes('Energy −5–10'));click(label+' ×1');const after=read(gameKey);
     assert.equal(draws,outcome===2?2:1,'one outcome roll, even under StrictMode');assert.equal(after.minutes,before.minutes);
     assert.equal(after.hunger,outcome===2?10:20+gain);assert.equal(after.thirst,outcome===2?46:66);assert.equal(after.energy,outcome===2?58:68);assert.equal(after.health,outcome===2?77:82);assert.equal(after.mood,outcome===1?25:28);
-    assert.deepEqual(read(invKey)[`${kind}Portions`],[100]);assert(screen.getByRole('dialog').textContent.includes(outcome===2?'You vomited':outcome===1?'nauseous (Mood −3)':'feel fine'));
+    assert.deepEqual(read(invKey)[`${kind}Portions`],[100]);assert(screen.getByRole('dialog').textContent.includes(outcome===2?'You vomited':outcome===1?'nauseous, but the food stays down':'feel fine'));
     const resultDialog=screen.getByRole('dialog',{name:['You feel fine','Nausea','You vomited'][outcome]});assert(resultDialog.classList.contains('illustrated-result'));assert.equal(screen.getAllByRole('dialog').length,1);
     const art=within(resultDialog).getByRole('img');assert(art.getAttribute('src').endsWith(`event-food-${['fine','nausea','vomiting'][outcome]}-480.webp`));assert(/480w.*768w.*1024w/.test(art.getAttribute('srcset')));assert(art.alt.length>20);
     const completed=read(gameKey);advance(5000);assert.deepEqual(read(gameKey),completed,'result pauses');cleanup();render(React.createElement(App));assert.deepEqual(read(gameKey),completed,'completed outcome survives reload');assert.deepEqual(read(invKey)[`${kind}Portions`],[100]);
@@ -79,7 +79,7 @@ try {
   }
  }
  Math.random=()=>0;
- setup({food:3,foodFreshness:0},{locationId:'shop'});click('Cheap Shop');click('Buy Cheap food for 5.00 zł');ok();click(/^Inventory$/);const bought=read(invKey).foodPortions;assert.deepEqual(bought.slice(0,3),[0,0,0]);assert(bought[3]>99&&bought[3]<=100);assert(document.querySelector('.inventory-slot').textContent.includes('Spoiled ×3'));
+ setup({food:3,foodFreshness:0},{locationId:'shop'});click('Small Shop');click('Buy Cheap food for 5.00 zł');ok();click(/^Inventory$/);const bought=read(invKey).foodPortions;assert.deepEqual(bought.slice(0,3),[0,0,0]);assert(bought[3]>99&&bought[3]<=100);assert(document.querySelector('.inventory-slot').textContent.includes('Spoiled ×3'));
  setup({food:6,foodPortions:[0,5,40,80,90,100]},{locationId:'residential-shelter'},{'street-life-situation-v1':{housing:'Schronisko',schroniskoReferral:true}});click('Schronisko');fireEvent.click(within(screen.getByText(/^Food ×\d+\/4$/).closest('div')).getByRole('button',{name:'Store'}));ok();assert.deepEqual(read(invKey).foodPortions,[90,100]);assert.deepEqual(read('street-life-storage-v1').foodPortions,[0,5,40,80]);fireEvent.click(within(screen.getByText(/^Food ×\d+\/4$/).closest('div')).getByRole('button',{name:'Take'}));ok();assert.deepEqual(read(invKey).foodPortions,[90,100,0,5,40,80]);assert.equal(read('street-life-storage-v1').food,0);
  console.log('PASS: UI slot labels, spoiled/all removal, compaction, pause/reload, freshness choices, fresh-only bypass, actual gains and storage transfers.');
 } finally {Math.random=originalRandom;cleanup();dom.window.close()}

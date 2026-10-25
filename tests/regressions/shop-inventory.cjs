@@ -16,10 +16,10 @@ setup({locationId:'support',minutes:420});assert(screen.getByRole('status').text
 // Three zloty buys 1.5 L of water: exactly three drinks of 0.5 L.
 setup({locationId:'shop',thirst:0},{[invKey]:{water:0}});
 assert(!screen.queryByText(/1.5 L|0.5 L/));assert(screen.getByText('Water'));assert(screen.getByText('3 portions'));assert(!screen.queryByText('💧💧💧'));click('Buy Water for 3.00 zł');
-assert.equal(read(stateKey).money,97);assert.equal(read(invKey).water,3);assert(screen.getByRole('dialog').textContent.includes('Water ×3'));assert(screen.getByRole('dialog').textContent.includes('+3'));ok();click(/Inventory$/);
+assert.equal(read(stateKey).money,97);assert.equal(read(invKey).water,3);assert(document.querySelector('.result-gains').textContent.includes('Water portions+3'));assert(screen.getByRole('dialog').textContent.includes('+3'));ok();click(/Inventory$/);
 assert(screen.getByRole('button',{name:/Water ×3.*tap to drink/}));assert(!document.querySelector('.water-portions'));
 for(const [remaining,thirst] of [[2,38],[1,76],[0,100]]) {
- click(/Water.*tap to drink/);assert.equal(read(invKey).water,remaining);assert.equal(read(stateKey).thirst,thirst);assert(screen.getByRole('dialog').textContent.includes('You drank water'));ok();
+ click(/Water.*tap to drink/);assert.equal(read(invKey).water,remaining);assert.equal(read(stateKey).thirst,thirst);assert(screen.getByRole('dialog').textContent.includes('You drink some water'));ok();
  if(remaining>0){assert(screen.getByRole('button',{name:new RegExp(`Water ×${remaining}.*tap to drink`)}));cleanup();render(React.createElement(App));assert.equal(read(invKey).water,remaining);}
 }
 assert(!screen.queryByRole('button',{name:/Water.*tap to drink/}));
@@ -145,7 +145,7 @@ for(const [minutes,reserved] of [[420,false],[900,true],[1380,true]]) {
 // Worker access follows appointment hours, not overnight accommodation hours.
 setup({locationId:'shelter',minutes:1080},{[lifeKey]:booking});const worker=screen.getByRole('button',{name:/Talk to shelter social worker/});assert(worker.disabled);fireEvent.click(worker);assert.equal(read(stateKey).minutes,1080);
 setup({day:2,locationId:'shelter',minutes:1020},{[lifeKey]:booking});assert(!screen.getByRole('button',{name:/Talk to shelter social worker/}).disabled);click(/Talk to shelter social worker/);assert.equal(read(stateKey).minutes,1020);advance(3000);assert.equal(read(stateKey).minutes,1020);
-click(/I still cannot afford housing/);click(/I am looking for work/);click(/Go to the Job Centre/);assert.equal(read(stateKey).minutes,1050);assert.equal(read(lifeKey).shelterUntilDay,31);assert(screen.getByRole('dialog').textContent.includes('30 min'));
+click(/I still can’t afford a place to live/);click(/I’m looking for work/);click(/I’ll go to the Job Centre/);assert.equal(read(stateKey).minutes,1050);assert.equal(read(lifeKey).shelterUntilDay,31);assert(screen.getByRole('dialog').textContent.includes('30 min'));
 
 console.log('PASS: location, travel, coins, food and inventory scenarios.');
 

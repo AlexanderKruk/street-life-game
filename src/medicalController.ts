@@ -39,7 +39,7 @@ export function createMedicalController(context: Context, host: Host) {
   function callAmbulanceImpl() {
     if (activeEvent) return
     if (shelterPhoneCharging) { setMessage('Collect your phone from the charger first.'); return }
-    if (game.health > 20) { setMessage('An ambulance is only available as a gameplay emergency option at Health 20 or lower.'); return }
+    if (game.health > 20) { setMessage('Emergency care requires Health 20 or lower. Visit a doctor for regular care.'); return }
     if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0) { setMessage('Your phone is not working, so you cannot call an ambulance.'); return }
     const hours = 4 + Math.floor(Math.random() * 5)
     setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2 * phoneDrainMultiplier(prev.phoneCondition)) }))
@@ -50,7 +50,7 @@ export function createMedicalController(context: Context, host: Host) {
     setSelectedDestination(null)
     setTrip(null)
     setScreen('location')
-    setMessage(`You call an ambulance. Emergency staff stabilize you without requiring documents. About ${hours} hours pass and your Health is stabilized to 35.`)
+    setMessage(`You call an ambulance. Emergency staff stabilise your condition without requiring documents. About ${hours} hours pass.`)
   }
 
   function hospitalVisit() { runWithResult('Medical appointment', hospitalVisitImpl) }

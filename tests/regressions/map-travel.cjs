@@ -21,18 +21,18 @@ assert(!document.querySelector('.district-map'));assert(!document.querySelector(
 click(/Map$/);
 click('Small Shop');assert(document.querySelector('.travel-sheet'));
 assert(!document.querySelector('.district-card'));
-assert(document.querySelector('.travel-sheet').textContent.includes('Cheap Shop'));
+assert(document.querySelector('.travel-sheet').textContent.includes('Small Shop'));
 assert.equal(read(stateKey).locationId,'street');
 fireEvent.click(document.querySelector('.sheet-close'));
 setup({locationId:'shop',minutes:600});click(/Map$/);
-assert(!screen.getByRole('button',{name:'Small Shop',exact:true}).disabled);
+assert(!within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Small Shop',exact:true}).disabled);
 const beforeExit=read(stateKey);
-fireEvent.click(screen.getByRole('button',{name:'Small Shop',exact:true}));
+fireEvent.click(within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Small Shop',exact:true}));
 assert(!document.querySelector('.travel-sheet'));assert.deepEqual(read(stateKey),beforeExit);
 assert(!document.querySelector('.district-map'));assert(document.querySelector('.shop-hero'));
 click(/Map$/);
 click('Street');assert(!document.querySelector('.travel-sheet'));
-assert(screen.getByRole('dialog',{name:'Leave Cheap Shop?'}));
+assert(screen.getByRole('dialog',{name:'Leave Small Shop?'}));
 assert(screen.getByText('TIME PAUSED'));assert(!screen.queryByText('You’ll step outside onto the street.'));
 advance(3000);assert.deepEqual(read(stateKey),beforeExit);
 click('Cancel');assert.deepEqual(read(stateKey),beforeExit);assert(!screen.queryByRole('dialog'));
@@ -51,7 +51,7 @@ for(const origin of ['station','hospital','free-clinic','daycenter','support','j
 }
 setup({locationId:'station',minutes:600});click(/Map$/);
 assert(!screen.getByRole('button',{name:'Street',exact:true}).disabled);
-assert(!screen.getByRole('button',{name:'Small Shop',exact:true}).disabled);
+assert(!within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Small Shop',exact:true}).disabled);
 
 // Cancelled routes must never count as a departure; actual walking does, once.
 setup({locationId:'shelter',minutes:540},{[lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,shelterStrikes:0}});
