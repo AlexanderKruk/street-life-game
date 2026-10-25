@@ -1,3 +1,4 @@
+import { ModalOverlay, ModalPanel } from './Modal'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon, type IconName } from './Icon'
 
@@ -24,11 +25,11 @@ export default function InventoryDialog({ title, description, label = 'BACKPACK 
       if (previous?.isConnected && !document.querySelector('[role="dialog"]')) previous.focus({ preventScroll: true })
     }
   }, [onCancel])
-  return <div className="phone-overlay result-overlay" onClick={event => { if (event.target === event.currentTarget) onCancel() }}>
-    <section ref={dialog} className="phone-modal discard-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-dialog-title" aria-describedby={description ? 'inventory-dialog-description' : undefined}>
+  return <ModalOverlay className="phone-overlay result-overlay" onClick={event => { if (event.target === event.currentTarget) onCancel() }}>
+    <ModalPanel ref={dialog} size="compact" className="phone-modal discard-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-dialog-title" aria-describedby={description ? 'inventory-dialog-description' : undefined}>
       <div className="timed-heading"><Icon name={icon} /><div><p className="eyebrow">{label}</p><h2 id="inventory-dialog-title">{title}</h2></div></div>
       {description && <p id="inventory-dialog-description">{description}</p>}
       {children}
-    </section>
-  </div>
+    </ModalPanel>
+  </ModalOverlay>
 }

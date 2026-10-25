@@ -1,3 +1,4 @@
+import { ModalOverlay, ModalPanel, ModalAction } from './Modal'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { OPENING_CALLS, OPENING_CALLS_KEY, CALL_BATTERY_PER_MINUTE, openingCall, loadOpeningCallIndex } from './openingCalls'
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -43,7 +44,7 @@ import { SAVE_KEY, DISCOVERY_KEY, readSavedGame, loadDiscoveredLocations } from 
 import { displayDay } from './gameDate'
 import { createRain, chooseRain, planRainDay, RAIN, rainArt, rainResultText, type RainChoice } from './rain'
 
-const BUILD_VERSION = 'v2026.10.24-323'
+const BUILD_VERSION = 'v2026.10.25-324'
 const ACTIVITY_TICK_MS = 250
 
 const FIRST_NIGHT_EVENTS_KEY = 'street-life-first-night-events-v1'
@@ -2500,12 +2501,12 @@ export default function App() {
 
   return <main className={`shell${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {streetExitPending && <InventoryDialog icon="exit" label="TIME PAUSED" title={`Leave ${current.name}?`} onCancel={cancelStreetExit}>
-      <div className="sleep-choice-buttons"><button type="button" onClick={cancelStreetExit}>Cancel</button><button type="button" className="confirm-action" onClick={confirmStreetExit}>Go to Street</button></div>
+      <div className="sleep-choice-buttons"><ModalAction variant="secondary" type="button" onClick={cancelStreetExit}>Cancel</ModalAction><ModalAction type="button" className="confirm-action" onClick={confirmStreetExit}>Go to Street</ModalAction></div>
     </InventoryDialog>}
     {foodChoice && <FoodChoiceDialog name={foodChoice.name} counts={foodSlot(inventory, foodChoice.kind, foodChoice.slotIndex)} onCancel={cancelFoodChoice} onChoose={chooseFood} />}
     {discardItem && <DiscardDialog name={discardItem.name} quantity={discardItem.quantity} spoiledQuantity={discardItem.spoiledQuantity} onCancel={cancelDiscard} onConfirm={() => confirmDiscard(false)} onDiscardSpoiled={() => confirmDiscard(true)} />}
-    {sleepChoice && <div className="phone-overlay result-overlay">
-      <section className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
+    {sleepChoice && <ModalOverlay className="phone-overlay result-overlay">
+      <ModalPanel size="compact" className="phone-modal sleep-choice-modal" role="dialog" aria-modal="true" aria-labelledby="sleep-choice-title">
         <div className="timed-heading"><Icon name="moon" /><div><p className="eyebrow">PLAN YOUR SLEEP · TIME PAUSED</p><h2 id="sleep-choice-title">How long do you want to sleep?</h2></div></div>
         <div className="sleep-choice-context"><span>{sleepChoice === 'ground' ? 'On the ground' : sleepChoice === 'bench' ? 'On the bench' : sleepChoice === 'shelter' ? 'Night shelter' : 'Schronisko'}</span><span>Day {displayDay(game.day)} {weekday(game.day)} · {formatTime(game.minutes)}</span></div>
         <p className="sleep-choice-energy"><Icon name="energy" />Energy {Math.round(game.energy)}% · {game.energy > 75 ? 'Rested' : game.energy > 50 ? 'Slightly tired' : game.energy > 25 ? 'Tired' : 'Exhausted'}</p>
@@ -2524,11 +2525,11 @@ export default function App() {
         {(sleepChoice === 'ground' || sleepChoice === 'bench') && <p className="sleep-choice-note">Cold and {CLOTHING_WETNESS_ENABLED ? 'wet clothes and ' : ''}longer exposure increase illness risk. Your belongings may also be stolen.</p>}
         {sleepChoice === 'shelter' && <p className="sleep-choice-note">Sleep ends by 07:30 for morning checkout. Longer choices are shortened.</p>}
         <div className="sleep-choice-buttons">
-          <button onClick={() => setSleepChoice(null)}>Cancel</button>
-          <button className="trash-stop" disabled={sleepDurationUnavailable(sleepHours, game.energy) !== null} onClick={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}>Start sleeping</button>
+          <ModalAction variant="secondary" onClick={() => setSleepChoice(null)}>Cancel</ModalAction>
+          <ModalAction className="trash-stop" disabled={sleepDurationUnavailable(sleepHours, game.energy) !== null} onClick={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}>Start sleeping</ModalAction>
         </div>
-      </section>
-    </div>}
+      </ModalPanel>
+    </ModalOverlay>}
     {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: `${locations.find(place => place.id === closingNotice)?.name} has closed`,
@@ -2537,8 +2538,8 @@ export default function App() {
       illustration: '/street-life-game/assets/event-closing-time.webp',
       illustrationAlt: 'You stand outside with your backpack after the doors have closed behind you.',
     }} onClose={() => setClosingNotice(null)} />}
-    {trashGame && <div className="trash-overlay">
-      <section className="trash-card" role="dialog" aria-modal="true" aria-labelledby="trash-title">
+    {trashGame && <ModalOverlay className="trash-overlay">
+      <ModalPanel size="compact" className="trash-card" role="dialog" aria-modal="true" aria-labelledby="trash-title">
         <div className="trash-head"><Icon name="bottle" /><h2 id="trash-title">Look for bottles</h2></div>
         <p className="trash-tip">Drag rubbish out. Tap intact bottles & cans.</p>
         <div className="trash-search-row"><TrashSearchTime startedAt={trashGame.startedAt} onDeadline={checkTrashDeadline} /><span aria-label={`${trashGame.found} containers kept`}><Icon name="bottle" /><strong>{trashGame.found}</strong></span></div>
@@ -2568,9 +2569,9 @@ export default function App() {
           ><img src={`/street-life-game/assets/trash-${item.art}.webp`} alt="" draggable={false} decoding="async" width="192" height="192" /></button>)}
           </div>
         </div>
-        <button className="trash-stop" onClick={finishTrashSearch}>Finish searching</button>
-      </section>
-    </div>}
+        <ModalAction className="trash-stop" onClick={finishTrashSearch}>Finish searching</ModalAction>
+      </ModalPanel>
+    </ModalOverlay>}
 
     {phoneOpen && !phoneUnavailable && <PhoneDialog
       battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
@@ -2700,13 +2701,13 @@ export default function App() {
       </ClosedContent>
     </div>}
 
-    {phoneActivity && <div className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>
-      <section className="travel-screen phone-activity" role="dialog" aria-modal="true" aria-labelledby="phone-activity-title" aria-busy="true" tabIndex={-1} ref={phoneSearchModalRef}>
+    {phoneActivity && <ModalOverlay className="travel-overlay phone-activity-overlay" inert={!phoneSearchVisible} aria-hidden={!phoneSearchVisible || undefined}>
+      <ModalPanel className="travel-screen phone-activity" role="dialog" aria-modal="true" aria-labelledby="phone-activity-title" aria-busy="true" tabIndex={-1} ref={phoneSearchModalRef}>
         <PhoneSearchIcon calling={!!activeCall} />
         <div className="travel-route-heading"><h2 id="phone-activity-title">{activeCall?.callingTitle ?? 'Looking for information'}</h2></div>
         <ActivityStatus elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel={activeCall ? 'Elapsed call time' : 'Elapsed browsing time'} label={activeCall ? activeCall.id === 'call-university' || phoneActivity.remaining === phoneActivity.total ? 'Ringing' : 'Talking' : phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Searching' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading options' : 'Saving addresses'} />
-      </section>
-    </div>}
+      </ModalPanel>
+    </ModalOverlay>}
 
 
     {(screen === 'map' || travelling) && <div className="map-surface" inert={travelling} aria-hidden={travelling || undefined}><CityMap
@@ -2718,10 +2719,10 @@ export default function App() {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const elapsed = Math.max(0, trip.total - trip.remaining)
       const phase = getTravelDisplayPhase(trip)
-      return <div className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><section className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
+      return <ModalOverlay className="travel-overlay" inert={!travelVisible} aria-hidden={!travelVisible || undefined}><ModalPanel className="travel-screen" role="dialog" aria-modal="true" aria-label="Time on the way" tabIndex={-1} ref={travelModalRef}>
         <TravelHeading from={current.name} to={destination?.name} walking={trip.mode === 'walk'} moving={phase.walking} />
         <ActivityStatus elapsed={elapsed} timeLabel="Elapsed travel time" label={underRainCover ? 'Under cover' : phase.label} />
-      </section></div>
+      </ModalPanel></ModalOverlay>
     })()}
 
     {selectedDestination && screen === 'map' && (() => {
@@ -2729,7 +2730,7 @@ export default function App() {
       if (!destination) return null
       const transitMinutes = Math.ceil(destination.travelMinutes * 0.5)
       const nearbyTime = destination.travelRange ? `${destination.travelRange.min}–${destination.travelRange.max}m` : null
-      return <div className="travel-choice-overlay"><section className="travel-sheet" role="dialog" aria-modal="true" aria-label={`Travel to ${destination.name}`} tabIndex={-1} ref={travelChoiceRef}>
+      return <ModalOverlay className="travel-choice-overlay"><ModalPanel className="travel-sheet" role="dialog" aria-modal="true" aria-label={`Travel to ${destination.name}`} tabIndex={-1} ref={travelChoiceRef}>
         <button className="sheet-close" aria-label="Close travel options" onClick={() => setSelectedDestination(null)}>×</button>
         <p className="eyebrow">TRAVEL TO</p>
         <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
@@ -2745,7 +2746,7 @@ export default function App() {
         </button>}
         </ChoiceOptions>
 
-      </section></div>
+      </ModalPanel></ModalOverlay>
     })()}
 
     {screen === 'inventory' && <section className="inventory-screen" aria-label="Inventory">
@@ -2862,25 +2863,25 @@ export default function App() {
 
     </div>
 
-    {gameOver && <div className="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
-      <section className="game-over-card">
+    {gameOver && <ModalOverlay className="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+      <ModalPanel size="compact" className="game-over-card">
         <p className="eyebrow">RUN OVER</p>
         <div className="game-over-emblem"><Icon name="heart-broken" /></div>
         <h2 id="game-over-title">Your health reached zero</h2>
         <p className="game-over-day"><strong>Day {displayDay(game.day)}</strong><span>Your run ended here</span></p>
-        <p className="game-over-description">Food, water and medicine can stop causes of damage, but lost health needs proper recovery and care.</p>
-        <button onClick={reset}>Start new run</button>
-      </section>
-    </div>}
+        <p className="game-over-description modal-narrative">Food, water and medicine can stop causes of damage, but lost health needs proper recovery and care.</p>
+        <ModalAction onClick={reset}>Start new run</ModalAction>
+      </ModalPanel>
+    </ModalOverlay>}
 
-    {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="rain-event-title">
-      <section className="event-card illustrated-event" ref={rainModalRef}>
+    {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <ModalOverlay className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="rain-event-title">
+      <ModalPanel className="event-card illustrated-event" ref={rainModalRef}>
         <img className="event-illustration" {...responsiveImageProps(rainArt(game.rain, rainWaiting ? game.rain.choice! : 'opening'))} alt={rainWaiting ? game.rain.choice === 'proper' ? 'You find a deep covered passage on the rainy street.' : game.rain.shelter === 'tree' ? 'You take partial cover beneath a street tree.' : 'You wait beneath a small shop awning.' : RAIN[game.rain.level].text} />
         <div className="event-body">
           <p className="eyebrow">{rainWaiting ? 'WAITING OUT THE RAIN' : 'STREET EVENT'}</p>
           <h2 id="rain-event-title">{RAIN[game.rain.level].title}</h2>
           {rainWaiting ? <>
-            <p>{game.rain.choice === 'proper' ? game.rain.searchRemaining > 0 ? 'You head along the street, looking for a roof that will keep the rain off.' : 'You stand well inside the covered passage, watching the rain outside.' : game.rain.shelter === 'tree' ? 'The leaves catch some of the rain, but drops still fall onto your shoulders.' : 'You stand close to the wall beneath the little awning. Some rain still reaches you.'}</p>
+            <p className="modal-narrative">{game.rain.choice === 'proper' ? game.rain.searchRemaining > 0 ? 'You head along the street, looking for a roof that will keep the rain off.' : 'You stand well inside the covered passage, watching the rain outside.' : game.rain.shelter === 'tree' ? 'The leaves catch some of the rain, but drops still fall onto your shoulders.' : 'You stand close to the wall beneath the little awning. Some rain still reaches you.'}</p>
             <ActivityStatus elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))} timeLabel="Elapsed waiting time" label={game.rain.searchRemaining > 0 ? 'Looking for shelter' : 'Waiting for the rain to stop'} />
             {game.rain.choice === 'nearby' && <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" duration="~5m" onClick={() => {
               const rain = chooseRain(game.rain!, 'proper', absoluteMinutes(game), current.id)
@@ -2888,7 +2889,7 @@ export default function App() {
             }} detail={<small>Leave this cover and look for a dry passage</small>} />}
             <ChoiceButton icon="walk" aria-label="Carry on" label="Carry on" onClick={() => setGame(previous => previous.rain ? { ...previous, rain: { ...previous.rain, choice: 'continue', searchRemaining: 0 } } : previous)} detail={<small>Leave cover and continue in the rain</small>} />
           </> : <>
-            <p>{RAIN[game.rain.level].text}</p>
+            <p className="modal-narrative">{RAIN[game.rain.level].text}</p>
             <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|rain:${game.rain.id}`}>
               <ChoiceButton icon="umbrella" aria-label="Take cover nearby" label="Take cover nearby" onClick={() => respondToRain('nearby')} detail={<small>Quick shelter, but it may offer little protection</small>} />
               <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" onClick={() => respondToRain('proper')} duration="~5m" detail={<small>Stay in the rain while you look for somewhere dry</small>} />
@@ -2896,54 +2897,54 @@ export default function App() {
             </ChoiceOptions>
           </>}
         </div>
-      </section>
-    </div>}
-    {!gameOver && diceCheck?.choice.check && <div className="dice-overlay" role="dialog" aria-modal="true" aria-labelledby="dice-action-title">
-      <section className="dice-card">
+      </ModalPanel>
+    </ModalOverlay>}
+    {!gameOver && diceCheck?.choice.check && <ModalOverlay className="dice-overlay" role="dialog" aria-modal="true" aria-labelledby="dice-action-title">
+      <ModalPanel size="compact" className="dice-card">
         <h2 id="dice-action-title">{diceCheck.stealItemId ? `Steal ${SHOP_ITEMS.find(item => item.id === diceCheck.stealItemId)?.name.toLowerCase()}?` : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</h2>
-        <p className="dice-description">{diceCheck.stealItemId ? 'Try to take it without being noticed. If you’re caught, you’ll be thrown out without the item.' : diceCheck.fareDodgeDestinationId ? 'Try to ride without a ticket. If an inspector catches you, you’ll have to pay a penalty.' : activeEvent?.text}</p>
+        <p className="dice-description modal-narrative">{diceCheck.stealItemId ? 'Try to take it without being noticed. If you’re caught, you’ll be thrown out without the item.' : diceCheck.fareDodgeDestinationId ? 'Try to ride without a ticket. If an inspector catches you, you’ll have to pay a penalty.' : activeEvent?.text}</p>
         <p className="eyebrow">{diceCheck.choice.check.stat.toUpperCase()} CHECK</p>
         <div className={diceCheck.roll === null ? 'd20 rolling-ready' : diceCheck.roll === 20 ? 'd20 critical' : diceCheck.roll === 1 ? 'd20 critical-fail' : 'd20'} aria-label={diceCheck.roll === null ? 'D20' : `Rolled ${diceCheck.roll}`}><Icon name="dice" />{diceCheck.roll !== null && <span>{diceCheck.roll}</span>}</div>
         <div className="dice-math" aria-label={`${diceCheck.choice.check.stat === 'persuasion' ? 'Hygiene and Mood' : 'Energy'} modifier ${diceCheck.modifier}; target ${diceCheck.choice.check.dc}`}>{diceCheck.roll === null ? `D20 ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} ≥ ${diceCheck.choice.check.dc}` : `${diceCheck.roll} ${diceCheck.modifier >= 0 ? '+' : '−'} ${Math.abs(diceCheck.modifier)} = ${diceCheck.roll + diceCheck.modifier}`}</div>
         {diceCheck.roll === null
-          ? <div className="dice-actions"><button className="dice-attempt" onClick={rollDice}>{diceCheck.stealItemId ? 'Try to steal' : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</button><button className="dice-cancel" onClick={() => setDiceCheck(null)}>Cancel</button></div>
-          : <><strong className="dice-result">{diceCheck.roll === 20 ? 'CRITICAL SUCCESS' : diceCheck.roll === 1 ? 'CRITICAL FAILURE' : diceCheck.roll + diceCheck.modifier >= diceCheck.choice.check.dc ? 'SUCCESS' : 'FAILURE'}</strong><button onClick={acceptDiceResult}>Continue</button></>}
-      </section>
-    </div>}
+          ? <div className="dice-actions"><ModalAction className="dice-attempt" onClick={rollDice}>{diceCheck.stealItemId ? 'Try to steal' : diceCheck.choice.label.replace(/ · .* DC \d+$/, '')}</ModalAction><ModalAction variant="secondary" className="dice-cancel" onClick={() => setDiceCheck(null)}>Cancel</ModalAction></div>
+          : <><strong className="dice-result">{diceCheck.roll === 20 ? 'CRITICAL SUCCESS' : diceCheck.roll === 1 ? 'CRITICAL FAILURE' : diceCheck.roll + diceCheck.modifier >= diceCheck.choice.check.dc ? 'SUCCESS' : 'FAILURE'}</strong><ModalAction onClick={acceptDiceResult}>Continue</ModalAction></>}
+      </ModalPanel>
+    </ModalOverlay>}
 
-    {!gameOver && shelterQueue && <div className="sleep-overlay queue-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Shelter registration queue">
-      <section className="sleep-card timed-card rest-card">
+    {!gameOver && shelterQueue && <ModalOverlay className="sleep-overlay queue-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Shelter registration queue">
+      <ModalPanel size="compact" className="sleep-card timed-card rest-card">
         <div className="timed-heading"><Icon name="clock" /><div><p className="eyebrow">NIGHT SHELTER</p><h2>Registration queue</h2></div></div>
-        <p className="timed-description">{game.minutes < SHELTER_ENTRY_OPEN ? 'Waiting outside. Doors open at 18:00.' : game.minutes < SHELTER_REGISTRATION_OPEN ? 'Waiting inside. Registration starts at 18:20.' : 'Waiting for your turn. A bed isn’t guaranteed.'}</p>
+        <p className="timed-description modal-narrative">{game.minutes < SHELTER_ENTRY_OPEN ? 'Waiting outside. Doors open at 18:00.' : game.minutes < SHELTER_REGISTRATION_OPEN ? 'Waiting inside. Registration starts at 18:20.' : 'Waiting for your turn. A bed isn’t guaranteed.'}</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterQueue.remaining} min remaining</span></div>
         <div className="sleep-progress" role="progressbar" aria-label="Registration queue progress" aria-valuemin={0} aria-valuemax={shelterQueue.total ?? SHELTER_QUEUE_MINUTES} aria-valuenow={(shelterQueue.total ?? SHELTER_QUEUE_MINUTES) - shelterQueue.remaining}><i style={{ width: `${(1 - shelterQueue.remaining / (shelterQueue.total ?? SHELTER_QUEUE_MINUTES)) * 100}%` }} /></div>
         <p className="timed-footnote">Arrived at {formatTime(shelterQueue.arrivalMinute ?? shelterQueue.joinedAt)} · {shelterQueue.peopleAhead} ahead of you. Today’s availability: 0–3 places.</p>
-      </section>
-    </div>}
+      </ModalPanel>
+    </ModalOverlay>}
 
-    {!gameOver && shelterCheckoutDue && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <div className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter">
-      <section className="sleep-card timed-card">
+    {!gameOver && shelterCheckoutDue && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <ModalOverlay className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leave the night shelter">
+      <ModalPanel size="compact" className="sleep-card timed-card">
         <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Time to leave the night shelter</h2></div></div>
-        <p className="timed-description">You must leave by 08:00. Packing and leaving takes 30 minutes.</p>
+        <p className="timed-description modal-narrative">You must leave by 08:00. Packing and leaving takes 30 minutes.</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>On the street at {formatTime((game.minutes + SHELTER_DEPARTURE_MINUTES) % 1440)}</span></div>
-        <button className="checkout-start" autoFocus onClick={startShelterDeparture}>Leave the night shelter · 30 min</button>
-      </section>
-    </div>}
+        <ModalAction className="checkout-start" autoFocus onClick={startShelterDeparture}>Leave the night shelter · 30 min</ModalAction>
+      </ModalPanel>
+    </ModalOverlay>}
 
-    {!gameOver && shelterDeparture && <div className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leaving the night shelter">
-      <section className="sleep-card timed-card">
+    {!gameOver && shelterDeparture && <ModalOverlay className="sleep-overlay checkout-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Leaving the night shelter">
+      <ModalPanel size="compact" className="sleep-card timed-card">
         <div className="timed-heading"><Icon name="backpack" /><div><p className="eyebrow">MORNING CHECKOUT</p><h2>Leaving the night shelter</h2></div></div>
-        <p className="timed-description">Packing your things and heading outside.{shelterPhoneCharging && ' Your phone keeps charging until you collect it on the way out.'}</p>
+        <p className="timed-description modal-narrative">Packing your things and heading outside.{shelterPhoneCharging && ' Your phone keeps charging until you collect it on the way out.'}</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>{shelterDepartureRemaining} min remaining</span></div>
         <div className="sleep-progress" role="progressbar" aria-label="Packing progress" aria-valuemin={0} aria-valuemax={SHELTER_DEPARTURE_MINUTES} aria-valuenow={SHELTER_DEPARTURE_MINUTES - shelterDepartureRemaining}><i style={{ width: `${(1 - shelterDepartureRemaining / SHELTER_DEPARTURE_MINUTES) * 100}%` }} /></div>
         <p className="timed-footnote"><Icon name="clock" />On the street at {formatTime((shelterDeparture.startAbsolute + SHELTER_DEPARTURE_MINUTES) % 1440)}</p>
-      </section>
-    </div>}
+      </ModalPanel>
+    </ModalOverlay>}
 
-    {sleeping && <div className="sleep-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Sleeping">
-      <section className="sleep-card timed-card rest-card">
+    {sleeping && <ModalOverlay className="sleep-overlay timed-overlay" role="dialog" aria-modal="true" aria-label="Sleeping">
+      <ModalPanel size="compact" className="sleep-card timed-card rest-card">
         <SleepHeading kind={sleeping.kind} />
-        <p className="timed-description">{sleeping.kind === 'shelter' ? 'Resting in your reserved bed.' : sleeping.kind === 'residential' ? 'Resting in your room.' : sleeping.kind === 'bench' ? 'Resting on a bench, still exposed.' : 'Resting on the ground, out in the open.'}</p>
+        <p className="timed-description modal-narrative">{sleeping.kind === 'shelter' ? 'Resting in your reserved bed.' : sleeping.kind === 'residential' ? 'Resting in your room.' : sleeping.kind === 'bench' ? 'Resting on a bench, still exposed.' : 'Resting on the ground, out in the open.'}</p>
         <div className="sleep-clock"><strong>{formatTime(game.minutes)}</strong><span>Wake at {formatTime((sleeping.startAbsolute + sleeping.total) % 1440)}</span></div>
         {(() => {
           const elapsed = Math.min(sleeping.total, Math.max(0, Math.floor(((Date.now() - sleeping.realStartedAt) / 1000) * DEBUG_SLEEP_SPEED)))
@@ -2954,25 +2955,25 @@ export default function App() {
         })()}
         <p className="timed-footnote">{sleeping.kind === 'shelter' ? 'Sleep ends by 07:30 for morning checkout.' : 'You cannot perform other actions until you wake up.'}</p>
         <button className="sleep-debug-wake" onClick={() => { const active = sleeping; setSleeping(null); finishSleep(active) }}>Wake up (debug)</button>
-      </section>
-    </div>}
+      </ModalPanel>
+    </ModalOverlay>}
 
-    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <div className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="street-event-title">
-      <section ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ' compact-street-event'}`}>
+    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <ModalOverlay className="event-overlay" role="dialog" aria-modal="true" aria-labelledby="street-event-title">
+      <ModalPanel size={activeEvent.illustration ? 'regular' : 'compact'} ref={eventModalRef} className={`event-card${activeEvent.illustration ? ' illustrated-event' : ' compact-street-event'}`}>
         {activeEvent.illustration && <img className="event-illustration" {...responsiveImageProps(activeEvent.illustration)} alt={activeEvent.text} />}
         {!activeEvent.illustration
           ? <CompactStreetEvent event={{ ...activeEvent, choices: visibleEventChoices }} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason} orderSeed={choiceSeed} decisionKey={choiceDecisionKey} />
           : <div className="event-body">
         <p className="eyebrow">STREET EVENT</p>
         <h2 id="street-event-title">{activeEvent.title}</h2>
-        <p>{activeEvent.text}</p>
+        <p className="modal-narrative">{activeEvent.text}</p>
         <ChoiceOptions className="event-choices" seed={choiceSeed} decision={`${choiceDecisionKey}|event:${activeEvent.id}`}>{visibleEventChoices.map((choice) => {
           const unavailable = checkUnavailableReason(choice)
           return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => resolveStreetEvent(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
         })}</ChoiceOptions>
         </div>}
-      </section>
-    </div>}
+      </ModalPanel>
+    </ModalOverlay>}
 
     {autosave.saveFailed && <p role="alert" className="save-warning">Progress could not be saved on this device. Keep the game open and try again.</p>}
     <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>

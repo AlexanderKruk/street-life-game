@@ -27,7 +27,7 @@ export default function CompactStreetEvent({ event, onChoose, unavailableReason,
     <div className="compact-event-heading"><Icon name={icon} /><div>
       <p className="eyebrow">STREET EVENT</p><h2 id="street-event-title">{event.title}</h2>
     </div></div>
-    <p className="compact-event-description">{event.text}</p>
+    <p className="compact-event-description modal-narrative">{event.text}</p>
     <ChoiceOptions className="event-choices" seed={orderSeed} decision={`${decisionKey}|event:${event.id}`}>{event.choices.map(choice => {
       const unavailable = unavailableReason(choice)
       const label = choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label

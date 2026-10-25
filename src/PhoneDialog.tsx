@@ -1,3 +1,4 @@
+import { ModalOverlay, ModalPanel, ModalAction } from './Modal'
 import { useEffect, useRef } from 'react'
 import { BatteryIcon, Icon } from './Icon'
 
@@ -48,11 +49,11 @@ export default function PhoneDialog(props: PhoneDialogProps) {
       if (previous?.isConnected) previous.focus({ preventScroll: true })
     }
   }, [])
-  return <div className="phone-overlay phone-list-overlay" inert={props.blocked} aria-hidden={props.blocked || undefined} onClick={() => { if (!props.blocked) props.onClose() }}>
-    <section className="phone-modal phone-list-modal" role="dialog" aria-modal="true" aria-labelledby="phone-dialog-title" ref={dialog} onClick={event => event.stopPropagation()}>
+  return <ModalOverlay className="phone-overlay phone-list-overlay" inert={props.blocked} aria-hidden={props.blocked || undefined} onClick={() => { if (!props.blocked) props.onClose() }}>
+    <ModalPanel size="compact" className="phone-modal phone-list-modal" role="dialog" aria-modal="true" aria-labelledby="phone-dialog-title" ref={dialog} onClick={event => event.stopPropagation()}>
       <header className="phone-list-header"><h2 id="phone-dialog-title">Mobile plan</h2><span className="phone-list-battery" aria-label={`Phone battery: ${Math.round(props.battery)}%`}><BatteryIcon charge={props.battery} />{Math.round(props.battery)}%</span><button className="sheet-close phone-list-close" aria-label="Close mobile plan" ref={closeButton} onClick={props.onClose}><Icon name="close" /></button></header>
-      <div className="phone-list-service"><div className="phone-list-copy"><strong><Icon name="signal" />Mobile service</strong><small className={props.serviceActive ? 'service-active' : undefined}>{props.serviceActive ? `Active · ${props.serviceMinutesLeft >= 60 ? Math.ceil(props.serviceMinutesLeft / 60) + 'h left' : props.serviceMinutesLeft + 'm left'}` : 'No active service'}</small></div><button className="phone-list-pay" onClick={props.onBuyService} disabled={!props.canBuyService} aria-label="Add 24 hours of mobile service for 1 zł">+24h<small>1 zł</small></button></div>
+      <div className="phone-list-service"><div className="phone-list-copy"><strong><Icon name="signal" />Mobile service</strong><small className={props.serviceActive ? 'service-active' : undefined}>{props.serviceActive ? `Active · ${props.serviceMinutesLeft >= 60 ? Math.ceil(props.serviceMinutesLeft / 60) + 'h left' : props.serviceMinutesLeft + 'm left'}` : 'No active service'}</small></div><ModalAction variant="secondary" className="phone-list-pay" onClick={props.onBuyService} disabled={!props.canBuyService} aria-label="Add 24 hours of mobile service for 1 zł">+24h<small>1 zł</small></ModalAction></div>
       <button className="phone-list-row" role="switch" aria-checked={props.autoRenew} aria-label="Auto-renew" onClick={props.onAutoRenew}><Icon name="renew" /><span className="phone-list-copy"><strong>Auto-renew</strong><small>1 zł when service expires</small></span><span className="phone-list-toggle"><span>{props.autoRenew ? 'ON' : 'OFF'}</span><i className={props.autoRenew ? 'phone-switch on' : 'phone-switch'} aria-hidden="true" /></span></button>
-    </section>
-  </div>
+    </ModalPanel>
+  </ModalOverlay>
 }

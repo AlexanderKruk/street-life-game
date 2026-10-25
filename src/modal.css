@@ -1,0 +1,120 @@
+/* The modal visual contract. Layout-specific rules live in styles.css;
+   surfaces, spacing, narrative typography and action themes live here. */
+:root {
+  --modal-width: 480px;
+  --modal-width-compact: 408px;
+  --modal-surface: #191e21;
+  --modal-border: #4a5155;
+  --modal-radius: 18px;
+  --modal-shadow: 0 8px 30px rgba(0,0,0,.24);
+  --modal-backdrop: rgba(4,7,10,.62);
+  --modal-blur: 5px;
+  --modal-gutter: 12px;
+  --modal-inset: 16px;
+  --modal-padding-x: 16px;
+  --modal-padding-y: 14px;
+  --modal-padding-compact: 22px;
+  --control-radius: 10px;
+  --control-height: 46px;
+  --control-secondary-surface: #232b30;
+  --control-secondary-border: #414b50;
+  --control-danger-surface: #573331;
+  --control-danger-border: #81504c;
+  --control-danger-text: #f0c5bf;
+  --control-inverse-text: #171b1e;
+  --choice-surface: #191e21;
+  --choice-border: #3a4145;
+  --choice-radius: 12px;
+  --choice-gap: 12px;
+  --choice-icon-size: 24px;
+}
+
+/* Keep one scrollable surface on narrow/short screens. Existing JS locks still
+   preserve scroll position and mobile Safari behavior where they are needed. */
+html:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) { overflow:hidden; }
+.modal-overlay {
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:calc(var(--modal-inset) + env(safe-area-inset-top,0px)) var(--modal-gutter) calc(var(--modal-inset) + env(safe-area-inset-bottom,0px));
+  background:var(--modal-backdrop);
+  backdrop-filter:blur(var(--modal-blur));
+  -webkit-backdrop-filter:blur(var(--modal-blur));
+  overscroll-behavior:none;
+}
+.modal-panel {
+  position:relative;
+  width:min(var(--modal-width),100%);
+  min-width:0;
+  max-height:calc(100dvh - var(--modal-inset) * 2 - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding:var(--modal-padding-y) var(--modal-padding-x);
+  border:1px solid var(--modal-border);
+  border-radius:var(--modal-radius);
+  background:var(--modal-surface);
+  box-shadow:var(--modal-shadow);
+  color:var(--text-primary);
+}
+.modal-panel--compact { width:min(var(--modal-width-compact),100%); padding:var(--modal-padding-compact); }
+.modal-panel[tabindex="-1"]:focus { outline:none; }
+.modal-panel :focus-visible { outline:2px solid var(--color-warning); outline-offset:2px; }
+.modal-panel .eyebrow, .modal-panel .result-card-label {
+  color:var(--text-secondary);
+  font-size:var(--font-small);
+  font-weight:var(--weight-regular);
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.modal-panel .modal-narrative {
+  font-size:var(--font-body);
+  font-weight:var(--weight-regular);
+  color:var(--text-primary);
+  line-height:1.5;
+}
+.modal-panel .modal-action {
+  appearance:none;
+  -webkit-appearance:none;
+  min-width:0;
+  min-height:var(--control-height);
+  padding:10px 14px;
+  border:1px solid var(--color-warning-border);
+  border-radius:var(--control-radius);
+  background:var(--color-warning);
+  color:var(--control-inverse-text);
+  font-family:var(--font-family);
+  font-size:var(--font-body);
+  font-weight:var(--weight-semibold);
+  line-height:1.35;
+  overflow-wrap:anywhere;
+  cursor:pointer;
+}
+.modal-panel .modal-action--primary:active:not(:disabled) { background:var(--color-warning-pressed); }
+.modal-panel .modal-action--secondary { background:var(--control-secondary-surface); border-color:var(--control-secondary-border); color:var(--text-secondary); }
+.modal-panel .modal-action--danger { background:var(--control-danger-surface); border-color:var(--control-danger-border); color:var(--control-danger-text); }
+.modal-panel .modal-action:disabled { opacity:.42; cursor:not-allowed; }
+
+/* A scene and its illustrated outcome share width, framing and inner edges. */
+.modal-panel.illustrated-event { padding:0; }
+.illustrated-event .event-body { padding:var(--modal-padding-y) var(--modal-padding-x); }
+.modal-panel.illustrated-result { padding-top:0; }
+.result-illustration {
+  width:calc(100% + var(--modal-padding-x) * 2);
+  margin-left:calc(var(--modal-padding-x) * -1);
+  margin-right:calc(var(--modal-padding-x) * -1);
+  margin-bottom:var(--modal-padding-y);
+  max-height:none;
+}
+.event-illustration, .result-illustration { aspect-ratio:16/9; }
+.event-body h2 { margin:0 0 9px; line-height:1.25; }
+.illustrated-event .event-body > .modal-narrative { margin:0; }
+.compact-street-event .event-body > .modal-narrative { margin:16px 0 22px; }
+.modal-panel .dice-description { margin-bottom:20px; }
+.modal-panel .game-over-description { margin-top:14px; }
+.modal-panel .timed-description { margin-top:14px; }
+.phone-goals-count { color:var(--text-secondary); font-size:var(--font-small); font-weight:var(--weight-regular); }
+
+@media(max-width:360px) { :root { --modal-padding-compact:20px; } }
+@media(max-height:650px) { .event-illustration, .result-illustration { max-height:150px; } }

@@ -1,3 +1,4 @@
+import { ModalOverlay, ModalPanel, ModalAction } from './Modal'
 import { memo, useEffect, useRef, useState } from 'react'
 import { responsiveImageProps } from './responsiveImages'
 import { BatteryIcon, Icon, type IconName } from './Icon'
@@ -98,8 +99,8 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter || change === summaryBattery)
 
-  return <div className="phone-overlay result-overlay">
-    <section className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactInfo ? ' compact-info-result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="result-title" ref={dialog}>
+  return <ModalOverlay className="phone-overlay result-overlay">
+    <ModalPanel className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactInfo ? ' compact-info-result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="result-title" ref={dialog}>
       {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} onLoad={() => setReadyIllustration(result.illustration!)} onError={() => setReadyIllustration(result.illustration!)} />}
       <div className="result-card-heading">
         {!result.bottleSearch && !compactInfo && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}
@@ -117,18 +118,18 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           {compactPlace ? <p className="result-description">{compactPlace.detail}</p> : !!presentation?.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>
           </div>)}</div>}
-          {presentation?.lead && <p className="result-description result-narrative">{presentation.lead}</p>}
+          {presentation?.lead && <p className="result-description result-narrative modal-narrative">{presentation.lead}</p>}
           {!compactPlace && !!presentation?.places?.length && presentation.mapStatus && <p className="compact-info-saved"><Icon name="check" />{presentation.mapStatus}</p>}
           {presentation?.notice && <p className="result-notice">{presentation.notice}</p>}
-          {result.reflection && <p className="result-description result-narrative">{result.reflection}</p>}
+          {result.reflection && <p className="result-description result-narrative modal-narrative">{result.reflection}</p>}
         </> : presentation ? <>
-          <p className="result-lead result-narrative">{presentation.lead}</p>
+          <p className="result-lead result-narrative modal-narrative">{presentation.lead}</p>
           {!!presentation.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <Icon name="map" />
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
-        </> : <p className="result-description result-narrative">{result.text}</p>}
+        </> : <p className="result-description result-narrative modal-narrative">{result.text}</p>}
         {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} animationReady={animationReady} />)}</div>}
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
@@ -141,7 +142,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           <p className="result-description">{result.text}</p>
         </details>}
       </div>
-      <button className="result-confirm" ref={confirm} onClick={onClose}>Got it</button>
-    </section>
-  </div>
+      <ModalAction className="result-confirm" ref={confirm} onClick={onClose}>Got it</ModalAction>
+    </ModalPanel>
+  </ModalOverlay>
 })

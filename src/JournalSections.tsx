@@ -8,8 +8,7 @@ export type JournalGoal = { id: string; title: string; description: string }
 type GoalsProps = { pending: JournalGoal[]; completed: JournalGoal[] }
 
 export const JournalGoals = memo(function JournalGoals({ pending, completed }: GoalsProps) {
-  return <section className="journal-goals" aria-labelledby="journal-goals-heading">
-    <div className="journal-section-title"><h3 id="journal-goals-heading">Goals</h3><span aria-label={`${pending.length} incomplete goals`}>{pending.length}</span></div>
+  return <section className="journal-goals" aria-label="Goals">
     <ul className="goal-list" aria-label="Goals ordered by priority">
       {pending.map((goal, index) => <li className={index === 0 ? 'goal main-goal' : 'goal'} key={goal.id}>
         <span className="goal-marker" aria-label={index === 0 ? 'Main goal, not completed' : 'Not completed'} /><div><strong>{goal.title}</strong><small>{goal.description}</small></div>

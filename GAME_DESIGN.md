@@ -696,6 +696,25 @@ Street decisions themselves keep ordinary time running. Result/event/parameter m
 
 ### Visual style and typography (v280)
 
+The implementation contract is maintained in root [AGENTS.md](AGENTS.md), which
+agents must read before editing. It indexes UI templates, typography, color roles
+and the actual art references. Shared modal visuals are defined once in
+`src/modal.css` and rendered through `ModalOverlay`, `ModalPanel` and `ModalAction`
+from `src/Modal.tsx` (v324). Individual modal styles contain content layout only;
+do not reintroduce local frame themes or compensate with stronger CSS overrides.
+
+All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
+and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
+most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,
+internal scrolling and compact viewport spacing are shared. Illustrated event
+openings and outcomes have matching width and 16:9 image framing. Main narrative
+is Body/400 in primary text, including event openings; metadata stays Small.
+Confirmation/cancel/destructive buttons share `ModalAction` with Body/600 text
+and primary/secondary/danger variants driven by `--control-*` variables. Existing
+pause/dismissal/focus/save behavior stays with the caller. Choice cards retain
+their own common template and use `--choice-*` variables. Goals uses one visible
+header; its pending count appears beside that shared Phone header.
+
 Use one system sans-serif family everywhere: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`. Inter was previously listed without being loaded and is removed from the stack; the user's platform supplies the system font. Controls inherit the same family.
 
 | Text role | Token | Mobile / tablet below 768px | Desktop from 768px | Usage |
