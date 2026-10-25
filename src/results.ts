@@ -1,3 +1,4 @@
+import { clothingHygieneCap } from './hygieneRules'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { absoluteMinutes, energyCap, moodLimit, type GameState, type Housing } from './game'
 
@@ -38,7 +39,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
   ] as const) {
     const cleanliness = after.inventory.clothingCleanliness ?? 100
     const mood = key === 'mood' ? moodLimit(after.game, { housing: after.housing, effects: after.effects }) : undefined
-    const cap = key === 'energy' ? energyCap(after.game.health) : key === 'hygiene' ? cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60 : mood?.cap
+    const cap = key === 'energy' ? energyCap(after.game.health) : key === 'hygiene' ? clothingHygieneCap(cleanliness) : mood?.cap
     add(label, after.game[key] - before.game[key], '', false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}), ...(mood ? { capReason: mood.reasons.join(', ') } : {}) })
   }
   add('🍺 Intoxication', after.game.intoxication - before.game.intoxication, '', true)

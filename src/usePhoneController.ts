@@ -1,4 +1,5 @@
-import { useEffect, type Dispatch, type SetStateAction } from 'react'
+import { useEffect } from 'react'
+import type { Setter, RunWithResult } from './controllerTypes'
 import type { ActionResult, GameState } from './game'
 import { absoluteMinutes } from './gameTime'
 import { CALL_BATTERY_PER_MINUTE, OPENING_CALLS, openingCall } from './openingCalls'
@@ -13,7 +14,6 @@ import type { ResultSnapshot } from './results'
 import { SHELTER_ENTRY_OPEN } from './shelterRules'
 import type { Inventory, JournalGoals, Screen } from './stateTypes'
 
-type Setter<T> = Dispatch<SetStateAction<T>>
 type PhoneContext = {
   game: GameState; inventory: Inventory; currentId: string; open: boolean; screen: Screen
   firstNight: boolean; eventInteractionBlocked: boolean; sleeping: boolean; trip: boolean; gameOver: boolean
@@ -27,7 +27,7 @@ type PhoneHost = {
   setActiveGoal: Setter<{ type: 'night-shelter'; day: number; minute: number } | null>
   applyAction: (game: GameState, action: ActionResult) => GameState
   moodCap: (game: GameState) => number; resultSnapshot: () => ResultSnapshot
-  runWithResult: (title: string, action: () => void, before?: ResultSnapshot, includeTime?: boolean, always?: boolean) => void
+  runWithResult: RunWithResult
   onOpeningSearch: () => void
 }
 

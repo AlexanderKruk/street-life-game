@@ -1,3 +1,4 @@
+import { clothingHygieneCap } from './hygieneRules'
 import { energyCap, moodLimit, type GameState, type TimeContext } from './game'
 import type { IconName } from './Icon'
 
@@ -33,6 +34,6 @@ export function limitingEffects(state: GameState, context: TimeContext, cleanlin
   const mood = moodLimit(state, context)
   mood.reasons.forEach(reason => add(reason, 'Mood', mood.cap))
   add('Health', 'Energy', energyCap(state.health))
-  add('Dirty clothes', 'Hygiene', cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60)
+  add('Dirty clothes', 'Hygiene', clothingHygieneCap(cleanliness))
   return groups
 }

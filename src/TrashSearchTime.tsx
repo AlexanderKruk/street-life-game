@@ -1,10 +1,7 @@
+import { trashSearchMinutes } from './trashSearchRules'
+export { trashSearchMinutes } from './trashSearchRules'
 import { useEffect, useState } from 'react'
 import { Icon } from './Icon'
-
-export function trashSearchMinutes(startedAt: number) {
-  const seconds = Math.max(5, Math.floor((Date.now() - startedAt) / 1000))
-  return Math.min(60, Math.max(10, Math.ceil(seconds / 5) * 5))
-}
 
 export default function TrashSearchTime({ startedAt, onDeadline }: { startedAt: number; onDeadline: () => void }) {
   const [minutes, setMinutes] = useState(() => trashSearchMinutes(startedAt))

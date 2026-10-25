@@ -11,12 +11,12 @@ import DiscardDialog from './DiscardDialog'
 import EventDialog from './EventDialog'
 import FoodChoiceDialog from './FoodChoiceDialog'
 import GameHeader from './GameHeader'
-import { Icon,type IconName } from './Icon'
+import type { IconName } from './Icon'
 import InventoryDialog from './InventoryDialog'
 import InventoryScreen from './InventoryScreen'
 import { JournalGoals } from './JournalSections'
 import LocationScreen from './LocationScreen'
-import { ModalAction,ModalOverlay,ModalPanel } from './Modal'
+import { ModalAction } from './Modal'
 import PhoneDialog from './PhoneDialog'
 import PhoneHistoryScreen from './PhoneHistoryScreen'
 import PhoneNotesScreen from './PhoneNotesScreen'
@@ -29,27 +29,25 @@ import ShelterQueueDialog from './ShelterQueueDialog'
 import { ShelterCheckoutWarning,ShelterDepartureDialog } from './ShelterCheckoutDialog'
 import SleepPlanningDialog from './SleepPlanningDialog'
 import StatusScreen from './StatusScreen'
-import TrashSearchTime,{ trashSearchMinutes } from './TrashSearchTime'
+import TrashSearchDialog from './TrashSearchDialog'
+import GameOverDialog from './GameOverDialog'
 import { firstNightTime } from './events'
 import { ageFood,foodSlot,type FoodCondition,type FoodKind } from './foodInventory'
 import { actions,applyAction as applyGameAction,conditionBand,createInitialState,energyCap,formatTime,isOpen,limitMood,locations,moodLimit,temperatureAt,weatherAt,weatherExposure,type ActionResult,type GameState,type Housing } from './game'
 import { displayDay } from './gameDate'
 import { absoluteMinutes,formatTravelTime,weekday } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
-import { BACKPACK_CAPACITY,BOTTLE_STACK_SIZE,FREE_WATER_LIMIT,INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_STORAGE,SHOP_ITEMS,backpackSlots,storageSlots } from './inventory'
-import { inventoryCommandResult,resolveInventoryCommand,type InventoryCommand } from './inventoryCommands'
+import { INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_STORAGE,SHOP_ITEMS,backpackSlots,storageSlots } from './inventory'
 import { journalReflection,type JournalEntry } from './journal'
 import { limitingEffects } from './limitingEffects'
 import { CLOSING_NOTICE_KEY,locationClosedSince } from './locationClosing'
 import { OPENING_CALLS,OPENING_CALLS_KEY,openingCall } from './openingCalls'
-import { phoneDrainMultiplier } from './phonePower'
-import { locationPresentation } from './resultPresentation'
 import { summarizeResult,type ConsumedItem,type ResultSnapshot } from './results'
 import { DISCOVERY_KEY,SAVE_KEY } from './saveCompatibility'
 import { SHELTER_PHONE_CHARGE_KEY } from './shelterCharging'
 import { SHELTER_ENTRY_OPEN,shelterAccess } from './shelterRules'
 import { SLEEP_HOURS,sleepDurationUnavailable } from './sleepRules'
-import type { ActiveEffect,BackpackItemId,Inventory,JournalGoals as JournalGoalState,LifeSituation,Screen,ShopItem,StoredItems,TravelMode,Trip } from './stateTypes'
+import type { ActiveEffect,BackpackItemId,Inventory,JournalGoals as JournalGoalState,LifeSituation,Screen,StoredItems,Trip } from './stateTypes'
 import { CHOICE_SEED_KEY,newChoiceSeed } from './streetChoiceOrder'
 import { getTravelDisplayPhase,getTravelPhase } from './travelPhases'
 import { useGameAutosave } from './useGameAutosave'
@@ -65,10 +63,16 @@ import { useSleepSession,useShelterSession } from './restSessions'
 import { createSleepController,useForcedSleep,useSleepCompletion } from './sleepController'
 import { createShelterController } from './shelterController'
 import { useShelterAdmission,useShelterProcesses,useShelterAttendance } from './useShelterLifecycle'
-import { locationActionUnavailable } from './locationActionRules'
+import { useTrashSession,useTrashController } from './trashSearchController'
+import { createMedicalController } from './medicalController'
+import { createSupportWorkController } from './supportWorkController'
+import { createStreetController } from './streetController'
+import { createLocationController } from './locationController'
+import { createInventoryController } from './inventoryController'
+import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.25-331'
+const BUILD_VERSION = 'v2026.10.25-332'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -184,8 +188,8 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(false)
   const [streetBenchFound, setStreetBenchFound] = useState(false)
   const [begging, setBegging] = useState<{ day: number; attempts: number }>(() => initial.begging)
-  const [trashGame, setTrashGame] = useState<{ items: TrashItem[]; startedAt: number; found: number; before: ResultSnapshot } | null>(null)
-  const trashDrag = useRef<{ id: number; offsetX: number; offsetY: number; startX: number; startY: number; moved: boolean } | null>(null)
+  const trashSession = useTrashSession()
+  const { trashGame, resetTrashSession } = trashSession
   const eventModalRef = useRef<HTMLElement>(null)
   const eventSession = useEventSession(initial, game)
   const { firstNightEvents, leftHome, encounters, openingSearchObservation,
@@ -309,7 +313,6 @@ export default function App() {
   const usedStorageSlots = storageSlots(storage)
 
   const laundryCleanAt = useRef(-1)
-  const clothingHygieneCap = (cleanliness: number) => cleanliness >= 70 ? 100 : cleanliness >= 40 ? 80 : 60
   const hygieneLimit = clothingHygieneCap(inventory.clothingCleanliness)
   const statusNeeds = [
     { id: 'hunger', label: 'Food', value: game.hunger, icon: 'food' as IconName },
@@ -396,6 +399,27 @@ export default function App() {
     openPage, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),
   })
 
+  const { executeInventoryCommand, returnBottles, storeItem, takeStoredItem, storeFood, takeStoredFood, buyItem, useSupply, useMedicine, smokeCigarette, useItem } = createInventoryController(
+    { game, inventory, storage, effects, locationId: current.id, open, insideNightShelter },
+    { setInventory, setStorage, setEffects, setGame, setMessage, setInfoModal, applyAction, runWithResult, resultSnapshot })
+  const { hospitalVisit, callAmbulance } = createMedicalController(
+    { game, inventory, currentId: current.id, open, activeEvent: !!activeEvent, shelterPhoneCharging },
+    { setGame, setInventory, setEffects, setMessage, setSelectedDestination, setTrip, setScreen, applyAction, runWithResult })
+  const { socialSupport, takeDayWork } = createSupportWorkController(
+    { game, inventory, storage, life, currentId: current.id, open, dayWorkEnergyRequired },
+    { setGame, setInventory, setEffects, setLife, setMessage, setDiscoveredLocations, applyAction, runWithResult })
+  const { act, actionUnavailableReason } = createLocationController(
+    { game, inventory, life, current, open, activeEvent: !!activeEvent, shelterQueue: !!shelterQueue, shelterBooked, shelterAdmitted, hygieneLimit },
+    { setGame, setInventory, setLife, setEffects, setMessage, laundryCleanAt, runWithResult, resultSnapshot, applyAction, moodContext,
+      beginShelterInterview, prepareShelterAction, requestSleep, finishRestAction, finishLocationPhoneCharge }, encounterQueue)
+  const { walkMusicCost, canWalkWithMusic, walkCity, askForMoney, streetAction } = createStreetController(
+    { game, inventory, currentId: current.id, activeEvent: !!activeEvent, sleeping: !!sleeping, trip: !!trip, infoModal: !!infoModal,
+      musicWalkUsed, mobileServiceActive, musicOn, streetBenchFound, begging },
+    { setGame, setInventory, setInfoModal, setMessage, setBegging, setMusicWalkUsed, setRainChoice, setStreetBenchFound, moodContext, resultSnapshot, runWithResult, applyAction, requestSleep }, encounterQueue)
+  const { searchStreetBottles, startTrashDrag, moveTrashItem, collectTrashBottle, finishTrashSearch, checkTrashDeadline, endTrashDrag, cancelTrashDrag } = useTrashController(
+    trashSession, { inventory, currentId: current.id, activeEvent: !!activeEvent },
+    { setInventory, setGame, setMessage, setInfoModal, applyAction, runWithResult, resultSnapshot })
+
   function runWithResult(title: string, action: () => void, before = resultSnapshot(), includeTime = true, always = false, consumedItems: ConsumedItem[] = []) {
     if (sleepChoice && title !== 'Start sleeping') return
     if (shelterQueue && title !== 'Shelter registration') return
@@ -404,36 +428,6 @@ export default function App() {
     action()
     setPendingResult({ title, before, includeTime, always, consumedItems })
   }
-
-  // Resolve from the current render only after runWithResult accepts the action.
-  // Never resolve random food outcomes inside a state updater or an effect.
-  function executeInventoryCommand(command: InventoryCommand) {
-    const perform = () => {
-      const changes = resolveInventoryCommand({ game, inventory, storage, effects, locationId: current.id, open, insideNightShelter }, command)
-      if (changes.inventory) setInventory(changes.inventory)
-      if (changes.storage) setStorage(changes.storage)
-      if (changes.effects) setEffects(changes.effects)
-      if (changes.game) setGame(changes.game)
-      const action = changes.action
-      if (action) setGame(previous => applyAction(previous, action))
-      if (changes.message !== undefined) setMessage(changes.message)
-      if (changes.info) setInfoModal(changes.info)
-    }
-    const result = inventoryCommandResult(command)
-    if (result) runWithResult(result.title, perform, resultSnapshot(), true, result.always ?? false, result.consumedItems ?? [])
-    else perform()
-  }
-
-  function returnBottles() { executeInventoryCommand({ type: 'return-bottles' }) }
-  function storeItem(item: 'documents' | 'medicines' | 'cigarettes') { executeInventoryCommand({ type: 'store', item }) }
-  function takeStoredItem(item: 'documents' | 'medicines' | 'cigarettes') { executeInventoryCommand({ type: 'take', item }) }
-  function storeFood() { executeInventoryCommand({ type: 'store-food' }) }
-  function takeStoredFood() { executeInventoryCommand({ type: 'take-food' }) }
-  function buyItem(item: ShopItem) { executeInventoryCommand({ type: 'buy', item }) }
-  function useSupply(item: 'bread' | 'cannedFood' | 'readyMeal' | 'wipes', slotIndex = 0, condition?: FoodCondition) { executeInventoryCommand({ type: 'use', item, slotIndex, condition }) }
-  function useMedicine() { executeInventoryCommand({ type: 'medicine' }) }
-  function smokeCigarette() { executeInventoryCommand({ type: 'smoke' }) }
-  function useItem(item: 'water' | 'food', slotIndex = 0, condition?: FoodCondition) { executeInventoryCommand({ type: 'use', item, slotIndex, condition }) }
 
   useEffect(() => {
     if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit || game.mood > moodCeiling.cap) return
@@ -479,14 +473,6 @@ export default function App() {
     setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionTitle: 'Closing time', text: `${current.name} closed. You stepped outside onto the street.` }].slice(-500))
   }, [game.day, game.minutes, current, !!trip, gameOver])
 
-  function hospitalVisit(...args: Parameters<typeof hospitalVisitImpl>) { runWithResult('Medical appointment', () => hospitalVisitImpl(...args)) }
-  function callAmbulance(...args: Parameters<typeof callAmbulanceImpl>) { runWithResult('Emergency care', () => callAmbulanceImpl(...args)) }
-  function askForMoney(...args: Parameters<typeof askForMoneyImpl>) { runWithResult('Ask for money', () => askForMoneyImpl(...args)) }
-  function finishTrashSearch(...args: Parameters<typeof finishTrashSearchImpl>) { runWithResult('Trash search results', () => finishTrashSearchImpl(...args), trashGame?.before ?? resultSnapshot()) }
-  function streetAction(...args: Parameters<typeof streetActionImpl>) { runWithResult(args[0] === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(...args)) }
-  function act(...args: Parameters<typeof actImpl>) { runWithResult(actions.find(action => action.id === args[0])?.name ?? 'Action complete', () => actImpl(...args), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(args[0]) ? ['showerGel'] : []) }
-  function socialSupport(...args: Parameters<typeof socialSupportImpl>) { runWithResult('Social support', () => socialSupportImpl(...args)) }
-  function takeDayWork(...args: Parameters<typeof takeDayWorkImpl>) { runWithResult('Day work', () => takeDayWorkImpl(...args)) }
 
   useShelterProcesses(shelterSession, shelterController, { game, life, current, trip: !!trip, shelterBooked, shelterDepartureRemaining, gameOver }, setLife)
   useEffect(() => {
@@ -550,174 +536,6 @@ export default function App() {
 
   useSleepCompletion(sleepSession, game, sleepController)
 
-  function hospitalVisitImpl() {
-    if (activeEvent || current.id !== 'hospital') return
-    if (!open) { setMessage('Regular medical care is closed.'); return }
-    if (!inventory.documents) { setMessage('You need your documents for a regular medical appointment.'); return }
-    setGame((prev) => {
-      const afterTime = applyAction(prev, { minutes: 90, mood: 3 })
-      return { ...afterTime, health: Math.max(afterTime.health, 65) }
-    })
-    setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
-    setMessage('A doctor examines you and treats what they can. Your condition is brought back to a stable level.')
-  }
-
-  function callAmbulanceImpl() {
-    if (activeEvent) return
-    if (shelterPhoneCharging) { setMessage('Collect your phone from the charger first.'); return }
-    if (game.health > 20) { setMessage('An ambulance is only available as a gameplay emergency option at Health 20 or lower.'); return }
-    if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0) { setMessage('Your phone is not working, so you cannot call an ambulance.'); return }
-    const hours = 4 + Math.floor(Math.random() * 5)
-    setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2 * phoneDrainMultiplier(prev.phoneCondition)) }))
-    setGame((prev) => {
-      const afterTime = applyAction(prev, { minutes: hours * 60, energy: -15, mood: -5 })
-      return { ...afterTime, health: Math.max(afterTime.health, 35), locationId: 'hospital' }
-    })
-    setSelectedDestination(null)
-    setTrip(null)
-    setScreen('location')
-    setMessage(`You call an ambulance. Emergency staff stabilize you without requiring documents. About ${hours} hours pass and your Health is stabilized to 35.`)
-  }
-
-  function askForMoneyImpl() {
-    if (activeEvent || current.id !== 'street') return
-    const attemptsToday = begging.day === game.day ? begging.attempts : 0
-    if (attemptsToday >= 3) {
-      setMessage('You have already asked around enough today. People in this area have stopped responding.')
-      return
-    }
-    setBegging({ day: game.day, attempts: attemptsToday + 1 })
-    const roll = Math.random()
-    const earned = roll < 0.35 ? 0 : roll < 0.65 ? 1 : roll < 0.85 ? 2 : roll < 0.96 ? 3 : 5
-    setGame((prev) => applyAction(prev, { minutes: 45, money: earned, energy: -2, mood: earned > 0 ? 1 : -3 }))
-    setMessage(earned > 0 ? `You spend 45 minutes asking passers-by for help and collect ${earned.toFixed(2)} zł in small change.` : 'You spend 45 minutes asking passers-by for help. Nobody gives you anything.')
-  }
-
-  function searchStreetBottles() {
-    if (activeEvent || current.id !== 'street' || trashGame) return
-    const clutter: TrashArt[] = ['paper', 'cup', 'tray', 'wrapper']
-    const layers = 6
-    const perLayer = 3
-    const count = layers * perLayer
-    const bottleCount = 2 + Math.floor(Math.random() * 5)
-    const shuffled = Array.from({ length: count }, (_, id) => id)
-    for (let index = count - 1; index > 0; index--) {
-      const other = Math.floor(Math.random() * (index + 1))
-      ;[shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]]
-    }
-    const bottleIndexes = new Set(shuffled.slice(0, bottleCount))
-    const items: TrashItem[] = Array.from({ length: count }, (_, id) => {
-      const bottle = bottleIndexes.has(id)
-      const layer = Math.floor(id / perLayer)
-      const slot = id % perLayer
-      const base = [
-        { x: 22, y: 32 },
-        { x: 70, y: 28 },
-        { x: 48, y: 68 },
-      ][slot]
-      const appearance = Math.random()
-      const can = bottle && appearance < .35
-      const returnable = bottle && Math.random() < (can ? .78 : .65)
-      const art: TrashArt = bottle ? can ? returnable ? 'can' : 'can-crushed' : returnable ? 'plastic' : 'plastic-crushed' : clutter[Math.floor(appearance * clutter.length)]
-      return {
-        id,
-        layer,
-        art,
-        x: base.x + (Math.random() * 14 - 7),
-        y: base.y + (Math.random() * 14 - 7),
-        rotation: Math.random() * 360,
-        scale: TRASH_ITEM_SCALE[art] + Math.random() * .2,
-        bottle,
-        returnable,
-      }
-    })
-    setTrashGame({ items, startedAt: Date.now(), before: resultSnapshot(), found: 0 })
-  }
-
-  function startTrashDrag(id: number, clientX: number, clientY: number, bounds: DOMRect) {
-    const item = trashGame?.items.find((entry) => entry.id === id)
-    if (!item || item.collected || !trashGame) return false
-    const pointerX = ((clientX - bounds.left) / bounds.width) * 100
-    const pointerY = ((clientY - bounds.top) / bounds.height) * 100
-    trashDrag.current = { id, offsetX: pointerX - item.x, offsetY: pointerY - item.y, startX: clientX, startY: clientY, moved: false }
-    return true
-  }
-
-  function moveTrashItem(id: number, clientX: number, clientY: number, bounds: DOMRect) {
-    const drag = trashDrag.current
-    if (!drag || drag.id !== id) return
-    if (!drag.moved && Math.hypot(clientX - drag.startX, clientY - drag.startY) < 5) return
-    const pointerX = ((clientX - bounds.left) / bounds.width) * 100
-    const pointerY = ((clientY - bounds.top) / bounds.height) * 100
-    const nextX = Math.max(-30, Math.min(110, pointerX - drag.offsetX))
-    const nextY = Math.max(-30, Math.min(110, pointerY - drag.offsetY))
-    drag.moved = true
-    const draggedItem = trashGame?.items.find((entry) => entry.id === id)
-    const halfWidth = 18 * (draggedItem?.scale ?? 1) / bounds.width * 100
-    const halfHeight = 20 * (draggedItem?.scale ?? 1) / bounds.height * 100
-    // Rectangular field: clear only the dragged item as it reaches an edge,
-    // and discard rubbish once roughly a quarter has crossed that edge.
-    const cleared = nextX - halfWidth < 0 || nextX + halfWidth > 100 || nextY - halfHeight < 0 || nextY + halfHeight > 100
-    const outside = nextX - halfWidth * .5 < 0 || nextX + halfWidth * .5 > 100 || nextY - halfHeight * .5 < 0 || nextY + halfHeight * .5 > 100
-    setTrashGame((active) => active ? { ...active, items: active.items.map((item) => item.id === id ? {
-      ...item,
-      x: nextX,
-      y: nextY,
-      cleared: item.cleared || cleared,
-      collected: !item.returnable && outside ? true : item.collected,
-    } : item) } : null)
-  }
-
-  function collectTrashBottle(id: number) {
-    if (!trashGame) return
-    const item = trashGame.items.find((entry) => entry.id === id)
-    if (!item || !item.returnable || item.collected) return
-    const currentBottleSlots = inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0
-    const otherSlots = backpackSlots(inventory) - currentBottleSlots
-    const bottleCapacity = Math.max(0, BACKPACK_CAPACITY - otherSlots) * BOTTLE_STACK_SIZE
-    if (inventory.bottles >= bottleCapacity) { setMessage('Your backpack has no room for another container.'); return }
-    setInventory((prev) => ({ ...prev, bottles: prev.bottles + 1 }))
-    setTrashGame((active) => active ? { ...active, found: active.found + 1, items: active.items.map((entry) => entry.id === id ? { ...entry, collected: true } : entry) } : null)
-  }
-
-  function finishTrashSearchImpl() {
-    if (!trashGame) return
-    const minutes = trashSearchMinutes(trashGame.startedAt)
-    const { found } = trashGame
-    setGame((prev) => applyAction(prev, { minutes, energy: -Math.max(1, minutes / 15), hygiene: -Math.max(2, minutes / 5), mood: found > 0 ? 1 : -2 }))
-    setTrashGame(null)
-    const text = found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable container${found === 1 ? '' : 's'}.` : `You searched for ${minutes} minutes and found nothing useful.`
-    setMessage(text)
-    setInfoModal({ title: 'Trash search results', text, bottleSearch: { found } })
-  }
-
-  const checkTrashDeadline = useLatestAction(() => {
-    if (trashGame && Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
-  })
-
-  const walkMusicCost = 2 * phoneDrainMultiplier(inventory.phoneCondition)
-  const canWalkWithMusic = !musicWalkUsed && mobileServiceActive && inventory.phoneCondition > 0 && inventory.phoneBattery >= walkMusicCost
-  function walkCity(withMusic = false) {
-    if (current.id !== 'street' || sleeping || trip || activeEvent || infoModal) return
-    if (withMusic && !canWalkWithMusic) return
-    // The authored music walk has one +3 reward, rather than stacked walking/music bonuses.
-    const passiveMusic = !withMusic && musicOn
-    const musicText = 'You listen to your favorite songs as you walk. You feel a little better.'
-    const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
-    runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
-      if (withMusic) setMusicWalkUsed(true)
-      setRainChoice(false)
-      let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: passiveMusic })
-      next = applyGameAction(next, { minutes: 15, energy: -1, mood: withMusic ? 0 : 2 }, { ...moodContext(next), walking: true, music: passiveMusic })
-      if (withMusic) next.mood = Math.min(moodLimit(next, moodContext(next)).cap, next.mood + 3)
-      setInventory(previous => ({ ...previous, phoneBattery: Math.max(0, previous.phoneBattery - (withMusic && !musicOn ? walkMusicCost : 0)), clothingCleanliness: Math.max(0, previous.clothingCleanliness - 30 * (10 / 1440)) }))
-      setGame(next)
-        setMessage(withMusic ? musicText : 'You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.')
-        if (withMusic) setInfoModal({ title: 'Walk with music', text: musicText, illustration: musicIllustration, illustrationAlt: 'You walk through the neighbourhood wearing full-size over-ear headphones.', batteryInSummary: true })
-        if (!observeFirstNight('walk', next)) observeOrdinaryEvent('travel', next, 'walk')
-    }, resultSnapshot(), true, true)
-  }
-
   // Street offers one phone entry; all individual searches live in Find Help.
   const exhausted = game.energy <= 40
   const lastAction = journalEntries.at(-1)?.actionTitle
@@ -739,156 +557,6 @@ export default function App() {
   ]
   const lastDecision = journalEntries.at(-1)
   const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
-
-  function streetActionImpl(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') {
-    if (activeEvent || current.id !== 'street') return
-    if (kind === 'find-bench') {
-      const found = Math.random() < 0.7
-      setGame((prev) => applyGameAction(prev, { minutes: 20, energy: -2, mood: found ? 1 : -2 }, { ...moodContext(prev), exposure: 'outside', music: musicOn }))
-      setStreetBenchFound(found)
-      setMessage(found ? 'You found a usable bench nearby.' : 'You looked around, but every decent place to sit is occupied or unusable.')
-      return
-    }
-    if (!streetBenchFound) return
-    if (kind === 'bench-rest') {
-      const next = applyGameAction(game, { minutes: 45, energy: 18, mood: 2 }, { ...moodContext(), exposure: 'outside', music: musicOn })
-      setGame(next)
-      setMessage('You sit on the bench and get off your feet for a while.')
-      if (!observeFirstNight('bench', next)) observeOrdinaryEvent('location', next, undefined, { observation: 'action', elapsedMinutes: 45 })
-      return
-    }
-    requestSleep('bench')
-  }
-
-  function actionUnavailableReason(action: (typeof actions)[number]) {
-    return locationActionUnavailable(action, { game, inventory, life, current, open, shelterBooked, shelterAdmitted })
-  }
-
-  function actImpl(actionId: string) {
-    const action = actions.find((x) => x.id === actionId)
-    if (!action || action.locationId !== current.id || activeEvent || shelterQueue) return
-    const unavailable = actionUnavailableReason(action)
-    if (unavailable) { setMessage(unavailable); return }
-    if (actionId === 'shelter-social-worker') { beginShelterInterview(); return }
-    if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
-    if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && actionId !== 'shelter-rest') {
-      setMessage('Quiet hours are 22:00–06:00. Only sleeping is allowed right now.')
-      return
-    }
-    if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
-    if (actionId.endsWith('-refill-water')) {
-      const added = FREE_WATER_LIMIT - inventory.water
-      setInventory(previous => ({ ...previous, water: Math.max(previous.water, FREE_WATER_LIMIT) }))
-      setGame(previous => applyAction(previous, { minutes: action.minutes }))
-      setMessage(`You refilled your water for free. Backpack: ${FREE_WATER_LIMIT} portions (+${added}).`)
-      return
-    }
-    if ((current.id === 'daycenter' || current.id === 'free-clinic') && actionId.startsWith('daycenter-')) {
-      const hour = game.minutes / 60
-      const chance = hour < 10 ? 0.9 : hour < 12 ? 0.75 : hour < 14 ? 0.55 : 0.35
-      if (Math.random() > chance) {
-        setGame((prev) => applyAction(prev, { minutes: 15, mood: -2 }))
-        setMessage(current.id === 'free-clinic' ? 'The free clinic is full right now. You wait for a while, but no appointment opens up.' : 'The day center is full right now. You wait for a while, but no place opens up.')
-        return
-      }
-    }
-
-    if (actionId === 'street-sleep') { requestSleep('ground'); return }
-    if (actionId === 'station-sleep') { requestSleep('bench'); return }
-    if (prepareShelterAction(actionId)) return
-    if (actionId === 'residential-sleep') { requestSleep('residential'); return }
-
-    const isShower = actionId === 'shelter-shower' || actionId === 'daycenter-shower'
-    const useGel = isShower && inventory.showerGel > 0
-    const baseResult = action.resolve(game)
-    const result = useGel ? { ...baseResult, hygiene: (baseResult.hygiene ?? 0) * 1.5, hygieneCap: 100,
-      message: 'You showered with 3-in-1 gel. Hygiene gain ×1.5, up to 100. One use spent.' } : baseResult
-    if (useGel) setInventory(prev => ({ ...prev, showerGel: prev.showerGel - 1 }))
-    const washedClothes = actionId === 'daycenter-laundry' || actionId === 'shelter-laundry-pickup'
-    const next = actionId === 'residential-stay' ? applyGameAction(game, result, moodContext(game, 'Schronisko')) : applyAction(game, result)
-    if (washedClothes) {
-      next.wetness = 0
-      laundryCleanAt.current = absoluteMinutes(next)
-      setInventory(prev => ({ ...prev, clothingCleanliness: 100 }))
-    } else {
-      const endCleanliness = Math.max(0, inventory.clothingCleanliness - result.minutes * (20 / 1440))
-      next.hygiene = Math.min(next.hygiene, clothingHygieneCap(endCleanliness))
-    }
-    setGame(next, actionId === 'residential-stay' ? 'Schronisko' : undefined)
-    setMessage((result.message ?? 'Time passes.') + (isShower && hygieneLimit < 100 ? ` Dirty clothes limit Hygiene to ${hygieneLimit}. Wash your clothes to raise the limit.` : ''))
-
-    if (!finishRestAction(actionId, action.name, result, next)) {
-      if (!observeFirstNight('location', next)) observeOrdinaryEvent('location', next, undefined, { observation: 'action', elapsedMinutes: result.minutes })
-    }
-    if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
-    if (actionId === 'shop-meal') {
-      const expiresAt = absoluteMinutes(next) + 240
-      setEffects((active) => [...active.filter((effect) => effect.id !== 'well-fed'), { id: 'well-fed', expiresAt }])
-    }
-    finishLocationPhoneCharge(actionId)
-    if (actionId === 'daycenter-doctor') {
-      setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
-    }
-  }
-
-  function socialSupportImpl(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
-    if (!open || current.id !== 'support') return
-    if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
-      setMessage(storage.documents ? 'Your documents are stored at the shelter. Take them with you for this application.' : 'You need basic documents for this application. Ask for help restoring them first.')
-      return
-    }
-    if (kind === 'housing') {
-      setDiscoveredLocations(prev => prev.includes('residential-shelter') ? prev : [...prev, 'residential-shelter'])
-      if (life.schroniskoReferral) {
-        setMessage('You already have a referral to Schronisko. It is available on the map.')
-        return
-      }
-      setGame((prev) => applyAction(prev, { minutes: 35, mood: 3 }))
-      setLife((status) => ({ ...status, schroniskoReferral: true }))
-      setMessage('The social worker issued a referral. Schronisko 24/7 is now available on the map.')
-      return
-    }
-    if (kind === 'documents') {
-      if (inventory.documents) {
-        setMessage('Your basic documents are currently complete.')
-        return
-      }
-      setGame((prev) => applyAction(prev, { minutes: 60, mood: 3 }))
-      setInventory((prev) => ({ ...prev, documents: true }))
-      setMessage('The social worker helped you restore your basic documents.')
-      return
-    }
-    if (kind === 'transport') {
-      const expiresAt = absoluteMinutes(game) + 3 * 1440
-      setGame((prev) => applyAction(prev, { minutes: 25 }))
-      setEffects((active) => [...active.filter((effect) => effect.id !== 'free-transit'), { id: 'free-transit', expiresAt }])
-      setMessage('You received free public transport for 3 days.')
-      return
-    }
-    setGame((prev) => applyAction(prev, { minutes: 30, mood: 2 }))
-    setMessage('The social worker explained which benefits may be available. Applications will be added as the progression expands.')
-  }
-
-  function takeDayWorkImpl() {
-    if (!open || current.id !== 'work') return
-    if (game.energy < dayWorkEnergyRequired) { setMessage(`You need at least ${dayWorkEnergyRequired} Energy to start this shift.`); return }
-    setGame((prev) => {
-      const weather = weatherAt(prev)
-      const temperature = temperatureAt(weather.temp, prev.minutes + 90)
-      const heatMultiplier = temperature >= 25 ? 1.5 : temperature >= 18 ? 1.2 : 1
-      return applyAction(prev, {
-        minutes: 180,
-        money: 35,
-        hunger: -10 * heatMultiplier,
-        thirst: -14 * heatMultiplier,
-        energy: -5,
-        hygiene: -8 * heatMultiplier,
-        mood: 3,
-      })
-    })
-    setLife((status) => ({ ...status, employment: 'Day work', income: 'Irregular' }))
-    setMessage('You completed a 3-hour physical shift. +35 zł. Physical work increases hunger, thirst and hygiene loss, especially in warm weather.')
-  }
 
   function reset() {
     autosave.resetPending()
@@ -928,21 +596,18 @@ export default function App() {
     setMusicOn(false)
     setStreetBenchFound(false)
     setBegging({ day: 1, attempts: 0 })
-    setShelterPhoneCharging(false)
     localStorage.removeItem(SHELTER_PHONE_CHARGE_KEY)
-    setActiveEvent(null)
     resetEventSession()
     localStorage.removeItem(LEFT_HOME_KEY)
     localStorage.removeItem(FIRST_NIGHT_EVENTS_KEY)
     localStorage.removeItem(ENCOUNTERS_KEY)
-    setDiceCheck(null)
     laundryCleanAt.current = -1
-    groundSleepWindow.current = null
     setInventory(INITIAL_INVENTORY)
     setStorage(INITIAL_STORAGE)
     setLife(INITIAL_LIFE)
     setEffects([])
     resetSleepSession()
+    resetTrashSession()
     localStorage.removeItem(SAVE_KEYS.inventory)
     localStorage.removeItem(SAVE_KEYS.storage)
     localStorage.removeItem(SAVE_KEYS.effects)
@@ -955,12 +620,6 @@ export default function App() {
     localStorage.removeItem(SAVE_KEYS.mobileServiceUntil)
     localStorage.removeItem(SAVE_KEYS.mobileAutoRenew)
     localStorage.removeItem(SAVE_KEYS.mobileRenewedDay)
-  }
-
-  function discoverLocation(id: string, label: string) {
-    setDiscoveredLocations((prev) => prev.includes(id) ? prev : [...prev, id])
-    setMessage(`${label} added to your map.`)
-    openPage('map')
   }
 
   const autosave = useGameAutosave({
@@ -1051,40 +710,8 @@ export default function App() {
       illustration: '/street-life-game/assets/event-closing-time.webp',
       illustrationAlt: 'You stand outside with your backpack after the doors have closed behind you.',
     }} onClose={() => setClosingNotice(null)} />}
-    {trashGame && <ModalOverlay className="trash-overlay">
-      <ModalPanel size="compact" className="trash-card" role="dialog" aria-modal="true" aria-labelledby="trash-title">
-        <div className="trash-head"><Icon name="bottle" /><h2 id="trash-title">Look for bottles</h2></div>
-        <p className="trash-tip">Drag rubbish out. Tap intact bottles & cans.</p>
-        <div className="trash-search-row"><TrashSearchTime startedAt={trashGame.startedAt} onDeadline={checkTrashDeadline} /><span aria-label={`${trashGame.found} containers kept`}><Icon name="bottle" /><strong>{trashGame.found}</strong></span></div>
-        <div className="trash-bin">
-          <div className="trash-pile">
-          {trashGame.items.map((item, index) => !item.collected && <button
-            key={item.id}
-            className={item.bottle ? 'trash-piece bottle-piece' : 'trash-piece'}
-            aria-label={item.returnable ? item.art === 'can' ? 'Pick up can' : 'Pick up plastic bottle' : 'Drag rubbish aside · arrow keys to move'}
-            data-art={item.art}
-            style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `translate(-50%, -50%) rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: index + 2 }}
-            onPointerDown={(e) => { const bounds = e.currentTarget.parentElement!.getBoundingClientRect(); if (startTrashDrag(item.id, e.clientX, e.clientY, bounds)) e.currentTarget.setPointerCapture(e.pointerId) }}
-            onPointerMove={(e) => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; moveTrashItem(item.id, e.clientX, e.clientY, e.currentTarget.parentElement!.getBoundingClientRect()) }}
-            onPointerUp={(e) => { const tapped = trashDrag.current?.id === item.id && !trashDrag.current.moved; trashDrag.current = null; if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); if (tapped && item.returnable) collectTrashBottle(item.id) }}
-            onPointerCancel={() => { trashDrag.current = null }}
-            onClick={e => { if (e.detail === 0 && item.returnable) collectTrashBottle(item.id) }}
-            onKeyDown={e => {
-              const direction = ({ ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] } as Record<string, number[]>)[e.key]
-              if (!direction) return
-              e.preventDefault()
-              const bounds = e.currentTarget.parentElement!.getBoundingClientRect()
-              const x = bounds.left + item.x / 100 * bounds.width
-              const y = bounds.top + item.y / 100 * bounds.height
-              if (startTrashDrag(item.id, x, y, bounds)) moveTrashItem(item.id, x + direction[0], y + direction[1], bounds)
-              trashDrag.current = null
-            }}
-          ><img src={`/street-life-game/assets/trash-${item.art}.webp`} alt="" draggable={false} decoding="async" width="192" height="192" /></button>)}
-          </div>
-        </div>
-        <ModalAction className="trash-stop" onClick={finishTrashSearch}>Finish searching</ModalAction>
-      </ModalPanel>
-    </ModalOverlay>}
+    {trashGame && <TrashSearchDialog trashGame={trashGame} checkTrashDeadline={checkTrashDeadline} finishTrashSearch={finishTrashSearch}
+      startTrashDrag={startTrashDrag} moveTrashItem={moveTrashItem} collectTrashBottle={collectTrashBottle} endTrashDrag={endTrashDrag} cancelTrashDrag={cancelTrashDrag} />}
 
     {phoneOpen && !phoneUnavailable && <PhoneDialog
       battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
@@ -1153,16 +780,7 @@ export default function App() {
 
     </div>
 
-    {gameOver && <ModalOverlay className="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
-      <ModalPanel size="compact" className="game-over-card">
-        <p className="eyebrow">RUN OVER</p>
-        <div className="game-over-emblem"><Icon name="heart-broken" /></div>
-        <h2 id="game-over-title">Your health reached zero</h2>
-        <p className="game-over-day"><strong>Day {displayDay(game.day)}</strong><span>Your run ended here</span></p>
-        <p className="game-over-description modal-narrative">Food, water and medicine can stop causes of damage, but lost health needs proper recovery and care.</p>
-        <ModalAction onClick={reset}>Start new run</ModalAction>
-      </ModalPanel>
-    </ModalOverlay>}
+    {gameOver && <GameOverDialog day={game.day} onReset={reset} />}
 
     {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <RainEventDialog
       rain={game.rain} waiting={rainWaiting} elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))}

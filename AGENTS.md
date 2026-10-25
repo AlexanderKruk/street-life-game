@@ -38,6 +38,8 @@ each completed stage. Partial extraction is not a completed gameplay controller.
 | Rain choices and waiting under cover | `RainEventDialog`, built on `EventFrame` / `EventBody` |
 | Travel mode planning | `TravelPlanningDialog` |
 | D20 roll and outcome confirmation | `DiceDialog` |
+| Bottle-search minigame | `TrashSearchDialog` with `TrashSearchTime` |
+| End of run | `GameOverDialog` |
 | Sleep in progress | `SleepProgressDialog` |
 | Shelter registration queue | `ShelterQueueDialog` |
 | Morning warning / packing and departure | `ShelterCheckoutWarning` / `ShelterDepartureDialog` |
@@ -163,6 +165,25 @@ outside React updaters, and reset all session guards. The debug wake command
 still finishes the planned period; partial/random sleep interruption is a
 separate gameplay change. Run `check-rest-controllers.cjs` plus sleep/illness,
 shelter/charging, rendering, persistence and result regressions.
+
+Remaining action ownership is finalized in v332: `medicalController.ts`
+handles appointments/emergency care, `supportWorkController.ts` handles support
+and work, `streetController.ts` handles walks/music/bench/begging, and
+`locationController.ts` runs location services with their existing eligibility,
+crowding, shower-gel and laundry rules. Sleep/shelter/phone commands are delegated
+to their owners. `inventoryController.ts` applies the existing inventory command
+plans through `runWithResult`, retaining the latest snapshot and deferred summary.
+`trashSearchController.ts` owns the bottle minigame, its drag/collection/completion
+state and reset; `trashSearchRules.ts` provides its model and elapsed-time rule.
+`TrashSearchDialog` / `GameOverDialog` own complete markup. Keep the existing
+`TrashSearchTime` local poll and stable deadline callback; it is not another
+world clock. Collection/completion guards prevent duplicate rewards. Reuse
+`hygieneRules.ts` for the clothing Hygiene ceiling in actions/status/results,
+and `controllerTypes.ts` for common state/result ports. App remains the explicit
+coordinator of shared clocks, pause/focus, aging, result/journal and persistence.
+Run `check-action-controllers.cjs`, `check-module-boundaries.cjs` and the full
+suite for shared changes. Runtime imports must remain acyclic; controllers must
+not import presentation, storage writers or App, or create a world timer.
 
 Scenes with illustrations and their results share the regular frame, 16:9 art
 flush with its top/side edges, and the same inner horizontal padding. Compact

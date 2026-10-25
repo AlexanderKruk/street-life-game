@@ -781,6 +781,20 @@ audits; daily vacancies resolve outside React updaters. Reset clears the guards.
 Save keys, balance, text and time rates are unchanged; the existing debug wake
 still completes the selected period, without adding partial sleep interruption.
 
+The agreed separation is finalized in v332. Remaining commands live in
+`medicalController.ts`, `supportWorkController.ts`, `streetController.ts` and
+`locationController.ts`; `inventoryController.ts` applies inventory plans through
+the existing result pipeline. `trashSearchController.ts` / `trashSearchRules.ts`
+own minigame state/model/timing, with complete `TrashSearchDialog` and
+`GameOverDialog` presentations. Collection and completion are guarded against
+replay, and reset clears an unfinished local minigame. Its existing local
+`TrashSearchTime` poll remains separate from the single world clock. Clothing
+Hygiene ceilings share `hygieneRules.ts`; state/result ports share
+`controllerTypes.ts`. App coordinates states, shared time/pause/focus, aging,
+result/journal and persistence. Runtime dependency checks enforce an acyclic
+module graph and keep domain modules independent of presentation/storage.
+Gameplay prices, text, time rates, saves and action ordering are preserved.
+
 All modal variants share a #191e21 surface, #4a5155 border, 18px radius, 5px blur
 and rgba(4,7,10,.62) backdrop using `--modal-*` variables. Regular panels are at
 most 480px; compact confirmation/timer panels at most 408px. Safe-area padding,
@@ -946,6 +960,8 @@ These are implementation facts or defined future work, not claims that the whole
 
 | Suite | Scope |
 |---|---|
+| `check-module-boundaries.cjs` | Acyclic runtime dependencies, domain/presentation/persistence separation and one shared world clock. |
+| `check-action-controllers.cjs` | Medical/emergency access and costs, support/referrals/documents/transit, work threshold/payment and daily begging limits. |
 | `check-events.cjs` | Deterministic context/queue, opening after search, spacing, no repeats, restored choices, money/refusal and reset. |
 | `check-event-travel-controllers.cjs` | Critical/threshold outcomes, one-time D20 acceptance, immutable travel progress, restored arrival/roll/rain reporting under StrictMode. |
 | `check-phone.cjs` | Apps, legacy Journal migration, offline notes, plan payment/expiry, timed search/reload, work/clinic discovery and dead-phone travel. |
