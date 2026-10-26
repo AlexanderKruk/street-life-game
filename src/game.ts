@@ -6,6 +6,7 @@ import { RAIN, rainRisk, type RainEpisode } from './rain'
 
 export type Need = 'hunger' | 'thirst' | 'energy' | 'health' | 'hygiene' | 'mood'
 export type Housing = 'Street' | 'Night shelter' | 'Schronisko' | 'Hostel' | 'Room' | 'Apartment'
+export type MoodLimitReason = Housing | 'Hunger' | 'Thirst' | 'Health' | 'Tiredness' | 'Hygiene' | 'Cold'
 export const HOUSING_MOOD_CAP: Record<Housing, number> = {
   Street: 50, 'Night shelter': 60, Schronisko: 70, Hostel: 80, Room: 90, Apartment: 100,
 }
@@ -124,11 +125,11 @@ export function createInitialState(): GameState {
 const clamp = (value: number) => Math.max(0, Math.min(100, value))
 
 export function conditionBand(value: number) {
-  if (value <= 20) return { label: 'VERY BAD', level: 'very-bad' as const }
-  if (value <= 40) return { label: 'BAD', level: 'bad' as const }
-  if (value <= 60) return { label: 'FAIR', level: 'fair' as const }
-  if (value <= 80) return { label: 'GOOD', level: 'ok' as const }
-  return { label: 'VERY GOOD', level: 'very-good' as const }
+  if (value <= 20) return { level: 'very-bad' as const }
+  if (value <= 40) return { level: 'bad' as const }
+  if (value <= 60) return { level: 'fair' as const }
+  if (value <= 80) return { level: 'ok' as const }
+  return { level: 'very-good' as const }
 }
 
 // Compatibility name for callers: there is one Mood, never a second average.
@@ -138,7 +139,7 @@ export function overallCondition(state: GameState) {
 
 export function moodLimit(state: GameState, context: TimeContext = {}) {
   const housing = context.housing ?? 'Street'
-  const limits = [
+  const limits: { reason: MoodLimitReason; cap: number }[] = [
     { reason: housing, cap: HOUSING_MOOD_CAP[housing] ?? HOUSING_MOOD_CAP.Street },
     { reason: 'Hunger', cap: Math.min(100, 20 + clamp(state.hunger) * 2) },
     { reason: 'Thirst', cap: Math.min(100, 20 + clamp(state.thirst) * 2) },

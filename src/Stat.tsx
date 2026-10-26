@@ -1,3 +1,4 @@
+import { conditionLabel } from './statusPresentation'
 import { memo, useEffect, useState, type ReactNode } from 'react'
 import { conditionBand } from './game'
 import MoodIcon from './MoodIcon'
@@ -36,15 +37,15 @@ export default memo(function Stat({ id, label, value, icon, cap = 100, capReason
   const level = displayed > 60 ? 'good' : displayed > 30 ? 'warning' : 'critical'
   const blocked = (resourceId === 'hygiene' || resourceId === 'mood') && cap < 100
   const restriction = capReason ?? t(resourceId === 'hygiene' ? 'stat.dirtyClothes' : 'stat.housingAndNeeds')
-  return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}${change ? ' result-stat' : ''}`} data-stat={label}>
+  return <div className={`stat status-stat ${level}${focus ? ' status-focus' : ''}${change ? ' result-stat' : ''}`} data-stat={label} data-resource-id={resourceId}>
     <span className="status-stat-icon">{resourceId === 'mood' ? <MoodIcon value={displayed} /> : icon}</span>
     <div className="status-stat-label">{focus && level !== 'good' && <span className="status-focus-label">{t(level === 'critical' ? 'stat.needsAttention' : 'stat.keepAnEye')}</span>}<strong>{label}</strong>{cap < 100 && !blocked && <small>{t('stat.maximum', { cap })}</small>}{blocked && resourceId === 'mood' && capReason && <small>{capReason}</small>}</div>
-    <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={blocked ? t('stat.accessibleLimited', { label, condition: conditionBand(displayed).label, cap: Math.round(cap), reason: restriction }) : t('stat.accessible', { label, condition: conditionBand(displayed).label })} aria-valuenow={displayed} aria-valuemin={0} aria-valuemax={100} title={blocked ? t('stat.limitedBy', { reason: restriction }) : undefined}>
+    <div className={blocked ? 'bar capped-bar' : 'bar'} role="meter" aria-label={blocked ? t('stat.accessibleLimited', { label, condition: conditionLabel(conditionBand(displayed).level), cap: Math.round(cap), reason: restriction }) : t('stat.accessible', { label, condition: conditionLabel(conditionBand(displayed).level) })} aria-valuenow={displayed} aria-valuemin={0} aria-valuemax={100} title={blocked ? t('stat.limitedBy', { reason: restriction }) : undefined}>
       {blocked && <span className="bar-blocked" style={{ left: `${cap}%` }} aria-hidden="true" />}
       {loss && <span className={`bar-loss-trail ${from > 60 ? 'good' : from > 30 ? 'warning' : 'critical'}`} style={{ left: `${value}%`, width: `${from - value}%` }} aria-hidden="true" />}
       <i className={level} style={{ width: `${displayed}%` }} />
       {blocked && <span className="bar-cap-marker" style={{ left: `${cap}%` }} aria-hidden="true" />}
     </div>
-    <b className="status-stat-value"><span>{Math.round(displayed)}%</span>{change && <small className={`result-stat-delta ${change.kind}`}>{change.value}</small>}</b>
+    <b className="status-stat-value"><span>{t('format.percent', { amount: Math.round(displayed) })}</span>{change && <small className={`result-stat-delta ${change.kind}`}>{change.value}</small>}</b>
   </div>
 })

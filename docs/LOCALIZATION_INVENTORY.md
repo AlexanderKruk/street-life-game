@@ -25,7 +25,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory.ts / effects.ts; itemPresentation.ts | moved own item/slot/shop copy | original copy preserved; count grammar via plurals | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
 | `inventoryCommands.ts`, `inventoryController.ts`, `foodConsumption.ts` | inventory.ts | moved | whole outcome/refusal messages, original meaning and mechanics preserved | all refusals, medicine absent/already treated, food poisoning, storage/capacity |
-| `StatusScreen.tsx`, `LifeSituation.tsx`, `statusEffects.ts`, `limitingEffects.ts`, App status data | status | pending | needs full model/display split | untreated/treated Cold, tied caps, wetness disabled/enabled, housing/employment/income IDs |
+| `StatusScreen.tsx`, `LifeSituation.tsx`, `statusEffects.ts`, `limitingEffects.ts`, App status data | status.ts / effects.ts / common.ts; statusPresentation.ts | moved | machine enums separate from labels; caps/focus/ceil unchanged, 1 day grammar fixed | untreated/treated Cold, tied caps, wetness disabled/enabled, housing/employment/income IDs |
 | `events.ts`, `eventController.ts` | events | pending | reference scenes approved; remaining variants not fully audited | all choices/DC outcomes/critical outcomes, rejected supplies, documents, broken screen |
 | `EventDialog.tsx`, `CompactStreetEvent.tsx` | dialogs/events | pending | pending | illustrated/compact, unavailable choice, check badges/duration/time paused |
 | `openingCalls.ts`, `usePhoneController.ts`, `phoneActivity.ts`, `phoneSession.ts` | phone | pending | opening calls approved; controller refusals need review | call/search, interrupted/complete, battery/service/checkout, restored processes |
@@ -90,7 +90,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `InventorySlot`, `ShopCard`, `StatusScreen` | English freshness / effect chip strings select visual states | ImpactId/resourceId/kind plus explicit foodCondition/counts; cold Mood annotation uses resource ID; remaining own copy pending |
 | `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | choice IDs/React keys and pure labels explicit; stat/dc formats badges/accessible names; contextual theft titles by item ID |
 | `eventController` | replaces “The screen still works.” in phone damage outcome | **pending**: explicit broken-screen outcome variant |
-| `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | retain persisted/internal IDs, add display names before extraction |
+| `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | Status/mood/housing now have display mappings; weather/phone states remain pending, keep internal IDs stable |
 
 ## Exclusions and finish criteria
 
@@ -149,3 +149,11 @@ numeric plurals preserve former output; buy eligibility no longer uses text
 truthiness. Item/food/command comparisons and selected UI checks passed. Shared
 place/hero metadata, event/theft prose and remaining screen/catalogue rows are
 still pending. Next: Status/Life situation and internal-enum display names.
+
+
+Status checkpoint: Status/Life situation, reason labels/lists, condition-band copy
+and effect time use catalogues; machine enum values, thresholds and saves stay
+unchanged. Header/nav Mood labels share conditionLabel; their remaining HUD copy
+is pending. Four selected visual cases and eight extra comparisons passed.
+Next: HUD/weather display identity. Main saves use the AGENTS.md [skip ci] method
+authorized by the user; they do not publish the game.

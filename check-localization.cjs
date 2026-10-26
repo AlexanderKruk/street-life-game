@@ -268,11 +268,34 @@ for(const inventory of [INITIAL_INVENTORY,{...INITIAL_INVENTORY,medicines:32}]){
  assert.deepEqual(after.inventory,before.inventory);assert.equal(after.rejected.length,before.rejected.length);
 }
 console.log(`PASS: inventory captions/plurals and ${translatedCommandCases} pseudo-catalog commands preserve updates, RNG, guards, result IDs, History groups and seeds.`);
+const statusModel=bundled('src/statusPresentation.ts');
+const reasonIds=['Street','Night shelter','Schronisko','Hostel','Room','Apartment','Hunger','Thirst','Health','Tiredness','Hygiene','Cold','Dirty clothes'];
+for(const id of reasonIds){assert.equal(statusModel.limitReasonLabel(id),id);assert.equal(statusModel.limitCauseLabel(id),({Street:'On the street',Room:'Rented room',Hygiene:'Poor hygiene'})[id]??id);}
+for(const id of ['Street','Night shelter','Schronisko','Hostel','Room','Apartment'])assert.equal(statusModel.housingLabel(id),id);
+for(const id of ['Unemployed','Day work'])assert.equal(statusModel.employmentLabel(id),id);for(const id of ['None','Irregular'])assert.equal(statusModel.incomeLabel(id),id);
+assert.equal(statusModel.limitReasonsLabel(['Night shelter','Tiredness','Cold']),'Night shelter, Tiredness, Cold');
+const {remainingEffect}=bundled('src/statusEffects.ts');
+for(const [left,text] of [[-1,'0m'],[0,'0m'],[1,'1m'],[59,'59m'],[60,'1h'],[61,'2h'],[1439,'24h'],[1440,'1 day'],[1441,'2 days'],[2880,'2 days']])assert.equal(remainingEffect(600+left,{day:1,minutes:600}),text);
+const {status:statusCatalog}=bundled('src/locales/en/status.ts');const {common:commonCatalog}=bundled('src/locales/en/common.ts');
+const pseudoStatus=Object.fromEntries(Object.entries(statusCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+const pseudoCommon=Object.fromEntries(Object.entries(commonCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+pseudoStatus['status.housing.shelter']='';pseudoStatus['status.cause.tiredness']='';pseudoCommon['stat.health']='';
+assert.deepEqual(validateCatalog(statusCatalog,pseudoStatus),[]);assert.deepEqual(validateCatalog(commonCatalog,pseudoCommon),[]);
+const statusView=bundled({source:`export {default as App} from './src/App'; export {default as LifeSituation} from './src/LifeSituation'; export * from './src/statusPresentation'; export * from './src/limitingEffects'; export * from './src/game'; export * from './src/results';`,catalogs:{status:pseudoStatus,common:pseudoCommon,effects:pseudoEffects}});
+const comfortableStatus={...initialState,day:2,minutes:720,hunger:100,thirst:100,health:100,hygiene:100,energy:100,mood:95};
+const tied=statusView.limitingEffects({...comfortableStatus,energy:20},{housing:'Night shelter'},10);
+assert.deepEqual(tied.map(e=>e.reason),['Night shelter','Tiredness','Dirty clothes']);assert.equal(tied[0].name,'');assert.equal(tied[1].name,'');
+for(const housing of ['Street','Night shelter','Schronisko','Hostel','Room','Apartment'])assert.deepEqual(statusView.moodLimit(comfortableStatus,{housing}),bundled('src/game.ts').moodLimit(comfortableStatus,{housing}));
+const capSnapshot={game:{...comfortableStatus,mood:49},housing:'Street',inventory:INITIAL_INVENTORY,effects:[]};
+const capSummary=statusView.summarizeResult(capSnapshot,{...capSnapshot,game:{...capSnapshot.game,mood:50}});
+const translatedMood=capSummary.changes.find(row=>row.id==='mood');assert.equal(translatedMood.amount,1);assert.equal(translatedMood.meter.cap,50);assert.equal(translatedMood.meter.capReason,statusView.limitReasonsLabel(['Street']));
+console.log('PASS: all housing/cause/employment/income mappings, condition identities, tied empty-name limits and effect-time boundaries.');
+
 
 
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
-for (const key of ['window', 'document', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
+for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
 Object.defineProperty(global, 'navigator', { configurable: true, value: dom.window.navigator });
 global.IS_REACT_ACT_ENVIRONMENT = true;
 window.scrollTo = () => {}; window.matchMedia = () => ({ matches: true });
@@ -361,7 +384,7 @@ try {
   assert.deepEqual([...document.querySelectorAll('.supply-effects em')].map(n=>[n.className,n.textContent]),pseudoChips.slice(0,2).map(c=>[c.kind,c.label]));
   const coldLimits=[{reason:'Cold',name:'⟦illness⟧',icon:'thermometer',limits:[{stat:'energy',cap:77},{stat:'mood',cap:60}]}];
   const otherLimits=[{reason:'Health',name:'⟦health⟧',icon:'heart',limits:[{stat:'mood',cap:40},{stat:'energy',cap:60}]}];
-  const showStatus=statLimits=>{cleanup();render(React.createElement(chipsView.StatusScreen,{game:chipsView.initialState,statusEffects:[{id:'cold',expiresAt:3000,treated:true}],statLimits,separateLimits:otherLimits,statusNeeds:[],focusedNeed:null,situation:{housing:'⟦housing⟧',employment:'⟦work⟧',income:'⟦income⟧',documents:'⟦documents⟧'}}));};
+  const showStatus=statLimits=>{cleanup();render(React.createElement(chipsView.StatusScreen,{game:chipsView.initialState,statusEffects:[{id:'cold',expiresAt:3000,treated:true}],statLimits,separateLimits:otherLimits,statusNeeds:[],focusedNeed:null,situation:{housing:'Street',employment:'Unemployed',income:'None',documents:'carried'}}));};
   showStatus(coldLimits);
   const coldChips=[...document.querySelectorAll('.illness .effect-impact b')].map(n=>n.textContent);
   assert.equal(coldChips.filter(s=>s.includes('60')).length,1);assert(coldChips[1].includes('60'));assert(!coldChips[0].includes('60'));assert(!coldChips.join('').includes('77'));
@@ -385,6 +408,24 @@ try {
   assert.deepEqual(discards.map(r=>r.id),['water','food','bread','cannedFood','readyMeal','wipes','bottles','cigarettes','medicines','showerGel']);assert.equal(discards.find(r=>r.id==='food').spoiledQuantity,1);
   assert.equal(document.querySelector('.inventory-slot-copy strong b'),null);
   console.log('PASS: all nine pseudo-labelled shop items retain buy/steal eligibility with empty reasons; all ten backpack item controls dispatch by ID.');
+  const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
+  try{
+    for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){
+      cleanup();localStorage.clear();localStorage.setItem('street-life-screen','status');
+      localStorage.setItem('street-life-save-v3',JSON.stringify(comfortableStatus));
+      localStorage.setItem('street-life-situation-v1',JSON.stringify({housing,employment:'Day work',income:'Irregular'}));
+      localStorage.setItem('street-life-inventory-v1',JSON.stringify({...INITIAL_INVENTORY,clothingCleanliness:100,documents:false}));
+      localStorage.setItem('street-life-storage-v1',JSON.stringify({...INITIAL_STORAGE,documents:true}));
+      render(React.createElement(statusView.App));
+      const game=JSON.parse(localStorage.getItem('street-life-save-v3')),life=JSON.parse(localStorage.getItem('street-life-situation-v1'));
+      assert.equal(game.mood,Math.min(95,cap));assert.equal(game.minutes,720);assert.equal(life.housing,housing);assert.equal(life.employment,'Day work');assert.equal(life.income,'Irregular');
+      const mood=document.querySelector('[data-resource-id="mood"]');assert.equal(!!mood.querySelector('.bar-blocked'),cap<100);if(cap<100)assert.equal(mood.querySelector('.bar-cap-marker').style.left,cap+'%');
+      assert(document.querySelector('.header-condition').classList.contains(statusView.conditionBand(game.mood).level));assert.equal(mood.querySelector('svg').innerHTML,document.querySelector('.header-condition svg').innerHTML);
+      assert.deepEqual([...document.querySelectorAll('.life-card strong')].map(n=>n.textContent),[statusView.housingLabel(housing),statusView.employmentLabel('Day work'),statusView.incomeLabel('Irregular'),statusView.documentStateLabel('stored')]);
+    }
+  }finally{cleanup();window.setInterval=intervals.set;window.clearInterval=intervals.clear;}
+  console.log('PASS: pseudo Status/App preserves all six housing caps, faces, timestamps, stored documents and persisted machine enum values.');
+
 
 
 

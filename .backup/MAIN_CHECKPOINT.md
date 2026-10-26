@@ -1,6 +1,8 @@
 # Main source checkpoint — 26 October 2026
 
-Source commit: c6abdef7cd99c1324edb33a2d128d02959b4c7d0
-Source tree excluding .backup: b8bfb5f14da8c6db315d4aaa5084365a3253dcdc
+Source commit: 6c6a43ba4da90352de3b4b7f8caa7c840ac2baeb
+Source tree excluding .backup: 325d0da686f70b78f6dce6cc90a23d6fabd911cd
 
-User explicitly requested ready stages in main for durable storage and recording this no-CI-build method in AGENTS.md. Ready inventory stages and the documentation are included. Status work in progress is excluded. The main commit is marked [skip ci], without a release/build version change, workflow change or manual deployment. Original eleven local commits are preserved in the bundle.
+The user requested saving ready stages in main and recording the no-CI-build method in AGENTS.md. Main includes all verified localization stages through Status/Life situation and the inventory/shop catalogue. The bundle preserves twelve original local commits.
+
+The main checkpoint uses [skip ci], preserving the existing deployment workflow and release/build ID. No workflow dispatch or publication is part of this source save. Earlier main checkpoints faa2c3b and e4570ee remain in the main history. Published game remains v335.

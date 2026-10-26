@@ -1,11 +1,9 @@
 # Localization recovery backup — 26 October 2026
 
-Source commit: c6abdef7cd99c1324edb33a2d128d02959b4c7d0
-Source tree excluding .backup: b8bfb5f14da8c6db315d4aaa5084365a3253dcdc
+Source commit: 6c6a43ba4da90352de3b4b7f8caa7c840ac2baeb
+Source tree excluding .backup: 325d0da686f70b78f6dce6cc90a23d6fabd911cd
 
-Sources match the local commit byte for byte. This source save includes the verified inventory catalogue and AGENTS.md instructions for [skip ci] main saves without starting or waiting for CI builds/deployment. Status work in progress is excluded.
-
-Original local commits (preserved in the bundle):
+The source tree matches the local commit byte for byte. The bundle preserves all twelve original local commits/hashes; API snapshot and main merge commits have different hashes.
 
 7bb039f refactor: add typed English catalogs and stable result identities
 40175a7 docs: record localization foundation checkpoint
@@ -18,6 +16,7 @@ f29979f refactor: use explicit duration and check presentation metadata
 3dfed72 refactor: use stable freshness and effect chip metadata
 eecb1c5 refactor: move inventory shop and food copy into typed catalogue
 c6abdef docs: record main source saves without CI builds
+6c6a43b refactor: separate Status labels from persisted game identities
 
 Restore from a clone containing published base d8ff6fac4236badc45df86195d3295d7cfee64af:
 
@@ -29,4 +28,8 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Completed stage validation is in LOCALIZATION.md. Documentation-only save used diff verification, with no fresh build or tests. Main source checkpoints use [skip ci]; publication is separately authorised. See MAIN_CHECKPOINT.md.
+Current stage: Status/Life situation/cause labels, condition-band labels and result cap reasons are separate from machine enum/level identities. Housing caps, tied causes, face IDs and saves are preserved. Effect-duration grammar uses 1 day; rounding is unchanged.
+
+Validation: localization with pseudo catalogues and actual App for all six housing caps; mood, results, rendering, module boundaries, wetness enabled/disabled; needs-mood/journal-services regressions; production build; diff check. Four selected street/result visual tests passed unchanged. Eight extra Status scenarios match eecb1c5 in text/labels/classes/values/caps/groups/life fields. Full suites, long-pseudo browser layout, WebKit and physical iPhone unrun.
+
+Ready sources are saved in main with [skip ci], without starting or waiting for CI build/deployment. This method is in AGENTS.md. Published release remains v335; a separate publication request still requires final full checks. Next: HUD/weather display identity and remaining catalogues/audits.
