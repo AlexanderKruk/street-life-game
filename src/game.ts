@@ -1,3 +1,4 @@
+import type { WeatherConditions } from './weather'
 import type { ImpactId } from './effectChips'
 import type { IconName } from './Icon'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
@@ -184,35 +185,35 @@ export function formatTime(minutes: number) {
 export const NEED_DRAIN = { food: 100 / (48 * 60), water: 100 / (24 * 60), energy: 100 / (36 * 60) }
 const WALKING_NEED_MULTIPLIER = 1.25
 
-export const WEATHER = [
-  { icon: '☁️', label: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
-  { icon: '🌧️', label: 'Rain', temp: 7, energyDrain: 0.025, thirstDrain: 0 },
-  { icon: '☀️', label: 'Clear', temp: 16, energyDrain: 0, thirstDrain: NEED_DRAIN.water * 0.15 },
-  { icon: '🌬️', label: 'Windy', temp: 6, energyDrain: 0.035, thirstDrain: 0 },
-  { icon: '🌦️', label: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
+export const WEATHER: WeatherConditions[] = [
+  { icon: '☁️', id: 'Cloudy', temp: 9, energyDrain: 0, thirstDrain: 0 },
+  { icon: '🌧️', id: 'Rain', temp: 7, energyDrain: 0.025, thirstDrain: 0 },
+  { icon: '☀️', id: 'Clear', temp: 16, energyDrain: 0, thirstDrain: NEED_DRAIN.water * 0.15 },
+  { icon: '🌬️', id: 'Windy', temp: 6, energyDrain: 0.035, thirstDrain: 0 },
+  { icon: '🌦️', id: 'Showers', temp: 10, energyDrain: 0.015, thirstDrain: 0 },
 ]
 
 export function rainDailyLimit(day: number) {
   if (day <= 1) return 0 // The opening two-hour evening remains dry.
-  const weather = WEATHER[(day - 1) % WEATHER.length].label
+  const weather = WEATHER[(day - 1) % WEATHER.length].id
   return weather === 'Cloudy' ? 1 : weather === 'Rain' || weather === 'Showers' ? Infinity : 0
 }
 
 // Calendar saves are 1-based. Release rain can start on the first full day (D1).
-export function weatherAt(state: Pick<GameState, 'day' | 'minutes' | 'rainUntil' | 'rain' | 'rainSystemStarted'>) {
+export function weatherAt(state: Pick<GameState, 'day' | 'minutes' | 'rainUntil' | 'rain' | 'rainSystemStarted'>): WeatherConditions {
   if (state.day <= 1 || (state.day <= 2 && (!state.rainSystemStarted || CLOTHING_WETNESS_ENABLED))) return WEATHER[0]
   if (state.rainSystemStarted) {
     if (state.rain && state.rain.end > absoluteMinutes(state)) {
       const level = state.rain.level
-      return { ...WEATHER[1], label: level === 'drizzle' ? 'Drizzle' : level === 'downpour' ? 'Downpour' : 'Rain', energyDrain: 0 }
+      return { ...WEATHER[1], id: level === 'drizzle' ? 'Drizzle' : level === 'downpour' ? 'Downpour' : 'Rain', energyDrain: 0 }
     }
     const base = WEATHER[(state.day - 1) % WEATHER.length]
     // The separate, experimental moisture model retains its legacy weather
     // inputs for tuning. Release gameplay uses only temporary rain episodes.
     if (CLOTHING_WETNESS_ENABLED) return base
     // Rainy describes the day between showers, without applying rain exposure.
-    return base.label === 'Rain' ? { ...base, label: 'Rainy', energyDrain: 0 }
-      : base.label === 'Showers' ? { ...base, energyDrain: 0 } : base
+    return base.id === 'Rain' ? { ...base, id: 'Rainy', energyDrain: 0 }
+      : base.id === 'Showers' ? { ...base, energyDrain: 0 } : base
   }
   return (state.rainUntil ?? 0) > absoluteMinutes(state) ? WEATHER[1] : WEATHER[(state.day - 1) % WEATHER.length]
 }
@@ -259,15 +260,15 @@ export function advanceTime(state: GameState, minutes: number, context: TimeCont
     const temperature = temperatureAt(weather.temp, next.minutes)
     const exposure = weatherExposure(next, context)
     const wetBefore = CLOTHING_WETNESS_ENABLED ? clamp(next.wetness ?? 0) : 0
-    const rainGain = exposure === 'outside' ? weather.label === 'Rain' ? 1 : weather.label === 'Showers' ? 0.6 : 0 : 0
+    const rainGain = exposure === 'outside' ? weather.id === 'Rain' ? 1 : weather.id === 'Showers' ? 0.6 : 0 : 0
     const drying = exposure === 'indoors' ? next.locationId === 'station' || next.locationId === 'shop' ? 0.6 : 1.2
-      : exposure === 'transit' ? 0.3 : exposure === 'cover' ? 0.15 : weather.label === 'Windy' ? 0.4 : 0.2
+      : exposure === 'transit' ? 0.3 : exposure === 'cover' ? 0.15 : weather.id === 'Windy' ? 0.4 : 0.2
     const wetness = CLOTHING_WETNESS_ENABLED ? clamp(wetBefore + (rainGain || -drying) * step) : 0
     const wetStress = (wetBefore + wetness) / 200 * (temperature <= 10 ? 1 : temperature <= 15 ? 0.65 : 0.35)
-      * (exposure === 'indoors' || exposure === 'transit' ? 0.25 : weather.label === 'Windy' ? 1.25 : 1)
+      * (exposure === 'indoors' || exposure === 'transit' ? 0.25 : weather.id === 'Windy' ? 1.25 : 1)
     const wetSleepLoss = (next.wetSleepLoss ?? 0) + (context.sleeping && exposure !== 'indoors' && exposure !== 'transit' ? wetStress * 0.04 * step : 0)
     const trackSleepRisk = context.sleeping && (context.sleepKind === 'ground' || context.sleepKind === 'bench')
-    const sleepIllnessDose = trackSleepRisk ? (next.sleepIllnessDose ?? 0) + sleepIllnessHazard(context.sleepKind!, temperature, weather.label, (wetBefore + wetness) / 2, exposure) * step : undefined
+    const sleepIllnessDose = trackSleepRisk ? (next.sleepIllnessDose ?? 0) + sleepIllnessHazard(context.sleepKind!, temperature, weather.id, (wetBefore + wetness) / 2, exposure) * step : undefined
     const walkingHygiene = context.walking ? (temperature >= 25 ? 0.05 : temperature >= 18 ? 0.033 : 0.025) : 0
     const energyDrain = context.sleeping ? 0 :
       NEED_DRAIN.energy * step * healthEnergyMultiplier(next.health) + weather.energyDrain * step +

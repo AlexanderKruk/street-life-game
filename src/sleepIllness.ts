@@ -1,10 +1,11 @@
+import type { WeatherId } from './weather'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 export type SleepKind = 'ground' | 'bench' | 'shelter' | 'residential'
 export type SleepExposure = 'outside' | 'cover' | 'indoors' | 'transit'
 
 // Calibrated to the existing eight-hour chances in constant conditions.
 // Hazards add across minutes, so one long jump and many ticks are equivalent.
-export function sleepIllnessHazard(kind: SleepKind, temperature: number, weather: string, wetness: number, exposure: SleepExposure) {
+export function sleepIllnessHazard(kind: SleepKind, temperature: number, weather: WeatherId, wetness: number, exposure: SleepExposure) {
   if (kind !== 'ground' && kind !== 'bench') return 0
   const cold = temperature <= 5 ? 0.28 : temperature <= 10 ? 0.16 : temperature <= 15 ? 0.07 : 0
   const weatherRisk = exposure === 'outside' ? weather === 'Rain' || weather === 'Downpour' ? 0.22 : weather === 'Drizzle' ? 0.08 : weather === 'Showers' ? 0.14 : weather === 'Windy' ? 0.10 : 0 : 0

@@ -388,3 +388,16 @@ cases match eecb1c5 in visible text, header labels/classes, caps/groups/life fie
 Only the ungrammatical singular duration is corrected to 1 day; ceil is unchanged.
 Full suites/long pseudo browser layout/WebKit/iPhone unrun. Main source saves
 use [skip ci] and do not require new builds or CI waits solely for uploading.
+
+
+HUD/weather checkpoint: check-localization replaces all eight displayed weather
+names with Clear and all seven weekday names with Th. It checks actual HUD icons
+at 06:00/20:00, date/money/battery aria messages and low threshold, 14 calendar days
+of rain/needs/phone drain, sleep hazards, service weekdays and App restoration of
+an existing rain schedule. Weather IDs remain derived, with no new save fields.
+Existing rain/wetness assertions now read id instead of label and retain their
+original expected weather and numeric rules. Targeted rain/sleep/wetness/controller/
+rendering/boundary checks, phone-clock/shelter-sleep/events regressions and build
+passed. Temporary browser comparison with 048ac75 at 390/1280 and extra 320/390
+expanded day/title cases preserved layout; CSS/baselines were unchanged. Full
+suites, WebKit, iPhone and the overall long-text matrix remain unrun.

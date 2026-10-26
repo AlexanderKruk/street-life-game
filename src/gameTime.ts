@@ -1,6 +1,8 @@
 import type { GameState } from './game'
 
-export const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+// Calendar identities are also used by service eligibility; display separately.
+export const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const
+export type WeekdayId = typeof WEEKDAYS[number]
 
 
 export function weekday(day: number) {

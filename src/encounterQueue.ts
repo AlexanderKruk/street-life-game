@@ -1,3 +1,4 @@
+import type { WeatherId } from './weather'
 import { useEffect } from 'react'
 import { STREET_EVENTS, firstNightTime, firstMorningTime, nextStreetEvent, type EventContext, type EventTrigger, type StreetEvent } from './events'
 import { temperatureAt, weatherAt, type GameState } from './game'
@@ -9,7 +10,7 @@ type QueueContext = {
   game: GameState
   life: LifeSituation
   inventory: Inventory
-  weather: { label: string }
+  weather: { id: WeatherId }
   trip: boolean
   infoModal: boolean
   currentId: string
@@ -38,7 +39,7 @@ export function createEncounterQueue(session: EventSession, context: QueueContex
   function observeFirstNight(trigger: Extract<EventTrigger, 'walk' | 'bench' | 'location'>, state: GameState, locationId = state.locationId) {
     if (!firstNightTime(state) || life.housing !== 'Street' || activeEvent || infoModal || firstNightEvents.pendingId) return
     if (!encounterDue(state)) return
-    const event = nextStreetEvent(trigger, { locationId, minutes: state.minutes, weather: weather.label, housing: life.housing, documents: inventory.documents, firstNight: true, nearHome: !leftHome && !trip, seenEventIds: [...firstNightEvents.seen, ...STREET_EVENTS.filter(event => !event.id.startsWith('first-night-')).map(event => event.id)] })
+    const event = nextStreetEvent(trigger, { locationId, minutes: state.minutes, weather: weather.id, housing: life.housing, documents: inventory.documents, firstNight: true, nearHome: !leftHome && !trip, seenEventIds: [...firstNightEvents.seen, ...STREET_EVENTS.filter(event => !event.id.startsWith('first-night-')).map(event => event.id)] })
     if (event?.id.startsWith('first-night-')) { rememberFirstNightEvent(event, state); return true }
     return false
   }
@@ -48,7 +49,7 @@ export function createEncounterQueue(session: EventSession, context: QueueContex
     // Opening observations keep priority; D1+ night encounters can occur away from home
     // even when the player skipped the at-home encounters on D0.
     const eventWeather = weatherAt(state)
-    const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(eventWeather.temp, state.minutes), ...observation, travelMode, weather: eventWeather.label, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
+    const event = nextStreetEvent(trigger, { locationId: state.locationId, day: state.day, minutes: state.minutes, temperature: temperatureAt(eventWeather.temp, state.minutes), ...observation, travelMode, weather: eventWeather.id, housing: life.housing, documents: inventory.documents, firstNight: firstNightTime(state),
       seenEventIds: [...encounters.seen, ...STREET_EVENTS.filter(event => event.id.startsWith('first-night-')).map(event => event.id)] })
     // The first-morning decision takes priority over ordinary cooldowns.
     if (event?.id !== 'city-waking' && !encounterDue(state)) return

@@ -39,8 +39,8 @@ near(advanceTime({...base,rain:short},5,{exposure:'outside'}).rainResults[0].ene
 const cold = { ...chooseRain(episode('downpour'),'continue',now,'street'), coldRoll:0 };
 const caught = advanceTime({...base,rain:cold},60,{exposure:'outside'}).rainResults[0];
 near(rainRisk(caught),.25); assert(caught.cold);
-assert.equal(weatherAt({...base,day:1,rain:cold}).label,'Cloudy');
-assert.equal(weatherAt({...base,day:2,rain:undefined}).label,'Rainy');
+assert.equal(weatherAt({...base,day:1,rain:cold}).id,'Cloudy');
+assert.equal(weatherAt({...base,day:2,rain:undefined}).id,'Rainy');
 for(const [day,limit] of [[1,0],[2,Infinity],[3,0],[4,0],[5,Infinity],[6,1],[7,Infinity]]) assert.equal(rainDailyLimit(day),limit);
 const cloudyDay={day:6,minutes:600,rainSystemStarted:true};
 for(const roll of [0,.999]) {const plan=planRainDay(cloudyDay,1,()=>roll);assert(plan.nextRainAt>5*1440+600 && plan.nextRainAt<6*1440);}

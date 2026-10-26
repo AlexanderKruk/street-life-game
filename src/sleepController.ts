@@ -1,3 +1,4 @@
+import type { WeatherId } from './weather'
 import { useEffect } from 'react'
 import { applySleepTime as applyGameSleepTime, weatherAt, formatTime, type ActionResult, type GameState, type TimeContext } from './game'
 import { firstNightTime, nextStreetEvent, type StreetEvent } from './events'
@@ -16,7 +17,7 @@ import type { GameSetter, RunWithResult, Setter } from './controllerTypes'
 
 type Context = {
   game: GameState; inventory: Inventory; effects: ActiveEffect[]; current: { id: string; name: string }
-  weather: { label: string }; underRainCover: boolean; insideNightShelter: boolean; streetBenchFound: boolean; blocked: boolean
+  weather: { id: WeatherId }; underRainCover: boolean; insideNightShelter: boolean; streetBenchFound: boolean; blocked: boolean
 }
 type Host = {
   setGame: GameSetter; setLife: Setter<LifeSituation>; setEffects: Setter<ActiveEffect[]>; setMessage: Setter<string>; setInfoModal: Setter<ResultCardData | null>
@@ -137,13 +138,13 @@ export function createSleepController(session: SleepSession, eventSession: Event
         illnessText = ' Your throat feels sore, your nose is blocked, and a chill runs through you as you sit up. You feel unwell — you have caught a cold.'
       }
       const sleepStart = { day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 }
-      wakeEvent = newlyIll || !encounterDue(wakeState) ? null : nextStreetEvent('wake', { locationId: current.id, weather: sleepWeather.label, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: [...firstNightEvents.seen, ...encounters.seen, ...(firstNightTime(sleepStart) && sleep.kind === 'bench' && !firstNightEvents.seen.includes('first-night-bench-wake') ? ['quiet-night','night-theft'] : [])] })
+      wakeEvent = newlyIll || !encounterDue(wakeState) ? null : nextStreetEvent('wake', { locationId: current.id, weather: sleepWeather.id, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: [...firstNightEvents.seen, ...encounters.seen, ...(firstNightTime(sleepStart) && sleep.kind === 'bench' && !firstNightEvents.seen.includes('first-night-bench-wake') ? ['quiet-night','night-theft'] : [])] })
       if (wakeEvent?.id.startsWith('first-night-')) { rememberFirstNightEvent(wakeEvent, wakeState); wakeEvent = null }
     } else if (sleep.kind === 'shelter') {
       const sleepStartDay = Math.floor(sleep.startAbsolute / 1440) + 1
       const stayNightDay = sleep.startAbsolute % 1440 < 480 ? sleepStartDay - 1 : sleepStartDay
       setLife((status) => ({ ...status, housing: 'Night shelter', shelterLastStayDay: Math.max(status.shelterLastStayDay ?? 0, stayNightDay) }))
-      const event = !encounterDue(wakeState) ? null : nextStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents, sleepKind: sleep.kind, seenEventIds: [...encounters.seen, ...firstNightEvents.seen] })
+      const event = !encounterDue(wakeState) ? null : nextStreetEvent('wake', { locationId: current.id, weather: weather.id, housing: 'Night shelter', documents: inventory.documents, sleepKind: sleep.kind, seenEventIds: [...encounters.seen, ...firstNightEvents.seen] })
       if (wakeState.minutes < SHELTER_CHECKOUT_WARNING) wakeEvent = event
     } else {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
@@ -161,12 +162,12 @@ export function createSleepController(session: SleepSession, eventSession: Event
   function finishRestAction(actionId: string, actionName: string, result: ActionResult, next: GameState) {
     if (actionId === 'street-sleep') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
-      const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Street', documents: inventory.documents, sleepKind: current.id === 'station' ? 'bench' : 'ground', seenEventIds: encounters.seen })
+      const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.id, housing: 'Street', documents: inventory.documents, sleepKind: current.id === 'station' ? 'bench' : 'ground', seenEventIds: encounters.seen })
       presentWakeEvent(wakeEvent, actionName, result.message ?? 'Time passes.')
       return true
     } else if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
       setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
-      const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.label, housing: 'Night shelter', documents: inventory.documents, seenEventIds: encounters.seen })
+      const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.id, housing: 'Night shelter', documents: inventory.documents, seenEventIds: encounters.seen })
       presentWakeEvent(wakeEvent, actionName, result.message ?? 'Time passes.')
       return true
     }

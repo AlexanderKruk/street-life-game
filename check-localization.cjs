@@ -293,6 +293,41 @@ console.log('PASS: all housing/cause/employment/income mappings, condition ident
 
 
 
+// HUD/weather copy is presentation only, including deliberately misleading names.
+const {hud:hudCatalog}=bundled('src/locales/en/hud.ts');
+const pseudoHud=Object.fromEntries(Object.entries(hudCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+for(const key of Object.keys(pseudoHud))if(key.startsWith('weather.'))pseudoHud[key]='Clear';
+for(const key of Object.keys(pseudoHud))if(key.startsWith('calendar.weekday.'))pseudoHud[key]='Th';
+assert.deepEqual(validateCatalog(hudCatalog,pseudoHud),[]);
+const hudSource=`export {default as GameHeader} from './src/GameHeader'; export {default as App} from './src/App'; export * from './src/hudPresentation'; export * from './src/game'; export * from './src/gameTime'; export * from './src/phonePower'; export * from './src/sleepIllness'; export * from './src/locationActionRules';`;
+const hudBase=bundled({source:hudSource});
+const hudView=bundled({source:hudSource,catalogs:{hud:pseudoHud}});
+const weatherIds=['Cloudy','Rain','Clear','Windy','Showers','Rainy','Drizzle','Downpour'];
+for(const id of weatherIds){
+ assert.equal(hudBase.weatherLabel(id),id);assert.equal(hudView.weatherLabel(id),'Clear');
+ for(const minutes of [0,359,360,1199,1200,1439])assert.equal(hudView.weatherIcon(id,minutes),id==='Clear'?(minutes>=360&&minutes<1200?'sun':'moon'):['Cloudy','Windy'].includes(id)?'cloud':'rain');
+ for(const kind of ['ground','bench','shelter'])for(const exposure of ['outside','cover','indoors'])assert.equal(hudView.sleepIllnessHazard(kind,5,id,80,exposure),hudBase.sleepIllnessHazard(kind,5,id,80,exposure));
+}
+for(let day=1;day<=14;day++){
+ assert.equal(hudBase.weekdayLabel(day),hudBase.weekday(day));assert.equal(hudView.weekdayLabel(day),'Th');
+ assert.equal(hudView.rainDailyLimit(day),hudBase.rainDailyLimit(day));
+ const game={...comfortableStatus,day,minutes:990,rainSystemStarted:true,nextRainAt:999999};
+ const context={game,inventory:INITIAL_INVENTORY,life:{housing:'Night shelter'},current:{id:'shelter',open:1080},open:true,shelterBooked:true,shelterAdmitted:true};
+ const worker=hudView.actions.find(a=>a.id==='shelter-social-worker');
+ assert.equal(hudView.locationActionUnavailable(worker,context)===null,[2,5].includes((day-1)%7+1),'translated weekday cannot enable social worker on Thursday');
+ const laundry=hudView.actions.find(a=>a.id==='shelter-laundry-drop');
+ assert.equal(hudView.locationActionUnavailable(laundry,{...context,game:{...game,minutes:420}})===null,(day-1)%7===3,'translated weekday cannot change laundry day');
+ for(const minutes of [359,1199,1439])for(const level of [undefined,'drizzle','rain','downpour']){
+  const now=(day-1)*1440+minutes;
+  const state={...game,minutes,...(level?{rain:{id:'fixture',level,start:now-1,end:now+3,choice:'continue',searchRemaining:0,protection:0.5,shelter:'canopy',exposure:0,energyLoss:0,moodLoss:0,waited:0,coldRoll:0.5}}:{})};
+  assert.deepEqual(hudView.weatherAt(state),hudBase.weatherAt(state));
+  assert.equal(Object.hasOwn(hudView.weatherAt(state),'label'),false);
+  for(const usage of ['browsing','navigation'])assert.equal(hudView.phoneScreenDrain(state,72,usage,10),hudBase.phoneScreenDrain(state,72,usage,10));
+  assert.deepEqual(hudView.advanceTime(state,10,{exposure:'outside'}),hudBase.advanceTime(state,10,{exposure:'outside'}));
+ }
+}
+console.log('PASS: weather/weekday pseudo-copy preserves all 8 identities, dawn/dusk icons, service weekdays, rain, needs, phone drain and illness rules.');
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -373,6 +408,34 @@ try {
     assert.equal(document.querySelector('#dice-action-title').textContent,`Steal ${item.name.toLowerCase()}?`);
   }
   console.log('PASS: numeric duration/range/route metadata, intact pseudo-copy, explicit check labels and all theft headings.');
+  for(const id of weatherIds)for(const minutes of [359,360,1199,1200]){
+    const props={game:{...comfortableStatus,day:1,minutes,money:30.5},weatherId:id,temperature:-3,battery:29.5};
+    cleanup();render(React.createElement(hudBase.GameHeader,props));
+    const icon=document.querySelector('.weather svg').innerHTML;
+    assert.equal(document.querySelector('h1').getAttribute('aria-label'),`Day 0 Mo ${hudBase.formatTime(minutes)}`);
+    assert.equal(document.querySelector('.money').textContent,'30.5 zł');assert.equal(document.querySelector('.money').getAttribute('aria-label'),'Money: 30.50 zł');
+    assert.equal(document.querySelector('.phone-charge strong').textContent,'30%');assert(document.querySelector('.phone-charge').classList.contains('low'));
+    assert.equal(document.querySelector('.weather').getAttribute('aria-label'),`${id}, -3°C`);
+    cleanup();render(React.createElement(hudView.GameHeader,props));
+    assert.equal(document.querySelector('.weather svg').innerHTML,icon,'actual HUD icon follows ID, never the translated name Clear');
+    assert.equal(document.querySelector('.weather').title,'Clear');
+    assert(document.querySelector('h1').getAttribute('aria-label').startsWith('⟦hud.dateAccessible <b>copy</b>⟧'));
+    assert(document.querySelector('.money').getAttribute('aria-label').startsWith('⟦hud.moneyAccessible <b>copy</b>⟧'));
+    assert(document.querySelector('.phone-charge').getAttribute('aria-label').startsWith('⟦hud.batteryAccessible <b>copy</b>⟧'));
+  }
+  const hudTimers={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
+  try{
+    cleanup();localStorage.clear();
+    localStorage.setItem('street-life-save-v3',JSON.stringify({...comfortableStatus,day:7,minutes:720,rainSystemStarted:true,rainScheduleDay:7,rainStartsToday:1,nextRainAt:9400}));
+    localStorage.setItem('street-life-mobile-auto-renew','false');
+    localStorage.setItem('street-life-inventory-v1',JSON.stringify(INITIAL_INVENTORY));
+    render(React.createElement(hudView.App));
+    assert.equal(document.querySelector('.weather').title,'Clear');assert.equal(document.querySelector('.weekday').textContent,'Th');
+    const restored=JSON.parse(localStorage.getItem('street-life-save-v3'));
+    assert.equal(restored.day,7);assert.equal(restored.minutes,720);assert.equal(restored.money,comfortableStatus.money);assert.equal(restored.nextRainAt,9400);
+    assert.equal(hudView.weatherAt(restored).id,'Rainy');assert.equal(Object.hasOwn(restored,'weatherId'),false,'weather remains derived; no new save field');
+  }finally{cleanup();window.setInterval=hudTimers.set;window.clearInterval=hudTimers.clear;}
+  console.log('PASS: actual pseudo HUD/App preserves calendar, money, battery threshold, weather icons and restored rain schedule without new save fields.');
   const chipsView=bundled({source:`export {default as InventorySlot} from './src/InventorySlot'; export {default as ShopCard} from './src/ShopCard'; export {default as StatusScreen} from './src/StatusScreen'; export * from './src/effectChips'; export * from './src/inventory'; export * from './src/game';`,effects:pseudoEffects});
   const pseudoChips=[chipsView.impactChip('mood-gain'),chipsView.impactChip('health-loss'),chipsView.freshnessChip('stale',2),chipsView.freshnessChip('spoiled',1)];
   let used=0,discarded=0;

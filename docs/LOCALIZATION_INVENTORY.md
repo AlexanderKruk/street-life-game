@@ -14,7 +14,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | Source(s), relative to src | Catalogue / target | Transfer | Editorial/context review | Conditions / checks |
 | --- | --- | --- | --- | --- |
 | `BottomNavigation.tsx` | `common.ts`: `nav.*` | moved | unchanged approved controls | blocked, phone/travel busy, active screen; result/phone regressions |
-| `GameHeader.tsx`, `game.ts` condition/weather data, `gameTime.ts` | common/status (next) | pending | existing v335 only | D0/D1, day/night, 7 weather labels, low battery, Mood bands |
+| `GameHeader.tsx`, `game.ts` weather IDs, `gameTime.ts`, `hudPresentation.ts` | hud.ts / status.ts / formatters | moved own HUD copy | unchanged English; weather/weekday IDs independent of translations | D0/D1, 8 weather labels, dawn/dusk, low battery, Mood; pseudo HUD/App, weekday services, rain/phone/sleep checks |
 | `Stat.tsx` | `common.ts`: `stat.*` | moved own copy | unchanged labels/hints | cap, focus, reduced motion, gains/losses; `check-results`, relabelled-resource cases |
 | `results.ts`, `resultResources.ts` | `results.ts`: `result.resource.*` | moved | preserve actual rounded deltas | all needs/items/effects, consumed loss, start/end/treated; `check-results` |
 | `ResultCard.tsx` | `results.ts`, `common.ts` | moved own copy | unchanged compact/full/results | see modal matrix; controller payload still pending |
@@ -90,7 +90,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `InventorySlot`, `ShopCard`, `StatusScreen` | English freshness / effect chip strings select visual states | ImpactId/resourceId/kind plus explicit foodCondition/counts; cold Mood annotation uses resource ID; own copy moved; final layout audit pending |
 | `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | choice IDs/React keys and pure labels explicit; stat/dc formats badges/accessible names; contextual theft titles by item ID |
 | `eventController` | replaces “The screen still works.” in phone damage outcome | **pending**: explicit broken-screen outcome variant |
-| `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | Status/mood/housing now have display mappings; weather/phone states remain pending, keep internal IDs stable |
+| `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | Status/mood/housing and weather/weekday now have display mappings; phone states remain pending, keep internal IDs stable |
 
 ## Exclusions and finish criteria
 
@@ -157,3 +157,14 @@ unchanged. Header/nav Mood labels share conditionLabel; their remaining HUD copy
 is pending. Four selected visual cases and eight extra comparisons passed.
 Next: HUD/weather display identity. Main saves use the AGENTS.md [skip ci] method
 authorized by the user; they do not publish the game.
+
+
+HUD/weather checkpoint: own GameHeader copy is in hud.ts. WeatherConditions.id
+and WeekdayId are domain values, independent of displayed labels and icon choice.
+All 8 weather names, weekday calendars/services, dawn/dusk, raw low-battery
+threshold and rounded display values were covered under misleading pseudo-copy.
+Existing rain/wetness/sleep/phone and restored-process assertions passed.
+Temporary browser HUD comparison with 048ac75 covered 390/1280 and additional
+320/expanded day/title at390; CSS/baselines were unchanged. Other calendar strings
+in History/sleep are tracked with those pending sources. Next: location catalogue,
+map/description/hour/accessibility copy, followed by action/refusal catalogues.
