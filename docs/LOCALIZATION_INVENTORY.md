@@ -42,7 +42,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `shelterController.ts`, `ShelterQueueDialog.tsx`, `ShelterCheckoutDialog.tsx`, `useShelterLifecycle.ts` | shelter/dialogs | pending | pending | outside/inside/registration, vacancy/refusal, renewal, checkout/charging |
 | `trashSearchController.ts`, `TrashSearchDialog.tsx`, `TrashSearchTime.tsx`, `trashSearchRules.ts` | trash/dialogs | pending | pending | found/damaged, cap/full, manual/deadline, keyboard/touch, aria announcements |
 | `GameOverDialog.tsx` | `dialogs.ts`: `gameOver.*` | moved | exact copy; explains current Health recovery | restart/day/terminal blocking; action regressions |
-| `medicalController.ts`, `supportWorkController.ts`, `streetController.ts` | actions/results | pending | no balance edits | refusals and rare messages; documents/referral/transit/benefits/work/begging/bench |
+| `medicalController.ts`, `supportWorkController.ts`, `streetController.ts` | controllerActions.ts / shared actions.ts | moved own prose/title/alt | original English and mechanics preserved; legacy walk day/night editorial question open | refusals and rare messages; documents/referral/transit/benefits/work/begging/bench |
 | `Icon.tsx`, `MoodIcon.tsx`, `ItemArt.tsx`, `ChoiceButton.tsx`, `ChoiceOptions.tsx`, `AvailableFirst.tsx` | common/accessibility | pending audit | symbol-only markup is exempt where hidden | icon/duration/order/freshness metadata moved; remaining accessibility copy/residual audit pending |
 | `index.html`, `public/manifest*` if added | common/metadata | pending audit | pending | page title/lang/description; images have decorative empty alt or owner-provided alt |
 
@@ -191,3 +191,13 @@ translation remains blocked. 33,600 legacy-rule cases, actual command ports and
 English shelter/support browser cards match e4b5fe7 at390/1280; expanded390 copy
 fits cards. Incoming opening-call copy and other street/support/medical/shelter/
 sleep/phone/event/travel/rain producers remain in their pending rows.
+
+
+Street/support/work/medical checkpoint: controllerActions.ts owns 34 whole
+messages/title/alt entries; the bench-search title reuses actions.ts. 153 frozen
+and empty-pseudo command scenarios preserve exact English output and all command
+ports, expenses/time/RNG/effects, History decisions/groups and result rejection.
+Stored employment='Day work' is a domain enum, not the translated result title.
+The ordinary walk remains absent from UI; its retained legacy controller copy
+still needs the final day/night editorial review. No JSX/CSS/browser changes.
+Next: shelter processes/dialogs and remaining special-process catalogues.

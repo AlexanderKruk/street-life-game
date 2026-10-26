@@ -428,3 +428,14 @@ assertions. Targeted action/rest/art/boundary/design checks plus shelter-sleep,
 journal-services/street-trash regressions and build passed. English shelter/
 support card geometry matches e4b5fe7 at390/1280; long pseudo390 copy fits cards.
 Full suites, overall layout audit, WebKit and iPhone remain unrun.
+
+
+Street/support/work/medical catalogue checkpoint: check-localization compares
+153 command scenarios with frozen 9064851 controller sources, then repeats them
+with empty static controller messages. It checks exact English reports/title/
+illustration alt, full state and ordered ports, RNG counts/boundaries, effects,
+History facts/decisions/groups and runWithResult refusal before mutation/RNG.
+The same cases protect the persisted 'Day work' employment enum from translation.
+Targeted action-controller/boundary checks, street-trash/journal-services/needs-mood
+regressions and build passed. No JSX/CSS changed; no fresh browser/visual/full
+suite/WebKit/iPhone run is claimed for this controller-only extraction.

@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { weatherAt, temperatureAt, type ActionResult, type GameState } from './game'
 import { absoluteMinutes } from './gameTime'
 import type { ActiveEffect, Inventory, LifeSituation, StoredItems } from './stateTypes'
@@ -27,45 +28,45 @@ export function createSupportWorkController(context: Context, host: Host) {
   function socialSupportImpl(kind: 'housing' | 'documents' | 'transport' | 'benefits') {
     if (!open || currentId !== 'support') return
     if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
-      setMessage(storage.documents ? 'Your documents are stored at the shelter. Take them with you for this application.' : 'You need basic documents for this application. Ask for help restoring them first.')
+      setMessage(storage.documents ? t("controller.support.documents.stored") : t("controller.support.documents.required"))
       return { kind: 'action' as const, supportOutcome: 'needed' as const }
     }
     if (kind === 'housing') {
       setDiscoveredLocations(prev => prev.includes('residential-shelter') ? prev : [...prev, 'residential-shelter'])
       if (life.schroniskoReferral) {
-        setMessage('You already have a referral to Schronisko. It is available on the map.')
+        setMessage(t("controller.support.housing.existing"))
         return { kind: 'action' as const, supportOutcome: 'unchanged' as const }
       }
       setGame((prev) => applyAction(prev, { minutes: 35, mood: 3 }))
       setLife((status) => ({ ...status, schroniskoReferral: true }))
-      setMessage('The social worker gives you a referral to Schronisko. The address is saved on your map.')
+      setMessage(t("controller.support.housing.granted"))
       return { kind: 'action' as const, supportOutcome: 'referral' as const }
     }
     if (kind === 'documents') {
       if (inventory.documents) {
-        setMessage('Your basic documents are currently complete.')
+        setMessage(t("controller.support.documents.complete"))
         return { kind: 'action' as const, supportOutcome: 'unchanged' as const }
       }
       setGame((prev) => applyAction(prev, { minutes: 60, mood: 3 }))
       setInventory((prev) => ({ ...prev, documents: true }))
-      setMessage('The social worker helps you replace your missing documents.')
+      setMessage(t("controller.support.documents.restored"))
       return { kind: 'action' as const, supportOutcome: 'restored' as const }
     }
     if (kind === 'transport') {
       const expiresAt = absoluteMinutes(game) + 3 * 1440
       setGame((prev) => applyAction(prev, { minutes: 25 }))
       setEffects((active) => [...active.filter((effect) => effect.id !== 'free-transit'), { id: 'free-transit', expiresAt }])
-      setMessage('You receive a pass for 3 days of free public transport.')
+      setMessage(t("controller.support.transport.granted"))
       return { kind: 'action' as const, supportOutcome: 'transport' as const }
     }
     setGame((prev) => applyAction(prev, { minutes: 30, mood: 2 }))
-    setMessage('The social worker explains which benefits may be available. You leave with information about your options.')
+    setMessage(t("controller.support.benefits.information"))
     return { kind: 'action' as const, supportOutcome: 'benefits' as const }
   }
 
   function takeDayWorkImpl() {
     if (!open || currentId !== 'work') return
-    if (game.energy < dayWorkEnergyRequired) { setMessage(`You need at least ${dayWorkEnergyRequired} Energy to start this shift.`); return }
+    if (game.energy < dayWorkEnergyRequired) { setMessage(t('controller.work.energy', { required: dayWorkEnergyRequired })); return }
     setGame((prev) => {
       const weather = weatherAt(prev)
       const temperature = temperatureAt(weather.temp, prev.minutes + 90)
@@ -81,10 +82,10 @@ export function createSupportWorkController(context: Context, host: Host) {
       })
     })
     setLife((status) => ({ ...status, employment: 'Day work', income: 'Irregular' }))
-    setMessage('You finish the shift and collect your pay. After three hours of physical work, you could use something to eat and drink.')
+    setMessage(t("controller.work.completed"))
   }
 
-  function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') { runWithResult({ id: 'social-support', title: 'Social support' }, () => socialSupportImpl(kind)) }
-  function takeDayWork() { runWithResult({ id: 'day-work', title: 'Day work' }, takeDayWorkImpl) }
+  function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') { runWithResult({ id: 'social-support', title: t("controller.support.title") }, () => socialSupportImpl(kind)) }
+  function takeDayWork() { runWithResult({ id: 'day-work', title: t("controller.work.title") }, takeDayWorkImpl) }
   return { socialSupport, takeDayWork }
 }

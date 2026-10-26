@@ -419,6 +419,52 @@ for(const action of actionsBase.actions)for(const gel of [0,1])for(const random 
 }
 console.log(`PASS: ${oldActions.length} action definitions/outcomes, whole shower messages, ${ruleCases} legacy-rule cases and 22 empty-refusal controller guards preserve mechanics/RNG/History IDs.`);
 
+// Whole controller messages preserve exact copy and all domain command ports.
+const {controllerActions:controllerCatalog}=bundled('src/locales/en/controllerActions.ts');
+const pseudoControllers=Object.fromEntries(Object.entries(controllerCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+for(const[key,message]of Object.entries(controllerCatalog))if(typeof message==='string'&&!message.includes('{'))pseudoControllers[key]='';
+assert.deepEqual(validateCatalog(controllerCatalog,pseudoControllers),[]);
+const controllerExports=`export * from './src/game'; export * from './src/inventory'; export * from './src/results'; export * from './src/journalIdentity';`;
+const controllerSource=controllerExports+`export * from './src/streetController'; export * from './src/supportWorkController'; export * from './src/medicalController';`;
+const controllerBase=bundled({source:controllerSource});
+const controllerPseudo=bundled({source:controllerSource,catalogs:{controllerActions:pseudoControllers}});
+const controllerLegacy=bundled({source:controllerExports+`export * from './test-fixtures/streetController-copy'; export * from './test-fixtures/supportWorkController-copy'; export * from './test-fixtures/medicalController-copy';`});
+const copyCases=[];
+for(const roll of [0,.349999,.35,.649999,.65,.849999,.85,.959999,.96,.999999])copyCases.push({domain:'street',method:'askForMoney',roll});
+for(const patch of [{activeEvent:true},{game:{locationId:'station'}},{begging:{day:3,attempts:3}},{begging:{day:2,attempts:3}}])copyCases.push({domain:'street',method:'askForMoney',patch});
+for(const withMusic of [false,true])for(const patch of [{},{activeEvent:true},{sleeping:true},{trip:true},{infoModal:true},{game:{locationId:'station'}},{musicWalkUsed:true},{mobileServiceActive:false},{inventory:{phoneCondition:0}},{inventory:{phoneBattery:1.99999}},{inventory:{phoneBattery:2}},{musicOn:true}])copyCases.push({domain:'street',method:'walkCity',args:[withMusic],patch});
+for(const kind of ['find-bench','bench-rest','bench-sleep'])for(const roll of [.699999,.7])for(const patch of [{},{streetBenchFound:true},{activeEvent:true},{game:{locationId:'station'}}])copyCases.push({domain:'street',method:'streetAction',args:[kind],roll,patch});
+for(const kind of ['housing','documents','transport','benefits'])for(const carried of [false,true])for(const stored of [false,true])for(const referral of [false,true])copyCases.push({domain:'support',method:'socialSupport',args:[kind],patch:{inventory:{documents:carried},storage:{documents:stored},life:{schroniskoReferral:referral}}});
+for(const kind of ['housing','documents','transport','benefits'])for(const patch of [{open:false},{game:{locationId:'street'}}])copyCases.push({domain:'support',method:'socialSupport',args:[kind],patch});
+for(const dayWorkEnergyRequired of [35,55])for(const energy of [34.999,35,54.999,55,100])for(const day of [2,3,4])copyCases.push({domain:'support',method:'takeDayWork',patch:{dayWorkEnergyRequired,game:{locationId:'work',day,energy,minutes:780}}});
+for(const patch of [{open:false,game:{locationId:'work'}},{game:{locationId:'support'}}])copyCases.push({domain:'support',method:'takeDayWork',patch});
+for(const patch of [{},{activeEvent:true},{open:false},{inventory:{documents:false}},{game:{locationId:'street'}},{game:{health:99}}])copyCases.push({domain:'medical',method:'hospitalVisit',patch});
+for(const roll of [0,.199999,.2,.4,.6,.8,.999999])copyCases.push({domain:'medical',method:'callAmbulance',roll,patch:{game:{health:20}}});
+for(const patch of [{activeEvent:true},{shelterPhoneCharging:true},{game:{health:21}},{inventory:{phoneBattery:0}},{inventory:{phoneCondition:0}},{inventory:{phoneBattery:.1,phoneCondition:1}}])copyCases.push({domain:'medical',method:'callAmbulance',patch:{...patch,game:{health:20,...patch.game}}});
+function executeController(view,test,accepted=true){
+ const patch=test.patch??{};
+ const state={game:{...initialState,day:3,minutes:780,money:100,hunger:70,thirst:70,energy:70,health:90,mood:35,locationId:test.domain==='medical'?'hospital':test.domain==='support'?'support':'street',rainSystemStarted:true,rainScheduleDay:3,nextRainAt:999999,...patch.game},inventory:{...INITIAL_INVENTORY,phoneCondition:100,phoneBattery:80,...patch.inventory},storage:{...INITIAL_STORAGE,...patch.storage},life:{housing:'Street',employment:'Unemployed',income:'None',...patch.life},effects:[{id:'cold',expiresAt:10000}],discoveredLocations:[],begging:patch.begging??{day:3,attempts:0},musicWalkUsed:patch.musicWalkUsed??false,rainChoice:true,streetBenchFound:patch.streetBenchFound??false,screen:'phone',trip:{remaining:1},selectedDestination:'shop',message:'',infoModal:null,results:[],ports:[],draws:0};
+ const setter=key=>value=>{state.ports.push([key]);state[key]=typeof value==='function'?value(state[key]):value;};
+ const snapshot=()=>JSON.parse(JSON.stringify({game:state.game,inventory:state.inventory,effects:state.effects,housing:state.life.housing}));
+ const host={setGame:(value,housing)=>{state.ports.push(['game',housing??null]);state.game=view.limitMood(typeof value==='function'?value(state.game):value,{housing:housing??state.life.housing,effects:state.effects});},setInventory:setter('inventory'),setEffects:setter('effects'),setLife:setter('life'),setDiscoveredLocations:setter('discoveredLocations'),setMessage:setter('message'),setScreen:setter('screen'),setTrip:setter('trip'),setSelectedDestination:setter('selectedDestination'),setBegging:setter('begging'),setMusicWalkUsed:setter('musicWalkUsed'),setRainChoice:setter('rainChoice'),setStreetBenchFound:setter('streetBenchFound'),setInfoModal:setter('infoModal'),requestSleep:kind=>state.ports.push(['sleep',kind]),resultSnapshot:snapshot,applyAction:(game,result)=>view.applyAction(game,result,{housing:state.life.housing,effects:state.effects}),moodContext:()=>({housing:state.life.housing,effects:state.effects}),runWithResult:(action,run)=>{state.ports.push(['result',action.id]);if(!accepted)return;const before=snapshot(),facts=run(),summary=view.summarizeResult(before,snapshot()),identity={...action,...(facts?{actionHistory:facts}:{})};const journal=view.journalPresentation(identity,summary);state.results.push({id:action.id,title:action.title,facts,summary,journal});}};
+ const queue={observeFirstNight:()=>{state.ports.push(['firstNight']);return false;},observeOrdinaryEvent:(trigger,_state,mode,facts)=>state.ports.push(['encounter',trigger,mode??null,facts??null])};
+ const context={...state,currentId:state.game.locationId,open:true,activeEvent:false,sleeping:false,trip:false,infoModal:false,mobileServiceActive:true,musicOn:false,shelterPhoneCharging:false,dayWorkEnergyRequired:55,...patch,game:state.game,inventory:state.inventory,storage:state.storage,life:state.life,begging:state.begging};
+ const random=Math.random;Math.random=()=>{state.draws++;return test.roll??0.5;};
+ try{const controller=test.domain==='medical'?view.createMedicalController(context,host):test.domain==='support'?view.createSupportWorkController(context,host):view.createStreetController(context,host,queue);controller[test.method](...(test.args??[]));return state;}finally{Math.random=random;}
+}
+function commandMechanics(state){
+ const{message,infoModal,results,...mechanics}=state;
+ return {...mechanics,infoModal:infoModal?{illustration:infoModal.illustration,batteryInSummary:infoModal.batteryInSummary}:null,results:results.map(({title,journal,...result})=>({...result,journal:{decisionId:journal.decisionId,groupId:journal.groupId}}))};
+}
+for(const test of copyCases){
+ const legacy=executeController(controllerLegacy,test),actual=executeController(controllerBase,test),translated=executeController(controllerPseudo,test);
+ assert.deepEqual(actual,legacy,`English controller parity: ${test.domain}/${test.method}`);
+ assert.deepEqual(commandMechanics(translated),commandMechanics(actual),`pseudo controller mechanics: ${test.domain}/${test.method}`);
+ const rejected=executeController(controllerPseudo,test,false);assert.equal(rejected.draws,0);assert.equal(rejected.results.length,0);assert(rejected.ports.every(port=>port[0]==='result'),'result guard rejects before controller updates');
+}
+assert.equal(t('controller.medical.emergency.treated',{hours:4}),'You call an ambulance. Emergency staff stabilise your condition without requiring documents. About 4 hours pass.');
+console.log(`PASS: ${copyCases.length} frozen/pseudo street, support/work and medical scenarios preserve English reports, ordered ports, costs, RNG, effects, decisions/groups and result rejection.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
