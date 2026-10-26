@@ -1,13 +1,13 @@
-# Authored events localisation checkpoint
+# Phone content localisation checkpoint
 
-Source commit: e393996a05de1c0f19ff2e8c37aaad630cfb23b3
-Source tree excluding .backup: cb8981766ac99b799e93154b3947379a4587009a
+Source commit: faf87857f6e0a6cbddc58805fbe7ac99792346c3
+Source tree excluding .backup: 432839143d0495e74f7f3aadfc75725c493336d8
 
-182 events catalogue entries migrate 25 scene titles/texts, 61 choice labels, 66 outcome messages and five full document/coin templates. Original English, IDs/history IDs, mechanics, eligibility and ordering preserved. Technical extraction does not close final editorial/long-copy/device audits.
+49 phoneContent entries migrate three opening calls, seven practical questions and own Find Help/Notes copy. Explicit hasDetails metadata protects Notes from translated text truthiness. Call/question IDs, progression, timings, battery and saved-answer routing preserved.
 
-Passed: complete frozen20dbb8a English data comparison; 4500 eligibility/spawn contexts; 84 document/coin combinations; all 25 actual dialogs under empty copy; check-localization, check-events, event-travel controllers, module boundaries, events/journal-services regressions, build/diff. Neighbour scene inspected on desktop and390 iframe; CSS/art/baselines unchanged. Full suites, broader long-copy, WebKit/iPhone unrun.
+Passed: frozen English/domain comparison, twenty old/corrupt opening call progress cases, fifteen Search/Notes DOM/eligibility/handler/detail variants under empty copy, check-localization, opening-calls, phone-controller, phone, module boundaries/design, phone-clock/journal-services regressions, build/diff. Mobile390 Find Help/Notes and expanded registration inspected. CSS/baselines unchanged; broader long-copy/full suites/WebKit/iPhone unrun.
 
-The verified bundle retains 26 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: phone catalogues and final audits. See LOCALIZATION.md.
+The verified bundle retains 27 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: phone controller/activity, PhoneScreen/PhoneDialog and remaining Goals/History. See LOCALIZATION.md.
 
 Restore in a clone containing the published base:
 

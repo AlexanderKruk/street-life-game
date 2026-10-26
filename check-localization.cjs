@@ -677,6 +677,17 @@ for(const documents of [false,true])for(const stored of [false,true])for(const r
 }
 console.log(`PASS: 25 authored scenes preserve exact English data, ${authoredEligibility} eligibility/spawn contexts, empty-copy mechanics and document/coin outcomes.`);
 
+const phoneContentSource=`export * from './src/openingCalls'; export * from './src/phoneQuestions'; export {default as PhoneSearchScreen} from './src/PhoneSearchScreen'; export {default as PhoneNotesScreen} from './src/PhoneNotesScreen';`;
+const phoneContentBase=bundled({source:phoneContentSource});
+const phoneContentOld=bundled({source:`export * from './test-fixtures/openingCalls-copy'; export * from './test-fixtures/phoneQuestions-copy'; export {default as PhoneSearchScreen} from './test-fixtures/PhoneSearchScreen-copy'; export {default as PhoneNotesScreen} from './test-fixtures/PhoneNotesScreen-copy';`});
+const {phoneContent:phoneContentCatalog}=bundled('src/locales/en/phoneContent.ts');const emptyPhoneContent=Object.fromEntries(Object.keys(phoneContentCatalog).map(key=>[key,'']));assert.deepEqual(validateCatalog(phoneContentCatalog,emptyPhoneContent),[]);
+const phoneContentView=bundled({source:phoneContentSource,catalogs:{phoneContent:emptyPhoneContent}});
+assert.deepEqual(phoneContentBase.OPENING_CALLS,phoneContentOld.OPENING_CALLS);
+assert.deepEqual(phoneContentBase.practicalQuestions.map(({hasDetails,...question})=>question),phoneContentOld.practicalQuestions);
+const phoneContentNumbers=data=>JSON.parse(JSON.stringify(data,(key,value)=>['label','callingTitle','title','text','noteTitle'].includes(key)?undefined:value));assert.deepEqual(phoneContentNumbers(phoneContentView.OPENING_CALLS),phoneContentNumbers(phoneContentBase.OPENING_CALLS));assert.deepEqual(phoneContentNumbers(phoneContentView.practicalQuestions),phoneContentNumbers(phoneContentBase.practicalQuestions));
+for(const raw of [null,'0','1','2','3','4','-1','null','{}','broken'])for(const existing of [false,true]){const storage={getItem:()=>raw};assert.equal(phoneContentView.loadOpeningCallIndex(storage,existing),phoneContentOld.loadOpeningCallIndex(storage,existing));}
+console.log('PASS: three calls, seven questions, explicit Notes detail metadata and 20 old/corrupt call-progress cases preserve English and domain data under empty copy.');
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -1014,6 +1025,14 @@ try {
    const show=view=>{cleanup();const event=view.STREET_EVENTS[i],calls=[];render(React.createElement(view.EventDialog,{event,choices:event.choices,onChoose:choice=>calls.push(choice.id),unavailableReason:()=>null,orderSeed:42,decisionKey:'authored-fixture',panelRef:null}));const ids=[...document.querySelectorAll('.choice-button')].map(n=>n.getAttribute('data-order-id'));act(()=>document.querySelectorAll('.choice-button').forEach(n=>n.click()));assert.equal(document.querySelector('.modal-narrative b'),null);return{ids,calls};};assert.deepEqual(show(authoredView),show(authoredBase),'empty authored text preserves all scene choices/order/dispatch');
   }
   console.log('PASS: all 25 authored dialogs retain buttons, ordering and choice IDs under empty copy.');
+  let phoneContentCases=0;
+  for(const serviceActive of [false,true])for(const battery of [0,4,100])for(const answeredQuestions of [[],['bed','morning','work','clinic','supplies']]){
+    const show=view=>{cleanup();const calls=[];render(React.createElement(view.PhoneSearchScreen,{serviceActive,battery,answeredQuestions,phoneSearchCost:5,onOpenNotes:()=>calls.push('notes'),onSearch:id=>calls.push(id)}));const html=document.body.innerHTML,controls=[...document.querySelectorAll('button')].map(n=>[n.getAttribute('data-choice'),n.disabled]);act(()=>document.querySelectorAll('button').forEach(n=>n.click()));return{html,controls,calls};};const old=show(phoneContentOld),actual=show(phoneContentBase),translated=show(phoneContentView);assert.equal(actual.html,old.html);assert.deepEqual(translated.controls,actual.controls);assert.deepEqual(translated.calls,actual.calls);phoneContentCases++;
+  }
+  for(const answeredQuestions of [[],['morning'],['bed','no-place','supplies','work','clinic','charging','morning']]){
+    const show=view=>{cleanup();render(React.createElement(view.PhoneNotesScreen,{mapPlaces:locationsView.locations,answeredQuestions}));return{html:document.body.innerHTML,details:document.querySelectorAll('details').length,articles:document.querySelectorAll('article').length};};const old=show(phoneContentOld),actual=show(phoneContentBase),translated=show(phoneContentView);assert.equal(actual.html,old.html);assert.equal(translated.details,actual.details);assert.equal(translated.articles,actual.articles);phoneContentCases++;
+  }
+  console.log(`PASS: ${phoneContentCases} search/Notes variants preserve English DOM, eligibility, command IDs and saved detail visibility under empty content.`);
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){

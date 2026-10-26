@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: авторские scenes/choices/outcomes events.ts (после `20dbb8a`), проверен тематически.
+Последний готовый этап: openingCalls/phoneQuestions и Find Help/Notes (после `e393996`), проверен тематически.
+Авторские события сохранены в main через checkpoint `64144d1`.
 Event eligibility сохранён в main через checkpoint `d90238a`.
 EventController сохранён в main через checkpoint `f9fba91`.
 DiceDialog сохранён в main через checkpoint `25bad27`.
@@ -50,7 +51,7 @@ DiceDialog использует dialogs.ts для собственных под�
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: телефон — openingCalls/phoneQuestions и связанные процессы/экраны. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: usePhoneController/phoneActivity, PhoneScreen/PhoneDialog и оставшиеся Goals/History. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -995,3 +996,25 @@ regression/events, journal-services и build/diff — PASS.
 Это технический перенос с прежней копией, не закрытие редакторского аудита всех
 сцен/редких веток. Общая long-copy матрица, full suites, WebKit/iPhone открыты.
 Следующий этап — телефон. Сохранение в main с [skip ci], без публикации.
+
+
+### Звонки, справочные вопросы, Find Help и Notes — 26 октября 2026
+
+49 записей phoneContent.ts покрывают три opening calls (label/calling title/result),
+семь practicalQuestions (title/noteTitle/text) и собственные Find Help/Notes подписи,
+описания/подсказки. practicalQuestions.hasDetails отделяет наличие подробностей
+от текста: пустой перевод не скрывает раскрываемую заметку. Это ephemeral metadata,
+не новое поле save. call/question IDs, order, locations, время/стоимость, battery,
+повторный поиск morning и переход сохранённых ответов в Notes не менялись.
+
+Проверено: точные frozen English данные и domain metadata под пустым каталогом;
+20 legacy/corrupt opening-call progress случаев; 15 Search/Notes DOM/eligibility/
+handler/detail-visibility вариантов. check-localization, check-opening-calls,
+check-phone-controller, check-phone, module boundaries (150 модулей), design-system,
+regression/phone-clock, journal-services и build/diff — PASS. Звонки ×1, расходы,
+прерывания, восстановление и once-only начисления проверены существующими сценариями.
+Мобильный browser стенд390×844: Find Help, Notes и раскрытый ответ регистрации
+осмотрены без горизонтального переполнения; CSS/шрифты/эталоны прежние. Общая
+long-copy матрица, полный browser/node набор, WebKit/iPhone ещё открыты.
+Остаются controller/activity сообщения, PhoneScreen/PhoneDialog, Goals/History UI.
+Источник сохраняется в main с [skip ci], без публикации.
