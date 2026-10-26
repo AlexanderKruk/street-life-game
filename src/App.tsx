@@ -316,7 +316,7 @@ export default function App() {
   const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
   const mobileServiceMinutesLeft = Math.max(0, mobileServiceUntil - absoluteMinutes(game))
   const phoneUnavailable = phoneUnavailableReason(inventory, shelterPhoneCharging)
-  const navigationOn = mobileServiceActive && !phoneUnavailable && !sleeping && !gameOver
+  const navigationOn = mobileServiceActive && phoneUnavailable === null && !sleeping && !gameOver
   const dayWorkEnergyRequired = 55
   const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
   const usedStorageSlots = storageSlots(storage)
@@ -719,7 +719,7 @@ export default function App() {
     {trashGame && <TrashSearchDialog trashGame={trashGame} checkTrashDeadline={checkTrashDeadline} finishTrashSearch={finishTrashSearch}
       startTrashDrag={startTrashDrag} moveTrashItem={moveTrashItem} collectTrashBottle={collectTrashBottle} endTrashDrag={endTrashDrag} cancelTrashDrag={cancelTrashDrag} />}
 
-    {phoneOpen && !phoneUnavailable && <PhoneDialog
+    {phoneOpen && phoneUnavailable === null && <PhoneDialog
       battery={inventory.phoneBattery} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} canBuyService={game.money >= 1}
       autoRenew={mobileAutoRenew} onClose={() => setPhoneOpen(false)} onBuyService={() => { setPhoneOpen(false); buyMobileService() }}
       onAutoRenew={() => setMobileAutoRenew(value => !value)}
@@ -782,7 +782,7 @@ export default function App() {
       {phoneApp === 'search' && <PhoneSearchScreen serviceActive={mobileServiceActive} answeredQuestions={answeredQuestions} battery={inventory.phoneBattery} phoneSearchCost={phoneSearchCost}
         onOpenNotes={() => openPhoneApp('notes')} onSearch={answerPracticalQuestion} />}
     </PhoneScreen>}
-    {screen === 'phone' && phoneApp === 'home' && !phoneUnavailable && game.health <= 20 && <ChoiceButton className="action phone-emergency" aria-label="Call ambulance" onClick={callAmbulance} icon="ambulance" label="Call ambulance" detail={<small>Emergency care · no internet required</small>} />}
+    {screen === 'phone' && phoneApp === 'home' && phoneUnavailable === null && game.health <= 20 && <ChoiceButton className="action phone-emergency" aria-label="Call ambulance" onClick={callAmbulance} icon="ambulance" label="Call ambulance" detail={<small>Emergency care · no internet required</small>} />}
 
     </div>
 

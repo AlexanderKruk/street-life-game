@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import type { GameState } from './game'
 import { absoluteMinutes } from './gameTime'
 import { CALL_BATTERY_PER_MINUTE, openingCall } from './openingCalls'
@@ -8,10 +9,12 @@ import type { Inventory, PhoneActivity } from './stateTypes'
 export const PHONE_SEARCH_MIN = 10
 export const PHONE_SEARCH_MAX = 25
 
+export function phoneUnavailableId(inventory: Inventory, charging: boolean) {
+  return charging ? 'charging' : inventory.phoneCondition <= 0 ? 'broken' : inventory.phoneBattery <= 0 ? 'empty' : null
+}
 export function phoneUnavailableReason(inventory: Inventory, charging: boolean) {
-  return charging ? 'Collect your phone from the charger at Night Shelter.'
-    : inventory.phoneCondition <= 0 ? 'Your phone is broken.'
-    : inventory.phoneBattery <= 0 ? 'The battery is empty. Find somewhere to charge it.' : null
+  const id = phoneUnavailableId(inventory, charging)
+  return id === null ? null : t(`phone.process.unavailable.${id}`)
 }
 
 export function phoneActivityTick(activity: PhoneActivity, game: GameState, condition: number) {

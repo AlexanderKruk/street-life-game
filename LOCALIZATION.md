@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: openingCalls/phoneQuestions и Find Help/Notes (после `e393996`), проверен тематически.
+Последний готовый этап: phone controller/activity сообщения и null-only доступ (после `faf8785`), проверен тематически.
+Phone content сохранён в main через checkpoint `7cabec6`.
 Авторские события сохранены в main через checkpoint `64144d1`.
 Event eligibility сохранён в main через checkpoint `d90238a`.
 EventController сохранён в main через checkpoint `f9fba91`.
@@ -51,9 +52,14 @@ DiceDialog использует dialogs.ts для собственных под�
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: usePhoneController/phoneActivity, PhoneScreen/PhoneDialog и оставшиеся Goals/History. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: PhoneScreen/PhoneDialog, оставшиеся Goals/History и мини-игра/остаточные строки. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
+
+Текущий грубый ориентир после сцен/phone content: около 80% всей подготовки
+готово, около 20% остаётся с редакторским/мобильным аудитом и проверками.
+Это экспертная оценка, не замер полноты; уточнить после остаточного аудита.
+Переводы на другие языки сюда не входят.
 
 Историческая оценка после Status/Life situation, до последующих этапов HUD,
 локаций, действий и контроллеров: выполнено 50–60%, осталось 40–50% всей подготовки к переводу
@@ -1017,4 +1023,27 @@ regression/phone-clock, journal-services и build/diff — PASS. Звонки ×
 осмотрены без горизонтального переполнения; CSS/шрифты/эталоны прежние. Общая
 long-copy матрица, полный browser/node набор, WebKit/iPhone ещё открыты.
 Остаются controller/activity сообщения, PhoneScreen/PhoneDialog, Goals/History UI.
+Источник сохраняется в main с [skip ci], без публикации.
+
+
+### Контроллер и процессы телефона — 26 октября 2026
+
+32 записи phoneProcess.ts: оплата/автопродление, зарядка/сбор телефона, поисковые
+результаты, сохранённые/вспомнившиеся ответы, прерывания и три причины unavailable.
+Динамические сообщения переведены целиком с параметрами. phoneUnavailableId
+отделён от подписи; контроллер, App, LocationScreen и PhoneScreen проверяют null,
+так что пустой отказ не открывает call/search/navigation/plan/launcher.
+Числа/скорости/стоимость 1 zł и 24h, 10–25 минут поиска, ×1 calls/×4 searches,
+charging limits, claimCompletion/claimRenewal, priority при checkout/last minute,
+saved schemas и History IDs прежние.
+
+Проверено: 64 frozen/pseudo hook-command случая (оплата, charge/toggle, call,
+search, location charge, tick/pause, restored complete activity), 18 unavailable
+комбинаций; пустой отказ сохраняет заблокированный launcher/plan. Exact English
+state/ports/reports совпадают с frozen faf8785, pseudo-copy сохраняет числа/IDs.
+check-localization, opening-calls, phone-controller, phone, module boundaries
+(151 модуль), design-system; phone-clock/journal-services; build/diff — PASS.
+Мобильный browser390 с пустой причиной показал unavailable вместо apps и disabled
+plan. CSS/эталоны не менялись. Общая long-copy/full/WebKit/iPhone матрица открыта.
+Следующий этап — собственные тексты PhoneScreen/PhoneDialog и Goals/History UI.
 Источник сохраняется в main с [skip ci], без публикации.

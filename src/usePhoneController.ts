@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { useEffect } from 'react'
 import type { Setter, RunWithResult } from './controllerTypes'
 import type { ActionResult, GameState } from './game'
@@ -58,7 +59,7 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
     if (!claimRenewal(game.day)) return
     setMobileRenewedDay(game.day)
     if (game.money < 1) {
-      setMessage('Mobile service auto-renewal failed: you need 1 zł.')
+      setMessage(t('phone.process.autoFailed'))
       return
     }
     setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
@@ -66,37 +67,37 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
   }, [game.day, game.minutes, game.money, mobileAutoRenew, mobileRenewedDay, mobileServiceUntil])
   useEffect(() => { if (!mobileServiceActive) setMusicOn(false) }, [mobileServiceActive])
   function buyMobileServiceImpl() {
-    if (game.money < 1) { setMessage('You need 1 zł to activate mobile service for 24 hours.'); return }
+    if (game.money < 1) { setMessage(t('phone.process.needPayment')); return }
     const now = absoluteMinutes(game)
     setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - 1) }))
     setMobileServiceUntil((until) => Math.max(until, now) + 1440)
-    setMessage('Mobile service activated for another 24 hours. Cost: 1 zł.')
+    setMessage(t('phone.process.activated'))
   }
 
   function chargePhoneImpl() {
-    if (inventory.phoneBattery >= 100) { setMessage('Phone is already fully charged.'); return }
+    if (inventory.phoneBattery >= 100) { setMessage(t('phone.process.alreadyFull')); return }
     if (currentId !== 'support' && currentId !== 'residential-shelter') return
     if (!open) return
     setInventory((prev) => ({ ...prev, phoneBattery: Math.min(100, prev.phoneBattery + 25) }))
     setGame((prev) => applyAction(prev, { minutes: 30 }))
-    setMessage('You spend half an hour by the socket while your phone charges.')
+    setMessage(t('phone.process.chargedSocket'))
   }
 
   function toggleShelterPhoneCharging() {
     if (!insideNightShelter || sleeping || shelterDeparture || shelterCheckoutDue || gameOver) return
     if (!shelterPhoneCharging && (inventory.phoneBattery >= 100 || inventory.phoneCondition <= 0)) return
-    runWithResult({ id: shelterPhoneCharging ? 'phone-collect' : 'phone-charging', title: shelterPhoneCharging ? 'Collect phone' : 'Phone charging' }, () => {
+    runWithResult({ id: shelterPhoneCharging ? 'phone-collect' : 'phone-charging', title: shelterPhoneCharging ? t('phone.process.collectTitle') : t('phone.process.chargingTitle') }, () => {
       setShelterPhoneCharging(!shelterPhoneCharging)
       setPhoneOpen(false)
       setMusicOn(false)
       setMessage(shelterPhoneCharging
-        ? 'You collect your phone from the charger.'
-        : 'You leave your phone plugged in at Night Shelter. It charges while you do other things or sleep. Collect it when you need to use it.')
+        ? t('phone.process.collected')
+        : t('phone.process.plugged'))
     }, resultSnapshot(), true, true)
   }
 
   function startOpeningCall() {
-    if (!nextOpeningCall || currentId !== 'street' || phoneUnavailable || phoneActivity || eventInteractionBlocked || sleeping || trip || gameOver) return
+    if (!nextOpeningCall || currentId !== 'street' || phoneUnavailable !== null || phoneActivity || eventInteractionBlocked || sleeping || trip || gameOver) return
     const cost = nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
     if (inventory.phoneBattery < cost) return
     setPhoneActivity({ questionId: nextOpeningCall.id, total: nextOpeningCall.minutes, remaining: nextOpeningCall.minutes, before: resultSnapshot() })
@@ -108,7 +109,7 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
     runWithResult({ id: `call:${call.id}`, title: call.title }, () => {
       setOpeningCallIndex(index => index + 1)
       setGame(previous => ({ ...previous, mood: Math.max(0, previous.mood - call.moodLoss) }))
-      setInfoModal({ title: call.title, text: call.text, label: 'PHONE CALL', illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title, batteryInSummary: true })
+      setInfoModal({ title: call.title, text: call.text, label: t('phone.process.callLabel'), illustration: `/street-life-game/assets/${call.illustration}.webp`, illustrationAlt: call.title, batteryInSummary: true })
     }, before, true, true)
   }
 
@@ -121,10 +122,10 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
     const presentation = questionPresentation(id, foundPlaces, false, foundPlaces.every(placeId => discoveredLocations.includes(placeId)))
     const answerText = id === 'morning'
       ? foundPlace && presentation?.places?.[0]
-        ? `${presentation.places[0].name} · ${presentation.places[0].hours}. ${presentation.places[0].detail}. The address is saved on your map.`
-        : 'You checked the available information again, but found no new places.'
+        ? t('phone.process.foundPlace', { place: presentation.places[0].name, hours: presentation.places[0].hours, detail: presentation.places[0].detail })
+        : t('phone.process.noPlaces')
       : question.text
-    runWithResult({ id: `question:${id}`, title: id === 'morning' && !foundPlace ? 'Searched for more help' : question.title, actionHistory: { kind: 'action', noNewInformation: id === 'morning' && !foundPlace } }, () => {
+    runWithResult({ id: `question:${id}`, title: id === 'morning' && !foundPlace ? t('phone.process.searchedTitle') : question.title, actionHistory: { kind: 'action', noNewInformation: id === 'morning' && !foundPlace } }, () => {
       const next = { ...game }
       if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(moodCap(next), before.game.mood + 3))
       setGame(next)
@@ -132,15 +133,15 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
       setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
       if (id === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
       if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: SHELTER_ENTRY_OPEN })
-      setInfoModal({ title: id === 'morning' && !foundPlace ? 'No new information' : question.title, text: `${memory ? 'You remember' : 'AI'}\n\n${answerText}`, presentation })
+      setInfoModal({ title: id === 'morning' && !foundPlace ? t('phone.process.noInfoTitle') : question.title, text: t(memory ? 'phone.process.rememberAnswer' : 'phone.process.aiAnswer', { answer: answerText }), presentation })
     }, before)
   }
 
   function answerPracticalQuestion(id: string) {
     const question = practicalQuestions.find(entry => entry.id === id)
-    if (!question || phoneActivity || screen !== 'phone' || phoneUnavailable) return
+    if (!question || phoneActivity || screen !== 'phone' || phoneUnavailable !== null) return
     if (id !== 'morning' && answeredQuestions.includes(id)) {
-      setInfoModal({ title: question.title, text: `${id === 'charging' ? 'A remembered place' : 'AI · Saved answer'}\n\n${question.text}`, presentation: questionPresentation(id, question.locations, true), costs: [], changes: [] })
+      setInfoModal({ title: question.title, text: t(id === 'charging' ? 'phone.process.savedMemory' : 'phone.process.savedAnswer', { answer: question.text }), presentation: questionPresentation(id, question.locations, true), costs: [], changes: [] })
       return
     }
     if (id === 'charging') { finishPracticalQuestion(id); return }
@@ -160,36 +161,36 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
         finishOpeningCall(activeCall.id, phoneActivity.before)
       } else if (end === 'interrupted') {
         setPhoneActivity(null)
-        runWithResult({ id: 'call-interrupted', title: 'Call interrupted' }, () => setInfoModal({ title: 'Call interrupted', text: 'The call cuts off before you can finish. You can try again once your phone is working.', illustration: `/street-life-game/assets/${activeCall.illustration}.webp`, batteryInSummary: true }), phoneActivity.before, true, true)
+        runWithResult({ id: 'call-interrupted', title: t('phone.process.callInterruptedTitle') }, () => setInfoModal({ title: t('phone.process.callInterruptedTitle'), text: t('phone.process.callInterrupted'), illustration: `/street-life-game/assets/${activeCall.illustration}.webp`, batteryInSummary: true }), phoneActivity.before, true, true)
       }
       return
     }
     if (end === 'checkout') {
       setPhoneActivity(null)
-      const text = 'It is time to leave Night Shelter. You put the phone away before finishing the search.'
-      runWithResult({ id: 'search-interrupted', title: 'Search interrupted' }, () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
+      const text = t('phone.process.checkout')
+      runWithResult({ id: 'search-interrupted', title: t('phone.process.searchInterruptedTitle') }, () => setInfoModal({ title: t('phone.process.searchInterruptedTitle'), text, presentation: { ...locationPresentation([]), heading: t('phone.process.searchInterruptedTitle'), lead: text } }), phoneActivity.before, true, true)
     } else if (end === 'complete') {
       setPhoneActivity(null)
       finishPracticalQuestion(phoneActivity.questionId, phoneActivity.before)
     } else if (end === 'interrupted') {
       setPhoneActivity(null)
-      const text = gameOver ? 'You could not finish the search.' : inventory.phoneBattery <= 0 ? 'Your phone ran out of battery before you could save the information.' : 'Mobile service expired before you could save the information.'
-      runWithResult({ id: 'search-interrupted', title: 'Search interrupted' }, () => setInfoModal({ title: 'Search interrupted', text, presentation: { ...locationPresentation([]), heading: 'Search interrupted', lead: text } }), phoneActivity.before, true, true)
+      const text = gameOver ? t('phone.process.gameOver') : inventory.phoneBattery <= 0 ? t('phone.process.emptyBattery') : t('phone.process.expired')
+      runWithResult({ id: 'search-interrupted', title: t('phone.process.searchInterruptedTitle') }, () => setInfoModal({ title: t('phone.process.searchInterruptedTitle'), text, presentation: { ...locationPresentation([]), heading: t('phone.process.searchInterruptedTitle'), lead: text } }), phoneActivity.before, true, true)
     }
   }, [phoneActivity, inventoryAgedAt, inventory.phoneBattery, inventory.phoneCondition, mobileServiceActive, gameOver, shelterCheckoutDue])
 
-  function buyMobileService() { runWithResult({ id: 'mobile-service', title: 'Mobile service' }, buyMobileServiceImpl) }
-  function chargePhone() { runWithResult({ id: 'phone-charge', title: 'Charge phone' }, chargePhoneImpl) }
+  function buyMobileService() { runWithResult({ id: 'mobile-service', title: t('phone.process.serviceTitle') }, buyMobileServiceImpl) }
+  function chargePhone() { runWithResult({ id: 'phone-charge', title: t('phone.process.chargeTitle') }, chargePhoneImpl) }
   // Called only after the owning location action has passed its access checks
   // and applied its duration; do not charge those minutes a second time.
   function finishLocationPhoneCharge(actionId: string) {
     if (actionId === 'daycenter-charge') {
       setInventory(previous => ({ ...previous, phoneBattery: 100 }))
-      setMessage('You wait indoors while your phone charges to 100%.')
+      setMessage(t('phone.process.chargedDaycenter'))
     }
     if (actionId === 'station-charge') {
       setInventory(previous => ({ ...previous, phoneBattery: Math.min(100, previous.phoneBattery + 60) }))
-      setMessage('You spend an hour charging your phone at the station.')
+      setMessage(t('phone.process.chargedStation'))
     }
   }
   function tickPhoneActivity() {
@@ -203,7 +204,7 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
   }
   function pausePhone() { setPhoneActivity(pausePhoneActivity) }
   useEffect(() => {
-    if (phoneUnavailable) { setPhoneApp('home'); setPhoneOpen(false) }
+    if (phoneUnavailable !== null) { setPhoneApp('home'); setPhoneOpen(false) }
   }, [phoneUnavailable])
   return { startOpeningCall, answerPracticalQuestion, buyMobileService, chargePhone, toggleShelterPhoneCharging,
     tickPhoneActivity, pausePhone, phoneSearchCost, finishLocationPhoneCharge }
