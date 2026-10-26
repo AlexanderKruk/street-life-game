@@ -310,6 +310,7 @@ for(const day of [2,3,20])for(const minutes of [0,60,239])assert(onlyScene('park
 for(const day of [0,1,undefined])for(const minutes of [0,60,239])assert(!onlyScene('park-company',{day,minutes}));
 for(const minutes of [-1,240,720,1320,1439])assert(!onlyScene('park-company',{minutes}));
 assert(!onlyScene('park-company',{minutes:60,locationId:'station'}));
+const checkLabel=choice=>choice.check?`${choice.label} · ${choice.check.stat==='persuasion'?'Persuasion':'Reflex'} DC ${choice.check.dc}`:choice.label;
 const company=STREET_EVENTS.find(event=>event.id==='park-company');
 const companyState={day:3,minutes:60,mood:30};
 const companyPending={[encountersKey]:{...complete,pendingId:'park-company'}};
@@ -318,10 +319,10 @@ for(const [hygiene,mood,roll,success]of [[55,30,9,false],[55,30,10,true],[80,30,
  assertEventImage('.event-illustration','event-park-company');
  const card=screen.getByRole('dialog').querySelector('.event-card.illustrated-event');
  assert(card,'same illustrated modal as neighbour');assert.equal(card.querySelectorAll('.choice-button').length,3);
- assert(screen.getByRole('button',{name:company.choices[0].label,exact:true}).textContent.includes('≈10m'));
+ assert(screen.getByRole('button',{name:checkLabel(company.choices[0]),exact:true}).textContent.includes('≈10m'));
  const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
  cleanup();render(React.createElement(App));assertEventImage('.event-illustration','event-park-company');
- click(company.choices[0].label);assert(screen.getByText('PERSUASION CHECK'));
+ click(checkLabel(company.choices[0]));assert(screen.getByText('PERSUASION CHECK'));
  assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
  Math.random=()=>(roll-.5)/20;fireEvent.click(document.querySelector('.dice-attempt'));assert.equal(read(encountersKey).pendingRoll,roll);
  cleanup();Math.random=()=>{throw new Error('Company check must restore the rolled D20')};render(React.createElement(App));
@@ -348,7 +349,7 @@ for(const [index,stem,minutes]of [[1,'decline',0],[2,'detour',5]]){
  const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after);ok();
  cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'company appears once per run');
 }
-setup({...companyState,mood:49},companyPending);click(company.choices[0].label);Math.random=()=>.99;fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
+setup({...companyState,mood:49},companyPending);click(checkLabel(company.choices[0]));Math.random=()=>.99;fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
 assert.equal(read(stateKey).mood,50);assert(screen.getByRole('dialog').querySelector('[data-stat="Mood"]').textContent.includes('+1'));ok();
 setup({day:1,minutes:1425,mood:30},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='park-company')},'street-life-left-home-v1':true});
 advance(14000);assert(!screen.queryByRole('dialog'));advance(1000);assertEventImage('.event-illustration','event-park-company');
@@ -406,7 +407,7 @@ for(const [energy,roll,success] of [[68,9,false],[68,10,true],[10,1,false],[10,2
  cleanup();render(React.createElement(App));
  assertEventImage('.event-illustration','event-borrow-phone-slip');
  advance(2000);assert.deepEqual(read(stateKey),before);
- click(borrowSlip.choices[0].label);
+ click(checkLabel(borrowSlip.choices[0]));
  assert(screen.getByText('REFLEX CHECK'));
  assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
  Math.random=()=>(roll-.5)/20;fireEvent.click(document.querySelector('.dice-attempt'));
@@ -431,7 +432,7 @@ for(const [inventory,service,allowed] of [
  assert(!screen.getByRole('button',{name:'Say no and move on',exact:true}).disabled);
 }
 setup(borrowedState,{...borrowPending('borrow-phone-slip'),[invKey]:{phoneCondition:3}});
-click(borrowSlip.choices[0].label);Math.random=()=>0;fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
+click(checkLabel(borrowSlip.choices[0]));Math.random=()=>0;fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');
 assert.equal(read(invKey).phoneCondition,0,'damage clamps at zero');
 assert(screen.getByRole('dialog').textContent.includes('screen, but it stays black'));
 assert(screen.getByRole('dialog').querySelector('[data-stat="Phone condition"]').textContent.includes('−3'),'the actual remaining condition loss remains visible');ok();
