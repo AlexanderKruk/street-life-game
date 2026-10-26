@@ -1,3 +1,5 @@
+import { actionName, showerResult } from './actionText'
+import { formatMoney } from './i18n/formatters'
 import { t } from './i18n'
 import { locationName } from './locationText'
 import type { RefObject } from 'react'
@@ -39,18 +41,18 @@ export function createLocationController(context: Context, host: Host, queue: En
     const action = actions.find((x) => x.id === actionId)
     if (!action || action.locationId !== current.id || activeEvent || shelterQueue) return
     const unavailable = actionUnavailableReason(action)
-    if (unavailable) { setMessage(unavailable); return }
+    if (unavailable !== null) { setMessage(unavailable); return }
     if (actionId === 'shelter-social-worker') { beginShelterInterview(); return }
     if (!open && action.requiresOpen !== false) { setMessage(t('location.closedRefusal', { place: locationName(current.id) })); return }
     if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && actionId !== 'shelter-rest') {
-      setMessage('Quiet hours are 22:00–06:00. Only sleeping is allowed right now.')
+      setMessage(t('action.controller.quiet'))
       return
     }
-    if (action.cost && game.money < action.cost) { setMessage(`You need ${action.cost.toFixed(2)} zł for that.`); return }
+    if (action.cost && game.money < action.cost) { setMessage(t('action.controller.money', { cost: formatMoney(Number(action.cost.toFixed(2)), true) })); return }
     if (actionId.endsWith('-refill-water')) {
       setInventory(previous => ({ ...previous, water: Math.max(previous.water, FREE_WATER_LIMIT) }))
       setGame(previous => applyAction(previous, { minutes: action.minutes }))
-      setMessage(`You refill your water for free. You now carry ${FREE_WATER_LIMIT} portions.`)
+      setMessage(t('action.controller.water', { count: FREE_WATER_LIMIT }))
       return
     }
     if ((current.id === 'daycenter' || current.id === 'free-clinic') && actionId.startsWith('daycenter-')) {
@@ -58,7 +60,7 @@ export function createLocationController(context: Context, host: Host, queue: En
       const chance = hour < 10 ? 0.9 : hour < 12 ? 0.75 : hour < 14 ? 0.55 : 0.35
       if (Math.random() > chance) {
         setGame((prev) => applyAction(prev, { minutes: 15, mood: -2 }))
-        setMessage(current.id === 'free-clinic' ? 'The free clinic is full right now. You wait for a while, but no appointment opens up.' : 'Day Center is full right now. You wait for a while, but no place opens up.')
+        setMessage(current.id === 'free-clinic' ? t('action.controller.clinicFull') : t('action.controller.daycenterFull'))
         return { kind: 'action' as const, failed: true }
       }
     }
@@ -72,7 +74,7 @@ export function createLocationController(context: Context, host: Host, queue: En
     const useGel = isShower && inventory.showerGel > 0
     const baseResult = action.resolve(game)
     const result = useGel ? { ...baseResult, hygiene: (baseResult.hygiene ?? 0) * 1.5, hygieneCap: 100,
-      message: 'You wash with 3-in-1 shower gel and rinse it off. It helps you get cleaner.' } : baseResult
+      message: showerResult(true, 100) } : baseResult
     if (useGel) setInventory(prev => ({ ...prev, showerGel: prev.showerGel - 1 }))
     const washedClothes = actionId === 'daycenter-laundry' || actionId === 'shelter-laundry-pickup'
     const next = actionId === 'residential-stay' ? applyGameAction(game, result, moodContext(game, 'Schronisko')) : applyAction(game, result)
@@ -85,9 +87,9 @@ export function createLocationController(context: Context, host: Host, queue: En
       next.hygiene = Math.min(next.hygiene, clothingHygieneCap(endCleanliness))
     }
     setGame(next, actionId === 'residential-stay' ? 'Schronisko' : undefined)
-    setMessage((result.message ?? 'Time passes.') + (isShower && hygieneLimit < 100 ? ` Dirty clothes limit Hygiene to ${hygieneLimit}. Wash your clothes to raise the limit.` : ''))
+    setMessage(isShower ? showerResult(useGel, hygieneLimit) : result.message ?? t('action.controller.timePasses'))
 
-    if (!finishRestAction(actionId, action.name, result, next)) {
+    if (!finishRestAction(actionId, actionName(action.id), result, next)) {
       if (!observeFirstNight('location', next)) observeOrdinaryEvent('location', next, undefined, { observation: 'action', elapsedMinutes: result.minutes })
     }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
@@ -101,6 +103,9 @@ export function createLocationController(context: Context, host: Host, queue: En
     }
   }
 
-  function act(id: string) { runWithResult({ id: `location:${id}`, title: actions.find(action => action.id === id)?.name ?? 'Action complete' }, () => actImpl(id), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(id) ? ['showerGel'] : []) }
+  function act(id: string) {
+    const action = actions.find(action => action.id === id)
+    runWithResult({ id: `location:${id}`, title: action ? actionName(action.id) : t('action.controller.complete') }, () => actImpl(id), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(id) ? ['showerGel'] : [])
+  }
   return { act, actionUnavailableReason }
 }

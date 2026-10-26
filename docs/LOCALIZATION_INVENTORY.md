@@ -20,8 +20,8 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `ResultCard.tsx` | `results.ts`, `common.ts` | moved own copy | unchanged compact/full/results | see modal matrix; controller payload still pending |
 | `resultPresentation.ts` | locations.ts / future phone catalogue | partial: locations/services moved; question framing pending | existing compact discoveries preserved | single/multiple/none, saved/new, known/unknown places; result checks |
 | `CityMap.tsx`, location hero/shop in `LocationPresentation.tsx`, `ClosedContent.tsx`, `game.ts` locations | locations.ts / locationText.ts | moved own location copy; sleep/travel process headings pending | unchanged English, pure domain LocationId/data | open/closed, bookable shelter, same destination, transit/walk, route arrows |
-| `LocationScreen.tsx`, `game.ts` actions | locations.ts / future actions | partial: hero/opening location copy moved; actions pending | v335 action hints only | every location, available/unavailable, stored/carried documents, referral, shelter interview |
-| `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions/dialogs | pending | match current thresholds during transfer | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
+| `LocationScreen.tsx`, `game.ts` actions, `actionText.ts` | locations.ts / actions.ts | moved own screen/action copy; incoming call labels pending | original copy, numeric plurals, whole shower messages | every location, available/unavailable, stored/carried documents, referral, shelter interview |
+| `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions.ts / future dialogs | partial: location rules/controller moved; sleep/shelter/event rules pending | 22 domain refusal IDs; null-only eligibility; original thresholds | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
 | `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory.ts / effects.ts; itemPresentation.ts | moved own item/slot/shop copy | original copy preserved; count grammar via plurals | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
 | `inventoryCommands.ts`, `inventoryController.ts`, `foodConsumption.ts` | inventory.ts | moved | whole outcome/refusal messages, original meaning and mechanics preserved | all refusals, medicine absent/already treated, food poisoning, storage/capacity |
@@ -181,3 +181,13 @@ English map geometry matched 956629b at390/1280. Expanded 320/390 copy now wraps
 shortcuts (two title lines) and truncates pin labels, retaining full accessible
 names and selected-card titles. Extra-tall headings can still overlap high map
 pins; projection/layout audit remains open, along with the older hero overflow.
+
+
+Action catalogue checkpoint: actions.ts/actionText.ts covers 24 domain actions,
+LocationScreen own copy, whole shower variants and locationController messages.
+22 locationActionBlock IDs keep refusal facts separate from labels; an empty
+translation remains blocked. 33,600 legacy-rule cases, actual command ports and
+36 pseudo screen states preserve numeric mechanics/RNG/History and disabled/order.
+English shelter/support browser cards match e4b5fe7 at390/1280; expanded390 copy
+fits cards. Incoming opening-call copy and other street/support/medical/shelter/
+sleep/phone/event/travel/rain producers remain in their pending rows.

@@ -519,3 +519,15 @@ name lines; pin labels ellipsise at bounded widths, while accessible names and
 selected cards retain full names. Do not shrink fonts. The overall mobile and
 map projection audit remains open. Other action/phone/sleep/travel copy is still
 tracked separately in LOCALIZATION.md.
+
+
+Location action checkpoint (26 October 2026): GameAction has LocationActionId and
+mechanics, without name/description; use actionName/actionDescription from
+actionText.ts at display/result boundaries. locations' own action copy lives
+in locales/en/actions.ts. locationActionBlock returns domain reason/parameters
+or null; locationActionUnavailable only formats it. Only null means available:
+never use the truthiness of a translated refusal in handlers. Preserve the
+existing condition order, numeric costs/timers, crowd RNG and action IDs.
+Shower descriptions and result variants are whole translated messages selected
+by gel/cap facts. LocationScreen owns no English copy except incoming call text,
+tracked with openingCalls. Other controller/process catalogues remain pending.

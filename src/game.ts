@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import type { WeatherConditions } from './weather'
 import type { ImpactId } from './effectChips'
 import type { IconName } from './Icon'
@@ -78,12 +79,12 @@ export type ActionResult = {
   message?: string
 }
 
+export type LocationActionId = "street-sleep" | "station-rest" | "station-charge" | "station-sleep" | "shop-water" | "shop-roll" | "shop-meal" | "daycenter-stay" | "daycenter-shower" | "daycenter-laundry" | "daycenter-charge" | "daycenter-doctor" | "shelter-social-worker" | "support-worker" | "residential-stay" | "residential-sleep" | "residential-refill-water" | "shelter-refill-water" | "shelter-shower" | "shelter-dinner" | "shelter-breakfast" | "shelter-laundry-drop" | "shelter-laundry-pickup" | "shelter-rest"
+
 export type GameAction = {
   icon: IconName
-  id: string
+  id: LocationActionId
   locationId: string
-  name: string
-  description: string
   minutes: number
   cost?: number
   impacts?: ImpactId[]
@@ -342,150 +343,150 @@ export function isOpen(location: Location, minutes: number) {
 export const actions: GameAction[] = [
   {
     icon: 'bed',
-    id: 'street-sleep', locationId: 'street', name: 'Sleep on the ground',
-    description: 'Lie down wherever you can. Free, exposed, dirty, and barely restorative.', minutes: 8 * 60, requiresOpen: false,
-    resolve: () => ({ minutes: 8 * 60, energy: 52, hygiene: -12, mood: -9, message: 'You sleep on the ground in short, uneasy stretches. You wake stiff, dirty and exhausted.' }),
+    id: 'street-sleep', locationId: 'street',
+    minutes: 8 * 60, requiresOpen: false,
+    resolve: () => ({ minutes: 8 * 60, energy: 52, hygiene: -12, mood: -9, message: t("action.result.street-sleep") }),
   },
   {
     icon: 'bench',
-    id: 'station-rest', locationId: 'station', name: 'Sit and recover',
-    description: 'Rest on a bench and recover some Energy.', minutes: 40, requiresOpen: false,
-    resolve: () => ({ minutes: 40, energy: 13, mood: 2, message: 'You sit for a while. Your legs feel a little better.' }),
+    id: 'station-rest', locationId: 'station',
+    minutes: 40, requiresOpen: false,
+    resolve: () => ({ minutes: 40, energy: 13, mood: 2, message: t("action.result.station-rest") }),
   },
   {
     icon: 'phone',
-    id: 'station-charge', locationId: 'station', name: 'Charge phone',
-    description: 'Use the outlet in the waiting room.', minutes: 60, requiresOpen: false,
-    resolve: () => ({ minutes: 60, energy: 5, mood: 1, message: 'You spend an hour near a power outlet at the station.' }),
+    id: 'station-charge', locationId: 'station',
+    minutes: 60, requiresOpen: false,
+    resolve: () => ({ minutes: 60, energy: 5, mood: 1, message: t("action.result.station-charge") }),
   },
   {
     icon: 'bed',
-    id: 'station-sleep', locationId: 'station', name: 'Try to sleep',
-    description: 'Rest on a station bench. You may be disturbed, and your belongings are still at risk.', minutes: 8 * 60, requiresOpen: false,
-    resolve: () => ({ minutes: 0, message: 'You try to sleep on a station bench.' }),
+    id: 'station-sleep', locationId: 'station',
+    minutes: 8 * 60, requiresOpen: false,
+    resolve: () => ({ minutes: 0, message: t("action.result.station-sleep") }),
   },
   {
     icon: 'water',
-    id: 'shop-water', locationId: 'shop', name: 'Buy water',
-    description: 'A bottle of water. Cheap and immediately useful.', minutes: 5, cost: 3,
-    resolve: () => ({ minutes: 5, money: -3, thirst: 38, message: 'You drink a bottle of water.' }),
+    id: 'shop-water', locationId: 'shop',
+    minutes: 5, cost: 3,
+    resolve: () => ({ minutes: 5, money: -3, thirst: 38, message: t("action.result.shop-water") }),
   },
   {
     icon: 'person',
-    id: 'shop-roll', locationId: 'shop', name: 'Buy bread and a roll',
-    description: 'Cheap calories. Enough to keep going.', minutes: 10, cost: 5,
-    resolve: () => ({ minutes: 10, money: -5, hunger: 22, mood: 1, message: 'You buy some food and eat outside.' }),
+    id: 'shop-roll', locationId: 'shop',
+    minutes: 10, cost: 5,
+    resolve: () => ({ minutes: 10, money: -5, hunger: 22, mood: 1, message: t("action.result.shop-roll") }),
   },
   {
     icon: 'food',
-    id: 'shop-meal', locationId: 'shop', name: 'Buy a filling meal',
-    description: 'Costs more, but buys you breathing room.', minutes: 15, cost: 8,
-    resolve: () => ({ minutes: 15, money: -8, hunger: 48, thirst: 8, mood: 5, message: 'You sit down to a filling meal. It helps to have something warm to eat.' }),
+    id: 'shop-meal', locationId: 'shop',
+    minutes: 15, cost: 8,
+    resolve: () => ({ minutes: 15, money: -8, hunger: 48, thirst: 8, mood: 5, message: t("action.result.shop-meal") }),
   },
   {
     icon: 'clock',
-    id: 'daycenter-stay', locationId: 'daycenter', name: 'Stay indoors',
-    description: 'Warm up and rest indoors.', minutes: 60,
-    resolve: () => ({ minutes: 60, energy: 10, mood: 5, message: 'You spend an hour indoors, warm up and get off your feet.' }),
+    id: 'daycenter-stay', locationId: 'daycenter',
+    minutes: 60,
+    resolve: () => ({ minutes: 60, energy: 10, mood: 5, message: t("action.result.daycenter-stay") }),
   },
   {
     icon: 'shower',
-    id: 'daycenter-shower', locationId: 'daycenter', name: 'Take a shower',
-    description: 'Use the free shower. There may be a short wait.', minutes: 40,
-    resolve: () => ({ minutes: 40, hygiene: 50, hygieneCap: 70, mood: 4, message: 'You rinse off with water only. Shower gel would help you get cleaner.' }),
+    id: 'daycenter-shower', locationId: 'daycenter',
+    minutes: 40,
+    resolve: () => ({ minutes: 40, hygiene: 50, hygieneCap: 70, mood: 4, message: t("action.result.daycenter-shower") }),
   },
   {
     icon: 'laundry',
-    id: 'daycenter-laundry', locationId: 'daycenter', name: 'Do laundry',
-    description: 'Wash and dry your clothes.', minutes: 90,
-    resolve: () => ({ minutes: 90, hygiene: 18, mood: 5, message: 'Your clothes are washed and dried.' }),
+    id: 'daycenter-laundry', locationId: 'daycenter',
+    minutes: 90,
+    resolve: () => ({ minutes: 90, hygiene: 18, mood: 5, message: t("action.result.daycenter-laundry") }),
   },
   {
     icon: 'phone',
-    id: 'daycenter-charge', locationId: 'daycenter', name: 'Charge phone',
-    description: 'Leave your phone charging while you wait.', minutes: 60,
-    resolve: () => ({ minutes: 60, energy: 4, message: 'You spend an hour by a power outlet.' }),
+    id: 'daycenter-charge', locationId: 'daycenter',
+    minutes: 60,
+    resolve: () => ({ minutes: 60, energy: 4, message: t("action.result.daycenter-charge") }),
   },
   {
     icon: 'hospital',
-    id: 'daycenter-doctor', locationId: 'free-clinic', name: 'See a doctor',
-    description: 'Free basic medical care. No insurance or documents needed.', minutes: 60,
-    resolve: (state) => ({ minutes: 60, health: state.health < 65 ? 12 : 4, mood: 3, message: 'You are seen at the clinic and receive basic medical care.' }),
+    id: 'daycenter-doctor', locationId: 'free-clinic',
+    minutes: 60,
+    resolve: (state) => ({ minutes: 60, health: state.health < 65 ? 12 : 4, mood: 3, message: t("action.result.daycenter-doctor") }),
   },
   {
     icon: 'work',
-    id: 'shelter-social-worker', locationId: 'shelter', name: 'Talk to shelter social worker',
-    description: 'Available Tuesdays and Fridays, 16:00–20:00. Discuss extending your current place.', minutes: 30,
-    resolve: () => ({ minutes: 30, mood: 2, message: 'You discuss extending your shelter place.' }),
+    id: 'shelter-social-worker', locationId: 'shelter',
+    minutes: 30,
+    resolve: () => ({ minutes: 30, mood: 2, message: t("action.result.shelter-social-worker") }),
   },
   {
     icon: 'work',
-    id: 'support-worker', locationId: 'support', name: 'Talk to a social worker',
-    description: 'Explain your situation and find out what support you can apply for.', minutes: 30,
-    resolve: () => ({ minutes: 30, mood: 4, message: 'The social worker listens as you explain your situation, then talks you through the help available.' }),
+    id: 'support-worker', locationId: 'support',
+    minutes: 30,
+    resolve: () => ({ minutes: 30, mood: 4, message: t("action.result.support-worker") }),
   },
   {
     icon: 'clock',
-    id: 'residential-stay', locationId: 'residential-shelter', name: 'Settle into your place',
-    description: 'Use your assigned place in the 24/7 shelter.', minutes: 30,
-    resolve: () => ({ minutes: 30, energy: 8, hygiene: 4, mood: 8, message: 'You settle into your place. You now have stable 24/7 shelter accommodation.' }),
+    id: 'residential-stay', locationId: 'residential-shelter',
+    minutes: 30,
+    resolve: () => ({ minutes: 30, energy: 8, hygiene: 4, mood: 8, message: t("action.result.residential-stay") }),
   },
   {
     icon: 'bed',
-    id: 'residential-sleep', locationId: 'residential-shelter', name: 'Sleep safely',
-    description: 'Rest in your assigned bed. Recovery is better when fed and hydrated.', minutes: 8 * 60,
-    resolve: (state) => ({ minutes: 8 * 60, energy: 90, health: state.hunger > 20 && state.thirst > 20 ? 3 : 0, hygiene: 3, mood: 8, message: state.hunger > 20 && state.thirst > 20 ? 'A safe full night restores some health.' : 'You sleep safely, but hunger or dehydration prevents physical recovery.' }),
+    id: 'residential-sleep', locationId: 'residential-shelter',
+    minutes: 8 * 60,
+    resolve: (state) => ({ minutes: 8 * 60, energy: 90, health: state.hunger > 20 && state.thirst > 20 ? 3 : 0, hygiene: 3, mood: 8, message: state.hunger > 20 && state.thirst > 20 ? t("action.result.residential-sleep.fed") : t("action.result.residential-sleep.hungry") }),
   },
   {
     icon: 'water',
-    id: 'residential-refill-water', locationId: 'residential-shelter', name: 'Refill water',
-    description: 'Free · top up the water in your backpack to 4 portions.', minutes: 5,
-    resolve: () => ({ minutes: 5, message: 'You refill your backpack water.' }),
+    id: 'residential-refill-water', locationId: 'residential-shelter',
+    minutes: 5,
+    resolve: () => ({ minutes: 5, message: t("action.result.residential-refill-water") }),
   },
   {
     icon: 'water',
-    id: 'shelter-refill-water', locationId: 'shelter', name: 'Refill water',
-    description: 'Free · top up the water in your backpack to 4 portions.', minutes: 5,
-    resolve: () => ({ minutes: 5, message: 'You refill your backpack water.' }),
+    id: 'shelter-refill-water', locationId: 'shelter',
+    minutes: 5,
+    resolve: () => ({ minutes: 5, message: t("action.result.shelter-refill-water") }),
   },
   {
     icon: 'shower',
-    id: 'shelter-shower', locationId: 'shelter', name: 'Ask for a shower',
-    description: 'There may be a queue, but it restores hygiene.', minutes: 35,
-    resolve: () => ({ minutes: 35, hygiene: 55, hygieneCap: 70, energy: 4, mood: 4, message: 'You rinse off with water only. Shower gel would help you get cleaner.' }),
+    id: 'shelter-shower', locationId: 'shelter',
+    minutes: 35,
+    resolve: () => ({ minutes: 35, hygiene: 55, hygieneCap: 70, energy: 4, mood: 4, message: t("action.result.shelter-shower") }),
   },
   {
     icon: 'food',
-    id: 'shelter-dinner', locationId: 'shelter', name: 'Dinner',
-    description: 'Free meal with tea · 19:00–20:30.', minutes: 20,
+    id: 'shelter-dinner', locationId: 'shelter',
+    minutes: 20,
     impacts: ['food-large', 'thirst-large', 'mood-gain'],
-    resolve: () => ({ minutes: 20, hunger: 48, thirst: 38, mood: 4, message: 'You eat the free shelter dinner and drink tea.' }),
+    resolve: () => ({ minutes: 20, hunger: 48, thirst: 38, mood: 4, message: t("action.result.shelter-dinner") }),
   },
   {
     icon: 'food',
-    id: 'shelter-breakfast', locationId: 'shelter', name: 'Breakfast',
-    description: 'Free meal with tea · 06:30–07:00.', minutes: 15,
+    id: 'shelter-breakfast', locationId: 'shelter',
+    minutes: 15,
     impacts: ['food-medium', 'thirst-large', 'mood-gain'],
-    resolve: () => ({ minutes: 15, hunger: 28, thirst: 38, mood: 3, message: 'You eat breakfast and drink tea before leaving the shelter.' }),
+    resolve: () => ({ minutes: 15, hunger: 28, thirst: 38, mood: 3, message: t("action.result.shelter-breakfast") }),
   },
   {
     icon: 'laundry',
-    id: 'shelter-laundry-drop', locationId: 'shelter', name: 'Leave clothes for laundry',
-    description: 'Thursday morning only. Leave your clothes and collect them in the evening.', minutes: 10,
-    resolve: () => ({ minutes: 10, mood: 1, message: 'You leave your clothes for the Thursday laundry.' }),
+    id: 'shelter-laundry-drop', locationId: 'shelter',
+    minutes: 10,
+    resolve: () => ({ minutes: 10, mood: 1, message: t("action.result.shelter-laundry-drop") }),
   },
   {
     icon: 'laundry',
-    id: 'shelter-laundry-pickup', locationId: 'shelter', name: 'Collect clean laundry',
-    description: 'Thursday evening. Collect the clothes you left in the morning.', minutes: 10,
-    resolve: () => ({ minutes: 10, hygiene: 18, mood: 4, message: 'You collect your clean clothes.' }),
+    id: 'shelter-laundry-pickup', locationId: 'shelter',
+    minutes: 10,
+    resolve: () => ({ minutes: 10, hygiene: 18, mood: 4, message: t("action.result.shelter-laundry-pickup") }),
   },
   {
     icon: 'bed',
-    id: 'shelter-rest', locationId: 'shelter', name: 'Registration / reserved bed',
-    description: 'Arrive early to keep your place in the queue. Doors 18:00; registration 18:20–22:00. Reserved beds: check in 18:00–22:00.', minutes: 20, requiresOpen: false,
+    id: 'shelter-rest', locationId: 'shelter',
+    minutes: 20, requiresOpen: false,
     // App owns the persisted queue and booking; this resolver cannot grant a bed.
-    resolve: () => ({ minutes: 0, message: 'A bed requires successful registration.' }),
+    resolve: () => ({ minutes: 0, message: t("action.result.shelter-rest") }),
   },
 ]
 
