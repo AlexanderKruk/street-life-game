@@ -491,3 +491,16 @@ Stat exposes data-resource-id independently of its displayed data-stat label.
 Status/Life situation messages and effect-duration plurals are in status.ts;
 weather/HUD copy still requires its own migration. Do not translate machine
 weather values before removing their gameplay/display coupling.
+
+
+HUD/weather checkpoint (26 October 2026): weatherAt/WEATHER return WeatherConditions
+with a stable WeatherId in id, never a display label. Existing capitalised IDs
+remain domain values; weather, illness, phone drain and event contexts use them.
+GameHeader receives weatherId. hudPresentation maps weather/day IDs to hud.ts
+messages and selects weather icons independently of translations. weekday still
+returns calendar identities used for service schedules; never translate its
+return value. Use weekdayLabel at display boundaries. HUD money preserves
+Number(value.toFixed(2)) before locale formatting; battery low compares the raw
+value <30 before display rounding. No new weather/weekday fields in saves.
+Remaining dates in phone/sleep and place labels belong to their own catalogue
+stages. The completed HUD does not imply all common controls are migrated.

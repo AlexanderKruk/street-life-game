@@ -15,7 +15,7 @@ export function phoneScreenDrain(state: GameState, condition: number, usage: 'br
     const minute = absolute % 1440
     const day = Math.floor(absolute / 1440) + 1
     const daylight = minute >= 360 && minute < 1200
-    const clear = weatherAt({ ...state, day, minutes: minute }).label === 'Clear'
+    const clear = weatherAt({ ...state, day, minutes: minute }).id === 'Clear'
     const hourly = (usage === 'browsing' ? 18 : 12) + (daylight ? clear ? 12 : 6 : 0)
     drain += hourly / 60 * phoneDrainMultiplier(condition) * Math.min(1, minutes - elapsed)
   }

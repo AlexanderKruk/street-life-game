@@ -14,12 +14,12 @@ const { summarizeResult } = bundled('src/results.ts');
 const base = { ...initialState, day: 7, minutes: 600, energy: 80, mood: 45, hunger: 100, thirst: 100, health: 100 };
 for (const day of [1, 2]) for (const minutes of [0, 359, 600, 1200, 1439]) {
   const opening = { ...base, day, minutes, rainUntil: 10000 };
-  assert.equal(weatherAt(opening).label, 'Cloudy', 'D0/D1 ignore legacy rain overrides');
-  assert.equal(weatherAt({ ...opening, rainUntil: undefined }).label, 'Cloudy');
+  assert.equal(weatherAt(opening).id, 'Cloudy', 'D0/D1 ignore legacy rain overrides');
+  assert.equal(weatherAt({ ...opening, rainUntil: undefined }).id, 'Cloudy');
   assert.equal(advanceTime(opening, 1).energy, advanceTime({ ...opening, rainUntil: undefined }, 1).energy);
 }
-assert.equal(weatherAt({ ...base, day: 3 }).label, 'Clear', 'D2 keeps its original calendar weather');
-assert.equal(weatherAt({ ...base, day: 3, rainUntil: 10000 }).label, 'Rain', 'later rain overrides remain');
+assert.equal(weatherAt({ ...base, day: 3 }).id, 'Clear', 'D2 keeps its original calendar weather');
+assert.equal(weatherAt({ ...base, day: 3, rainUntil: 10000 }).id, 'Rain', 'later rain overrides remain');
 const old = { ...base, wetness: 100, wetSleepLoss: 12 };
 const loaded = readSavedGame({ getItem: key => key === SAVE_KEY ? JSON.stringify(old) : null });
 assert.equal(loaded.wetness, undefined);
@@ -33,7 +33,7 @@ assert(advanceTime(base, 60).energy < advanceTime({ ...base, day: 1 }, 60).energ
 assert.equal(sleepIllnessHazard('ground', 4, 'Rain', 100, 'outside'), sleepIllnessHazard('ground', 4, 'Rain', 0, 'outside'));
 const inventory = { water: 0, food: 0, bottles: 0, phoneBattery: 50, phoneCondition: 100, jacket: 80, documents: true, cigarettes: 0, medicines: 0, transitCard: false };
 const snapshot = { game: base, inventory, effects: [] };
-assert(!summarizeResult({ ...snapshot, game: old }, snapshot).changes.some(row => /wetness/.test(row.label)));
+assert(!summarizeResult({ ...snapshot, game: old }, snapshot).changes.some(row => /wetness/.test(row.id)));
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/street-life-game/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event', 'MouseEvent']) global[key] = dom.window[key];

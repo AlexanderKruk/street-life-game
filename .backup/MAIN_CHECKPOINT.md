@@ -1,6 +1,6 @@
-# Main source checkpoint — 26 October 2026
+# Main localisation checkpoint
 
-Source: 048ac7548d7361448e2c6a16dd91b9ea8a97baeb
-Tree excluding .backup: 41025344b9d9ac1d3ca5bcaad89e79dc319d0293
+Verified local source: 956629baa57067819d718e8b704205156676e201
+Source tree excluding .backup: 631ea9a9098355dd8a6133cef264072af9b2d991
 
-Runtime code is the verified Status/Life situation stage 6c6a43b. Root LOCALIZATION.md, task handoff and source inventory now align their checklists/current-state descriptions with that code. Work-left estimate is approximately 40–50%, with no claim of a completed residual string audit. Thirteen original commits remain in the recovery bundle. Source save only, [skip ci], no CI build/deploy or publication. See AGENTS.md.
+HUD/weather completed and tested; see LOCALIZATION.md for checks and remaining work. The recovery bundle preserves the original fourteen local commits. Saved to main with [skip ci], without dispatching or waiting for CI build/deploy. Published game remains v335.

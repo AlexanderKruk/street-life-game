@@ -701,7 +701,7 @@ export default function App() {
       kind={sleepChoice} dateLabel={`Day ${displayDay(game.day)} ${weekday(game.day)} · ${formatTime(game.minutes)}`} energy={game.energy}
       options={SLEEP_HOURS.map(hours => ({ hours, wakeLabel: wakeLabel(hours, sleepChoice), unavailableReason: sleepDurationUnavailable(hours, game.energy) }))}
       selectedHours={sleepHours} durationLabel={formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}
-      wetClothesWarning={CLOTHING_WETNESS_ENABLED && (sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.label === 'Rain' || weather.label === 'Showers')}
+      wetClothesWarning={CLOTHING_WETNESS_ENABLED && (sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.id === 'Rain' || weather.id === 'Showers')}
       wetnessEnabled={CLOTHING_WETNESS_ENABLED} onSelect={setSleepHours} onCancel={() => setSleepChoice(null)}
       onConfirm={() => runWithResult({ id: 'sleep-start', title: 'Start sleeping' }, () => sleep(sleepHours, sleepChoice))}
     />}
@@ -724,7 +724,7 @@ export default function App() {
     />}
 
     <div className={`game-background${eventInteractionBlocked ? ' event-background-blocked' : ''}`} inert={eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} onClickCapture={event => { if (eventInteractionBlocked) { event.preventDefault(); event.stopPropagation() } }}>
-    <GameHeader game={game} weatherLabel={weather.label} temperature={temperature} battery={inventory.phoneBattery} />
+    <GameHeader game={game} weatherId={weather.id} temperature={temperature} battery={inventory.phoneBattery} />
 
     {screen === 'location' && <LocationScreen state={{
       current, open, firstNight, game, message, currentActions, shelterInterview, choiceSeed, choiceDecisionKey,

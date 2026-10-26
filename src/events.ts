@@ -1,3 +1,4 @@
+import type { WeatherId } from './weather'
 import type { EventHistoryOutcomeId } from './eventHistoryDefinitions'
 import { illustrateStreetEvent } from './eventArtwork'
 import type { Housing } from './game'
@@ -23,7 +24,7 @@ export type EventContext = {
   observation?: 'idle' | 'action' | 'arrival'
   elapsedMinutes?: number
   travelMode?: 'walk' | 'transit' | 'fare-dodge'
-  weather: string
+  weather: WeatherId
   housing: Housing
   documents: boolean
   firstNight?: boolean
