@@ -1,10 +1,10 @@
 # Localisation recovery checkpoint — 26 October 2026
 
-Source commit: 024323cc71f9ec9f6811a3cea99761cd7179410f
-Source tree: ac2ffc9df1185b0437b425da4bd4bc4177235fbf
+Source commit: 95cab8acee60a67198ea873490464f11e8650d38
+Source tree: 90ac4817531abf147a7f617a11e305a334ccbcd6
 Published base: d8ff6fac4236badc45df86195d3295d7cfee64af (v335, unchanged).
 
-The verified bundle preserves 31 original local commits from the published base through the bottle-search catalogue checkpoint. The API source tree matched the committed local tree before adding these recovery files. Source save only; no publication.
+The verified bundle preserves 32 original local commits through the residual App/phone/metadata source-audit checkpoint. The API source tree matched the local committed source tree before adding these recovery files. Source save only; no publication.
 
 Restore the original local history:
 

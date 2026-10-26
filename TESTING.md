@@ -555,3 +555,17 @@ except corrected singular aria. street-trash regression, results, module boundar
 design-system and build passed. Browser component QA at390×844 covered normal
 layout, keyboard collection, singular count and manual result. No CSS/baselines
 changed; long-copy browser layout, full suites, WebKit/iPhone remain open.
+
+
+Residual catalogue checkpoint (26 October 2026): check-localization now runs
+a TS/TSX source-copy audit with explicit compatibility/machine/layout/internal/
+message-key exemptions and a negative fixture. Primary audit:161 files,240
+explained candidates,0 unexplained. This is a syntactic guard, not full data-flow
+or editorial verification.128 frozen/pseudo question-presentation cases and16
+actual App shell/restored-phone cases cover phase boundaries, focus/inert,
+emergency eligibility, reset, saved state and a real storage-failure alert.
+Phone, results, autosave, phone-clock/journal-services regressions, boundaries,
+design-system and build passed. Built title remains Street Life via escaped
+catalogue injection; dev title verified too. Mobile390 component QA inspected
+search, emergency, footer/build and failed-save states. No CSS/baseline changes;
+full suites, general long-copy matrix, WebKit/iPhone remain unrun.

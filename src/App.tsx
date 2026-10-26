@@ -583,7 +583,7 @@ export default function App() {
     localStorage.removeItem(JOURNAL_GOALS_KEY)
     localStorage.removeItem(GOAL_KEY)
     setGame(createInitialState())
-    setMessage('New run started.')
+    setMessage(t('app.newRun'))
     setInfoModal(null)
     setClosingNotice(null)
     localStorage.removeItem(CLOSING_NOTICE_KEY)
@@ -747,9 +747,9 @@ export default function App() {
     }} />}
 
     {phoneActivity && <ActivityDialog kind="phone" visible={phoneSearchVisible} panelRef={phoneSearchModalRef}
-      calling={!!activeCall} title={activeCall?.callingTitle ?? 'Looking for information'}
-      elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel={activeCall ? 'Elapsed call time' : 'Elapsed browsing time'}
-      phase={activeCall ? activeCall.id === 'call-university' || phoneActivity.remaining === phoneActivity.total ? 'Ringing' : 'Talking' : phoneActivity.remaining > phoneActivity.total * 2 / 3 ? 'Searching' : phoneActivity.remaining > phoneActivity.total / 3 ? 'Reading options' : 'Saving addresses'}
+      calling={!!activeCall} title={activeCall?.callingTitle ?? t('phone.ui.searchTitle')}
+      elapsed={phoneActivity.total - phoneActivity.remaining} timeLabel={activeCall ? t('phone.ui.elapsedCall') : t('phone.ui.elapsedBrowsing')}
+      phase={activeCall ? activeCall.id === 'call-university' || phoneActivity.remaining === phoneActivity.total ? t('phone.ui.phase.ringing') : t('phone.ui.phase.talking') : phoneActivity.remaining > phoneActivity.total * 2 / 3 ? t('phone.ui.phase.searching') : phoneActivity.remaining > phoneActivity.total / 3 ? t('phone.ui.phase.reading') : t('phone.ui.phase.saving')}
     />}
 
     {(screen === 'map' || travelling) && <div className="map-surface" inert={travelling} aria-hidden={travelling || undefined}><CityMap
@@ -782,7 +782,7 @@ export default function App() {
       {phoneApp === 'search' && <PhoneSearchScreen serviceActive={mobileServiceActive} answeredQuestions={answeredQuestions} battery={inventory.phoneBattery} phoneSearchCost={phoneSearchCost}
         onOpenNotes={() => openPhoneApp('notes')} onSearch={answerPracticalQuestion} />}
     </PhoneScreen>}
-    {screen === 'phone' && phoneApp === 'home' && phoneUnavailable === null && game.health <= 20 && <ChoiceButton className="action phone-emergency" aria-label="Call ambulance" onClick={callAmbulance} icon="ambulance" label="Call ambulance" detail={<small>Emergency care · no internet required</small>} />}
+    {screen === 'phone' && phoneApp === 'home' && phoneUnavailable === null && game.health <= 20 && <ChoiceButton className="action phone-emergency" aria-label={t('app.emergency')} onClick={callAmbulance} icon="ambulance" label={t('app.emergency')} detail={<small>{t('app.emergencyDescription')}</small>} />}
 
     </div>
 
@@ -810,8 +810,8 @@ export default function App() {
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={eventModalRef}
     />}
 
-    {autosave.saveFailed && <p role="alert" className="save-warning">Progress could not be saved on this device. Keep the game open and try again.</p>}
-    <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>Reset save</button><small className="header-version" title={BUILD_VERSION} aria-label={`Build ${BUILD_VERSION}`}>v{BUILD_VERSION.split('-').pop()}</small></footer>
+    {autosave.saveFailed && <p role="alert" className="save-warning">{t('app.saveFailed')}</p>}
+    <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>{t('app.reset')}</button><small className="header-version" title={BUILD_VERSION} aria-label={t('app.buildAccessible', { version: BUILD_VERSION })}>{t('app.buildShort', { version: BUILD_VERSION.split('-').pop() ?? '' })}</small></footer>
     <BottomNavigation screen={screen} blocked={eventInteractionBlocked} phoneBusy={!!phoneActivity} travelling={travelling} current={current} mood={game.mood} onNavigate={setScreen} />
   </main>
 }
