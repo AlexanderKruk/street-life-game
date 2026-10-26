@@ -1,7 +1,9 @@
+import { rainResultText, rainResultTitle } from './rainText'
+import { formatResultDelta } from './i18n/formatters'
 import { useEffect, useRef } from 'react'
 import { rainDailyLimit, type GameState } from './game'
 import { absoluteMinutes } from './gameTime'
-import { chooseRain, createRain, planRainDay, rainArt, rainResultText, type RainChoice } from './rain'
+import { chooseRain, createRain, planRainDay, rainArt, rainResultActionId, type RainChoice } from './rain'
 import { summarizeResult, type ResultSnapshot } from './results'
 import { resultResourceLabel } from './resultResources'
 import { t } from './i18n'
@@ -64,8 +66,9 @@ export function useRainResults(context: { game: GameState; effects: ActiveEffect
       if (granted) setEffects(previous => [...previous.filter(effect => effect.id !== 'cold'), { id: 'cold', expiresAt: absoluteMinutes(game) + 2 * 1440 }])
       setGame(previous => ({ ...previous, rainResults: previous.rainResults?.map(item => item.id === rain.id ? { ...item, reported: true, coldGranted: granted } : item) }))
     }
-    const title = rain.choice === 'proper' && rain.searchRemaining > 0 ? 'The rain has stopped' : rain.choice === 'continue' ? 'The rain has passed' : 'Shelter from the rain'
-    const text = rainResultText(rain) + (granted ? ' A chill lingers, and your throat feels sore. You have caught a cold.' : '')
+    const actionId = rainResultActionId(rain)
+    const title = rainResultTitle(actionId)
+    const text = rainResultText(rain, granted)
     const after = resultSnapshot()
     const before = { ...after, game: { ...game, energy: Math.min(100, game.energy + rain.energyLoss), mood: Math.min(100, game.mood + rain.moodLoss) } }
     const summary = summarizeResult(before, after, false)
@@ -75,7 +78,7 @@ export function useRainResults(context: { game: GameState; effects: ActiveEffect
       summary.changes = []
       for (const [id, loss] of [['energy', rain.energyLoss], ['mood', rain.moodLoss]] as const) {
         const amount = Number(loss.toFixed(1))
-        if (amount > 0) summary.changes.push({ id, amount: -amount, label: resultResourceLabel(id), value: `−${amount}`, kind: 'negative' })
+        if (amount > 0) summary.changes.push({ id, amount: -amount, label: resultResourceLabel(id), value: formatResultDelta(-amount, id), kind: 'negative' })
       }
     }
     // Only the rain's own losses belong here. Purchases, food, recovery and
@@ -85,10 +88,9 @@ export function useRainResults(context: { game: GameState; effects: ActiveEffect
     const illustration = rain.choice === 'proper' && rain.searchRemaining > 0
       ? '/street-life-game/assets/event-rain-stopped-search.webp'
       : rainArt(rain, rain.choice ?? 'continue')
-    setInfoModal({ title, text, label: 'AFTER THE RAIN', illustration, illustrationAlt: text, visibleStats: ['energy', 'mood'], rainResultId: rain.id, ...summary })
+    setInfoModal({ title, text, label: t('rain.result.label'), illustration, illustrationAlt: text, visibleStats: ['energy', 'mood'], rainResultId: rain.id, ...summary })
     setEventResultOpen(true)
     if (newlyReported) {
-      const actionId = rain.choice === 'proper' && rain.searchRemaining > 0 ? 'rain-stopped' : rain.choice === 'continue' ? 'rain-passed' : 'rain-cover'
       const entry: JournalEntry = { day: game.day, minute: game.minutes, title, text, actionId, decisionId: actionId, groupId: JSON.stringify([actionId,rain.level,rain.choice ?? 'continue',granted]), actionTitle: title, reflection: true }
       setJournalEntries(previous => [...previous,entry].slice(-500))
     }

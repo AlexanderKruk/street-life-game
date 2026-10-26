@@ -6,7 +6,8 @@ function bundled(path) {
   const module = { exports: {} }; new Function('require','module','exports',code)(require,module,module.exports); return module.exports;
 }
 const { initialState, advanceTime, weatherAt, rainDailyLimit } = bundled('src/game.ts');
-const { createRain, chooseRain, rainRisk, rainArt, rainResultText, planRainDay } = bundled('src/rain.ts');
+const { createRain, chooseRain, rainRisk, rainArt, planRainDay } = bundled('src/rain.ts');
+const { rainResultText } = bundled('src/rainText.ts');
 const { readSavedGame, SAVE_KEY } = bundled('src/saveCompatibility.ts');
 const base = { ...initialState, day: 7, minutes: 600, hunger: 100, thirst: 100, energy: 90, health: 100, hygiene: 90, mood: 45, rainSystemStarted: true, nextRainAt: 99999 };
 const now = (base.day - 1) * 1440 + base.minutes;

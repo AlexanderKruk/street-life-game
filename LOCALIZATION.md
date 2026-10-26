@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: сон и пробуждение (после `ee68ae4`), проверен тематически.
+Последний готовый этап: дождь/укрытия/результаты (после `37961d0`), проверен тематически.
+Сон сохранён в main через checkpoint `cb787a5`.
 Ночлежка сохранена в main через checkpoint `3c2e079`.
 Street/support/work/medical сохранены в main через checkpoint `46543b0`.
 GameAction/LocationScreen и причины отказов сохранены в main через checkpoint `ab8c60e`.
@@ -35,12 +36,13 @@ HUD/погода перенесены в hud.ts; weatherAt возвращает 
 streetController, supportWorkController и medicalController используют controllerActions.ts.
 Ночлежка (контроллер, посещаемость, очередь, checkout/departure dialogs) перенесена в shelter.ts.
 Сон (контроллер/правила/планирование/прогресс/заголовок/даты) перенесён в sleep.ts.
-Не завершено: дождь/поездки, события/телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
+Дождь (модель/диалог/контроллер результатов) перенесён в rain.ts и rainText.ts.
+Не завершено: поездки/D20, события/телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: дождь/поездки/D20, затем события/телефон. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: поездки/D20, затем события/телефон. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -230,7 +232,8 @@ src/locales/en/
 
 - [x] Перенести event/inventory/action History на ID/факты и каталоги; отделить старый parser.
 - [x] Перенести прямые closing-записи History; сохранить их domain groupId и старые сохранённые тексты.
-- [ ] Завершить каталог прямых rain-записей, memories и оставшегося собственного UI History/Goals.
+- [x] Перенести собственные тексты прямого rain writer в каталог; английская копия и ID сохранены.
+- [ ] Завершить first-person/context audit rain History, memories и оставшийся собственный UI History/Goals.
 - [x] Старые записи с `reflection: true` и уже сохранённым текстом показывать как были; не переписывать их ради новой редакции и не терять пустые реакции.
 - [x] Сохранить обратную совместимость новых optional action/outcome/decision/group полей; загружать старые записи без них.
 - [x] Сохранить дату/время, порядок, группировку, пагинацию и отсутствие дубликатов.
@@ -846,4 +849,47 @@ regression/shelter-sleep, phone-clock, journal-services; build/diff — PASS.
 внутренняя прокрутка, подтверждение и debug wake доступны. CSS/шрифты/эталоны
 не менялись. Полные наборы, WebKit/iPhone и общий остаточный аудит ещё открыты.
 Следующий этап — rain/travel/D20, затем events/phone и итоговые аудиты.
+Источник сохраняется в main с [skip ci], без публикации.
+
+
+### Дождь, укрытия и результаты — 26 октября 2026
+
+54 записи locales/en/rain.ts и rainText.ts покрывают три интенсивности,
+opening/nearby/proper/continue, поиск/ожидание у дерева/навеса/в проходе,
+досрочное окончание поиска, результаты и их полные варианты с Cold.
+Модель RAIN содержит только числовые energy/mood/risk. rainResultActionId
+выбирает внутренний rain-cover/rain-passed/rain-stopped независимо от копии;
+даже старый queued episode с null choice сохраняет прежние title/group IDs.
+Recorded-loss display использует общий formatResultDelta с прежним округлением.
+
+Сохранены choice/level/shelter IDs, art paths, 1–5 минут поиска, 5–60 минут дождя,
+частота/перенос через полночь, protection/exposure/risk/coldRoll, recorded costs,
+reported/coldGranted/lastReported guards и подтверждение по rainResultId.
+Часы, pause/focus, прерываемые phone/trip процессы и схемы saves не менялись.
+Прямой History writer получает каталогизированный текст; прежние записи не
+переписываются, decision/group IDs остаются прежними.
+
+Проверено: check-localization — 477 случаев copy/result/schedule с frozen37961d0,
+сравнение числовых RAIN и RNG boundaries; 60 dialog DOM/order/handler вариантов;
+110 frozen/pseudo StrictMode report/remount случаев; 25 App restore/acknowledgement
+сценариев (3 интенсивности × 4 исхода × Cold + уже существующий Cold).
+Все rain-подписи могут быть пустыми без изменения последствий/History/groups.
+Английский DOM и ordered ports совпадают; нормализуются только React useId маски
+иконки walk с отдельной проверкой связи mask/rect. Повторная загрузка не продлевает
+Cold и не добавляет второй History; Got it удаляет ровно этот rainResultId.
+check-rain, check-event-travel-controllers, check-load-game-session,
+check-module-boundaries (143 модуля), check-design-system;
+regression/map-travel, phone-clock, journal-services; build/diff — PASS.
+
+Браузерный стенд сравнил английские opening/tree на390×844 и search/stopped-search
+на1280×900: текст/геометрия совпали. Длинные downpour opening/passage/Cold-result
+на390 сохранили Body16, внутреннюю прокрутку, доступные варианты/подтверждение,
+без горизонтального overflow. CSS, картинки и visual-эталоны не менялись.
+Полные наборы, WebKit/iPhone и общий остаточный аудит не запускались.
+
+Редакторские вопросы остаются в итоговом аудите: rain History ещё повторяет
+результат во втором лице; continue-result предполагает ходьбу даже если во время
+фонового дождя игрок сменил занятие/зашёл внутрь; вечерний свет иллюстраций не
+выбирается по времени суток. Эти прежние смыслы/условия здесь не изменялись.
+Следующий этап — поездки/D20, затем события/телефон и итоговые аудиты.
 Источник сохраняется в main с [skip ci], без публикации.
