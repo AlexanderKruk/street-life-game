@@ -618,3 +618,11 @@ and own Find Help/Notes copy. Preserve call/question IDs, progression, timings,
 location lists and saved-answer routing. Notes uses question.hasDetails, never
 truthiness of translated question.text. This metadata is not persisted. Other
 phone controller/activity/header/plan/Goals/History copy remains pending.
+
+Phone process checkpoint: phoneProcess.ts contains controller/activity messages,
+whole search/answer templates and unavailable copy. phoneUnavailableId is domain
+identity; only null means usable in controller/App/LocationScreen/PhoneScreen.
+Never let empty translated refusal enable calls/search/navigation/plan/launcher.
+Preserve costs/timing, battery, charging and claimCompletion/claimRenewal/save
+contracts. PhoneScreen/PhoneDialog own headers/controls and Goals/History UI remain
+pending; controller templates do not own an extra clock or persistence writer.

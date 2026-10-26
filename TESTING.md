@@ -521,3 +521,11 @@ handler/eligibility/detail cases pass. Opening calls, phone-controller/phone,
 phone-clock/journal-services, boundaries/design and build passed. Mobile390 Find
 Help/Notes plus expanded registration inspected; CSS/baselines unchanged. Broader
 long-copy/full suites/WebKit/iPhone remain unrun.
+
+Phone process catalogue: 64 frozen/pseudo hook-command scenarios compare English
+state/ports/reports and empty-copy mechanics across service/charging/call/search/
+location-charge/tick/pause and restored completion. Eighteen unavailable cases
+retain domain reasons; empty refusal keeps launcher/plan blocked. Opening-calls,
+phone-controller/phone, phone-clock/journal-services, boundary/design and build
+passed. Mobile390 unavailable/disabled plan inspected; CSS/baselines unchanged.
+Full suites, broader long-copy, WebKit/iPhone remain unrun.
