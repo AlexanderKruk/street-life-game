@@ -612,3 +612,9 @@ id/historyId, choice order, eligibility, amounts, follow-ups and RNG independent
 copy. English resolves at module load; do not add a language switch yet. Historical
 saved reflections remain intact. Technical extraction is not the final editorial/
 long-copy/device audit. Phone catalogues remain next.
+
+Phone content checkpoint: phoneContent.ts supplies openingCalls, practicalQuestions
+and own Find Help/Notes copy. Preserve call/question IDs, progression, timings,
+location lists and saved-answer routing. Notes uses question.hasDetails, never
+truthiness of translated question.text. This metadata is not persisted. Other
+phone controller/activity/header/plan/Goals/History copy remains pending.

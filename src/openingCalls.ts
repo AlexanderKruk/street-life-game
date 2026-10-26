@@ -1,26 +1,27 @@
+import { t } from './i18n'
 export const OPENING_CALLS_KEY = 'street-life-opening-calls-v1'
 export const CALL_BATTERY_PER_MINUTE = 0.2
 
 export const OPENING_CALLS = [
   {
     id: 'call-university', minutes: 2, moodLoss: 2,
-    label: 'Maybe I could stay with someone I know. I’ll call a friend from university. We used to be close.',
-    callingTitle: 'Calling a university friend', title: 'No answer',
-    text: 'The phone keeps ringing. You wait, watching the windows across the street. Eventually, the call ends. No answer.',
+    label: t('phone.call.call-university.label'),
+    callingTitle: t('phone.call.call-university.callingTitle'), title: t('phone.call.call-university.title'),
+    text: t('phone.call.call-university.text'),
     illustration: 'event-call-no-answer',
   },
   {
     id: 'call-colleague', minutes: 5, moodLoss: 5,
-    label: 'I’ll try my old colleague. We worked together for years. Maybe he could put me up for a couple of nights.',
-    callingTitle: 'Calling an old colleague', title: 'A call to an old colleague',
-    text: '“I talked to my wife. With the kids here… she’s not comfortable having someone stay, even for a couple of nights. I’m sorry. We can’t.”\n\nYou hear a child calling him from another room.',
+    label: t('phone.call.call-colleague.label'),
+    callingTitle: t('phone.call.call-colleague.callingTitle'), title: t('phone.call.call-colleague.title'),
+    text: t('phone.call.call-colleague.text'),
     illustration: 'event-call-family',
   },
   {
     id: 'call-friend', minutes: 5, moodLoss: 5,
-    label: 'There’s one more friend I could try. I helped him move here last year. We haven’t seen each other since.',
-    callingTitle: 'Calling another friend', title: 'Nowhere to put you',
-    text: '“I’m renting a single room myself. There’s barely enough space for my bed and my things. I’ve got nowhere to put you.”',
+    label: t('phone.call.call-friend.label'),
+    callingTitle: t('phone.call.call-friend.callingTitle'), title: t('phone.call.call-friend.title'),
+    text: t('phone.call.call-friend.text'),
     illustration: 'event-call-small-room',
   },
 ] as const

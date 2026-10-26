@@ -514,3 +514,10 @@ mechanics; all 25 EventDialog variants preserve button/order/choice dispatch wit
 empty copy. Localisation/events/event-travel/boundaries, events/journal-services
 regressions and build passed. Neighbour scene inspected on desktop and390 iframe;
 CSS/baselines unchanged. Full suites, broader long-copy and WebKit/iPhone unrun.
+
+Phone content catalogue: frozen calls/questions retain exact English and domain
+data under empty copy. Twenty old/corrupt call progress and 15 Search/Notes DOM/
+handler/eligibility/detail cases pass. Opening calls, phone-controller/phone,
+phone-clock/journal-services, boundaries/design and build passed. Mobile390 Find
+Help/Notes plus expanded registration inspected; CSS/baselines unchanged. Broader
+long-copy/full suites/WebKit/iPhone remain unrun.
