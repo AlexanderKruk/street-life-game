@@ -1,11 +1,11 @@
 # Localization recovery backup — 26 October 2026
 
-This branch is a recovery snapshot, not a publication. Main remains at d8ff6fac4236badc45df86195d3295d7cfee64af.
+Recovery snapshot only; main remains at d8ff6fac4236badc45df86195d3295d7cfee64af. No publication.
 
-Source commit: f29979f46b22d088592b7f76a207fb0c5b158a3f
-Source tree (excluding this .backup directory): 03b23cdcec32dd5dce5e156dff4571af4dcd8081
+Source commit: 3dfed720f6870cd01d7502c49e87c433b266d6ec
+Source tree (excluding .backup): e2521f161b05179c70f5c82718734175eeb4d755
 
-The source snapshot matches that local tree byte for byte. API snapshot commits have different hashes; the bundle preserves all eight original local commits and their hashes:
+The snapshot source matches the local tree byte for byte. API snapshot commits have different hashes; the bundle preserves all nine original local commits and their hashes:
 
 - 7bb039f refactor: add typed English catalogs and stable result identities
 - 40175a7 docs: record localization foundation checkpoint
@@ -15,8 +15,9 @@ The source snapshot matches that local tree byte for byte. API snapshot commits 
 - eaa5db2 refactor: restore ID-based History for remaining controllers
 - e186132 refactor: decouple choice order and History grouping from copy
 - f29979f refactor: use explicit duration and check presentation metadata
+- 3dfed72 refactor: use stable freshness and effect chip metadata
 
-Restore from an existing clone containing the published main base:
+Restore from a clone containing the published main base:
 
 ```sh
 git fetch origin backup/localization-2026-10-26
@@ -26,8 +27,8 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Current stage: numeric duration/range/minimum metadata; pure choice labels and stat/dc-based check presentation. Raw-button text/emoji adaptation and DC suffix parsing removed. Contextual theft headings use item IDs. Owners render ChoiceButton directly, preserving costs, clocks, handlers, availability and seeded order.
+Current stage: 14 ImpactId definitions with explicit kind/resource metadata; effect/freshness catalogue; inventory/shop/action chips no longer infer colour from text. Food previews retain existing average/count thresholds. Cold Mood cap uses resource identity, and limits use stat IDs. Food aging, consumption, storage, RNG, costs and saves are unchanged.
 
-Validation: check-localization, check-rendering, check-design-system, check-module-boundaries, check-event-travel-controllers; regression groups street-trash, events, map-travel, shelter-sleep; TypeScript/Vite build; git diff --check. Six selected visual cases (street/event/sleep-planning, mobile/desktop) passed unchanged. Eight extra travel/station/support/D20 browser scenarios matched previous time/card/description/overflow metrics. Full suites/WebKit/iPhone not run. No deployment.
+Validation: check-localization (definitions, 30 food-slot cases, misleading pseudo-catalog UI), check-mood, inventory commands, food inventory, module boundaries, rendering, wetness; regression shop-inventory/street-trash/journal-services; build; diff check. Four selected shop/inventory visual cases passed unchanged. Eight extra inventory/status browser scenarios match f29979f in text/colours/sizes/limits/counts/overflow. Full suites/WebKit/iPhone not run. No deployment.
 
-Earlier location-hero overflow at width390 is recorded for the layout phase in LOCALIZATION.md; reproduced at e186132. Next: freshness/effect chip metadata, remaining catalogues and editorial/mobile audit.
+Next: inventory/shop/backpack catalogue and accessible names. Remaining controller/scene/enum copy, broken-screen outcome metadata and editorial/mobile audit stay open in LOCALIZATION.md. Earlier mobile location-hero overflow remains recorded there.

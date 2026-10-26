@@ -22,7 +22,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `CityMap.tsx`, `LocationPresentation.tsx`, `ClosedContent.tsx`, `game.ts` locations | locations | pending | v335 context only | open/closed, bookable shelter, same destination, transit/walk, route arrows |
 | `LocationScreen.tsx`, `game.ts` actions | locations/actions | pending | v335 hints only | every location, available/unavailable, stored/carried documents, referral, shelter interview |
 | `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions/dialogs | pending | match current thresholds during transfer | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
-| `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory | pending | v335 labels only | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
+| `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory / effects.ts | partial: chip/freshness messages moved; own copy pending | v335 labels only | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
 | `inventoryCommands.ts`, `inventoryController.ts`, `foodConsumption.ts` | inventory/results | pending | no new story editing | all refusals, medicine absent/already treated, food poisoning, storage/capacity |
 | `StatusScreen.tsx`, `LifeSituation.tsx`, `statusEffects.ts`, `limitingEffects.ts`, App status data | status | pending | needs full model/display split | untreated/treated Cold, tied caps, wetness disabled/enabled, housing/employment/income IDs |
@@ -86,7 +86,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `ChoiceOptions` | text/aria label determines shuffle identity and conventional binary ordering | stable choice IDs, explicit fixed pairs and frozen historical hash salts; tested under pseudo-copy |
 | App `choiceDecisionKey`, `JournalTimeline` grouping | actionTitle feeds seed/group comparison | new decisionId/groupId, semantic message aliases and parameters; legacy comparison only for missing metadata; first time/pagination preserved |
 | `AvailableFirst`, `ChoiceButton`, `Icon.choiceIcon` | English text used to extract duration and guess icon | direct ChoiceButton icon/estimate/thoughtEstimate; raw button/text adapter removed |
-| `InventorySlot`, `ShopCard`, `StatusScreen` | English freshness / effect chip strings select visual states | **pending**: structured kind/impact IDs |
+| `InventorySlot`, `ShopCard`, `StatusScreen` | English freshness / effect chip strings select visual states | ImpactId/resourceId/kind plus explicit foodCondition/counts; cold Mood annotation uses resource ID; remaining own copy pending |
 | `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | choice IDs/React keys and pure labels explicit; stat/dc formats badges/accessible names; contextual theft titles by item ID |
 | `eventController` | replaces “The screen still works.” in phone damage outcome | **pending**: explicit broken-screen outcome variant |
 | `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | retain persisted/internal IDs, add display names before extraction |
@@ -131,3 +131,11 @@ suffix parser remains. Duration/check templates and contextual theft titles are
 in common/dialogs catalogues; scene prose remains pending. Selected visual
 cases passed unchanged. Earlier narrow location-hero overflow is recorded in
 LOCALIZATION.md for the layout audit. Next: freshness/effect chip metadata.
+
+
+Freshness/effect-chip checkpoint: metadata and effects.ts catalogue replace
+label-based colour/Cold-cap recognition. Limits carry stat IDs; internal reason
+values remain stable. Preview thresholds/counts and saved food mechanics are
+unchanged. Four selected visual checks and eight extra comparison scenarios
+passed; remaining source copy and full editorial/device audits are pending.
+Next: inventory/shop/backpack catalogue and accessible names.

@@ -1,3 +1,4 @@
+import type { ImpactId } from './effectChips'
 import type { IconName } from './Icon'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { sleepIllnessHazard, type SleepKind } from './sleepIllness'
@@ -83,7 +84,7 @@ export type GameAction = {
   description: string
   minutes: number
   cost?: number
-  impacts?: string[]
+  impacts?: ImpactId[]
   requiresOpen?: boolean
   resolve: (state: GameState) => ActionResult
 }
@@ -455,14 +456,14 @@ export const actions: GameAction[] = [
     icon: 'food',
     id: 'shelter-dinner', locationId: 'shelter', name: 'Dinner',
     description: 'Free meal with tea · 19:00–20:30.', minutes: 20,
-    impacts: ['Food+++', 'Thirst+++', 'Mood+'],
+    impacts: ['food-large', 'thirst-large', 'mood-gain'],
     resolve: () => ({ minutes: 20, hunger: 48, thirst: 38, mood: 4, message: 'You eat the free shelter dinner and drink tea.' }),
   },
   {
     icon: 'food',
     id: 'shelter-breakfast', locationId: 'shelter', name: 'Breakfast',
     description: 'Free meal with tea · 06:30–07:00.', minutes: 15,
-    impacts: ['Food++', 'Thirst+++', 'Mood+'],
+    impacts: ['food-medium', 'thirst-large', 'mood-gain'],
     resolve: () => ({ minutes: 15, hunger: 28, thirst: 38, mood: 3, message: 'You eat breakfast and drink tea before leaving the shelter.' }),
   },
   {

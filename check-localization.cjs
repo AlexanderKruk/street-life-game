@@ -3,9 +3,11 @@ const ts = require('typescript');
 const { buildSync } = require('./tests/helpers/build.cjs');
 function bundled(path) {
   const input = typeof path === 'string' ? { entryPoints: [path] } : { stdin: { contents: path.source, resolveDir: process.cwd(), loader: 'tsx' } };
-  const code = buildSync({ ...input, bundle: true, platform: 'node', format: 'cjs', write: false, external: ['react', 'react-dom', 'react/jsx-runtime'] }).outputFiles[0].text;
+  const pseudoEffects = typeof path === 'object' ? path.effects : undefined;
+  const code = buildSync({ ...input, bundle: true, platform: 'node', format: 'cjs', write: false, external: ['react', 'react-dom', 'react/jsx-runtime', ...(pseudoEffects ? ['*/locales/en/effects'] : [])] }).outputFiles[0].text;
   const module = { exports: {} };
-  new Function('require', 'module', 'exports', code)(require, module, module.exports);
+  const load = name => pseudoEffects && name.endsWith('/locales/en/effects') ? { effects: pseudoEffects } : require(name);
+  new Function('require', 'module', 'exports', code)(load, module, module.exports);
   return module.exports;
 }
 const { en, t, validateCatalog, createTranslator } = bundled('src/i18n/index.ts');
@@ -193,6 +195,28 @@ console.log(`PASS: ${samples.length} History presentations, grouping parity, met
 
 // Render relabelled resources: filtering, cap hatching, icons, costs and the
 // compact Mood/battery split must use IDs even when labels cannot be parsed.
+const { EFFECT_CHIPS, impactChip, freshnessChip, foodEffectChips, foodFreshnessLabel } = bundled('src/effectChips.ts');
+const { foodSlot } = bundled('src/foodInventory.ts');
+const chipFixtures={ 'thirst-large':['Thirst+++','positive'], 'food-small':['Food+','positive'], 'food-medium':['Food++','positive'], 'food-large':['Food+++','positive'], 'mood-gain':['Mood+','positive'], 'mood-loss':['Mood−','negative'], 'energy-loss':['Energy−','negative'], 'energy-strong-loss':['Energy−−','negative'], 'health-loss':['Health−','negative'], 'hygiene-small':['Hygiene+','positive'], 'hygiene-large':['Hygiene+++','positive'], 'travel-large':['Travel+++','positive'], 'recovery-fast':['Recovery ×3','positive'], 'deposit-value':['0.50 zł','positive'] };
+assert.deepEqual(Object.keys(EFFECT_CHIPS).sort(),Object.keys(chipFixtures).sort());
+for(const[id,[label,kind]]of Object.entries(chipFixtures)){const chip=impactChip(id);assert.equal(chip.label,label);assert.equal(chip.kind,kind);}
+for(const [freshness,label] of [[0,'Spoiled'],[20,'Spoiled'],[20.001,'Stale'],[50,'Stale'],[50.001,'Fresh'],[100,'Fresh']])assert.equal(foodFreshnessLabel(freshness),label);
+let foodChipCases=0;
+for(const kind of ['food','bread','readyMeal'])for(const portions of [[0],[20],[20.001],[50],[50.001],[100],[100,100,40,10],[10,20,30,100],[100,100,100,100,40,10,100]]){
+ const stock={[kind]:portions.length,[kind+'Portions']:portions};const saved=JSON.stringify(stock);
+ for(let index=0;index<Math.ceil(portions.length/4);index++){
+  const slot=foodSlot(stock,kind,index),f=slot.freshness;
+  const labels=[kind==='bread'?'Food+':kind==='readyMeal'&&f>50?'Food+++':f>20?'Food++':'Food+',...(kind==='food'&&f>50?['Mood+']:[]),...(slot.stale?[`Stale ×${slot.stale}`]:[]),...(slot.spoiled?[`Spoiled ×${slot.spoiled}`]:[])];
+  const chips=foodEffectChips(kind,slot);assert.deepEqual(chips.map(c=>c.label),labels);assert.deepEqual(chips.map(c=>c.kind),labels.map(l=>l.startsWith('Spoiled')?'negative':l.startsWith('Stale')?'warning':'positive'));foodChipCases++;
+ }
+ assert.equal(JSON.stringify(stock),saved);
+}
+const { effects:effectCatalog }=bundled('src/locales/en/effects.ts');
+const pseudoEffects=Object.fromEntries(Object.entries(effectCatalog).map(([key,value])=>[key,`⟦${key}⟧ ${(value.match(/\{\w+\}/g)||[]).join(' ')}`]));
+pseudoEffects['effectChip.mood.gain']='Spoiled − ⟦positive⟧';pseudoEffects['effectChip.health.loss']='Fresh + ⟦negative⟧';pseudoEffects['freshness.stale.count']='⟦warning⟧ {count}';pseudoEffects['freshness.spoiled.count']='⟦bad⟧ {count}';
+assert.deepEqual(validateCatalog(effectCatalog,pseudoEffects),[]);
+console.log(`PASS: ${Object.keys(chipFixtures).length} impact definitions and ${foodChipCases} food-slot previews, boundaries/counts and unchanged input.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -273,6 +297,26 @@ try {
     assert.equal(document.querySelector('#dice-action-title').textContent,`Steal ${item.name.toLowerCase()}?`);
   }
   console.log('PASS: numeric duration/range/route metadata, intact pseudo-copy, explicit check labels and all theft headings.');
+  const chipsView=bundled({source:`export {default as InventorySlot} from './src/InventorySlot'; export {default as ShopCard} from './src/ShopCard'; export {default as StatusScreen} from './src/StatusScreen'; export * from './src/effectChips'; export * from './src/inventory'; export * from './src/game';`,effects:pseudoEffects});
+  const pseudoChips=[chipsView.impactChip('mood-gain'),chipsView.impactChip('health-loss'),chipsView.freshnessChip('stale',2),chipsView.freshnessChip('spoiled',1)];
+  let used=0,discarded=0;
+  cleanup();render(React.createElement(chipsView.InventorySlot,{art:'food',name:'⟦meal⟧',quantity:4,effects:pseudoChips,hint:'⟦hint⟧',onUse:()=>used++,onDiscard:()=>discarded++}));
+  assert.deepEqual([...document.querySelectorAll('.inventory-effects em')].map(n=>n.className),['positive','negative','warning','negative']);
+  assert.deepEqual([...document.querySelectorAll('.inventory-effects em')].map(n=>n.textContent),pseudoChips.map(c=>c.label));
+  document.querySelector('.inventory-slot-use').click();document.querySelector('.inventory-discard').click();assert.equal(used,1);assert.equal(discarded,1);
+  cleanup();render(React.createElement(chipsView.ShopCard,{item:chipsView.SHOP_ITEMS.find(i=>i.id==='cigarettes'),open:true,fits:true,affordable:true,onBuy:()=>{},onSteal:()=>{}}));
+  assert.deepEqual([...document.querySelectorAll('.supply-effects em')].map(n=>[n.className,n.textContent]),pseudoChips.slice(0,2).map(c=>[c.kind,c.label]));
+  const coldLimits=[{reason:'Cold',name:'⟦illness⟧',icon:'thermometer',limits:[{stat:'energy',cap:77},{stat:'mood',cap:60}]}];
+  const otherLimits=[{reason:'Health',name:'⟦health⟧',icon:'heart',limits:[{stat:'mood',cap:40},{stat:'energy',cap:60}]}];
+  const showStatus=statLimits=>{cleanup();render(React.createElement(chipsView.StatusScreen,{game:chipsView.initialState,statusEffects:[{id:'cold',expiresAt:3000,treated:true}],statLimits,separateLimits:otherLimits,statusNeeds:[],focusedNeed:null,situation:{housing:'⟦housing⟧',employment:'⟦work⟧',income:'⟦income⟧',documents:'⟦documents⟧'}}));};
+  showStatus(coldLimits);
+  const coldChips=[...document.querySelectorAll('.illness .effect-impact b')].map(n=>n.textContent);
+  assert.equal(coldChips.filter(s=>s.includes('60')).length,1);assert(coldChips[1].includes('60'));assert(!coldChips[0].includes('60'));assert(!coldChips.join('').includes('77'));
+  assert(document.querySelector('.effect.illness').classList.contains('negative'));assert.equal(document.querySelector('[data-mood-limit]').dataset.moodLimit,'Health');
+  assert.deepEqual([...document.querySelectorAll('.limit-effect b')].map(n=>n.textContent),['⟦effect.statCap⟧ Mood 40','⟦effect.statCap⟧ Energy 60']);
+  showStatus([]);assert(!document.querySelector('.illness .effect-impact').textContent.includes('60'));
+  console.log('PASS: pseudo-effect labels preserve inventory/shop colours and handlers, treated Cold Mood cap and separate stat identities.');
+
 
 
 

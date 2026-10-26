@@ -30,23 +30,19 @@ export const BOTTLE_DEPOSIT = 0.5
 
 
 export const SHOP_ITEMS: ShopItem[] = [
-  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['Thirst+++'] },
-  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['Food++', 'Mood+'] },
-  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['Food+'] },
-  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 10, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['Food++', 'Mood+'] },
-  { id: 'readyMeal', name: 'Ready meal', icon: '🍝', price: 12, quantity: 1, description: 'Pasta with meat and herbs · plastic container · stack 4 · ready to eat', impacts: ['Food+++'] },
-  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['Hygiene+'] },
-  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['Hygiene+++'] },
-  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['Mood+', 'Health−'] },
-  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'One dose per Cold · stack 4', impacts: ['Recovery ×3'] },
+  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['thirst-large'] },
+  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['food-medium', 'mood-gain'] },
+  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['food-small'] },
+  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 10, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['food-medium', 'mood-gain'] },
+  { id: 'readyMeal', name: 'Ready meal', icon: '🍝', price: 12, quantity: 1, description: 'Pasta with meat and herbs · plastic container · stack 4 · ready to eat', impacts: ['food-large'] },
+  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['hygiene-small'] },
+  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['hygiene-large'] },
+  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['mood-gain', 'health-loss'] },
+  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'One dose per Cold · stack 4', impacts: ['recovery-fast'] },
 ]
 
 
-export function foodFreshnessLabel(value: number) {
-  if (value > 50) return 'Fresh'
-  if (value > 20) return 'Stale'
-  return 'Spoiled'
-}
+export { foodFreshnessLabel } from './effectChips'
 
 
 export function stackSlots(count: number) {

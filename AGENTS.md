@@ -377,7 +377,8 @@ prose or modal headings are passed to its resolver. ActionHistoryFacts capture
 refusal/support/search/sleep/arrival state after the existing guard accepts the
 command. The old parser/loader is isolated in legacyJournalCompatibility.ts:
 new gameplay must not call it. Ordering/grouping and duration/check metadata
-now use explicit data; effect chips and remaining catalogues are still pending. Preserve direct rain/closing writers and
+now use explicit data; effect chips also use IDs/kind/resource metadata.
+Remaining catalogues are still pending. Preserve direct rain/closing writers and
 saved historical text. Back up completed stages in the existing GitHub backup
 branch without changing main or publishing the game.
 
@@ -407,3 +408,16 @@ StreetEventChoice.label contains only the label, without a check suffix.
 choiceCheckPresentation formats accessible labels/check badges from check.stat
 and check.dc. Dice headings use those fields and contextual catalogue messages;
 never strip a label with regex or change item case to form a sentence.
+
+
+Freshness/effect-chip checkpoint (26 October 2026): ShopItem.impacts,
+GameAction.impacts and EFFECTS.impacts are ImpactId arrays from effectChips.ts.
+impactChip resolves an ID to {id, resourceId?, kind, label}; InventorySlot takes
+these resolved objects. Never infer colour/meaning from a sign, prefix, label
+or translation key. Freshness uses foodCondition and per-slot average/counts
+from foodSlot; foodEffectChips changes previews only, not food mechanics.
+Chip/freshness messages live in locales/en/effects.ts. Cold's Mood annotation
+uses resourceId=mood and the mood stat cap; changing a label must not hide it.
+LimitingEffect.limits.stat uses mood/energy/hygiene IDs, with separate catalogue
+labels. Existing reason values (Cold, Health, Night shelter, etc.) remain internal
+identities; do not translate them or use translated cause names for comparisons.

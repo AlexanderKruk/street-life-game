@@ -15,14 +15,13 @@
 изолирован в legacyJournalCompatibility.ts и применяется только при загрузке.
 Ordering/grouping новых записей используют ID с совместимостью прежних seed.
 Длительности и подписи D20 используют явные данные; старый button adapter удалён.
-Не завершено: effect chips,
-остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
+Freshness/effect chips используют ID/kind/resource metadata.
+Не завершено: остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: структурированные freshness/effect chips и их визуальные состояния,
-затем оставшиеся каталоги. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: каталог предметов, рюкзака, магазина и их доступных имён. Сохранившийся пакет иконок не переделывать.
 
 ## Задание для нового чата
 
@@ -448,3 +447,35 @@ shelter-sleep; production build и git diff --check — PASS.
 Исправление и проверка связанных visual-эталонов остаются в этапе вёрстки.
 Следующий шаг — kind/impact ID для freshness/effect chips; затем остальные
 каталоги и редакторская/мобильная матрица.
+
+
+### Свежесть и эффект-чипы по ID — 26 октября 2026
+
+effectChips.ts задаёт 14 ImpactId, resourceId, kind и подпись через новый
+locales/en/effects.ts. ShopItem/GameAction/EFFECTS хранят ID вместо английских
+чипов. InventorySlot использует явный kind, ShopCard и карточки действий
+разрешают те же ID; знаки и Stale/Spoiled больше не выбирают цвет.
+
+Свежесть использует существующий foodCondition и foodSlot: среднее, пороги
+50/20, количество stale/spoiled в каждом слоте и условие Mood-preview сохранены.
+foodFreshnessLabel форматирует состояние; покупки, старение, RNG, отравление,
+порции и хранение не менялись. Старые сохранения не получают новых обязательных
+полей. Status Cold добавляет ограничение по resourceId=mood, а не по Mood−.
+LimitingEffect.limits.stat теперь mood/energy/hygiene; подписи берутся отдельно
+из common. Старые причины ограничений остаются внутренними ID, не переводами.
+
+Проверено: check-localization (14 чипов, 30 food-slot случаев, граничные значения,
+подмена каталога на вводящие в заблуждение подписи, UI цветов/handlers и
+простуды), check-mood, check-inventory-commands, check-food-inventory,
+check-module-boundaries (126 модулей), check-rendering, check-wetness;
+regression/shop-inventory, street-trash, journal-services; build и diff --check — PASS.
+Выбранные visual shop/inventory × 390×844 и 1280×900 — 4/4 PASS, эталоны не
+менялись. Восемь дополнительных сценариев mixed inventory, treated Cold,
+более сильного ограничения Thirst и объединённых Health-лимитов на двух ширинах
+совпали с f29979f по тексту, цветам, размерам, счётчикам и отсутствию переполнения.
+Полные наборы, WebKit и реальный iPhone не запускались; публикации не было.
+
+Следующий этап — каталог предметов, рюкзака, магазина и доступных имён.
+Оставшиеся runtime строки/сцены/контроллеры, представление внутренних enum,
+вариант broken-screen в eventController, редакторская и мобильная матрица
+остаются открытыми; полный перенос текстов не завершён.

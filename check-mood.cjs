@@ -38,13 +38,13 @@ assert.deepEqual(advanceTime(timed, 30, cold), stepped, 'instant actions and tic
 const { limitingEffects } = bundled('src/limitingEffects.ts');
 const restrictions = limitingEffects({ ...comfortable, energy: 20 }, { housing: 'Night shelter' }, 10);
 assert.deepEqual(restrictions.map(effect => [effect.reason, effect.limits]), [
-  ['Night shelter', [{ stat: 'Mood', cap: 60 }]],
-  ['Tiredness', [{ stat: 'Mood', cap: 60 }]],
-  ['Dirty clothes', [{ stat: 'Hygiene', cap: 60 }]],
+  ['Night shelter', [{ stat: 'mood', cap: 60 }]],
+  ['Tiredness', [{ stat: 'mood', cap: 60 }]],
+  ['Dirty clothes', [{ stat: 'hygiene', cap: 60 }]],
 ]);
 assert.deepEqual(limitingEffects(comfortable, { housing: 'Night shelter' }, 100).map(effect => effect.reason), ['Night shelter']);
 assert.deepEqual(limitingEffects({ ...comfortable, thirst: 10 }, { housing: 'Night shelter' }, 10).map(effect => effect.reason), ['Thirst', 'Dirty clothes']);
-assert.deepEqual(limitingEffects({ ...comfortable, health: 10 }, { housing: 'Apartment' }, 100).map(effect => effect.limits), [[{ stat: 'Mood', cap: 40 }, { stat: 'Energy', cap: 60 }]]);
+assert.deepEqual(limitingEffects({ ...comfortable, health: 10 }, { housing: 'Apartment' }, 100).map(effect => effect.limits), [[{ stat: 'mood', cap: 40 }, { stat: 'energy', cap: 60 }]]);
 assert.deepEqual(limitingEffects(comfortable, { housing: 'Apartment' }, 100), []);
 
 const { JSDOM } = require('jsdom');
@@ -100,6 +100,7 @@ try {
   setup('Apartment', 40, { health: 10 });
   assert.equal(document.querySelectorAll('[data-limit-reason="Health"]').length, 1);
   assert.equal(document.querySelector('[data-limit-reason="Health"]').querySelectorAll('b').length, 2);
+  assert.deepEqual([...document.querySelectorAll('[data-limit-reason="Health"] b')].map(node=>node.textContent), ['Mood ≤ 40%', 'Energy ≤ 60%']);
   setup('Apartment', 60);
   cleanup();
   localStorage.setItem('street-life-effects-v1', JSON.stringify([{ id: 'cold', expiresAt: 3000 }]));

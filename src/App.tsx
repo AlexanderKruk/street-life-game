@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { journalPresentation, journalDecisionKey } from './journalIdentity'
 import type { ActionHistoryFacts } from './actionHistory'
 import type { InventoryHistoryFacts } from './inventoryHistory'
@@ -321,10 +322,10 @@ export default function App() {
   const statusNeeds: StatusNeed[] = [
     { id: 'hunger', label: 'Food', value: game.hunger, icon: 'food' as IconName },
     { id: 'thirst', label: 'Thirst', value: game.thirst, icon: 'water' as IconName },
-    { id: 'energy', label: 'Energy', value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
+    { id: 'energy', label: t('stat.energy'), value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
     { id: 'health', label: 'Health', value: game.health, icon: 'heart' as IconName },
-    { id: 'hygiene', label: 'Hygiene', value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
-    { id: 'mood', label: 'Mood', value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: moodCeiling.reasons.join(', ') },
+    { id: 'hygiene', label: t('stat.hygiene'), value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
+    { id: 'mood', label: t('stat.mood'), value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: moodCeiling.reasons.join(', ') },
   ]
   // Dangerous physical needs take precedence over a lower mood score.
   const dangerousNeeds = statusNeeds.filter(need => need.id !== 'mood' && need.value <= 20)

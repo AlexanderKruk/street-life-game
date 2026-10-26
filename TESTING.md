@@ -351,3 +351,15 @@ without baseline changes. Extra travel/station/support/D20 inspection compared
 card time, description sizes and overflow with e186132 on both viewports.
 Known earlier location-hero overflow (~450 px at width390) is recorded for the
 layout phase; it is present before this stage. Full suites/WebKit/iPhone unrun.
+
+
+Freshness/effect-chip checkpoint: check-localization covers 14 effect definitions,
+30 food-slot previews including exact 20/50 boundaries and mixed/second slots.
+A test-only effects catalogue replacement verifies actual InventorySlot, ShopCard
+and StatusScreen under misleading translated labels: colours, handlers, treated
+Cold's Mood cap and stat identities remain intact. check-mood keeps the same
+cap assertions with lowercase stat IDs and checks unchanged rendered cap text.
+Targeted food/inventory/mood/rendering/wetness/module checks and three regression
+groups passed, plus build. Selected shop/inventory visual cases passed 4/4 with
+unchanged baselines. Eight extra browser scenarios match f29979f on both sizes.
+Full suites, WebKit and physical iPhone not run.
