@@ -1,15 +1,15 @@
 type TravelProgress = { mode: 'walk' | 'transit' | 'fare-dodge'; total: number; remaining: number }
-type TravelPhase = { label: string; walking: boolean; exposure: 'outside' | 'cover' | 'transit' }
+type TravelPhase = { id: string; walking: boolean; exposure: 'outside' | 'cover' | 'transit' }
 
-const walking: TravelPhase = { label: 'Walking', walking: true, exposure: 'outside' }
-const approachingCrossing: TravelPhase = { label: 'Near a crossing', walking: true, exposure: 'outside' }
-const waitingForGreen: TravelPhase = { label: 'Red light', walking: false, exposure: 'outside' }
-const crossingRoad: TravelPhase = { label: 'Crossing', walking: true, exposure: 'outside' }
-const walkingOn: TravelPhase = { label: 'Walking on', walking: true, exposure: 'outside' }
-const toStop: TravelPhase = { label: 'To the stop', walking: true, exposure: 'outside' }
-const waiting: TravelPhase = { label: 'Waiting', walking: false, exposure: 'cover' }
-const riding: TravelPhase = { label: 'On the bus', walking: false, exposure: 'transit' }
-const toDestination: TravelPhase = { label: 'Final walk', walking: true, exposure: 'outside' }
+const walking: TravelPhase = { id: 'walking', walking: true, exposure: 'outside' }
+const approachingCrossing: TravelPhase = { id: 'approachingCrossing', walking: true, exposure: 'outside' }
+const waitingForGreen: TravelPhase = { id: 'waitingForGreen', walking: false, exposure: 'outside' }
+const crossingRoad: TravelPhase = { id: 'crossingRoad', walking: true, exposure: 'outside' }
+const walkingOn: TravelPhase = { id: 'walkingOn', walking: true, exposure: 'outside' }
+const toStop: TravelPhase = { id: 'toStop', walking: true, exposure: 'outside' }
+const waiting: TravelPhase = { id: 'waiting', walking: false, exposure: 'cover' }
+const riding: TravelPhase = { id: 'riding', walking: false, exposure: 'transit' }
+const toDestination: TravelPhase = { id: 'toDestination', walking: true, exposure: 'outside' }
 
 function getWalkingStage(trip: TravelProgress): { phase: TravelPhase; minutes: number } {
   const elapsed = Math.max(0, trip.total - trip.remaining)

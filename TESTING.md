@@ -481,3 +481,10 @@ load/boundary/design checks, map-travel/phone-clock/journal-services regressions
 and build passed. Selected English browser comparisons at390/1280 and expanded390
 opening/wait/Cold-result fit with Body16 and reachable controls; no CSS/baseline
 changes. Full suites, WebKit and physical iPhone remain unrun.
+
+Travel catalogue checkpoint: frozen phase comparisons cover all remaining minutes
+for routes 1–180 in three modes, simulation and display, with pseudo labels.
+Planner DOM/command/order/eligibility comparisons cover all locations and fare
+boundaries/free transit. Event-travel/boundary checks, map-travel/phone-clock
+regressions and build passed. Desktop browser inspected; fresh mobile/long-copy,
+WebKit/iPhone and full suites remain unrun.

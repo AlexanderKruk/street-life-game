@@ -580,3 +580,9 @@ Recorded background losses use IDs and formatResultDelta, never translated label
 Rain History copy is catalogued but its first-person/context audit remains open;
 do not rewrite saved records. Clocks/pause/focus/activity interruption stay with
 App and the existing hooks; no new timers/storage writers.
+
+Travel catalogue checkpoint: travel.ts contains planner/controller/fare-check copy.
+travelPhases returns stable phase id plus walking/exposure; display through
+travelPhaseLabel. Never use translated phases for clocks, effort or weather.
+Fares, RNG, destination/mode IDs, arrival guards and saved trips are unchanged.
+DiceDialog's own copy remains pending with the D20 stage.
