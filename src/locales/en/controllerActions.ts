@@ -4,7 +4,7 @@ export const controllerActions = {
   "controller.street.music.text": "You listen to your favourite songs as you walk. You feel a little better.",
   "controller.street.music.title": "Walk with music",
   "controller.street.walk.title": "Walk through the city",
-  "controller.street.walk.text": "You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.",
+  "controller.street.walk.text": "You pass familiar streets and shopfronts. Half an hour has passed. You are still outside.",
   "controller.street.music.alt": "You walk through the neighbourhood wearing full-size over-ear headphones.",
   "controller.street.bench.found": "You find a bench nearby with room to sit.",
   "controller.street.bench.missing": "You look around, but every decent place to sit is occupied or unusable.",

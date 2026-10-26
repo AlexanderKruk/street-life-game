@@ -16,7 +16,7 @@ export const actionHistory = {
   "history.action.music-walk.title": "Walked with music",
   "history.action.music-walk.neutral": "For a moment, it felt like the walk home from work.",
   "history.action.city-walk.title": "Walked through the city",
-  "history.action.city-walk.neutral": "I keep looking at the lit windows. I miss having somewhere to return to.",
+  "history.action.city-walk.neutral": "I keep looking at the buildings around me. I miss having somewhere to return to.",
   "history.action.ask-money.title": "Asked for help",
   "history.action.ask-money.neutral": "All that time, and nothing I can use.",
   "history.action.ask-money.moneyPositive": "I’m already thinking about what I need to spend it on.",
