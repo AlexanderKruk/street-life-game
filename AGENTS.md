@@ -605,3 +605,10 @@ The phone owner still supplies optional refusal copy; do not infer availability
 from its truthiness. Preserve condition priority and numeric thresholds/D20.
 EventDialog/CompactStreetEvent own label/pause copy lives in eventUi.ts; authored
 scene text remains pending.
+
+Authored events checkpoint: locales/en/events.ts contains scene titles/text,
+choice labels, outcome messages and full document/coin templates. Keep authored
+id/historyId, choice order, eligibility, amounts, follow-ups and RNG independent of
+copy. English resolves at module load; do not add a language switch yet. Historical
+saved reflections remain intact. Technical extraction is not the final editorial/
+long-copy/device audit. Phone catalogues remain next.
