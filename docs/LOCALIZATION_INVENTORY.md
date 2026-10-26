@@ -21,7 +21,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `resultPresentation.ts` | locations.ts / future phone catalogue | partial: locations/services moved; question framing pending | existing compact discoveries preserved | single/multiple/none, saved/new, known/unknown places; result checks |
 | `CityMap.tsx`, location hero/shop in `LocationPresentation.tsx`, `ClosedContent.tsx`, `game.ts` locations | locations.ts / locationText.ts | moved own location copy; sleep/travel process headings pending | unchanged English, pure domain LocationId/data | open/closed, bookable shelter, same destination, transit/walk, route arrows |
 | `LocationScreen.tsx`, `game.ts` actions, `actionText.ts` | locations.ts / actions.ts | moved own screen/action copy; incoming call labels pending | original copy, numeric plurals, whole shower messages | every location, available/unavailable, stored/carried documents, referral, shelter interview |
-| `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions.ts / future dialogs | partial: location rules/controller moved; sleep/shelter/event rules pending | 22 domain refusal IDs; null-only eligibility; original thresholds | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
+| `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions.ts / future dialogs | partial: location and shelter rules/controllers moved; sleep/event rules pending | 22 domain refusal IDs; null-only eligibility; original thresholds | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
 | `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory.ts / effects.ts; itemPresentation.ts | moved own item/slot/shop copy | original copy preserved; count grammar via plurals | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
 | `inventoryCommands.ts`, `inventoryController.ts`, `foodConsumption.ts` | inventory.ts | moved | whole outcome/refusal messages, original meaning and mechanics preserved | all refusals, medicine absent/already treated, food poisoning, storage/capacity |
@@ -39,7 +39,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `DiceDialog.tsx` | dialogs | pending | pending | ready/rolled, 1/20/threshold, theft/fare-dodge/authored check |
 | `rain.ts`, `RainEventDialog.tsx`, `useRainController.ts` | rain/dialogs | partial: summary resource IDs; prose pending | stopped-search image/text already approved | 3 intensities, 3 choices, tree/awning/passage, early end, illness, recorded costs |
 | `sleepController.ts`, `SleepPlanningDialog.tsx`, `SleepProgressDialog.tsx` | sleep/dialogs | pending | pending | all 4 sleep kinds, forced/normal, wake event/theft/illness, 07:30 truncation, wetness flag |
-| `shelterController.ts`, `ShelterQueueDialog.tsx`, `ShelterCheckoutDialog.tsx`, `useShelterLifecycle.ts` | shelter/dialogs | pending | pending | outside/inside/registration, vacancy/refusal, renewal, checkout/charging |
+| `shelterController.ts`, `shelterRules.ts`, `ShelterQueueDialog.tsx`, `ShelterCheckoutDialog.tsx`, `useShelterLifecycle.ts` | shelter.ts / shelterText.ts | moved own shelter copy | original English/rules; whole checkout variants, numeric plurals | outside/inside/registration, vacancy/refusal, renewal, checkout/charging |
 | `trashSearchController.ts`, `TrashSearchDialog.tsx`, `TrashSearchTime.tsx`, `trashSearchRules.ts` | trash/dialogs | pending | pending | found/damaged, cap/full, manual/deadline, keyboard/touch, aria announcements |
 | `GameOverDialog.tsx` | `dialogs.ts`: `gameOver.*` | moved | exact copy; explains current Health recovery | restart/day/terminal blocking; action regressions |
 | `medicalController.ts`, `supportWorkController.ts`, `streetController.ts` | controllerActions.ts / shared actions.ts | moved own prose/title/alt | original English and mechanics preserved; legacy walk day/night editorial question open | refusals and rare messages; documents/referral/transit/benefits/work/begging/bench |
@@ -69,11 +69,11 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `PhoneDialog` | active/expired plan, battery, service expiry hours/minutes, money, auto-renew, blocked behind process | P; phone checks |
 | `SleepPlanningDialog` | ground/bench/shelter/residential; fatigue restrictions; wake day/time; 07:30; wetness flag | P; rest/shelter checks |
 | `SleepProgressDialog` | four kinds; elapsed/cap; forced sleep; wake debug; exposure note | P; sleep/illness checks |
-| `ShelterQueueDialog` | before 18:00, 18:00–18:20, after 18:20; vacancies, people, elapsed, restored | P; rest/queue checks |
-| `ShelterCheckoutWarning` | 07:30–08:00/deadline, focus trap, leave action | P; rest/charging checks |
-| `ShelterDepartureDialog` | packing progress, phone charging on/off, automatic collection/exit, restored | P; rest/charging checks |
+| `ShelterQueueDialog` | before 18:00, 18:00–18:20, after 18:20; vacancies, people, elapsed, restored | T; shelter.ts; progress/fallback arrival/restore checks |
+| `ShelterCheckoutWarning` | 07:30–08:00/deadline, focus trap, leave action | T; shelter.ts; focus/charging/restore checks |
+| `ShelterDepartureDialog` | packing progress, phone charging on/off, automatic collection/exit, restored | T; shelter.ts; focus/charging/restore checks |
 | `TrashSearchDialog` / `TrashSearchTime` | movable rubbish, valid/damaged/full items, time/deadline, stop, keyboard/drag | P; trash regressions |
-| Shelter interview in `LocationScreen` | reason/action/plan, extension earned/refused/no progress/max/block | P; shelter/controller regressions |
+| Shelter interview in `LocationScreen` | reason/action/plan, progress/renewal/block contexts | T; actions.ts + shelter.ts; interview/extension/controller checks |
 
 ## Text-dependent risk register
 
@@ -201,3 +201,14 @@ Stored employment='Day work' is a domain enum, not the translated result title.
 The ordinary walk remains absent from UI; its retained legacy controller copy
 still needs the final day/night editorial review. No JSX/CSS/browser changes.
 Next: shelter processes/dialogs and remaining special-process catalogues.
+
+
+Shelter checkpoint: shelter.ts/shelterText.ts owns controller/rule/queue/checkout
+copy. The interview controls were already moved with actions.ts. Four whole
+checkout outcomes keep charging/booking context separate from translation.
+128 attendance/797 command cases and 53 dialog variants preserve original
+conditions, numeric time/priority, vacancy cache/RNG, extension/strike/month
+rules and once-only guards. Eight App/StrictMode restore/remount cases retain
+bookings, phone charging and one-time History/rewards. Browser queue/warning/
+departure geometry/text match1f39ed9 at390/1280; expanded390 text fits. Full
+browser/modal matrix remains open. Next: sleep rules/controller/dialogs/headings.

@@ -44,6 +44,6 @@ export function useShelterAttendance(game: GameState, life: LifeSituation, setLi
     const audit = shelterAttendance(life, game.day)
     if (audit.life === life) return
     setLife(previous => shelterAttendance(previous, game.day).life)
-    if (audit.message) setMessage(audit.message)
+    if (audit.message !== undefined) setMessage(audit.message)
   }, [game.day, life.shelterRegisteredDay, life.shelterUntilDay, life.shelterAuditDay, life.shelterLastStayDay])
 }

@@ -543,3 +543,15 @@ a whole plural message without changing the 4–8-hour draw. Do not reintroduce
 the removed ordinary-walk UI while maintaining its legacy command. No new
 persistence fields or clock ownership. Remaining shelter/sleep/rain/travel,
 event/phone and final-editorial work is in LOCALIZATION.md.
+
+
+Shelter catalogue checkpoint (26 October 2026): shelter.ts covers the shelter
+controller, attendance report, queue and checkout/departure dialogs. Use whole
+shelterDepartureText(charging, booked) variants rather than concatenated prose;
+extension days and people-ahead messages retain numeric plural selectors.
+Do not translate housing/employment/plan values or alter scheduling, arrival
+priority, vacancies/cache, attendance month/strikes, extensions or completion
+guards. Attendance has an optional message: test !== undefined for its presence,
+never truthiness of its translated text. Queue/departure save schemas and before
+snapshots remain unchanged. The owner retains one clock, focus/blocking and
+lastQueue/lastDeparture guards. Sleep/rain/travel/event/phone work stays open.

@@ -465,6 +465,57 @@ for(const test of copyCases){
 assert.equal(t('controller.medical.emergency.treated',{hours:4}),'You call an ambulance. Emergency staff stabilise your condition without requiring documents. About 4 hours pass.');
 console.log(`PASS: ${copyCases.length} frozen/pseudo street, support/work and medical scenarios preserve English reports, ordered ports, costs, RNG, effects, decisions/groups and result rejection.`);
 
+// Shelter copy has no authority over bookings, queues, attendance or guards.
+const {shelter:shelterCatalog}=bundled('src/locales/en/shelter.ts');
+const pseudoShelter=Object.fromEntries(Object.entries(shelterCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+for(const[key,message]of Object.entries(shelterCatalog))if(typeof message==='string'&&!message.includes('{'))pseudoShelter[key]='';
+assert.deepEqual(validateCatalog(shelterCatalog,pseudoShelter),[]);
+const shelterShared=`export * from './src/game'; export * from './src/results'; export * from './src/journalIdentity';`;
+const shelterSource=shelterShared+`export * from './src/shelterController'; export * from './src/shelterRules'; export {default as ShelterQueueDialog} from './src/ShelterQueueDialog'; export * from './src/ShelterCheckoutDialog'; export {default as App} from './src/App';`;
+const shelterBase=bundled({source:shelterSource}),shelterView=bundled({source:shelterSource,catalogs:{shelter:pseudoShelter}});
+const shelterLegacy=bundled({source:shelterShared+`export * from './test-fixtures/shelterController-copy'; export * from './test-fixtures/shelterRules-copy'; export {default as ShelterQueueDialog} from './test-fixtures/ShelterQueueDialog-copy'; export * from './test-fixtures/ShelterCheckoutDialog-copy';`});
+let auditCases=0;
+for(const day of [2,3,7,30,31,32,60,61])for(const misses of [0,1,2,3])for(const last of [day-2,day-1])for(const audited of [day-3,day-1]){
+ const life={housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:70,shelterLastStayDay:last,shelterAuditDay:audited,shelterMisses:misses,shelterMissMonth:0};
+ assert.deepEqual(shelterBase.shelterAttendance(life,day),shelterLegacy.shelterAttendance(life,day));
+ const translated=shelterView.shelterAttendance(life,day),expected=shelterBase.shelterAttendance(life,day);assert.deepEqual(translated.life,expected.life);assert.equal(translated.message===undefined,expected.message===undefined);
+ assert.deepEqual(shelterView.shelterAttendance(translated.life,day).life,translated.life,'replayed attendance is idempotent');auditCases++;
+}
+const shelterCases=[];
+for(const day of [2,30,31,60])for(const minute of [480,481,1079,1080])for(const strikes of [0,1,2])shelterCases.push({method:'recordShelterDeparture',args:['street'],patch:{game:{day,minutes:minute},life:{shelterStrikes:strikes,shelterUntilDay:day}}});
+shelterCases.push({method:'recordShelterDeparture',args:['shelter']});
+for(const shelterCheckoutDue of [false,true])for(const departureBlocked of [false,true])shelterCases.push({method:'startShelterDeparture',patch:{shelterCheckoutDue,departureBlocked,game:{minutes:450}}});
+for(const shelterPhoneCharging of [false,true])for(const shelterBooked of [false,true])shelterCases.push({method:'completeShelterDeparture',repeat:true,patch:{shelterPhoneCharging,shelterBooked,shelterDeparture:{day:2,startAbsolute:1890},game:{minutes:480}}});
+shelterCases.push({method:'completeShelterDeparture'});
+for(const vacancies of [0,1,2,3])for(const peopleAhead of [0,1,2,3])shelterCases.push({method:'completeShelterQueue',repeat:true,patch:{shelterQueue:{day:2,total:20,remaining:0,arrivalMinute:1020,joinedAt:1100,vacancies,peopleAhead}}});
+shelterCases.push({method:'completeShelterQueue'});
+for(const step of ['reason','action'])for(const value of ['work','documents','health','nothing'])shelterCases.push({method:'answerShelterInterview',args:[value],patch:{shelterInterview:{step}}});
+for(const renewals of [0,1,2,4])for(const progress of ['none','work','referral','documents'])for(const value of ['jobcenter','daywork','documents','benefits','nothing','unknown'])shelterCases.push({method:'answerShelterInterview',args:[value],patch:{life:{shelterRenewals:renewals,...(progress==='work'?{employment:'Day work'}:progress==='referral'?{schroniskoReferral:true}:{})},shelterInterview:{step:'plan',action:progress==='documents'?'documents':'nothing'}}});
+for(let day=1;day<=7;day++)for(const minute of [959,960,1199,1200])for(const booked of [false,true])shelterCases.push({method:'beginShelterInterview',patch:{game:{day,minutes:minute},life:{shelterUntilDay:booked?20:0}}});
+for(const id of ['shelter-dinner','shelter-breakfast','shelter-laundry-drop','shelter-laundry-pickup','shelter-rest','unknown'])for(const day of [2,4,5])for(const minute of [389,390,419,420,479,480,1079,1080,1139,1140,1229,1230,1319,1320])for(const used of [false,true])shelterCases.push({method:'prepareShelterAction',args:[id],patch:{game:{day,minutes:minute},life:{shelterUntilDay:0,...(used?{shelterDinnerDay:day,shelterBreakfastDay:day,shelterLaundryDropDay:day,shelterRegistrationAttemptDay:day}:{})}}});
+for(const cached of [false,true])for(const arrivalDay of [1,2])for(const minute of [1020,1080,1100,1120])for(const roll of [0,.5,.999999])shelterCases.push({method:'prepareShelterAction',args:['shelter-rest'],roll,patch:{game:{minutes:minute},life:{shelterUntilDay:0,...(cached?{shelterVacancyDay:2,shelterVacancies:2}:{})},shelterArrival:{day:arrivalDay,minute:1020}}});
+shelterCases.push({method:'prepareShelterAction',args:['shelter-rest'],patch:{life:{shelterBlockedUntilDay:31}}});
+for(const remaining of [0,1,20])for(const minutes of [0,1,25])shelterCases.push({method:'tickShelterQueue',args:[minutes],patch:{shelterQueue:{day:2,total:20,remaining,arrivalMinute:1020,joinedAt:1100,vacancies:2,peopleAhead:0}}});
+function executeShelter(view,test,accepted=true){
+ const patch=test.patch??{};const state={game:{...initialState,day:2,minutes:1100,money:100,mood:35,locationId:'shelter',rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999,...patch.game},life:{housing:'Night shelter',employment:'Unemployed',income:'None',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,...patch.life},shelterQueue:patch.shelterQueue??null,shelterArrival:patch.shelterArrival??null,shelterDeparture:patch.shelterDeparture??null,shelterInterview:patch.shelterInterview??null,musicOn:true,phoneOpen:true,shelterPhoneCharging:patch.shelterPhoneCharging??false,selectedDestination:'shop',screen:'phone',activeGoal:{type:'night-shelter',day:2,minute:1080},message:'',ports:[],results:[],draws:0,returned:[]};
+ const setter=key=>value=>{state.ports.push([key]);state[key]=typeof value==='function'?value(state[key]):value;};
+ const snapshot=()=>JSON.parse(JSON.stringify({game:state.game,inventory:INITIAL_INVENTORY,effects:[],housing:state.life.housing}));
+ const host={setGame:(value,housing)=>{state.ports.push(['game',housing??null]);state.game=view.limitMood(typeof value==='function'?value(state.game):value,{housing:housing??state.life.housing});},setLife:setter('life'),setMessage:setter('message'),setMusicOn:setter('musicOn'),setPhoneOpen:setter('phoneOpen'),setShelterPhoneCharging:setter('shelterPhoneCharging'),setSelectedDestination:setter('selectedDestination'),setScreen:setter('screen'),setActiveGoal:setter('activeGoal'),applyAction:(game,result)=>view.applyAction(game,result,{housing:state.life.housing}),moodContext:(_game,housing)=>({housing:housing??state.life.housing}),requestSleep:kind=>state.ports.push(['sleep',kind]),resultSnapshot:snapshot,runWithResult:(identity,run,before=snapshot(),...flags)=>{state.ports.push(['result',identity.id,flags]);if(!accepted)return;run();const summary=view.summarizeResult(before,snapshot());state.results.push({...identity,journal:view.journalPresentation(identity,summary),summary});}};
+ const lastQueue={current:null},lastDeparture={current:null},vacancyRoll=new Map();
+ const session={shelterQueue:state.shelterQueue,shelterArrival:state.shelterArrival,shelterDeparture:state.shelterDeparture,shelterInterview:state.shelterInterview,setShelterQueue:setter('shelterQueue'),setShelterArrival:setter('shelterArrival'),setShelterDeparture:setter('shelterDeparture'),setShelterInterview:setter('shelterInterview'),lastQueue,lastDeparture,rollVacancies:day=>{if(!vacancyRoll.has(day))vacancyRoll.set(day,Math.floor(Math.random()*4));return vacancyRoll.get(day);}};
+ const context={game:state.game,life:state.life,current:{id:state.game.locationId},shelterCheckoutDue:true,departureBlocked:false,shelterPhoneCharging:state.shelterPhoneCharging,shelterBooked:true,...patch,game:state.game,life:state.life};
+ const random=Math.random;Math.random=()=>{state.draws++;return test.roll??.5;};
+ try{const controller=view.createShelterController(session,context,host);state.returned.push(controller[test.method](...(test.args??[])));if(test.repeat)state.returned.push(controller[test.method](...(test.args??[])));state.queueGuard=!!lastQueue.current;state.departureGuard=!!lastDeparture.current;return state;}finally{Math.random=random;}
+}
+function shelterMechanics(state){const{message,results,...mechanics}=state;return{...mechanics,results:results.map(({title,journal,...result})=>({...result,journal:{decisionId:journal.decisionId,groupId:journal.groupId}}))};}
+for(const test of shelterCases){
+ const old=executeShelter(shelterLegacy,test),actual=executeShelter(shelterBase,test),translated=executeShelter(shelterView,test);
+ assert.deepEqual(actual,old,`shelter frozen parity: ${test.method}`);assert.deepEqual(shelterMechanics(translated),shelterMechanics(actual),`shelter pseudo mechanics: ${test.method}`);
+ if(test.repeat)assert.equal(actual.results.length,1,'replayed completion applies only once');
+ if(['completeShelterQueue','completeShelterDeparture','answerShelterInterview'].includes(test.method)){const rejected=executeShelter(shelterView,test,false);assert.equal(rejected.draws,0);assert.equal(rejected.results.length,0);assert(rejected.ports.every(port=>port[0]==='result'));}
+}
+console.log(`PASS: ${auditCases} attendance and ${shelterCases.length} frozen/pseudo shelter scenarios preserve bookings, eligibility, deadlines, RNG/priority, extensions, History and once-only queue/checkout.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -662,6 +713,42 @@ try {
   for(const step of ['reason','action','plan']){const state=locationState('shelter',{shelterInterview:{step}});assert.deepEqual(locationControls(actionsView,state),locationControls(actionsBase,state));screenCases++;}
   assert.equal(actionsBase.actions.length,24);assert.equal(t('action.street.begRemaining',{count:1}),'1/3 attempt left today.');
   console.log(`PASS: ${screenCases} pseudo LocationScreen states preserve control order/disabled flags/command IDs, including all interview steps and missing documents/full phone.`);
+  let shelterDialogCases=0;
+  const shelterDialogs=[];
+  for(const minute of [1079,1080,1099,1100])for(const peopleAhead of [0,1,3])for(const total of [undefined,20])shelterDialogs.push({component:'ShelterQueueDialog',props:{minute,shelterQueue:{day:2,total,remaining:5,arrivalMinute:total?1020:undefined,joinedAt:1060,peopleAhead,vacancies:3}}});
+  for(const minute of [450,465,480,1439])for(const remaining of [0,15,30])for(const charging of [false,true])shelterDialogs.push({component:'ShelterDepartureDialog',props:{minute,shelterDeparture:{day:2,startAbsolute:1890},shelterDepartureRemaining:remaining,shelterPhoneCharging:charging}});
+  for(const minute of [449,450,479,480,1439])shelterDialogs.push({component:'ShelterCheckoutWarning',props:{minute}});
+  for(const test of shelterDialogs){
+    const show=(view)=>{let started=0;cleanup();render(React.createElement(view[test.component],{...test.props,onStart:()=>started++}));const html=document.body.innerHTML;const progress=[...document.querySelectorAll('[role="progressbar"]')].map(n=>[n.getAttribute('aria-valuenow'),n.getAttribute('aria-valuemax'),n.querySelector('i').style.width]);if(test.component==='ShelterCheckoutWarning'){const button=document.querySelector('button');assert.equal(document.activeElement,button);const event=new window.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true});button.dispatchEvent(event);assert(event.defaultPrevented);assert.equal(document.activeElement,button);button.click();assert.equal(started,1);}assert.equal(document.querySelector('.modal-narrative b'),null);return {html,progress};};
+    const old=show(shelterLegacy),actual=show(shelterBase),translated=show(shelterView);assert.equal(actual.html,old.html,'English shelter dialog DOM stays identical');assert.deepEqual(translated.progress,actual.progress);shelterDialogCases++;
+  }
+  const shelterTimers={set:window.setInterval,clear:window.clearInterval,random:Math.random};window.setInterval=()=>1;window.clearInterval=()=>{};Math.random=()=>.99;
+  try{
+    const restoreShelter=(view,gamePatch,life,extra)=>{
+      cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
+      const game={...comfortableStatus,mood:28,day:2,minutes:1120,locationId:'shelter',rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999,...gamePatch};
+      localStorage.setItem('street-life-save-v3',JSON.stringify(game));localStorage.setItem('street-life-situation-v1',JSON.stringify(life));localStorage.setItem('street-life-inventory-v1',JSON.stringify(INITIAL_INVENTORY));localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-effects-v1','[]');
+      for(const[key,value]of Object.entries(extra)){const saved=['street-life-shelter-queue-v1','street-life-shelter-departure-v1'].includes(key)?{...value,before:{game,inventory:INITIAL_INVENTORY,effects:[],housing:life.housing}}:value;localStorage.setItem(key,JSON.stringify(saved));}render(React.createElement(React.StrictMode,null,React.createElement(view.App)));
+      const read=key=>JSON.parse(localStorage.getItem(key));const snapshot=()=>({game:read('street-life-save-v3'),life:read('street-life-situation-v1'),inventory:read('street-life-inventory-v1'),effects:read('street-life-effects-v1'),queue:read('street-life-shelter-queue-v1'),departure:read('street-life-shelter-departure-v1'),charging:read('street-life-shelter-phone-charge-v1'),history:read('street-life-journal-history-v1')});
+      const first=snapshot();cleanup();render(React.createElement(React.StrictMode,null,React.createElement(view.App)));const second=snapshot();assert.deepEqual(second,first,'restored shelter completion/audit cannot replay across remount');return first;
+    };
+    const savedShelterMechanics=state=>({...state,history:state.history?.map(({actionTitle,title,text,...entry})=>entry)});
+    let restoredShelterCases=0;
+    for(const [vacancies,peopleAhead]of [[0,0],[3,3],[3,0]]){
+      const extra={'street-life-shelter-queue-v1':{day:2,total:20,remaining:0,arrivalMinute:1020,joinedAt:1100,vacancies,peopleAhead}};
+      const actual=restoreShelter(shelterBase,{},{housing:'Street'},extra),translated=restoreShelter(shelterView,{},{housing:'Street'},extra);
+      assert.deepEqual(savedShelterMechanics(translated),savedShelterMechanics(actual));assert.equal(translated.history.length,1);assert.equal(translated.queue,null);assert.equal(translated.game.mood,vacancies>peopleAhead?31:23);restoredShelterCases++;
+    }
+    for(const charging of [false,true])for(const booked of [false,true]){
+      const life={housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:booked?7:1,shelterLastStayDay:1,shelterAuditDay:1};
+      const extra={'street-life-shelter-departure-v1':{day:2,startAbsolute:1890},'street-life-shelter-phone-charge-v1':charging};
+      const actual=restoreShelter(shelterBase,{minutes:480},life,extra),translated=restoreShelter(shelterView,{minutes:480},life,extra);
+      assert.deepEqual(savedShelterMechanics(translated),savedShelterMechanics(actual));assert.equal(translated.history.length,1);assert.equal(translated.departure,null);assert.equal(translated.charging,null);assert.equal(translated.game.locationId,'street');assert.equal(translated.life.shelterCheckoutDay,2);restoredShelterCases++;
+    }
+    const missed={housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,shelterMisses:2,shelterMissMonth:0};
+    const audited=restoreShelter(shelterView,{day:4,minutes:600,rainScheduleDay:4},missed,{}),expectedAudit=restoreShelter(shelterBase,{day:4,minutes:600,rainScheduleDay:4},missed,{});assert.deepEqual(savedShelterMechanics(audited),savedShelterMechanics(expectedAudit));assert.equal(audited.life.shelterBlockedUntilDay,31);assert.equal(audited.life.shelterMisses,3);restoredShelterCases++;
+    console.log(`PASS: ${shelterDialogCases} shelter dialog DOM/focus/progress variants and ${restoredShelterCases} pseudo App/StrictMode restore/remount states preserve saved clocks, booking/phone and one-time History/rewards.`);
+  }finally{cleanup();window.setInterval=shelterTimers.set;window.clearInterval=shelterTimers.clear;Math.random=shelterTimers.random;}
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){

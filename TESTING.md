@@ -439,3 +439,17 @@ The same cases protect the persisted 'Day work' employment enum from translation
 Targeted action-controller/boundary checks, street-trash/journal-services/needs-mood
 regressions and build passed. No JSX/CSS changed; no fresh browser/visual/full
 suite/WebKit/iPhone run is claimed for this controller-only extraction.
+
+
+Shelter catalogue checkpoint: check-localization compares 128 attendance cases
+and 797 controller cases against frozen1f39ed9 and a pseudo shelter catalogue.
+It checks all queue outcomes, extension/plan/day/month/strike boundaries, arrival
+priority/vacancy RNG, ordered commands, result rejection and one-time completion.
+53 queue/warning/departure DOM variants preserve English markup, progress and
+focus/Tab/start handling. Eight actual App/StrictMode restore/remount states
+preserve clocks/stats/bookings/phone and exactly-once History/rewards; saved copy
+remains byte-for-byte stable within each locale. Cross-locale comparisons retain
+IDs/groups and exclude intentionally translated History presentation fields.
+Rest/load/boundary/design checks, shelter-sleep/journal-services/phone-clock
+regressions and build passed. Browser comparisons at390/1280 plus expanded390
+copy match original geometry and fit panels; full suites/WebKit/iPhone unrun.
