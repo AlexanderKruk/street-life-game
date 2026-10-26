@@ -18,6 +18,8 @@ export const common = {
   'activity.travel': 'Time on the way',
   'activity.elapsedTravel': 'Elapsed travel time',
   'stat.thirst': 'Thirst',
+  'stat.hunger': 'Food',
+  'stat.health': 'Health',
   'stat.energy': 'Energy',
   'stat.hygiene': 'Hygiene',
   'stat.mood': 'Mood',

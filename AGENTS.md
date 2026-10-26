@@ -476,3 +476,18 @@ GitHub's skip-command behaviour is documented at
 https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs.
 An explicit later request to publish still follows the existing full-check and
 GitHub Pages procedure; the source-save shortcut does not replace that gate.
+
+
+Status checkpoint (26 October 2026): statusPresentation.ts maps persisted
+Housing/employment/income identities and ephemeral document state to catalogue
+labels. LifeSituation receives those machine values, not translated strings.
+MoodLimitReason/LimitReason retain their existing internal values; changing
+labels must not change caps, cause grouping or saved data. Short reason lists
+(use Intl unit-list formatting) and longer effect-card names have separate
+contexts. results.ts also formats cap reasons through this presentation layer.
+conditionBand/overallCondition return stable level identities only; use
+conditionLabel for text, including Stat, GameHeader and BottomNavigation.
+Stat exposes data-resource-id independently of its displayed data-stat label.
+Status/Life situation messages and effect-duration plurals are in status.ts;
+weather/HUD copy still requires its own migration. Do not translate machine
+weather values before removing their gameplay/display coupling.

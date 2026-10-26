@@ -23,8 +23,8 @@ export function statusImpactChips(id: EffectId, moodCap?: number, translate: typ
 
 export function remainingEffect(expiresAt: number, game: GameState) {
   const left = Math.max(0, expiresAt - absoluteMinutes(game))
-  if (left >= 1440) return `${Math.ceil(left / 1440)} days`
-  if (left >= 60) return `${Math.ceil(left / 60)}h`
-  return `${left}m`
+  if (left >= 1440) return t('status.duration.days', { days: Math.ceil(left / 1440) })
+  if (left >= 60) return t('status.duration.hours', { hours: Math.ceil(left / 60) })
+  return t('status.duration.minutes', { minutes: left })
 }
 

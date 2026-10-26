@@ -1,3 +1,4 @@
+import { limitReasonsLabel } from './statusPresentation'
 import { t } from './i18n'
 import { journalPresentation, journalDecisionKey } from './journalIdentity'
 import type { ActionHistoryFacts } from './actionHistory'
@@ -320,12 +321,12 @@ export default function App() {
   const laundryCleanAt = useRef(-1)
   const hygieneLimit = clothingHygieneCap(inventory.clothingCleanliness)
   const statusNeeds: StatusNeed[] = [
-    { id: 'hunger', label: 'Food', value: game.hunger, icon: 'food' as IconName },
-    { id: 'thirst', label: 'Thirst', value: game.thirst, icon: 'water' as IconName },
+    { id: 'hunger', label: t('stat.hunger'), value: game.hunger, icon: 'food' as IconName },
+    { id: 'thirst', label: t('stat.thirst'), value: game.thirst, icon: 'water' as IconName },
     { id: 'energy', label: t('stat.energy'), value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
-    { id: 'health', label: 'Health', value: game.health, icon: 'heart' as IconName },
+    { id: 'health', label: t('stat.health'), value: game.health, icon: 'heart' as IconName },
     { id: 'hygiene', label: t('stat.hygiene'), value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
-    { id: 'mood', label: t('stat.mood'), value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: moodCeiling.reasons.join(', ') },
+    { id: 'mood', label: t('stat.mood'), value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: limitReasonsLabel(moodCeiling.reasons) },
   ]
   // Dangerous physical needs take precedence over a lower mood score.
   const dangerousNeeds = statusNeeds.filter(need => need.id !== 'mood' && need.value <= 20)
@@ -770,7 +771,7 @@ export default function App() {
     {screen === 'inventory' && <InventoryScreen inventory={inventory} hygiene={game.hygiene} usedBackpackSlots={usedBackpackSlots} shelterPhoneCharging={shelterPhoneCharging}
       onUseItem={useItem} onUseSupply={useSupply} onSmoke={smokeCigarette} onMedicine={useMedicine} onRequestFood={requestFood} onDiscard={setDiscardItem} />}
     {screen === 'status' && <StatusScreen game={game} statusEffects={statusEffects} statLimits={statLimits} separateLimits={separateLimits} statusNeeds={statusNeeds} focusedNeed={focusedNeed}
-      situation={{ housing: life.housing, employment: life.employment, income: life.income, documents: inventory.documents ? 'With you' : storage.documents ? 'Stored safely' : 'Missing' }} />}
+      situation={{ housing: life.housing, employment: life.employment, income: life.income, documents: inventory.documents ? 'carried' : storage.documents ? 'stored' : 'missing' }} />}
     {screen === 'phone' && <PhoneScreen busy={!!phoneActivity} app={phoneApp} onApp={openPhoneApp} pendingGoals={pendingGoals.length} unavailable={phoneUnavailable} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} onPlan={() => setPhoneOpen(true)}>
       {phoneApp === 'goals' && <JournalGoals pending={pendingGoals} completed={completedGoals} />}
       {phoneApp === 'history' && <PhoneHistoryScreen journalDay={journalDay} today={game.day} entries={journalEntries} onDayChange={setSelectedJournalDay} />}

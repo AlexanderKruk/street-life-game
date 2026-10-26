@@ -375,3 +375,16 @@ cases passed unchanged. A temporary comparison with 3dfed72 matched 9 item
 definitions, 27 food outcomes and 73 command scenarios, plus 8 extra browser
 food-choice/discard/medicine/storage states on both sizes. Long pseudo-copy
 browser layout, full suites, WebKit and iPhone remain unrun.
+
+
+Status catalogue checkpoint: check-localization covers all housing/cause/employment/
+income mappings, effect-duration boundaries, tied empty cause names, translated
+result cap reasons, and actual App under pseudo status/common/effect catalogues.
+All six housing caps preserve Mood, faces, timestamps, stored-document display
+and persisted machine enums. Targeted mood/results/rendering/boundary/wetness
+checks, needs-mood/journal-services regressions and build passed. Four selected
+street/result visual cases passed without changed baselines. Eight Status browser
+cases match eecb1c5 in visible text, header labels/classes, caps/groups/life fields.
+Only the ungrammatical singular duration is corrected to 1 day; ceil is unchanged.
+Full suites/long pseudo browser layout/WebKit/iPhone unrun. Main source saves
+use [skip ci] and do not require new builds or CI waits solely for uploading.

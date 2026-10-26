@@ -335,3 +335,10 @@ CSS не менялся; новый визуальный прогон в бра�
 хранение и inventoryCommands/foodConsumption используют каталог inventory.ts
 и itemPresentation; проверки и следующие блоки записаны в LOCALIZATION.md. Это локальная работа без повышения release/build ID
 и без публикации; исторические проверки v332 выше к ней не относятся.
+
+
+Status/Life situation now use statusPresentation/status catalogue. Persisted
+enums and numeric caps remain stable, condition bands expose level IDs and all
+condition text is rendered separately. Main source checkpoints are authorised
+with [skip ci]; publishing remains separate. See LOCALIZATION.md for verification
+and the next HUD/weather stage.

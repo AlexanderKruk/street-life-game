@@ -1,3 +1,4 @@
+import { conditionLabel } from './statusPresentation'
 import { conditionBand, type Location } from './game'
 import type { Screen } from './stateTypes'
 import { Icon, locationIcon, type IconName } from './Icon'
@@ -12,7 +13,7 @@ export default function BottomNavigation({ screen, blocked, phoneBusy, travellin
       {nav('map', 'map', t('nav.map'))}
       {nav('inventory', 'backpack', t('nav.inventory'))}
       <button disabled={phoneBusy || travelling || blocked} className={screen === 'location' ? 'nav-item home active' : 'nav-item home'} aria-current={screen === 'location' ? 'page' : undefined} onClick={() => onNavigate('location')}><Icon name={locationIcon(current.id)} /><small>{current.name}</small></button>
-      <button disabled={phoneBusy || travelling || blocked} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => onNavigate('status')} aria-label={t('nav.status')} title={moodBand.label}><Icon name="person" /><small>{t('nav.status')}</small><i className={`nav-condition ${moodBand.level}`} aria-hidden="true" /></button>
+      <button disabled={phoneBusy || travelling || blocked} className={screen === 'status' ? 'nav-item active' : 'nav-item'} aria-current={screen === 'status' ? 'page' : undefined} onClick={() => onNavigate('status')} aria-label={t('nav.status')} title={conditionLabel(moodBand.level)}><Icon name="person" /><small>{t('nav.status')}</small><i className={`nav-condition ${moodBand.level}`} aria-hidden="true" /></button>
       {nav('phone', 'phone', t('nav.phone'))}
     </nav>
 }

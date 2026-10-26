@@ -26,3 +26,7 @@ export function formatResultDelta(amount: number, id: ResultResourceId, precisio
   if (['wetness', 'phoneBattery', 'phoneCondition', 'clothingCleanliness', 'jacket'].includes(id)) return t('format.percent', { amount: signed })
   return signed
 }
+
+export function formatLabelList(labels: readonly string[]) {
+  return new Intl.ListFormat(locale, { style: 'short', type: 'unit' }).format(labels)
+}

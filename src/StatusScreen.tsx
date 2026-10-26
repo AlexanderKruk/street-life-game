@@ -17,13 +17,13 @@ type Props = {
 }
 export default function StatusScreen({ game, statusEffects, statLimits, separateLimits, statusNeeds, focusedNeed, situation }: Props) {
   const statusEffectCount = statusEffects.length + separateLimits.length + (CLOTHING_WETNESS_ENABLED && (game.wetness ?? 0) > 0 ? 1 : 0)
-  return <section className="status-screen" aria-label="Status">
+  return <section className="status-screen" aria-label={t('status.label')}>
       {!!statusEffectCount && <section className="status-effects" aria-labelledby="status-effects-heading">
-        <div className="effects-heading"><h3 id="status-effects-heading">Effects</h3><span>{statusEffectCount}</span></div>
+        <div className="effects-heading"><h3 id="status-effects-heading">{t('status.effects')}</h3><span>{statusEffectCount}</span></div>
         <div className="effects-list">
           {CLOTHING_WETNESS_ENABLED && (game.wetness ?? 0) > 0 && <div className="effect negative wet-clothes">
-            <span><Icon name="water" /></span><strong className="effect-name">Wet clothes</strong>
-            <div className="effect-details"><div className="effect-impact">{(['energy-loss', 'mood-loss'] as const).map(id => impactChip(id)).map(chip => <b key={chip.id}>{chip.label}</b>)}</div><small className="effect-time">{Math.max(1, Math.round(game.wetness!))}%</small></div>
+            <span><Icon name="water" /></span><strong className="effect-name">{t('status.wetClothes')}</strong>
+            <div className="effect-details"><div className="effect-impact">{(['energy-loss', 'mood-loss'] as const).map(id => impactChip(id)).map(chip => <b key={chip.id}>{chip.label}</b>)}</div><small className="effect-time">{t('format.percent', { amount: Math.max(1, Math.round(game.wetness!)) })}</small></div>
           </div>}
           {separateLimits.map(effect => <div className="effect negative limit-effect" data-limit-reason={effect.reason} data-mood-limit={effect.limits.some(limit => limit.stat === 'mood') ? effect.reason : undefined} key={effect.reason}>
             <span><Icon name={effect.icon} /></span><strong className="effect-name" title={effect.name}>{effect.name}</strong>
@@ -39,9 +39,9 @@ export default function StatusScreen({ game, statusEffects, statLimits, separate
           })}
         </div>
       </section>}
-      <div className="condition-heading"><h3>Condition</h3></div>
+      <div className="condition-heading"><h3>{t('status.condition')}</h3></div>
       {focusedNeed && <Stat id={focusedNeed.id} label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} capReason={focusedNeed.capReason} focus />}
-      <div className="status-needs" aria-label={focusedNeed ? 'Other condition indicators' : 'Condition indicators'}>
+      <div className="status-needs" aria-label={t(focusedNeed ? 'status.otherIndicators' : 'status.indicators')}>
         {statusNeeds.filter(need => need.id !== focusedNeed?.id).map(need => <Stat key={need.id} id={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} capReason={need.capReason} />)}
       </div>
       <LifeSituation {...situation} />

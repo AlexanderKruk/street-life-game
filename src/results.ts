@@ -1,3 +1,4 @@
+import { limitReasonsLabel } from './statusPresentation'
 import { clothingHygieneCap } from './hygieneRules'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { absoluteMinutes, energyCap, moodLimit, type GameState, type Housing } from './game'
@@ -36,7 +37,7 @@ export function summarizeResult(before: ResultSnapshot, after: ResultSnapshot, i
     const cleanliness = after.inventory.clothingCleanliness ?? 100
     const mood = key === 'mood' ? moodLimit(after.game, { housing: after.housing, effects: after.effects }) : undefined
     const cap = key === 'energy' ? energyCap(after.game.health) : key === 'hygiene' ? clothingHygieneCap(cleanliness) : mood?.cap
-    add(key, after.game[key] - before.game[key], false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}), ...(mood ? { capReason: mood.reasons.join(', ') } : {}) })
+    add(key, after.game[key] - before.game[key], false, false, 1, { before: before.game[key], after: after.game[key], ...(cap !== undefined ? { cap } : {}), ...(mood ? { capReason: limitReasonsLabel(mood.reasons) } : {}) })
   }
   add('intoxication', after.game.intoxication - before.game.intoxication, true)
   if (CLOTHING_WETNESS_ENABLED) add('wetness', (after.game.wetness ?? 0) - (before.game.wetness ?? 0), true, false, 0)

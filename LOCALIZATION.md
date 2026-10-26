@@ -17,12 +17,13 @@ Ordering/grouping новых записей используют ID с совм�
 Длительности и подписи D20 используют явные данные; старый button adapter удалён.
 Freshness/effect chips используют ID/kind/resource metadata. Каталог предметов,
 рюкзака, магазина, хранения и связанных команд/еды перенесён в inventory.ts.
-Не завершено: остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
+Status/Life situation и причины ограничений также используют каталоги и enum-to-label mapping.
+Не завершено: HUD/погода, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: Status, Life situation и представление причин ограничений/внутренних enum. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: HUD/погода — отдельные display names вместо английских weather IDs. Сохранившийся пакет иконок не переделывать.
 
 ## Задание для нового чата
 
@@ -519,3 +520,39 @@ journal-services; build и diff --check — PASS.
 жилья и эффектов отдельно от внутренних enum. Затем HUD/погода, локации,
 действия/события/телефон и оставшиеся процессы. Broken-screen metadata,
 остаточный строковый аудит и мобильные дефекты остаются открыты.
+
+
+### Status/Life situation и отображение внутренних значений — 26 октября 2026
+
+statusPresentation.ts и locales/en/status.ts отделяют имена жилья, занятости,
+дохода, документов и причин ограничений от машинных значений. Housing и другие
+значения сохранений не менялись. LifeSituation принимает ID, а не готовую
+английскую подпись. Короткий список причин и длинное имя карточки имеют разные
+контексты; список форматирует Intl.ListFormat. Числовые правила moodLimit,
+energyCap, clothingHygieneCap, tied/grouped causes и focus-selection прежние.
+
+conditionBand/overallCondition возвращают level без английского label. Stat,
+GameHeader и BottomNavigation получают текст через conditionLabel; лица и классы
+определяет прежний level. Stat имеет data-resource-id, независимый от подписи.
+results.ts форматирует причины через тот же слой. В Status вынесены заголовки,
+доступные имена, Wet clothes, Life situation и время эффектов. Единственная
+грамматическая нормализация — 1 day вместо 1 days; округление ceil не менялось.
+
+Проверено: check-localization (полный mapping, длительности на границах,
+пустые совпадающие имена причин, translated result cap, реальный App с шестью
+вариантами жилья, сохранённые enum/время/документы/лица), check-mood,
+check-results, check-rendering, check-module-boundaries (130 модулей),
+check-wetness и check-wetness-disabled; regression/needs-mood и journal-services;
+production build и diff --check — PASS. Выбранные visual street/result на
+390×844 и 1280×900 — 4/4 PASS, эталоны не менялись. Восемь браузерных случаев
+Cold/более сильный Thirst/объединённые Health-лимиты/Life situation совпали с
+eecb1c5 по тексту, Mood aria/title/classes, значениям/caps, группам и полям жизни.
+Длинная псевдолокаль в браузере, полные наборы, WebKit/iPhone не запускались.
+
+По указанию пользователя готовые этапы сохраняются также в main с [skip ci],
+без запуска/ожидания CI build/deploy. Метод закреплён отдельным коммитом
+c6abdef в AGENTS.md; первый main checkpoint — faa2c3b, документация — e4570ee.
+Это сохранение исходников; опубликованная игра остаётся v335. Не выполнять
+отдельную публикацию без указания пользователя и финальных проверок.
+Следующий этап — HUD/погода, включая weather display identity; затем локации,
+события/телефон/процессы, broken-screen metadata и остаточный/редакторский аудит.
