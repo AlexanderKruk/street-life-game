@@ -134,7 +134,7 @@ export function useTrashController(session: Session, context: Context, host: Hos
     if (trashGame && Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
   })
 
-  function finishTrashSearch() { runWithResult({ id: 'trash-search', title: 'Trash search results' }, finishTrashSearchImpl, trashGame?.before ?? resultSnapshot()) }
+  function finishTrashSearch() { runWithResult({ id: 'trash-search', title: 'Trash search results', actionHistory: { kind: 'action', failed: trashGame?.found === 0 } }, finishTrashSearchImpl, trashGame?.before ?? resultSnapshot()) }
   function endTrashDrag(id: number) {
     const tapped = trashDrag.current?.id === id && !trashDrag.current.moved
     trashDrag.current = null

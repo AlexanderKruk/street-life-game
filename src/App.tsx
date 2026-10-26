@@ -1,3 +1,4 @@
+import { actionHistoryReflection, type ActionHistoryFacts } from './actionHistory'
 import { inventoryHistoryReflection, type InventoryHistoryFacts } from './inventoryHistory'
 import { eventHistoryReflection } from './eventHistory'
 import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,RAIN_RESPONSE_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
@@ -40,7 +41,7 @@ import { displayDay } from './gameDate'
 import { absoluteMinutes,formatTravelTime,weekday } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_STORAGE,SHOP_ITEMS,backpackSlots,storageSlots } from './inventory'
-import { journalReflection,type JournalEntry } from './journal'
+import { type JournalEntry } from './journal'
 import { resultActionAllowed, type ResultAction } from './resultActions'
 import { limitingEffects } from './limitingEffects'
 import { CLOSING_NOTICE_KEY,locationClosedSince } from './locationClosing'
@@ -423,10 +424,12 @@ export default function App() {
     trashSession, { inventory, currentId: current.id, activeEvent: !!activeEvent },
     { setInventory, setGame, setMessage, setInfoModal, applyAction, runWithResult, resultSnapshot })
 
-  function runWithResult(identity: ResultAction, action: () => void | InventoryHistoryFacts, before = resultSnapshot(), includeTime = true, always = false, consumedItems: ConsumedItem[] = []) {
+  function runWithResult(identity: ResultAction, action: () => void | InventoryHistoryFacts | ActionHistoryFacts, before = resultSnapshot(), includeTime = true, always = false, consumedItems: ConsumedItem[] = []) {
     if (!resultActionAllowed(identity.id, { sleepChoice: !!sleepChoice, shelterQueue: !!shelterQueue, shelterDeparture: !!shelterDeparture, shelterCheckoutDue, activeEvent: !!activeEvent, diceCheck: !!diceCheck, shelterInterview: !!shelterInterview })) return
-    const inventoryHistory = action() ?? identity.inventoryHistory
-    setPendingResult({ ...identity, inventoryHistory, before, includeTime, always, consumedItems })
+    const facts = action()
+    const inventoryHistory = facts && !('kind' in facts) ? facts : identity.inventoryHistory
+    const actionHistory = facts && 'kind' in facts ? facts : identity.actionHistory
+    setPendingResult({ ...identity, inventoryHistory, actionHistory, before, includeTime, always, consumedItems })
   }
 
   useEffect(() => {
@@ -446,7 +449,7 @@ export default function App() {
     if (lastRecordedResult.current !== pendingResult) {
       lastRecordedResult.current = pendingResult
       const actionTitle = pendingResult.title
-      const reflection = pendingResult.inventoryHistory ? inventoryHistoryReflection(pendingResult.id, pendingResult.inventoryHistory, summary) : pendingResult.eventHistory ? eventHistoryReflection(pendingResult.eventHistory, summary) : journalReflection(infoModal?.title ?? actionTitle, resultText, summary, memory?.id)
+      const reflection = pendingResult.inventoryHistory ? inventoryHistoryReflection(pendingResult.id, pendingResult.inventoryHistory, summary) : pendingResult.eventHistory ? eventHistoryReflection(pendingResult.eventHistory, summary) : actionHistoryReflection(pendingResult, summary, memory?.id)
       const entry: JournalEntry = { day: game.day, minute: game.minutes, actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}), actionTitle, reflection: true, ...reflection }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }

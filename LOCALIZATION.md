@@ -11,14 +11,15 @@
 и icon metadata. В этом восстановленном пакете новые реакции 25 авторских
 событий (66 исходов) переведены на ID и факты, каталог `eventHistory.ts`.
 
-Не завершено: History остальных контроллеров, изоляция старого
-parser, seeded ordering/grouping, duration/check-label parsing, effect chips,
+Новые реакции остальных контроллеров также используют ID/facts; старый parser
+изолирован в legacyJournalCompatibility.ts и применяется только при загрузке.
+Не завершено: seeded ordering/grouping, duration/check-label parsing, effect chips,
 остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: остальные контроллеры и legacy-only parser. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: seeded ordering/grouping по ID, затем duration/check metadata. Сохранившийся пакет иконок не переделывать.
 
 ## Задание для нового чата
 
@@ -362,3 +363,30 @@ check-localization дополнен 66 сценариями инвентаря, 
 один outcome и один severity draw и возвращает правильные факты.
 
 Проверки этого пакета: check-localization.cjs, check-inventory-commands.cjs, check-module-boundaries.cjs (115 модулей), regression/shop-inventory, regression/journal-services, regression/street-trash и npm run build — PASS. git diff --check — PASS. Полный набор и browser/visual не запускались; публикации не было.
+
+
+### Восстановление остальных контроллеров History
+
+`actionHistory.ts` и `actionHistoryDefinitions.ts` выбирают новые реакции по
+стабильному action ID, ActionHistoryFacts, memory ID и actual summary. Факты
+передаются в существующей точке решения очереди, услуг, улицы, поддержки, сна,
+поиска и прибытия. Callback возвращает facts после принятия действия; прежние
+расходы, RNG, часы и once-only guards сохранены.
+
+64 заголовка и сообщения вынесены в locales/en/actionHistory.ts. Defs содержат
+явные варианты mood/health/money/bottles/failed, без распознавания английского.
+Порядок условий для денежных действий отличается от общего fallback и сохранён.
+Отдельно сохранены repeated search, illness-презентация сна и memory priority.
+Старые особенности текста, кроме ранее исправленных покупок, не редактировались.
+
+Исходный parser/loader перенесён в legacyJournalCompatibility.ts. journal.ts
+оставляет тип и совместимые exports; новые игровые реакции не вызывают parser.
+Прямые rain/closing записи сохраняют свои writers и текст. Старые reflection:true,
+пустые реакции и completion timestamps не переписываются. Grouping/ordering
+всё ещё зависят от текста и остаются следующим этапом, не считать их готовыми.
+
+Проверки: check-localization.cjs (64 headings × 6 summaries, явные отказы,
+поддержка/повторный поиск/сон/прибытие/memories), action/rest/phone/event-travel
+controllers, module boundaries (119 модулей), regression/journal-services,
+phone-clock, shelter-sleep, map-travel, street-trash и npm run build — PASS.
+Полные наборы и browser/visual не запускались. Публикации игры не было.

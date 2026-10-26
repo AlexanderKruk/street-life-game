@@ -371,3 +371,14 @@ accepts them. Resolve food randomness once in the existing command handler;
 never in a React updater or before the guard. Purchases must not imply eating,
 washing or taking medicine. Keep saved reflections unchanged. Other controller
 History still requires migration; do not claim the parser is fully retired.
+
+
+Restored action History now uses actionHistoryReflection(action, summary,
+memoryId), actionHistoryDefinitions and locales/en/actionHistory.ts. No report
+prose or modal headings are passed to its resolver. ActionHistoryFacts capture
+refusal/support/search/sleep/arrival state after the existing guard accepts the
+command. The old parser/loader is isolated in legacyJournalCompatibility.ts:
+new gameplay must not call it. Text-based ordering/grouping and duration/check
+metadata remain migration targets. Preserve direct rain/closing writers and
+saved historical text. Back up completed stages in the existing GitHub backup
+branch without changing main or publishing the game.

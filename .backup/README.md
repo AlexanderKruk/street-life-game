@@ -1,22 +1,16 @@
 # Localisation backup — 26 October 2026
 
-This branch is a backup only. Do not merge or publish it automatically.
+Backup only. Do not merge or deploy automatically.
 
-Source HEAD: c5794b96b9cf3c8cb3b208b107a6b84f5a081ac3
-Verified source tree: a91a2e645eef9ea49b33fd35594d1dce38a26f30
+Original local HEAD: eaa5db2e3e4bbcb31530f15706babc43601354e0
+Verified source tree: be6d62246974271a5bc3ced9750a8acd041651f2
 Published prerequisite: d8ff6fac4236badc45df86195d3295d7cfee64af
 
-The source files in this snapshot match the local source tree byte for byte.
-The additional .backup directory holds an original Git bundle preserving these
-five exact commits (not recreated commit hashes):
+Source files match the local source tree byte for byte. The bundle preserves
+all six original commits with exact hashes:
+7bb039f, 40175a7, 21ee7f8, 5492abd, c5794b9, eaa5db2.
 
-- 7bb039f — typed English catalogues and stable result identities
-- 40175a7 — localisation foundation checkpoint
-- 21ee7f8 — explicit choice icon metadata
-- 5492abd — restored authored-event History and current task plan
-- c5794b9 — restored inventory History
-
-Restore the original history in a clone containing the published prerequisite:
+Restore original history in a clone containing the published prerequisite:
 
 ```sh
 git fetch origin backup/localization-2026-10-26
@@ -26,7 +20,11 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Continue from LOCALIZATION.md and LOCALIZATION_TASK.md. History for authored
-events and inventory is restored. Other controller History, ordering/grouping,
-duration/check-label metadata and most text catalogues remain incomplete.
-No language switch or publication was requested.
+Continue from LOCALIZATION.md / LOCALIZATION_TASK.md. New History now uses
+IDs/facts for authored events, inventory and remaining controllers. The old
+parser is restricted to old-save conversion. Ordering/grouping, duration/check
+metadata and the remaining text catalogues still need work.
+
+Validation: targeted localisation/controller/module/regression checks and
+production build passed. Full suites and browser/visual checks were not run.
+main and the published game remain unchanged.

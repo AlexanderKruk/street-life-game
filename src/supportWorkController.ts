@@ -28,38 +28,39 @@ export function createSupportWorkController(context: Context, host: Host) {
     if (!open || currentId !== 'support') return
     if ((kind === 'transport' || kind === 'benefits') && !inventory.documents) {
       setMessage(storage.documents ? 'Your documents are stored at the shelter. Take them with you for this application.' : 'You need basic documents for this application. Ask for help restoring them first.')
-      return
+      return { kind: 'action' as const, supportOutcome: 'needed' as const }
     }
     if (kind === 'housing') {
       setDiscoveredLocations(prev => prev.includes('residential-shelter') ? prev : [...prev, 'residential-shelter'])
       if (life.schroniskoReferral) {
         setMessage('You already have a referral to Schronisko. It is available on the map.')
-        return
+        return { kind: 'action' as const, supportOutcome: 'unchanged' as const }
       }
       setGame((prev) => applyAction(prev, { minutes: 35, mood: 3 }))
       setLife((status) => ({ ...status, schroniskoReferral: true }))
       setMessage('The social worker gives you a referral to Schronisko. The address is saved on your map.')
-      return
+      return { kind: 'action' as const, supportOutcome: 'referral' as const }
     }
     if (kind === 'documents') {
       if (inventory.documents) {
         setMessage('Your basic documents are currently complete.')
-        return
+        return { kind: 'action' as const, supportOutcome: 'unchanged' as const }
       }
       setGame((prev) => applyAction(prev, { minutes: 60, mood: 3 }))
       setInventory((prev) => ({ ...prev, documents: true }))
       setMessage('The social worker helps you replace your missing documents.')
-      return
+      return { kind: 'action' as const, supportOutcome: 'restored' as const }
     }
     if (kind === 'transport') {
       const expiresAt = absoluteMinutes(game) + 3 * 1440
       setGame((prev) => applyAction(prev, { minutes: 25 }))
       setEffects((active) => [...active.filter((effect) => effect.id !== 'free-transit'), { id: 'free-transit', expiresAt }])
       setMessage('You receive a pass for 3 days of free public transport.')
-      return
+      return { kind: 'action' as const, supportOutcome: 'transport' as const }
     }
     setGame((prev) => applyAction(prev, { minutes: 30, mood: 2 }))
     setMessage('The social worker explains which benefits may be available. You leave with information about your options.')
+    return { kind: 'action' as const, supportOutcome: 'benefits' as const }
   }
 
   function takeDayWorkImpl() {

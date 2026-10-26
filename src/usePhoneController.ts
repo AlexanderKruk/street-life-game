@@ -124,7 +124,7 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
         ? `${presentation.places[0].name} · ${presentation.places[0].hours}. ${presentation.places[0].detail}. The address is saved on your map.`
         : 'You checked the available information again, but found no new places.'
       : question.text
-    runWithResult({ id: `question:${id}`, title: id === 'morning' && !foundPlace ? 'Searched for more help' : question.title }, () => {
+    runWithResult({ id: `question:${id}`, title: id === 'morning' && !foundPlace ? 'Searched for more help' : question.title, actionHistory: { kind: 'action', noNewInformation: id === 'morning' && !foundPlace } }, () => {
       const next = { ...game }
       if (id !== 'morning' || foundPlace) next.mood = Math.max(next.mood, Math.min(moodCap(next), before.game.mood + 3))
       setGame(next)

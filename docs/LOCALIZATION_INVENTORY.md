@@ -114,3 +114,5 @@ separately; no device result is implied by this matrix.
 Recovery checkpoint, 26 October 2026: authored event History uses eventHistory.ts / eventHistoryDefinitions.ts and locales/en/eventHistory.ts (66 outcomes). Other controller reflections still use the previous parser. Runtime scene/choice prose, ordering/grouping and duration/check-label parsing remain pending. Explicit icon metadata from 21ee7f8 is retained.
 
 Inventory History recovery: inventoryHistory.ts / locales/en/inventoryHistory.ts now use action IDs and resolved command facts. The remaining controller parser, ordering/grouping and duration/check-label migration are still pending. Purchase reactions no longer imply consumption/treatment/washing.
+
+Remaining-controller History recovery: new results use actionHistory.ts/definitions and locales/en/actionHistory.ts. Legacy phrase parsing is restricted to old-save conversion. Text-based choice ordering/grouping and duration/check-label metadata remain pending.

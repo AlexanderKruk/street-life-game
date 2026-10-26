@@ -55,7 +55,7 @@ export function createShelterController(session: ShelterSession, context: Contex
   function completeShelterQueue() {
     if (!shelterQueue || lastQueue.current === shelterQueue) return
     const queued = shelterQueue
-    runWithResult({ id: 'shelter-registration', title: 'Shelter registration' }, () => {
+    runWithResult({ id: 'shelter-registration', title: 'Shelter registration', actionHistory: { kind: 'action', failed: queued.vacancies <= queued.peopleAhead } }, () => {
       lastQueue.current = queued
       setShelterQueue(null)
       if (queued.vacancies > queued.peopleAhead) {

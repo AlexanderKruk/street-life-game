@@ -323,3 +323,10 @@ GitHub workflow сохраняет отчёты на 14 дней и не обн�
 покупки/отказы, хранение и нечисловые подписи summary. Покупки проверяются на
 отсутствие ложных утверждений об употреблении/лечении/мытье. Новых runner-скриптов
 не добавлено; старые fixtures сохранений и проверки механики сохранены.
+
+
+Restored remaining-controller History: check-localization compares 64 heading
+fixtures at six summary states and explicit refusals/support/search/sleep/arrival
+and memory variants. Action/rest/phone/event-travel controller checks and five
+regression groups passed along with the build. This does not verify browser
+layout, WebKit/iPhone or the unfinished ordering/grouping migration.

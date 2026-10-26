@@ -50,6 +50,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
     const earned = roll < 0.35 ? 0 : roll < 0.65 ? 1 : roll < 0.85 ? 2 : roll < 0.96 ? 3 : 5
     setGame((prev) => applyAction(prev, { minutes: 45, money: earned, energy: -2, mood: earned > 0 ? 1 : -3 }))
     setMessage(earned > 0 ? `You spend 45 minutes asking passers-by for help and collect ${earned.toFixed(2)} zł in small change.` : 'You spend 45 minutes asking passers-by for help. Nobody gives you anything.')
+    return { kind: 'action' as const, failed: earned === 0 }
   }
 
   const walkMusicCost = 2 * phoneDrainMultiplier(inventory.phoneCondition)
@@ -82,7 +83,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
       setGame((prev) => applyGameAction(prev, { minutes: 20, energy: -2, mood: found ? 1 : -2 }, { ...moodContext(prev), exposure: 'outside', music: musicOn }))
       setStreetBenchFound(found)
       setMessage(found ? 'You find a bench nearby with room to sit.' : 'You look around, but every decent place to sit is occupied or unusable.')
-      return
+      return { kind: 'action' as const, failed: !found }
     }
     if (!streetBenchFound) return
     if (kind === 'bench-rest') {
