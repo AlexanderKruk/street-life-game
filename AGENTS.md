@@ -640,3 +640,12 @@ selection/seen guards independent of translated text. Never retranslate stored
 JournalEntry title/text/reflection. Grouping, day navigation and batches of30 stay
 unchanged. Final editorial/long-copy audits and remaining trash/residual copy stay
 open.
+
+
+Trash catalogue checkpoint: trash.ts owns controller/dialog/time copy. Keep
+TrashArt and item IDs, RNG/order/geometry, acceptedIds/lastFinished guards,
+capacity/stack rules and result actionId/before/failed independent of copy.
+Use numeric found plurals; time remains 10–60 minutes in steps of5. Preserve
+the existing 250ms display interval and 60s deadline, App clock/pause/focus
+ownership and local-only session. No new save keys or timers. Final residual,
+editorial and long-copy/device audits remain open.

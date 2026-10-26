@@ -1,3 +1,4 @@
+import { trash } from '../locales/en/trash'
 import { journalUi } from '../locales/en/journalUi'
 import { phoneUi } from '../locales/en/phoneUi'
 import { phoneProcess } from '../locales/en/phoneProcess'
@@ -25,7 +26,7 @@ import { results } from '../locales/en/results'
 import { createTranslator } from './core'
 import type { TranslationCatalog } from './types'
 
-export const en = { ...journalUi, ...phoneUi, ...phoneProcess, ...phoneContent, ...events, ...eventUi, ...eventController, ...travel, ...rain, ...sleep, ...shelter, ...controllerActions, ...actions, ...locations, ...hud, ...status, ...inventory, ...effects, ...common, ...dialogs, ...results, ...eventHistory, ...inventoryHistory, ...actionHistory } as const
+export const en = { ...trash, ...journalUi, ...phoneUi, ...phoneProcess, ...phoneContent, ...events, ...eventUi, ...eventController, ...travel, ...rain, ...sleep, ...shelter, ...controllerActions, ...actions, ...locations, ...hud, ...status, ...inventory, ...effects, ...common, ...dialogs, ...results, ...eventHistory, ...inventoryHistory, ...actionHistory } as const
 export type MessageKey = keyof typeof en
 export type Catalog = TranslationCatalog<typeof en>
 export const locale = 'en-GB'

@@ -40,7 +40,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `rain.ts`, `rainText.ts`, `RainEventDialog.tsx`, `useRainController.ts` | rain.ts | moved own rain copy; numeric RAIN/domain result IDs | original English retained; direct History voice/background-walk/art-time follow-up open | 3 intensities, 3 choices, tree/awning/passage, early end, illness, recorded costs |
 | `sleepController.ts`, `sleepRules.ts`, `sleepText.ts`, `SleepPlanningDialog.tsx`, `SleepProgressDialog.tsx`, SleepHeading/App sleep | sleep.ts | moved own copy | original English preserved; numeric wake date/time and domain fatigue reasons | all 4 sleep kinds, forced/normal, wake event/theft/illness, 07:30 truncation, wetness flag |
 | `shelterController.ts`, `shelterRules.ts`, `ShelterQueueDialog.tsx`, `ShelterCheckoutDialog.tsx`, `useShelterLifecycle.ts` | shelter.ts / shelterText.ts | moved own shelter copy | original English/rules; whole checkout variants, numeric plurals | outside/inside/registration, vacancy/refusal, renewal, checkout/charging |
-| `trashSearchController.ts`, `TrashSearchDialog.tsx`, `TrashSearchTime.tsx`, `trashSearchRules.ts` | trash/dialogs | pending | pending | found/damaged, cap/full, manual/deadline, keyboard/touch, aria announcements |
+| `trashSearchController.ts`, `TrashSearchDialog.tsx`, `TrashSearchTime.tsx`, `trashSearchRules.ts` | trash.ts | moved own copy; rules contain only domain data | original copy; singular aria corrected | found/damaged, cap/full, manual/deadline, keyboard/touch, aria announcements |
 | `GameOverDialog.tsx` | `dialogs.ts`: `gameOver.*` | moved | exact copy; explains current Health recovery | restart/day/terminal blocking; action regressions |
 | `medicalController.ts`, `supportWorkController.ts`, `streetController.ts` | controllerActions.ts / shared actions.ts | moved own prose/title/alt | original English and mechanics preserved; legacy walk day/night editorial question open | refusals and rare messages; documents/referral/transit/benefits/work/begging/bench |
 | `Icon.tsx`, `MoodIcon.tsx`, `ItemArt.tsx`, `ChoiceButton.tsx`, `ChoiceOptions.tsx`, `AvailableFirst.tsx` | common/accessibility | pending audit | symbol-only markup is exempt where hidden | icon/duration/order/freshness metadata moved; remaining accessibility copy/residual audit pending |
@@ -72,7 +72,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `ShelterQueueDialog` | before 18:00, 18:00–18:20, after 18:20; vacancies, people, elapsed, restored | T; shelter.ts; progress/fallback arrival/restore checks |
 | `ShelterCheckoutWarning` | 07:30–08:00/deadline, focus trap, leave action | T; shelter.ts; focus/charging/restore checks |
 | `ShelterDepartureDialog` | packing progress, phone charging on/off, automatic collection/exit, restored | T; shelter.ts; focus/charging/restore checks |
-| `TrashSearchDialog` / `TrashSearchTime` | movable rubbish, valid/damaged/full items, time/deadline, stop, keyboard/drag | P; trash regressions |
+| `TrashSearchDialog` / `TrashSearchTime` | movable rubbish, valid/damaged/full items, time/deadline, stop, keyboard/drag | T; 63 frozen/pseudo cases + trash regressions; mobile component QA |
 | Shelter interview in `LocationScreen` | reason/action/plan, progress/renewal/block contexts | T; actions.ts + shelter.ts; interview/extension/controller checks |
 
 ## Text-dependent risk register
@@ -212,3 +212,10 @@ rules and once-only guards. Eight App/StrictMode restore/remount cases retain
 bookings, phone charging and one-time History/rewards. Browser queue/warning/
 departure geometry/text match1f39ed9 at390/1280; expanded390 text fits. Full
 browser/modal matrix remains open. Next: sleep rules/controller/dialogs/headings.
+
+
+Trash checkpoint: 13 messages moved to trash.ts; 63 frozen/pseudo cases and
+street-trash/results/design/boundary/build checks passed. Mobile390 component
+QA covered keyboard pickup, count and manual result. Timing/guards/IDs/RNG
+unchanged; residual source audit and general editorial/long-copy/device checks
+remain open.
