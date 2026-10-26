@@ -249,7 +249,7 @@ do not round actual timers, opening hours or gameplay calculations.
 Shop/Backpack names use Body/600 and 1.3 line-height; effect chips use Small/400,
 1.3 line-height, 2px/4px padding and 5px radius. Item art retains transparency.
 Discard icons overlay the bottom-right corner without reserving a blank row.
-Phone apps use the shared 44px header, without a repeated title below it.
+Phone apps use the shared header with a 44px minimum height, without a repeated title below it. Let long translated headings/status wrap and increase its height.
 Keep Map, Inventory and Status free of redundant page headings. Inactive
 navigation/location icons stay gray; the active navigation uses ochre.
 
@@ -626,3 +626,9 @@ Never let empty translated refusal enable calls/search/navigation/plan/launcher.
 Preserve costs/timing, battery, charging and claimCompletion/claimRenewal/save
 contracts. PhoneScreen/PhoneDialog own headers/controls and Goals/History UI remain
 pending; controller templates do not own an extra clock or persistence writer.
+
+Phone UI checkpoint: phoneUi.ts supplies PhoneScreen/PhoneDialog own copy and
+numeric goal plurals. Preserve ceil-hours/minutes and battery rounding, IDs,
+focus/Tab/Escape/body lock and blocked inert. Header/service/pay/toggle layouts
+wrap long translations without shrinking text; normal header remains44px minimum.
+Goals/History contents and final residual/editorial/device audits remain pending.

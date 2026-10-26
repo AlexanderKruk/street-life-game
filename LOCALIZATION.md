@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: phone controller/activity сообщения и null-only доступ (после `faf8785`), проверен тематически.
+Последний готовый этап: PhoneScreen/PhoneDialog (после `c85cfe0`), проверен тематически.
+Phone process сохранён в main через checkpoint `f68a54b`.
 Phone content сохранён в main через checkpoint `7cabec6`.
 Авторские события сохранены в main через checkpoint `64144d1`.
 Event eligibility сохранён в main через checkpoint `d90238a`.
@@ -52,7 +53,7 @@ DiceDialog использует dialogs.ts для собственных под�
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: PhoneScreen/PhoneDialog, оставшиеся Goals/History и мини-игра/остаточные строки. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: Goals/History UI, воспоминания и мини-игра/остаточные строки. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -1047,3 +1048,25 @@ check-localization, opening-calls, phone-controller, phone, module boundaries
 plan. CSS/эталоны не менялись. Общая long-copy/full/WebKit/iPhone матрица открыта.
 Следующий этап — собственные тексты PhoneScreen/PhoneDialog и Goals/History UI.
 Источник сохраняется в main с [skip ci], без публикации.
+
+
+### PhoneScreen и диалог тарифа — 26 октября 2026
+
+32 записи phoneUi.ts содержат названия приложений, header/plan/expiry/battery,
+кнопки оплаты/автопродления и доступные подписи. Numeric plural исправляет
+1 active/incomplete goal; прежние plural-формы и отображаемое число сохранены.
+До60 минут показываются минуты, от60 — ceil(hours); battery округляется прежним
+Math.round. UI использует IDs/числа, а не подписи, для маршрутизации/оплаты.
+Фокус/Tab/Escape/body scroll lock/blocked inert и callbacks прежние.
+
+170 frozen/pseudo вариантов проверяют English DOM (кроме singular grammar),
+launcher/app IDs, доступность, часы59/60/61, батарею, автофокус, Tab/Escape и
+снятие body lock. check-localization, phone/phone-controller, module-boundaries
+(152 модуля), design-system, phone-clock regression и build/diff — PASS.
+Браузер390×844: обычный home/plan и длинные home/plan. Длинный текст выявил
+переполнение: существующие service/pay/toggle/header правила теперь допускают
+переносы; header имеет минимум44px вместо фиксированной высоты. Обычный вид
+сохранён, шрифты не уменьшались. Переключатель с длинной подписью проверен.
+CSS изменён по наблюдавшейся проблеме, visual-эталоны не обновлялись. Полный
+набор, WebKit/iPhone и общая long-copy/device матрица остаются открытыми.
+Следующий этап — Goals/History и остальные строки. Без публикации.

@@ -1,0 +1,42 @@
+export const phoneUi = {
+  "phone.ui.app.search": "Find Help",
+  "phone.ui.app.goals": "Goals",
+  "phone.ui.app.notes": "Notes",
+  "phone.ui.app.history": "History",
+  "phone.ui.phone": "Phone",
+  "phone.ui.back": "Back to phone",
+  "phone.ui.plan": "Mobile plan",
+  "phone.ui.plan.hours": "Mobile internet: {hours}h left. Manage plan.",
+  "phone.ui.plan.minutes": "Mobile internet: {minutes}m left. Manage plan.",
+  "phone.ui.plan.unpaid": "Mobile internet is unpaid. Manage plan.",
+  "phone.ui.dailyPrice": "1 zł/day",
+  "phone.ui.paid": "Paid",
+  "phone.ui.unpaid": "Unpaid",
+  "phone.ui.unavailableTitle": "Phone unavailable",
+  "phone.ui.mapHint": "You can still use the map to reach places you know.",
+  "phone.ui.apps": "Phone apps",
+  "phone.ui.internetUnpaid": "Internet unpaid",
+  "phone.ui.battery": "Phone battery: {amount}%",
+  "phone.ui.closePlan": "Close mobile plan",
+  "phone.ui.service": "Mobile service",
+  "phone.ui.service.hours": "Active · {hours}h left",
+  "phone.ui.service.minutes": "Active · {minutes}m left",
+  "phone.ui.service.inactive": "No active service",
+  "phone.ui.buyAccessible": "Add 24 hours of mobile service for 1 zł",
+  "phone.ui.buyDuration": "+24h",
+  "phone.ui.buyPrice": "1 zł",
+  "phone.ui.renew": "Auto-renew",
+  "phone.ui.renewPrice": "1 zł when service expires",
+  "phone.ui.on": "ON",
+  "phone.ui.off": "OFF",
+  "phone.ui.incompleteGoals": {
+    "plural": "count",
+    "one": "{count} incomplete goal",
+    "other": "{count} incomplete goals"
+  },
+  "phone.ui.activeGoals": {
+    "plural": "count",
+    "one": "{count} active goal",
+    "other": "{count} active goals"
+  }
+} as const
