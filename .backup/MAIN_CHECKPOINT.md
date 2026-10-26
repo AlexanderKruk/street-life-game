@@ -1,8 +1,6 @@
 # Main source checkpoint — 26 October 2026
 
-Source commit: 6c6a43ba4da90352de3b4b7f8caa7c840ac2baeb
-Source tree excluding .backup: 325d0da686f70b78f6dce6cc90a23d6fabd911cd
+Source: 048ac7548d7361448e2c6a16dd91b9ea8a97baeb
+Tree excluding .backup: 41025344b9d9ac1d3ca5bcaad89e79dc319d0293
 
-The user requested saving ready stages in main and recording the no-CI-build method in AGENTS.md. Main includes all verified localization stages through Status/Life situation and the inventory/shop catalogue. The bundle preserves twelve original local commits.
-
-The main checkpoint uses [skip ci], preserving the existing deployment workflow and release/build ID. No workflow dispatch or publication is part of this source save. Earlier main checkpoints faa2c3b and e4570ee remain in the main history. Published game remains v335.
+Runtime code is the verified Status/Life situation stage 6c6a43b. Root LOCALIZATION.md, task handoff and source inventory now align their checklists/current-state descriptions with that code. Work-left estimate is approximately 40–50%, with no claim of a completed residual string audit. Thirteen original commits remain in the recovery bundle. Source save only, [skip ci], no CI build/deploy or publication. See AGENTS.md.
