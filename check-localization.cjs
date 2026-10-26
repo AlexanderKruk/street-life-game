@@ -42,6 +42,20 @@ const program = ts.createProgram(['tests/i18n-types.ts'], parsed.options);
 const diagnostics = ts.getPreEmitDiagnostics(program);
 assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: p => p, getCurrentDirectory: ts.sys.getCurrentDirectory, getNewLine: () => '\n' }));
 
+// Catch new raw JSX/a11y copy and prose outside catalogues; documented machine,
+// compatibility, layout and diagnostic literals are explicitly exempted.
+const sourceAudit = require('./tests/helpers/localization-source-audit.cjs')('src', Object.keys(en));
+assert.deepEqual(sourceAudit.violations, [], 'uncatalogued source copy');
+const auditFs = require('node:fs'), auditTemp = auditFs.mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'street-life-copy-audit-'));
+try {
+  auditFs.writeFileSync(require('node:path').join(auditTemp, 'view.tsx'), "const view = <button aria-label={'uncatalogued'}>lowercase</button>; const result = { text: 'hello' }; const housing = 'Night shelter'; const translated = t('example.key');");
+  const fixture = require('./tests/helpers/localization-source-audit.cjs')(auditTemp);
+  assert.deepEqual(fixture.violations.map(hit => hit.value), ['uncatalogued', 'lowercase', 'hello']);
+  assert.equal(fixture.machine, 1);
+} finally { auditFs.rmSync(auditTemp, { recursive: true }); }
+
+console.log(`PASS: source audit: ${sourceAudit.files} TS/TSX files; ${sourceAudit.catalogFiles} catalogues, ${sourceAudit.coreFiles} i18n core and ${sourceAudit.compatibilityFiles} frozen compatibility files; ${sourceAudit.candidates} reviewed machine/layout/internal/catalogue-binding candidates, no residual candidates.`);
+
 const { resultActionAllowed } = bundled('src/resultActions.ts');
 const unblocked = { sleepChoice: false, shelterQueue: false, shelterDeparture: false, shelterCheckoutDue: false, activeEvent: false, diceCheck: false, shelterInterview: false };
 for (const [flag, allowed] of [['sleepChoice', 'sleep-start'], ['shelterQueue', 'shelter-registration'], ['shelterDeparture', 'shelter-checkout']]) {
@@ -706,6 +720,20 @@ const trashSource=`export * from './src/trashSearchController'; export {default 
 const trashBase=bundled({source:trashSource}),trashOld=bundled({source:`export * from './test-fixtures/trashSearchController-copy'; export {default as TrashSearchDialog} from './test-fixtures/TrashSearchDialog-copy'; export {default as TrashSearchTime} from './test-fixtures/TrashSearchTime-copy';`});
 const {trash:trashCatalog}=bundled('src/locales/en/trash.ts');const trashPseudo=Object.fromEntries(Object.entries(trashCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));assert.deepEqual(validateCatalog(trashCatalog,trashPseudo),[]);const trashView=bundled({source:trashSource,catalogs:{trash:trashPseudo}});
 
+const answersBase=bundled('src/resultPresentation.ts'),answersOld=bundled('test-fixtures/resultPresentation-copy.ts');
+const {phoneAnswers:answersCatalog}=bundled('src/locales/en/phoneAnswers.ts');const answersPseudo=Object.fromEntries(Object.entries(answersCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));assert.deepEqual(validateCatalog(answersCatalog,answersPseudo),[]);const answersView=bundled({source:`export * from './src/resultPresentation';`,catalogs:{phoneAnswers:answersPseudo}});
+let answerCases=0;
+for(const id of ['morning','bed','no-place','supplies','work','clinic','charging','unknown'])for(const places of [[],['unknown'],['shelter'],['support','daycenter','shelter']])for(const saved of [false,true])for(const known of [false,true]){
+ const old=answersOld.questionPresentation(id,places,saved,known),actual=answersBase.questionPresentation(id,places,saved,known),translated=answersView.questionPresentation(id,places,saved,known);
+ assert.deepEqual(actual,old);
+ const mechanics=value=>value?(({heading,lead,notice,...rest})=>rest)(value):value;assert.deepEqual(mechanics(translated),mechanics(actual));
+ if(id==='morning'&&actual.places.length)assert.equal(translated.heading,actual.places[0].name);answerCases++;
+}
+console.log(`PASS: ${answerCases} phone answer variants preserve compact/full/map/unknown-place metadata and English copy under pseudo headings, leads and notices.`);
+const {app:appCatalog}=bundled('src/locales/en/app.ts');const appPseudo=Object.fromEntries(Object.entries(appCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));assert.deepEqual(validateCatalog(appCatalog,appPseudo),[]);
+const shellSource=`export {default as App} from './src/App'; export * from './src/i18n';`;
+const shellBase=bundled({source:shellSource}),shellView=bundled({source:shellSource,catalogs:{app:appPseudo,phoneUi:pseudoPhoneUi,phoneAnswers:answersPseudo}});
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -1127,6 +1155,32 @@ try {
     }
     assert(trashClears>0);console.log(`PASS: ${trashCases} trash frozen/pseudo cases preserve capacity, duplicate collection/completion guards, deadlines, time/costs/rewards, item IDs, keyboard callbacks and timer cleanup (singular aria corrected).`);
   }finally{cleanup();Date.now=trashClock.now;Math.random=trashClock.random;window.setInterval=trashClock.set;window.clearInterval=trashClock.clear;}
+  const shellClock={set:window.setInterval,clear:window.clearInterval,random:Math.random};window.setInterval=()=>1;window.clearInterval=()=>{};Math.random=()=>.99;
+  try{
+    function mountShell(view,activity=null,health=70){
+      cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
+      const game={...comfortableStatus,day:2,minutes:600,mood:30,health,locationId:'station',rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999};
+      for(const [key,value] of Object.entries({'street-life-save-v3':game,'street-life-inventory-v1':INITIAL_INVENTORY,'street-life-effects-v1':[],'street-life-screen':'phone',...(activity?{'street-life-phone-activity-v1':{...activity,before:{game:{...game,minutes:600-(activity.total-activity.remaining)},inventory:INITIAL_INVENTORY,effects:[]}}}:{})}))localStorage.setItem(key,typeof value==='string'?value:JSON.stringify(value));
+      localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-mobile-service-until','99999');
+      render(React.createElement(React.StrictMode,null,React.createElement(view.App)));
+      const read=()=>({game:JSON.parse(localStorage.getItem('street-life-save-v3')),inventory:JSON.parse(localStorage.getItem('street-life-inventory-v1')),activity:JSON.parse(localStorage.getItem('street-life-phone-activity-v1')),history:JSON.parse(localStorage.getItem('street-life-journal-history-v1'))});
+      const initial=read(),reset=document.querySelector('footer .reset'),version=document.querySelector('.header-version');assert.equal(reset.textContent,view.t('app.reset'));assert.equal(version.getAttribute('aria-label'),view.t('app.buildAccessible',{version:version.title}));assert.equal(version.textContent,view.t('app.buildShort',{version:version.title.split('-').pop()}));
+      return{initial,read,reset};
+    }
+    let shellCases=0;
+    const activities=[...['call-university','call-colleague','call-friend'].flatMap(questionId=>(questionId==='call-university'?[2,1]:[5,3,1]).map(remaining=>({questionId,total:questionId==='call-university'?2:5,remaining}))),...[15,11,10,6,5,1].map(remaining=>({questionId:'bed',total:15,remaining}))];
+    for(const activity of activities){
+      const show=view=>{const mounted=mountShell(view,activity),call=activity.questionId.startsWith('call-'),phase=call?activity.questionId==='call-university'||activity.remaining===activity.total?'ringing':'talking':activity.remaining>activity.total*2/3?'searching':activity.remaining>activity.total/3?'reading':'saving';assert.equal(document.querySelector('.activity-phase').textContent,view.t(`phone.ui.phase.${phase}`));assert.equal(document.querySelector('.travel-elapsed').getAttribute('aria-label'),view.t(call?'phone.ui.elapsedCall':'phone.ui.elapsedBrowsing'));if(!call)assert.equal(document.querySelector('#phone-activity-title').textContent,view.t('phone.ui.searchTitle'));assert(document.activeElement.classList.contains('phone-activity'));assert(mounted.reset.closest('footer').hasAttribute('inert'));const snapshot=mounted.read();cleanup();return snapshot;};assert.deepEqual(show(shellView),show(shellBase));shellCases++;
+    }
+    for(const view of [shellBase,shellView]){
+      let mounted=mountShell(view,null,20);assert.equal(document.querySelector('.phone-emergency').getAttribute('aria-label'),view.t('app.emergency'));assert.equal(document.querySelector('.phone-emergency small').textContent,view.t('app.emergencyDescription'));cleanup();mounted=mountShell(view);assert(!document.querySelector('.phone-emergency'));act(()=>mounted.reset.click());const reset=mounted.read();assert.equal(reset.game.day,1);assert.equal(reset.activity,null);assert.equal(reset.history.length,0);shellCases++;
+      // An actual storage failure must expose translated alert copy without
+      // changing the autosave retry/failed-write mechanism.
+      cleanup();localStorage.clear();const setItem=window.Storage.prototype.setItem;window.Storage.prototype.setItem=function(){throw new Error('Quota');};
+      try{render(React.createElement(view.App));assert.equal(document.querySelector('.save-warning').textContent,view.t('app.saveFailed'));}finally{cleanup();window.Storage.prototype.setItem=setItem;}
+    }
+    console.log(`PASS: ${shellCases} restored call/search and shell variants preserve numeric phase thresholds, elapsed labels, focus/blocked footer, emergency eligibility, reset and saved state under pseudo-copy; real storage failure exposes translated alert.`);
+  }finally{cleanup();window.setInterval=shellClock.set;window.clearInterval=shellClock.clear;Math.random=shellClock.random;}
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){

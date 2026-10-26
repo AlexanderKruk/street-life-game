@@ -649,3 +649,16 @@ Use numeric found plurals; time remains 10–60 minutes in steps of5. Preserve
 the existing 250ms display interval and 60s deadline, App clock/pause/focus
 ownership and local-only session. No new save keys or timers. Final residual,
 editorial and long-copy/device audits remain open.
+
+
+Residual source audit checkpoint: app.ts owns reset/emergency/save failure/build
+and document title; phoneUi.ts owns call/search phases and elapsed labels;
+phoneAnswers.ts owns question presentation framing. Preserve numeric thresholds,
+call IDs, nullish title fallback, emergency predicate, reset/autosave and old
+History. Vite injects escaped app.documentTitle into the HTML placeholder in
+dev/build; keep lang accurate when a locale-selection mechanism is introduced.
+The source audit helper in tests/helpers/localization-source-audit.cjs runs with
+check-localization; its explicit machine/compatibility/layout/diagnostic/key
+exceptions and heuristic limits are described in docs/LOCALIZATION_RESIDUAL_AUDIT.md.
+Do not broaden exceptions to conceal new player copy. Technical source extraction
+does not complete the contextual/editorial or long-copy/mobile audits.

@@ -1,4 +1,12 @@
 export const phoneUi = {
+  'phone.ui.searchTitle': 'Looking for information',
+  'phone.ui.elapsedCall': 'Elapsed call time',
+  'phone.ui.elapsedBrowsing': 'Elapsed browsing time',
+  'phone.ui.phase.ringing': 'Ringing',
+  'phone.ui.phase.talking': 'Talking',
+  'phone.ui.phase.searching': 'Searching',
+  'phone.ui.phase.reading': 'Reading options',
+  'phone.ui.phase.saving': 'Saving addresses',
   "phone.ui.app.search": "Find Help",
   "phone.ui.app.goals": "Goals",
   "phone.ui.app.notes": "Notes",

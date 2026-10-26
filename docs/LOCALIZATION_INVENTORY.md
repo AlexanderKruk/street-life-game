@@ -18,9 +18,9 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `Stat.tsx` | `common.ts`: `stat.*` | moved own copy | unchanged labels/hints | cap, focus, reduced motion, gains/losses; `check-results`, relabelled-resource cases |
 | `results.ts`, `resultResources.ts` | `results.ts`: `result.resource.*` | moved | preserve actual rounded deltas | all needs/items/effects, consumed loss, start/end/treated; `check-results` |
 | `ResultCard.tsx` | `results.ts`, `common.ts` | moved own copy | unchanged compact/full/results | see modal matrix; controller payload still pending |
-| `resultPresentation.ts` | locations.ts / future phone catalogue | partial: locations/services moved; question framing pending | existing compact discoveries preserved | single/multiple/none, saved/new, known/unknown places; result checks |
+| `resultPresentation.ts` | locations.ts / phoneAnswers.ts | moved own location/services and question framing copy | existing compact discoveries preserved | single/multiple/none, saved/new, known/unknown places; result checks |
 | `CityMap.tsx`, location hero/shop in `LocationPresentation.tsx`, `ClosedContent.tsx`, `game.ts` locations | locations.ts / locationText.ts | moved own location and sleep heading copy; travel owner copy tracked separately | unchanged English, pure domain LocationId/data | open/closed, bookable shelter, same destination, transit/walk, route arrows |
-| `LocationScreen.tsx`, `game.ts` actions, `actionText.ts` | locations.ts / actions.ts | moved own screen/action copy; incoming call labels pending | original copy, numeric plurals, whole shower messages | every location, available/unavailable, stored/carried documents, referral, shelter interview |
+| `LocationScreen.tsx`, `game.ts` actions, `actionText.ts` | locations.ts / actions.ts | moved own screen/action and incoming call copy | original copy, numeric plurals, whole shower messages | every location, available/unavailable, stored/carried documents, referral, shelter interview |
 | `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions.ts / shelter.ts / sleep.ts / future events | moved own location/shelter/sleep/event refusal copy; phone-supplied reason tracked separately | 22 domain refusal IDs; null-only eligibility; original thresholds | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
 | `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory.ts / effects.ts; itemPresentation.ts | moved own item/slot/shop copy | original copy preserved; count grammar via plurals | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
@@ -33,7 +33,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | App goal data, `JournalSections.tsx`, `PhoneHistoryScreen.tsx` | journalUi.ts | moved own copy | v335 reactions/hints only | pending/completed goals, current/past day, grouped/paginated/empty History |
 | `journal.ts`, `eventHistory.ts`, `inventoryHistory.ts`, `actionHistory.ts`, `legacyJournalCompatibility.ts` | History catalogues; legacy adapter isolated | new reflections, direct rain/closing, memories and own History UI moved; rain first-person audit open | original reactions preserved except documented purchase fix | failed/success, all event choices, heading-only actions; `journal-services` |
 | Shop/storage blocks in `LocationScreen.tsx` | inventory.ts | moved own copy | names/capacity/return deposits/storage hints unchanged | shared place/hero copy P; shop/storage checks |
-| App memories, closing notice/History, exit confirmation, initial message/footer | locations.ts / future history/dialogs/common | partial: closing/exit/closing History/memories moved; initial/footer pending | exact original copy during structural migration | once-per-run memories, closing transition, leave/cancel, reset, build label |
+| App memories, closing notice/History, exit confirmation, initial message/footer | locations.ts / journalUi.ts / app.ts | moved closing/exit/History/memory/reset/footer copy; initial message is empty | exact original copy during structural migration | once-per-run memories, closing transition, leave/cancel, reset, build label |
 | `ActivityDialog.tsx`, `ActivityStatus.tsx` | `common.ts`, formatters | moved own copy | exact time formatting retained | phone/travel visibility, 01m/59m/1h 00m; phase/title supplied by owner |
 | `travelPhases.ts`, `travelText.ts`, `useTravelController.ts`, `TravelPlanningDialog.tsx` | travel.ts | moved own copy | original English; phase IDs separate from labels | normal/nearby ranges, free/paid/ticketless, arrived/blocked entry, restored trip |
 | `DiceDialog.tsx` | dialogs.ts | moved own copy; authored text tracked with events | original English and numerical checks preserved | ready/rolled, 1/20/threshold, theft/fare-dodge/authored check |
@@ -43,8 +43,8 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `trashSearchController.ts`, `TrashSearchDialog.tsx`, `TrashSearchTime.tsx`, `trashSearchRules.ts` | trash.ts | moved own copy; rules contain only domain data | original copy; singular aria corrected | found/damaged, cap/full, manual/deadline, keyboard/touch, aria announcements |
 | `GameOverDialog.tsx` | `dialogs.ts`: `gameOver.*` | moved | exact copy; explains current Health recovery | restart/day/terminal blocking; action regressions |
 | `medicalController.ts`, `supportWorkController.ts`, `streetController.ts` | controllerActions.ts / shared actions.ts | moved own prose/title/alt | original English and mechanics preserved; legacy walk day/night editorial question open | refusals and rare messages; documents/referral/transit/benefits/work/begging/bench |
-| `Icon.tsx`, `MoodIcon.tsx`, `ItemArt.tsx`, `ChoiceButton.tsx`, `ChoiceOptions.tsx`, `AvailableFirst.tsx` | common/accessibility | pending audit | symbol-only markup is exempt where hidden | icon/duration/order/freshness metadata moved; remaining accessibility copy/residual audit pending |
-| `index.html`, `public/manifest*` if added | common/metadata | pending audit | pending | page title/lang/description; images have decorative empty alt or owner-provided alt |
+| `Icon.tsx`, `MoodIcon.tsx`, `ItemArt.tsx`, `ChoiceButton.tsx`, `ChoiceOptions.tsx`, `AvailableFirst.tsx` | common/accessibility | primary source audit completed | symbol-only/hidden markup and machine IDs exempt | icon/duration/order/freshness metadata moved; see LOCALIZATION_RESIDUAL_AUDIT.md; final device audit open |
+| `index.html`, `public/manifest*` if added | app.ts / Vite title injection | primary audit completed | title unchanged; lang=en; no manifest | viewport/theme technical; decorative empty alt or catalogue/owner alt; language selection remains future work |
 
 ## Modal and variant matrix
 
@@ -58,11 +58,11 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `DiscardDialog` | non-food; fresh food; mixed freshness; 0 spoiled disabled; spoiled-only/all; cancel | T; `street-trash` and inventory checks |
 | `FoodChoiceDialog` | fresh/stale/spoiled and mixed; only present groups; risk description and accessible relation | T; food/inventory checks |
 | `GameOverDialog` | stored day→display day, terminal state, reset | T; `street-trash` / rendering |
-| `ActivityDialog` / `ActivityStatus` | call vs search vs walk/bus, hidden behind result/event, elapsed hour boundary | T own copy; phase/heading from controller P; phone/travel checks |
+| `ActivityDialog` / `ActivityStatus` | call vs search vs walk/bus, hidden behind result/event, elapsed hour boundary | T own and owner-supplied phase/heading copy; restored phase boundary/phone/travel checks |
 | App exit confirmation using `InventoryDialog` | current place in heading; cancel vs leave | T; locations.ts |
 | App closing notice using `ResultCard` | every closable place; open→closed only; behind another result; reload | T; locations.ts; transition/reload checks retained |
 | `EventDialog` / `EventFrame` / `EventBody` | with/without illustration; unavailable choices; D20; rejected supplies; continuation | T own label/refusal and authored events.ts text; `check-events`, event regressions |
-| `CompactStreetEvent` | event IDs and choices, missing icon fallback, duration/check badge | P |
+| `CompactStreetEvent` | event IDs and choices, missing icon fallback, duration/check badge | T; eventUi/events and explicit choice/check metadata |
 | `RainEventDialog` | drizzle/rain/downpour; opening, nearby/passage search/wait; tree/awning; carry on; shelter search finishes/ends early | T; rain.ts; all intensities/choices/early end/Cold/restore checks |
 | `TravelPlanningDialog` | walking, paid/free/ticketless transit, poor money, nearby timed range, invalid destination | T; travel.ts; phase/planner/controller/map-travel checks |
 | `DiceDialog` | before/after roll, criticals/normal threshold, theft/fare/authored, cancel/continue | T own copy; 144 DOM/pseudo variants and event/controller checks |
@@ -90,7 +90,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `InventorySlot`, `ShopCard`, `StatusScreen` | English freshness / effect chip strings select visual states | ImpactId/resourceId/kind plus explicit foodCondition/counts; cold Mood annotation uses resource ID; own copy moved; final layout audit pending |
 | `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | choice IDs/React keys and pure labels explicit; stat/dc formats badges/accessible names; contextual theft titles by item ID |
 | `eventController` | replaces “The screen still works.” in phone damage outcome | resolved: explicit EventOutcome.phoneBreakMessage; no English replacement; numeric boundary/pseudo-copy checks |
-| `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | Status/mood/housing and weather/weekday now have display mappings; phone states remain pending, keep internal IDs stable |
+| `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | Status/mood/housing/weather/weekday have display mappings; phoneUnavailableId is separate from translated reason, null-only access; keep internal IDs stable |
 
 ## Exclusions and finish criteria
 
@@ -104,9 +104,10 @@ not a missed catalogue migration.
 
 This is a source/branch inventory from TS/TSX reads and searches for JSX text,
 props, result/controller messages, arrays/maps, template literals, accessibility
-attributes and string comparisons. A complete residual AST/string audit with
-per-occurrence exceptions is **not done**. Candidate string counts alone would
-include internal IDs and do not establish completeness. All pending source rows
+attributes and string comparisons. The primary residual AST/source audit with explicit exception categories is
+recorded in [LOCALIZATION_RESIDUAL_AUDIT.md](LOCALIZATION_RESIDUAL_AUDIT.md).
+Its syntactic guard is heuristic, not complete data-flow analysis; candidate
+counts do not establish editorial or device completeness. All pending source rows
 and all remaining text-dependent consumers must be revisited before closing
 the main plan. Chromium, WebKit and real iPhone verification are recorded
 separately; no device result is implied by this matrix.
@@ -219,3 +220,12 @@ street-trash/results/design/boundary/build checks passed. Mobile390 component
 QA covered keyboard pickup, count and manual result. Timing/guards/IDs/RNG
 unchanged; residual source audit and general editorial/long-copy/device checks
 remain open.
+
+
+Residual checkpoint:32 App/phone activity/phone answer/metadata messages moved.
+Primary source audit and explicit exclusions are documented in
+LOCALIZATION_RESIDUAL_AUDIT.md; check-localization enforces its syntactic guard.
+128 frozen/pseudo answer cases and16 App shell/restore/storage-failure variants,
+phone/results/autosave/regressions/design/boundary/build checks passed.
+Selected English mobile390 component states and dev/built title passed.
+Contextual/editorial and general long-copy/device audits remain open.
