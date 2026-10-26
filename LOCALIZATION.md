@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: eventChecks и собственные подписи event dialogs (после `fe2f44f`), проверен тематически.
+Последний готовый этап: авторские scenes/choices/outcomes events.ts (после `20dbb8a`), проверен тематически.
+Event eligibility сохранён в main через checkpoint `d90238a`.
 EventController сохранён в main через checkpoint `f9fba91`.
 DiceDialog сохранён в main через checkpoint `25bad27`.
 Поездки сохранены в main через checkpoint `e8f88ea`.
@@ -43,12 +44,13 @@ streetController, supportWorkController и medicalController использую�
 Дождь (модель/диалог/контроллер результатов) перенесён в rain.ts и rainText.ts.
 Поездки перенесены в travel.ts; фазы маршрута используют ID.
 DiceDialog использует dialogs.ts для собственных подсказок/математики/исходов.
-Не завершено: события/телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
+Авторские сцены и resolveEventOutcome перенесены в locales/en/events.ts.
+Не завершено: телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: авторские сцены events.ts, затем телефон. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: телефон — openingCalls/phoneQuestions и связанные процессы/экраны. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -970,3 +972,26 @@ regression/events и build/diff — PASS. Frozen controller fixture теперь
 CSS/английская копия не менялись; свежий browser/mobile/long-copy/full/WebKit/iPhone
 прогон не выполнялся. Следующий этап — авторские scenes/choices/outcomes events.ts.
 Сохранение в main с [skip ci], без публикации.
+
+
+### Авторские события — 26 октября 2026
+
+182 записи locales/en/events.ts: 25 title/text, 61 choice label, 66 outcome message
+и пять полных шаблонов identity-check/coin. Broken-phone alternative остаётся
+в eventController.ts catalogue. resolveEventOutcome выбирает полный document
+шаблон по carried/stored/missing и coin шаблон по числовому номиналу; склейки
+английских предложений/единиц в runtime больше нет. Исходный английский текст,
+порядок, id/historyId, numeric outcomes, eligibility, RNG и сохранения прежние.
+Языкового переключателя нет; t разрешает текущий английский каталог при загрузке.
+
+Проверено: все scene/choice/outcome данные совпадают с frozen20dbb8a; 4500
+eligibility контекстов со spawn для пяти triggers, пустой каталог и 84 комбинации
+identity/coin outcomes сохраняют числовую механику. Все 25 реальных EventDialog
+с пустым текстом сохраняют кнопки, порядок и choice IDs. check-localization,
+check-events, check-event-travel-controllers, check-module-boundaries (149 модулей),
+regression/events, journal-services и build/diff — PASS.
+Браузер: эталонная встреча с соседкой осмотрена на desktop и iframe390×844;
+иллюстрация/текст/кнопки помещаются, CSS и visual-эталоны не менялись.
+Это технический перенос с прежней копией, не закрытие редакторского аудита всех
+сцен/редких веток. Общая long-copy матрица, full suites, WebKit/iPhone открыты.
+Следующий этап — телефон. Сохранение в main с [skip ci], без публикации.

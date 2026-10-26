@@ -507,3 +507,10 @@ and original English. Empty phone refusal blocks before commands; six illustrate
 compact cases protect null versus empty/nonempty refusal and handlers. Localisation,
 events/event-travel/boundary, regression/events and build passed. Controller fixture
 uses frozen eventChecks. No fresh browser/full/WebKit/iPhone run or CSS change.
+
+Authored events catalogue: complete English scene data is compared with frozen
+20dbb8a. 4500 eligibility/spawn contexts and 84 document/coin combinations retain
+mechanics; all 25 EventDialog variants preserve button/order/choice dispatch with
+empty copy. Localisation/events/event-travel/boundaries, events/journal-services
+regressions and build passed. Neighbour scene inspected on desktop and390 iframe;
+CSS/baselines unchanged. Full suites, broader long-copy and WebKit/iPhone unrun.

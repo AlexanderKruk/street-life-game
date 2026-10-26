@@ -654,6 +654,29 @@ let rejectedEventPorts=0;const emptyController=eventRulesView.createEventControl
 emptyController.resolveStreetEvent(phoneChoice);assert.equal(rejectedEventPorts,0,'empty phone refusal blocks before result or commands');
 console.log(`PASS: ${eventRuleCases} event eligibility boundaries preserve English reasons, order and null-only availability; empty phone refusal blocks commands.`);
 
+const authoredSource=`export * from './src/events'; export {default as EventDialog} from './src/EventDialog';`;
+const authoredBase=bundled({source:authoredSource}),authoredOld=bundled('test-fixtures/events-copy.ts');
+const {events:authoredCatalog}=bundled('src/locales/en/events.ts');
+const authoredPseudo=Object.fromEntries(Object.entries(authoredCatalog).map(([key,message])=>[key,message.includes('{')?pseudoMessage(key,message):'']));
+assert.deepEqual(validateCatalog(authoredCatalog,authoredPseudo),[]);
+const authoredView=bundled({source:authoredSource,catalogs:{events:authoredPseudo}});
+const authoredData=events=>JSON.parse(JSON.stringify(events));
+const authoredMechanics=events=>JSON.parse(JSON.stringify(events,(key,value)=>['title','text','label','message','phoneBreakMessage'].includes(key)?undefined:value));
+assert.deepEqual(authoredData(authoredBase.STREET_EVENTS),authoredData(authoredOld.STREET_EVENTS),'all English scene/choice/outcome and metadata bytes preserved');
+assert.deepEqual(authoredMechanics(authoredView.STREET_EVENTS),authoredMechanics(authoredBase.STREET_EVENTS));
+let authoredEligibility=0;
+for(let i=0;i<authoredBase.STREET_EVENTS.length;i++)for(const day of [1,2,3])for(const minutes of [0,239,240,479,480,599,600,1140,1320,1439])for(const locationId of ['street','station'])for(const observation of ['idle','action','arrival']){
+ const context={day,minutes,locationId,observation,elapsedMinutes:30,weather:'Rain',housing:'Street',documents:true,firstNight:day===1,nearHome:true,sleepKind:'bench',travelMode:'walk'};
+ const old=authoredOld.STREET_EVENTS[i],actual=authoredBase.STREET_EVENTS[i],translated=authoredView.STREET_EVENTS[i];
+ assert.equal(actual.eligible?.(context),old.eligible?.(context));assert.equal(translated.eligible?.(context),actual.eligible?.(context));
+ for(const trigger of ['location','travel','wake','walk','bench']){const scoped={...context,seenEventIds:authoredBase.STREET_EVENTS.filter(e=>e.id!==actual.id).map(e=>e.id)};assert.equal(authoredBase.nextStreetEvent(trigger,scoped)?.id,authoredOld.nextStreetEvent(trigger,scoped)?.id);assert.equal(authoredView.nextStreetEvent(trigger,scoped)?.id,authoredBase.nextStreetEvent(trigger,scoped)?.id);}authoredEligibility++;
+}
+for(const documents of [false,true])for(const stored of [false,true])for(const roll of [0,.09999,.1,.24999,.25,.99999,1])for(const outcome of [{message:'Frozen result',identityCheck:true,minutes:5},{message:'Frozen result',randomCoin:true},{message:'Frozen result',identityCheck:true,randomCoin:true}]){
+ assert.deepEqual(authoredBase.resolveEventOutcome(outcome,()=>roll,documents,stored),authoredOld.resolveEventOutcome(outcome,()=>roll,documents,stored));
+ const actual=authoredBase.resolveEventOutcome(outcome,()=>roll,documents,stored),translated=authoredView.resolveEventOutcome(outcome,()=>roll,documents,stored);assert.deepEqual({...translated,message:undefined},{...actual,message:undefined});
+}
+console.log(`PASS: 25 authored scenes preserve exact English data, ${authoredEligibility} eligibility/spawn contexts, empty-copy mechanics and document/coin outcomes.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -987,6 +1010,10 @@ try {
    cleanup();let choices=0;const event={id:'fixture',title:'Fixture',text:'Fixture text',illustration,choices:[{id:'choice',label:'Choose',outcome:{message:'done'}}]};render(React.createElement(eventRulesView.EventDialog,{event,choices:event.choices,onChoose:()=>choices++,unavailableReason:()=>reason,orderSeed:42,decisionKey:'fixture',panelRef:null}));const button=document.querySelector('.choice-button');assert.equal(button.disabled,reason!==null);act(()=>button.click());assert.equal(choices,reason===null?1:0);
   }
   console.log('PASS: illustrated and compact events retain disabled commands for empty refusal labels.');
+  for(let i=0;i<authoredBase.STREET_EVENTS.length;i++){
+   const show=view=>{cleanup();const event=view.STREET_EVENTS[i],calls=[];render(React.createElement(view.EventDialog,{event,choices:event.choices,onChoose:choice=>calls.push(choice.id),unavailableReason:()=>null,orderSeed:42,decisionKey:'authored-fixture',panelRef:null}));const ids=[...document.querySelectorAll('.choice-button')].map(n=>n.getAttribute('data-order-id'));act(()=>document.querySelectorAll('.choice-button').forEach(n=>n.click()));assert.equal(document.querySelector('.modal-narrative b'),null);return{ids,calls};};assert.deepEqual(show(authoredView),show(authoredBase),'empty authored text preserves all scene choices/order/dispatch');
+  }
+  console.log('PASS: all 25 authored dialogs retain buttons, ordering and choice IDs under empty copy.');
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){
