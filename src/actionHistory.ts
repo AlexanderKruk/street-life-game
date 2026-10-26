@@ -33,7 +33,7 @@ export function actionHistoryReflection(action: ResultAction, summary?: ResultSu
   } else if ((action.id === 'sleep-complete' || action.id === 'sleep-start') && rows.some(row => resultChangeId(row) === 'cold' && row.effectTransition === 'started')) key = 'history.action.coldText'
   if (facts?.noNewInformation) { title = translate('history.action.noNewTitle'); key = 'history.action.noNewText' }
   if (facts?.supportOutcome) key = `history.action.support.${facts.supportOutcome}`
-  if (facts?.destinationName) title = translate('history.action.arrived', { place: facts.destinationName })
+  if (facts?.destinationName !== undefined) title = translate('history.action.arrived', { place: facts.destinationName })
   if (memoryId && ['office-routine','redundancy-savings','unanswered-applications','lost-home'].includes(memoryId)
     && !['sleep-start','sleep-complete','shelter-registration','search-interrupted'].includes(action.id)) key = `history.action.memory.${memoryId}` as Key
   return { title, text: translate(key) }

@@ -18,9 +18,9 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `Stat.tsx` | `common.ts`: `stat.*` | moved own copy | unchanged labels/hints | cap, focus, reduced motion, gains/losses; `check-results`, relabelled-resource cases |
 | `results.ts`, `resultResources.ts` | `results.ts`: `result.resource.*` | moved | preserve actual rounded deltas | all needs/items/effects, consumed loss, start/end/treated; `check-results` |
 | `ResultCard.tsx` | `results.ts`, `common.ts` | moved own copy | unchanged compact/full/results | see modal matrix; controller payload still pending |
-| `resultPresentation.ts` | locations/phone | pending | existing compact discoveries reviewed v335 | single/multiple/none, saved/new, known/unknown places; result checks |
-| `CityMap.tsx`, `LocationPresentation.tsx`, `ClosedContent.tsx`, `game.ts` locations | locations | pending | v335 context only | open/closed, bookable shelter, same destination, transit/walk, route arrows |
-| `LocationScreen.tsx`, `game.ts` actions | locations/actions | pending | v335 hints only | every location, available/unavailable, stored/carried documents, referral, shelter interview |
+| `resultPresentation.ts` | locations.ts / future phone catalogue | partial: locations/services moved; question framing pending | existing compact discoveries preserved | single/multiple/none, saved/new, known/unknown places; result checks |
+| `CityMap.tsx`, location hero/shop in `LocationPresentation.tsx`, `ClosedContent.tsx`, `game.ts` locations | locations.ts / locationText.ts | moved own location copy; sleep/travel process headings pending | unchanged English, pure domain LocationId/data | open/closed, bookable shelter, same destination, transit/walk, route arrows |
+| `LocationScreen.tsx`, `game.ts` actions | locations.ts / future actions | partial: hero/opening location copy moved; actions pending | v335 action hints only | every location, available/unavailable, stored/carried documents, referral, shelter interview |
 | `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions/dialogs | pending | match current thresholds during transfer | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
 | `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory.ts / effects.ts; itemPresentation.ts | moved own item/slot/shop copy | original copy preserved; count grammar via plurals | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
@@ -33,7 +33,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | App goal data, `JournalSections.tsx`, `PhoneHistoryScreen.tsx` | phone/history | pending | v335 reactions/hints only | pending/completed goals, current/past day, grouped/paginated/empty History |
 | `journal.ts`, `eventHistory.ts`, `inventoryHistory.ts`, `actionHistory.ts`, `legacyJournalCompatibility.ts` | History catalogues; legacy adapter isolated | new reflections moved; direct rain/closing/memories and own History UI pending | original reactions preserved except documented purchase fix | failed/success, all event choices, heading-only actions; `journal-services` |
 | Shop/storage blocks in `LocationScreen.tsx` | inventory.ts | moved own copy | names/capacity/return deposits/storage hints unchanged | shared place/hero copy P; shop/storage checks |
-| App memories, closing notice/History, exit confirmation, initial message/footer | history/dialogs/common | pending | exact original copy during structural migration | once-per-run memories, closing transition, leave/cancel, reset, build label |
+| App memories, closing notice/History, exit confirmation, initial message/footer | locations.ts / future history/dialogs/common | partial: closing/exit/closing History moved; memories/initial/footer pending | exact original copy during structural migration | once-per-run memories, closing transition, leave/cancel, reset, build label |
 | `ActivityDialog.tsx`, `ActivityStatus.tsx` | `common.ts`, formatters | moved own copy | exact time formatting retained | phone/travel visibility, 01m/59m/1h 00m; phase/title supplied by owner |
 | `travelPhases.ts`, `useTravelController.ts`, `TravelPlanningDialog.tsx` | travel/dialogs | pending | pending | normal/nearby ranges, free/paid/ticketless, arrived/blocked entry, restored trip |
 | `DiceDialog.tsx` | dialogs | pending | pending | ready/rolled, 1/20/threshold, theft/fare-dodge/authored check |
@@ -59,8 +59,8 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `FoodChoiceDialog` | fresh/stale/spoiled and mixed; only present groups; risk description and accessible relation | T; food/inventory checks |
 | `GameOverDialog` | stored day→display day, terminal state, reset | T; `street-trash` / rendering |
 | `ActivityDialog` / `ActivityStatus` | call vs search vs walk/bus, hidden behind result/event, elapsed hour boundary | T own copy; phase/heading from controller P; phone/travel checks |
-| App exit confirmation using `InventoryDialog` | current place in heading; cancel vs leave | P |
-| App closing notice using `ResultCard` | every closable place; open→closed only; behind another result; reload | P |
+| App exit confirmation using `InventoryDialog` | current place in heading; cancel vs leave | T; locations.ts |
+| App closing notice using `ResultCard` | every closable place; open→closed only; behind another result; reload | T; locations.ts; transition/reload checks retained |
 | `EventDialog` / `EventFrame` / `EventBody` | with/without illustration; unavailable choices; D20; rejected supplies; continuation | P; `check-events`, event regressions |
 | `CompactStreetEvent` | event IDs and choices, missing icon fallback, duration/check badge | P |
 | `RainEventDialog` | drizzle/rain/downpour; opening, nearby/passage search/wait; tree/awning; carry on; shelter search finishes/ends early | P; rain and event-travel checks |
@@ -168,3 +168,16 @@ Temporary browser HUD comparison with 048ac75 covered 390/1280 and additional
 320/expanded day/title at390; CSS/baselines were unchanged. Other calendar strings
 in History/sleep are tracked with those pending sources. Next: location catalogue,
 map/description/hour/accessibility copy, followed by action/refusal catalogues.
+
+
+Location/map checkpoint: 11 place names/descriptions, map controls/hours/aria,
+location summaries, service/discovery details, exit/closing messages and direct
+closing History use locations.ts. Location data contains no name/description.
+Route/discovery/service/referral/save identities remain domain IDs. Tests include
+empty names and six restored completed trips; arrival groups and known-place
+branches survive blank translations. Whole phone question text, action choices,
+sleep/travel process copy and other controller messages remain pending.
+English map geometry matched 956629b at390/1280. Expanded 320/390 copy now wraps
+shortcuts (two title lines) and truncates pin labels, retaining full accessible
+names and selected-card titles. Extra-tall headings can still overlap high map
+pins; projection/layout audit remains open, along with the older hero overflow.

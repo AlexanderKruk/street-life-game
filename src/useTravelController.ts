@@ -1,3 +1,5 @@
+import { t } from './i18n'
+import { locationName } from './locationText'
 import { useEffect, useRef } from 'react'
 import { locations, destinationTravelTimeRange, randomTravelMinutes, type GameState, type ActionResult } from './game'
 import type { EventOutcome, StreetEventChoice } from './events'
@@ -48,7 +50,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (!trip || trip.remaining > 0 || lastArrival.current === trip) return
     const destination = locations.find(location => location.id === trip.destinationId)
     if (!destination) { setTrip(null); return }
-    runWithResult({ id: 'arrival', title: 'Arrival', actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : destination.name } }, () => {
+    runWithResult({ id: 'arrival', title: 'Arrival', actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : locationName(destination.id) } }, () => {
       if (lastArrival.current === trip) return
       lastArrival.current = trip
       setGame(previous => ({ ...previous, locationId: destination.id }))
@@ -56,8 +58,8 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
       const admitted = game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10
       if (shelterArrival) setLife(status => ({ ...status, shelterEntry: { night: shelterNightDay, admitted }, ...(admitted ? { shelterLastStayDay: shelterNightDay, housing: 'Night shelter' as const } : {}) }))
       setMessage(shelterArrival && !admitted
-        ? 'You are outside Night Shelter. Entry is 18:00–22:00. If you miss entry, this counts as a missed night.'
-        : `You arrived at ${destination.name} by ${trip.mode === 'walk' ? 'walking' : 'public transport'}.`)
+        ? t('location.arrival.outsideShelter')
+        : t(trip.mode === 'walk' ? 'location.arrival.walk' : 'location.arrival.transit', { place: locationName(destination.id) }))
       setScreen('location')
       setTrip(null)
       const arrived = { ...game, locationId: destination.id }

@@ -1,3 +1,4 @@
+import { locationName, locationDescription } from './locationText'
 import { itemName } from './itemPresentation'
 import { formatNumber } from './i18n/formatters'
 import { impactChip } from './effectChips'
@@ -52,7 +53,7 @@ export default function LocationScreen({ state, handlers }: { state: ViewState; 
   const { answerShelterInterview, returnBottles, buyShopItem, stealShopItem, socialSupport, takeStoredItem, storeItem, storeFood, takeStoredFood, chargePhone, toggleShelterPhoneCharging, takeDayWork, hospitalVisit, startOpeningCall, openPhone, walkCity, goToShelter, goToWork, goToStation, askForMoney, searchStreetBottles, streetAction, act, actionUnavailableReason } = handlers
   const routeEstimate = (id: string) => ({ minutes: destinationTravelTimeRange(locations.find(place => place.id === id)!, 'transit').min, atLeast: true })
   return <div className="location-surface" inert={busy} aria-hidden={busy || undefined}>
-      {current.id === 'shop' ? <ShopHero name={current.name} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={current.name} description={current.id === 'street' && firstNight && game.minutes >= 1320 ? 'Behind the lit windows, people are getting ready for bed. You sit outside with your backpack. You have nowhere to go, and no one is expecting you tonight.' : current.description} open={open} opensAt={current.open} night={current.id === 'street' && (game.minutes >= 1200 || game.minutes < 360)} streetIllustration={streetIllustration} />}
+      {current.id === 'shop' ? <ShopHero name={locationName(current.id)} open={open} opensAt={current.open} closesAt={current.close} /> : <LocationSummary id={current.id} name={locationName(current.id)} description={current.id === 'street' && firstNight && game.minutes >= 1320 ? t('location.street.opening') : locationDescription(current.id)} open={open} opensAt={current.open} night={current.id === 'street' && (game.minutes >= 1200 || game.minutes < 360)} streetIllustration={streetIllustration} />}
       {underRainCover && !travelling && <p className="rain-cover-status"><Icon name="umbrella" />Under cover</p>}
       {message && current.id !== 'street' && <section className="event"><span>●</span><p>{message}</p></section>}
       <ClosedContent closed={!open && current.id !== 'hospital' && !currentActions.some(action => actionUnavailableReason(action) === null)} opensAt={formatTime(current.open)}>

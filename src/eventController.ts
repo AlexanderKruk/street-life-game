@@ -1,3 +1,4 @@
+import { locationName } from './locationText'
 import { STREET_EVENTS, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
 import { illustrateStreetEvent } from './eventArtwork'
 import { locations, type GameState, type ActionResult } from './game'
@@ -54,7 +55,7 @@ export function createEventController(session: EventSession, context: Context, h
   }
   function applyEventOutcomeImpl(outcome: EventOutcome) {
     const { rejected } = fitEventSupplies(inventory, outcome)
-    const knownPlaces = outcome.knownLocations?.filter(id => discoveredLocations.includes(id)).map(id => locations.find(place => place.id === id)?.name).filter(Boolean)
+    const knownPlaces = outcome.knownLocations?.filter(id => discoveredLocations.includes(id)).flatMap(id => locations.some(place => place.id === id) ? [locationName(id)] : [])
     const knowledgeText = knownPlaces
       ? `\n\n${knownPlaces.length ? `You already know about: ${knownPlaces.join(', ')}.` : 'You’re not sure where to start yet.'}\n\nYou can find out more by asking around or searching on your phone.`
       : ''
@@ -66,7 +67,7 @@ export function createEventController(session: EventSession, context: Context, h
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
         visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['phoneCondition'] : undefined,
         batteryInSummary: !!outcome.phoneBattery,
-        ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcomeText,
+        ...(place ? { presentation: { ...locationPresentation([place.id]), lead: outcomeText,
           ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
     }
     setEncounters(previous => ({ ...previous, pendingId: null, pendingRoll: null }))

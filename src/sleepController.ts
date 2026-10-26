@@ -1,3 +1,4 @@
+import { locationName } from './locationText'
 import type { WeatherId } from './weather'
 import { useEffect } from 'react'
 import { applySleepTime as applyGameSleepTime, weatherAt, formatTime, type ActionResult, type GameState, type TimeContext } from './game'
@@ -16,7 +17,7 @@ import type { ResultSnapshot } from './results'
 import type { GameSetter, RunWithResult, Setter } from './controllerTypes'
 
 type Context = {
-  game: GameState; inventory: Inventory; effects: ActiveEffect[]; current: { id: string; name: string }
+  game: GameState; inventory: Inventory; effects: ActiveEffect[]; current: { id: string }
   weather: { id: WeatherId }; underRainCover: boolean; insideNightShelter: boolean; streetBenchFound: boolean; blocked: boolean
 }
 type Host = {
@@ -201,7 +202,7 @@ export function createSleepController(session: SleepSession, eventSession: Event
     const active: SleepState = { kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true }
     forcedSleep.current = active
     setSleeping(active)
-    setMessage(safeKind === 'ground' ? `${current.id !== 'street' ? `You leave ${current.name} and step outside. ` : ''}You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep in your bed.')
+    setMessage(safeKind === 'ground' ? `${current.id !== 'street' ? `You leave ${locationName(current.id)} and step outside. ` : ''}You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep in your bed.')
   }
   return { requestSleep, chosenSleepMinutes, wakeLabel, sleep, finishSleep, presentWakeEvent, applySleepTime, tickSleep, forceSleep, finishRestAction }
 }

@@ -1,6 +1,6 @@
 # Main localisation checkpoint
 
-Verified local source: 956629baa57067819d718e8b704205156676e201
-Source tree excluding .backup: 631ea9a9098355dd8a6133cef264072af9b2d991
+Verified local source: e4b5fe738b2489af5b674803f908cfde4206ecb4
+Source tree excluding .backup: dbf9ffc574e0c1838b72513d3f283cf29014bd52
 
-HUD/weather completed and tested; see LOCALIZATION.md for checks and remaining work. The recovery bundle preserves the original fourteen local commits. Saved to main with [skip ci], without dispatching or waiting for CI build/deploy. Published game remains v335.
+Location/map catalogue completed and tested; see LOCALIZATION.md for checks and remaining work. The recovery bundle preserves all fifteen original local commits. Saved to main with [skip ci], without dispatching or waiting for CI build/deploy. Published game remains v335.
