@@ -586,3 +586,8 @@ travelPhases returns stable phase id plus walking/exposure; display through
 travelPhaseLabel. Never use translated phases for clocks, effort or weather.
 Fares, RNG, destination/mode IDs, arrival guards and saved trips are unchanged.
 DiceDialog's own copy remains pending with the D20 stage.
+
+DiceDialog catalogue checkpoint: own descriptions, accessible roll/math templates,
+controls and critical/ordinary outcome labels live in dialogs.ts. Keep numeric
+roll/modifier/DC and saved-roll/acceptance guards independent of display. Authored
+choice labels/eventText still belong to the pending events catalogue.

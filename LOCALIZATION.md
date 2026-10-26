@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: поездки (после `e147bde`), проверен тематически.
+Последний готовый этап: собственные тексты DiceDialog (после `6f0771f`), проверен тематически.
+Поездки сохранены в main через checkpoint `e8f88ea`.
 Дождь сохранён в main через checkpoint `5a6678f`.
 Сон сохранён в main через checkpoint `cb787a5`.
 Ночлежка сохранена в main через checkpoint `3c2e079`.
@@ -39,12 +40,13 @@ streetController, supportWorkController и medicalController использую�
 Сон (контроллер/правила/планирование/прогресс/заголовок/даты) перенесён в sleep.ts.
 Дождь (модель/диалог/контроллер результатов) перенесён в rain.ts и rainText.ts.
 Поездки перенесены в travel.ts; фазы маршрута используют ID.
-Не завершено: D20, события/телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
+DiceDialog использует dialogs.ts для собственных подсказок/математики/исходов.
+Не завершено: события/телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: D20, затем события/телефон. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: события/eventController, затем телефон. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -910,3 +912,18 @@ check-event-travel-controllers, check-module-boundaries (145 модулей),
 map-travel/phone-clock regressions и build — PASS. Desktop browser осмотрен;
 свежий mobile/long-copy, WebKit/iPhone, полные наборы не запускались.
 CSS и эталоны прежние. Следующий этап — D20. Без публикации.
+
+
+### Диалог D20 — 26 октября 2026
+
+14 новых записей dialogs.ts: подсказки к краже/безбилетному проезду, accessible
+roll/modifier/target, полные математические шаблоны, кнопки и четыре исхода.
+Контекстные theft titles/check headings уже используют каталоги. Authored choice
+и eventText остаются у events; их перенос — следующий этап. Символ D20 сохранён.
+Расчёт roll/modifier/DC, критические 1/20, callbacks и persistence не менялись.
+144 frozen/pseudo варианта сравнивают точный English DOM, классы исходов и
+кнопки/handlers: два типа проверки, три модификатора, шесть roll states,
+event/fare и два предмета. check-localization, event-travel controllers,
+events/shop-inventory regressions, design-system и build — PASS.
+Desktop browser критического исхода осмотрен. Свежие mobile/long-copy,
+полные наборы, WebKit/iPhone не запускались. CSS/эталоны прежние. Без публикации.

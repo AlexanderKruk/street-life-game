@@ -929,6 +929,19 @@ try {
    const old=show(travelOld),actual=show(travelBase),translated=show(travelView);assert.equal(actual.html,old.html);assert.deepEqual(translated.controls,actual.controls);assert.deepEqual(translated.calls,actual.calls);travelDialogs++;
   }
   console.log(`PASS: ${travelDialogs} travel planner variants preserve English DOM, costs, eligibility, order and command IDs under pseudo-copy.`);
+  const diceOld=bundled('test-fixtures/DiceDialog-copy.tsx').default;
+  const diceBase=bundled('src/DiceDialog.tsx').default;
+  const {dialogs:diceCatalog}=bundled('src/locales/en/dialogs.ts');
+  const dicePseudo=Object.fromEntries(Object.entries(diceCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+  const diceView=bundled({source:`export {default as DiceDialog} from './src/DiceDialog';`,catalogs:{dialogs:dicePseudo}}).DiceDialog;
+  let diceCases=0;
+  for(const stat of ['reflex','persuasion'])for(const modifier of [-2,0,2])for(const roll of [null,1,9,10,12,20])for(const kind of ['event','fare','water','medicines']){
+    const choice={label:'Frozen authored choice',check:{stat,dc:12,success:{message:'success'},failure:{message:'failure'}}};
+    const diceCheck={choice,modifier,roll,resolved:false,...(kind==='fare'?{fareDodgeDestinationId:'station'}:kind==='event'?{}:{stealItemId:kind})};
+    const show=Component=>{cleanup();const calls=[];render(React.createElement(Component,{diceCheck,eventText:'Frozen authored description',onRoll:()=>calls.push('roll'),onAccept:()=>calls.push('accept'),onCancel:()=>calls.push('cancel')}));const html=document.body.innerHTML,shape=[...document.querySelectorAll('button')].map(n=>[n.className,n.disabled]);const face=document.querySelector('.d20').className;act(()=>document.querySelectorAll('button').forEach(n=>n.click()));assert.equal(document.querySelector('.dice-description b'),null);return{html,shape,face,calls};};
+    const old=show(diceOld),actual=show(diceBase),translated=show(diceView);assert.equal(actual.html,old.html);assert.deepEqual({...translated,html:undefined},{...actual,html:undefined});diceCases++;
+  }
+  console.log(`PASS: ${diceCases} frozen/pseudo D20 variants preserve English DOM, critical/threshold states, modifiers, buttons and handlers.`);
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){
