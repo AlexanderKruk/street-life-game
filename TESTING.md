@@ -599,3 +599,19 @@ system, build and diff checks passed. Full suites/WebKit/iPhone unrun.
 Map stress QA with extended catalogue names confirmed the top Hospital label
 can sit behind shortcuts; that projection/overlap issue remains OPEN, as does
 rain-art time context and the rest of the long-copy/modal matrix. No publication.
+
+
+Map panel overlap checkpoint — 26 October 2026: CityMap now places backdrop
+and projected markers in a shared district-plot below the shortcuts. The plot
+keeps the artwork's2:3 aspect and original image coordinates. map-surface can
+scroll vertically on short screens; selected district-card sticks to its lower
+edge, with bounded height/overflow. No font shrinking, new clocks or game rules.
+Browser component QA with actual HUD/navigation at320×568,390×844,850×390,
+normal and expanded catalogue names: upper pins below shortcuts, projected image
+and anchors aligned; Hospital pointer selection and visible Go checked at320
+and850. At320 selected long card had no horizontal overflow.
+check-localization, check-rendering, regression/map-travel, design-system, build
+and diff checks passed. No full suites/WebKit/iPhone or baseline updates.
+This resolves the shortcut/top-marker collision, not every possible collision
+between neighbouring pin labels. Rain-art context, remaining modal long-copy
+matrix and final baseline review remain open. Published v335 unchanged.

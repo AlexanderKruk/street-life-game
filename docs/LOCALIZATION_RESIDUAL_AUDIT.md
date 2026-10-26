@@ -57,3 +57,10 @@
 - Финальная сверка матрицы редких исходов и редакторских статусов.
 - Полный Node/browser прогон только перед отдельно разрешённой публикацией;
   WebKit и физический iPhone пока не проверены. Другие языки ещё не переводились.
+
+
+Map follow-up: shortcut/top-marker overlap resolved with a shared artwork/pin
+plot below shortcuts and vertical scrolling on constrained screens. Normal/long
+component QA at320/390/850 passed; selected-card Go remains accessible. Other
+neighbouring-label collisions and the remaining modal/device matrix are not
+closed by this fix.

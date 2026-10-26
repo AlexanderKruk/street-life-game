@@ -38,7 +38,7 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
   }, [])
   const origin = positions[currentId]
   const target = positions[selectedId]
-  return <><div ref={backdropRef} className="district-backdrop">
+  return <div className="district-plot"><div ref={backdropRef} className="district-backdrop">
       <img {...responsiveImageProps('/street-life-game/assets/city-map-dark.webp')} width="1024" height="1536" alt={t('location.mapAlt')} />
     </div><div ref={sceneRef} className="district-scene"><div className="district-anchors" style={projection ?? undefined}>
       {origin && target && selectedId !== currentId && <svg className="district-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={`M ${origin[0]} ${origin[1]} C ${origin[0] + (target[0] - origin[0]) * .55} ${origin[1]}, ${origin[0] + (target[0] - origin[0]) * .2} ${target[1]}, ${target[0]} ${target[1]}`} /></svg>}
@@ -52,7 +52,7 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
           <span className="district-marker" aria-hidden="true" /><span className="district-label"><strong>{locationName(place.id)}</strong></span>
         </button>
       })}
-    </div></div></>
+    </div></div></div>
 })
 
 export default function CityMap({ places, currentId, initialFocusId, minutes, reservedBed, routeId, onRoute }: {

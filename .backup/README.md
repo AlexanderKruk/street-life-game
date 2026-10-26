@@ -1,14 +1,14 @@
-# Location hero / legacy walk checkpoint — 26 October 2026
+# Map panel overlap checkpoint — 26 October 2026
 
-Source commit: 37daf7d41bdcf97d9b2509c230b3c70815e945aa
-Source tree: 3270c3e11a1c5c831c0ca0aa3e27cf9b6803d6a7
-Recovery bundle preserves 34 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. API source tree matched the local committed source tree before recovery files.
+Source commit: d8e72ddfa1279e0cd5473188a6dfb093ff0cc405
+Source tree: 60f1e18aa9259e4985d7d3d9359cde81ae669eed
+Recovery bundle preserves 35 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. API source tree matched the local committed source tree before recovery files.
 
-Location heroes now constrain width to the container plus existing gutters, with min-width:0 and wrapping for long words. Browser QA reproduced 450px overflow in a305px client area before the fix. Street/station/shelter long-copy and unbroken-name components fit at320/390/850 iframe widths, client/scroll305/305,375/375,835/835. Title20/24 and Body16 preserved. Short-title states inspected. No baselines updated.
+Backdrop and projected pins now share a2:3 district-plot below shortcuts. Original artwork coordinates and projection math unchanged. The map scrolls vertically on constrained screens; selected card sticks to the map's lower edge with bounded height/overflow. Fonts, routes, IDs, game clocks/rules unchanged.
 
-Legacy ordinary-walk result/reflection no longer assume evening/closed shops/empty roads. Removed ordinary-walk UI stays removed; historical text and adapters unchanged.
+Browser component QA with actual HUD/navigation, normal/extended catalogue names at320x568,390x844,850x390: upper markers below panel, anchors/image aligned; Hospital pointer selection and Go visible at320 and850; long selected card has no horizontal overflow at320.
 
-Passed: check-localization, design-system, build, diff check. Full suites/WebKit/iPhone unrun. Map long-name stress QA confirms top Hospital label can overlap shortcuts; projection/overlap remains OPEN. Rain illustration time context and remaining long-copy/modal matrix also open.
+Passed: check-localization, check-rendering, regression/map-travel, design-system, production build, diff check. Full suites, WebKit/iPhone and baseline updates unrun. Other neighbouring pin-label collisions, rain-art context and remaining modal/device matrix remain open.
 
 Source save only with [skip ci]; published v335 unchanged. No deployment.
 
