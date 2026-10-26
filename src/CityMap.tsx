@@ -1,3 +1,6 @@
+import { t } from './i18n'
+import { formatTime } from './game'
+import { locationName, locationDescription, locationHours, mapPinAccessible } from './locationText'
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { isOpen, type Location } from './game'
 import { Icon, locationIcon } from './Icon'
@@ -8,15 +11,6 @@ const positions: Record<string, [number, number]> = {
   hospital: [81.3, 14.1], jobcenter: [37.3, 20.2], support: [11.2, 21.5],
   'free-clinic': [85.1, 29.8], work: [50.4, 40.5], daycenter: [11.2, 47.5],
   shelter: [89.3, 38.5], 'residential-shelter': [16.1, 63.2], station: [34.5, 65.8],
-}
-
-function hours(place: Location) {
-  const shortTime = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}${minutes % 60 ? `:${String(minutes % 60).padStart(2, '0')}` : ''}`
-  return place.open === 0 && place.close === 1440 ? '24/7' : `${shortTime(place.open)}-${shortTime(place.close)}`
-}
-
-function fullTime(minutes: number) {
-  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 }
 
 type SceneProps = { places: Location[]; currentId: string; selectedId: string; openFlags: string; onFocus: (id: string) => void }
@@ -45,7 +39,7 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
   const origin = positions[currentId]
   const target = positions[selectedId]
   return <><div ref={backdropRef} className="district-backdrop">
-      <img {...responsiveImageProps('/street-life-game/assets/city-map-dark.webp')} width="1024" height="1536" alt="Dark overhead city map with streets, neighborhoods, parks, a river and railway lines" />
+      <img {...responsiveImageProps('/street-life-game/assets/city-map-dark.webp')} width="1024" height="1536" alt={t('location.mapAlt')} />
     </div><div ref={sceneRef} className="district-scene"><div className="district-anchors" style={projection ?? undefined}>
       {origin && target && selectedId !== currentId && <svg className="district-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={`M ${origin[0]} ${origin[1]} C ${origin[0] + (target[0] - origin[0]) * .55} ${origin[1]}, ${origin[0] + (target[0] - origin[0]) * .2} ${target[1]}, ${target[0]} ${target[1]}`} /></svg>}
       {places.map((place, index) => {
@@ -54,8 +48,8 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
         const here = place.id === currentId
         const active = place.id === selectedId
         const open = openFlags[index] === '1'
-        return <button key={place.id} className={`district-pin${x > 55 || place.id === 'work' ? ' label-left' : ''}${here ? ' here' : ''}${active ? ' selected' : ''}${open ? '' : ' closed'}`} style={{ left: `${x}%`, top: `${y}%` }} onClick={() => onFocus(place.id)} aria-pressed={active} aria-label={`${place.name} ${open ? 'Open' : 'Closed'} ${hours(place)}${here ? ' You are here' : ''}`}>
-          <span className="district-marker" aria-hidden="true" /><span className="district-label"><strong>{place.name}</strong></span>
+        return <button key={place.id} className={`district-pin${x > 55 || place.id === 'work' ? ' label-left' : ''}${here ? ' here' : ''}${active ? ' selected' : ''}${open ? '' : ' closed'}`} style={{ left: `${x}%`, top: `${y}%` }} onClick={() => onFocus(place.id)} aria-pressed={active} aria-label={mapPinAccessible(place, open, here)}>
+          <span className="district-marker" aria-hidden="true" /><span className="district-label"><strong>{locationName(place.id)}</strong></span>
         </button>
       })}
     </div></div></>
@@ -70,20 +64,20 @@ export default function CityMap({ places, currentId, initialFocusId, minutes, re
   const hour = Math.floor(minutes / 60)
   const shopOpen = useMemo(() => !!shop && isOpen(shop, hour * 60), [shop, hour])
   if (!selected) return null
-  const shopHours = shop ? shopOpen ? `Open ${fullTime(shop.open)}–${fullTime(shop.close)}` : `Opens at ${fullTime(shop.open)}` : ''
+  const shopHours = shop ? shopOpen ? t('location.map.shopOpen', { open: formatTime(shop.open), close: formatTime(shop.close) }) : t('location.opensAt', { time: formatTime(shop.open) }) : ''
   const openFlags = places.map(place => (place.id === 'shop' ? shopOpen : isOpen(place, minutes)) ? '1' : '0').join('')
-  return <section className="district-map" aria-label="City map">
+  return <section className="district-map" aria-label={t('location.mapAccessible')}>
     <div className="district-map-heading">
-      <div className="district-shortcuts" aria-label="Nearby places">
-        <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} aria-label="Street" aria-describedby="street-shortcut-hours" onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span className="district-shortcut-copy"><span>Street</span><small id="street-shortcut-hours">Open 24/7</small></span></button>
-        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} aria-label="Small Shop" aria-describedby="shop-shortcut-hours" disabled={!shopOpen} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span className="district-shortcut-copy"><span>Small Shop</span><small id="shop-shortcut-hours">{shopHours}</small></span></button>
+      <div className="district-shortcuts" aria-label={t('location.nearbyAccessible')}>
+        <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} aria-label={locationName('street')} aria-describedby="street-shortcut-hours" onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span className="district-shortcut-copy"><span>{locationName('street')}</span><small id="street-shortcut-hours">{t('location.map.openAllDay')}</small></span></button>
+        <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} aria-label={locationName('shop')} aria-describedby="shop-shortcut-hours" disabled={!shopOpen} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span className="district-shortcut-copy"><span>{locationName('shop')}</span><small id="shop-shortcut-hours">{shopHours}</small></span></button>
       </div>
     </div>
     <DistrictScene places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />
     {selected.id !== 'street' && selected.id !== 'shop' && <div className="district-card" aria-live="polite">
       <div className="district-place-icon"><Icon name={locationIcon(selected.id)} /></div>
-      <div className="district-place-copy"><div className="district-place-heading"><h3>{selected.name}</h3><p className={`district-hours ${isOpen(selected, minutes) ? 'open' : 'closed'}`}>{hours(selected)}</p></div><small>{selected.id === 'shelter' ? reservedBed ? 'Use your reserved bed during admission hours.' : 'A place is not guaranteed.' : selected.description}</small></div>
-      <button className="district-route-button" onClick={() => onRoute(selected.id)}>Go →</button>
+      <div className="district-place-copy"><div className="district-place-heading"><h3>{locationName(selected.id)}</h3><p className={`district-hours ${isOpen(selected, minutes) ? 'open' : 'closed'}`}>{locationHours(selected, 'map')}</p></div><small>{selected.id === 'shelter' ? reservedBed ? t('location.map.shelterReserved') : t('location.map.shelterUnreserved') : locationDescription(selected.id)}</small></div>
+      <button className="district-route-button" onClick={() => onRoute(selected.id)}>{t('location.map.go')}</button>
     </div>}
   </section>
 }

@@ -1,3 +1,4 @@
+import { locations } from '../locales/en/locations'
 import { hud } from '../locales/en/hud'
 import { status } from '../locales/en/status'
 import { inventory } from '../locales/en/inventory'
@@ -11,7 +12,7 @@ import { results } from '../locales/en/results'
 import { createTranslator } from './core'
 import type { TranslationCatalog } from './types'
 
-export const en = { ...hud, ...status, ...inventory, ...effects, ...common, ...dialogs, ...results, ...eventHistory, ...inventoryHistory, ...actionHistory } as const
+export const en = { ...locations, ...hud, ...status, ...inventory, ...effects, ...common, ...dialogs, ...results, ...eventHistory, ...inventoryHistory, ...actionHistory } as const
 export type MessageKey = keyof typeof en
 export type Catalog = TranslationCatalog<typeof en>
 export const locale = 'en-GB'

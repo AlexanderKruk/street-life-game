@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { memo } from 'react'
 import { formatTime } from './game'
 import { responsiveImageProps } from './responsiveImages'
@@ -8,7 +9,7 @@ export const StreetArt = memo(function StreetArt({ phone, inline, illustration, 
   const source = phone ? '/street-life-game/assets/phone-search.webp' : illustration ?? '/street-life-game/assets/street-hero.webp'
   return <div className={`street-art${phone || inline ? ' phone-art' : !illustration && night ? ' night' : ''}`} aria-hidden="true">
     <img {...responsiveImageProps(source)} alt="" width="1400" height={phone || inline ? 1050 : 788} fetchPriority="high" />
-    {illustration && <span className="result-art-caption">Looking ahead</span>}
+    {illustration && <span className="result-art-caption">{t('location.artCaption')}</span>}
   </div>
 })
 
@@ -30,13 +31,13 @@ export const LocationSummary = memo(function LocationSummary({ id, name, descrip
     {id === 'street' && <StreetArt phone={false} inline={false} illustration={streetIllustration} night={night} />}
     {illustration && <img key={illustration} className="location-hero-image" {...responsiveImageProps(`/street-life-game/assets/${illustration}.webp`)} width="1600" height="900" alt="" aria-hidden="true" fetchPriority="high" />}
     {id !== 'street' && <div className="location-icon"><Icon name={locationIcon(id)} /></div>}
-    <div>{id === 'street' ? <p className="eyebrow">A MOMENT ON THE STREET</p> : !open && <p className="eyebrow">CLOSED · OPENS AT {formatTime(opensAt)}</p>}<h2>{name}</h2><p>{description}</p></div>
+    <div>{id === 'street' ? <p className="eyebrow">{t('location.street.eyebrow')}</p> : !open && <p className="eyebrow">{t('location.closedEyebrow', { time: formatTime(opensAt) })}</p>}<h2>{name}</h2><p>{description}</p></div>
   </section>
 })
 
 type ShopHeroProps = { name: string; open: boolean; opensAt: number; closesAt: number }
 export const ShopHero = memo(function ShopHero({ name, open, opensAt, closesAt }: ShopHeroProps) {
-  return <section className="shop-hero" aria-label="Shop"><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{name}</h2><p>{open ? 'Open' : 'Closed'} · {formatTime(opensAt)}–{formatTime(closesAt)}</p></section>
+  return <section className="shop-hero" aria-label={t('location.shopAccessible')}><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{name}</h2><p>{t(open ? 'location.shop.openHours' : 'location.shop.closedHours', { open: formatTime(opensAt), close: formatTime(closesAt) })}</p></section>
 })
 
 type TravelHeadingProps = { from: string; to?: string; walking: boolean; moving?: boolean }

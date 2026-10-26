@@ -1,3 +1,4 @@
+import { locationName } from './locationText'
 import { locations, type GameState } from './game'
 import type { StreetEventChoice } from './events'
 import type { Inventory, EventDiceState } from './stateTypes'
@@ -18,7 +19,7 @@ export function eventCheckModifier(game: GameState, choice: StreetEventChoice) {
 export function eventChoiceUnavailable(choice: StreetEventChoice, game: GameState, inventory: Inventory, discoveredLocations: string[], phoneUnavailable: string | null) {
   if (choice.undiscoveredLocationRequired && discoveredLocations.includes(choice.undiscoveredLocationRequired)) {
     const place = locations.find(location => location.id === choice.undiscoveredLocationRequired)
-    return `You already know about the ${place?.name ?? 'location'}.`
+    return `You already know about the ${locationName(place?.id ?? '')}.`
   }
   if (choice.moneyRequired !== undefined && game.money < choice.moneyRequired) return `Need ${choice.moneyRequired} zł`
   if (choice.phoneBatteryRequired !== undefined) {

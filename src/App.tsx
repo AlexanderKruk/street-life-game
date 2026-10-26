@@ -1,3 +1,4 @@
+import { locationName } from './locationText'
 import { limitReasonsLabel } from './statusPresentation'
 import { t } from './i18n'
 import { journalPresentation, journalDecisionKey } from './journalIdentity'
@@ -474,7 +475,7 @@ export default function App() {
     setSelectedDestination(null)
     setPhoneOpen(false)
     setScreen('location')
-    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionId: 'closing-time' as const, decisionId: 'closing-time', groupId: JSON.stringify(['closing-time', current.id]), actionTitle: 'Closing time', text: `${current.name} closed, and I had to leave. I need to work out where to go next.` }].slice(-500))
+    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: t('location.history.closingTitle'), reflection: true as const, actionId: 'closing-time' as const, decisionId: 'closing-time', groupId: JSON.stringify(['closing-time', current.id]), actionTitle: t('location.history.closingAction'), text: t('location.history.closingText', { place: locationName(current.id) }) }].slice(-500))
   }, [game.day, game.minutes, current, !!trip, gameOver])
 
 
@@ -692,8 +693,8 @@ export default function App() {
   }
 
   return <main className={`shell${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
-    {streetExitPending && <InventoryDialog icon="exit" label="TIME PAUSED" title={`Leave ${current.name}?`} onCancel={cancelStreetExit}>
-      <div className="sleep-choice-buttons"><ModalAction variant="secondary" type="button" onClick={cancelStreetExit}>Cancel</ModalAction><ModalAction type="button" className="confirm-action" onClick={confirmStreetExit}>Go to Street</ModalAction></div>
+    {streetExitPending && <InventoryDialog icon="exit" label={t('location.leaveLabel')} title={t('location.leaveTitle', { place: locationName(current.id) })} onCancel={cancelStreetExit}>
+      <div className="sleep-choice-buttons"><ModalAction variant="secondary" type="button" onClick={cancelStreetExit}>{t('common.cancel')}</ModalAction><ModalAction type="button" className="confirm-action" onClick={confirmStreetExit}>{t('location.goToStreet')}</ModalAction></div>
     </InventoryDialog>}
     {foodChoice && <FoodChoiceDialog name={foodChoice.name} counts={foodSlot(inventory, foodChoice.kind, foodChoice.slotIndex)} onCancel={cancelFoodChoice} onChoose={chooseFood} />}
     {discardItem && <DiscardDialog name={discardItem.name} quantity={discardItem.quantity} spoiledQuantity={discardItem.spoiledQuantity} onCancel={cancelDiscard} onConfirm={() => confirmDiscard(false)} onDiscardSpoiled={() => confirmDiscard(true)} />}
@@ -707,11 +708,11 @@ export default function App() {
     />}
     {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
-      title: `${locations.find(place => place.id === closingNotice)?.name} has closed`,
-      label: 'CLOSING TIME · TIME PAUSED',
-      text: 'It’s closing time. You have to leave. You step outside and find yourself back on the street.',
+      title: t('location.closedTitle', { place: locationName(closingNotice) }),
+      label: t('location.closingLabel'),
+      text: t('location.closingText'),
       illustration: '/street-life-game/assets/event-closing-time.webp',
-      illustrationAlt: 'You stand outside with your backpack after the doors have closed behind you.',
+      illustrationAlt: t('location.closingAlt'),
     }} onClose={() => setClosingNotice(null)} />}
     {trashGame && <TrashSearchDialog trashGame={trashGame} checkTrashDeadline={checkTrashDeadline} finishTrashSearch={finishTrashSearch}
       startTrashDrag={startTrashDrag} moveTrashItem={moveTrashItem} collectTrashBottle={collectTrashBottle} endTrashDrag={endTrashDrag} cancelTrashDrag={cancelTrashDrag} />}
@@ -759,7 +760,7 @@ export default function App() {
       const elapsed = Math.max(0, trip.total - trip.remaining)
       const phase = getTravelDisplayPhase(trip)
       return <ActivityDialog kind="travel" visible={travelVisible} panelRef={travelModalRef}
-        from={current.name} to={destination?.name} walking={trip.mode === 'walk'} moving={phase.walking}
+        from={locationName(current.id)} to={destination ? locationName(destination.id) : undefined} walking={trip.mode === 'walk'} moving={phase.walking}
         elapsed={elapsed} phase={underRainCover ? 'Under cover' : phase.label}
       />
     })()}

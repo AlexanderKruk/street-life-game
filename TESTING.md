@@ -401,3 +401,17 @@ rendering/boundary checks, phone-clock/shelter-sleep/events regressions and buil
 passed. Temporary browser comparison with 048ac75 at 390/1280 and extra 320/390
 expanded day/title cases preserved layout; CSS/baselines were unchanged. Full
 suites, WebKit, iPhone and the overall long-text matrix remain unrun.
+
+
+Location catalogue checkpoint: check-localization compares 11 frozen location
+fixtures from 956629b with pure domain data and catalogue names/descriptions;
+it checks compact/full hours, route ranges, opening thresholds and all-empty
+translated place names. Actual map clicks preserve all IDs, reserved-bed hints,
+shop availability and closed pins; Notes and inert overlays remain present.
+Six completed trips restored into App/StrictMode preserve money, location,
+arrival/group IDs and saved History across remount. Known-place event prose
+uses the known branch even when a translated name is empty. Targeted boundary,
+event/travel/rest/load/render/design checks and map-travel/events/journal-services
+regressions passed, plus build. Browser comparison preserves English map geometry
+at390/1280 and checks expanded shortcuts/pin labels at320/390; general layout/
+projection, full suites, WebKit and iPhone remain unverified.

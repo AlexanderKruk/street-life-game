@@ -504,3 +504,18 @@ Number(value.toFixed(2)) before locale formatting; battery low compares the raw
 value <30 before display rounding. No new weather/weekday fields in saves.
 Remaining dates in phone/sleep and place labels belong to their own catalogue
 stages. The completed HUD does not imply all common controls are migrated.
+
+
+Location catalogue checkpoint (26 October 2026): Location holds only LocationId,
+icon, numeric opening/closing and travel parameters. Resolve names/descriptions/
+service details with locationText.ts at display boundaries; never restore name
+or description as domain identities. locations.ts is the English catalogue for
+map/hours/location panels and exit/closing/arrival messages. Existing contextual
+hours formats remain distinct. Route callbacks, referral checks, discovery and
+History groups use place IDs. Preserve empty display names in known-place lists;
+arrival title selection checks destinationName !== undefined, never truthiness.
+Existing saved History is not retranslated. Map shortcuts may wrap up to two
+name lines; pin labels ellipsise at bounded widths, while accessible names and
+selected cards retain full names. Do not shrink fonts. The overall mobile and
+map projection audit remains open. Other action/phone/sleep/travel copy is still
+tracked separately in LOCALIZATION.md.

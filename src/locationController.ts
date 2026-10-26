@@ -1,3 +1,5 @@
+import { t } from './i18n'
+import { locationName } from './locationText'
 import type { RefObject } from 'react'
 import { actions, applyAction as applyGameAction, type ActionResult, type GameState, type Housing, type Location, type TimeContext } from './game'
 import { absoluteMinutes } from './gameTime'
@@ -39,7 +41,7 @@ export function createLocationController(context: Context, host: Host, queue: En
     const unavailable = actionUnavailableReason(action)
     if (unavailable) { setMessage(unavailable); return }
     if (actionId === 'shelter-social-worker') { beginShelterInterview(); return }
-    if (!open && action.requiresOpen !== false) { setMessage(`${current.name} is closed. Come back during opening hours.`); return }
+    if (!open && action.requiresOpen !== false) { setMessage(t('location.closedRefusal', { place: locationName(current.id) })); return }
     if (current.id === 'shelter' && (game.minutes >= 1320 || game.minutes < 360) && actionId !== 'shelter-rest') {
       setMessage('Quiet hours are 22:00–06:00. Only sleeping is allowed right now.')
       return

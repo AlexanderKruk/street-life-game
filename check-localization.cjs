@@ -328,6 +328,43 @@ for(let day=1;day<=14;day++){
 }
 console.log('PASS: weather/weekday pseudo-copy preserves all 8 identities, dawn/dusk icons, service weekdays, rain, needs, phone drain and illness rules.');
 
+// Names/descriptions no longer live in domain locations or control branches.
+const locationFixtures=require('./test-fixtures/location-catalogue.cjs');
+const {locations:locationCatalog}=bundled('src/locales/en/locations.ts');
+const pseudoLocations=Object.fromEntries(Object.entries(locationCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+for(const key of Object.keys(pseudoLocations))if(key.startsWith('location.name.'))pseudoLocations[key]='';
+assert.deepEqual(validateCatalog(locationCatalog,pseudoLocations),[]);
+const locationsSource=`export {default as App} from './src/App'; export {default as CityMap} from './src/CityMap'; export {default as BottomNavigation} from './src/BottomNavigation'; export {default as ClosedContent} from './src/ClosedContent'; export {default as PhoneNotesScreen} from './src/PhoneNotesScreen'; export * from './src/LocationPresentation'; export * from './src/locationText'; export * from './src/resultPresentation'; export * from './src/game'; export * from './src/journalIdentity'; export * from './src/saveCompatibility'; export * from './src/loadGameSession'; export * from './src/eventController';`;
+const locationsBase=bundled({source:locationsSource});
+const locationsView=bundled({source:locationsSource,catalogs:{locations:pseudoLocations}});
+for(const old of locationFixtures){
+ const place=locationsView.locations.find(p=>p.id===old.id);const {name,description,...mechanics}=old;
+ assert.deepEqual(place,mechanics);assert.equal(locationsBase.locationName(place.id),name);assert.equal(locationsBase.locationDescription(place.id),description);
+ assert.equal(locationsView.locationName(place.id),'');
+ for(const minutes of [0,419,420,479,480,899,900,959,960,1079,1080,1319,1320,1439])assert.equal(locationsView.isOpen(place,minutes),locationsBase.isOpen(old,minutes));
+ for(const mode of ['walk','transit','fare-dodge'])assert.deepEqual(locationsView.destinationTravelTimeRange(place,mode),locationsBase.destinationTravelTimeRange(old,mode));
+ const expected=old.open===0&&old.close===1440?'24 hours':`${locationsBase.formatTime(old.open)}–${locationsBase.formatTime(old.close)}`;
+ assert.equal(locationsBase.locationHours(place),expected);
+ const expectedMap=old.open===0&&old.close===1440?'24/7':`${String(old.open/60).padStart(2,'0')}-${String(old.close/60).padStart(2,'0')}`;
+ assert.equal(locationsBase.locationHours(place,'map'),expectedMap);
+ const discovery=locationsView.locationPresentation([old.id]).places;assert.equal(discovery.length,1);assert.equal(discovery[0].id,old.id);assert.equal(discovery[0].name,'');
+ const arrival={id:'arrival',title:'Arrival',actionHistory:{kind:'action',destinationId:old.id,destinationName:name}};
+ assert.equal(locationsView.journalPresentation({...arrival,actionHistory:{...arrival.actionHistory,destinationName:''}}).groupId,locationsBase.journalPresentation(arrival).groupId,'empty display names cannot drop arrival identity or change History grouping');
+}
+assert.equal(locationsBase.locationHours({open:420,close:1440},'map'),'07-24');
+assert.equal(locationsBase.locationHours({open:425,close:1315},'map'),'07:05-21:55');
+assert.deepEqual(locationsView.locationPresentation(['not-a-place']).places,[]);
+
+for(const view of [locationsBase,locationsView]){
+ let report='';let state={...comfortableStatus,mood:40};let inventory={...INITIAL_INVENTORY};let discovered=['support'];
+ const setter=(get,set)=>value=>set(typeof value==='function'?value(get()):value);
+ const session={activeEvent:{id:'fixture',title:'fixture',illustration:'fixture.webp'},firstNightEvents:{pendingId:null},ambientEventClock:{current:{}},setEncounters:()=>{},setFirstNightEvents:()=>{},setActiveEvent:()=>{},setDiceCheck:()=>{}};
+ const controller=view.createEventController(session,{game:state,inventory,storage:INITIAL_STORAGE,life:{housing:'Street'},discoveredLocations:discovered,phoneUnavailable:null,shelterBooked:false,currentId:'street',open:true},{setGame:setter(()=>state,v=>state=v),setInventory:setter(()=>inventory,v=>inventory=v),setMessage:text=>report=text,setInfoModal:()=>{},setEventResultOpen:()=>{},setDiscoveredLocations:setter(()=>discovered,v=>discovered=v),setActiveGoal:()=>{},openPage:()=>{},resultSnapshot:()=>({game:state,inventory,effects:[]}),runWithResult:(_action,run)=>run(),applyAction:state=>state,startFareDodgeTrip:()=>{}});
+ controller.applyEventOutcome({message:'fixture',knownLocations:['support','station','unknown']});
+ assert(report.includes('You already know about:'),'known-place branch must survive an empty translated name');assert(!report.includes('not sure where to start'));assert.deepEqual(discovered,['support']);
+}
+console.log('PASS: all 11 location catalogues preserve English copy, numeric hours/travel and empty-name discovery/arrival identities.');
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -335,7 +372,7 @@ Object.defineProperty(global, 'navigator', { configurable: true, value: dom.wind
 global.IS_REACT_ACT_ENVIRONMENT = true;
 window.scrollTo = () => {}; window.matchMedia = () => ({ matches: true });
 const React = require('react');
-const { render, cleanup } = require('@testing-library/react');
+const { render, cleanup, act } = require('@testing-library/react');
 const { orderChoiceNodes } = bundled('src/ChoiceOptions.tsx');
 const { shuffleChoiceOrder } = bundled('src/streetChoiceOrder.ts');
 const { choiceOrderToken } = bundled('src/legacyChoiceOrderCompatibility.ts');
@@ -471,6 +508,42 @@ try {
   assert.deepEqual(discards.map(r=>r.id),['water','food','bread','cannedFood','readyMeal','wipes','bottles','cigarettes','medicines','showerGel']);assert.equal(discards.find(r=>r.id==='food').spoiledQuantity,1);
   assert.equal(document.querySelector('.inventory-slot-copy strong b'),null);
   console.log('PASS: all nine pseudo-labelled shop items retain buy/steal eligibility with empty reasons; all ten backpack item controls dispatch by ID.');
+  for(const minutes of [419,420,1319,1320])for(const reservedBed of [false,true]){
+    const routed=[];cleanup();render(React.createElement(locationsView.CityMap,{places:locationsView.locations,currentId:'station',initialFocusId:'shelter',minutes,reservedBed,routeId:null,onRoute:id=>routed.push(id)}));
+    const shop=document.querySelectorAll('.district-shortcut')[1];assert.equal(shop.disabled,minutes<420||minutes>=1320);
+    assert.equal(document.querySelector('.district-place-copy h3').textContent,'');
+    assert(document.querySelector('.district-place-copy small').textContent.startsWith(reservedBed?'⟦location.map.shelterReserved':'⟦location.map.shelterUnreserved'));
+    const pins=[...document.querySelectorAll('.district-pin')];const ids=locationsView.locations.filter(p=>!['street','shop'].includes(p.id)).map(p=>p.id);
+    for(let index=0;index<pins.length;index++){
+      const id=ids[index];act(()=>pins[index].click());assert.equal(document.querySelector('.district-place-copy h3').textContent,'');
+      assert.equal(pins[index].classList.contains('closed'),!locationsView.isOpen(locationsView.locations.find(p=>p.id===id),minutes));
+      document.querySelector('.district-route-button').click();assert.equal(routed.at(-1),id,'map route callback uses ID when every display name is empty');
+    }
+    act(()=>document.querySelectorAll('.district-shortcut')[0].click());assert.equal(routed.at(-1),'street');
+    if(!shop.disabled){act(()=>shop.click());assert.equal(routed.at(-1),'shop');}
+  }
+  cleanup();render(React.createElement(locationsView.PhoneNotesScreen,{mapPlaces:locationsView.locations,answeredQuestions:[]}));
+  assert.equal(document.querySelectorAll('.phone-note').length,10,'empty names do not remove known Notes');assert.equal(document.querySelector('h3 b'),null);
+  cleanup();render(React.createElement(locationsView.ClosedContent,{closed:true,opensAt:'07:00'},React.createElement('button',null,'fixture')));
+  assert(document.querySelector('.closed-content-body').hasAttribute('inert'));assert(document.querySelector('.closed-content-notice h2').textContent.startsWith('⟦location.closed'));
+  console.log('PASS: actual pseudo map keeps all route IDs, closed pins, 07:00/22:00 shop boundaries and reserved-bed hints; Notes/closed content retain identity and blocking.');
+  const locationTimers={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
+  try{
+    for(const destinationId of ['station','shop','shelter'])for(const mode of ['walk','transit']){
+      cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
+      const game={...comfortableStatus,mood:40,rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999};
+      localStorage.setItem('street-life-save-v3',JSON.stringify(game));localStorage.setItem('street-life-mobile-auto-renew','false');
+      localStorage.setItem('street-life-inventory-v1',JSON.stringify(INITIAL_INVENTORY));
+      localStorage.setItem('street-life-trip-v1',JSON.stringify({destinationId,mode,total:30,remaining:0,before:{game,inventory:INITIAL_INVENTORY,effects:[]}}));
+      render(React.createElement(React.StrictMode,null,React.createElement(locationsView.App)));
+      const read=key=>JSON.parse(localStorage.getItem(key));
+      assert.equal(read('street-life-save-v3').locationId,destinationId);assert.equal(read('street-life-save-v3').money,game.money);assert.equal(read('street-life-trip-v1'),null);
+      const history=read('street-life-journal-history-v1');assert.equal(history.length,1);assert.equal(history[0].actionId,'arrival');
+      assert(history[0].groupId.includes(destinationId),'an empty translated arrival name retains destination grouping');
+      cleanup();render(React.createElement(locationsView.App));assert.deepEqual(read('street-life-journal-history-v1'),history,'restored arrival does not replay or rewrite saved History');
+    }
+  }finally{cleanup();window.setInterval=locationTimers.set;window.clearInterval=locationTimers.clear;}
+  console.log('PASS: empty-name App restores six completed trips under StrictMode without duplicate arrival/costs or rewritten saved History.');
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){

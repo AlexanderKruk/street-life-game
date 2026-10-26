@@ -1,14 +1,7 @@
-import { formatTime, locations } from './game'
+import { locations } from './game'
+import { t } from './i18n'
+import { locationName, locationHours, locationService } from './locationText'
 import type { ResultPresentation } from './ResultCard'
-
-const services: Record<string, string> = {
-  support: 'Accommodation, documents and benefits',
-  daycenter: 'A place indoors, shower, laundry and phone charging',
-  'free-clinic': 'Free basic medical care · no insurance needed',
-  shelter: 'A bed for the night, meals and a shower. Try to arrive before 18:00 for a better chance of getting a bed.',
-  shop: 'A small shop selling affordable food and water. Registered Night Shelter guests can also get free meals.',
-  station: 'Outlet in the waiting room · +60% charge in one hour, capped at 100%',
-}
 
 const answers: Record<string, Pick<ResultPresentation, 'heading' | 'lead' | 'notice' | 'illustration'>> = {
   morning: { heading: 'Help for tomorrow', lead: 'Places saved on your map.', notice: 'Services may be full.' },
@@ -20,16 +13,16 @@ const answers: Record<string, Pick<ResultPresentation, 'heading' | 'lead' | 'not
   charging: { heading: 'An outlet at the station', lead: '', notice: 'No internet needed. The station is open around the clock.' },
 }
 
-export function locationPresentation(placeIds: string[], mapStatus = 'On map'): ResultPresentation {
+export function locationPresentation(placeIds: string[], mapStatus = t('location.onMap')): ResultPresentation {
   return {
-    heading: 'Information found', label: 'INFORMATION', lead: '', compact: true, mapStatus,
+    heading: t('location.informationTitle'), label: t('location.informationLabel'), lead: '', compact: true, mapStatus,
     places: placeIds.flatMap(placeId => {
       const place = locations.find(location => location.id === placeId)
       if (!place) return []
       return [{
-        id: place.id, name: place.name,
-        hours: place.open === 0 && place.close === 1440 ? '24 hours' : `${formatTime(place.open)}–${formatTime(place.close)}`,
-        detail: services[place.id] ?? place.description,
+        id: place.id, name: locationName(place.id),
+        hours: locationHours(place),
+        detail: locationService(place.id),
       }]
     }),
   }
