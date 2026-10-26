@@ -3,6 +3,8 @@ import { rainDailyLimit, type GameState } from './game'
 import { absoluteMinutes } from './gameTime'
 import { chooseRain, createRain, planRainDay, rainArt, rainResultText, type RainChoice } from './rain'
 import { summarizeResult, type ResultSnapshot } from './results'
+import { resultResourceLabel } from './resultResources'
+import { t } from './i18n'
 import type { ActiveEffect } from './stateTypes'
 import type { ResultCardData } from './ResultCard'
 import type { JournalEntry } from './journal'
@@ -71,21 +73,25 @@ export function useRainResults(context: { game: GameState; effects: ActiveEffect
       // Background costs may already have been offset by eating/resting. Report
       // the recorded rain totals, without fabricating a before/after stat meter.
       summary.changes = []
-      for (const [label, loss] of [['⚡ Energy', rain.energyLoss], ['🙂 Mood', rain.moodLoss]] as const) {
+      for (const [id, loss] of [['energy', rain.energyLoss], ['mood', rain.moodLoss]] as const) {
         const amount = Number(loss.toFixed(1))
-        if (amount > 0) summary.changes.push({ label, value: `−${amount}`, kind: 'negative' })
+        if (amount > 0) summary.changes.push({ id, amount: -amount, label: resultResourceLabel(id), value: `−${amount}`, kind: 'negative' })
       }
     }
     // Only the rain's own losses belong here. Purchases, food, recovery and
     // ordinary passive costs during a background episode are unrelated.
-    if (rain.choice !== 'continue' && rain.waited > 0) summary.costs.push({ label: '⏱ Time', value: `${Math.round(rain.waited)} min`, kind: 'neutral' })
-    if (granted) summary.changes.push({ label: '🤒 Cold', value: 'Started', kind: 'negative' })
+    if (rain.choice !== 'continue' && rain.waited > 0) summary.costs.push({ id: 'time', amount: Math.round(rain.waited), label: resultResourceLabel('time'), value: t('format.minutes', { minutes: Math.round(rain.waited) }), kind: 'neutral' })
+    if (granted) summary.changes.push({ id: 'cold', effectTransition: 'started', label: resultResourceLabel('cold'), value: t('result.effectStarted'), kind: 'negative' })
     const illustration = rain.choice === 'proper' && rain.searchRemaining > 0
       ? '/street-life-game/assets/event-rain-stopped-search.webp'
       : rainArt(rain, rain.choice ?? 'continue')
-    setInfoModal({ title, text, label: 'AFTER THE RAIN', illustration, illustrationAlt: text, visibleStats: ['Energy', 'Mood'], rainResultId: rain.id, ...summary })
+    setInfoModal({ title, text, label: 'AFTER THE RAIN', illustration, illustrationAlt: text, visibleStats: ['energy', 'mood'], rainResultId: rain.id, ...summary })
     setEventResultOpen(true)
-    if (newlyReported) setJournalEntries(previous => [...previous, { day: game.day, minute: game.minutes, title, text, actionTitle: title, reflection: true as const }].slice(-500))
+    if (newlyReported) {
+      const actionId = rain.choice === 'proper' && rain.searchRemaining > 0 ? 'rain-stopped' : rain.choice === 'continue' ? 'rain-passed' : 'rain-cover'
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, title, text, actionId, decisionId: actionId, groupId: JSON.stringify([actionId,rain.level,rain.choice ?? 'continue',granted]), actionTitle: title, reflection: true }
+      setJournalEntries(previous => [...previous,entry].slice(-500))
+    }
   }, [game, effects, blocked])
 
 }

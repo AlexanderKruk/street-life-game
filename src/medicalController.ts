@@ -53,7 +53,7 @@ export function createMedicalController(context: Context, host: Host) {
     setMessage(`You call an ambulance. Emergency staff stabilise your condition without requiring documents. About ${hours} hours pass.`)
   }
 
-  function hospitalVisit() { runWithResult('Medical appointment', hospitalVisitImpl) }
-  function callAmbulance() { runWithResult('Emergency care', callAmbulanceImpl) }
+  function hospitalVisit() { runWithResult({ id: 'medical-appointment', title: 'Medical appointment' }, hospitalVisitImpl) }
+  function callAmbulance() { runWithResult({ id: 'emergency-care', title: 'Emergency care' }, callAmbulanceImpl) }
   return { hospitalVisit, callAmbulance }
 }

@@ -20,7 +20,8 @@ Find Help на двух ширинах (Body 16px), Small Shop на двух ш�
 зарядки, времени, местоположения и остановки зарядки сохранены.
 WebKit и физический iPhone в этот результат не входят.
 
-`npm test` последовательно запускает **28 проверочных скриптов**. Это число
+`npm test` последовательно запускает **29 проверочных скриптов** (добавлен
+`check-localization.cjs`; последний полный выпускной прогон выше был 28/28). Это число
 файлов, а не отдельных тестовых случаев: внутри одного файла может быть много
 сценариев и утверждений. Используются Node.js `assert`, esbuild, jsdom и React
 Testing Library. `tests/run.cjs` сохраняет исходный порядок, прекращает прогон
@@ -284,3 +285,93 @@ npm-пакета; отдельная загрузка Chromium через Playwr
 Отчёт: `playwright-report/index.html`; падения и trace: `test-results/browser/`.
 Эти временные результаты исключены из Git, эталонные PNG — включены.
 GitHub workflow сохраняет отчёты на 14 дней и не обновляет эталоны автоматически.
+
+
+## Подготовка локализации — первый пакет
+
+Добавлен `node check-localization.cjs` (29-й скрипт runner). Проверяет ключи
+и именованные параметры на уровне TypeScript (`tests/i18n-types.ts`), полноту
+и параметры форм сообщений, plural-категории через Intl (включая few/many),
+отказ от неверных ключей/плейсхолдеров, прежние форматы времени/денег.
+Поведенческие случаи проверяют ID блокировки результата, сохранение пустой
+реакции, legacy-ID, once-per-run музыку и признак ухода из начального района
+при произвольном новом actionTitle, а также фильтрацию, компактный Mood,
+батарею и Hygiene-cap при псевдоподписях ресурсов. Псевдолокаль игроку не включена.
+
+Это ещё не проверка полного перевода игры: новый History использует ID/facts,
+остальные сюжетные/доменные каталоги и длинный перевод на всех модалках остаются
+в [плане локализации](LOCALIZATION.md). Полный Node/browser-прогон нового пакета
+до публикации не запускается; актуальные тематические результаты записываются
+в журнале этого плана. Старые результаты v335 выше относятся к прежней версии.
+
+
+26 октября 2026: в восстановленном окружении доступен только первый пакет
+локализации (`40175a7`). Для нового отдельного переноса icon metadata добавлена
+проверка в check-localization: изменение всех слов подписи не меняет явную
+иконку. Не относить прежние результаты отсутствующих локальных коммитов к
+текущему коду. Полные наборы и browser/visual не запускались.
+
+
+Восстановление авторских событий: check-localization.cjs проверяет 66 исходов,
+документы, rejected supplies, capped/no-delta и сохранение outcomeId. Остальные
+проверки выбираются по фактически изменённому event/result коду; старые результаты
+отсутствующих коммитов не считаются проверкой восстановленного пакета.
+
+
+Восстановленный History инвентаря: check-localization покрывает 66 сценариев,
+факты реальных принятых/отклонённых команд, один исход случайной еды, лекарства,
+покупки/отказы, хранение и нечисловые подписи summary. Покупки проверяются на
+отсутствие ложных утверждений об употреблении/лечении/мытье. Новых runner-скриптов
+не добавлено; старые fixtures сохранений и проверки механики сохранены.
+
+
+Restored remaining-controller History: check-localization compares 64 heading
+fixtures at six summary states and explicit refusals/support/search/sleep/arrival
+and memory variants. Action/rest/phone/event-travel controller checks and five
+regression groups passed along with the build. This does not verify browser
+layout, WebKit/iPhone or the unfinished ordering/grouping migration.
+
+
+ID ordering/grouping checkpoint: check-localization now compares historical
+seed permutations for authored/filtered event choices, travel, rain, interview
+and services under pseudo-copy; History metadata survives reload and relabelling.
+Pairwise fixtures protect previous grouping equivalence. check-rendering covers
+metadata grouping with different saved wording, first timestamp and reload.
+Targeted scripts and five affected regression groups passed; full suites and
+browser/visual were not run. Duration/check-label parsing remains pending.
+
+
+Explicit duration/check checkpoint: check-localization covers numeric estimates,
+ranges/minimum, text that resembles times/DC, separate full/compact check labels,
+unchanged accessible names and all nine contextual theft headings. Owners now
+render ChoiceButton directly; previous icon invariance coverage uses this path.
+Targeted Node scripts, four affected regression groups and build passed.
+Six selected visual cases (street, event, sleep-planning × mobile/desktop) passed
+without baseline changes. Extra travel/station/support/D20 inspection compared
+card time, description sizes and overflow with e186132 on both viewports.
+Known earlier location-hero overflow (~450 px at width390) is recorded for the
+layout phase; it is present before this stage. Full suites/WebKit/iPhone unrun.
+
+
+Freshness/effect-chip checkpoint: check-localization covers 14 effect definitions,
+30 food-slot previews including exact 20/50 boundaries and mixed/second slots.
+A test-only effects catalogue replacement verifies actual InventorySlot, ShopCard
+and StatusScreen under misleading translated labels: colours, handlers, treated
+Cold's Mood cap and stat identities remain intact. check-mood keeps the same
+cap assertions with lowercase stat IDs and checks unchanged rendered cap text.
+Targeted food/inventory/mood/rendering/wetness/module checks and three regression
+groups passed, plus build. Selected shop/inventory visual cases passed 4/4 with
+unchanged baselines. Eight extra browser scenarios match f29979f on both sizes.
+Full suites, WebKit and physical iPhone not run.
+
+
+Inventory catalogue checkpoint: check-localization can replace selected test-only
+catalogues without enabling a player locale. It verifies 72 translated command
+plans (same updates/RNG/ID/group/seed), numeric plural forms, rejected supplies,
+all 9 shop items with empty unavailable reasons, all 10 inventory controls and
+escaped item names. Node inventory/food/medicine/event-travel/rendering/boundary
+checks plus 3 regression groups/build passed. Four selected shop/inventory visual
+cases passed unchanged. A temporary comparison with 3dfed72 matched 9 item
+definitions, 27 food outcomes and 73 command scenarios, plus 8 extra browser
+food-choice/discard/medicine/storage states on both sizes. Long pseudo-copy
+browser layout, full suites, WebKit and iPhone remain unrun.

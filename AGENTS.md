@@ -14,6 +14,26 @@ Notes. Copy must match implemented mechanics. Never expose development plans
 inside story text. Before editing action titles/outcome phrases, check their
 dispatch, memory and History consumers and preserve saved-text compatibility.
 
+Localisation work is tracked in [LOCALIZATION.md](LOCALIZATION.md); the source
+and modal branch inventory is [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
+Use `t` from `src/i18n` and semantic keys in `src/locales/en/` for migrated
+surfaces and new text. Translate whole messages with named parameters. Use
+plural messages with a numeric selector rather than appending English endings;
+keep markup in React, never inject translated HTML. Format display values with
+`src/i18n/formatters.ts` without changing calculation/rounding rules.
+
+`runWithResult` takes `{ id, title }`: `id` is a domain action identity from
+`resultActions.ts`, not a translation key. Result changes carry resource `id`,
+numeric `amount` and (where relevant) `effectTransition`. Use these fields for
+filtering, icons, caps, memories and eligibility, never displayed labels/titles.
+New History entries retain `actionId` alongside historical `actionTitle`.
+`legacyActionCompatibility.ts` and `legacyResultCompatibility.ts` handle old
+missing IDs only. Do not extend those adapters to infer IDs from new copy.
+New History outcome recognition, ordering and grouping use explicit IDs;
+legacy salts preserve existing seeds and old records retain saved text. Do not claim the
+whole game is localised or add a language switch yet. Run
+`node check-localization.cjs` plus the affected thematic checks during this work.
+
 The completed refactoring stages and remaining checklist are maintained in
 [REFACTORING.md](REFACTORING.md). Read it before continuing structural work and
 update the relevant checkboxes, baseline version and verification notes after
@@ -325,3 +345,93 @@ preserve the repository and the current hosting setup.
 Current refactoring batch (25 October 2026): the user requested collecting
 separate verified commits locally and publishing everything at the end. Do not
 push/deploy each refactoring stage individually during this batch.
+
+
+Icon metadata checkpoint (26 October 2026): `GameAction.icon`, authored
+`StreetEventChoice.icon` and raw LocationScreen button `data-icon` supply choice
+icons explicitly. ChoiceButton receives icon explicitly; do not restore label-based inference.
+The legacy button adapter has now been removed. This historical checkpoint
+does not claim that the missing earlier local batches are present.
+
+
+Recovery checkpoint (26 October 2026): use LOCALIZATION.md / LOCALIZATION_TASK.md
+as the current plan; earlier reported local batches 2–4 are absent here.
+Authored event History now uses EventOutcome.historyId / EventHistoryFacts and
+`eventHistoryReflection`, with messages in locales/en/eventHistory.ts. Do not
+parse new event wording to select a reflection. Other History producers still
+need migration; preserve old saved reflections and optional outcomeId.
+
+
+Inventory History uses `inventoryHistoryReflection` with action ID and resolved
+InventoryHistoryFacts; its messages are in locales/en/inventoryHistory.ts.
+runWithResult callbacks may return these facts only after the action guard
+accepts them. Resolve food randomness once in the existing command handler;
+never in a React updater or before the guard. Purchases must not imply eating,
+washing or taking medicine. Keep saved reflections unchanged. Other controller
+History still requires migration; do not claim the parser is fully retired.
+
+
+Restored action History now uses actionHistoryReflection(action, summary,
+memoryId), actionHistoryDefinitions and locales/en/actionHistory.ts. No report
+prose or modal headings are passed to its resolver. ActionHistoryFacts capture
+refusal/support/search/sleep/arrival state after the existing guard accepts the
+command. The old parser/loader is isolated in legacyJournalCompatibility.ts:
+new gameplay must not call it. Ordering/grouping and duration/check metadata
+now use explicit data; effect chips also use IDs/kind/resource metadata.
+Remaining catalogues are still pending. Preserve direct rain/closing writers and
+saved historical text. Back up completed stages in the existing GitHub backup
+branch without changing main or publishing the game.
+
+
+Ordering/grouping checkpoint (26 October 2026): shuffled choices require
+`data-order-id` or `data-choice`; conventional pairs explicitly set fixed order.
+Never derive identity from copy. Frozen legacyChoiceOrderCompatibility and
+legacyJournalIdentityCompatibility salts preserve historical seeds, not labels.
+New History entries use journalPresentation to record decisionId/groupId from
+action/message IDs and semantic parameters. Equivalent historical messages have
+frozen aliases in journalMessageIdentity; never regenerate these from new copy.
+Keep existing group IDs stable during catalogue edits; new distinct meanings
+need distinct semantic identities. Arrival supplies destinationId separately
+from destinationName. groupJournalEntries preserves first text/time and groups
+before pagination; raw-text comparison is limited to records missing metadata.
+
+
+Duration/check checkpoint (26 October 2026): use ChoiceButton directly inside
+ChoiceOptions/AvailableFirst; these containers no longer adapt raw buttons.
+Pass estimate {minutes, maxMinutes?, atLeast?} for approximate time and optional
+thoughtEstimate for compact street choices. The owner supplies route/sleep/queue
+values; rounding is display-only. duration is already formatted display content
+(exact sleep hours, Notes, rain search), never a source of gameplay data.
+Keep prices, benefits and descriptions separate from estimates. Use Body
+choice-description for important copy; preserve short metadata at Small.
+StreetEventChoice.label contains only the label, without a check suffix.
+choiceCheckPresentation formats accessible labels/check badges from check.stat
+and check.dc. Dice headings use those fields and contextual catalogue messages;
+never strip a label with regex or change item case to form a sentence.
+
+
+Freshness/effect-chip checkpoint (26 October 2026): ShopItem.impacts,
+GameAction.impacts and EFFECTS.impacts are ImpactId arrays from effectChips.ts.
+impactChip resolves an ID to {id, resourceId?, kind, label}; InventorySlot takes
+these resolved objects. Never infer colour/meaning from a sign, prefix, label
+or translation key. Freshness uses foodCondition and per-slot average/counts
+from foodSlot; foodEffectChips changes previews only, not food mechanics.
+Chip/freshness messages live in locales/en/effects.ts. Cold's Mood annotation
+uses resourceId=mood and the mood stat cap; changing a label must not hide it.
+LimitingEffect.limits.stat uses mood/energy/hygiene IDs, with separate catalogue
+labels. Existing reason values (Cold, Health, Night shelter, etc.) remain internal
+identities; do not translate them or use translated cause names for comparisons.
+
+
+Inventory catalogue checkpoint (26 October 2026): itemPresentation.ts resolves
+shared item names, the carried Food/shop Cheap food distinction, descriptions,
+captions and rejected-supply labels by item ID. InventoryScreen/InventorySlot,
+ShopCard, shop/storage blocks in LocationScreen, inventoryCommands and
+foodConsumption use locales/en/inventory.ts. Keep quantity plurals numeric and
+whole command/food-outcome sentences in the catalogue; never compose translated
+condition/noun fragments. Prices use existing i18n formatters, not calculations.
+ShopCard eligibility is reasonId/open/fits/affordable, independent of even an
+empty translated reason. A displayed name passed to food/discard dialogs is
+presentation only; actions keep kind/id/slotIndex/condition. Existing History
+hash salts and saved historical wording must not change when item names move.
+Shared place/hero copy and event/theft prose remain tracked in their own rows.

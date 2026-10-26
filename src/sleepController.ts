@@ -83,9 +83,9 @@ export function createSleepController(session: SleepSession, eventSession: Event
     forcedSleep.current = null
     setSleeping(null)
     const before = sleep.before ?? { ...resultSnapshot(), game: { ...game, day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 } }
-    runWithResult('Sleep complete', () => {
+    runWithResult({ id: 'sleep-complete', title: 'Sleep complete' }, () => {
       setGame(previous => applySleepTime(previous, Math.max(0, sleep.startAbsolute + sleep.total - absoluteMinutes(previous))))
-      finishSleepImpl(sleep)
+      return finishSleepImpl(sleep)
     }, before, false, true)
   }
 
@@ -155,6 +155,7 @@ export function createSleepController(session: SleepSession, eventSession: Event
       illustrationAlt: sleep.kind === 'bench' ? 'You wake on a bench with a sore throat and a blocked nose.' : 'You wake on the pavement, chilled and feeling unwell.',
     })
     else presentWakeEvent(wakeEvent, 'Sleep complete', completionText, wakeState)
+    return { kind: 'action' as const, sleepIllness: newlyIll }
   }
 
   function finishRestAction(actionId: string, actionName: string, result: ActionResult, next: GameState) {

@@ -57,7 +57,7 @@ export function createLocationController(context: Context, host: Host, queue: En
       if (Math.random() > chance) {
         setGame((prev) => applyAction(prev, { minutes: 15, mood: -2 }))
         setMessage(current.id === 'free-clinic' ? 'The free clinic is full right now. You wait for a while, but no appointment opens up.' : 'Day Center is full right now. You wait for a while, but no place opens up.')
-        return
+        return { kind: 'action' as const, failed: true }
       }
     }
 
@@ -99,6 +99,6 @@ export function createLocationController(context: Context, host: Host, queue: En
     }
   }
 
-  function act(id: string) { runWithResult(actions.find(action => action.id === id)?.name ?? 'Action complete', () => actImpl(id), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(id) ? ['showerGel'] : []) }
+  function act(id: string) { runWithResult({ id: `location:${id}`, title: actions.find(action => action.id === id)?.name ?? 'Action complete' }, () => actImpl(id), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(id) ? ['showerGel'] : []) }
   return { act, actionUnavailableReason }
 }

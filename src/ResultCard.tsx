@@ -4,34 +4,41 @@ import { responsiveImageProps } from './responsiveImages'
 import { BatteryIcon, Icon, type IconName } from './Icon'
 import Stat from './Stat'
 import type { ResultChange, ResultSummary } from './results'
+import { plainResultLabel, resultChangeAmount, resultChangeId } from './legacyResultCompatibility'
+import type { ResultResourceId } from './resultResources'
+import { t } from './i18n'
+import { formatMoney, formatResultDelta } from './i18n/formatters'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
-export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; visibleStats?: string[]; rainResultId?: string; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; visibleStats?: ResultResourceId[]; rainResultId?: string; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
-  return label.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '')
+  return plainResultLabel(label)
 }
 
-function wholeStatDelta(value: string) {
-  return value.replace(/\d+(?:\.\d+)?/, amount => String(Math.max(1, Math.round(Number(amount)))))
+function wholeStatDelta(change: ResultChange) {
+  const amount = resultChangeAmount(change)
+  const id = resultChangeId(change)
+  return id && Number.isFinite(amount) ? formatResultDelta((amount < 0 ? -1 : 1) * Math.max(1, Math.round(Math.abs(amount))), id, 0) : change.value
 }
 
 // Keep gains and meaningful consequences; omit small ongoing stat drain entirely.
 export function isMajorChange(change: ResultChange) {
   if (change.kind === 'negative' && change.consumed) return false
   if (change.kind !== 'negative') return true
-  const amount = Number(change.value.replace('−', '-').match(/^[+-]?\d+(?:\.\d+)?/)?.[0])
-  const passiveNeeds = ['Food', 'Water', 'Energy', 'Health', 'Hygiene', 'Battery', 'Phone condition', 'Clothing cleanliness', 'Clothing condition'].includes(resultLabel(change.label))
+  const amount = resultChangeAmount(change)
+  const passiveNeeds = ['hunger', 'thirst', 'energy', 'health', 'hygiene', 'phoneBattery', 'phoneCondition', 'clothingCleanliness', 'jacket'].includes(resultChangeId(change) ?? '')
   return !passiveNeeds || !Number.isFinite(amount) || Math.abs(amount) >= 5
 }
 
 function ResultStat({ change, animationReady }: { change: ResultChange; animationReady: boolean }) {
   const label = resultLabel(change.label)
+  const id = resultChangeId(change)
   const meter = change.meter!
-  const icons: Record<string, IconName> = { Food: 'food', Water: 'water', Energy: 'energy', Health: 'heart', Hygiene: 'shower', Battery: 'phone', 'Phone condition': 'phone', 'Clothing cleanliness': 'shower', 'Clothing condition': 'person' }
-  const icon = icons[label] ?? 'person'
-  return <Stat label={label === 'Water' ? 'Thirst' : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} capReason={meter.capReason} change={{ from: meter.before, value: change.value, kind: change.kind }} animationReady={animationReady} />
+  const icons: Partial<Record<ResultResourceId, IconName>> = { hunger: 'food', thirst: 'water', energy: 'energy', health: 'heart', hygiene: 'shower', phoneBattery: 'phone', phoneCondition: 'phone', clothingCleanliness: 'shower', jacket: 'person' }
+  const icon = (id && icons[id]) || 'person'
+  return <Stat id={id} label={id === 'thirst' ? t('stat.thirst') : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} capReason={meter.capReason} change={{ from: meter.before, value: change.value, kind: change.kind }} animationReady={animationReady} />
 }
 
 function ChangeRows({ changes }: { changes: ResultChange[] }) {
@@ -87,15 +94,15 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
   const presentation = result.presentation
   const compactInfo = !!presentation?.compact
   const compactPlace = compactInfo && presentation?.places?.length === 1 ? presentation.places[0] : undefined
-  const changes = (result.changes ?? []).filter(change => isMajorChange(change) || result.visibleStats?.includes(resultLabel(change.label)))
+  const changes = (result.changes ?? []).filter(change => isMajorChange(change) || (resultChangeId(change) && result.visibleStats?.includes(resultChangeId(change)!)))
   const gains = changes.filter(change => change.kind === 'positive')
   const consequences = changes.filter(change => change.kind !== 'positive')
-  const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || ((compactInfo || result.batteryInSummary) && resultLabel(cost.label) === 'Battery'))
+  const costs = (result.costs ?? []).filter(cost => isMajorChange(cost) || ((compactInfo || result.batteryInSummary) && resultChangeId(cost) === 'phoneBattery'))
   const meters = [...gains, ...consequences, ...costs].filter(change => change.meter)
-  const summaryMood = compactInfo ? meters.find(change => resultLabel(change.label) === 'Mood') : undefined
-  const summaryBattery = result.batteryInSummary ? costs.find(change => resultLabel(change.label) === 'Battery') : undefined
+  const summaryMood = compactInfo ? meters.find(change => resultChangeId(change) === 'mood') : undefined
+  const summaryBattery = result.batteryInSummary ? costs.find(change => resultChangeId(change) === 'phoneBattery') : undefined
   const statMeters = meters.filter(change => change !== summaryMood && change !== summaryBattery)
-  const gainRows = gains.filter(change => !change.meter && !(result.bottleSearch && resultLabel(change.label) === 'Deposit containers'))
+  const gainRows = gains.filter(change => !change.meter && !(result.bottleSearch && resultChangeId(change) === 'bottles'))
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter || change === summaryBattery)
 
@@ -103,17 +110,17 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
     <ModalPanel className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactInfo ? ' compact-info-result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="result-title" ref={dialog}>
       {result.illustration && <img className="result-illustration" {...responsiveImageProps(result.illustration)} alt={result.illustrationAlt ?? result.title} onLoad={() => setReadyIllustration(result.illustration!)} onError={() => setReadyIllustration(result.illustration!)} />}
       <div className="result-card-heading">
-        {!result.bottleSearch && !compactInfo && <p className="result-card-label">{presentation?.label ?? result.label ?? 'AFTER THE ACTION'}</p>}
+        {!result.bottleSearch && !compactInfo && <p className="result-card-label">{presentation?.label ?? result.label ?? t('result.afterAction')}</p>}
         <div className={compactInfo ? 'compact-info-heading' : undefined}>
-          <h2 id="result-title">{compactInfo && <Icon name="info" />}<span>{compactPlace?.name ?? (result.bottleSearch ? 'Bottle & can search' : presentation?.heading ?? result.title)}</span></h2>
+          <h2 id="result-title">{compactInfo && <Icon name="info" />}<span>{compactPlace?.name ?? (result.bottleSearch ? t('result.bottleSearch') : presentation?.heading ?? result.title)}</span></h2>
           {compactPlace && <span className="compact-info-hours">{compactPlace.hours}</span>}
           {compactPlace && presentation?.mapStatus && <span className="compact-info-saved"><Icon name="check" />{presentation.mapStatus}</span>}
         </div>
       </div>
       <div className="result-card-content">
         {result.bottleSearch ? <>
-          <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <>+{result.bottleSearch.found} <span className="sr-only">returnable </span>container{result.bottleSearch.found === 1 ? '' : 's'}</> : 'Nothing useful found'}</p>
-          {result.bottleSearch.found > 0 && <p className="result-description">Return at Small Shop · {(result.bottleSearch.found * .5).toFixed(2)} zł</p>}
+          <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <><span aria-hidden="true">{t('result.containers', { count: result.bottleSearch.found })}</span><span className="sr-only">{t('result.returnableContainers', { count: result.bottleSearch.found })}</span></> : t('result.noContainers')}</p>
+          {result.bottleSearch.found > 0 && <p className="result-description">{t('result.returnAtShop', { amount: formatMoney(result.bottleSearch.found * .5, true) })}</p>}
         </> : compactInfo ? <>
           {compactPlace ? <p className="result-description">{compactPlace.detail}</p> : !!presentation?.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>
@@ -133,16 +140,16 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
         {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} animationReady={animationReady} />)}</div>}
         {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
         {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
-        {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={compactInfo || result.batteryInSummary ? 'Action summary' : 'Spent'}>
-          {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}>{resultLabel(cost.label) === 'Battery' ? <BatteryIcon charge={cost.meter?.after ?? 0} /> : <Icon name={resultLabel(cost.label) === 'Time' ? 'clock' : 'coins'} />}<span className="sr-only">{resultLabel(cost.label)} </span>{resultLabel(cost.label) === 'Battery' ? wholeStatDelta(cost.value) : cost.value}</span>)}
-          {summaryMood && <span className={`compact-info-mood ${summaryMood.kind}`}><Icon name="face-fair" />Mood {wholeStatDelta(summaryMood.value)}</span>}
+        {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={t(compactInfo || result.batteryInSummary ? 'result.actionSummary' : 'result.spent')}>
+          {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}>{resultChangeId(cost) === 'phoneBattery' ? <BatteryIcon charge={cost.meter?.after ?? 0} /> : <Icon name={resultChangeId(cost) === 'time' ? 'clock' : 'coins'} />}<span className="sr-only">{resultLabel(cost.label)} </span>{resultChangeId(cost) === 'phoneBattery' ? wholeStatDelta(cost) : cost.value}</span>)}
+          {summaryMood && <span className={`compact-info-mood ${summaryMood.kind}`}><Icon name="face-fair" />{t('result.moodDelta', { delta: wholeStatDelta(summaryMood) })}</span>}
         </div>}
         {presentation && !compactInfo && <details className="result-details">
-          <summary>Full answer & details</summary>
+          <summary>{t('result.fullAnswer')}</summary>
           <p className="result-description">{result.text}</p>
         </details>}
       </div>
-      <ModalAction className="result-confirm" ref={confirm} onClick={onClose}>Got it</ModalAction>
+      <ModalAction className="result-confirm" ref={confirm} onClick={onClose}>{t('common.gotIt')}</ModalAction>
     </ModalPanel>
   </ModalOverlay>
 })

@@ -1,3 +1,7 @@
+import { t } from './i18n'
+import { journalPresentation, journalDecisionKey } from './journalIdentity'
+import type { ActionHistoryFacts } from './actionHistory'
+import type { InventoryHistoryFacts } from './inventoryHistory'
 import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,RAIN_RESPONSE_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
 import { INITIAL_LIFE,SHELTER_DEPARTURE_MINUTES,loadGameSession } from './loadGameSession'
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
@@ -28,7 +32,7 @@ import SleepProgressDialog from './SleepProgressDialog'
 import ShelterQueueDialog from './ShelterQueueDialog'
 import { ShelterCheckoutWarning,ShelterDepartureDialog } from './ShelterCheckoutDialog'
 import SleepPlanningDialog from './SleepPlanningDialog'
-import StatusScreen from './StatusScreen'
+import StatusScreen, { type StatusNeed } from './StatusScreen'
 import TrashSearchDialog from './TrashSearchDialog'
 import GameOverDialog from './GameOverDialog'
 import { firstNightTime } from './events'
@@ -38,7 +42,8 @@ import { displayDay } from './gameDate'
 import { absoluteMinutes,formatTravelTime,weekday } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { INITIAL_INVENTORY,INITIAL_STORAGE,NIGHT_SHELTER_STORAGE,SCHRONISKO_STORAGE,SHOP_ITEMS,backpackSlots,storageSlots } from './inventory'
-import { journalReflection,type JournalEntry } from './journal'
+import { type JournalEntry } from './journal'
+import { resultActionAllowed, type ResultAction } from './resultActions'
 import { limitingEffects } from './limitingEffects'
 import { CLOSING_NOTICE_KEY,locationClosedSince } from './locationClosing'
 import { OPENING_CALLS,OPENING_CALLS_KEY,openingCall } from './openingCalls'
@@ -99,7 +104,7 @@ export default function App() {
   const [message, setMessage] = useState('')
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
   const [closingNotice, setClosingNotice] = useState<string | null>(() => initial.closingNotice)
-  const [pendingResult, setPendingResult] = useState<{ title: string; before: ResultSnapshot; includeTime: boolean; always: boolean; consumedItems: ConsumedItem[] } | null>(null)
+  const [pendingResult, setPendingResult] = useState<(ResultAction & { before: ResultSnapshot; includeTime: boolean; always: boolean; consumedItems: ConsumedItem[] }) | null>(null)
   const [eventResultOpen, setEventResultOpen] = useState(false)
   const closeResult = useCallback(() => {
     if (infoModal?.rainResultId) commitGame(previous => ({ ...previous, rainResults: previous.rainResults?.filter(rain => rain.id !== infoModal.rainResultId) }))
@@ -314,13 +319,13 @@ export default function App() {
 
   const laundryCleanAt = useRef(-1)
   const hygieneLimit = clothingHygieneCap(inventory.clothingCleanliness)
-  const statusNeeds = [
+  const statusNeeds: StatusNeed[] = [
     { id: 'hunger', label: 'Food', value: game.hunger, icon: 'food' as IconName },
     { id: 'thirst', label: 'Thirst', value: game.thirst, icon: 'water' as IconName },
-    { id: 'energy', label: 'Energy', value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
+    { id: 'energy', label: t('stat.energy'), value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
     { id: 'health', label: 'Health', value: game.health, icon: 'heart' as IconName },
-    { id: 'hygiene', label: 'Hygiene', value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
-    { id: 'mood', label: 'Mood', value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: moodCeiling.reasons.join(', ') },
+    { id: 'hygiene', label: t('stat.hygiene'), value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
+    { id: 'mood', label: t('stat.mood'), value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: moodCeiling.reasons.join(', ') },
   ]
   // Dangerous physical needs take precedence over a lower mood score.
   const dangerousNeeds = statusNeeds.filter(need => need.id !== 'mood' && need.value <= 20)
@@ -420,13 +425,12 @@ export default function App() {
     trashSession, { inventory, currentId: current.id, activeEvent: !!activeEvent },
     { setInventory, setGame, setMessage, setInfoModal, applyAction, runWithResult, resultSnapshot })
 
-  function runWithResult(title: string, action: () => void, before = resultSnapshot(), includeTime = true, always = false, consumedItems: ConsumedItem[] = []) {
-    if (sleepChoice && title !== 'Start sleeping') return
-    if (shelterQueue && title !== 'Shelter registration') return
-    if (shelterDeparture && title !== 'Shelter checkout') return
-    if (shelterCheckoutDue && !activeEvent && !diceCheck && !shelterInterview && title !== 'Sleep complete' && title !== 'Search interrupted') return
-    action()
-    setPendingResult({ title, before, includeTime, always, consumedItems })
+  function runWithResult(identity: ResultAction, action: () => void | InventoryHistoryFacts | ActionHistoryFacts, before = resultSnapshot(), includeTime = true, always = false, consumedItems: ConsumedItem[] = []) {
+    if (!resultActionAllowed(identity.id, { sleepChoice: !!sleepChoice, shelterQueue: !!shelterQueue, shelterDeparture: !!shelterDeparture, shelterCheckoutDue, activeEvent: !!activeEvent, diceCheck: !!diceCheck, shelterInterview: !!shelterInterview })) return
+    const facts = action()
+    const inventoryHistory = facts && !('kind' in facts) ? facts : identity.inventoryHistory
+    const actionHistory = facts && 'kind' in facts ? facts : identity.actionHistory
+    setPendingResult({ ...identity, inventoryHistory, actionHistory, before, includeTime, always, consumedItems })
   }
 
   useEffect(() => {
@@ -436,18 +440,18 @@ export default function App() {
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime, pendingResult.consumedItems)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     const memories = [
-      { id: 'office-routine', titles: ['Walk through the city'], text: 'In your late thirties, you had a steady office job and a desk by the window. Then came the redundancy notice.' },
-      { id: 'redundancy-savings', titles: ['Rest on the bench', 'Sit and recover', 'Shelter from the rain'], text: 'After the redundancy, you expected to find another job in a few weeks. As the search dragged on, rent and ordinary expenses used up what you had put aside.' },
-      { id: 'unanswered-applications', titles: ['Where can I get help in the morning?'], text: 'Your last job application still has no reply. The redundancy email is still in your inbox.' },
+      { id: 'office-routine', actions: ['city-walk'], text: 'In your late thirties, you had a steady office job and a desk by the window. Then came the redundancy notice.' },
+      { id: 'redundancy-savings', actions: ['bench-rest', 'location:station-rest', 'rain-cover'], text: 'After the redundancy, you expected to find another job in a few weeks. As the search dragged on, rent and ordinary expenses used up what you had put aside.' },
+      { id: 'unanswered-applications', actions: ['question:morning'], text: 'Your last job application still has no reply. The redundancy email is still in your inbox.' },
     ]
-    const memory = memories.find(fragment => fragment.titles.includes(pendingResult.title) && !seenMemories.includes(fragment.id))
+    const memory = memories.find(fragment => fragment.actions.includes(pendingResult.id) && !seenMemories.includes(fragment.id))
     const resultText = (infoModal?.text ?? message) + (memory ? `\n\n${memory.text}` : '')
     if (memory) setSeenMemories(previous => [...new Set([...previous, memory.id])])
     if (lastRecordedResult.current !== pendingResult) {
       lastRecordedResult.current = pendingResult
       const actionTitle = pendingResult.title
-      const reflection = journalReflection(infoModal?.title ?? actionTitle, resultText, summary, memory?.id)
-      const entry: JournalEntry = { day: game.day, minute: game.minutes, actionTitle, reflection: true, ...reflection }
+      const reflection = journalPresentation(pendingResult, summary, memory?.id)
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}), actionTitle, reflection: true, ...reflection }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }
     setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }))
@@ -469,7 +473,7 @@ export default function App() {
     setSelectedDestination(null)
     setPhoneOpen(false)
     setScreen('location')
-    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionTitle: 'Closing time', text: `${current.name} closed, and I had to leave. I need to work out where to go next.` }].slice(-500))
+    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionId: 'closing-time' as const, decisionId: 'closing-time', groupId: JSON.stringify(['closing-time', current.id]), actionTitle: 'Closing time', text: `${current.name} closed, and I had to leave. I need to work out where to go next.` }].slice(-500))
   }, [game.day, game.minutes, current, !!trip, gameOver])
 
 
@@ -537,9 +541,9 @@ export default function App() {
 
   // Street offers one phone entry; all individual searches live in Find Help.
   const exhausted = game.energy <= 40
-  const lastAction = journalEntries.at(-1)?.actionTitle
-  const justWalked = lastAction === 'Walk through the city' || lastAction === 'Walk with music'
-  const wantsBench = answeredQuestions.includes('bed') && !exhausted && lastAction !== 'Rest on the bench' && !justWalked
+  const lastAction = journalEntries.at(-1)?.actionId
+  const justWalked = lastAction === 'city-walk' || lastAction === 'music-walk'
+  const wantsBench = answeredQuestions.includes('bed') && !exhausted && lastAction !== 'bench-rest' && !justWalked
   const bodyChoices = exhausted ? ['bench-sleep', 'street-sleep', 'bench-rest', 'find-bench']
     : openingCallsActive ? ['music-walk']
     : wantsBench ? [firstNight || (game.minutes >= 360 && game.minutes < 1380) ? 'bench-rest' : 'bench-sleep', 'find-bench', 'street-sleep']
@@ -554,8 +558,7 @@ export default function App() {
     bodyChoices,
     ...(openingCallsActive ? [] : [practicalChoices]),
   ]
-  const lastDecision = journalEntries.at(-1)
-  const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
+  const choiceDecisionKey = journalDecisionKey(journalEntries)
 
   function reset() {
     autosave.resetPending()
@@ -699,7 +702,7 @@ export default function App() {
       selectedHours={sleepHours} durationLabel={formatTravelTime(chosenSleepMinutes(sleepHours, sleepChoice))}
       wetClothesWarning={CLOTHING_WETNESS_ENABLED && (sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.label === 'Rain' || weather.label === 'Showers')}
       wetnessEnabled={CLOTHING_WETNESS_ENABLED} onSelect={setSleepHours} onCancel={() => setSleepChoice(null)}
-      onConfirm={() => runWithResult('Start sleeping', () => sleep(sleepHours, sleepChoice))}
+      onConfirm={() => runWithResult({ id: 'sleep-start', title: 'Start sleeping' }, () => sleep(sleepHours, sleepChoice))}
     />}
     {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{

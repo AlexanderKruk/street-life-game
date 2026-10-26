@@ -1,3 +1,7 @@
+import { t } from './i18n'
+import { formatMoney } from './i18n/formatters'
+import type { InventoryHistoryFacts } from './inventoryHistory'
+import type { ResultActionId } from './resultActions'
 import { FOOD_OUTCOME_PRESENTATION, foodConsumption } from './foodConsumption'
 import { addFoodPortions, consumeFood, discardFood, foodPortionIndex, foodPortions, isPerishableFood, withFoodPortions, type FoodCondition } from './foodInventory'
 import { type ActionResult, type GameState } from './game'
@@ -31,6 +35,7 @@ type Update<T> = (previous: T) => T
 // React to replay. App applies action through its existing clock/mood/exposure
 // rules, then lets pendingResult wait for aging and stat caps before summarizing.
 export type InventoryCommandChanges = {
+  history?: InventoryHistoryFacts
   inventory?: Update<Inventory>
   storage?: Update<StoredItems>
   effects?: Update<ActiveEffect[]>
@@ -40,17 +45,17 @@ export type InventoryCommandChanges = {
   info?: ResultCardData
 }
 
-export function inventoryCommandResult(command: InventoryCommand): { title: string; always?: boolean; consumedItems?: ConsumedItem[] } | null {
+export function inventoryCommandResult(command: InventoryCommand): { id: ResultActionId; title: string; inventoryHistory: InventoryHistoryFacts; always?: boolean; consumedItems?: ConsumedItem[] } | null {
   switch (command.type) {
-    case 'buy': return { title: `Buy ${command.item.name}` }
-    case 'use': return { title: command.item === 'water' ? 'Drink water' : command.item === 'wipes' ? 'Use wet wipes' : 'Eat food', consumedItems: [command.item] }
-    case 'medicine': return { title: 'Use medicine', always: true }
-    case 'smoke': return { title: 'Smoke a cigarette', consumedItems: ['cigarettes'] }
-    case 'return-bottles': return { title: 'Return containers' }
-    case 'store': return { title: 'Store belongings' }
-    case 'take': return { title: 'Collect belongings' }
-    case 'store-food': return { title: 'Store food' }
-    case 'take-food': return { title: 'Collect food' }
+    case 'buy': return { inventoryHistory: { status: 'success', itemName: command.item.name }, id: `buy:${command.item.id}`, title: t('inventory.action.buy', { name: command.item.name }) }
+    case 'use': return { inventoryHistory: { status: 'success' }, id: `use:${command.item}`, title: t(command.item === 'water' ? 'inventory.action.water' : command.item === 'wipes' ? 'inventory.action.wipes' : 'inventory.action.food'), consumedItems: [command.item] }
+    case 'medicine': return { inventoryHistory: { status: 'success' }, id: 'use-medicine', title: t('inventory.action.medicine'), always: true }
+    case 'smoke': return { inventoryHistory: { status: 'success' }, id: 'smoke', title: t('inventory.action.smoke'), consumedItems: ['cigarettes'] }
+    case 'return-bottles': return { inventoryHistory: { status: 'success' }, id: 'return-containers', title: t('inventory.action.return') }
+    case 'store': return { inventoryHistory: { status: 'success' }, id: 'store-belongings', title: t('inventory.action.store') }
+    case 'take': return { inventoryHistory: { status: 'success' }, id: 'collect-belongings', title: t('inventory.action.collect') }
+    case 'store-food': return { inventoryHistory: { status: 'success' }, id: 'store-food', title: t('inventory.action.storeFood') }
+    case 'take-food': return { inventoryHistory: { status: 'success' }, id: 'collect-food', title: t('inventory.action.collectFood') }
     // Discard has its own confirmation and has never opened an action result.
     case 'discard': return null
   }
@@ -62,11 +67,11 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
     case 'buy': {
       const { item } = command
       if (!open || locationId !== 'shop') return {}
-      if (game.money < item.price) return { message: `You need ${item.price.toFixed(2)} zł for that.` }
-      if (!canAddToBackpack(inventory, item)) return { message: 'Backpack full. Use or remove something first.' }
+      if (game.money < item.price) return { history: { status: 'purchase-blocked', itemName: item.name }, message: t('inventory.result.needMoney', { price: formatMoney(item.price, true) }) }
+      if (!canAddToBackpack(inventory, item)) return { history: { status: 'purchase-blocked', itemName: item.name }, message: t('inventory.result.full') }
       return {
         inventory: previous => addShopItem(previous, item), action: { minutes: 3, money: -item.price },
-        message: 'You pay for your supplies and put them in your backpack.',
+        message: t('inventory.result.bought'),
       }
     }
     case 'return-bottles': {
@@ -75,7 +80,7 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       const payout = count * BOTTLE_DEPOSIT
       return {
         inventory: previous => ({ ...previous, bottles: 0 }), action: { minutes: 5, money: payout },
-        message: `You return ${count} deposit container${count === 1 ? '' : 's'} and collect the money.`,
+        message: t('inventory.result.returned', { count }),
       }
     }
     case 'use': {
@@ -87,37 +92,38 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
         const result = foodConsumption(item, freshness, random)
         return {
           inventory: previous => consumeFood(previous, item, slotIndex, condition), action: result, message: result.message,
-          ...(result.outcome ? { info: { ...FOOD_OUTCOME_PRESENTATION[result.outcome], text: result.message, label: 'AFTER EATING' } } : {}),
+          ...(result.outcome ? { history: { status: `food-${result.outcome}` as const }, info: { ...FOOD_OUTCOME_PRESENTATION[result.outcome], text: result.message, label: t('inventory.result.afterEating') } } : {}),
         }
       }
       if (item === 'wipes') {
-        if (game.hygiene >= 60) return { message: 'Wet wipes cannot improve Hygiene above 60. Find a shower.' }
+        if (game.hygiene >= 60) return { message: t('inventory.result.wipesLimited') }
         return {
           inventory: previous => ({ ...previous, wipes: previous.wipes - 1 }),
           game: previous => ({ ...previous, hygiene: Math.min(60, previous.hygiene + 10) }),
-          message: 'You clean up with wet wipes. A shower would help you get cleaner.',
+          message: t('inventory.result.wipes'),
         }
       }
       if (item === 'cannedFood') return {
         inventory: previous => ({ ...previous, cannedFood: previous.cannedFood - 1 }), action: { minutes: 0, hunger: 32, mood: 1 },
-        message: 'You open the pull-tab can and eat the food.',
+        message: t('inventory.result.cannedFood'),
       }
       return {
-        inventory: previous => ({ ...previous, water: previous.water - 1 }), action: { minutes: 0, thirst: 38 }, message: 'You drink some water.',
+        inventory: previous => ({ ...previous, water: previous.water - 1 }), action: { minutes: 0, thirst: 38 }, message: t('inventory.result.water'),
       }
     }
     case 'medicine': {
       if (inventory.medicines <= 0) return {}
-      const explain = (title: string, text: string, label = 'MEDICINE'): InventoryCommandChanges => ({ message: text, info: { title, text, label } })
+      const explain = (title: string, text: string, label = t('inventory.result.medicineLabel')): InventoryCommandChanges => ({ message: text, info: { title, text, label } })
       const now = absoluteMinutes(game)
       const cold = effects.find(effect => effect.id === 'cold' && effect.expiresAt > now)
-      if (!cold) return explain('No cold', 'You have no cold to treat. You keep the medicine for when you need it.')
-      if (cold.treated) return explain('One dose is enough', 'The first tablet is already helping. Another will not speed up recovery, so you keep it for later.')
+      if (!cold) return { ...explain(t('inventory.result.noColdTitle'), t('inventory.result.noCold')), history: { status: 'medicine-none' } }
+      if (cold.treated) return { ...explain(t('inventory.result.alreadyTreatedTitle'), t('inventory.result.alreadyTreated')), history: { status: 'medicine-treated' } }
       return {
         inventory: previous => ({ ...previous, medicines: previous.medicines - 1 }),
         effects: previous => previous.map(effect => effect.id === 'cold' && effect.expiresAt > now && !effect.treated
           ? { ...effect, treated: true, expiresAt: now + (effect.expiresAt - now) / 3 } : effect),
-        ...explain('Recovery accelerated', 'You take one tablet. Recovery from this cold is three times faster, but the symptoms will take time to pass. One dose is enough.', 'AFTER THE ACTION'),
+        history: { status: 'medicine-taken' },
+        ...explain(t('inventory.result.treatedTitle'), t('inventory.result.treated'), t('inventory.result.afterAction')),
       }
     }
     case 'smoke':
@@ -125,7 +131,7 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       return {
         inventory: previous => ({ ...previous, cigarettes: previous.cigarettes - 1 }),
         game: previous => ({ ...previous, mood: Math.min(100, previous.mood + 5), health: Math.max(0, previous.health - 0.5) }),
-        message: 'You smoke a cigarette. The brief break takes the edge off your thoughts.',
+        message: t('inventory.result.smoked'),
       }
     case 'store':
     case 'take': {
@@ -138,18 +144,18 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
         if (storing ? !inventory.documents || storage.documents || storageSlots(storage) >= capacity : !storage.documents || inventory.documents) return {}
         return {
           inventory: previous => ({ ...previous, documents: !storing }), storage: previous => ({ ...previous, documents: storing }),
-          message: storing ? 'You leave your documents in safe storage. Take them with you when you need them.' : 'You take your documents with you.',
+          message: storing ? t('inventory.result.storedDocuments') : t('inventory.result.collectedDocuments'),
         }
       }
       const amount = Math.min(item === 'medicines' ? 4 : 20, storing ? inventory[item] : storage[item])
       if (amount <= 0) return {}
-      if (storing && storageSlots({ ...storage, [item]: storage[item] + amount }) > capacity) return { message: 'Storage is full.' }
-      if (!storing && backpackSlots({ ...inventory, [item]: inventory[item] + amount }) > BACKPACK_CAPACITY) return { message: 'Backpack full.' }
-      const description = `${amount} ${item === 'medicines' ? 'tablet' : 'cigarette'}${amount === 1 ? '' : 's'}`
+      if (storing && storageSlots({ ...storage, [item]: storage[item] + amount }) > capacity) return { message: t('inventory.result.storageFull') }
+      if (!storing && backpackSlots({ ...inventory, [item]: inventory[item] + amount }) > BACKPACK_CAPACITY) return { history: { status: 'storage-blocked' }, message: t('inventory.result.backpackFull') }
+      const messageKey = item === 'medicines' ? storing ? 'inventory.result.storedMedicine' : 'inventory.result.collectedMedicine' : storing ? 'inventory.result.storedCigarettes' : 'inventory.result.collectedCigarettes'
       return {
         inventory: previous => ({ ...previous, [item]: previous[item] + (storing ? -amount : amount) }),
         storage: previous => ({ ...previous, [item]: previous[item] + (storing ? amount : -amount) }),
-        message: storing ? `You put ${description} in storage.` : `You take ${description} from storage.`,
+        message: t(messageKey, { count: amount }),
       }
     }
     case 'store-food': {
@@ -158,17 +164,17 @@ export function resolveInventoryCommand(context: InventoryCommandContext, comman
       const portions = foodPortions(inventory, 'food').slice(0, amount)
       return {
         inventory: previous => withFoodPortions(previous, 'food', foodPortions(previous, 'food').slice(amount)),
-        storage: previous => addFoodPortions(previous, 'food', portions), message: `You put ${amount} food portion${amount === 1 ? '' : 's'} on the shelf in Schronisko.`,
+        storage: previous => addFoodPortions(previous, 'food', portions), message: t('inventory.result.storedFood', { count: amount }),
       }
     }
     case 'take-food': {
       if (locationId !== 'residential-shelter' || storage.food <= 0) return {}
       const amount = Math.min(storage.food, STACK_SIZE)
-      if (backpackSlots({ ...inventory, food: inventory.food + amount }) > BACKPACK_CAPACITY) return { message: 'Backpack full.' }
+      if (backpackSlots({ ...inventory, food: inventory.food + amount }) > BACKPACK_CAPACITY) return { history: { status: 'storage-blocked' }, message: t('inventory.result.backpackFull') }
       const portions = foodPortions(storage, 'food').slice(0, amount)
       return {
         storage: previous => withFoodPortions(previous, 'food', foodPortions(previous, 'food').slice(amount)),
-        inventory: previous => addFoodPortions(previous, 'food', portions), message: `You take ${amount} food portion${amount === 1 ? '' : 's'} from storage.`,
+        inventory: previous => addFoodPortions(previous, 'food', portions), message: t('inventory.result.collectedFood', { count: amount }),
       }
     }
     case 'discard': {

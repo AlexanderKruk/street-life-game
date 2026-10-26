@@ -48,7 +48,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (!trip || trip.remaining > 0 || lastArrival.current === trip) return
     const destination = locations.find(location => location.id === trip.destinationId)
     if (!destination) { setTrip(null); return }
-    runWithResult('Arrival', () => {
+    runWithResult({ id: 'arrival', title: 'Arrival', actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : destination.name } }, () => {
       if (lastArrival.current === trip) return
       lastArrival.current = trip
       setGame(previous => ({ ...previous, locationId: destination.id }))
@@ -98,7 +98,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const choice: StreetEventChoice = {
-      label: 'Ride without a ticket · Reflex DC 12',
+      label: 'Ride without a ticket',
       check: {
         stat: 'reflex', dc: 12,
         success: { message: 'No ticket inspection this time. You ride for free.' },

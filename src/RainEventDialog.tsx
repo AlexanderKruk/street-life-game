@@ -1,5 +1,6 @@
 import type { Ref } from 'react'
 import ActivityStatus from './ActivityStatus'
+import { t } from './i18n'
 import ChoiceButton from './ChoiceButton'
 import ChoiceOptions from './ChoiceOptions'
 import { EventBody, EventFrame } from './EventDialog'
@@ -27,12 +28,12 @@ export default function RainEventDialog({ rain, waiting, elapsed, orderSeed, dec
     <EventBody titleId="rain-event-title" title={opening.title} label={waiting ? 'WAITING OUT THE RAIN' : 'STREET EVENT'} description={waiting ? waitingText : opening.text}>
       {waiting ? <>
         <ActivityStatus elapsed={elapsed} timeLabel="Elapsed waiting time" label={rain.searchRemaining > 0 ? 'Looking for shelter' : 'Waiting for the rain to stop'} />
-        {rain.choice === 'nearby' && <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" duration="~5m" onClick={onFindProperShelter} detail={<small>Leave this cover and look for a dry passage</small>} />}
+        {rain.choice === 'nearby' && <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" duration={t('choice.duration.searchMinutes', { minutes: 5 })} onClick={onFindProperShelter} detail={<small>Leave this cover and look for a dry passage</small>} />}
         <ChoiceButton icon="walk" aria-label="Carry on" label="Carry on" onClick={onContinue} detail={<small>Leave cover and continue in the rain</small>} />
       </> : <ChoiceOptions className="event-choices" seed={orderSeed} decision={`${decisionKey}|rain:${rain.id}`}>
-        <ChoiceButton icon="umbrella" aria-label="Take cover nearby" label="Take cover nearby" onClick={() => onChoose('nearby')} detail={<small>Quick shelter, but it may offer little protection</small>} />
-        <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" onClick={() => onChoose('proper')} duration="~5m" detail={<small>Stay in the rain while you look for somewhere dry</small>} />
-        <ChoiceButton icon="walk" aria-label="Carry on" label="Carry on" onClick={() => onChoose('continue')} detail={<small>Continue what you were doing, exposed to the rain</small>} />
+        <ChoiceButton icon="umbrella" aria-label="Take cover nearby" label="Take cover nearby" data-order-id="rain:nearby" onClick={() => onChoose('nearby')} detail={<small>Quick shelter, but it may offer little protection</small>} />
+        <ChoiceButton icon="search" aria-label="Find proper shelter" label="Find proper shelter" data-order-id="rain:proper" onClick={() => onChoose('proper')} duration={t('choice.duration.searchMinutes', { minutes: 5 })} detail={<small>Stay in the rain while you look for somewhere dry</small>} />
+        <ChoiceButton icon="walk" aria-label="Carry on" label="Carry on" data-order-id="rain:continue" onClick={() => onChoose('continue')} detail={<small>Continue what you were doing, exposed to the rain</small>} />
       </ChoiceOptions>}
     </EventBody>
   </EventFrame>

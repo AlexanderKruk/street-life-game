@@ -50,6 +50,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
     const earned = roll < 0.35 ? 0 : roll < 0.65 ? 1 : roll < 0.85 ? 2 : roll < 0.96 ? 3 : 5
     setGame((prev) => applyAction(prev, { minutes: 45, money: earned, energy: -2, mood: earned > 0 ? 1 : -3 }))
     setMessage(earned > 0 ? `You spend 45 minutes asking passers-by for help and collect ${earned.toFixed(2)} zł in small change.` : 'You spend 45 minutes asking passers-by for help. Nobody gives you anything.')
+    return { kind: 'action' as const, failed: earned === 0 }
   }
 
   const walkMusicCost = 2 * phoneDrainMultiplier(inventory.phoneCondition)
@@ -61,7 +62,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
     const passiveMusic = !withMusic && musicOn
     const musicText = 'You listen to your favourite songs as you walk. You feel a little better.'
     const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
-    runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
+    runWithResult({ id: withMusic ? 'music-walk' : 'city-walk', title: withMusic ? 'Walk with music' : 'Walk through the city' }, () => {
       if (withMusic) setMusicWalkUsed(true)
       setRainChoice(false)
       let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: passiveMusic })
@@ -82,7 +83,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
       setGame((prev) => applyGameAction(prev, { minutes: 20, energy: -2, mood: found ? 1 : -2 }, { ...moodContext(prev), exposure: 'outside', music: musicOn }))
       setStreetBenchFound(found)
       setMessage(found ? 'You find a bench nearby with room to sit.' : 'You look around, but every decent place to sit is occupied or unusable.')
-      return
+      return { kind: 'action' as const, failed: !found }
     }
     if (!streetBenchFound) return
     if (kind === 'bench-rest') {
@@ -95,7 +96,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
     requestSleep('bench')
   }
 
-  function askForMoney() { runWithResult('Ask for money', askForMoneyImpl) }
-  function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') { runWithResult(kind === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(kind)) }
+  function askForMoney() { runWithResult({ id: 'ask-money', title: 'Ask for money' }, askForMoneyImpl) }
+  function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') { runWithResult({ id: kind === 'find-bench' ? 'find-bench' : 'bench-rest', title: kind === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench' }, () => streetActionImpl(kind)) }
   return { walkMusicCost, canWalkWithMusic, walkCity, askForMoney, streetAction }
 }

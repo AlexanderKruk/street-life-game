@@ -40,7 +40,7 @@ export function createShelterController(session: ShelterSession, context: Contex
   function completeShelterDeparture() {
     if (!shelterDeparture || lastDeparture.current === shelterDeparture) return
     const departure = shelterDeparture
-    runWithResult('Shelter checkout', () => {
+    runWithResult({ id: 'shelter-checkout', title: 'Shelter checkout' }, () => {
       lastDeparture.current = departure
       setShelterDeparture(null)
       setGame(previous => ({ ...previous, locationId: 'street' }))
@@ -55,7 +55,7 @@ export function createShelterController(session: ShelterSession, context: Contex
   function completeShelterQueue() {
     if (!shelterQueue || lastQueue.current === shelterQueue) return
     const queued = shelterQueue
-    runWithResult('Shelter registration', () => {
+    runWithResult({ id: 'shelter-registration', title: 'Shelter registration', actionHistory: { kind: 'action', failed: queued.vacancies <= queued.peopleAhead } }, () => {
       lastQueue.current = queued
       setShelterQueue(null)
       if (queued.vacancies > queued.peopleAhead) {
@@ -158,7 +158,7 @@ export function createShelterController(session: ShelterSession, context: Contex
   function tickShelterQueue(minutes: number) {
     setShelterQueue(active => active ? { ...active, remaining: Math.max(0, active.remaining - minutes) } : null)
   }
-  function answerShelterInterview(value: string) { runWithResult('Shelter extension', () => answerShelterInterviewImpl(value)) }
+  function answerShelterInterview(value: string) { runWithResult({ id: 'shelter-extension', title: 'Shelter extension' }, () => answerShelterInterviewImpl(value)) }
   return { recordShelterDeparture, startShelterDeparture, completeShelterDeparture, completeShelterQueue, answerShelterInterview, beginShelterInterview, prepareShelterAction, tickShelterQueue }
 }
 export type ShelterController = ReturnType<typeof createShelterController>

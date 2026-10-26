@@ -1,8 +1,8 @@
 import type { ReactNode, Ref } from 'react'
-import ChoiceButton, { approximateDuration } from './ChoiceButton'
+import ChoiceButton from './ChoiceButton'
+import { choiceAccessibleLabel, choiceCheckDetail } from './choiceCheckPresentation'
 import ChoiceOptions from './ChoiceOptions'
 import CompactStreetEvent from './CompactStreetEvent'
-import { choiceIcon } from './Icon'
 import { ModalOverlay, ModalPanel } from './Modal'
 import { responsiveImageProps } from './responsiveImages'
 import type { StreetEvent, StreetEventChoice } from './events'
@@ -33,7 +33,7 @@ export function EventBody({ titleId, title, label = 'STREET EVENT', description,
 
 type Props = {
   event: StreetEvent
-  choices: StreetEventChoice[]
+  choices: StreetEvent['choices']
   onChoose: (choice: StreetEventChoice) => void
   unavailableReason: (choice: StreetEventChoice) => string | null
   orderSeed: number
@@ -46,9 +46,9 @@ export default function EventDialog({ event, choices, onChoose, unavailableReaso
     {!event.illustration
       ? <CompactStreetEvent event={{ ...event, choices }} onChoose={onChoose} unavailableReason={unavailableReason} orderSeed={orderSeed} decisionKey={decisionKey} />
       : <EventBody titleId="street-event-title" title={event.title} description={event.text}>
-        <ChoiceOptions className="event-choices" seed={orderSeed} decision={`${decisionKey}|event:${event.id}`}>{choices.map(choice => {
+        <ChoiceOptions className="event-choices" fixed={event.choiceOrder === 'fixed'} seed={orderSeed} decision={`${decisionKey}|event:${event.id}`}>{choices.map(choice => {
           const unavailable = unavailableReason(choice)
-          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => onChoose(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
+          return <ChoiceButton key={choice.id} data-order-id={`event:${event.id}:${choice.id}`} aria-label={choiceAccessibleLabel(choice)} icon={choice.icon ?? 'person'} label={choice.label} onClick={() => onChoose(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choiceCheckDetail(choice.check)}</small> : undefined} estimate={(choice.durationMinutes ?? choice.outcome?.minutes) ? { minutes: (choice.durationMinutes ?? choice.outcome?.minutes)! } : undefined} />
         })}</ChoiceOptions>
       </EventBody>}
   </EventFrame>

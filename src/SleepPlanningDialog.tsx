@@ -1,4 +1,5 @@
 import ChoiceButton from './ChoiceButton'
+import { t } from './i18n'
 import { Icon } from './Icon'
 import { ModalAction, ModalOverlay, ModalPanel } from './Modal'
 
@@ -28,7 +29,7 @@ export default function SleepPlanningDialog({ kind, dateLabel, energy, options, 
       <div className="sleep-choice-context"><span>{kind === 'ground' ? 'On the ground' : kind === 'bench' ? 'On the bench' : kind === 'shelter' ? 'Night shelter' : 'Schronisko'}</span><span>{dateLabel}</span></div>
       <p className="sleep-choice-energy"><Icon name="energy" />Energy {Math.round(energy)}% · {energy > 75 ? 'Rested' : energy > 50 ? 'Slightly tired' : energy > 25 ? 'Tired' : 'Exhausted'}</p>
       <div className="sleep-duration-options" role="group" aria-label="Sleep duration">
-        {options.map(({ hours, wakeLabel, unavailableReason: reason }) => <ChoiceButton icon="bed" label="Sleep" duration={`${hours}h`} aria-label={`${hours} h · Wake ${wakeLabel}${reason ? ` · ${reason}` : ''}`} detail={<span className="sr-only"> · Wake {wakeLabel}{reason && ` · ${reason}`}</span>} key={hours} className={hours === selectedHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === selectedHours} disabled={reason !== null} title={reason ?? undefined} autoFocus={hours === selectedHours} onClick={() => onSelect(hours)} />)}
+        {options.map(({ hours, wakeLabel, unavailableReason: reason }) => <ChoiceButton icon="bed" label="Sleep" duration={t('choice.duration.exactHours', { hours })} aria-label={`${hours} h · Wake ${wakeLabel}${reason ? ` · ${reason}` : ''}`} detail={<span className="sr-only"> · Wake {wakeLabel}{reason && ` · ${reason}`}</span>} key={hours} className={hours === selectedHours ? 'sleep-duration-option selected' : 'sleep-duration-option'} aria-pressed={hours === selectedHours} disabled={reason !== null} title={reason ?? undefined} autoFocus={hours === selectedHours} onClick={() => onSelect(hours)} />)}
       </div>
       {options.some(option => option.unavailableReason) && <p className="sleep-choice-note">Available sleep lengths depend on your fatigue.</p>}
       {wetClothesWarning && <p className="sleep-choice-note">Wet clothes reduce outdoor sleep recovery. Somewhere dry would help.</p>}

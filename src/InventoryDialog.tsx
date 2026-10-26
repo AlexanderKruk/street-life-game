@@ -1,8 +1,9 @@
 import { ModalOverlay, ModalPanel } from './Modal'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon, type IconName } from './Icon'
+import { t } from './i18n'
 
-export default function InventoryDialog({ title, description, label = 'BACKPACK · TIME PAUSED', icon, onCancel, children }: { title: string; description?: string; label?: string; icon: IconName; onCancel: () => void; children: ReactNode }) {
+export default function InventoryDialog({ title, description, label = t('inventoryDialog.paused'), icon, onCancel, children }: { title: string; description?: string; label?: string; icon: IconName; onCancel: () => void; children: ReactNode }) {
   const dialog = useRef<HTMLElement>(null)
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null
@@ -28,7 +29,7 @@ export default function InventoryDialog({ title, description, label = 'BACKPACK 
   return <ModalOverlay className="phone-overlay result-overlay" onClick={event => { if (event.target === event.currentTarget) onCancel() }}>
     <ModalPanel ref={dialog} size="compact" className="phone-modal discard-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-dialog-title" aria-describedby={description ? 'inventory-dialog-description' : undefined}>
       <div className="timed-heading"><Icon name={icon} /><div><p className="eyebrow">{label}</p><h2 id="inventory-dialog-title">{title}</h2></div></div>
-      {description && <p id="inventory-dialog-description">{description}</p>}
+      {description && <p id="inventory-dialog-description" className="modal-narrative">{description}</p>}
       {children}
     </ModalPanel>
   </ModalOverlay>

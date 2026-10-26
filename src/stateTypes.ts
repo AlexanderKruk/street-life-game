@@ -1,3 +1,4 @@
+import type { ImpactId } from './effectChips'
 import type { StreetEventChoice } from './events'
 import type { ResultSnapshot } from './results'
 import type { Housing } from './game'
@@ -5,7 +6,7 @@ import type { FoodPortionFields } from './foodInventory'
 
 export type Inventory = { clothingCleanliness: number; showerGel: number; bread: number; breadFreshness: number; cannedFood: number; readyMeal: number; readyMealFreshness: number; wipes: number; water: number; food: number; foodFreshness: number; bottles: number; phoneBattery: number; phoneCondition: number; jacket: number; documents: boolean; cigarettes: number; medicines: number; transitCard: boolean } & FoodPortionFields
 
-export type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'readyMeal' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: string[] }
+export type ShopItem = { id: 'water' | 'food' | 'bread' | 'cannedFood' | 'readyMeal' | 'wipes' | 'showerGel' | 'cigarettes' | 'medicines'; name: string; icon: string; price: number; quantity: number; description: string; impacts: ImpactId[] }
 
 export type BackpackItemId = ShopItem['id'] | 'bottles'
 

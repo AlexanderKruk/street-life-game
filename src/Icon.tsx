@@ -94,38 +94,6 @@ export const BatteryIcon = memo(function BatteryIcon({ charge }: { charge: numbe
   return <svg className="battery-icon" viewBox="0 0 28 16" aria-hidden="true" focusable="false"><rect x="1" y="2" width="23" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M26 6v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><rect x="3.5" y="4.5" width={18 * value / 100} height="7" rx=".5" fill="currentColor" /></svg>
 })
 
-export function choiceIcon(id: string, label = ''): IconName {
-  const value = `${id} ${label}`.toLowerCase()
-  if (/music|listen to|headphone/.test(value)) return 'headphones'
-  if (/think.*call|phone|question-|search|remember/.test(value) && !/bottle|bench|details/.test(value)) return 'phone'
-  if (/ticket|transport/.test(value)) return 'ticket'
-  if (/documents|officer/.test(value)) return 'documents'
-  if (/laundry|clothes/.test(value)) return 'laundry'
-  if (/shower/.test(value)) return 'shower'
-  if (/refill|water/.test(value)) return 'water'
-  if (/dinner|breakfast|meal|snack|food|take it|^ accept$/.test(value)) return 'food'
-  if (/sleep|bed|shelter-rest|shelter-route|spend the night/.test(value)) return 'bed'
-  if (/station-route|departure board/.test(value)) return 'station'
-  if (/bottle/.test(value)) return 'bottle'
-  if (/bench|seat|sit|rest/.test(value)) return 'bench'
-  if (/charge|plug/.test(value)) return 'plug'
-  if (/work|shift|job|income/.test(value)) return 'work'
-  if (/health|medical|clinic|doctor/.test(value)) return 'hospital'
-  if (/housing|accommodation/.test(value)) return 'house'
-  if (/beg|give.*zł|change|benefits|afford/.test(value)) return 'coins'
-  if (/hand|catch|grab/.test(value)) return 'hand'
-  if (/ask|answer|call after|listen|say|sorry|promise|evicted/.test(value)) return 'chat'
-  if (/think|nothing concrete/.test(value)) return 'thought'
-  if (/look|check/.test(value)) return 'search'
-  if (/wait|moment|stay|watch/.test(value)) return 'clock'
-  if (/rain/.test(value)) return 'rain'
-  if (/cover/.test(value)) return 'umbrella'
-  if (/stop/.test(value)) return 'pause'
-  if (/help|support/.test(value)) return 'help'
-  if (/walk|move|going|keep|gather|leave|outside|decline|no thanks|head the other way/.test(value)) return 'walk'
-  return 'person'
-}
-
 export function locationIcon(id: string): IconName {
   return ({ street: 'walk', station: 'station', shop: 'shop', shelter: 'bed', 'residential-shelter': 'bed', support: 'building', jobcenter: 'work', work: 'work', hospital: 'hospital', 'free-clinic': 'hospital', daycenter: 'building' } as Record<string, IconName>)[id] ?? 'building'
 }
