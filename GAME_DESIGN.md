@@ -1158,3 +1158,24 @@ and diff checks passed. No full suites/WebKit/iPhone or baseline updates.
 This resolves the shortcut/top-marker collision, not every possible collision
 between neighbouring pin labels. Rain-art context, remaining modal long-copy
 matrix and final baseline review remain open. Published v335 unchanged.
+
+
+Map labels / shared modal stress checkpoint — 26 October 2026: mapLabelLayout.ts
+keeps original mapPositions and computes deterministic label offsets using measured
+text boxes, plot bounds, other labels and markers. Moved labels have subtle
+connectors to their original marker. Candidate placement minimises overlap when
+space is insufficient; this is not a guarantee for arbitrary viewport/font/input.
+No gameplay/route IDs or save schemas changed. Labels recompute after projection/
+place changes, without clock ownership. Selected-card description wraps long words.
+Geometry cases at280/305/390/745 widths and two label lengths verify bounds,
+non-overlap, stable marker/connector endpoints, determinism and immutable input.
+Browser component QA with normal/expanded catalogue names at320×568,390×844,
+850×390 measured zero label intersections. Pointer Help Center selection retained
+full accessible name/card; narrow description client/scroll widths104/104.
+Shared ModalPanel + narrative/ChoiceButton/ModalAction stress fixture at the same
+viewports scrolls to a clickable confirmation with no horizontal overflow.
+This checks common primitives, not every specialised modal branch.
+check-localization, rendering, regression/map-travel, module boundaries(157),
+design-system, build and diff checks passed. Baselines/full suites/WebKit/iPhone
+unrun. Remaining specialised-modal matrix and rain-art time context stay open.
+No publication; v335 unchanged.

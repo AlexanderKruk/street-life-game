@@ -56,6 +56,16 @@ try {
 
 console.log(`PASS: source audit: ${sourceAudit.files} TS/TSX files; ${sourceAudit.catalogFiles} catalogues, ${sourceAudit.coreFiles} i18n core and ${sourceAudit.compatibilityFiles} frozen compatibility files; ${sourceAudit.candidates} reviewed machine/layout/internal/catalogue-binding candidates, no residual candidates.`);
 
+const {mapPositions,layoutMapLabels}=bundled('src/mapLabelLayout.ts');
+for(const width of [280,305,390,745])for(const labelWidth of [60,Math.min(width*.38,220)]){
+ const height=width*1.5,labels=Object.entries(mapPositions).map(([id,[x,y]])=>({id,x:x/100*width,y:y/100*height,width:labelWidth,height:23,left:x>55||id==='work'}));
+ const input=JSON.stringify(labels),offsets=layoutMapLabels(labels,width,height);assert.equal(JSON.stringify(labels),input);assert.deepEqual(layoutMapLabels(labels,width,height),offsets);
+ const rects=labels.map(l=>({...l,x:(l.left?l.x-20-l.width:l.x+20)+offsets[l.id].x,y:l.y-l.height/2+offsets[l.id].y}));
+ for(const r of rects){assert(r.x>=0&&r.y>=0&&r.x+r.width<=width&&r.y+r.height<=height);const l=labels.find(l=>l.id===r.id),line=offsets[r.id].line;if(line){assert.equal(line.x1,l.x);assert.equal(line.y1,l.y);assert(line.x2>=r.x&&line.x2<=r.x+r.width&&line.y2>=r.y&&line.y2<=r.y+r.height);}}
+ for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){const a=rects[i],b=rects[j];assert(!(a.x<b.x+b.width&&b.x<a.x+a.width&&a.y<b.y+b.height&&b.y<a.y+a.height),'neighbour labels cannot overlap');}
+}
+console.log('PASS: map label geometry preserves marker coordinates, deterministic bounded non-overlap, connector endpoints and input across four widths/two label lengths.');
+
 const { resultActionAllowed } = bundled('src/resultActions.ts');
 const unblocked = { sleepChoice: false, shelterQueue: false, shelterDeparture: false, shelterCheckoutDue: false, activeEvent: false, diceCheck: false, shelterInterview: false };
 for (const [flag, allowed] of [['sleepChoice', 'sleep-start'], ['shelterQueue', 'shelter-registration'], ['shelterDeparture', 'shelter-checkout']]) {
