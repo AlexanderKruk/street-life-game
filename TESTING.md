@@ -529,3 +529,11 @@ retain domain reasons; empty refusal keeps launcher/plan blocked. Opening-calls,
 phone-controller/phone, phone-clock/journal-services, boundary/design and build
 passed. Mobile390 unavailable/disabled plan inspected; CSS/baselines unchanged.
 Full suites, broader long-copy, WebKit/iPhone remain unrun.
+
+Phone UI catalogue: 170 frozen/pseudo launcher/plan cases cover app states,
+0/1/2 goals (singular grammar corrected), null/empty refusal, expiry boundaries,
+renewal/buy states, focus/Tab/Escape and body unlock. Phone/controller/boundary/
+design, phone-clock and build passed. Mobile390 normal and expanded home/plan
+revealed and verified fixes to header/service/pay/toggle wrapping. Header minimum
+is44px, fonts unchanged; long renewal switch works. CSS changed, visual baselines
+unchanged; full suites/WebKit/iPhone and general long-copy audit remain unrun.

@@ -1,13 +1,13 @@
-# Phone process localisation checkpoint
+# Phone UI localisation checkpoint
 
-Source commit: c85cfe02dba395c951cd6dd5971e39b677942304
-Source tree excluding .backup: d0b67c5e149dde315bfbc3638c1c58e113b9739d
+Source commit: da7c05e3ea8344affdc574791f41ea2cdb56e8c8
+Source tree excluding .backup: 3d746eada1d042d98dc6739d287306e820cba2f0
 
-32 phoneProcess entries migrate controller/activity messages, answer templates, payment/charging/interruption copy and unavailable reasons. phoneUnavailableId separates domain identity; null-only access across controller/App/LocationScreen/PhoneScreen preserves blocking even under empty copy. Costs, timing, battery, claimCompletion/claimRenewal, save schemas and History IDs unchanged.
+32 phoneUi entries migrate launcher/header/plan controls, expiry/battery labels and numeric goal plurals (singular grammar corrected). Numeric rounding, callbacks, focus/Tab/Escape/body-lock and blocked inert preserved. Observed long-copy overflow fixed in existing header/service/pay/toggle CSS: 44px minimum header grows when needed, controls wrap without shrinking fonts. Design contract documented in AGENTS.md/GAME_DESIGN.md.
 
-Passed: 64 frozen/pseudo phone process hook commands, eighteen unavailable combinations, empty-refusal launcher/plan test, check-localization, opening-calls, phone-controller/phone, module boundaries/design, phone-clock/journal-services regressions, build/diff. Mobile390 empty refusal still displays unavailable with disabled plan. CSS/baselines unchanged; broader long-copy/full suites/WebKit/iPhone unrun.
+Passed: 170 frozen/pseudo phone screen/plan variants, phone/controller checks, module boundaries/design, phone-clock regression, build/diff. Mobile390 normal/long home/plan inspected and long renewal switch toggled. Visual baselines unchanged; full suites/WebKit/iPhone and general long-copy audit remain unrun.
 
-The verified bundle retains 28 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: PhoneScreen/PhoneDialog own copy, Goals/History UI and remaining mini-game/residual audit. See LOCALIZATION.md.
+The verified bundle retains 29 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: Goals/History UI, memories and remaining mini-game/residual audit. See LOCALIZATION.md.
 
 Restore in a clone containing the published base:
 
