@@ -342,9 +342,9 @@ use existing responsive-image helpers for runtime artwork.
 Publish through the existing GitHub Pages workflow after authorized changes;
 preserve the repository and the current hosting setup.
 
-Current refactoring batch (25 October 2026): the user requested collecting
-separate verified commits locally and publishing everything at the end. Do not
-push/deploy each refactoring stage individually during this batch.
+Current localisation batch (26 October 2026): the user now requests saving
+completed stages in main without waiting for a CI build or publishing. Use the
+source-save procedure below. Publication remains a separate explicit request.
 
 
 Icon metadata checkpoint (26 October 2026): `GameAction.icon`, authored
@@ -379,8 +379,9 @@ command. The old parser/loader is isolated in legacyJournalCompatibility.ts:
 new gameplay must not call it. Ordering/grouping and duration/check metadata
 now use explicit data; effect chips also use IDs/kind/resource metadata.
 Remaining catalogues are still pending. Preserve direct rain/closing writers and
-saved historical text. Back up completed stages in the existing GitHub backup
-branch without changing main or publishing the game.
+saved historical text. Back up completed stages in the existing GitHub backup branch and save ready
+commits in main using [skip ci], as explicitly requested on 26 October 2026.
+Do not publish the game as part of a source save.
 
 
 Ordering/grouping checkpoint (26 October 2026): shuffled choices require
@@ -435,3 +436,43 @@ empty translated reason. A displayed name passed to food/discard dialogs is
 presentation only; actions keep kind/id/slotIndex/condition. Existing History
 hash salts and saved historical wording must not change when item names move.
 Shared place/hero copy and event/theft prose remain tracked in their own rows.
+
+
+## Save completed work to main without a CI build
+
+User instruction (26 October 2026): save ready commits in main so work survives
+environment loss; record this method and do not wait for a build to save them.
+This supersedes the earlier local-only/no-main-push batch rule.
+
+- The existing .github/workflows/deploy.yml runs build and Pages deployment on
+  every main push. For a source save, put `[skip ci]` in the new HEAD commit
+  message, for example `[skip ci] save: verified localisation checkpoint`.
+  GitHub skips push-triggered workflows for that commit; no CI build/deployment
+  needs to be started or awaited. Keep the workflow files and release/build ID
+  unchanged. Do not manually dispatch the deployment workflow for a backup.
+- Save completed stages; keep unfinished work separate. Retain the verification
+  already performed and report any unverified work honestly. Do not rerun tests
+  or a build solely to upload unchanged sources or documentation. Full suites
+  remain reserved for a separately authorised publication.
+- Prefer normal git push when authentication works. If shell push has no
+  credentials, use the connected GitHub create_blob/create_tree/create_commit/
+  update_ref API, which has already succeeded for this repository. Read the
+  current main SHA first. Use expected_sha and force=false to protect new remote
+  work; if the lease rejects the update, inspect main before retrying.
+- API snapshots do not recreate original local commit hashes. Preserve them with
+  a verified git bundle from the published base to the local checkpoint, stored
+  at .backup/localization-2026-10-26.bundle with restoration instructions. The
+  backup branch is backup/localization-2026-10-26. Compare the API source tree SHA
+  against the local committed tree before adding .backup files. Do not upload
+  uncommitted workspace files as though they were the completed checkpoint.
+- The established API method creates a backup snapshot, then a `[skip ci]` main
+  commit with current main as first parent and the backup head as an additional
+  parent. Its tree contains the verified sources, recovery bundle and a short
+  .backup/MAIN_CHECKPOINT.md noting the source commit and publication status.
+  Verify the resulting remote main SHA (git ls-remote is sufficient for the ref)
+  and report the commit link. Do not describe a source save as a game release.
+
+GitHub's skip-command behaviour is documented at
+https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs.
+An explicit later request to publish still follows the existing full-check and
+GitHub Pages procedure; the source-save shortcut does not replace that gate.
