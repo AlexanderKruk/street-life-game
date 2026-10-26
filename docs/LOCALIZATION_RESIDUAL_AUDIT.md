@@ -64,3 +64,8 @@ plot below shortcuts and vertical scrolling on constrained screens. Normal/long
 component QA at320/390/850 passed; selected-card Go remains accessible. Other
 neighbouring-label collisions and the remaining modal/device matrix are not
 closed by this fix.
+
+Map label follow-up: measured-label placement and connector lines added; normal/
+expanded names at320/390/850 had0 measured label intersections. Shared modal
+primitives passed long-copy scrolling/clickability at these viewports; specialised
+branches and rain-art context remain open.
