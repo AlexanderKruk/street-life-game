@@ -2,7 +2,8 @@ const assert = require('node:assert/strict');
 const ts = require('typescript');
 const { buildSync } = require('./tests/helpers/build.cjs');
 function bundled(path) {
-  const code = buildSync({ entryPoints: [path], bundle: true, platform: 'node', format: 'cjs', write: false, external: ['react', 'react-dom', 'react/jsx-runtime'] }).outputFiles[0].text;
+  const input = typeof path === 'string' ? { entryPoints: [path] } : { stdin: { contents: path.source, resolveDir: process.cwd(), loader: 'tsx' } };
+  const code = buildSync({ ...input, bundle: true, platform: 'node', format: 'cjs', write: false, external: ['react', 'react-dom', 'react/jsx-runtime'] }).outputFiles[0].text;
   const module = { exports: {} };
   new Function('require', 'module', 'exports', code)(require, module, module.exports);
   return module.exports;
@@ -213,7 +214,7 @@ function verifyChoiceOrder(ids,labels,fixed,decision) {
   assert.deepEqual(getIds(orderChoiceNodes(nodes.map(n=>React.cloneElement(n,{'aria-label':'⟦new⟧'},'⟦copy⟧')),seed,decision,fixed)),getIds(expected));
  }
 }
-for(const e of STREET_EVENTS)for(const choices of [e.choices,e.choices.filter(c=>!c.undiscoveredLocationRequired)])verifyChoiceOrder(choices.map(c=>`event:${e.id}:${c.id}`),choices.map(c=>c.label),e.choiceOrder==='fixed',`fixture|event:${e.id}`);
+for(const e of STREET_EVENTS)for(const choices of [e.choices,e.choices.filter(c=>!c.undiscoveredLocationRequired)])verifyChoiceOrder(choices.map(c=>`event:${e.id}:${c.id}`),choices.map(c=>choiceOrderToken(`event:${e.id}:${c.id}`)),e.choiceOrder==='fixed',`fixture|event:${e.id}`);
 for(const ids of [['travel:walk','travel:transit','travel:fare-dodge'],['travel:walk','travel:transit'],['rain:nearby','rain:proper','rain:continue'],['support:housing','support:documents','support:transport','support:benefits'],['interview:reason:work','interview:reason:documents','interview:reason:health'],['interview:action:job','interview:action:documents','interview:action:nothing'],['interview:plan:jobcenter','interview:plan:daywork','interview:plan:documents','interview:plan:nothing'],['hospital:appointment','location:empty']])verifyChoiceOrder(ids,ids.map(choiceOrderToken),false,'fixture');
 console.log('PASS: stable ordering matches historical seeds for events, hidden answers, services and travel under pseudo-copy.');
 const { default: ResultCard, isMajorChange } = bundled('src/ResultCard.tsx');
@@ -230,11 +231,50 @@ try {
   assert(document.querySelector('.bar-blocked'), 'translated Hygiene retains its cap hatching');
   assert(document.querySelector('[role="meter"]').getAttribute('aria-label').includes('maximum 60%'));
   cleanup();
-  const { standardizeChoiceButton } = bundled('src/ChoiceButton.tsx');
-  const explicit = label => standardizeChoiceButton(React.createElement('button', { 'data-icon': 'hand' }, React.createElement('div', null, React.createElement('strong', null, label))));
+  const { default: ChoiceButton, approximateDuration, formatChoiceEstimate } = bundled('src/ChoiceButton.tsx');
+  const explicit = label => React.createElement(ChoiceButton, { icon: 'hand', label });
   render(explicit('Catch it')); const handIcon = document.querySelector('.choice-icon').innerHTML;
   cleanup(); render(explicit('⟦water phone doctor sleep⟧'));
   assert.equal(document.querySelector('.choice-icon').innerHTML, handIcon, 'explicit metadata keeps its icon when all label words change');
+  for(const [minutes,label] of [[0,'≈0m'],[1,'≈5m'],[7,'≈5m'],[8,'≈10m'],[59,'≈1h'],[62,'≈1h'],[63,'≈1h 5m'],[90,'≈1h 30m'],[180,'≈3h']])assert.equal(approximateDuration(minutes),label);
+  assert.equal(formatChoiceEstimate({minutes:7,maxMinutes:62}),'≈5–60m');
+  assert.equal(formatChoiceEstimate({minutes:120,atLeast:true}),'≈2h+');
+  const view=bundled({source:`export {default as ChoiceButton} from './src/ChoiceButton'; export {default as AvailableFirst} from './src/AvailableFirst'; export {default as EventDialog} from './src/EventDialog'; export {default as DiceDialog} from './src/DiceDialog'; export * from './src/choiceCheckPresentation';`});
+  const choice=(label,detail,estimate,thoughtEstimate)=>React.createElement(view.ChoiceButton,{icon:'hand',label,detail:React.createElement('small',null,detail),estimate,thoughtEstimate,'data-choice':'fixture'});
+  const showThought=child=>{cleanup();render(React.createElement(view.AvailableFirst,{className:'fixture',thoughtsOnly:true,choiceGroups:[['fixture']]},child));};
+  for(const label of ['Original','⟦Sleep · Unknown DC 99⟧']){
+    showThought(choice(label,'~999 min · Choose duration',{minutes:31}));
+    assert.equal(document.querySelector('.choice-duration').textContent,'≈30m');
+    assert.equal(document.querySelector('.choice-copy').textContent,label);
+  }
+  showThought(choice('Choose duration','~999 min'));
+  assert.equal(document.querySelector('.choice-duration'),null,'copy alone cannot create a duration');
+  showThought(choice('⟦route⟧','ignored',{minutes:80},{minutes:30,atLeast:true}));
+  assert.equal(document.querySelector('.choice-duration').textContent,'≈30m+');
+  cleanup();render(choice('⟦service⟧','~999 min · intact detail',{minutes:47}));
+  assert.equal(document.querySelector('.choice-duration').textContent,'≈45m');
+  assert.equal(document.querySelector('.choice-copy small').textContent,'~999 min · intact detail');
+  for(const event of STREET_EVENTS)for(const c of event.choices)if(c.check){
+    assert.equal(view.choiceAccessibleLabel(c),choiceOrderToken(`event:${event.id}:${c.id}`),'historical accessible check label stays the same');
+    const changed={...c,label:'⟦label · Something DC 99⟧'};
+    for(const illustrated of [false,true]){
+      cleanup();render(React.createElement(view.EventDialog,{event:{...event,illustration:illustrated?'fixture.webp':undefined},choices:[changed],onChoose:()=>{},unavailableReason:()=>null,orderSeed:1,decisionKey:'fixture',panelRef:null}));
+      assert.equal(document.querySelector('.choice-copy strong').textContent,changed.label);
+      assert.equal(document.querySelector('.choice-copy small').textContent,view.choiceCheckDetail(c.check));
+      assert.equal(document.querySelector('button.choice-button').getAttribute('aria-label'),view.choiceAccessibleLabel(changed));
+    }
+    cleanup();render(React.createElement(view.DiceDialog,{diceCheck:{choice:changed,roll:null,modifier:0,resolved:false},onRoll:()=>{},onAccept:()=>{},onCancel:()=>{}}));
+    assert.equal(document.querySelector('#dice-action-title').textContent,changed.label);
+    assert.equal(document.querySelector('.dice-attempt').textContent,changed.label);
+  }
+  const anyCheck=STREET_EVENTS.flatMap(e=>e.choices).find(c=>c.check);
+  for(const item of SHOP_ITEMS){
+    cleanup();render(React.createElement(view.DiceDialog,{diceCheck:{choice:anyCheck,roll:null,modifier:0,resolved:false,stealItemId:item.id},onRoll:()=>{},onAccept:()=>{},onCancel:()=>{}}));
+    assert.equal(document.querySelector('#dice-action-title').textContent,`Steal ${item.name.toLowerCase()}?`);
+  }
+  console.log('PASS: numeric duration/range/route metadata, intact pseudo-copy, explicit check labels and all theft headings.');
+
+
 
 } finally { cleanup(); dom.window.close(); }
 console.log('PASS: typed messages/parameters, locale plural categories, catalog completeness, unchanged time/money formats, stable result guards, legacy History and relabelled result mechanics.');

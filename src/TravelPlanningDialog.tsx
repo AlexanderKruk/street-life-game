@@ -1,6 +1,6 @@
 import type { Ref } from 'react'
 import { locations } from './game'
-import { formatTravelTime } from './gameTime'
+import ChoiceButton from './ChoiceButton'
 import { Icon, locationIcon } from './Icon'
 import ChoiceOptions from './ChoiceOptions'
 import { ModalOverlay, ModalPanel } from './Modal'
@@ -19,21 +19,15 @@ type Props = {
 export default function TravelPlanningDialog({ destination, panelRef, choiceSeed, choiceDecisionKey, freeTransitActive, money, onClose, onStart, onFareDodge }: Props) {
   if (!destination) return null
       const transitMinutes = Math.ceil(destination.travelMinutes * 0.5)
-      const nearbyTime = destination.travelRange ? `${destination.travelRange.min}–${destination.travelRange.max}m` : null
+      const estimate = (minutes: number) => destination.travelRange ? { minutes: destination.travelRange.min, maxMinutes: destination.travelRange.max } : { minutes }
   return <ModalOverlay className="travel-choice-overlay"><ModalPanel className="travel-sheet" role="dialog" aria-modal="true" aria-label={`Travel to ${destination.name}`} tabIndex={-1} ref={panelRef}>
         <button className="sheet-close" aria-label="Close travel options" onClick={() => onClose()}>×</button>
         <p className="eyebrow">TRAVEL TO</p>
         <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
         <ChoiceOptions seed={choiceSeed} decision={`${choiceDecisionKey}|travel:${destination.id}`}>
-        <button className="travel-option" data-order-id="travel:walk" onClick={() => onStart('walk')}>
-          <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>≈{nearbyTime ?? formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
-        </button>
-        <button className="travel-option" data-order-id="travel:transit" onClick={() => onStart('transit')} disabled={!freeTransitActive && money < 4.4}>
-          <Icon name="bus" /><div><strong>Public transport</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · {nearbyTime ? 'includes waiting' : 'less physical strain'}</small></div>
-        </button>
-        {!freeTransitActive && <button className="travel-option" data-order-id="travel:fare-dodge" onClick={onFareDodge}>
-          <Icon name="coins" /><div><strong>Ride without ticket</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · free{nearbyTime ? ' · includes waiting' : ''}</small><small>Risk: 20–35 zł fine</small></div>
-        </button>}
+        <ChoiceButton className="travel-option" data-order-id="travel:walk" icon="person" label="Walk" estimate={estimate(destination.travelMinutes)} onClick={() => onStart('walk')} detail={<small>free · more hunger &amp; thirst</small>} />
+        <ChoiceButton className="travel-option" data-order-id="travel:transit" icon="bus" label="Public transport" estimate={estimate(transitMinutes)} onClick={() => onStart('transit')} disabled={!freeTransitActive && money < 4.4} detail={<small>{freeTransitActive ? 'FREE' : '4.40 zł'} · {destination.travelRange ? 'includes waiting' : 'less physical strain'}</small>} />
+        {!freeTransitActive && <ChoiceButton className="travel-option" data-order-id="travel:fare-dodge" icon="coins" label="Ride without ticket" estimate={estimate(transitMinutes)} onClick={onFareDodge} detail={<><small>free{destination.travelRange ? ' · includes waiting' : ''}</small><small className="choice-description">Risk: 20–35 zł fine</small></>} />}
         </ChoiceOptions>
 
       </ModalPanel></ModalOverlay>

@@ -147,7 +147,7 @@ export const STREET_EVENTS: StreetEvent[] = [
     { id:'decline', label:'Say no and move on', icon:'walk', outcome:{ historyId:'borrow-phone:decline:complete', message:'“Sorry, I can’t.” He nods. “All right.” As you walk away, he looks down the street for someone else to ask.' } },
   ]},
   { id:'park-company', trigger:'location', icon:'💬', title:'Room for one more', text:'A few people are gathered around a park bench, drinking beer and talking over each other. A bag of bottles sits at their feet. One of them spots you and shuffles along the bench. “Hey, mate! Come sit with us!”', weight:1, eligible:c=>c.locationId==='street' && c.day!==undefined && c.day>=2 && c.minutes!==undefined && c.minutes>=0 && c.minutes<240, choices:[
-    { id:'chat', label:'Join them for a chat · Persuasion DC 10', icon:'chat', durationMinutes:10, check:{ stat:'persuasion', dc:10,
+    { id:'chat', label:'Join them for a chat', icon:'chat', durationMinutes:10, check:{ stat:'persuasion', dc:10,
       success:{ historyId:'park-company:chat:success', minutes:10, mood:3, message:'You sit down and join the conversation. Their stories get more ridiculous with each telling, and soon you’re laughing along. When you get up to leave, they wish you a good night. You feel a little less alone.' },
       failure:{ historyId:'park-company:chat:failure', minutes:10, mood:-2, message:'Something you say rubs one of them the wrong way. You try to explain, but he keeps talking over you, louder each time. You get up and leave with his last remark still ringing in your ears.' },
     } },
@@ -161,7 +161,7 @@ export const STREET_EVENTS: StreetEvent[] = [
   ]},
   // This stage is reached only by handing over the phone; it never spawns alone.
   { id:'borrow-phone-slip', trigger:'location', continuationOnly:true, icon:'📱', title:'One quick call', text:'He finishes the call and holds your phone out. “Thanks, I really—” It slips from his fingers before you can take it. You reach for it.', weight:1, choices:[
-    { id:'catch', label:'Try to catch it · Reflex DC 11', icon:'hand', check:{ stat:'reflex', dc:11,
+    { id:'catch', label:'Try to catch it', icon:'hand', check:{ stat:'reflex', dc:11,
       success:{ historyId:'borrow-phone-slip:catch:success', minutes:5, mood:3, phoneBattery:-2, message:'You catch it just above the pavement. For a second, neither of you speaks. “God, sorry,” he says. You check the screen before putting it safely away.' },
       failure:{ historyId:'borrow-phone-slip:catch:failure', minutes:5, mood:3, phoneBattery:-2, phoneCondition:-5, message:'Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. The screen still works. There’s a fresh dent in the corner. “I’m really sorry.” You take it back.' },
     } },
@@ -187,7 +187,7 @@ export const STREET_EVENTS: StreetEvent[] = [
     { id:'leave', icon:'walk', label:'Gather my things and step outside', outcome:{ historyId:'station-patrol-wake:leave:complete', identityCheck:true, minutes:5, energy:-1, moveToStreet:true, message:'You say you have no train ticket, collect your backpack and step out into the street. The check is over, but your rest is over too.' } },
   ]},
   { id:'phone-drop', choiceOrder:'fixed', trigger:'travel', icon:'📱', title:'The phone slips', text:'Your old phone slips from your hand while you are walking. You have a split second to react.', weight:3, eligible:c=>c.travelMode==='walk', choices:[
-    { id:'catch', icon:'hand', label:'Try to catch it · Reflex DC 11', check:{ stat:'reflex', dc:11, requirements:{ minEnergy:20, minHealth:20 },
+    { id:'catch', icon:'hand', label:'Try to catch it', check:{ stat:'reflex', dc:11, requirements:{ minEnergy:20, minHealth:20 },
       success:{ historyId:'phone-drop:catch:success', mood:2, message:'You catch the phone just before it hits the pavement.' },
       failure:{ historyId:'phone-drop:catch:failure', phoneCondition:-8, mood:-3, message:'Too slow. The phone hits the pavement and takes damage.' },
       criticalSuccess:{ historyId:'phone-drop:catch:criticalSuccess', mood:4, message:'Perfect catch. Somehow you snatch it out of the air without breaking stride.' },

@@ -339,3 +339,15 @@ Pairwise fixtures protect previous grouping equivalence. check-rendering covers
 metadata grouping with different saved wording, first timestamp and reload.
 Targeted scripts and five affected regression groups passed; full suites and
 browser/visual were not run. Duration/check-label parsing remains pending.
+
+
+Explicit duration/check checkpoint: check-localization covers numeric estimates,
+ranges/minimum, text that resembles times/DC, separate full/compact check labels,
+unchanged accessible names and all nine contextual theft headings. Owners now
+render ChoiceButton directly; previous icon invariance coverage uses this path.
+Targeted Node scripts, four affected regression groups and build passed.
+Six selected visual cases (street, event, sleep-planning × mobile/desktop) passed
+without baseline changes. Extra travel/station/support/D20 inspection compared
+card time, description sizes and overflow with e186132 on both viewports.
+Known earlier location-hero overflow (~450 px at width390) is recorded for the
+layout phase; it is present before this stage. Full suites/WebKit/iPhone unrun.

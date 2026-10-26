@@ -1,6 +1,5 @@
 import { choiceOrderToken } from './legacyChoiceOrderCompatibility'
 import { Children, Fragment, isValidElement, type ReactNode } from 'react'
-import { standardizeChoiceButton } from './ChoiceButton'
 import { shuffleChoiceOrder } from './streetChoiceOrder'
 
 function flatten(children: ReactNode): ReactNode[] {
@@ -22,5 +21,5 @@ export function orderChoiceNodes(children: ReactNode, seed: number, decision: st
 }
 
 export default function ChoiceOptions({ children, seed, decision, className, fixed = false }: { children: ReactNode; seed: number; decision: string; className?: string; fixed?: boolean }) {
-  return <div className={`choice-options ${className ?? ''}`}>{orderChoiceNodes(children, seed, decision, fixed).map(standardizeChoiceButton)}</div>
+  return <div className={`choice-options ${className ?? ''}`}>{orderChoiceNodes(children, seed, decision, fixed)}</div>
 }

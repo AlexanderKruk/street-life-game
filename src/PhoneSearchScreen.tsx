@@ -1,4 +1,4 @@
-import ChoiceButton, { approximateDuration } from './ChoiceButton'
+import ChoiceButton from './ChoiceButton'
 import type { IconName } from './Icon'
 import { PHONE_SEARCH_ESTIMATE } from './phoneQuestions'
 
@@ -16,7 +16,7 @@ export default function PhoneSearchScreen({ serviceActive, answeredQuestions, ba
           ] as { id: string; title: string; detail: string; icon: IconName }[]).map(search => {
             const saved = search.id !== 'morning' && answeredQuestions.includes(search.id)
             return <ChoiceButton className="phone-search-row" type="button" key={search.id} aria-label={search.title} data-choice={`question-${search.id}`} disabled={!serviceActive || (!saved && battery < phoneSearchCost)} onClick={() => saved ? onOpenNotes() : onSearch(search.id)}
-              icon={search.icon} label={search.title} detail={<small className="choice-description">{search.detail}</small>} duration={saved ? 'Notes' : approximateDuration(PHONE_SEARCH_ESTIMATE)} />
+              icon={search.icon} label={search.title} detail={<small className="choice-description">{search.detail}</small>} duration={saved ? 'Notes' : undefined} estimate={saved ? undefined : { minutes: PHONE_SEARCH_ESTIMATE }} />
           })}
         </div>
         <p className={`phone-search-hint${!serviceActive ? ' warning' : ''}`}>{!serviceActive ? 'Mobile internet is unpaid. Activate the 1 zł/day plan in the header to search.' : battery < phoneSearchCost ? 'Not enough battery to search. Charge your phone first.' : 'Searching uses time and battery.'}</p>

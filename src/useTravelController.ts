@@ -98,7 +98,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const choice: StreetEventChoice = {
-      label: 'Ride without a ticket · Reflex DC 12',
+      label: 'Ride without a ticket',
       check: {
         stat: 'reflex', dc: 12,
         success: { message: 'No ticket inspection this time. You ride for free.' },

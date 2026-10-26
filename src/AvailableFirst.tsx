@@ -1,10 +1,8 @@
 import { Children, Fragment, cloneElement, isValidElement, type ReactNode } from 'react'
-import { Icon, type IconName } from './Icon'
-import { locations, destinationTravelTimeRange } from './game'
-import { approximateDuration, standardizeChoiceButton } from './ChoiceButton'
+import ChoiceButton, { type ChoiceButtonProps } from './ChoiceButton'
 import { orderChoiceNodes } from './ChoiceOptions'
 import { shuffleChoiceOrder } from './streetChoiceOrder'
-import { SLEEP_HOURS } from './sleepRules'
+import { t } from './i18n'
 
 // Flatten conditional fragments before sorting, so custom and configured
 // actions share one available-first ordering and keep their order within a group.
@@ -14,32 +12,8 @@ export default function AvailableFirst({ children, className, tag = 'section', t
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment ? flatten(node.props.children) : [node])
   }
   function thoughtOnly(node: ReactNode): ReactNode {
-    if (!isValidElement<{ children?: ReactNode; 'data-choice'?: string; 'data-icon'?: IconName }>(node) || node.type !== 'button') return node
-    const id = node.props['data-choice'] ?? ''
-    const icon = node.props['data-icon'] ?? 'person'
-    const route = { 'station-route': 'station', 'shelter-route': 'shelter', 'work-route': 'work' }[id as 'station-route' | 'shelter-route' | 'work-route']
-    function textOf(children: ReactNode): string {
-      return Children.toArray(children).map(child => isValidElement<{ children?: ReactNode }>(child) ? textOf(child.props.children) : String(child)).join('')
-    }
-    const metadata = Children.toArray(node.props.children).find(part => isValidElement(part) && part.type === 'span')
-    const text = isValidElement<{ children?: ReactNode }>(metadata) ? textOf(metadata.props.children) : ''
-    const minutes = text.match(/~(\d+)(?:[–-](\d+))? min/)
-    const destination = route ? locations.find(place => place.id === route) : undefined
-    const duration = destination ? `${approximateDuration(destinationTravelTimeRange(destination, 'transit').min)}+`
-      : text === 'Choose duration' ? `${approximateDuration(SLEEP_HOURS[0] * 60)}+`
-      : minutes ? minutes[2] ? `≈${minutes[1]}–${minutes[2]}m` : approximateDuration(Number(minutes[1])) : null
-    return cloneElement(node, {}, Children.toArray(node.props.children)
-      .filter(part => !isValidElement(part) || part.type !== 'span')
-      .map(part => isValidElement<{ children?: ReactNode }>(part) && part.type === 'div'
-        ? cloneElement(part, {}, <Icon name={icon} className="story-action-icon" />, Children.toArray(part.props.children)
-          .filter(detail => !isValidElement<{ className?: string }>(detail) || detail.type !== 'small' || detail.props.className?.split(' ').includes('choice-estimate'))
-          .map(detail => isValidElement<{ children?: ReactNode }>(detail) && detail.type === 'strong'
-            ? cloneElement(detail, {}, Children.toArray(detail.props.children)
-              .filter(text => !isValidElement(text) || text.type !== 'span')
-              .map(text => typeof text === 'string' ? text.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]+\s*/u, '') : text))
-            : detail), duration && !Children.toArray(part.props.children).some(detail => isValidElement<{ className?: string }>(detail) && detail.props.className?.split(' ').includes('choice-estimate'))
-              ? <small className="choice-estimate choice-duration">{duration}</small> : null)
-        : part))
+    if (!isValidElement<ChoiceButtonProps>(node) || node.type !== ChoiceButton) return node
+    return cloneElement(node, { detail: undefined, duration: undefined, estimate: node.props.thoughtEstimate ?? node.props.estimate })
   }
   const nodes = flatten(children).map(node => thoughtsOnly ? thoughtOnly(node) : node)
   const disabled = (node: ReactNode) => isValidElement<{ disabled?: boolean }>(node) && !!node.props.disabled
@@ -53,12 +27,12 @@ export default function AvailableFirst({ children, className, tag = 'section', t
     const ids = selected.map(node => isValidElement<{ 'data-choice'?: string }>(node) ? node.props['data-choice'] : '').join('|')
     const ordered = shuffleChoiceOrder(selected, orderSeed, `${decisionKey}|${ids}`)
     const Tag = tag
-    return <Tag className={className}>{ordered.filter(node => !disabled(node)).map(standardizeChoiceButton)}{ordered.filter(disabled).map(standardizeChoiceButton)}</Tag>
+    return <Tag className={className}>{ordered.filter(node => !disabled(node))}{ordered.filter(disabled)}</Tag>
   }
   const ordered = orderChoiceNodes(nodes, orderSeed, decisionKey)
   const available = ordered.filter(node => !disabled(node))
   const unavailable = ordered.filter(disabled)
   const Tag = tag
-  return <Tag className={className}>{available.map(standardizeChoiceButton)}{unavailable.length > 0 && <p className="unavailable-heading">Unavailable now</p>}{unavailable.map(standardizeChoiceButton)}</Tag>
+  return <Tag className={className}>{available}{unavailable.length > 0 && <p className="unavailable-heading">{t('choice.unavailable')}</p>}{unavailable}</Tag>
 }
 

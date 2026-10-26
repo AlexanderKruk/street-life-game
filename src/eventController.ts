@@ -153,7 +153,7 @@ export function createEventController(session: EventSession, context: Context, h
       return
     }
     const choice: StreetEventChoice = {
-      label: `Steal ${item.name} · Reflex DC 12`,
+      label: `Steal ${item.name}`,
       check: {
         stat: 'reflex', dc: 12,
         success: { minutes: 5, message: `You steal ${item.name} without being stopped.` },

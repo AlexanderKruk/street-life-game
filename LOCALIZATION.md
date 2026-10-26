@@ -14,13 +14,15 @@
 Новые реакции остальных контроллеров также используют ID/facts; старый parser
 изолирован в legacyJournalCompatibility.ts и применяется только при загрузке.
 Ordering/grouping новых записей используют ID с совместимостью прежних seed.
-Не завершено: duration/check-label parsing, effect chips,
+Длительности и подписи D20 используют явные данные; старый button adapter удалён.
+Не завершено: effect chips,
 остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: явные duration/check metadata. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: структурированные freshness/effect chips и их визуальные состояния,
+затем оставшиеся каталоги. Сохранившийся пакет иконок не переделывать.
 
 ## Задание для нового чата
 
@@ -413,3 +415,36 @@ shelter-sleep, journal-services и npm run build — PASS. git diff --check — 
 Полные наборы и browser/visual не запускались. Публикации не было.
 Следующий этап — duration/check metadata; effect chips, остальные каталоги
 и редакторская/мобильная матрица остаются открыты.
+
+
+### Явные длительности и D20-подписи — 26 октября 2026
+
+30 карточек LocationScreen и планирование поездки используют ChoiceButton
+напрямую. estimate/thoughtEstimate передают числа, диапазон и признак «от»;
+AvailableFirst больше не извлекает время из английской строки или Choose duration.
+Удалены standardizeChoiceButton, roundDurationLabel и разбор текста/эмодзи.
+Сохранены handlers, доступность, прежние ID/seed, цены, benefit chips, Body/Small
+и округление только показываемого времени. Реальные часы/расходы не менялись.
+
+StreetEventChoice.label хранит чистую подпись. choiceCheckPresentation собирает
+accessible name и badge из stat/dc. EventDialog, CompactStreetEvent и DiceDialog
+больше не отрезают DC-суффикс; новые динамические D20 choices также без него.
+Заголовки кражи используют контекстные сообщения каталога по ID предмета вместо
+toLowerCase. Frozen legacy salts не менялись, сохранённый authored roll не менялся.
+
+Проверено: check-localization.cjs (числа/диапазоны/минимум, псевдоподписи с DC
+и ~999 min, compact/illustrated choices, все 9 заголовков кражи), check-rendering,
+check-design-system, check-module-boundaries (124 модуля),
+check-event-travel-controllers; regression/street-trash, events, map-travel,
+shelter-sleep; production build и git diff --check — PASS.
+Выбранные visual-тесты street/event/sleep-planning на 390×844 и 1280×900 —
+6/6 PASS, эталоны не менялись. Дополнительно осмотрены travel/station/support/D20
+на обеих ширинах; метрики карточек и времени сопоставлены с предыдущим коммитом.
+Полные наборы, WebKit и реальный iPhone не запускались. Публикации не было.
+
+Найденный прежний дефект для мобильного аудита: location-hero с min-height
+и aspect-ratio расширяется до ~450 px при viewport 390×844 (вокзал, Help Center
+и дневная улица). Воспроизведён на предыдущем e186132; карточки не переполняются.
+Исправление и проверка связанных visual-эталонов остаются в этапе вёрстки.
+Следующий шаг — kind/impact ID для freshness/effect chips; затем остальные
+каталоги и редакторская/мобильная матрица.

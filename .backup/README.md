@@ -1,11 +1,11 @@
-# Localization backup — 26 October 2026
+# Localization recovery backup — 26 October 2026
 
 This branch is a recovery snapshot, not a publication. Main remains at d8ff6fac4236badc45df86195d3295d7cfee64af.
 
-Source commit: e186132135815e6fed88521d277223c8237dcdc5
-Source tree (excluding this .backup directory): 24b6962f7d602de5da78d7f85325f0ddf5af230c
+Source commit: f29979f46b22d088592b7f76a207fb0c5b158a3f
+Source tree (excluding this .backup directory): 03b23cdcec32dd5dce5e156dff4571af4dcd8081
 
-The source snapshot matches that local tree byte for byte. The snapshot commit has a different hash because it was created through the connected GitHub API. The bundle preserves all seven original local commits and their hashes:
+The source snapshot matches that local tree byte for byte. API snapshot commits have different hashes; the bundle preserves all eight original local commits and their hashes:
 
 - 7bb039f refactor: add typed English catalogs and stable result identities
 - 40175a7 docs: record localization foundation checkpoint
@@ -14,6 +14,7 @@ The source snapshot matches that local tree byte for byte. The snapshot commit h
 - c5794b9 refactor: restore inventory History from resolved command facts
 - eaa5db2 refactor: restore ID-based History for remaining controllers
 - e186132 refactor: decouple choice order and History grouping from copy
+- f29979f refactor: use explicit duration and check presentation metadata
 
 Restore from an existing clone containing the published main base:
 
@@ -25,8 +26,8 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Current stage: choice ordering and new History grouping use stable IDs. Frozen compatibility salts preserve historical seed permutations. Existing saved text, first group time, mixed records and grouping before pagination are preserved.
+Current stage: numeric duration/range/minimum metadata; pure choice labels and stat/dc-based check presentation. Raw-button text/emoji adaptation and DC suffix parsing removed. Contextual theft headings use item IDs. Owners render ChoiceButton directly, preserving costs, clocks, handlers, availability and seeded order.
 
-Validation: check-localization, check-rendering, check-module-boundaries; regression groups street-trash, events, map-travel, shelter-sleep, journal-services; TypeScript/Vite build; git diff --check. Full suites and browser/visual were not run. No deployment.
+Validation: check-localization, check-rendering, check-design-system, check-module-boundaries, check-event-travel-controllers; regression groups street-trash, events, map-travel, shelter-sleep; TypeScript/Vite build; git diff --check. Six selected visual cases (street/event/sleep-planning, mobile/desktop) passed unchanged. Eight extra travel/station/support/D20 browser scenarios matched previous time/card/description/overflow metrics. Full suites/WebKit/iPhone not run. No deployment.
 
-Next: explicit duration/check metadata, then remaining catalogues, effect chips and editorial/mobile audit. See LOCALIZATION.md.
+Earlier location-hero overflow at width390 is recorded for the layout phase in LOCALIZATION.md; reproduced at e186132. Next: freshness/effect chip metadata, remaining catalogues and editorial/mobile audit.

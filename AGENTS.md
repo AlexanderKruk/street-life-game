@@ -349,11 +349,9 @@ push/deploy each refactoring stage individually during this batch.
 
 Icon metadata checkpoint (26 October 2026): `GameAction.icon`, authored
 `StreetEventChoice.icon` and raw LocationScreen button `data-icon` supply choice
-icons explicitly. Existing inline Icon nodes retain precedence in the legacy
-button adapter. Never restore label-based icon inference. `AvailableFirst`
-uses the same metadata for thought cards. Duration extraction and check-label
-suffix parsing remain legacy migration targets; this checkpoint does not claim
-that their transfer or the missing earlier local batches is complete.
+icons explicitly. ChoiceButton receives icon explicitly; do not restore label-based inference.
+The legacy button adapter has now been removed. This historical checkpoint
+does not claim that the missing earlier local batches are present.
 
 
 Recovery checkpoint (26 October 2026): use LOCALIZATION.md / LOCALIZATION_TASK.md
@@ -378,8 +376,8 @@ memoryId), actionHistoryDefinitions and locales/en/actionHistory.ts. No report
 prose or modal headings are passed to its resolver. ActionHistoryFacts capture
 refusal/support/search/sleep/arrival state after the existing guard accepts the
 command. The old parser/loader is isolated in legacyJournalCompatibility.ts:
-new gameplay must not call it. Ordering/grouping now use explicit IDs; duration/check
-metadata remain migration targets. Preserve direct rain/closing writers and
+new gameplay must not call it. Ordering/grouping and duration/check metadata
+now use explicit data; effect chips and remaining catalogues are still pending. Preserve direct rain/closing writers and
 saved historical text. Back up completed stages in the existing GitHub backup
 branch without changing main or publishing the game.
 
@@ -395,3 +393,17 @@ Keep existing group IDs stable during catalogue edits; new distinct meanings
 need distinct semantic identities. Arrival supplies destinationId separately
 from destinationName. groupJournalEntries preserves first text/time and groups
 before pagination; raw-text comparison is limited to records missing metadata.
+
+
+Duration/check checkpoint (26 October 2026): use ChoiceButton directly inside
+ChoiceOptions/AvailableFirst; these containers no longer adapt raw buttons.
+Pass estimate {minutes, maxMinutes?, atLeast?} for approximate time and optional
+thoughtEstimate for compact street choices. The owner supplies route/sleep/queue
+values; rounding is display-only. duration is already formatted display content
+(exact sleep hours, Notes, rain search), never a source of gameplay data.
+Keep prices, benefits and descriptions separate from estimates. Use Body
+choice-description for important copy; preserve short metadata at Small.
+StreetEventChoice.label contains only the label, without a check suffix.
+choiceCheckPresentation formats accessible labels/check badges from check.stat
+and check.dc. Dice headings use those fields and contextual catalogue messages;
+never strip a label with regex or change item case to form a sentence.

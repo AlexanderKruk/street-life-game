@@ -85,9 +85,9 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `journalReflection` | title regexes and outcome fragments choose new reflections | new event/inventory/action reflections use ID/facts/catalogues; phrase parser isolated to old-save conversion |
 | `ChoiceOptions` | text/aria label determines shuffle identity and conventional binary ordering | stable choice IDs, explicit fixed pairs and frozen historical hash salts; tested under pseudo-copy |
 | App `choiceDecisionKey`, `JournalTimeline` grouping | actionTitle feeds seed/group comparison | new decisionId/groupId, semantic message aliases and parameters; legacy comparison only for missing metadata; first time/pagination preserved |
-| `AvailableFirst`, `ChoiceButton`, `Icon.choiceIcon` | English text used to extract duration and guess icon | icons use explicit metadata; duration extraction still pending |
+| `AvailableFirst`, `ChoiceButton`, `Icon.choiceIcon` | English text used to extract duration and guess icon | direct ChoiceButton icon/estimate/thoughtEstimate; raw button/text adapter removed |
 | `InventorySlot`, `ShopCard`, `StatusScreen` | English freshness / effect chip strings select visual states | **pending**: structured kind/impact IDs |
-| `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | choice IDs/React keys explicit; check suffix stripping and item case conversion pending |
+| `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | choice IDs/React keys and pure labels explicit; stat/dc formats badges/accessible names; contextual theft titles by item ID |
 | `eventController` | replaces “The screen still works.” in phone damage outcome | **pending**: explicit broken-screen outcome variant |
 | `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | retain persisted/internal IDs, add display names before extraction |
 
@@ -123,3 +123,11 @@ legacy hash salts preserve old seed permutations. Message aliases preserve
 historically equivalent groups under new wording. Old saved text remains intact;
 duration/check-label parsing, effect chips, remaining catalogues and final audit
 are still pending. See the current checkpoint at the top of LOCALIZATION.md.
+
+
+Explicit duration/check checkpoint: direct ChoiceButton owners pass numeric
+estimates and separate descriptions/costs. No runtime text/emoji adapter or DC
+suffix parser remains. Duration/check templates and contextual theft titles are
+in common/dialogs catalogues; scene prose remains pending. Selected visual
+cases passed unchanged. Earlier narrow location-hero overflow is recorded in
+LOCALIZATION.md for the layout audit. Next: freshness/effect chip metadata.
