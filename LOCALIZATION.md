@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: PhoneScreen/PhoneDialog (после `c85cfe0`), проверен тематически.
+Последний готовый этап: Goals/History UI и воспоминания (после `da7c05e`), проверен тематически.
+Phone UI сохранён в main через checkpoint `4ae2cec`.
 Phone process сохранён в main через checkpoint `f68a54b`.
 Phone content сохранён в main через checkpoint `7cabec6`.
 Авторские события сохранены в main через checkpoint `64144d1`.
@@ -53,7 +54,7 @@ DiceDialog использует dialogs.ts для собственных под�
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: Goals/History UI, воспоминания и мини-игра/остаточные строки. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: мини-игра поиска бутылок и остаточный аудит строк; затем финальные редакторские/мобильные проверки. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -249,7 +250,8 @@ src/locales/en/
 - [x] Перенести event/inventory/action History на ID/факты и каталоги; отделить старый parser.
 - [x] Перенести прямые closing-записи History; сохранить их domain groupId и старые сохранённые тексты.
 - [x] Перенести собственные тексты прямого rain writer в каталог; английская копия и ID сохранены.
-- [ ] Завершить first-person/context audit rain History, memories и оставшийся собственный UI History/Goals.
+- [x] Перенести memories и собственный UI History/Goals.
+- [ ] Завершить first-person/context audit rain History и итоговый редакторский аудит.
 - [x] Старые записи с `reflection: true` и уже сохранённым текстом показывать как были; не переписывать их ради новой редакции и не терять пустые реакции.
 - [x] Сохранить обратную совместимость новых optional action/outcome/decision/group полей; загружать старые записи без них.
 - [x] Сохранить дату/время, порядок, группировку, пагинацию и отсутствие дубликатов.
@@ -1070,3 +1072,25 @@ launcher/app IDs, доступность, часы59/60/61, батарею, ав
 CSS изменён по наблюдавшейся проблеме, visual-эталоны не обновлялись. Полный
 набор, WebKit/iPhone и общая long-copy/device матрица остаются открытыми.
 Следующий этап — Goals/History и остальные строки. Без публикации.
+
+
+### Goals/History UI и воспоминания — 26 октября 2026
+
+30 записей journalUi.ts: собственные controls/aria/empty/pagination/date подписи,
+четыре цели, три фрагмента воспоминаний и полный шаблон result+memory.
+Даты показывают displayDay и weekdayLabel, не переводят машинный календарь.
+Условие цели, activeGoal/seenMemories/action ID, приоритет, группировка и batch30
+не менялись. Singular completed goal исправлен numeric plural. Сохранённые
+entry.title/text/reflection остаются прежними и не переводятся повторно.
+
+27 frozen/pseudo Goals/History вариантов сравнивают English DOM (кроме singular),
+дни1/2/3, 0/1/2/30/31/61 записи, older pagination, completed/priority и saved copy.
+Actual App/StrictMode: новое/уже увиденное unanswered-applications после restored
+search сохраняет seen IDs и один History/reward при ремоунте под псевдокаталогом.
+check-localization, phone/results, module-boundaries (153 модуля), design-system;
+journal-services/phone-clock regressions; build/diff — PASS.
+Браузер390×844: Goals/History, раскрытие completed и загрузка30→60 старых записей
+проверены. CSS/эталоны не менялись. Полные наборы, общая long-copy матрица,
+WebKit/iPhone и финальная редактура остаются открытыми.
+Следующий этап — trash mini-game и остаточные строки. Сохранение main с [skip ci],
+без публикации.

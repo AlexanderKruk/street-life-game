@@ -632,3 +632,11 @@ numeric goal plurals. Preserve ceil-hours/minutes and battery rounding, IDs,
 focus/Tab/Escape/body lock and blocked inert. Header/service/pay/toggle layouts
 wrap long translations without shrinking text; normal header remains44px minimum.
 Goals/History contents and final residual/editorial/device audits remain pending.
+
+Journal UI checkpoint: journalUi.ts owns Goals/History controls/date/empty/count
+copy, App goal descriptions and three memory fragments/result composition.
+Use weekdayLabel at display boundaries; keep goal IDs/conditions and memory
+selection/seen guards independent of translated text. Never retranslate stored
+JournalEntry title/text/reflection. Grouping, day navigation and batches of30 stay
+unchanged. Final editorial/long-copy audits and remaining trash/residual copy stay
+open.

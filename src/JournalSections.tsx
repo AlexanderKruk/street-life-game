@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { groupJournalEntries, type TimelineEntry } from './journalIdentity'
 import { memo, useId, useMemo, useState } from 'react'
 import { Icon } from './Icon'
@@ -9,18 +10,18 @@ export type JournalGoal = { id: string; title: string; description: string }
 type GoalsProps = { pending: JournalGoal[]; completed: JournalGoal[] }
 
 export const JournalGoals = memo(function JournalGoals({ pending, completed }: GoalsProps) {
-  return <section className="journal-goals" aria-label="Goals">
-    <ul className="goal-list" aria-label="Goals ordered by priority">
+  return <section className="journal-goals" aria-label={t('journal.ui.goals')}>
+    <ul className="goal-list" aria-label={t('journal.ui.priority')}>
       {pending.map((goal, index) => <li className={index === 0 ? 'goal main-goal' : 'goal'} key={goal.id}>
-        <span className="goal-marker" aria-label={index === 0 ? 'Main goal, not completed' : 'Not completed'} /><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
+        <span className="goal-marker" aria-label={t(index === 0 ? 'journal.ui.mainPending' : 'journal.ui.pending')} /><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
       </li>)}
     </ul>
-    {!pending.length && <p className="empty">All starting goals completed.</p>}
+    {!pending.length && <p className="empty">{t('journal.ui.allDone')}</p>}
     {!!completed.length && <details className="completed-goals">
-      <summary><h3>Completed</h3><span aria-label={`${completed.length} completed goals`}>{completed.length}</span><Icon name="chevron-down" /></summary>
-      <ul className="goal-list" aria-label="Completed goals">
+      <summary><h3>{t('journal.ui.completed')}</h3><span aria-label={t('journal.ui.completedCount', { count: completed.length })}>{completed.length}</span><Icon name="chevron-down" /></summary>
+      <ul className="goal-list" aria-label={t('journal.ui.completedList')}>
         {completed.map(goal => <li className="goal done" key={goal.id}>
-          <span className="goal-marker" aria-label="Completed"><Icon name="check" /></span><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
+          <span className="goal-marker" aria-label={t('journal.ui.completed')}><Icon name="check" /></span><div><strong>{goal.title}</strong><small>{goal.description}</small></div>
         </li>)}
       </ul>
     </details>}
@@ -40,18 +41,18 @@ function DayTimeline({ entries, day, today }: Omit<TimelineProps, 'entries'> & {
   const listId = useId()
   const visible = entries.slice(0, limit)
   return <>
-    <ol id={listId} className="timeline" aria-label={`Day ${displayDay(day)} history`}>
+    <ol id={listId} className="timeline" aria-label={t('journal.ui.dayHistory', { day: displayDay(day) })}>
       {visible.map((entry, index) => <li className="timeline-entry" key={`${entry.day}-${entry.minute}-${index}`}>
         <time dateTime={formatTime(entry.minute)}>{formatTime(entry.minute)}</time><span className="timeline-marker" aria-hidden="true" />
         <div><strong>{entry.title}{entry.count > 1 && ` ×${entry.count}`}</strong>{entry.text && <p className="journal-thought">{entry.text}</p>}</div>
       </li>)}
     </ol>
-    {!visible.length && <p className="empty">{today ? 'No recorded actions today yet.' : 'No recorded actions on this day.'}</p>}
+    {!visible.length && <p className="empty">{t(today ? 'journal.ui.emptyToday' : 'journal.ui.emptyDay')}</p>}
     {entries.length > HISTORY_BATCH_SIZE && <div className="journal-load-more">
       {visible.length < entries.length && <button type="button" aria-controls={listId} onClick={() => setLimit(previous => Math.min(previous + HISTORY_BATCH_SIZE, entries.length))}>
-        <Icon name="chevron-down" />Show older entries
+        <Icon name="chevron-down" />{t('journal.ui.older')}
       </button>}
-      <p role="status">Showing {visible.length} of {entries.length} entries</p>
+      <p role="status">{t('journal.ui.showing', { visible: visible.length, total: entries.length })}</p>
     </div>}
   </>
 }
