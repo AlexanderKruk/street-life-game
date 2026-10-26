@@ -574,6 +574,31 @@ for(const test of sleepCases){
 }
 console.log(`PASS: ${sleepCases.length} frozen/pseudo sleep commands preserve eligibility, fatigue, dates/cutoff, forced sleep, recovery/illness, RNG, wake scenes, History and once-only guards.`);
 
+const {rain:rainCatalog}=bundled('src/locales/en/rain.ts');
+const pseudoRain=Object.fromEntries(Object.keys(rainCatalog).map(key=>[key,'']));
+assert.deepEqual(validateCatalog(rainCatalog,pseudoRain),[]);
+const rainShared=`export * from './src/game'; export * from './src/inventory';`;
+const rainSource=rainShared+`export * from './src/rain'; export * from './src/rainText'; export * from './src/useRainController'; export {default as RainEventDialog} from './src/RainEventDialog'; export {default as App} from './src/App';`;
+const rainBase=bundled({source:rainSource}),rainView=bundled({source:rainSource,catalogs:{rain:pseudoRain}});
+const rainLegacy=bundled({source:rainShared+`export * from './test-fixtures/rain-copy'; export * from './test-fixtures/useRainController-copy'; export {default as RainEventDialog} from './test-fixtures/RainEventDialog-copy';`});
+function rainFixture(level='rain',patch={}){return{id:'rain:2040',level,start:2040,end:2100,choice:null,searchRemaining:0,protection:.5,shelter:level==='rain'?'tree':'canopy',exposure:40,energyLoss:4.44,moodLoss:2.55,waited:30,coldRoll:.99,...patch};}
+let rainRuleCases=0;
+for(const level of ['drizzle','rain','downpour']){
+ const {title,text,...numbers}=rainLegacy.RAIN[level];assert.deepEqual(rainBase.RAIN[level],numbers);assert.deepEqual(rainView.RAIN[level],numbers);assert.deepEqual(rainBase.rainOpening(level),{title,text});
+ for(const choice of [null,'nearby','proper','continue'])for(const searchRemaining of [0,1,5])for(const newlyCold of [false,true]){
+  const rain=rainFixture(level,{choice,searchRemaining});assert.equal(rainBase.rainResultText(rain,newlyCold),rainLegacy.rainResultText(rain)+(newlyCold?' A chill lingers, and your throat feels sore. You have caught a cold.':''));
+  const actionId=choice==='proper'&&searchRemaining>0?'rain-stopped':choice==='continue'?'rain-passed':'rain-cover';assert.equal(rainBase.rainResultActionId(rain),actionId);assert.equal(rainView.rainResultActionId(rain),actionId);assert.equal(rainView.rainResultText(rain,newlyCold),'');rainRuleCases++;
+ }
+ for(const exposure of [0,20,21,40,60,100])assert.equal(rainBase.rainRisk(rainFixture(level,{exposure})),rainLegacy.rainRisk(rainFixture(level,{exposure})));
+}
+for(const day of [1,2,5,6,7])for(const minutes of [0,600,1439])for(const limit of [0,1,Infinity])for(const roll of [0,.5,.99999]){
+ const state={day,minutes,rainSystemStarted:true,nextRainAt:1440*day+10};
+ for(const patch of [{},{rain:rainFixture('rain',{start:(day-1)*1440-5,end:(day-1)*1440+5})},{rainResults:[rainFixture('drizzle',{start:(day-1)*1440-5,end:(day-1)*1440+5})]}]){const input=Object.freeze({...state,...patch});assert.deepEqual(rainBase.planRainDay(input,limit,()=>roll),rainLegacy.planRainDay(input,limit,()=>roll));rainRuleCases++;}
+ const created=rainBase.createRain((day-1)*1440+minutes,()=>roll);assert.deepEqual(created,rainLegacy.createRain((day-1)*1440+minutes,()=>roll));assert(rainBase.validRain(created));
+ for(const choice of ['nearby','proper','continue'])assert.deepEqual(rainBase.chooseRain(created,choice,created.start,'street',()=>roll),rainLegacy.chooseRain(created,choice,created.start,'street',()=>roll));
+}
+console.log(`PASS: ${rainRuleCases} rain copy/result/schedule cases preserve numeric RAIN data, domain action IDs, whole Cold messages, carried episodes and RNG boundaries.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -844,6 +869,46 @@ try {
       console.log(`PASS: ${sleepDialogCases} sleep dialog DOM/focus/progress variants and ${restores} pseudo App/StrictMode restore/remount/debug-finish states preserve dates, fatigue, cutoff, illness and single rewards/History.`);
     }finally{cleanup();window.setInterval=timer.set;window.clearInterval=timer.clear;Math.random=timer.random;}
   }finally{Date.now=sleepClock;}
+  let rainDialogCases=0;
+  for(const level of ['drizzle','rain','downpour'])for(const mode of ['opening','tree','canopy','search','passage'])for(const seed of [0,1,17,42]){
+    const waiting=mode!=='opening',rain=rainFixture(level,{choice:mode==='opening'?null:mode==='search'||mode==='passage'?'proper':'nearby',shelter:mode==='tree'?'tree':'canopy',searchRemaining:mode==='search'?2:0});
+    const show=view=>{cleanup();const calls=[];render(React.createElement(view.RainEventDialog,{rain,waiting,elapsed:65,orderSeed:seed,decisionKey:'rain-fixture',panelRef:{current:null},onChoose:choice=>calls.push(choice),onFindProperShelter:()=>calls.push('proper'),onContinue:()=>calls.push('continue')}));const mask=document.querySelector('mask');if(mask)assert.equal(document.querySelector('rect[mask]').getAttribute('mask'),`url(#${mask.id})`);const html=document.body.innerHTML.replace(/_r_\w+_/g,'_react_generated_mask_'),controls=[...document.querySelectorAll('button')].map(n=>[n.getAttribute('data-order-id'),n.disabled]);act(()=>document.querySelectorAll('button').forEach(button=>button.click()));assert.equal(document.querySelector('.modal-narrative b'),null);return{html,controls,calls};};
+    const old=show(rainLegacy),actual=show(rainBase),translated=show(rainView);assert.equal(actual.html,old.html,'English rain dialog DOM is preserved');assert.deepEqual(translated.controls,actual.controls);assert.deepEqual(translated.calls,actual.calls);rainDialogCases++;
+  }
+  const rainReportCases=[];
+  for(const level of ['drizzle','rain','downpour'])for(const choice of [null,'nearby','proper','continue'])for(const searchRemaining of [0,2])for(const cold of [false,true])for(const activeCold of [false,true])rainReportCases.push({rain:rainFixture(level,{choice,searchRemaining,cold}),activeCold});
+  for(const coldGranted of [undefined,false,true])for(const reported of [false,true])rainReportCases.push({rain:rainFixture('downpour',{choice:'continue',cold:true,coldGranted,reported})});
+  for(const blocked of [false,true])rainReportCases.push({rain:null,blocked},{rain:rainFixture('rain',{cold:true}),blocked});
+  for(const loss of [.04,.05,.14,4.44])rainReportCases.push({rain:rainFixture('rain',{choice:'continue',energyLoss:loss,moodLoss:loss,waited:0})});
+  function executeRainReport(view,test){
+    cleanup();const saved={day:1,minute:1320,actionId:'bench-rest',actionTitle:'Saved title',title:'Saved heading',text:'',reflection:true};
+    const state={game:{...comfortableStatus,day:2,minutes:660,energy:97,mood:49,rainResults:test.rain?[test.rain]:[],rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999},effects:test.activeCold?[{id:'cold',expiresAt:10000}]:[],infoModal:null,eventResultOpen:false,journalEntries:[saved],ports:[]};
+    const setter=key=>value=>{state.ports.push([key]);state[key]=typeof value==='function'?value(state[key]):value;};
+    const host={...Object.fromEntries(['game','effects','infoModal','eventResultOpen','journalEntries'].map(key=>['set'+key[0].toUpperCase()+key.slice(1),setter(key)])),resultSnapshot:()=>({game:state.game,inventory:INITIAL_INVENTORY,effects:state.effects,housing:'Street'})};
+    function Harness(){view.useRainResults({game:state.game,effects:state.effects,blocked:test.blocked??false},host);return null;}
+    const mount=()=>render(React.createElement(React.StrictMode,null,React.createElement(Harness)));
+    mount();assert.deepEqual(state.journalEntries[0],saved,'previous History copy stays unchanged');
+    const first=JSON.parse(JSON.stringify(state));cleanup();mount();assert.deepEqual(state.effects,first.effects,'reported rain cannot extend or duplicate Cold');assert.deepEqual(state.journalEntries,first.journalEntries,'reported rain cannot append History twice');cleanup();return first;
+  }
+  const rainMechanics=state=>({...state,infoModal:state.infoModal?(({title,text,label,illustrationAlt,...modal})=>modal)(state.infoModal):null,journalEntries:state.journalEntries.map(({title,text,actionTitle,...entry})=>entry)});
+  for(const test of rainReportCases){const old=executeRainReport(rainLegacy,test),actual=executeRainReport(rainBase,test),translated=executeRainReport(rainView,test);assert.deepEqual(actual,old,'rain report frozen English/state/ordered-port parity');assert.deepEqual(rainMechanics(translated),rainMechanics(actual),'rain report IDs, losses, grouping, effects and replay guards ignore all-empty copy');}
+  const rainTimers={set:window.setInterval,clear:window.clearInterval,random:Math.random};window.setInterval=()=>1;window.clearInterval=()=>{};Math.random=()=>.99;
+  try{
+    function restoreRain(view,rain,activeCold=false){
+      cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);
+      const game={...comfortableStatus,day:2,minutes:660,energy:70,mood:40,locationId:'street',rain:undefined,rainResults:[rain],rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999};
+      for(const[key,value]of Object.entries({'street-life-save-v3':game,'street-life-situation-v1':{housing:'Street'},'street-life-inventory-v1':INITIAL_INVENTORY,'street-life-effects-v1':activeCold?[{id:'cold',expiresAt:10000}]:[]}))localStorage.setItem(key,JSON.stringify(value));localStorage.setItem('street-life-mobile-auto-renew','false');
+      const mount=()=>render(React.createElement(React.StrictMode,null,React.createElement(view.App))),read=key=>JSON.parse(localStorage.getItem(key)),snapshot=()=>({game:read('street-life-save-v3'),effects:read('street-life-effects-v1'),history:read('street-life-journal-history-v1'),inventory:read('street-life-inventory-v1')});
+      mount();const first=snapshot();assert.equal(first.history.length,1);assert(document.querySelector('.result-modal'));cleanup();mount();assert.deepEqual(snapshot(),first,'pending rain result survives restore without replay');assert(document.querySelector('.result-modal'));act(()=>document.querySelector('.result-modal button').click());assert.deepEqual(snapshot().game.rainResults,[],'acknowledgement removes pending result by rain ID despite blank title');const acknowledged=snapshot();cleanup();mount();assert.deepEqual(snapshot(),acknowledged);assert.equal(document.querySelector('.result-modal'),null,'consumed rain result cannot return');cleanup();return acknowledged;
+    }
+    const mechanics=state=>({...state,history:state.history.map(({actionTitle,title,text,...entry})=>entry)});let rainRestores=0;
+    for(const level of ['drizzle','rain','downpour'])for(const choice of ['nearby','proper','continue','stoppedSearch'])for(const cold of [false,true]){
+      const rain=rainFixture(level,{choice:choice==='stoppedSearch'?'proper':choice,searchRemaining:choice==='stoppedSearch'?2:0,cold});
+      assert.deepEqual(mechanics(restoreRain(rainView,rain)),mechanics(restoreRain(rainBase,rain)));rainRestores++;
+    }
+    const rain=rainFixture('downpour',{choice:'continue',cold:true});assert.deepEqual(mechanics(restoreRain(rainView,rain,true)),mechanics(restoreRain(rainBase,rain,true)));rainRestores++;
+    console.log(`PASS: ${rainDialogCases} rain dialog DOM/order/handler variants, ${rainReportCases.length} frozen/pseudo StrictMode report/remount cases and ${rainRestores} App restore/acknowledgement states preserve losses, Cold, History and once-only consumption.`);
+  }finally{cleanup();window.setInterval=rainTimers.set;window.clearInterval=rainTimers.clear;Math.random=rainTimers.random;}
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){

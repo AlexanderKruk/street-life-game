@@ -567,3 +567,16 @@ sleep, recovery/caps, illness RNG, wall-clock catch-up and lastFinishedSleep gua
 Persisted sleep kinds/housing and save schemas remain unchanged. The shared clock,
 focus/pause and debug command ownership stay with App/controllers. Author-written
 wake events, remaining rain/travel/event/phone copy and final audits stay open.
+
+
+Rain catalogue checkpoint (26 October 2026): RAIN contains numeric energy/mood/
+risk only. rainText.ts resolves opening/wait/result messages from locales/en/rain.ts,
+including whole Cold variants; do not concatenate translated symptom fragments.
+rainResultActionId chooses rain-cover/passed/stopped independently of copy and
+retains old queued-null-choice behaviour. Keep group IDs, reported/coldGranted/
+lastReported guards, result acknowledgement by rainResultId, original coldRoll,
+search/duration/exposure/protection, daily schedules/carry-over and saved schemas.
+Recorded background losses use IDs and formatResultDelta, never translated labels.
+Rain History copy is catalogued but its first-person/context audit remains open;
+do not rewrite saved records. Clocks/pause/focus/activity interruption stay with
+App and the existing hooks; no new timers/storage writers.

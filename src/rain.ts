@@ -8,9 +8,9 @@ export type RainEpisode = {
   coldRoll: number; cold?: boolean; reported?: boolean; coldGranted?: boolean
 }
 export const RAIN = {
-  drizzle: { title: 'A light drizzle', text: 'Fine drops begin to speckle your jacket. People around you barely seem to notice. For now, the rain is easy enough to ignore.', energy: 2 / 60, mood: 1 / 60, risk: .03 },
-  rain: { title: 'Rain sets in', text: 'The drops come faster, pattering against your shoulders. People quicken their pace, some ducking into doorways. There’s no telling how long this will last.', energy: 6 / 60, mood: 4 / 60, risk: .12 },
-  downpour: { title: 'A sudden downpour', text: 'Heavy rain drums against the pavement. Within moments, people scatter for cover and water streams along the kerb. You pull up your hood, but the rain still reaches you.', energy: 12 / 60, mood: 8 / 60, risk: .25 },
+  drizzle: { energy: 2 / 60, mood: 1 / 60, risk: .03 },
+  rain: { energy: 6 / 60, mood: 4 / 60, risk: .12 },
+  downpour: { energy: 12 / 60, mood: 8 / 60, risk: .25 },
 } as const
 const integer = (min: number, max: number, random: () => number) => min + Math.min(max - min, Math.floor(random() * (max - min + 1)))
 export function planRainDay(state: { day: number; minutes: number; rain?: RainEpisode; rainResults?: RainEpisode[]; rainSystemStarted?: boolean; nextRainAt?: number }, limit: number, random = Math.random) {
@@ -43,32 +43,11 @@ export function rainRisk(rain: RainEpisode) {
 export function rainArt(rain: Pick<RainEpisode, 'level'>, choice: RainChoice | 'opening') {
   return `/street-life-game/assets/event-rain-${rain.level}-${choice}.webp`
 }
-export function rainResultText(rain: RainEpisode) {
-  if (rain.choice === 'proper' && rain.searchRemaining > 0) {
-    return {
-      drizzle: 'The drizzle stops while you’re looking for shelter. There’s no need to keep searching.',
-      rain: 'The rain stops while you’re looking for shelter. There’s no need to keep searching.',
-      downpour: 'The downpour ends while you’re looking for shelter. There’s no need to keep searching.',
-    }[rain.level]
-  }
-  const text: Record<RainLevel, Record<RainChoice, string>> = {
-    drizzle: {
-      nearby: 'You wait beneath the little shop awning, close to the wall. Fine drops drift past its edge, but most of the drizzle stays off you. At last, it stops.',
-      proper: 'A short search brings you to a deep covered passage. You wait on the dry paving, watching the fine drizzle outside until it fades away.',
-      continue: 'You keep walking past the shopfronts, letting the fine drizzle settle on your jacket. Eventually, the drops stop. It was barely more than a nuisance.',
-    },
-    rain: {
-      nearby: 'You stop beneath a street tree, close to the trunk. The leaves catch some of the rain, though large drops still fall onto your shoulders. You wait there until the rain eases and stops.',
-      proper: 'You reach a covered passage and step well inside. Beyond the dry paving, umbrellas pass through the steady rain. You stay under the roof until it stops.',
-      continue: 'You walk on through the steady rain as people pass beneath umbrellas. Drops collect on your jacket and your boots splash through shallow puddles. When it finally stops, you’re glad of the quiet.',
-    },
-    downpour: {
-      nearby: 'Hood up, you press close to the shop wall beneath the tiny awning. Water pours off its edge, and rain still reaches your sleeves and legs. You hold your narrow patch of cover until the downpour passes.',
-      proper: 'With your hood still up, you stand well inside a deep covered passage. Water splashes across the pavement outside, but the paving beneath your feet stays dry. You wait there until the downpour passes.',
-      continue: 'You pull your hood low and push on through the downpour. Water splashes around your boots with every step. When the rain finally lets up, your shoulders relax, but the walk has taken its toll.',
-    },
-  }
-  return text[rain.level][rain.choice ?? 'continue']
+// Result identity is independent of displayed titles and prose, including old
+// queued episodes whose choice is null.
+export function rainResultActionId(rain: Pick<RainEpisode, 'choice' | 'searchRemaining'>) {
+  return rain.choice === 'proper' && rain.searchRemaining > 0 ? 'rain-stopped'
+    : rain.choice === 'continue' ? 'rain-passed' : 'rain-cover'
 }
 
 // Saved episodes and queued results are untrusted input. Never reset a whole save

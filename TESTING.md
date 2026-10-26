@@ -467,3 +467,17 @@ load/boundary/design, shelter-sleep/phone-clock/journal-services regressions and
 build passed. Browser planning/progress comparisons used shell at390/1280, and
 expanded390 copy retained scrolling/reachable controls without horizontal spill.
 No CSS or visual baseline changes; full suites, WebKit/iPhone remain unrun.
+
+
+Rain catalogue checkpoint: check-localization adds 477 frozen37961d0 copy/result/
+schedule cases plus numeric RAIN/RNG comparisons; 60 dialog DOM/order/handler
+variants, 110 frozen/pseudo StrictMode report/remount cases and 25 App restore/
+acknowledgement cases. All-empty rain messages retain IDs/groups, recorded losses,
+Cold lifetime, pending results and one-time History/consumption. DOM parity
+normalizes React-generated mask IDs only and separately checks mask references.
+check-rain imports rainResultText from its new presentation module, preserving
+all existing numerical/pause/interruption/reload assertions. Rain/event-travel/
+load/boundary/design checks, map-travel/phone-clock/journal-services regressions
+and build passed. Selected English browser comparisons at390/1280 and expanded390
+opening/wait/Cold-result fit with Body16 and reachable controls; no CSS/baseline
+changes. Full suites, WebKit and physical iPhone remain unrun.
