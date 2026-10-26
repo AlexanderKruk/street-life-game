@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import type { GameState } from './game'
 import type { LifeSituation } from './stateTypes'
 import { displayDay } from './gameDate'
@@ -42,7 +43,7 @@ export function shelterAttendance(life: LifeSituation, day: number): { life: Lif
   if (misses >= 3) {
     const blockedUntil = (month + 1) * 30 + 1
     return { life: { ...life, housing: 'Street', housingUntil: undefined, shelterUntilDay: undefined, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month, shelterBlockedUntilDay: blockedUntil },
-      message: `You missed three shelter nights this month. Your place was cancelled; you can register again on Day ${displayDay(blockedUntil)}.` }
+      message: t('shelter.attendance.cancelled', { day: displayDay(blockedUntil) }) }
   }
   return { life: { ...life, shelterAuditDay: previousDay, shelterMisses: misses, shelterMissMonth: month } }
 }

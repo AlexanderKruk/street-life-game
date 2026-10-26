@@ -1,11 +1,11 @@
 # Localization recovery backup — 26 October 2026
 
-Source commit: 1f39ed98e2a0e3c158144fbd3d0a25036bde13c7
-Source tree excluding .backup: 8b009b6aa92424e0be53a138bd06245afc0c6139
+Source commit: ee68ae4cba0eeccebb71d3e8527011189de22088
+Source tree excluding .backup: a9c596824849580319d66f6fc312d1bf032d1cd4
 
-Verified street/support/work/medical controller checkpoint after 9064851. Sources match the local committed tree byte for byte. controllerActions.ts contains 34 whole messages/title/alt entries. 153 frozen and empty-pseudo scenarios preserve English reports, mechanics, RNG, effects, command ports and History identities. Persisted employment='Day work' remains a domain enum. See LOCALIZATION.md for checks and remaining work.
+Verified shelter checkpoint after 1f39ed9: runtime source 0a89bf1 plus modal-inventory documentation. Sources match the local committed tree byte for byte. shelter.ts/shelterText.ts contain 50 whole entries for registration, interview/extension, services, attendance, queue and checkout/departure. Guards, save schemas, arrival priority and charging/bookings are unchanged. See LOCALIZATION.md for checks and next sleep stage.
 
-The bundle contains all seventeen original local localisation commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af through 1f39ed98e2a0e3c158144fbd3d0a25036bde13c7.
+The bundle preserves all 19 original local localisation commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af through ee68ae4cba0eeccebb71d3e8527011189de22088.
 
 Restore from a clone containing that published base:
 
@@ -17,4 +17,4 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Main source saves use [skip ci]. No publication or build-ID change; public game remains v335. Next: shelter processes/dialogs, then remaining special processes/events/phone and final audits.
+Main source saves use [skip ci]. No publication/build-ID change; public game remains v335. Next: sleep/controller/rules/dialogues, then rain/travel/events/phone and final audits.
