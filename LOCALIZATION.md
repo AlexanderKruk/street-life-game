@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: контекстная rain/History редактура (после `95cab8a`).
+Последний готовый этап: location hero overflow и time-neutral legacy walk (после `633454b`).
+Rain/History редактура сохранена в main через checkpoint `497015c`.
 Остаточный source-аудит сохранён в main через checkpoint `aa2804e`.
 Поиск бутылок сохранён в main через checkpoint `fd094ac`.
 Goals/History UI и воспоминания сохранены в main через checkpoint `6c13d1c`.
@@ -1166,3 +1167,20 @@ all-empty catalogue, report/remount/acknowledgement and illness guards remain
 covered. No CSS/art changes, fresh browser/full-suite/WebKit/iPhone run.
 Legacy walk day/night wording, rain illustration time context and general
 long-copy/mobile audit remain open. No publication.
+
+
+Location hero / legacy walk checkpoint — 26 October 2026: browser component
+QA reproduced a450px location hero inside a305px client area (320px iframe).
+The existing hero rule now sets width from its container plus existing gutters,
+with min-width:0 and overflow-wrap:anywhere on copy. Cards can grow vertically;
+no font reduction. Street/station/shelter long-copy and unbroken-name fixtures
+fit at320/390/850 iframe widths; measured client/scroll widths matched
+305/305,375/375,835/835. Title20px mobile/24px desktop and Body16px preserved.
+Short-title component states also inspected. No screenshot baselines updated.
+Legacy ordinary-walk result/reflection now avoid lit windows, closed shops and
+an empty road; the removed ordinary-walk UI remains removed. Old saved prose
+and frozen compatibility adapters stay unchanged. check-localization, design
+system, build and diff checks passed. Full suites/WebKit/iPhone unrun.
+Map stress QA with extended catalogue names confirmed the top Hospital label
+can sit behind shortcuts; that projection/overlap issue remains OPEN, as does
+rain-art time context and the rest of the long-copy/modal matrix. No publication.
