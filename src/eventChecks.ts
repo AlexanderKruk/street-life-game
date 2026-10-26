@@ -1,5 +1,4 @@
-import { locationName } from './locationText'
-import { locations, type GameState } from './game'
+import type { GameState } from './game'
 import type { StreetEventChoice } from './events'
 import type { Inventory, EventDiceState } from './stateTypes'
 
@@ -16,20 +15,22 @@ export function eventCheckModifier(game: GameState, choice: StreetEventChoice) {
   return 0
 }
 
-export function eventChoiceUnavailable(choice: StreetEventChoice, game: GameState, inventory: Inventory, discoveredLocations: string[], phoneUnavailable: string | null) {
-  if (choice.undiscoveredLocationRequired && discoveredLocations.includes(choice.undiscoveredLocationRequired)) {
-    const place = locations.find(location => location.id === choice.undiscoveredLocationRequired)
-    return `You already know about the ${locationName(place?.id ?? '')}.`
-  }
-  if (choice.moneyRequired !== undefined && game.money < choice.moneyRequired) return `Need ${choice.moneyRequired} zł`
+export type EventChoiceBlock =
+  | { id: 'known-place'; placeId: string }
+  | { id: 'money' | 'battery' | 'health' | 'energy'; required: number }
+  | { id: 'phone'; message: string }
+
+export function eventChoiceBlock(choice: StreetEventChoice, game: GameState, inventory: Inventory, discoveredLocations: string[], phoneUnavailable: string | null): EventChoiceBlock | null {
+  if (choice.undiscoveredLocationRequired && discoveredLocations.includes(choice.undiscoveredLocationRequired)) return { id: 'known-place', placeId: choice.undiscoveredLocationRequired }
+  if (choice.moneyRequired !== undefined && game.money < choice.moneyRequired) return { id: 'money', required: choice.moneyRequired }
   if (choice.phoneBatteryRequired !== undefined) {
-    if (phoneUnavailable) return phoneUnavailable
-    if (inventory.phoneBattery < choice.phoneBatteryRequired) return `Need ${choice.phoneBatteryRequired}% battery`
+    if (phoneUnavailable !== null) return { id: 'phone', message: phoneUnavailable }
+    if (inventory.phoneBattery < choice.phoneBatteryRequired) return { id: 'battery', required: choice.phoneBatteryRequired }
   }
   const requirements = choice.check?.requirements
   if (!requirements) return null
-  if (requirements.minHealth !== undefined && game.health < requirements.minHealth) return `Too weak · need Health ${requirements.minHealth}`
-  if (requirements.minEnergy !== undefined && game.energy < requirements.minEnergy) return `Too exhausted · need Energy ${requirements.minEnergy}`
+  if (requirements.minHealth !== undefined && game.health < requirements.minHealth) return { id: 'health', required: requirements.minHealth }
+  if (requirements.minEnergy !== undefined && game.energy < requirements.minEnergy) return { id: 'energy', required: requirements.minEnergy }
   return null
 }
 

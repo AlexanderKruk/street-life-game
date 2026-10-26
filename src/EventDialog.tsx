@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import type { ReactNode, Ref } from 'react'
 import ChoiceButton from './ChoiceButton'
 import { choiceAccessibleLabel, choiceCheckDetail } from './choiceCheckPresentation'
@@ -20,7 +21,7 @@ export function EventFrame({ titleId, illustration, illustrationAlt, panelRef, c
   </ModalOverlay>
 }
 
-export function EventBody({ titleId, title, label = 'STREET EVENT', description, children }: {
+export function EventBody({ titleId, title, label = t('event.ui.label'), description, children }: {
   titleId: string; title: string; label?: string; description: ReactNode; children: ReactNode
 }) {
   return <div className="event-body">
@@ -48,7 +49,7 @@ export default function EventDialog({ event, choices, onChoose, unavailableReaso
       : <EventBody titleId="street-event-title" title={event.title} description={event.text}>
         <ChoiceOptions className="event-choices" fixed={event.choiceOrder === 'fixed'} seed={orderSeed} decision={`${decisionKey}|event:${event.id}`}>{choices.map(choice => {
           const unavailable = unavailableReason(choice)
-          return <ChoiceButton key={choice.id} data-order-id={`event:${event.id}:${choice.id}`} aria-label={choiceAccessibleLabel(choice)} icon={choice.icon ?? 'person'} label={choice.label} onClick={() => onChoose(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choiceCheckDetail(choice.check)}</small> : undefined} estimate={(choice.durationMinutes ?? choice.outcome?.minutes) ? { minutes: (choice.durationMinutes ?? choice.outcome?.minutes)! } : undefined} />
+          return <ChoiceButton key={choice.id} data-order-id={`event:${event.id}:${choice.id}`} aria-label={choiceAccessibleLabel(choice)} icon={choice.icon ?? 'person'} label={choice.label} onClick={() => onChoose(choice)} disabled={unavailable !== null} detail={unavailable !== null ? <small>{unavailable}</small> : choice.check ? <small>{choiceCheckDetail(choice.check)}</small> : undefined} estimate={(choice.durationMinutes ?? choice.outcome?.minutes) ? { minutes: (choice.durationMinutes ?? choice.outcome?.minutes)! } : undefined} />
         })}</ChoiceOptions>
       </EventBody>}
   </EventFrame>

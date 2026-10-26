@@ -501,3 +501,9 @@ message text. Event/event-travel checks, events/shop-inventory regressions,
 boundaries and build passed. check-events selectors now expect existing stat/DC
 accessible labels for company chat and phone catch, retaining gameplay assertions.
 No JSX/CSS changes or fresh browser/full/WebKit/iPhone run.
+
+Event eligibility: 200 frozen/pseudo boundary comparisons preserve refusal priority
+and original English. Empty phone refusal blocks before commands; six illustrated/
+compact cases protect null versus empty/nonempty refusal and handlers. Localisation,
+events/event-travel/boundary, regression/events and build passed. Controller fixture
+uses frozen eventChecks. No fresh browser/full/WebKit/iPhone run or CSS change.

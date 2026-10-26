@@ -636,6 +636,24 @@ for(const condition of [0,3,5,6,100]){
 for(const outcome of [{message:'fixture'},{message:'fixture',knownLocations:[]},{message:'fixture',knownLocations:['support','station','unknown']},{message:'fixture',discoverLocation:'shelter',minutes:30},{message:'fixture',moveToStreet:true}])assert.deepEqual(executeEventCopy(eventBase,outcome),executeEventCopy(eventOld,outcome));
 console.log('PASS: event controller English parity, knowledge/discovery/movement and broken-phone boundary/translated-message metadata preserve state and History facts.');
 
+const eventRulesSource=`export * from './src/eventChecks'; export * from './src/eventChoiceText'; export * from './src/eventController'; export {default as EventDialog} from './src/EventDialog';`;
+const eventRules=bundled({source:eventRulesSource}),eventRulesOld=bundled('test-fixtures/eventChecks-copy.ts');
+const {eventUi:eventUiCatalog}=bundled('src/locales/en/eventUi.ts');
+const eventUiPseudo=Object.fromEntries(Object.entries(eventUiCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+const eventRulesView=bundled({source:eventRulesSource,catalogs:{eventUi:eventUiPseudo}});
+let eventRuleCases=0;
+for(const value of [0,19,20,39,40,59,60,79,80,100])for(const documents of [false,true])for(const phone of [null,'Phone unavailable']){
+ const game={...initialState,money:value,health:value,energy:value},inventory={...INITIAL_INVENTORY,phoneBattery:value,documents};
+ for(const choice of [{label:'choice'},{label:'choice',undiscoveredLocationRequired:'support'},{label:'choice',moneyRequired:20},{label:'choice',phoneBatteryRequired:40},{label:'choice',check:{stat:'reflex',dc:12,requirements:{minHealth:20,minEnergy:60}}}]){
+  const args=[choice,game,inventory,['support'],phone];assert.equal(eventRules.eventChoiceUnavailable(...args),eventRulesOld.eventChoiceUnavailable(...args));assert.equal(eventRulesView.eventChoiceUnavailable(...args)===null,eventRules.eventChoiceBlock(...args)===null);eventRuleCases++;
+ }
+}
+const phoneChoice={label:'Phone choice',phoneBatteryRequired:1,outcome:{message:'should not execute',money:10}};
+assert.deepEqual(eventRules.eventChoiceBlock(phoneChoice,initialState,INITIAL_INVENTORY,[],''),{id:'phone',message:''});
+let rejectedEventPorts=0;const emptyController=eventRulesView.createEventController({activeEvent:null,firstNightEvents:{},ambientEventClock:{current:{}},setActiveEvent:()=>rejectedEventPorts++,setDiceCheck:()=>rejectedEventPorts++},{game:initialState,inventory:INITIAL_INVENTORY,storage:INITIAL_STORAGE,life:{housing:'Street'},discoveredLocations:[],phoneUnavailable:'',shelterBooked:false,currentId:'street',open:true},{runWithResult:()=>rejectedEventPorts++});
+emptyController.resolveStreetEvent(phoneChoice);assert.equal(rejectedEventPorts,0,'empty phone refusal blocks before result or commands');
+console.log(`PASS: ${eventRuleCases} event eligibility boundaries preserve English reasons, order and null-only availability; empty phone refusal blocks commands.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -965,6 +983,10 @@ try {
     const old=show(diceOld),actual=show(diceBase),translated=show(diceView);assert.equal(actual.html,old.html);assert.deepEqual({...translated,html:undefined},{...actual,html:undefined});diceCases++;
   }
   console.log(`PASS: ${diceCases} frozen/pseudo D20 variants preserve English DOM, critical/threshold states, modifiers, buttons and handlers.`);
+  for(const illustration of [undefined,'/fixture.webp'])for(const reason of [null,'','Refused']){
+   cleanup();let choices=0;const event={id:'fixture',title:'Fixture',text:'Fixture text',illustration,choices:[{id:'choice',label:'Choose',outcome:{message:'done'}}]};render(React.createElement(eventRulesView.EventDialog,{event,choices:event.choices,onChoose:()=>choices++,unavailableReason:()=>reason,orderSeed:42,decisionKey:'fixture',panelRef:null}));const button=document.querySelector('.choice-button');assert.equal(button.disabled,reason!==null);act(()=>button.click());assert.equal(choices,reason===null?1:0);
+  }
+  console.log('PASS: illustrated and compact events retain disabled commands for empty refusal labels.');
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){
