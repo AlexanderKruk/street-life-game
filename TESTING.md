@@ -415,3 +415,16 @@ event/travel/rest/load/render/design checks and map-travel/events/journal-servic
 regressions passed, plus build. Browser comparison preserves English map geometry
 at390/1280 and checks expanded shortcuts/pin labels at320/390; general layout/
 projection, full suites, WebKit and iPhone remain unverified.
+
+
+Location-action catalogue checkpoint: check-localization now compares 24 frozen
+GameAction definitions/outcomes and 33,600 legacy refusal cases, covering all
+22 reason IDs. Pseudo catalogues empty names/descriptions/static reasons; rejected
+commands must not advance time, alter inventory or draw RNG. 96 gel/crowd command
+scenarios preserve numeric state, effects and History grouping. 36 actual screen
+states preserve order/disabled/command IDs across all locations and interview
+steps. Location-art uses locationName(id), retaining its title/unique-art/reload
+assertions. Targeted action/rest/art/boundary/design checks plus shelter-sleep,
+journal-services/street-trash regressions and build passed. English shelter/
+support card geometry matches e4b5fe7 at390/1280; long pseudo390 copy fits cards.
+Full suites, overall layout audit, WebKit and iPhone remain unrun.

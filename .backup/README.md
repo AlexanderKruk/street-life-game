@@ -1,11 +1,11 @@
 # Localization recovery backup — 26 October 2026
 
-Source commit: e4b5fe738b2489af5b674803f908cfde4206ecb4
-Source tree excluding .backup: dbf9ffc574e0c1838b72513d3f283cf29014bd52
+Source commit: 9064851f9fe7fc233e9102f235c10a76556b8403
+Source tree excluding .backup: 1a651d1413857caf2b70a35cbb95df6b38299a91
 
-The verified location/map checkpoint follows 956629b. Sources match the local committed tree byte for byte. Location names/descriptions, map/location display, discovery/service details and exit/closing messages are catalogued. Domain locations contain IDs and numeric rules only. Action/refusal catalogues are next; see LOCALIZATION.md for checks and remaining layout limitations.
+Verified location-action checkpoint after e4b5fe7. The source tree matches the local committed sources byte for byte. 24 GameAction definitions/outcomes, LocationScreen own copy, locationController and 22 structured refusal reasons are catalogued. Only null means available; translated empty refusals cannot enable commands. See LOCALIZATION.md for checks and remaining work.
 
-The bundle contains all fifteen original local localisation commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af through e4b5fe738b2489af5b674803f908cfde4206ecb4.
+The bundle contains all sixteen original local localisation commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af through 9064851f9fe7fc233e9102f235c10a76556b8403.
 
 Restore from a clone containing that published base:
 
@@ -17,4 +17,4 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Main source saves use [skip ci]. This checkpoint does not publish or change the build ID; the public game remains v335.
+Main source saves use [skip ci]. This checkpoint does not publish or change the build ID; public game remains v335. Next: remaining street/support/medical controller messages, then processes/events/phone and final audits.

@@ -10,9 +10,9 @@ window.scrollTo=()=>{};
 window.setInterval=()=>1;window.clearInterval=()=>{};
 const esbuild=require('./tests/helpers/build.cjs');
 esbuild.buildSync({entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{}'},platform:'node',format:'cjs',outfile:'location-art-app.cjs',external:['react','react-dom','react/jsx-runtime']});
-const gameCode=esbuild.buildSync({entryPoints:['src/game.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
+const gameCode=esbuild.buildSync({stdin:{contents:"export {locations} from './src/game'; export {locationName} from './src/locationText';",resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const gameModule={exports:{}};new Function('module','exports',gameCode)(gameModule,gameModule.exports);
-const {locations}=gameModule.exports;
+const {locations,locationName}=gameModule.exports;
 const React=require('react');
 const {render,screen,fireEvent,cleanup}=require('@testing-library/react');
 const App=require('./location-art-app.cjs').default;
@@ -30,12 +30,12 @@ try{
  for(const place of locations){
   setup(place.id);
   const image=document.querySelector('.location-surface .location-hero-image,.location-surface .street-art img,.location-surface .shop-hero-image');
-  assert(image,`${place.name} has a main-tab image`);
-  assert(!seen.has(image.src),`${place.name} does not reuse another place's image`);seen.add(image.src);
+  assert(image,`${locationName(place.id)} has a main-tab image`);
+  assert(!seen.has(image.src),`${locationName(place.id)} does not reuse another place's image`);seen.add(image.src);
   assert(!image.src.includes('/event-'),'place imagery is independent of event scenes');
   if(place.id !== 'shop'){
    const header=image.closest('.location-summary.location-hero');
-   assert(header && header.querySelector('h2')?.textContent===place.name,`${place.name} keeps its title over the artwork, including Street`);
+   assert(header && header.querySelector('h2')?.textContent===locationName(place.id),`${locationName(place.id)} keeps its title over the artwork, including Street`);
    assert.equal(document.querySelector('.location-surface > .street-art'),null,'Street artwork is not detached from its caption');
   }
   if(!['shop','work','support'].includes(place.id))assert(document.querySelector('.location-actions-title'),'every location action heading uses balanced spacing');

@@ -365,6 +365,60 @@ for(const view of [locationsBase,locationsView]){
 }
 console.log('PASS: all 11 location catalogues preserve English copy, numeric hours/travel and empty-name discovery/arrival identities.');
 
+// Location actions keep catalogue copy separate from dispatch and refusal facts.
+const oldActions=require('./test-fixtures/location-actions.cjs');
+const oldRules=bundled('test-fixtures/location-action-rules.ts');
+const {actions:actionsCatalog}=bundled('src/locales/en/actions.ts');
+const pseudoActions=Object.fromEntries(Object.entries(actionsCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+for(const [key,message]of Object.entries(actionsCatalog))if(typeof message==='string'&&!message.includes('{')&&(key.startsWith('action.unavailable.')||key.startsWith('action.name.')||key.startsWith('action.description.')))pseudoActions[key]='';
+assert.deepEqual(validateCatalog(actionsCatalog,pseudoActions),[]);
+const actionsSource=`export {default as LocationScreen} from './src/LocationScreen'; export * from './src/actionText'; export * from './src/locationActionRules'; export * from './src/locationController'; export * from './src/game'; export * from './src/journalIdentity';`;
+const actionsBase=bundled({source:actionsSource}),actionsView=bundled({source:actionsSource,catalogs:{actions:pseudoActions}});
+for(const old of oldActions){
+ const action=actionsBase.actions.find(a=>a.id===old.id);const {name,description,resolve,...mechanics}=old;const {resolve:newResolve,...actual}=action;
+ assert.deepEqual(actual,mechanics);assert.equal(actionsBase.actionName(action.id),name);assert.equal(actionsBase.actionDescription(action.id),description);
+ for(const state of [{...initialState,hunger:10,thirst:10,health:20},{...initialState,hunger:70,thirst:70,health:90}])assert.deepEqual(newResolve(state),resolve(state));
+}
+for(const gel of [false,true])for(const cap of [30,70,100]){
+ const oldDescription=(gel?`3-in-1 gel: Hygiene gain ×1.5, max ${cap} · uses 1 automatically.`:`Water only: Hygiene max ${Math.min(70,cap)}. Bring 3-in-1 shower gel for better cleaning.`)+(cap<100?` Dirty clothes: Hygiene max ${cap}.`:'');
+ assert.equal(actionsBase.showerDescription(gel,cap),oldDescription);
+ const oldResult=(gel?'You wash with 3-in-1 shower gel and rinse it off. It helps you get cleaner.':'You rinse off with water only. Shower gel would help you get cleaner.')+(cap<100?` Dirty clothes limit Hygiene to ${cap}. Wash your clothes to raise the limit.`:'');
+ assert.equal(actionsBase.showerResult(gel,cap),oldResult);
+}
+const blockedContexts=new Map();let ruleCases=0;
+for(const action of actionsBase.actions)for(let day=1;day<=7;day++)for(const minutes of [0,359,389,390,419,420,479,480,959,960,1079,1080,1139,1140,1199,1200,1229,1230,1319,1320]){
+ const current=actionsBase.locations.find(p=>p.id===action.locationId);const game={...comfortableStatus,day,minutes,intoxication:0};
+ const context={game,inventory:INITIAL_INVENTORY,life:{housing:'Street'},current,open:actionsBase.isOpen(current,minutes),shelterBooked:true,shelterAdmitted:true};
+ for(const patch of [{},{current:actionsBase.locations.find(p=>p.id!==action.locationId)},{shelterBooked:false},{shelterAdmitted:false},{life:{housing:'Street',shelterBlockedUntilDay:20}},{life:{housing:'Street',shelterRegistrationAttemptDay:day},shelterBooked:false},{game:{...game,intoxication:11,money:0}},{inventory:{...INITIAL_INVENTORY,water:4}},{inventory:{...INITIAL_INVENTORY,water:0,medicines:64}},{life:{housing:'Street',shelterDinnerDay:day,shelterBreakfastDay:day,shelterLaundryDropDay:day}}]){
+  const ctx={...context,...patch};const old=oldRules.locationActionUnavailable(action,ctx);assert.equal(actionsBase.locationActionUnavailable(action,ctx),old);
+  assert.equal(actionsView.locationActionUnavailable(action,ctx)===null,old===null,'translated refusal cannot change availability');
+  const block=actionsView.locationActionBlock(action,ctx);if(block&&!blockedContexts.has(block.id))blockedContexts.set(block.id,{action,context:ctx});ruleCases++;
+ }
+}
+assert.equal(blockedContexts.size,22,'all static and parameterised refusal reasons exercised');
+function executeLocation(view,action,context,randomValue=0.1){
+ let game=JSON.parse(JSON.stringify(context.game)),inventory={...context.inventory},life={...context.life},effects=[];const log=[];let draws=0;
+ const setter=(get,set)=>value=>set(typeof value==='function'?value(get()):value);const random=Math.random;Math.random=()=>{draws++;return randomValue;};
+ try{
+  const controller=view.createLocationController({...context,game,inventory,life,activeEvent:false,shelterQueue:false,hygieneLimit:55},{
+   setGame:setter(()=>game,v=>game=v),setInventory:setter(()=>inventory,v=>inventory=v),setLife:setter(()=>life,v=>life=v),setEffects:setter(()=>effects,v=>effects=v),setMessage:()=>{},laundryCleanAt:{current:0},
+   runWithResult:(identity,run)=>{log.push(['result',identity.id,view.journalPresentation(identity).groupId]);run();},resultSnapshot:()=>({game,inventory,effects}),applyAction:(state,result)=>view.applyAction(state,result),moodContext:()=>({housing:'Street'}),
+   beginShelterInterview:()=>log.push(['interview']),prepareShelterAction:id=>{log.push(['prepare',id]);return false;},requestSleep:kind=>log.push(['sleep',kind]),finishRestAction:(id,_name,result)=>{const {message,...numbers}=result;log.push(['rest',id,numbers]);return false;},finishLocationPhoneCharge:id=>log.push(['charge',id])
+  },{observeFirstNight:()=>false,observeOrdinaryEvent:(_type,_game,_mode,facts)=>log.push(['observe',facts])});
+  controller.act(action.id);return {game,inventory,life,effects,draws,log};
+ }finally{Math.random=random;}
+}
+for(const {action,context}of blockedContexts.values()){
+ const expected=executeLocation(actionsBase,action,context),actual=executeLocation(actionsView,action,context);
+ assert.deepEqual(actual,expected);assert.equal(actual.draws,0);assert.deepEqual(actual.game,context.game);assert.deepEqual(actual.inventory,context.inventory);assert.equal(actual.log.length,1,'empty translated refusal stops before mechanics and RNG');
+}
+for(const action of actionsBase.actions)for(const gel of [0,1])for(const random of [0.1,0.99]){
+ const current=actionsBase.locations.find(p=>p.id===action.locationId),game={...comfortableStatus,mood:40,minutes:1140};
+ const context={game,inventory:{...INITIAL_INVENTORY,showerGel:gel},life:{housing:'Street'},current,open:true,shelterBooked:true,shelterAdmitted:true};
+ assert.deepEqual(executeLocation(actionsView,action,context,random),executeLocation(actionsBase,action,context,random));
+}
+console.log(`PASS: ${oldActions.length} action definitions/outcomes, whole shower messages, ${ruleCases} legacy-rule cases and 22 empty-refusal controller guards preserve mechanics/RNG/History IDs.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -544,6 +598,24 @@ try {
     }
   }finally{cleanup();window.setInterval=locationTimers.set;window.clearInterval=locationTimers.clear;}
   console.log('PASS: empty-name App restores six completed trips under StrictMode without duplicate arrival/costs or rewritten saved History.');
+  function locationState(id,patch={}){
+    const current=actionsBase.locations.find(p=>p.id===id);return {current,open:true,firstNight:false,game:{...comfortableStatus,day:4,minutes:1140,mood:40},underRainCover:false,travelling:false,message:'',currentActions:actionsBase.actions.filter(a=>a.locationId===id),shelterInterview:null,choiceSeed:42,choiceDecisionKey:'fixture',usedBackpackSlots:4,inventory:{...INITIAL_INVENTORY,showerGel:1},life:{housing:'Street'},insideNightShelter:true,usedStorageSlots:0,storageCapacity:8,storage:INITIAL_STORAGE,shelterPhoneCharging:false,dayWorkEnergyRequired:35,streetChoiceGroups:[['phone-help'],['music-walk','bottles'],['station-route','street-sleep']],nextOpeningCall:undefined,phoneUnavailable:null,musicWalkUsed:false,canWalkWithMusic:true,walkMusicCost:3,shelterBooked:true,discoveredLocations:['street','station','shelter','support','work'],begging:{day:4,attempts:2},streetBenchFound:false,hygieneLimit:55,busy:false,...patch};
+  }
+  function locationControls(view,state){
+    const calls=[];const handlers=new Proxy({actionUnavailableReason:action=>view.locationActionUnavailable(action,{game:state.game,inventory:state.inventory,life:state.life,current:state.current,open:state.open,shelterBooked:state.shelterBooked,shelterAdmitted:state.insideNightShelter})},{get:(target,name)=>name in target?target[name]:(...args)=>calls.push([name,...args.filter(value=>['string','number','boolean'].includes(typeof value))])});
+    cleanup();render(React.createElement(view.LocationScreen,{state,handlers}));
+    const controls=[...document.querySelectorAll('button')].map(button=>[button.dataset.orderId??button.dataset.choice??button.className,button.disabled]);
+    for(const button of document.querySelectorAll('button'))button.click();
+    assert.equal(document.querySelector('.action-unavailable-reason b'),null,'translated copy is never HTML');
+    return {controls,calls};
+  }
+  let screenCases=0;
+  for(const id of actionsBase.locations.map(p=>p.id))for(const patch of [{},{open:false},{inventory:{...INITIAL_INVENTORY,documents:false,showerGel:0,phoneBattery:100}}]){
+    const state=locationState(id,patch);assert.deepEqual(locationControls(actionsView,state),locationControls(actionsBase,state));screenCases++;
+  }
+  for(const step of ['reason','action','plan']){const state=locationState('shelter',{shelterInterview:{step}});assert.deepEqual(locationControls(actionsView,state),locationControls(actionsBase,state));screenCases++;}
+  assert.equal(actionsBase.actions.length,24);assert.equal(t('action.street.begRemaining',{count:1}),'1/3 attempt left today.');
+  console.log(`PASS: ${screenCases} pseudo LocationScreen states preserve control order/disabled flags/command IDs, including all interview steps and missing documents/full phone.`);
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){
