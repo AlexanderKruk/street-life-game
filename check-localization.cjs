@@ -701,6 +701,11 @@ const journalUiSource=`export {default as App} from './src/App'; export * from '
 const journalUiBase=bundled({source:journalUiSource}),journalUiOld=bundled({source:`export * from './test-fixtures/JournalSections-copy'; export {default as PhoneHistoryScreen} from './test-fixtures/PhoneHistoryScreen-copy';`});
 const {journalUi:journalUiCatalog}=bundled('src/locales/en/journalUi.ts');const journalUiPseudo=Object.fromEntries(Object.entries(journalUiCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));assert.deepEqual(validateCatalog(journalUiCatalog,journalUiPseudo),[]);const journalUiView=bundled({source:journalUiSource,catalogs:{journalUi:journalUiPseudo}});
 
+const trashApplyAction=bundled('src/game.ts').applyAction;
+const trashSource=`export * from './src/trashSearchController'; export {default as TrashSearchDialog} from './src/TrashSearchDialog'; export {default as TrashSearchTime} from './src/TrashSearchTime';`;
+const trashBase=bundled({source:trashSource}),trashOld=bundled({source:`export * from './test-fixtures/trashSearchController-copy'; export {default as TrashSearchDialog} from './test-fixtures/TrashSearchDialog-copy'; export {default as TrashSearchTime} from './test-fixtures/TrashSearchTime-copy';`});
+const {trash:trashCatalog}=bundled('src/locales/en/trash.ts');const trashPseudo=Object.fromEntries(Object.entries(trashCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));assert.deepEqual(validateCatalog(trashCatalog,trashPseudo),[]);const trashView=bundled({source:trashSource,catalogs:{trash:trashPseudo}});
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -1086,6 +1091,42 @@ try {
    for(const seen of [[],['unanswered-applications']])assert.deepEqual(restoreMemory(journalUiView,seen),restoreMemory(journalUiBase,seen));
    console.log('PASS: translated memory copy preserves seen IDs, saved History and one-time restored-search rewards across StrictMode/remount.');
   }finally{cleanup();window.setInterval=memoryTimers.set;window.clearInterval=memoryTimers.clear;Math.random=memoryTimers.random;}
+  const trashClock={now:Date.now,random:Math.random,set:window.setInterval,clear:window.clearInterval};let trashNow=100000,trashTimer,trashClears=0;
+  Date.now=()=>trashNow;Math.random=()=>.5;window.setInterval=(callback,delay)=>{assert.equal(delay,250);trashTimer=callback;return 731;};window.clearInterval=id=>{assert.equal(id,731);trashClears++;};
+  try{
+    let trashCases=0;
+    function executeTrash(view,{elapsed,requested,full,deadline}){
+      cleanup();trashNow=100000;let controller,session;const output={message:'',modal:null,results:[],actions:[]};
+      const empty={...INITIAL_INVENTORY,water:0,food:0,medicines:0,bread:0,cannedFood:0,wipes:0,showerGel:0,cigarettes:0,bottles:0};
+      function Harness(){
+        const [inventory,setInventory]=React.useState({...empty,...(full?{water:4,food:4,medicines:24}:{})});const gameRef=React.useRef({...comfortableStatus,locationId:'street'}),game=gameRef.current,setGame=value=>{gameRef.current=typeof value==='function'?value(gameRef.current):value;};session=view.useTrashSession();
+        const snapshot=()=>({game,inventory,effects:[]});
+        controller=view.useTrashController(session,{inventory,currentId:'street',activeEvent:false},{setInventory,setGame,setMessage:value=>output.message=value,setInfoModal:value=>output.modal=value,applyAction:(game,action)=>{output.actions.push(action);return trashApplyAction(game,action);},runWithResult:(action,run,before)=>{output.results.push({action,before});run();},resultSnapshot:snapshot});
+        output.game=game;output.inventory=inventory;output.search=session.trashGame;return null;
+      }
+      render(React.createElement(React.StrictMode,null,React.createElement(Harness)));
+      act(()=>controller.searchStreetBottles());assert.equal(output.search.items.length,18);
+      const ids=output.search.items.filter(item=>item.returnable).map(item=>item.id);
+      for(const id of ids.slice(0,requested))act(()=>{controller.collectTrashBottle(id);controller.collectTrashBottle(id);});
+      const found=full?0:requested;assert.equal(output.inventory.bottles,found);assert.equal(output.search.found,found);
+      trashNow+=elapsed*1000;
+      if(deadline){act(()=>controller.checkTrashDeadline());if(elapsed<60){assert(output.search);assert.equal(output.actions.length,0);act(()=>controller.finishTrashSearch());}}
+      else act(()=>{controller.finishTrashSearch();controller.finishTrashSearch();});
+      assert.equal(output.search,null);assert.equal(output.actions.length,1);assert.equal(output.actions[0].minutes,Math.min(60,Math.max(10,Math.ceil(Math.max(5,Math.floor(elapsed))/5)*5)));
+      assert.equal(output.modal.bottleSearch.found,found);assert.equal(output.results[0].action.id,'trash-search');
+      act(()=>controller.checkTrashDeadline());assert.equal(output.actions.length,1);return output;
+    }
+    const trashMechanics=state=>({...state,message:undefined,modal:{...state.modal,title:undefined,text:undefined},results:state.results.map(({action,before})=>({action:{...action,title:undefined},before}))});
+    for(const elapsed of [0,11,59,60,65])for(const requested of [0,1,2])for(const full of [false,true])for(const deadline of [false,true]){
+      const options={elapsed,requested,full,deadline},old=executeTrash(trashOld,options),actual=executeTrash(trashBase,options),translated=executeTrash(trashView,options);assert.deepEqual(actual,old);assert.deepEqual(trashMechanics(translated),trashMechanics(actual));trashCases++;
+    }
+    const items=['cup','paper','tray','wrapper','can-crushed','plastic','plastic-crushed','can'].map((art,id)=>({id,art,layer:0,x:50,y:50,rotation:0,scale:2,bottle:art.startsWith('can')||art.startsWith('plastic'),returnable:art==='can'||art==='plastic'}));
+    for(const found of [0,1,2]){
+      const show=view=>{cleanup();trashNow=100000;const calls=[],props={trashGame:{items,found,startedAt:100000,before:{}},checkTrashDeadline:()=>calls.push('deadline'),finishTrashSearch:()=>calls.push('finish'),startTrashDrag:(...args)=>{calls.push(['start',...args]);return true;},moveTrashItem:(...args)=>calls.push(['move',...args]),collectTrashBottle:id=>calls.push(['collect',id]),endTrashDrag:id=>{calls.push(['end',id]);return true;},cancelTrashDrag:()=>calls.push('cancel')};render(React.createElement(view.TrashSearchDialog,props));document.querySelector('.trash-pile').getBoundingClientRect=()=>({left:0,top:0,width:400,height:300});const html=document.body.innerHTML;assert.equal(document.querySelector('.trash-card b'),null);for(const button of document.querySelectorAll('.trash-piece')){act(()=>button.click());act(()=>button.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true})));}act(()=>document.querySelector('.trash-stop').click());trashNow+=61000;act(()=>trashTimer());if(view!==trashView)assert.equal(document.querySelector('.trash-search-row span').textContent,'60 min');const after=document.querySelector('.trash-search-row span').getAttribute('aria-label');cleanup();return{html,calls,after};};
+      const old=show(trashOld),actual=show(trashBase),translated=show(trashView);assert.equal(actual.html,old.html.replaceAll('1 containers kept','1 container kept'));assert.deepEqual(translated.calls,actual.calls);assert.equal(actual.after,'Search time: 60 minutes');assert(translated.after.includes('60'));trashCases++;
+    }
+    assert(trashClears>0);console.log(`PASS: ${trashCases} trash frozen/pseudo cases preserve capacity, duplicate collection/completion guards, deadlines, time/costs/rewards, item IDs, keyboard callbacks and timer cleanup (singular aria corrected).`);
+  }finally{cleanup();Date.now=trashClock.now;Math.random=trashClock.random;window.setInterval=trashClock.set;window.clearInterval=trashClock.clear;}
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){

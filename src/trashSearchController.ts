@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { useRef, useState } from 'react'
 import { BACKPACK_CAPACITY, BOTTLE_STACK_SIZE, backpackSlots } from './inventory'
 import type { GameState, ActionResult } from './game'
@@ -112,7 +113,7 @@ export function useTrashController(session: Session, context: Context, host: Hos
     const currentBottleSlots = inventory.bottles > 0 ? Math.ceil(inventory.bottles / BOTTLE_STACK_SIZE) : 0
     const otherSlots = backpackSlots(inventory) - currentBottleSlots
     const bottleCapacity = Math.max(0, BACKPACK_CAPACITY - otherSlots) * BOTTLE_STACK_SIZE
-    if (inventory.bottles >= bottleCapacity) { setMessage('Your backpack has no room for another container.'); return }
+    if (inventory.bottles >= bottleCapacity) { setMessage(t('trash.full')); return }
     acceptedIds.current.add(id)
     setInventory((prev) => ({ ...prev, bottles: prev.bottles + 1 }))
     setTrashGame((active) => active ? { ...active, found: active.found + 1, items: active.items.map((entry) => entry.id === id ? { ...entry, collected: true } : entry) } : null)
@@ -125,16 +126,16 @@ export function useTrashController(session: Session, context: Context, host: Hos
     const { found } = trashGame
     setGame((prev) => applyAction(prev, { minutes, energy: -Math.max(1, minutes / 15), hygiene: -Math.max(2, minutes / 5), mood: found > 0 ? 1 : -2 }))
     setTrashGame(null)
-    const text = found > 0 ? `You searched the trash for ${minutes} minutes and kept ${found} returnable container${found === 1 ? '' : 's'}.` : `You searched for ${minutes} minutes and found nothing useful.`
+    const text = found > 0 ? t('trash.result.found', { minutes, found }) : t('trash.result.empty', { minutes })
     setMessage(text)
-    setInfoModal({ title: 'Trash search results', text, bottleSearch: { found } })
+    setInfoModal({ title: t('trash.result.title'), text, bottleSearch: { found } })
   }
 
   const checkTrashDeadline = useLatestAction(() => {
     if (trashGame && Date.now() - trashGame.startedAt >= 60_000) finishTrashSearch()
   })
 
-  function finishTrashSearch() { runWithResult({ id: 'trash-search', title: 'Trash search results', actionHistory: { kind: 'action', failed: trashGame?.found === 0 } }, finishTrashSearchImpl, trashGame?.before ?? resultSnapshot()) }
+  function finishTrashSearch() { runWithResult({ id: 'trash-search', title: t('trash.result.title'), actionHistory: { kind: 'action', failed: trashGame?.found === 0 } }, finishTrashSearchImpl, trashGame?.before ?? resultSnapshot()) }
   function endTrashDrag(id: number) {
     const tapped = trashDrag.current?.id === id && !trashDrag.current.moved
     trashDrag.current = null

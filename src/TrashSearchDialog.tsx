@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { Icon } from './Icon'
 import { ModalOverlay, ModalPanel, ModalAction } from './Modal'
 import TrashSearchTime from './TrashSearchTime'
@@ -11,15 +12,15 @@ type Props = {
 export default function TrashSearchDialog({ trashGame, checkTrashDeadline, finishTrashSearch, startTrashDrag, moveTrashItem, collectTrashBottle, endTrashDrag, cancelTrashDrag }: Props) {
   return <ModalOverlay className="trash-overlay">
       <ModalPanel size="compact" className="trash-card" role="dialog" aria-modal="true" aria-labelledby="trash-title">
-        <div className="trash-head"><Icon name="bottle" /><h2 id="trash-title">Look for bottles</h2></div>
-        <p className="trash-tip">Drag rubbish out. Tap intact bottles & cans.</p>
-        <div className="trash-search-row"><TrashSearchTime startedAt={trashGame.startedAt} onDeadline={checkTrashDeadline} /><span aria-label={`${trashGame.found} containers kept`}><Icon name="bottle" /><strong>{trashGame.found}</strong></span></div>
+        <div className="trash-head"><Icon name="bottle" /><h2 id="trash-title">{t('trash.title')}</h2></div>
+        <p className="trash-tip">{t('trash.tip')}</p>
+        <div className="trash-search-row"><TrashSearchTime startedAt={trashGame.startedAt} onDeadline={checkTrashDeadline} /><span aria-label={t('trash.kept', { found: trashGame.found })}><Icon name="bottle" /><strong>{trashGame.found}</strong></span></div>
         <div className="trash-bin">
           <div className="trash-pile">
           {trashGame.items.map((item, index) => !item.collected && <button
             key={item.id}
             className={item.bottle ? 'trash-piece bottle-piece' : 'trash-piece'}
-            aria-label={item.returnable ? item.art === 'can' ? 'Pick up can' : 'Pick up plastic bottle' : 'Drag rubbish aside · arrow keys to move'}
+            aria-label={item.returnable ? item.art === 'can' ? t('trash.pickCan') : t('trash.pickBottle') : t('trash.moveRubbish')}
             data-art={item.art}
             style={{ left: `${item.x}%`, top: `${item.y}%`, transform: `translate(-50%, -50%) rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: index + 2 }}
             onPointerDown={(e) => { const bounds = e.currentTarget.parentElement!.getBoundingClientRect(); if (startTrashDrag(item.id, e.clientX, e.clientY, bounds)) e.currentTarget.setPointerCapture(e.pointerId) }}
@@ -40,7 +41,7 @@ export default function TrashSearchDialog({ trashGame, checkTrashDeadline, finis
           ><img src={`/street-life-game/assets/trash-${item.art}.webp`} alt="" draggable={false} decoding="async" width="192" height="192" /></button>)}
           </div>
         </div>
-        <ModalAction className="trash-stop" onClick={finishTrashSearch}>Finish searching</ModalAction>
+        <ModalAction className="trash-stop" onClick={finishTrashSearch}>{t('trash.finish')}</ModalAction>
       </ModalPanel>
     </ModalOverlay>
 }

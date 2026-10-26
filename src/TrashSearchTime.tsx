@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { trashSearchMinutes } from './trashSearchRules'
 export { trashSearchMinutes } from './trashSearchRules'
 import { useEffect, useState } from 'react'
@@ -12,5 +13,5 @@ export default function TrashSearchTime({ startedAt, onDeadline }: { startedAt: 
     }, 250)
     return () => window.clearInterval(timer)
   }, [startedAt, onDeadline])
-  return <span aria-label={`Search time: ${minutes} minutes`}><Icon name="clock" />{minutes} min</span>
+  return <span aria-label={t('trash.time.label', { minutes })}><Icon name="clock" />{t('trash.time.short', { minutes })}</span>
 }

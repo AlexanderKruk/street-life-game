@@ -545,3 +545,13 @@ saved History and one-time rewards/remount under pseudo-copy. Localisation,
 phone/results/boundaries/design, journal-services/phone-clock and build passed.
 Mobile390 completed expansion and older30→60 loading inspected. CSS/baselines
 unchanged; full suites/general long-copy/WebKit/iPhone remain unrun.
+
+
+Trash catalogue checkpoint (26 October 2026): check-localization adds 63
+frozen/pseudo cases for found 0/1/2, full bag, manual/60s deadline and timing
+boundaries, collection/completion replay guards, numeric costs/rewards, item IDs,
+keyboard callbacks and 250ms timer cleanup. English DOM matches the frozen views
+except corrected singular aria. street-trash regression, results, module boundaries,
+design-system and build passed. Browser component QA at390×844 covered normal
+layout, keyboard collection, singular count and manual result. No CSS/baselines
+changed; long-copy browser layout, full suites, WebKit/iPhone remain open.

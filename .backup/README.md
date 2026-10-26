@@ -1,15 +1,12 @@
-# Goals/History localisation checkpoint
+# Localisation recovery checkpoint — 26 October 2026
 
-Source commit: 72e2e3e20a5340b9960fdc23a3d975f2f95db6ac
-Source tree excluding .backup: b581c6a8baeb0167711405e44a0c7449df78b928
+Source commit: 024323cc71f9ec9f6811a3cea99761cd7179410f
+Source tree: ac2ffc9df1185b0437b425da4bd4bc4177235fbf
+Published base: d8ff6fac4236badc45df86195d3295d7cfee64af (v335, unchanged).
 
-30 journalUi entries migrate Goals/History controls, dates, counts, goal descriptions and three memory fragments/result composition. Singular completed-goal grammar corrected. Stored entry title/text/reflection, goal conditions/IDs, grouping, batch30 and memory seen guards unchanged.
+The verified bundle preserves 31 original local commits from the published base through the bottle-search catalogue checkpoint. The API source tree matched the committed local tree before adding these recovery files. Source save only; no publication.
 
-Passed: 27 frozen/pseudo Goals/History variants (days1/2/3, 0/1/2/30/31/61 entries), actual App/StrictMode restored-search memory/remount checks under pseudo-copy, check-localization, phone/results, module boundaries/design, journal-services/phone-clock regressions, build/diff. Mobile390 Goals/History, completed expansion and older30→60 loading inspected. CSS/baselines unchanged; full suites/general long-copy/WebKit/iPhone unrun.
-
-The verified bundle retains 30 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: trash mini-game/residual copy and final editorial/mobile audits. See LOCALIZATION.md.
-
-Restore in a clone containing the published base:
+Restore the original local history:
 
 ```sh
 git fetch origin backup/localization-2026-10-26

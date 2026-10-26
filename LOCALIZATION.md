@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: Goals/History UI и воспоминания (после `da7c05e`), проверен тематически.
+Последний готовый этап: поиск бутылок (после `72e2e3e`), проверен тематически.
+Goals/History UI и воспоминания сохранены в main через checkpoint `6c13d1c`.
 Phone UI сохранён в main через checkpoint `4ae2cec`.
 Phone process сохранён в main через checkpoint `f68a54b`.
 Phone content сохранён в main через checkpoint `7cabec6`.
@@ -49,12 +50,13 @@ streetController, supportWorkController и medicalController использую�
 Поездки перенесены в travel.ts; фазы маршрута используют ID.
 DiceDialog использует dialogs.ts для собственных подсказок/математики/исходов.
 Авторские сцены и resolveEventOutcome перенесены в locales/en/events.ts.
-Не завершено: телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
+Телефон, Goals/History, воспоминания и мини-игра поиска бутылок используют свои каталоги.
+Не завершены остаточный аудит строк и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: мини-игра поиска бутылок и остаточный аудит строк; затем финальные редакторские/мобильные проверки. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: остаточный аудит строк; затем финальные редакторские/мобильные проверки. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -69,8 +71,8 @@ History инвентаря также восстановлен через invent
 ключей каталога или уже посчитанных строк: полного остаточного аудита ещё нет.
 
 Основная архитектура развязки текста и поведения готова; HUD/погода завершены. Остаются
-сцены/телефон/специальные процессы, прямые записи
-History/memories, отдельные text dependencies и финальные редакторские,
+остаточные строки App/resultPresentation/common/metadata, отдельные
+text dependencies и финальные редакторские,
 длиннотекстовые/мобильные и выпускные проверки. После остаточного аудита оценку
 нужно уточнить; сами переводы на другие языки в этот объём не входят.
 
@@ -1094,3 +1096,30 @@ journal-services/phone-clock regressions; build/diff — PASS.
 WebKit/iPhone и финальная редактура остаются открытыми.
 Следующий этап — trash mini-game и остаточные строки. Сохранение main с [skip ci],
 без публикации.
+
+
+## Поиск бутылок — 26 октября 2026
+
+В `locales/en/trash.ts` перенесены 13 сообщений контроллера, TrashSearchDialog
+и TrashSearchTime: полный рюкзак, результаты 0/1/несколько контейнеров,
+заголовок/подсказка, accessible labels предметов, время и завершение.
+Результат — целое сообщение с числовым plural found; единственное число
+accessible-счётчика исправлено на «1 container kept». Время всегда 10–60 минут
+с шагом 5; формула, 250ms обновление и 60s deadline остались прежними.
+
+TrashArt/ID, RNG и слои, движение/keyboard/pointer, ёмкость и стеки, acceptedIds,
+lastFinished, runWithResult actionId/before/failed, расходы/награды и local-only
+состояние не изменены. Нет новых таймеров, save keys или storage writers.
+
+Проверки: check-localization — 63 frozen/pseudo варианта, в том числе full bag,
+повторный сбор/завершение, manual/deadline, расходы/награды и cleanup таймера;
+regression/street-trash (реальные pointer/keyboard/capacity/redemption),
+check-results, check-module-boundaries (154 runtime-модуля), check-design-system,
+production build и diff --check — PASS. Мобильный component QA 390×844: обычный
+диалог, keyboard-сбор одной банки, singular aria и ручной результат прошли;
+CSS/размеры шрифтов не менялись. Long-copy layout, полный browser/Node suite,
+WebKit и физический iPhone в этом этапе не проверялись. Публикации не было.
+
+Следующий этап — остаточный source-аудит (App, resultPresentation, common/aria,
+metadata) с явными исключениями внутренних ID/legacy adapters, затем
+редакторские и общие мобильные проверки.
