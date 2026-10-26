@@ -1,6 +1,6 @@
-import { actionHistoryReflection, type ActionHistoryFacts } from './actionHistory'
-import { inventoryHistoryReflection, type InventoryHistoryFacts } from './inventoryHistory'
-import { eventHistoryReflection } from './eventHistory'
+import { journalPresentation, journalDecisionKey } from './journalIdentity'
+import type { ActionHistoryFacts } from './actionHistory'
+import type { InventoryHistoryFacts } from './inventoryHistory'
 import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,RAIN_RESPONSE_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
 import { INITIAL_LIFE,SHELTER_DEPARTURE_MINUTES,loadGameSession } from './loadGameSession'
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
@@ -449,7 +449,7 @@ export default function App() {
     if (lastRecordedResult.current !== pendingResult) {
       lastRecordedResult.current = pendingResult
       const actionTitle = pendingResult.title
-      const reflection = pendingResult.inventoryHistory ? inventoryHistoryReflection(pendingResult.id, pendingResult.inventoryHistory, summary) : pendingResult.eventHistory ? eventHistoryReflection(pendingResult.eventHistory, summary) : actionHistoryReflection(pendingResult, summary, memory?.id)
+      const reflection = journalPresentation(pendingResult, summary, memory?.id)
       const entry: JournalEntry = { day: game.day, minute: game.minutes, actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}), actionTitle, reflection: true, ...reflection }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }
@@ -472,7 +472,7 @@ export default function App() {
     setSelectedDestination(null)
     setPhoneOpen(false)
     setScreen('location')
-    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionId: 'closing-time' as const, actionTitle: 'Closing time', text: `${current.name} closed, and I had to leave. I need to work out where to go next.` }].slice(-500))
+    setJournalEntries(entries => [...entries, { day: game.day, minute: game.minutes, title: 'Back on the street', reflection: true as const, actionId: 'closing-time' as const, decisionId: 'closing-time', groupId: JSON.stringify(['closing-time', current.id]), actionTitle: 'Closing time', text: `${current.name} closed, and I had to leave. I need to work out where to go next.` }].slice(-500))
   }, [game.day, game.minutes, current, !!trip, gameOver])
 
 
@@ -557,8 +557,7 @@ export default function App() {
     bodyChoices,
     ...(openingCallsActive ? [] : [practicalChoices]),
   ]
-  const lastDecision = journalEntries.at(-1)
-  const choiceDecisionKey = JSON.stringify([journalEntries.length, lastDecision?.day, lastDecision?.minute, lastDecision?.actionTitle])
+  const choiceDecisionKey = journalDecisionKey(journalEntries)
 
   function reset() {
     autosave.resetPending()

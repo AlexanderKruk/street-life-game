@@ -214,7 +214,7 @@ export function loadJournalEntries(saved: unknown): JournalEntry[] {
         : /looking for a place to live/.test(entry.text) ? 'lost-home' : undefined
       const reflection = entry.reflection === true ? { title: entry.title, text: entry.text }
         : legacyJournalReflection(actionTitle, entry.text, legacySummary, memoryId)
-      return { day: entry.day, minute: entry.minute, actionTitle, ...(actionId ? { actionId } : {}), ...(typeof entry.outcomeId === 'string' ? { outcomeId: entry.outcomeId } : {}), reflection: true, ...reflection }
+      return { day: entry.day, minute: entry.minute, actionTitle, ...(actionId ? { actionId } : {}), ...(typeof entry.outcomeId === 'string' ? { outcomeId: entry.outcomeId } : {}), ...(typeof entry.decisionId === 'string' ? { decisionId: entry.decisionId } : {}), ...(typeof entry.groupId === 'string' ? { groupId: entry.groupId } : {}), reflection: true, ...reflection }
     })
 }
 

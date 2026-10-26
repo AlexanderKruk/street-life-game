@@ -25,13 +25,13 @@ export default function TravelPlanningDialog({ destination, panelRef, choiceSeed
         <p className="eyebrow">TRAVEL TO</p>
         <h2><Icon name={locationIcon(destination.id)} /> {destination.name}</h2>
         <ChoiceOptions seed={choiceSeed} decision={`${choiceDecisionKey}|travel:${destination.id}`}>
-        <button className="travel-option" onClick={() => onStart('walk')}>
+        <button className="travel-option" data-order-id="travel:walk" onClick={() => onStart('walk')}>
           <img className="travel-option-walker" src="/street-life-game/assets/travel-walker.webp" width="24" height="24" alt="" aria-hidden="true" /><div><strong>Walk</strong><small>≈{nearbyTime ?? formatTravelTime(destination.travelMinutes)} · free · more hunger & thirst</small></div>
         </button>
-        <button className="travel-option" onClick={() => onStart('transit')} disabled={!freeTransitActive && money < 4.4}>
+        <button className="travel-option" data-order-id="travel:transit" onClick={() => onStart('transit')} disabled={!freeTransitActive && money < 4.4}>
           <Icon name="bus" /><div><strong>Public transport</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · {freeTransitActive ? 'FREE' : '4.40 zł'} · {nearbyTime ? 'includes waiting' : 'less physical strain'}</small></div>
         </button>
-        {!freeTransitActive && <button className="travel-option" onClick={onFareDodge}>
+        {!freeTransitActive && <button className="travel-option" data-order-id="travel:fare-dodge" onClick={onFareDodge}>
           <Icon name="coins" /><div><strong>Ride without ticket</strong><small>≈{nearbyTime ?? formatTravelTime(transitMinutes)} · free{nearbyTime ? ' · includes waiting' : ''}</small><small>Risk: 20–35 zł fine</small></div>
         </button>}
         </ChoiceOptions>

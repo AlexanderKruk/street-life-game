@@ -82,12 +82,12 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | App Street choices / memories | last `actionTitle` and memory title lists determine suggestions/once-only fragments | action IDs now; old relevant titles mapped in `legacyActionCompatibility` |
 | `loadGameSession` | English Arrival/Journey stopped/music titles restore left-home/music guards | explicit action ID, legacy adapter only when old data lacks one |
 | `ResultCard`, `Stat`, `results`, `journal.changed`, rain result summaries | labels choose hidden losses, icons, caps, Mood/battery split and reflection conditions | resource IDs/numeric deltas/effect transitions; legacy summary adapter isolated |
-| `journalReflection` | title regexes and outcome fragments choose new reflections | **still pending**: structured event/choice/outcome facts, history catalogue, isolated legacy parser |
-| `ChoiceOptions` | text/aria label determines shuffle identity and conventional binary ordering | **pending**: stable choice IDs, explicit fixed pairs, compatibility with seeded order |
-| App `choiceDecisionKey`, `JournalTimeline` grouping | actionTitle feeds seed/group comparison | **pending**: stable action ID for new records, preserve old grouping/order semantics |
-| `AvailableFirst`, `ChoiceButton`, `Icon.choiceIcon` | English text used to extract duration and guess icon | **pending**: explicit metadata; preserve existing presentation/order |
+| `journalReflection` | title regexes and outcome fragments choose new reflections | new event/inventory/action reflections use ID/facts/catalogues; phrase parser isolated to old-save conversion |
+| `ChoiceOptions` | text/aria label determines shuffle identity and conventional binary ordering | stable choice IDs, explicit fixed pairs and frozen historical hash salts; tested under pseudo-copy |
+| App `choiceDecisionKey`, `JournalTimeline` grouping | actionTitle feeds seed/group comparison | new decisionId/groupId, semantic message aliases and parameters; legacy comparison only for missing metadata; first time/pagination preserved |
+| `AvailableFirst`, `ChoiceButton`, `Icon.choiceIcon` | English text used to extract duration and guess icon | icons use explicit metadata; duration extraction still pending |
 | `InventorySlot`, `ShopCard`, `StatusScreen` | English freshness / effect chip strings select visual states | **pending**: structured kind/impact IDs |
-| `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | **pending**: explicit choice labels/check metadata and IDs |
+| `EventDialog`, `CompactStreetEvent`, `DiceDialog` | regex removes English check suffix; title used as React key; `toLowerCase` item name | choice IDs/React keys explicit; check suffix stripping and item case conversion pending |
 | `eventController` | replaces “The screen still works.” in phone damage outcome | **pending**: explicit broken-screen outcome variant |
 | `game.weatherAt`, `sleepIllness`, `phonePower`, mood/housing reasons | English-looking internal enum values reused as displayed strings | retain persisted/internal IDs, add display names before extraction |
 
@@ -116,3 +116,10 @@ Recovery checkpoint, 26 October 2026: authored event History uses eventHistory.t
 Inventory History recovery: inventoryHistory.ts / locales/en/inventoryHistory.ts now use action IDs and resolved command facts. The remaining controller parser, ordering/grouping and duration/check-label migration are still pending. Purchase reactions no longer imply consumption/treatment/washing.
 
 Remaining-controller History recovery: new results use actionHistory.ts/definitions and locales/en/actionHistory.ts. Legacy phrase parsing is restricted to old-save conversion. Text-based choice ordering/grouping and duration/check-label metadata remain pending.
+
+
+Ordering/grouping checkpoint: new choices and History use stable metadata;
+legacy hash salts preserve old seed permutations. Message aliases preserve
+historically equivalent groups under new wording. Old saved text remains intact;
+duration/check-label parsing, effect chips, remaining catalogues and final audit
+are still pending. See the current checkpoint at the top of LOCALIZATION.md.

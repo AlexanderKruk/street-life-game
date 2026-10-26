@@ -7,6 +7,8 @@ export type JournalEntry = {
   actionTitle: string
   actionId?: ResultActionId
   outcomeId?: string
+  decisionId?: string
+  groupId?: string
   reflection: true
 }
 

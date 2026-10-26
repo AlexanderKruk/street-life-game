@@ -298,7 +298,7 @@ GitHub workflow сохраняет отчёты на 14 дней и не обн�
 при произвольном новом actionTitle, а также фильтрацию, компактный Mood,
 батарею и Hygiene-cap при псевдоподписях ресурсов. Псевдолокаль игроку не включена.
 
-Это ещё не проверка полного перевода игры: History разбирает английские исходы,
+Это ещё не проверка полного перевода игры: новый History использует ID/facts,
 остальные сюжетные/доменные каталоги и длинный перевод на всех модалках остаются
 в [плане локализации](LOCALIZATION.md). Полный Node/browser-прогон нового пакета
 до публикации не запускается; актуальные тематические результаты записываются
@@ -330,3 +330,12 @@ fixtures at six summary states and explicit refusals/support/search/sleep/arriva
 and memory variants. Action/rest/phone/event-travel controller checks and five
 regression groups passed along with the build. This does not verify browser
 layout, WebKit/iPhone or the unfinished ordering/grouping migration.
+
+
+ID ordering/grouping checkpoint: check-localization now compares historical
+seed permutations for authored/filtered event choices, travel, rain, interview
+and services under pseudo-copy; History metadata survives reload and relabelling.
+Pairwise fixtures protect previous grouping equivalence. check-rendering covers
+metadata grouping with different saved wording, first timestamp and reload.
+Targeted scripts and five affected regression groups passed; full suites and
+browser/visual were not run. Duration/check-label parsing remains pending.

@@ -87,7 +87,11 @@ export function useRainResults(context: { game: GameState; effects: ActiveEffect
       : rainArt(rain, rain.choice ?? 'continue')
     setInfoModal({ title, text, label: 'AFTER THE RAIN', illustration, illustrationAlt: text, visibleStats: ['energy', 'mood'], rainResultId: rain.id, ...summary })
     setEventResultOpen(true)
-    if (newlyReported) setJournalEntries(previous => [...previous, { day: game.day, minute: game.minutes, title, text, actionId: rain.choice === 'proper' && rain.searchRemaining > 0 ? 'rain-stopped' as const : rain.choice === 'continue' ? 'rain-passed' as const : 'rain-cover' as const, actionTitle: title, reflection: true as const }].slice(-500))
+    if (newlyReported) {
+      const actionId = rain.choice === 'proper' && rain.searchRemaining > 0 ? 'rain-stopped' : rain.choice === 'continue' ? 'rain-passed' : 'rain-cover'
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, title, text, actionId, decisionId: actionId, groupId: JSON.stringify([actionId,rain.level,rain.choice ?? 'continue',granted]), actionTitle: title, reflection: true }
+      setJournalEntries(previous => [...previous,entry].slice(-500))
+    }
   }, [game, effects, blocked])
 
 }

@@ -29,8 +29,8 @@ filtering, icons, caps, memories and eligibility, never displayed labels/titles.
 New History entries retain `actionId` alongside historical `actionTitle`.
 `legacyActionCompatibility.ts` and `legacyResultCompatibility.ts` handle old
 missing IDs only. Do not extend those adapters to infer IDs from new copy.
-History outcome recognition and choice ordering still have text dependencies;
-follow the unfinished checklist before moving those blocks. Do not claim the
+New History outcome recognition, ordering and grouping use explicit IDs;
+legacy salts preserve existing seeds and old records retain saved text. Do not claim the
 whole game is localised or add a language switch yet. Run
 `node check-localization.cjs` plus the affected thematic checks during this work.
 
@@ -378,7 +378,20 @@ memoryId), actionHistoryDefinitions and locales/en/actionHistory.ts. No report
 prose or modal headings are passed to its resolver. ActionHistoryFacts capture
 refusal/support/search/sleep/arrival state after the existing guard accepts the
 command. The old parser/loader is isolated in legacyJournalCompatibility.ts:
-new gameplay must not call it. Text-based ordering/grouping and duration/check
+new gameplay must not call it. Ordering/grouping now use explicit IDs; duration/check
 metadata remain migration targets. Preserve direct rain/closing writers and
 saved historical text. Back up completed stages in the existing GitHub backup
 branch without changing main or publishing the game.
+
+
+Ordering/grouping checkpoint (26 October 2026): shuffled choices require
+`data-order-id` or `data-choice`; conventional pairs explicitly set fixed order.
+Never derive identity from copy. Frozen legacyChoiceOrderCompatibility and
+legacyJournalIdentityCompatibility salts preserve historical seeds, not labels.
+New History entries use journalPresentation to record decisionId/groupId from
+action/message IDs and semantic parameters. Equivalent historical messages have
+frozen aliases in journalMessageIdentity; never regenerate these from new copy.
+Keep existing group IDs stable during catalogue edits; new distinct meanings
+need distinct semantic identities. Arrival supplies destinationId separately
+from destinationName. groupJournalEntries preserves first text/time and groups
+before pagination; raw-text comparison is limited to records missing metadata.

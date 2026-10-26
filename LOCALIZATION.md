@@ -13,13 +13,14 @@
 
 Новые реакции остальных контроллеров также используют ID/facts; старый parser
 изолирован в legacyJournalCompatibility.ts и применяется только при загрузке.
-Не завершено: seeded ordering/grouping, duration/check-label parsing, effect chips,
+Ordering/grouping новых записей используют ID с совместимостью прежних seed.
+Не завершено: duration/check-label parsing, effect chips,
 остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: seeded ordering/grouping по ID, затем duration/check metadata. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: явные duration/check metadata. Сохранившийся пакет иконок не переделывать.
 
 ## Задание для нового чата
 
@@ -184,7 +185,7 @@ src/locales/en/
 - [ ] Перенести заголовки и новые реакции History на структурированные ID/параметры.
 - [ ] Старые записи с `reflection: true` и уже сохранённым текстом показывать как были; не переписывать их ради новой редакции и не терять пустые реакции.
 - [ ] Если расширяется модель записи, сделать её обратно совместимой. Старые сохранения без новых полей должны загружаться.
-- [ ] Сохранить дату/время, порядок, группировку, пагинацию и отсутствие дубликатов.
+- [x] Сохранить дату/время, порядок, группировку, пагинацию и отсутствие дубликатов.
 - [ ] Сохранить восстановление событий, звонков, поиска, поездок, сна, очереди и выхода; не повторять оплату, награды или случайный бросок.
 
 ### 6. Завершающий аудит и документация
@@ -390,3 +391,25 @@ check-localization дополнен 66 сценариями инвентаря, 
 controllers, module boundaries (119 модулей), regression/journal-services,
 phone-clock, shelter-sleep, map-travel, street-trash и npm run build — PASS.
 Полные наборы и browser/visual не запускались. Публикации игры не было.
+
+
+### ID порядка вариантов и группировки History — 26 октября 2026
+
+ChoiceOptions использует data-order-id/data-choice и явный fixed у четырёх
+обычных пар. Frozen legacyChoiceOrderCompatibility сохраняет байты прежнего
+seed; новая подпись не влияет на перестановку. Ключи React у ответов — choice.id.
+
+journalPresentation записывает decisionId/groupId из доменных ID, ID сообщений
+и параметров предмета/места. Frozen aliases сохраняют объединение исторически
+одинаковых реакций. Старые записи без метаданных используют только legacy
+сравнение; их текст и пустые реакции не переписываются. Смешанные записи,
+первое время группы и группировка до пагинации сохранены. Прямые rain/closing
+writers получили ID отдельно. Arrival передаёт destinationId.
+
+Проверено: check-localization.cjs (презентации History, попарная совместимость
+групп, псевдоподписи, сохранение/загрузка и прежние seed), check-rendering.cjs,
+check-module-boundaries.cjs, regression/street-trash, events, map-travel,
+shelter-sleep, journal-services и npm run build — PASS. git diff --check — PASS.
+Полные наборы и browser/visual не запускались. Публикации не было.
+Следующий этап — duration/check metadata; effect chips, остальные каталоги
+и редакторская/мобильная матрица остаются открыты.

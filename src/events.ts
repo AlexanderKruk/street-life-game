@@ -114,9 +114,10 @@ export type StreetEvent = {
   title: string
   text: string
   weight: number
+  choiceOrder?: 'fixed'
   continuationOnly?: boolean
   eligible?: (context: EventContext) => boolean
-  choices: StreetEventChoice[]
+  choices: (StreetEventChoice & { id: string })[]
 }
 
 // The opening bench wake keeps priority over subsequent patrol encounters.
@@ -185,7 +186,7 @@ export const STREET_EVENTS: StreetEvent[] = [
     { id:'ask-seat', icon:'chat', label:'Ask where I can wait', outcome:{ historyId:'station-patrol-wake:ask-seat:complete', identityCheck:true, minutes:10, message:'You say you have no train ticket and ask where you can wait. The officer points to another part of the waiting hall and asks you to sit rather than lie across the seats. You move there with your backpack.' } },
     { id:'leave', icon:'walk', label:'Gather my things and step outside', outcome:{ historyId:'station-patrol-wake:leave:complete', identityCheck:true, minutes:5, energy:-1, moveToStreet:true, message:'You say you have no train ticket, collect your backpack and step out into the street. The check is over, but your rest is over too.' } },
   ]},
-  { id:'phone-drop', trigger:'travel', icon:'📱', title:'The phone slips', text:'Your old phone slips from your hand while you are walking. You have a split second to react.', weight:3, eligible:c=>c.travelMode==='walk', choices:[
+  { id:'phone-drop', choiceOrder:'fixed', trigger:'travel', icon:'📱', title:'The phone slips', text:'Your old phone slips from your hand while you are walking. You have a split second to react.', weight:3, eligible:c=>c.travelMode==='walk', choices:[
     { id:'catch', icon:'hand', label:'Try to catch it · Reflex DC 11', check:{ stat:'reflex', dc:11, requirements:{ minEnergy:20, minHealth:20 },
       success:{ historyId:'phone-drop:catch:success', mood:2, message:'You catch the phone just before it hits the pavement.' },
       failure:{ historyId:'phone-drop:catch:failure', phoneCondition:-8, mood:-3, message:'Too slow. The phone hits the pavement and takes damage.' },
@@ -194,18 +195,18 @@ export const STREET_EVENTS: StreetEvent[] = [
     }},
     { id:'let-fall', icon:'person', label:'Let it fall', outcome:{ historyId:'phone-drop:let-fall:complete', phoneCondition:-8, mood:-3, message:'You do not risk the grab. The phone hits the pavement and takes damage.' } }
   ]},
-  { id:'found-coins', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the kerb.', weight:4, eligible:c=>c.travelMode==='walk', choices:[
+  { id:'found-coins', choiceOrder:'fixed', trigger:'travel', icon:'🪙', title:'Coin on the pavement', text:'Something glints beside the kerb.', weight:4, eligible:c=>c.travelMode==='walk', choices:[
     { id:'take', icon:'person', label:'Pick it up', outcome:{ historyId:'found-coins:take:complete', randomCoin:true, message:'You pick up the coin.' } },
     { id:'leave', icon:'walk', label:'Leave it', outcome:{ historyId:'found-coins:leave:complete', mood:1, message:'You leave it for someone who may need it more.' } }
   ]},
-  { id:'free-snack', trigger:'travel', icon:'🥪', title:'Someone offers food', text:'A passer-by offers you a packaged sandwich.', weight:3, eligible:c=>!c.firstNight && c.travelMode==='walk' && streetHasPassersBy(c), choices:[
+  { id:'free-snack', choiceOrder:'fixed', trigger:'travel', icon:'🥪', title:'Someone offers food', text:'A passer-by offers you a packaged sandwich.', weight:3, eligible:c=>!c.firstNight && c.travelMode==='walk' && streetHasPassersBy(c), choices:[
     { id:'accept', icon:'food', label:'Take it', outcome:{ historyId:'free-snack:accept:complete', food:1, mood:2, message:'You put the sandwich in your backpack.' } },
     { id:'decline', icon:'walk', label:'No thanks', outcome:{ historyId:'free-snack:decline:complete', message:'You politely decline and keep going.' } }
   ]},
   { id:'ticket-check', trigger:'travel', icon:'🎫', title:'Ticket inspection', text:'Inspectors enter the vehicle and start checking tickets.', weight:3, eligible:c=>c.travelMode==='transit', choices:[
     { id:'show-ticket', icon:'ticket', label:'Show my ticket', outcome:{ historyId:'ticket-check:show-ticket:complete', message:'Everything is in order. You continue the trip.' } }
   ]},
-  { id:'station-food', trigger:'location', icon:'🥐', title:'Food before closing', text:'A worker has a small bag of unsold food and asks if you want it.', weight:3, eligible:c=>c.locationId==='station' && !c.firstNight && (c.minutes ?? 1200)>=1140, choices:[
+  { id:'station-food', choiceOrder:'fixed', trigger:'location', icon:'🥐', title:'Food before closing', text:'A worker has a small bag of unsold food and asks if you want it.', weight:3, eligible:c=>c.locationId==='station' && !c.firstNight && (c.minutes ?? 1200)>=1140, choices:[
     { id:'accept', icon:'food', label:'Accept', outcome:{ historyId:'station-food:accept:complete', food:1, mood:3, message:'You put the food in your backpack for later.' } },
     { id:'decline', icon:'walk', label:'Decline', outcome:{ historyId:'station-food:decline:complete', message:'You thank them and decline.' } }
   ]},

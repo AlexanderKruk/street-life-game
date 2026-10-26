@@ -160,6 +160,36 @@ for(const[id,memory]of [['city-walk','office-routine'],['bench-rest','redundancy
 actionCase('question:morning',{noNewInformation:true},'','No new information','unanswered-applications');
 console.log('PASS: 64 action headings, explicit refusals/support/search/sleep/arrival facts and memory priority without report parsing.');
 
+const { journalPresentation, journalDecisionKey, groupJournalEntries } = bundled('src/journalIdentity.ts');
+const samples=[];
+function presentationCase(action,summary={costs:[],changes:[]},memory) {
+  const rendered=journalPresentation(action,summary,memory);
+  const pseudo=journalPresentation({...action,title:'⟦heading⟧'},summary,memory,(key)=>`⟦${key}⟧`);
+  assert.equal(rendered.groupId,pseudo.groupId);
+  const entry={day:2,minute:700,actionId:action.id,actionTitle:action.title,reflection:true,...rendered};
+  assert.deepEqual(loadJournalEntries([entry]),[entry]);
+  assert.equal(journalDecisionKey([entry]),JSON.stringify([1,2,700,action.title]));
+  assert.equal(journalDecisionKey([{...entry,actionTitle:'⟦new⟧'}]),journalDecisionKey([entry]));
+  samples.push(entry); return entry;
+}
+for(const[id,title]of Object.entries(actionTitles))for(const summary of actionSummaries)presentationCase({id,title},summary);
+for(const event of STREET_EVENTS)for(const choice of event.choices){
+ const outcomes=choice.check?['success','failure','criticalSuccess','criticalFailure'].map(k=>choice.check[k]).filter(Boolean):[choice.outcome].filter(Boolean);
+ for(const o of outcomes)presentationCase({id:`event:${event.id}`,title:event.title,eventHistory:{outcomeId:o.historyId,documents:'carried',suppliesRejected:false}});
+}
+for(const item of ['food','bread','cannedFood','readyMeal','water','wipes'])for(const summary of actionSummaries)presentationCase(inventoryCommandResult({type:'use',item}),summary);
+for(const item of SHOP_ITEMS)presentationCase(inventoryCommandResult({type:'buy',item}));
+for(let i=0;i<samples.length;i++)for(let j=i;j<samples.length;j++){
+ const a=samples[i],b=samples[j];assert.equal(a.groupId===b.groupId,a.actionTitle===b.actionTitle&&a.title===b.title&&a.text===b.text,`${a.actionId} / ${b.actionId}`);
+}
+presentationCase({id:'question:morning',title:'Searched for more help',actionHistory:{kind:'action',noNewInformation:true}});
+const arrival={id:'arrival',title:'Arrival',actionHistory:{kind:'action',destinationId:'station',destinationName:'Station'}};
+assert.equal(journalPresentation(arrival).groupId,journalPresentation({...arrival,actionHistory:{...arrival.actionHistory,destinationName:'⟦station⟧'}}).groupId);
+const water=samples.find(e=>e.actionId==='use:water');const old={...water};delete old.groupId;delete old.decisionId;
+const mixed=[old,{...water,minute:701},{...water,minute:702,title:'⟦heading⟧',text:'⟦thought⟧'}];const original=JSON.stringify(mixed);
+assert.equal(groupJournalEntries(mixed,2)[0].count,3);assert.equal(groupJournalEntries(mixed,2)[0].minute,700);assert.equal(JSON.stringify(mixed),original);
+console.log(`PASS: ${samples.length} History presentations, grouping parity, metadata reload, translated names and mixed records.`);
+
 // Render relabelled resources: filtering, cap hatching, icons, costs and the
 // compact Mood/battery split must use IDs even when labels cannot be parsed.
 const { JSDOM } = require('jsdom');
@@ -170,6 +200,22 @@ global.IS_REACT_ACT_ENVIRONMENT = true;
 window.scrollTo = () => {}; window.matchMedia = () => ({ matches: true });
 const React = require('react');
 const { render, cleanup } = require('@testing-library/react');
+const { orderChoiceNodes } = bundled('src/ChoiceOptions.tsx');
+const { shuffleChoiceOrder } = bundled('src/streetChoiceOrder.ts');
+const { choiceOrderToken } = bundled('src/legacyChoiceOrderCompatibility.ts');
+function verifyChoiceOrder(ids,labels,fixed,decision) {
+ for(const seed of [0,1,17,42,0xffffffff]){
+  const nodes=ids.map((id,i)=>React.createElement('button',{'data-order-id':id,'aria-label':labels[i],key:id},labels[i]));
+  const oldFixed=nodes.length===2&&labels.some(label=>/^(yes\b|no\b|accept\b|decline\b|confirm\b|cancel\b|leave it\b|let it fall\b)/i.test(label.trim()));
+  const expected=oldFixed?nodes:shuffleChoiceOrder(nodes,seed,`${decision}|${labels.join('|')}`);
+  const getIds=nodes=>nodes.map(n=>n.props['data-order-id']);
+  assert.deepEqual(getIds(orderChoiceNodes(nodes,seed,decision,fixed)),getIds(expected));
+  assert.deepEqual(getIds(orderChoiceNodes(nodes.map(n=>React.cloneElement(n,{'aria-label':'⟦new⟧'},'⟦copy⟧')),seed,decision,fixed)),getIds(expected));
+ }
+}
+for(const e of STREET_EVENTS)for(const choices of [e.choices,e.choices.filter(c=>!c.undiscoveredLocationRequired)])verifyChoiceOrder(choices.map(c=>`event:${e.id}:${c.id}`),choices.map(c=>c.label),e.choiceOrder==='fixed',`fixture|event:${e.id}`);
+for(const ids of [['travel:walk','travel:transit','travel:fare-dodge'],['travel:walk','travel:transit'],['rain:nearby','rain:proper','rain:continue'],['support:housing','support:documents','support:transport','support:benefits'],['interview:reason:work','interview:reason:documents','interview:reason:health'],['interview:action:job','interview:action:documents','interview:action:nothing'],['interview:plan:jobcenter','interview:plan:daywork','interview:plan:documents','interview:plan:nothing'],['hospital:appointment','location:empty']])verifyChoiceOrder(ids,ids.map(choiceOrderToken),false,'fixture');
+console.log('PASS: stable ordering matches historical seeds for events, hidden answers, services and travel under pseudo-copy.');
 const { default: ResultCard, isMajorChange } = bundled('src/ResultCard.tsx');
 const row = (id, amount, meter) => ({ id, label: `⟦${id} translated⟧`, amount, value: '⟦display value⟧', kind: amount > 0 ? 'positive' : 'negative', ...(meter ? { meter } : {}) });
 try {

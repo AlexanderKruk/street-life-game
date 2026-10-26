@@ -7,7 +7,7 @@ export type EventHistoryFacts = {
   suppliesRejected: boolean
   documents: 'carried' | 'stored' | 'missing'
 }
-export function eventHistoryReflection(facts: EventHistoryFacts, summary?: ResultSummary) {
+export function eventHistoryReflection(facts: EventHistoryFacts, summary?: ResultSummary, translate: typeof t = t) {
   const definition = eventHistoryDefinitions[facts.outcomeId]
   const rows = [...(summary?.costs ?? []), ...(summary?.changes ?? [])]
   const changed = (id: string, kind: string) => rows.some(row => resultChangeId(row) === id && row.kind === kind)
@@ -22,5 +22,5 @@ export function eventHistoryReflection(facts: EventHistoryFacts, summary?: Resul
     if (facts.documents === 'stored') key = 'history.event.special.documents-stored'
     if (facts.documents === 'missing') key = 'history.event.special.documents-missing'
   }
-  return { title: t(definition.titleKey), text: t(key) }
+  return { title: translate(definition.titleKey), text: translate(key) }
 }

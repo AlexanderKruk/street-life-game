@@ -48,7 +48,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (!trip || trip.remaining > 0 || lastArrival.current === trip) return
     const destination = locations.find(location => location.id === trip.destinationId)
     if (!destination) { setTrip(null); return }
-    runWithResult({ id: 'arrival', title: 'Arrival', actionHistory: { kind: 'action', destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : destination.name } }, () => {
+    runWithResult({ id: 'arrival', title: 'Arrival', actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : destination.name } }, () => {
       if (lastArrival.current === trip) return
       lastArrival.current = trip
       setGame(previous => ({ ...previous, locationId: destination.id }))

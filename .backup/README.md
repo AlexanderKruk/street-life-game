@@ -1,16 +1,21 @@
-# Localisation backup — 26 October 2026
+# Localization backup — 26 October 2026
 
-Backup only. Do not merge or deploy automatically.
+This branch is a recovery snapshot, not a publication. Main remains at d8ff6fac4236badc45df86195d3295d7cfee64af.
 
-Original local HEAD: eaa5db2e3e4bbcb31530f15706babc43601354e0
-Verified source tree: be6d62246974271a5bc3ced9750a8acd041651f2
-Published prerequisite: d8ff6fac4236badc45df86195d3295d7cfee64af
+Source commit: e186132135815e6fed88521d277223c8237dcdc5
+Source tree (excluding this .backup directory): 24b6962f7d602de5da78d7f85325f0ddf5af230c
 
-Source files match the local source tree byte for byte. The bundle preserves
-all six original commits with exact hashes:
-7bb039f, 40175a7, 21ee7f8, 5492abd, c5794b9, eaa5db2.
+The source snapshot matches that local tree byte for byte. The snapshot commit has a different hash because it was created through the connected GitHub API. The bundle preserves all seven original local commits and their hashes:
 
-Restore original history in a clone containing the published prerequisite:
+- 7bb039f refactor: add typed English catalogs and stable result identities
+- 40175a7 docs: record localization foundation checkpoint
+- 21ee7f8 refactor: replace choice icon text inference with explicit metadata
+- 5492abd refactor: restore authored event History facts and align localization plan
+- c5794b9 refactor: restore inventory History from resolved command facts
+- eaa5db2 refactor: restore ID-based History for remaining controllers
+- e186132 refactor: decouple choice order and History grouping from copy
+
+Restore from an existing clone containing the published main base:
 
 ```sh
 git fetch origin backup/localization-2026-10-26
@@ -20,11 +25,8 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Continue from LOCALIZATION.md / LOCALIZATION_TASK.md. New History now uses
-IDs/facts for authored events, inventory and remaining controllers. The old
-parser is restricted to old-save conversion. Ordering/grouping, duration/check
-metadata and the remaining text catalogues still need work.
+Current stage: choice ordering and new History grouping use stable IDs. Frozen compatibility salts preserve historical seed permutations. Existing saved text, first group time, mixed records and grouping before pagination are preserved.
 
-Validation: targeted localisation/controller/module/regression checks and
-production build passed. Full suites and browser/visual checks were not run.
-main and the published game remain unchanged.
+Validation: check-localization, check-rendering, check-module-boundaries; regression groups street-trash, events, map-travel, shelter-sleep, journal-services; TypeScript/Vite build; git diff --check. Full suites and browser/visual were not run. No deployment.
+
+Next: explicit duration/check metadata, then remaining catalogues, effect chips and editorial/mobile audit. See LOCALIZATION.md.

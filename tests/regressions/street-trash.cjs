@@ -111,7 +111,7 @@ const optionModule={exports:{}};new Function('require','module','exports',option
 const {orderChoiceNodes}=optionModule.exports;
 for(const labels of [['Yes','No'],['Accept','Decline'],['Pick it up','Leave it'],['Start','Cancel']])for(let seed=0;seed<20;seed++){
  const nodes=labels.map(label=>React.createElement('button',{'aria-label':label,key:label},label));
- assert.deepEqual(orderChoiceNodes(nodes,seed,'dialog').map(node=>node.props['aria-label']),labels,'conventional binary pairs stay in order');
+ assert.deepEqual(orderChoiceNodes(nodes,seed,'dialog',true).map(node=>node.props['aria-label']),labels,'explicit fixed pairs stay in order');
 }
 const durations=['2 h','4 h','6 h','8 h'].map(label=>React.createElement('button',{key:label},label));
 assert.deepEqual(orderChoiceNodes(durations,42,'sleep',true).map(node=>node.props.children),['2 h','4 h','6 h','8 h']);

@@ -198,6 +198,14 @@ function measure(App) {
   assert.equal(document.querySelector('.timeline-entry time').textContent, '05:57');
   assert(!screen.queryByRole('button', { name: 'Show older entries' }));
   assert.equal(JSON.parse(localStorage.getItem('street-life-journal-history-v1')).length, 70);
+  const structured={...water,actionId:'use:water',decisionId:'use:water',groupId:'fixture:water'};
+  setup(App,'journal',{day:2},{'street-life-journal-history-v1':[structured,{...structured,minute:359,title:'Reworded',text:'New wording.'},{...structured,minute:361,groupId:'fixture:other'}]});
+  assert.deepEqual(historyTitles(),['Drank water','Drank water ×2']);
+  assert.equal(document.querySelectorAll('.timeline-entry time')[1].textContent,'05:57');
+  const structuredSave=localStorage.getItem('street-life-journal-history-v1');
+  cleanup();render(React.createElement(App));fireEvent.click(screen.getByRole('button',{name:'History',exact:true}));
+  assert.deepEqual(historyTitles(),['Drank water','Drank water ×2']);
+  assert.equal(localStorage.getItem('street-life-journal-history-v1'),structuredSave);
   console.log('PASS: consecutive journal groups, first time, counts, differing outcomes/actions, day boundaries, reload and grouping before pagination.');
   // All locations, including closed locations, preserve live action availability.
   const locationAudit = [];
@@ -249,7 +257,7 @@ function measure(App) {
   assert(count('App') > 0, 'phone panel intentionally keeps time running');
   modalAudit.push({ name: 'phone panel (time continues)', renders: counts() });
   setup(App, 'location');
-  act(() => global.__auditSetters.setActiveEvent({ id: 'audit', title: 'Audit event', icon: '!', text: 'A paused event.', choices: [{ label: 'Continue', outcome: { message: 'Done' } }] }));
+  act(() => global.__auditSetters.setActiveEvent({ id: 'audit', title: 'Audit event', icon: '!', text: 'A paused event.', choices: [{ id: 'continue', icon: 'person', label: 'Continue', outcome: { message: 'Done' } }] }));
   pauseAudit('street event', '.event-card');
   setup(App, 'location', { locationId: 'shelter', minutes: 1140 });
   act(() => global.__auditSetters.setShelterInterview({ step: 'reason' }));
