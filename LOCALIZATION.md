@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: собственные тексты eventController и broken-screen metadata (после `75e3e30`), проверен тематически.
+Последний готовый этап: eventChecks и собственные подписи event dialogs (после `fe2f44f`), проверен тематически.
+EventController сохранён в main через checkpoint `f9fba91`.
 DiceDialog сохранён в main через checkpoint `25bad27`.
 Поездки сохранены в main через checkpoint `e8f88ea`.
 Дождь сохранён в main через checkpoint `5a6678f`.
@@ -47,7 +48,7 @@ DiceDialog использует dialogs.ts для собственных под�
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: авторские сцены events.ts и eventChecks, затем телефон. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: авторские сцены events.ts, затем телефон. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -949,3 +950,23 @@ check-events ранее искал короткие подписи chat/catch б
 обновлены под существующий accessibility-контракт с сохранением assertions.
 JSX/CSS не менялись; новый browser/mobile/long-copy/full/WebKit/iPhone прогон
 не выполнялся. Следующий этап — events.ts и eventChecks. Без публикации.
+
+
+### Доступность ответов и подписи диалогов событий — 26 октября 2026
+
+7 записей eventUi.ts: пять отказов и label/pause двух шаблонов. eventChoiceBlock
+возвращает доменную причину с параметрами либо null. eventChoiceText форматирует
+подпись; controller принимает решение по block, а оба диалога — по !== null,
+не по truthiness строки. Телефонный отказ пока приходит от phone owner как строка;
+даже пустая строка при наличии phone requirement теперь блокирует ответ.
+Порядок требований, числа/пороги и расчёт D20 прежние. Авторские сцены ещё pending.
+
+Проверено: 200 frozen/pseudo случаев eligibility (деньги/батарея/health/energy/
+known place), отдельный пустой phone refusal до команд и шесть UI случаев
+illustrated/compact × null/empty/nonempty. check-localization, check-events,
+check-event-travel-controllers, check-module-boundaries (148 модулей),
+regression/events и build/diff — PASS. Frozen controller fixture теперь использует
+свою frozen копию eventChecks; runtime не импортирует тестовые источники.
+CSS/английская копия не менялись; свежий browser/mobile/long-copy/full/WebKit/iPhone
+прогон не выполнялся. Следующий этап — авторские scenes/choices/outcomes events.ts.
+Сохранение в main с [skip ci], без публикации.

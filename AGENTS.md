@@ -597,3 +597,11 @@ EventOutcome.phoneBreakMessage is the complete broken-phone alternative; check
 presence with !== undefined and numeric phone condition, never replace an English
 sentence. Preserve historyId, numeric damage, follow-up/roll/claim guards and saves.
 Authored events, resolveEventOutcome and eventChecks copy remain pending.
+
+Event eligibility checkpoint: eventChoiceBlock returns a domain reason/parameters
+or null; eventChoiceText formats the message. Controllers and both event templates
+must use null-only availability, including empty translated/phone refusal text.
+The phone owner still supplies optional refusal copy; do not infer availability
+from its truthiness. Preserve condition priority and numeric thresholds/D20.
+EventDialog/CompactStreetEvent own label/pause copy lives in eventUi.ts; authored
+scene text remains pending.

@@ -1,3 +1,4 @@
+import { eventChoiceUnavailable } from './eventChoiceText'
 import { t, locale } from './i18n'
 import { locationName } from './locationText'
 import { STREET_EVENTS, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
@@ -8,7 +9,7 @@ import { absoluteMinutes } from './gameTime'
 import { SHOP_ITEMS, addShopItem, canAddToBackpack, fitEventSupplies } from './inventory'
 import { locationPresentation } from './resultPresentation'
 import { SHELTER_ENTRY_OPEN } from './shelterRules'
-import { eventCheckModifier, eventChoiceUnavailable, diceOutcome } from './eventChecks'
+import { eventCheckModifier, eventChoiceBlock, diceOutcome } from './eventChecks'
 import type { EventSession } from './eventSession'
 import type { Inventory, LifeSituation, Screen, StoredItems } from './stateTypes'
 import type { ResultCardData } from './ResultCard'
@@ -110,7 +111,7 @@ export function createEventController(session: EventSession, context: Context, h
   }
 
   function resolveStreetEvent(choice: StreetEventChoice) {
-    if (checkUnavailableReason(choice)) return
+    if (eventChoiceBlock(choice, game, inventory, discoveredLocations, phoneUnavailable) !== null) return
     if (choice.followUp && Math.random() < choice.followUp.chance) {
       const event = STREET_EVENTS.find(event => event.id === choice.followUp!.eventId && event.continuationOnly)
       if (event) {
@@ -120,8 +121,8 @@ export function createEventController(session: EventSession, context: Context, h
       }
     }
     if (choice.check) {
-      const unavailable = checkUnavailableReason(choice)
-      if (unavailable) return
+      const unavailable = eventChoiceBlock(choice, game, inventory, discoveredLocations, phoneUnavailable)
+      if (unavailable !== null) return
       setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false })
       return
     }

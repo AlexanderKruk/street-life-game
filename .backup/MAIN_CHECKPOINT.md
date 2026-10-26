@@ -1,13 +1,13 @@
-# Event controller localisation checkpoint
+# Event eligibility localisation checkpoint
 
-Source commit: fe2f44f194835c42c51fd15c8cc673e19c9894a9
-Source tree excluding .backup: 6e91aacf4092a80f5445b5a7ffa02845c853f03d
+Source commit: 20dbb8a34191f573b8d4f6974f43dc031b4cd547
+Source tree excluding .backup: 11d5badd394c759d6765e4988e62a8ed9835f5cc
 
-15 eventController catalogue messages and explicit EventOutcome.phoneBreakMessage replace English sentence substitution. Numeric damage/History identity and original English output remain unchanged. Authored scenes/choices, resolveEventOutcome and eventChecks copy remain pending.
+7 eventUi messages cover own labels/pause and event refusal messages. eventChoiceBlock provides domain reasons; eventChoiceText formats them. Null-only availability now protects controller and both templates, including empty phone refusal copy. Authored scenes/choices/outcomes remain pending.
 
-Passed: check-localization frozen/pseudo controller and broken-phone boundary/arbitrary-message cases, check-events, event-travel controllers, module boundaries, events/shop-inventory regressions, build/diff checks. Stale chat/catch test selectors now include the existing accessibility stat/DC labels; gameplay assertions retained. No JSX/CSS change or fresh browser/full/WebKit/iPhone run.
+Passed: 200 frozen/pseudo eligibility boundaries, empty phone refusal command guard, six illustrated/compact null/empty/nonempty UI cases, check-localization, events/event-travel controllers, module boundaries, regression/events, build/diff. CSS/English copy unchanged. No fresh browser/mobile/long-copy/full/WebKit/iPhone run.
 
-The verified bundle retains 24 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: authored events/eventChecks, then phone and final audits. See LOCALIZATION.md.
+The verified bundle retains 25 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: authored events, then phone and final audits. See LOCALIZATION.md.
 
 Restore in a clone containing the published base:
 

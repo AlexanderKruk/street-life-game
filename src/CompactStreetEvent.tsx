@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import ChoiceButton from './ChoiceButton'
 import { choiceAccessibleLabel, choiceCheckDetail } from './choiceCheckPresentation'
 import { Icon, type IconName } from './Icon'
@@ -26,17 +27,17 @@ export default function CompactStreetEvent({ event, onChoose, unavailableReason,
   const icon = eventIcons[event.id] ?? 'help'
   return <div className="event-body">
     <div className="compact-event-heading"><Icon name={icon} /><div>
-      <p className="eyebrow">STREET EVENT</p><h2 id="street-event-title">{event.title}</h2>
+      <p className="eyebrow">{t('event.ui.label')}</p><h2 id="street-event-title">{event.title}</h2>
     </div></div>
     <p className="compact-event-description modal-narrative">{event.text}</p>
     <ChoiceOptions className="event-choices" fixed={event.choiceOrder === 'fixed'} seed={orderSeed} decision={`${decisionKey}|event:${event.id}`}>{event.choices.map(choice => {
       const unavailable = unavailableReason(choice)
       const label = choice.label
-      return <ChoiceButton key={choice.id} data-order-id={`event:${event.id}:${choice.id}`} aria-label={choiceAccessibleLabel(choice)} disabled={!!unavailable} onClick={() => onChoose(choice)}
+      return <ChoiceButton key={choice.id} data-order-id={`event:${event.id}:${choice.id}`} aria-label={choiceAccessibleLabel(choice)} disabled={unavailable !== null} onClick={() => onChoose(choice)}
         icon={choice.icon ?? 'person'} label={label}
-        detail={<>{choice.check && <small>{choiceCheckDetail(choice.check)}</small>}{unavailable && <small>{unavailable}</small>}</>}
+        detail={<>{choice.check && <small>{choiceCheckDetail(choice.check)}</small>}{unavailable !== null && <small>{unavailable}</small>}</>}
         estimate={(choice.durationMinutes ?? choice.outcome?.minutes) ? { minutes: (choice.durationMinutes ?? choice.outcome?.minutes)! } : undefined} />
     })}</ChoiceOptions>
-    <p className="compact-event-pause"><Icon name="pause" />Time paused</p>
+    <p className="compact-event-pause"><Icon name="pause" />{t('event.ui.paused')}</p>
   </div>
 }
