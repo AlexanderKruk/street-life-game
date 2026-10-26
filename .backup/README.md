@@ -1,13 +1,16 @@
-# Localisation recovery checkpoint — 26 October 2026
+# Rain editorial checkpoint — 26 October 2026
 
-Source commit: 95cab8acee60a67198ea873490464f11e8650d38
-Source tree: 90ac4817531abf147a7f617a11e305a334ccbcd6
-Published base: d8ff6fac4236badc45df86195d3295d7cfee64af (v335, unchanged).
+Source commit: 633454b8c20f815457dfa1671eb07b4afdd291ab
+Source tree: 8ed7c35587d82c216a4561844c122a6bec5d6b73
+Recovery bundle preserves 33 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. API source tree matched the local committed tree before recovery files.
 
-The verified bundle preserves 32 original local commits through the residual App/phone/metadata source-audit checkpoint. The API source tree matched the local committed source tree before adding these recovery files. Source save only; no publication.
+New rain History uses eight first-person normal/Cold reactions instead of copying the second-person result. Background continue results no longer assert continuous walking or wet clothing. Saved History remains untouched. Numeric costs, illness, IDs, ordered ports, report/remount/acknowledgement guards and clocks unchanged.
 
-Restore the original local history:
+Passed: check-localization, check-rain, production build, diff check. No CSS/art changes or fresh browser/full-suite/WebKit/iPhone verification. Legacy walk day/night wording, rain illustration time context and general long-copy/mobile audit remain open.
 
+Source save only with [skip ci]; published v335 unchanged. No deployment.
+
+Restore original history:
 ```sh
 git fetch origin backup/localization-2026-10-26
 git show origin/backup/localization-2026-10-26:.backup/localization-2026-10-26.bundle > /tmp/localization.bundle

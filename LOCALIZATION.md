@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: остаточные App/phone-result/metadata строки и первичный source-аудит (после `024323c`).
+Последний готовый этап: контекстная rain/History редактура (после `95cab8a`).
+Остаточный source-аудит сохранён в main через checkpoint `aa2804e`.
 Поиск бутылок сохранён в main через checkpoint `fd094ac`.
 Goals/History UI и воспоминания сохранены в main через checkpoint `6c13d1c`.
 Phone UI сохранён в main через checkpoint `4ae2cec`.
@@ -256,7 +257,8 @@ src/locales/en/
 - [x] Перенести прямые closing-записи History; сохранить их domain groupId и старые сохранённые тексты.
 - [x] Перенести собственные тексты прямого rain writer в каталог; английская копия и ID сохранены.
 - [x] Перенести memories и собственный UI History/Goals.
-- [ ] Завершить first-person/context audit rain History и итоговый редакторский аудит.
+- [x] Отделить first-person rain History от result и убрать walking assumption фонового rain result.
+- [ ] Завершить итоговый редакторский аудит, legacy walk и контекст иллюстраций.
 - [x] Старые записи с `reflection: true` и уже сохранённым текстом показывать как были; не переписывать их ради новой редакции и не терять пустые реакции.
 - [x] Сохранить обратную совместимость новых optional action/outcome/decision/group полей; загружать старые записи без них.
 - [x] Сохранить дату/время, порядок, группировку, пагинацию и отсутствие дубликатов.
@@ -1151,3 +1153,16 @@ footer/build, storage-failure alert и dev title — PASS. CSS/baselines не м
 Полные Node/browser-наборы, общая long-copy матрица, WebKit/iPhone не запускались.
 Публикации не было. Следующий этап — контекстная rain/History/legacy-walk редактура
 и затем общая мобильная/длиннотекстовая матрица.
+
+
+Rain editorial checkpoint — 26 October 2026: new rain History uses separate
+first-person reactions via rainHistoryText (eight whole normal/Cold messages).
+Existing saved reflections remain untouched. Background continue results describe
+the rain ending without claiming continuous walking, wet clothing or a particular
+activity; recorded costs/Cold remain in the unchanged summary. No new save fields,
+clocks, RNG, result/group IDs or replay guards. check-localization, check-rain,
+production build and diff checks passed. Frozen mechanics/ports, prior History,
+all-empty catalogue, report/remount/acknowledgement and illness guards remain
+covered. No CSS/art changes, fresh browser/full-suite/WebKit/iPhone run.
+Legacy walk day/night wording, rain illustration time context and general
+long-copy/mobile audit remain open. No publication.

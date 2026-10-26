@@ -1,4 +1,4 @@
-import { rainResultText, rainResultTitle } from './rainText'
+import { rainHistoryText, rainResultText, rainResultTitle } from './rainText'
 import { formatResultDelta } from './i18n/formatters'
 import { useEffect, useRef } from 'react'
 import { rainDailyLimit, type GameState } from './game'
@@ -91,7 +91,7 @@ export function useRainResults(context: { game: GameState; effects: ActiveEffect
     setInfoModal({ title, text, label: t('rain.result.label'), illustration, illustrationAlt: text, visibleStats: ['energy', 'mood'], rainResultId: rain.id, ...summary })
     setEventResultOpen(true)
     if (newlyReported) {
-      const entry: JournalEntry = { day: game.day, minute: game.minutes, title, text, actionId, decisionId: actionId, groupId: JSON.stringify([actionId,rain.level,rain.choice ?? 'continue',granted]), actionTitle: title, reflection: true }
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, title, text: rainHistoryText(rain, granted), actionId, decisionId: actionId, groupId: JSON.stringify([actionId,rain.level,rain.choice ?? 'continue',granted]), actionTitle: title, reflection: true }
       setJournalEntries(previous => [...previous,entry].slice(-500))
     }
   }, [game, effects, blocked])

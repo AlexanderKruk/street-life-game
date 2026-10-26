@@ -662,3 +662,16 @@ check-localization; its explicit machine/compatibility/layout/diagnostic/key
 exceptions and heuristic limits are described in docs/LOCALIZATION_RESIDUAL_AUDIT.md.
 Do not broaden exceptions to conceal new player copy. Technical source extraction
 does not complete the contextual/editorial or long-copy/mobile audits.
+
+
+Rain editorial checkpoint — 26 October 2026: new rain History uses separate
+first-person reactions via rainHistoryText (eight whole normal/Cold messages).
+Existing saved reflections remain untouched. Background continue results describe
+the rain ending without claiming continuous walking, wet clothing or a particular
+activity; recorded costs/Cold remain in the unchanged summary. No new save fields,
+clocks, RNG, result/group IDs or replay guards. check-localization, check-rain,
+production build and diff checks passed. Frozen mechanics/ports, prior History,
+all-empty catalogue, report/remount/acknowledgement and illness guards remain
+covered. No CSS/art changes, fresh browser/full-suite/WebKit/iPhone run.
+Legacy walk day/night wording, rain illustration time context and general
+long-copy/mobile audit remain open. No publication.

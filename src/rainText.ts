@@ -16,3 +16,8 @@ export function rainResultText(rain: RainEpisode, newlyCold = false) {
 export function rainResultTitle(actionId: ReturnType<typeof rainResultActionId>) {
   return t(actionId === 'rain-stopped' ? 'rain.result.title.stopped' : actionId === 'rain-passed' ? 'rain.result.title.passed' : 'rain.result.title.cover')
 }
+
+export function rainHistoryText(rain: RainEpisode, newlyCold = false) {
+  const outcome = rain.choice === 'proper' && rain.searchRemaining > 0 ? 'stoppedSearch' : rain.choice ?? 'continue'
+  return t(`rain.history.${outcome}${newlyCold ? '.cold' : ''}`)
+}
