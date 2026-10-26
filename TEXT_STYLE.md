@@ -243,3 +243,16 @@ those strings. Existing stored reflections, including empty ones, remain intact.
 The first catalogues preserve approved wording; this is not a completed audit
 of every event, controller refusal or modal branch. No new story or translation
 has been approved by this technical extraction.
+
+
+Rain editorial checkpoint — 26 October 2026: new rain History uses separate
+first-person reactions via rainHistoryText (eight whole normal/Cold messages).
+Existing saved reflections remain untouched. Background continue results describe
+the rain ending without claiming continuous walking, wet clothing or a particular
+activity; recorded costs/Cold remain in the unchanged summary. No new save fields,
+clocks, RNG, result/group IDs or replay guards. check-localization, check-rain,
+production build and diff checks passed. Frozen mechanics/ports, prior History,
+all-empty catalogue, report/remount/acknowledgement and illness guards remain
+covered. No CSS/art changes, fresh browser/full-suite/WebKit/iPhone run.
+Legacy walk day/night wording, rain illustration time context and general
+long-copy/mobile audit remain open. No publication.
