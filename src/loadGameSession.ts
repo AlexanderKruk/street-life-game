@@ -3,6 +3,7 @@ import { createInitialState,applySleepTime as applyGameSleepTime,locations,type 
 import { absoluteMinutes } from './gameTime'
 import { INITIAL_INVENTORY,INITIAL_STORAGE } from './inventory'
 import { loadJournalEntries } from './journal'
+import { legacyActionId } from './legacyActionCompatibility'
 import { CLOSING_NOTICE_KEY } from './locationClosing'
 import { loadOpeningCallIndex,openingCall } from './openingCalls'
 import { readSavedGame,loadDiscoveredLocations,type SaveReader } from './saveCompatibility'
@@ -62,7 +63,7 @@ export function loadLeftHome(storage: SaveReader) {
     // Older saves did not record departure explicitly; an arrival/stopped trip
     // in History proves that the initial neighbourhood has already been left.
     const history = JSON.parse(storage.getItem(JOURNAL_HISTORY_KEY) ?? '[]')
-    return Array.isArray(history) && history.some(entry => ['Arrival', 'Journey stopped'].includes(entry?.actionTitle))
+    return Array.isArray(history) && history.some(entry => ['arrival', 'journey-stopped'].includes(entry?.actionId ?? legacyActionId(entry?.actionTitle)))
   } catch { return true }
 }
 
@@ -154,7 +155,7 @@ export function loadGameSession(source: SaveReader) {
     } catch { return [] }
   })()
   const musicWalkUsed = (() => {
-    const inHistory = journalEntries.some(entry => entry.actionTitle === 'Walk with music')
+    const inHistory = journalEntries.some(entry => entry.actionId === 'music-walk')
     try { return reader.getItem(MUSIC_WALK_USED_KEY) === 'true' || inHistory } catch { return inHistory }
   })()
   const journalGoals: JournalGoals = (() => {

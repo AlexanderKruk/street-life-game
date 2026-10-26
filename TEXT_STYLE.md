@@ -226,3 +226,20 @@ Seven changed screenshot baselines were individually reviewed: Find Help Body
 text, the Small Shop name and the footer version. The shelter charging check
 now expects the approved present-tense checkout sentence while retaining its
 resource/time/charging assertions. Physical iPhone and WebKit remain unverified.
+
+
+## Localisation preparation — first local package
+
+Use `src/locales/en/` for migrated copy and `t` from `src/i18n` in views.
+Keep the roles and canonical names above; parameterise whole messages instead
+of building English fragments. Plural messages use a named numeric selector.
+Do not reduce font sizes to fit a later translation. Important inventory-dialog
+prose and food-risk consequences now reuse `modal-narrative` (Body).
+
+Result/action identities have moved to domain IDs; History outcome recognition
+and choice presentation still have English dependencies. Follow
+[LOCALIZATION.md](LOCALIZATION.md) and its source/modal inventory before moving
+those strings. Existing stored reflections, including empty ones, remain intact.
+The first catalogues preserve approved wording; this is not a completed audit
+of every event, controller refusal or modal branch. No new story or translation
+has been approved by this technical extraction.

@@ -48,7 +48,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (!trip || trip.remaining > 0 || lastArrival.current === trip) return
     const destination = locations.find(location => location.id === trip.destinationId)
     if (!destination) { setTrip(null); return }
-    runWithResult('Arrival', () => {
+    runWithResult({ id: 'arrival', title: 'Arrival' }, () => {
       if (lastArrival.current === trip) return
       lastArrival.current = trip
       setGame(previous => ({ ...previous, locationId: destination.id }))

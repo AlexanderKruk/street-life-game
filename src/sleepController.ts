@@ -83,7 +83,7 @@ export function createSleepController(session: SleepSession, eventSession: Event
     forcedSleep.current = null
     setSleeping(null)
     const before = sleep.before ?? { ...resultSnapshot(), game: { ...game, day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 } }
-    runWithResult('Sleep complete', () => {
+    runWithResult({ id: 'sleep-complete', title: 'Sleep complete' }, () => {
       setGame(previous => applySleepTime(previous, Math.max(0, sleep.startAbsolute + sleep.total - absoluteMinutes(previous))))
       finishSleepImpl(sleep)
     }, before, false, true)

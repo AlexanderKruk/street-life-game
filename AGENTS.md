@@ -14,6 +14,26 @@ Notes. Copy must match implemented mechanics. Never expose development plans
 inside story text. Before editing action titles/outcome phrases, check their
 dispatch, memory and History consumers and preserve saved-text compatibility.
 
+Localisation work is tracked in [LOCALIZATION.md](LOCALIZATION.md); the source
+and modal branch inventory is [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
+Use `t` from `src/i18n` and semantic keys in `src/locales/en/` for migrated
+surfaces and new text. Translate whole messages with named parameters. Use
+plural messages with a numeric selector rather than appending English endings;
+keep markup in React, never inject translated HTML. Format display values with
+`src/i18n/formatters.ts` without changing calculation/rounding rules.
+
+`runWithResult` takes `{ id, title }`: `id` is a domain action identity from
+`resultActions.ts`, not a translation key. Result changes carry resource `id`,
+numeric `amount` and (where relevant) `effectTransition`. Use these fields for
+filtering, icons, caps, memories and eligibility, never displayed labels/titles.
+New History entries retain `actionId` alongside historical `actionTitle`.
+`legacyActionCompatibility.ts` and `legacyResultCompatibility.ts` handle old
+missing IDs only. Do not extend those adapters to infer IDs from new copy.
+History outcome recognition and choice ordering still have text dependencies;
+follow the unfinished checklist before moving those blocks. Do not claim the
+whole game is localised or add a language switch yet. Run
+`node check-localization.cjs` plus the affected thematic checks during this work.
+
 The completed refactoring stages and remaining checklist are maintained in
 [REFACTORING.md](REFACTORING.md). Read it before continuing structural work and
 update the relevant checkboxes, baseline version and verification notes after
@@ -325,3 +345,29 @@ preserve the repository and the current hosting setup.
 Current refactoring batch (25 October 2026): the user requested collecting
 separate verified commits locally and publishing everything at the end. Do not
 push/deploy each refactoring stage individually during this batch.
+
+
+Icon metadata checkpoint (26 October 2026): `GameAction.icon`, authored
+`StreetEventChoice.icon` and raw LocationScreen button `data-icon` supply choice
+icons explicitly. Existing inline Icon nodes retain precedence in the legacy
+button adapter. Never restore label-based icon inference. `AvailableFirst`
+uses the same metadata for thought cards. Duration extraction and check-label
+suffix parsing remain legacy migration targets; this checkpoint does not claim
+that their transfer or the missing earlier local batches is complete.
+
+
+Recovery checkpoint (26 October 2026): use LOCALIZATION.md / LOCALIZATION_TASK.md
+as the current plan; earlier reported local batches 2–4 are absent here.
+Authored event History now uses EventOutcome.historyId / EventHistoryFacts and
+`eventHistoryReflection`, with messages in locales/en/eventHistory.ts. Do not
+parse new event wording to select a reflection. Other History producers still
+need migration; preserve old saved reflections and optional outcomeId.
+
+
+Inventory History uses `inventoryHistoryReflection` with action ID and resolved
+InventoryHistoryFacts; its messages are in locales/en/inventoryHistory.ts.
+runWithResult callbacks may return these facts only after the action guard
+accepts them. Resolve food randomness once in the existing command handler;
+never in a React updater or before the guard. Purchases must not imply eating,
+washing or taking medicine. Keep saved reflections unchanged. Other controller
+History still requires migration; do not claim the parser is fully retired.

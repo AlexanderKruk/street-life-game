@@ -1,4 +1,8 @@
 import type { ResultSummary } from './results'
+import { resultChangeId } from './legacyResultCompatibility'
+import type { ResultResourceId } from './resultResources'
+import { validResultActionId, type ResultActionId } from './resultActions'
+import { legacyActionId } from './legacyActionCompatibility'
 
 export type JournalEntry = {
   day: number
@@ -6,6 +10,8 @@ export type JournalEntry = {
   title: string
   text: string
   actionTitle: string
+  actionId?: ResultActionId
+  outcomeId?: string
   reflection: true
 }
 
@@ -41,13 +47,14 @@ const memories: Record<string, string> = {
 }
 
 // Reflections describe the actual outcome, never copy the report or its numbers.
-// The original action title is retained separately because Street uses it to
-// choose the next actions; journal wording must not change that behavior.
+// actionId owns new dispatch/Street behaviour. The text-based reflection
+// parser below is still a migration target; keep copy stable until its
+// structured outcome facts and legacy-only adapter are implemented.
 export function journalReflection(actionTitle: string, outcome: string, summary?: ResultSummary, memoryId?: string) {
   const rows = [...(summary?.costs ?? []), ...(summary?.changes ?? [])]
-  const changed = (label: string, kind: 'positive' | 'negative') => rows.some(row => row.label.includes(label) && row.kind === kind)
+  const changed = (id: ResultResourceId, kind: 'positive' | 'negative') => rows.some(row => resultChangeId(row) === id && row.kind === kind)
   const source = `${actionTitle} ${outcome}`.toLowerCase()
-  const negative = changed('Mood', 'negative')
+  const negative = changed('mood', 'negative')
   const failed = /no free places|remaining places|full right now|no appointment|nothing useful|found nothing|not returnable|nobody gives|occupied or unusable|conversation ends|cuts the conversation|not enough|need .* for that|no backpack room|left it behind|backpack full/.test(source)
   let title = titles[actionTitle] ?? (actionTitle.startsWith('Buy ') ? `Bought ${actionTitle.slice(4)}` : actionTitle)
   let text = ''
@@ -79,11 +86,11 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
   } else if (actionTitle === 'Search interrupted') {
     text = 'I was so close to finding an answer. I feel more cut off now.'
   } else if (actionTitle === 'The phone slips') {
-    text = changed('Phone condition', 'negative') ? 'My heart sank. I can’t afford to lose my link to everything.' : 'My hands are still shaking. That was too close.'
+    text = changed('phoneCondition', 'negative') ? 'My heart sank. I can’t afford to lose my link to everything.' : 'My hands are still shaking. That was too close.'
   } else if (actionTitle === 'Shelter registration') {
     text = failed ? 'I’d let myself hope. Facing another night outside feels harder now.' : 'I can finally let my shoulders drop. Tonight feels less frightening.'
   } else if (actionTitle === 'Sleep complete' || /sleep/.test(actionTitle.toLowerCase())) {
-    text = rows.some(row => row.label.includes('Cold') && row.value === 'Started')
+    text = rows.some(row => resultChangeId(row) === 'cold' && (row.effectTransition === 'started' || (!row.id && row.value === 'Started')))
       ? 'My throat feels rough and I’m shivering. Being ill out here scares me.'
       : negative ? 'Everything feels stiff. I’m relieved to be awake, but I still don’t feel rested.' : 'My head feels clearer. It helps to have had some rest.'
   } else if (memoryId && memories[memoryId]) {
@@ -130,8 +137,8 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
       : 'It helps to have someone look after me. I need to give myself time to recover.'
   } else if (/trash|bottles|containers|money/.test(actionTitle.toLowerCase())) {
     text = failed ? 'I was counting on getting something for the time I spent.'
-      : changed('Money', 'positive') ? 'I’m already thinking about what I need to spend it on.'
-      : changed('Deposit containers', 'positive') || changed('Returnable bottles', 'positive') ? 'I’ll have to carry these until I can return them.'
+      : changed('money', 'positive') ? 'I’m already thinking about what I need to spend it on.'
+      : changed('bottles', 'positive') ? 'I’ll have to carry these until I can return them.'
       : 'All that time, and nothing I can use.'
   } else if (actionTitle.startsWith('Buy ')) {
     // The purchase heading is enough for a routine successful transaction.
@@ -160,7 +167,7 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
   } else if (/offers food|food before closing/.test(actionTitle.toLowerCase())) {
     text = /decline|left it behind|no backpack room/.test(source) ? 'It was kind of them to ask. Being noticed still feels strange.' : 'I feel grateful. It means something that someone noticed me.'
   } else if (actionTitle === 'Coin on the pavement' || actionTitle === 'Coins on the pavement') {
-    text = changed('Money', 'positive') ? 'I feel lucky for once. I needed a small break.' : 'I hope they help someone else. That thought feels good.'
+    text = changed('money', 'positive') ? 'I feel lucky for once. I needed a small break.' : 'I hope they help someone else. That thought feels good.'
   } else if (actionTitle === 'Woken by a patrol' || actionTitle === 'A patrol in the waiting hall') {
     text = /documents are stored at the shelter/.test(source) ? 'My papers are safe at the shelter. I wish I had them with me for that conversation.' : /documents are missing/.test(source) ? 'I felt exposed having to explain my missing documents. I need to get them sorted out.' : /step out into the street/.test(source) ? 'I am outside again. I need to work out where I can rest next.' : 'Being woken like that left me tense. I am glad the conversation is over.'
   } else if (actionTitle === 'A rustle behind you' || actionTitle === 'A rustle in the dark') {
@@ -194,9 +201,9 @@ export function journalReflection(actionTitle: string, outcome: string, summary?
     text = 'I needed a moment away from my thoughts. They’re still there when I stop.'
   } else if (actionTitle === 'Shelter checkout') {
     text = 'I’m uneasy about being outside again. I need to work out where to go.'
-  } else if (negative || failed || changed('Health', 'negative')) {
+  } else if (negative || failed || changed('health', 'negative')) {
     text = 'I feel unsettled. I need a moment to work out what to do next.'
-  } else if (changed('Mood', 'positive')) {
+  } else if (changed('mood', 'positive')) {
     text = 'I feel a little steadier. Right now, that matters.'
   }
   return { title, text }
@@ -209,6 +216,7 @@ export function loadJournalEntries(saved: unknown): JournalEntry[] {
     && typeof entry.title === 'string' && typeof entry.text === 'string' && entry.title !== 'Current situation')
     .slice(-500).map(entry => {
       const actionTitle = typeof entry.actionTitle === 'string' ? entry.actionTitle : entry.title
+      const actionId = validResultActionId(entry.actionId) ? entry.actionId : legacyActionId(actionTitle)
       const legacySummary = Array.isArray(entry.summary?.costs) && Array.isArray(entry.summary?.changes)
         ? { costs: entry.summary.costs.filter(validChange), changes: entry.summary.changes.filter(validChange) } : undefined
       const memoryId = /a steady office job/.test(entry.text) ? 'office-routine'
@@ -217,7 +225,7 @@ export function loadJournalEntries(saved: unknown): JournalEntry[] {
         : /looking for a place to live/.test(entry.text) ? 'lost-home' : undefined
       const reflection = entry.reflection === true ? { title: entry.title, text: entry.text }
         : journalReflection(actionTitle, entry.text, legacySummary, memoryId)
-      return { day: entry.day, minute: entry.minute, actionTitle, reflection: true, ...reflection }
+      return { day: entry.day, minute: entry.minute, actionTitle, ...(actionId ? { actionId } : {}), ...(typeof entry.outcomeId === 'string' ? { outcomeId: entry.outcomeId } : {}), reflection: true, ...reflection }
     })
 }
 

@@ -99,6 +99,6 @@ export function createLocationController(context: Context, host: Host, queue: En
     }
   }
 
-  function act(id: string) { runWithResult(actions.find(action => action.id === id)?.name ?? 'Action complete', () => actImpl(id), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(id) ? ['showerGel'] : []) }
+  function act(id: string) { runWithResult({ id: `location:${id}`, title: actions.find(action => action.id === id)?.name ?? 'Action complete' }, () => actImpl(id), resultSnapshot(), true, false, ['shelter-shower', 'daycenter-shower'].includes(id) ? ['showerGel'] : []) }
   return { act, actionUnavailableReason }
 }

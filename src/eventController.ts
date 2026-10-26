@@ -12,6 +12,7 @@ import type { Inventory, LifeSituation, Screen, StoredItems } from './stateTypes
 import type { ResultCardData } from './ResultCard'
 import type { ResultSnapshot } from './results'
 import type { GameSetter, RunWithResult, Setter } from './controllerTypes'
+import type { ResultActionId } from './resultActions'
 
 type Context = {
   game: GameState
@@ -44,12 +45,12 @@ export function createEventController(session: EventSession, context: Context, h
   const { setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal, openPage, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip } = host
   const checkModifier = (choice: StreetEventChoice) => eventCheckModifier(game, choice)
   const checkUnavailableReason = (choice: StreetEventChoice) => eventChoiceUnavailable(choice, game, inventory, discoveredLocations, phoneUnavailable)
-  function applyEventOutcome(outcome: EventOutcome, title?: string) {
+  function applyEventOutcome(outcome: EventOutcome, title?: string, actionId?: ResultActionId) {
     let resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents)
     if (activeEvent?.id === 'borrow-phone-slip' && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
       resolved = { ...resolved, message: resolved.message.replace('The screen still works.', 'You try the screen, but it stays black.') }
     }
-    runWithResult(title ?? activeEvent?.title ?? 'Event result', () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
+    runWithResult({ id: actionId ?? (activeEvent ? `event:${activeEvent.id}` : 'event-result'), title: title ?? activeEvent?.title ?? 'Event result', ...(resolved.historyId ? { eventHistory: { outcomeId: resolved.historyId, suppliesRejected: fitEventSupplies(inventory, resolved).rejected.length > 0, documents: inventory.documents ? 'carried' as const : storage.documents ? 'stored' as const : 'missing' as const } } : {}) }, () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
   }
   function applyEventOutcomeImpl(outcome: EventOutcome) {
     const { rejected } = fitEventSupplies(inventory, outcome)
@@ -63,7 +64,7 @@ export function createEventController(session: EventSession, context: Context, h
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
-        visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['Energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['Phone condition'] : undefined,
+        visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['phoneCondition'] : undefined,
         batteryInSummary: !!outcome.phoneBattery,
         ...(place ? { presentation: { ...locationPresentation([place.id], 'On map'), lead: outcomeText,
           ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
@@ -135,7 +136,7 @@ export function createEventController(session: EventSession, context: Context, h
     if (!diceCheck?.choice.check || diceCheck.roll === null) return
     if (!claimDice(diceCheck)) return
     const { success, outcome } = diceOutcome(diceCheck)!
-    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? 'Item stolen' : 'Caught stealing' : undefined)
+    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? 'Item stolen' : 'Caught stealing' : undefined, diceCheck.stealItemId ? success ? 'item-stolen' : 'caught-stealing' : undefined)
     if (diceCheck.fareDodgeDestinationId) startFareDodgeTrip(diceCheck.fareDodgeDestinationId, outcome)
     if (diceCheck.stealItemId && success) {
       const item = SHOP_ITEMS.find((entry) => entry.id === diceCheck.stealItemId)

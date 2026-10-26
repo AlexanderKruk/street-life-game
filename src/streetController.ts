@@ -61,7 +61,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
     const passiveMusic = !withMusic && musicOn
     const musicText = 'You listen to your favourite songs as you walk. You feel a little better.'
     const musicIllustration = '/street-life-game/assets/event-music-walk.webp'
-    runWithResult(withMusic ? 'Walk with music' : 'Walk through the city', () => {
+    runWithResult({ id: withMusic ? 'music-walk' : 'city-walk', title: withMusic ? 'Walk with music' : 'Walk through the city' }, () => {
       if (withMusic) setMusicWalkUsed(true)
       setRainChoice(false)
       let next = applyGameAction(game, { minutes: 15, energy: -1 }, { ...moodContext(), walking: true, music: passiveMusic })
@@ -95,7 +95,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
     requestSleep('bench')
   }
 
-  function askForMoney() { runWithResult('Ask for money', askForMoneyImpl) }
-  function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') { runWithResult(kind === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench', () => streetActionImpl(kind)) }
+  function askForMoney() { runWithResult({ id: 'ask-money', title: 'Ask for money' }, askForMoneyImpl) }
+  function streetAction(kind: 'find-bench' | 'bench-rest' | 'bench-sleep') { runWithResult({ id: kind === 'find-bench' ? 'find-bench' : 'bench-rest', title: kind === 'find-bench' ? 'Is there a bench nearby? My legs could use a break.' : 'Rest on the bench' }, () => streetActionImpl(kind)) }
   return { walkMusicCost, canWalkWithMusic, walkCity, askForMoney, streetAction }
 }

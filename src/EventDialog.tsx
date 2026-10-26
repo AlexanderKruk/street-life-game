@@ -2,7 +2,6 @@ import type { ReactNode, Ref } from 'react'
 import ChoiceButton, { approximateDuration } from './ChoiceButton'
 import ChoiceOptions from './ChoiceOptions'
 import CompactStreetEvent from './CompactStreetEvent'
-import { choiceIcon } from './Icon'
 import { ModalOverlay, ModalPanel } from './Modal'
 import { responsiveImageProps } from './responsiveImages'
 import type { StreetEvent, StreetEventChoice } from './events'
@@ -48,7 +47,7 @@ export default function EventDialog({ event, choices, onChoose, unavailableReaso
       : <EventBody titleId="street-event-title" title={event.title} description={event.text}>
         <ChoiceOptions className="event-choices" seed={orderSeed} decision={`${decisionKey}|event:${event.id}`}>{choices.map(choice => {
           const unavailable = unavailableReason(choice)
-          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? choiceIcon('', choice.label)} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => onChoose(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
+          return <ChoiceButton key={choice.label} aria-label={choice.label} icon={choice.icon ?? 'person'} label={choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label} onClick={() => onChoose(choice)} disabled={!!unavailable} detail={unavailable ? <small>{unavailable}</small> : choice.check ? <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small> : undefined} duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
         })}</ChoiceOptions>
       </EventBody>}
   </EventFrame>

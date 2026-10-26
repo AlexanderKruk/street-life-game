@@ -1,5 +1,5 @@
 import ChoiceButton, { approximateDuration } from './ChoiceButton'
-import { Icon, choiceIcon, type IconName } from './Icon'
+import { Icon, type IconName } from './Icon'
 import ChoiceOptions from './ChoiceOptions'
 import type { StreetEvent, StreetEventChoice } from './events'
 
@@ -32,7 +32,7 @@ export default function CompactStreetEvent({ event, onChoose, unavailableReason,
       const unavailable = unavailableReason(choice)
       const label = choice.check ? choice.label.replace(/ · .* DC \d+$/, '') : choice.label
       return <ChoiceButton key={choice.label} aria-label={choice.label} disabled={!!unavailable} onClick={() => onChoose(choice)}
-        icon={choice.icon ?? choiceIcon('', choice.label)} label={label}
+        icon={choice.icon ?? 'person'} label={label}
         detail={<>{choice.check && <small>{choice.check.stat === 'reflex' ? 'Reflex' : 'Persuasion'} check · DC {choice.check.dc}</small>}{unavailable && <small>{unavailable}</small>}</>}
         duration={(choice.durationMinutes ?? choice.outcome?.minutes) ? approximateDuration((choice.durationMinutes ?? choice.outcome?.minutes)!) : undefined} />
     })}</ChoiceOptions>

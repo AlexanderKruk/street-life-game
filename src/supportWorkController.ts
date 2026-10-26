@@ -83,7 +83,7 @@ export function createSupportWorkController(context: Context, host: Host) {
     setMessage('You finish the shift and collect your pay. After three hours of physical work, you could use something to eat and drink.')
   }
 
-  function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') { runWithResult('Social support', () => socialSupportImpl(kind)) }
-  function takeDayWork() { runWithResult('Day work', takeDayWorkImpl) }
+  function socialSupport(kind: 'housing' | 'documents' | 'transport' | 'benefits') { runWithResult({ id: 'social-support', title: 'Social support' }, () => socialSupportImpl(kind)) }
+  function takeDayWork() { runWithResult({ id: 'day-work', title: 'Day work' }, takeDayWorkImpl) }
   return { socialSupport, takeDayWork }
 }

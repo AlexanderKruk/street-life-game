@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, type ReactNode } from 'react'
-import { Icon, choiceIcon } from './Icon'
+import { Icon, type IconName } from './Icon'
 import { locations, destinationTravelTimeRange } from './game'
 import { approximateDuration, standardizeChoiceButton } from './ChoiceButton'
 import { orderChoiceNodes } from './ChoiceOptions'
@@ -14,9 +14,9 @@ export default function AvailableFirst({ children, className, tag = 'section', t
       isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment ? flatten(node.props.children) : [node])
   }
   function thoughtOnly(node: ReactNode): ReactNode {
-    if (!isValidElement<{ children?: ReactNode; 'data-choice'?: string }>(node) || node.type !== 'button') return node
+    if (!isValidElement<{ children?: ReactNode; 'data-choice'?: string; 'data-icon'?: IconName }>(node) || node.type !== 'button') return node
     const id = node.props['data-choice'] ?? ''
-    const icon = choiceIcon(id)
+    const icon = node.props['data-icon'] ?? 'person'
     const route = { 'station-route': 'station', 'shelter-route': 'shelter', 'work-route': 'work' }[id as 'station-route' | 'shelter-route' | 'work-route']
     function textOf(children: ReactNode): string {
       return Children.toArray(children).map(child => isValidElement<{ children?: ReactNode }>(child) ? textOf(child.props.children) : String(child)).join('')

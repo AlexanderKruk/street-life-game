@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
-import type { GameState } from './game'
+import type { GameState, Need } from './game'
 import type { ActiveEffect } from './stateTypes'
 import type { LimitingEffect } from './limitingEffects'
 import { Icon, type IconName } from './Icon'
@@ -8,7 +8,7 @@ import Stat from './Stat'
 import LifeSituation from './LifeSituation'
 import { EFFECTS, remainingEffect } from './statusEffects'
 
-export type StatusNeed = { id: string; label: string; value: number; icon: IconName; cap?: number; capReason?: string }
+export type StatusNeed = { id: Need; label: string; value: number; icon: IconName; cap?: number; capReason?: string }
 type Props = {
   game: GameState; statusEffects: ActiveEffect[]; statLimits: LimitingEffect[]; separateLimits: LimitingEffect[]
   statusNeeds: StatusNeed[]; focusedNeed: StatusNeed | null; situation: ComponentProps<typeof LifeSituation>
@@ -38,9 +38,9 @@ export default function StatusScreen({ game, statusEffects, statLimits, separate
         </div>
       </section>}
       <div className="condition-heading"><h3>Condition</h3></div>
-      {focusedNeed && <Stat label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} capReason={focusedNeed.capReason} focus />}
+      {focusedNeed && <Stat id={focusedNeed.id} label={focusedNeed.label} value={focusedNeed.value} icon={<Icon name={focusedNeed.icon} />} cap={focusedNeed.cap} capReason={focusedNeed.capReason} focus />}
       <div className="status-needs" aria-label={focusedNeed ? 'Other condition indicators' : 'Condition indicators'}>
-        {statusNeeds.filter(need => need.id !== focusedNeed?.id).map(need => <Stat key={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} capReason={need.capReason} />)}
+        {statusNeeds.filter(need => need.id !== focusedNeed?.id).map(need => <Stat key={need.id} id={need.id} label={need.label} value={need.value} icon={<Icon name={need.icon} />} cap={need.cap} capReason={need.capReason} />)}
       </div>
       <LifeSituation {...situation} />
     </section>

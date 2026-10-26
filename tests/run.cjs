@@ -1,6 +1,6 @@
 const { spawnSync } = require('node:child_process');
 const { resolve } = require('node:path');
-// Keep the original 28 suites and their order; output bundles still prohibit parallel runs.
+// Keep existing suite order; output bundles still prohibit parallel runs.
 const suites = [
   "check-design-system.cjs",
   "check-module-boundaries.cjs",
@@ -29,7 +29,8 @@ const suites = [
   "check-image-cache.mjs",
   "check-regressions.cjs",
   "check-ui.cjs",
-  "check-results.cjs"
+  "check-results.cjs",
+  "check-localization.cjs"
 ];
 const start = performance.now();
 let passed = 0;

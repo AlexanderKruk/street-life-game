@@ -31,9 +31,10 @@ export function createInventoryController(context: InventoryCommandContext, host
       if (action) setGame(previous => applyAction(previous, action))
       if (changes.message !== undefined) setMessage(changes.message)
       if (changes.info) setInfoModal(changes.info)
+      return changes.history ?? result?.inventoryHistory
     }
     const result = inventoryCommandResult(command)
-    if (result) runWithResult(result.title, perform, resultSnapshot(), true, result.always ?? false, result.consumedItems ?? [])
+    if (result) runWithResult(result, perform, resultSnapshot(), true, result.always ?? false, result.consumedItems ?? [])
     else perform()
   }
 

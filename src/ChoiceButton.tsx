@@ -1,5 +1,5 @@
 import { Children, cloneElement, isValidElement, type ButtonHTMLAttributes, type ReactNode } from 'react'
-import { Icon, choiceIcon, type IconName } from './Icon'
+import { Icon, type IconName } from './Icon'
 
 // Estimates are intentionally coarse; clocks and elapsed timers never use this formatter.
 export function approximateDuration(minutes: number): string {
@@ -47,12 +47,12 @@ function cleanLabel(children: ReactNode): ReactNode {
 // Existing action lists keep their handlers, disabled reasons and ordering while
 // sharing the same visual component as authored event choices.
 export function standardizeChoiceButton(node: ReactNode): ReactNode {
-  if (!isValidElement<ButtonHTMLAttributes<HTMLButtonElement> & { 'data-choice'?: string }>(node) || node.type !== 'button') return node
+  if (!isValidElement<ButtonHTMLAttributes<HTMLButtonElement> & { 'data-choice'?: string; 'data-icon'?: IconName }>(node) || node.type !== 'button') return node
   const all = descendants(node.props.children)
   const heading = all.find(part => isValidElement(part) && part.type === 'strong')
   const label = isValidElement<{ children?: ReactNode }>(heading) ? cleanLabel(heading.props.children) : cleanLabel(Children.toArray(node.props.children)[0])
   const existingIcon = all.find(part => isValidElement<{ name?: IconName }>(part) && part.type === Icon)
-  const icon = isValidElement<{ name: IconName }>(existingIcon) ? existingIcon.props.name : choiceIcon(node.props['data-choice'] ?? '', textOf(label))
+  const icon = isValidElement<{ name: IconName }>(existingIcon) ? existingIcon.props.name : node.props['data-icon'] ?? 'person'
   const details: ReactNode[] = []
   let duration: string | undefined
   const timePattern = /[≈~]\d+(?:[–-]\d+)?\s*(?:min|m|h)(?:\s*\d+m)?\+?/
