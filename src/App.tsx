@@ -1,3 +1,4 @@
+import { travelPhaseLabel } from './travelText'
 import { formatSleepDuration, sleepDateLabel, sleepUnavailableReason } from './sleepText'
 import { locationName } from './locationText'
 import { limitReasonsLabel } from './statusPresentation'
@@ -762,7 +763,7 @@ export default function App() {
       const phase = getTravelDisplayPhase(trip)
       return <ActivityDialog kind="travel" visible={travelVisible} panelRef={travelModalRef}
         from={locationName(current.id)} to={destination ? locationName(destination.id) : undefined} walking={trip.mode === 'walk'} moving={phase.walking}
-        elapsed={elapsed} phase={underRainCover ? 'Under cover' : phase.label}
+        elapsed={elapsed} phase={underRainCover ? t('travel.underCover') : travelPhaseLabel(phase.id)}
       />
     })()}
 

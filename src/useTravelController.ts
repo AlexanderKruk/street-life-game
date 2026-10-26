@@ -50,7 +50,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (!trip || trip.remaining > 0 || lastArrival.current === trip) return
     const destination = locations.find(location => location.id === trip.destinationId)
     if (!destination) { setTrip(null); return }
-    runWithResult({ id: 'arrival', title: 'Arrival', actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : locationName(destination.id) } }, () => {
+    runWithResult({ id: 'arrival', title: t('travel.arrivalTitle'), actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : locationName(destination.id) } }, () => {
       if (lastArrival.current === trip) return
       lastArrival.current = trip
       setGame(previous => ({ ...previous, locationId: destination.id }))
@@ -87,7 +87,7 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     setStreetExitPending(false)
     setLeftHome(true)
     recordShelterDeparture('street')
-    if (shelterPhoneCharging) setMessage('You collected your phone from the charger before leaving Night Shelter.')
+    if (shelterPhoneCharging) setMessage(t('travel.collectedPhone'))
     setStreetBenchFound(false)
     setShelterArrival(null)
     ambientEventClock.current = { locationId: 'street', minutes: 0 }
@@ -100,13 +100,13 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const choice: StreetEventChoice = {
-      label: 'Ride without a ticket',
+      label: t('travel.fare.choice'),
       check: {
         stat: 'reflex', dc: 12,
-        success: { message: 'No ticket inspection this time. You ride for free.' },
-        failure: { money: -20, mood: -8, message: 'A ticket inspector catches you. You receive a 20 zł penalty.' },
-        criticalSuccess: { mood: 2, message: 'You avoid inspection completely and ride for free.' },
-        criticalFailure: { money: -35, mood: -12, message: 'Bad luck: inspectors catch you immediately. The penalty is 35 zł.' },
+        success: { message: t('travel.fare.success') },
+        failure: { money: -20, mood: -8, message: t('travel.fare.failure') },
+        criticalSuccess: { mood: 2, message: t('travel.fare.criticalSuccess') },
+        criticalFailure: { money: -35, mood: -12, message: t('travel.fare.criticalFailure') },
       },
     }
     setDiceCheck({ choice, roll: null, modifier: eventCheckModifier(game, choice), resolved: false, fareDodgeDestinationId: destination.id })
@@ -118,13 +118,13 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (!destination) return
     const fare = freeTransitActive ? 0 : 4.4
     if (mode === 'transit' && game.money < fare) {
-      setMessage('You do not have enough money for public transport.')
+      setMessage(t('travel.noMoney'))
       return
     }
     const total = randomTravelMinutes(destinationTravelTimeRange(destination, mode))
     setLeftHome(true)
     recordShelterDeparture(destination.id)
-    if (shelterPhoneCharging) setMessage('You collected your phone from the charger before leaving Night Shelter.')
+    if (shelterPhoneCharging) setMessage(t('travel.collectedPhone'))
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
     setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot() })

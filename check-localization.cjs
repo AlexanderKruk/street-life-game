@@ -599,6 +599,20 @@ for(const day of [1,2,5,6,7])for(const minutes of [0,600,1439])for(const limit o
 }
 console.log(`PASS: ${rainRuleCases} rain copy/result/schedule cases preserve numeric RAIN data, domain action IDs, whole Cold messages, carried episodes and RNG boundaries.`);
 
+const travelSource=`export * from './src/travelPhases'; export * from './src/travelText'; export {default as TravelPlanningDialog} from './src/TravelPlanningDialog';`;
+const travelBase=bundled({source:travelSource});
+const travelOld=bundled({source:`export * from './test-fixtures/travelPhases-copy'; export {default as TravelPlanningDialog} from './test-fixtures/TravelPlanningDialog-copy';`});
+const {travel:travelCatalog}=bundled('src/locales/en/travel.ts');
+const pseudoTravel=Object.fromEntries(Object.entries(travelCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+assert.deepEqual(validateCatalog(travelCatalog,pseudoTravel),[]);
+const travelView=bundled({source:travelSource,catalogs:{travel:pseudoTravel}});
+let travelPhases=0;
+for(const mode of ['walk','transit','fare-dodge'])for(let total=1;total<=180;total++)for(let remaining=0;remaining<=total;remaining++)for(const method of ['getTravelPhase','getTravelDisplayPhase']){
+ const trip={mode,total,remaining},old=travelOld[method](trip),actual=travelBase[method](trip),translated=travelView[method](trip);
+ assert.deepEqual({label:travelBase.travelPhaseLabel(actual.id),walking:actual.walking,exposure:actual.exposure},old);assert.deepEqual(translated,actual);travelPhases++;
+}
+console.log(`PASS: ${travelPhases} travel simulation/display phases preserve timing, walking/exposure and English labels under pseudo-copy.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -909,6 +923,12 @@ try {
     const rain=rainFixture('downpour',{choice:'continue',cold:true});assert.deepEqual(mechanics(restoreRain(rainView,rain,true)),mechanics(restoreRain(rainBase,rain,true)));rainRestores++;
     console.log(`PASS: ${rainDialogCases} rain dialog DOM/order/handler variants, ${rainReportCases.length} frozen/pseudo StrictMode report/remount cases and ${rainRestores} App restore/acknowledgement states preserve losses, Cold, History and once-only consumption.`);
   }finally{cleanup();window.setInterval=rainTimers.set;window.clearInterval=rainTimers.clear;Math.random=rainTimers.random;}
+  let travelDialogs=0;
+  for(const destination of locationsView.locations)for(const freeTransitActive of [false,true])for(const money of [0,4.39,4.4,100]){
+   const show=view=>{cleanup();const calls=[];render(React.createElement(view.TravelPlanningDialog,{destination,panelRef:null,choiceSeed:42,choiceDecisionKey:'travel-fixture',freeTransitActive,money,onClose:()=>calls.push('close'),onStart:mode=>calls.push(mode),onFareDodge:()=>calls.push('fare-dodge')}));const mask=document.querySelector('mask');if(mask)assert.equal(document.querySelector('rect[mask]').getAttribute('mask'),`url(#${mask.id})`);const html=document.body.innerHTML.replace(/_r_\w+_/g,'_react_generated_mask_');const controls=[...document.querySelectorAll('button')].map(n=>[n.getAttribute('data-order-id'),n.disabled]);act(()=>document.querySelectorAll('button').forEach(n=>n.click()));return{html,controls,calls};};
+   const old=show(travelOld),actual=show(travelBase),translated=show(travelView);assert.equal(actual.html,old.html);assert.deepEqual(translated.controls,actual.controls);assert.deepEqual(translated.calls,actual.calls);travelDialogs++;
+  }
+  console.log(`PASS: ${travelDialogs} travel planner variants preserve English DOM, costs, eligibility, order and command IDs under pseudo-copy.`);
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){
