@@ -1,11 +1,11 @@
-# Travel localisation checkpoint
+# D20 localisation checkpoint
 
-Source commit: 6f0771fa3534a1b8d4141c419cb8d6680df08d7a
-Source tree excluding .backup: ce29fbe0cfe95dd1735b72f6073a688a3f081b90
+Source commit: 75e3e30d138036702ea38d0f5ce00cc17a722aaa
+Source tree excluding .backup: 971ab12cbc5a8ec653eb7d09e9e2c58c4a196e1d
 
-32 travel entries migrated; stable phase IDs separate from labels. 98,820 phase comparisons and 88 planner variants passed, plus event-travel/boundary checks, map-travel/phone-clock regressions and build. Desktop browser inspected; fresh mobile/long-copy, WebKit/iPhone and full suites remain unrun. See LOCALIZATION.md and TESTING.md. Next: DiceDialog/D20. Public game remains v335. Source save only with [skip ci].
+14 new dialogs.ts entries migrate DiceDialog's own descriptions, accessible math/roll, controls and outcome labels. 144 frozen/pseudo variants plus event-travel/restored-roll checks, events/shop-inventory regressions, design system and build passed. Desktop critical result inspected. Fresh mobile/long-copy, WebKit/iPhone and full suites remain unrun. CSS/baselines unchanged. Authored choice labels/eventText remain in the events stage.
 
-The verified bundle retains 22 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af.
+The verified bundle retains 23 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: events/eventController, then phone and final audits. See LOCALIZATION.md.
 
 Restore in a clone containing the published base:
 

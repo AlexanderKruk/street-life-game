@@ -488,3 +488,9 @@ Planner DOM/command/order/eligibility comparisons cover all locations and fare
 boundaries/free transit. Event-travel/boundary checks, map-travel/phone-clock
 regressions and build passed. Desktop browser inspected; fresh mobile/long-copy,
 WebKit/iPhone and full suites remain unrun.
+
+DiceDialog catalogue: 144 frozen/pseudo DOM/handler variants cover reflex and
+persuasion, -2/0/+2, ready/critical/threshold rolls, event/fare/theft contexts.
+Localisation, event-travel/restored D20, events/shop-inventory, design-system and
+build passed. Desktop critical-result inspected; fresh mobile/long-copy and full
+suites/WebKit/iPhone remain unrun.

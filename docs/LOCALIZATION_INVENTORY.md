@@ -36,7 +36,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | App memories, closing notice/History, exit confirmation, initial message/footer | locations.ts / future history/dialogs/common | partial: closing/exit/closing History moved; memories/initial/footer pending | exact original copy during structural migration | once-per-run memories, closing transition, leave/cancel, reset, build label |
 | `ActivityDialog.tsx`, `ActivityStatus.tsx` | `common.ts`, formatters | moved own copy | exact time formatting retained | phone/travel visibility, 01m/59m/1h 00m; phase/title supplied by owner |
 | `travelPhases.ts`, `travelText.ts`, `useTravelController.ts`, `TravelPlanningDialog.tsx` | travel.ts | moved own copy | original English; phase IDs separate from labels | normal/nearby ranges, free/paid/ticketless, arrived/blocked entry, restored trip |
-| `DiceDialog.tsx` | dialogs | pending | pending | ready/rolled, 1/20/threshold, theft/fare-dodge/authored check |
+| `DiceDialog.tsx` | dialogs.ts | moved own copy; authored text tracked with events | original English and numerical checks preserved | ready/rolled, 1/20/threshold, theft/fare-dodge/authored check |
 | `rain.ts`, `rainText.ts`, `RainEventDialog.tsx`, `useRainController.ts` | rain.ts | moved own rain copy; numeric RAIN/domain result IDs | original English retained; direct History voice/background-walk/art-time follow-up open | 3 intensities, 3 choices, tree/awning/passage, early end, illness, recorded costs |
 | `sleepController.ts`, `sleepRules.ts`, `sleepText.ts`, `SleepPlanningDialog.tsx`, `SleepProgressDialog.tsx`, SleepHeading/App sleep | sleep.ts | moved own copy | original English preserved; numeric wake date/time and domain fatigue reasons | all 4 sleep kinds, forced/normal, wake event/theft/illness, 07:30 truncation, wetness flag |
 | `shelterController.ts`, `shelterRules.ts`, `ShelterQueueDialog.tsx`, `ShelterCheckoutDialog.tsx`, `useShelterLifecycle.ts` | shelter.ts / shelterText.ts | moved own shelter copy | original English/rules; whole checkout variants, numeric plurals | outside/inside/registration, vacancy/refusal, renewal, checkout/charging |
@@ -65,7 +65,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `CompactStreetEvent` | event IDs and choices, missing icon fallback, duration/check badge | P |
 | `RainEventDialog` | drizzle/rain/downpour; opening, nearby/passage search/wait; tree/awning; carry on; shelter search finishes/ends early | T; rain.ts; all intensities/choices/early end/Cold/restore checks |
 | `TravelPlanningDialog` | walking, paid/free/ticketless transit, poor money, nearby timed range, invalid destination | T; travel.ts; phase/planner/controller/map-travel checks |
-| `DiceDialog` | before/after roll, criticals/normal threshold, theft/fare/authored, cancel/continue | P; event/controller checks |
+| `DiceDialog` | before/after roll, criticals/normal threshold, theft/fare/authored, cancel/continue | T own copy; 144 DOM/pseudo variants and event/controller checks |
 | `PhoneDialog` | active/expired plan, battery, service expiry hours/minutes, money, auto-renew, blocked behind process | P; phone checks |
 | `SleepPlanningDialog` | ground/bench/shelter/residential; fatigue restrictions; wake day/time; 07:30; wetness flag | T; sleep.ts; fatigue/date/focus/restore checks |
 | `SleepProgressDialog` | four kinds; elapsed/cap; forced sleep; wake debug; exposure note | T; sleep.ts; elapsed/illness/restore/debug-finish checks |
