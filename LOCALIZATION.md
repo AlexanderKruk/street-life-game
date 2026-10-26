@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: собственные тексты DiceDialog (после `6f0771f`), проверен тематически.
+Последний готовый этап: собственные тексты eventController и broken-screen metadata (после `75e3e30`), проверен тематически.
+DiceDialog сохранён в main через checkpoint `25bad27`.
 Поездки сохранены в main через checkpoint `e8f88ea`.
 Дождь сохранён в main через checkpoint `5a6678f`.
 Сон сохранён в main через checkpoint `cb787a5`.
@@ -46,7 +47,7 @@ DiceDialog использует dialogs.ts для собственных под�
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: события/eventController, затем телефон. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: авторские сцены events.ts и eventChecks, затем телефон. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -927,3 +928,24 @@ event/fare и два предмета. check-localization, event-travel controll
 events/shop-inventory regressions, design-system и build — PASS.
 Desktop browser критического исхода осмотрен. Свежие mobile/long-copy,
 полные наборы, WebKit/iPhone не запускались. CSS/эталоны прежние. Без публикации.
+
+
+### eventController и broken-screen metadata — 26 октября 2026
+
+15 сообщений locales/en/eventController.ts: titles, знания/открытия мест,
+отказ при полном рюкзаке и результаты краж, shelter notice и полный исход
+поломки телефона. EventOutcome.phoneBreakMessage обозначает альтернативный
+текст при обнулении телефона; наличие проверяется через !== undefined.
+Замена английского предложения через replace удалена. Основная failure-копия,
+phoneCondition -5, пороги, historyId, RNG/порядок команд и saves прежние.
+Тексты сцен/ответов, resolveEventOutcome и eventChecks пока не перенесены.
+
+Проверено: check-localization сравнивает controller English/state с frozen75e3e30,
+знания/открытие/движение, phone condition 0/3/5/6/100, произвольный исходный текст
+и псевдокаталог: поломка больше не зависит от фразы. check-events,
+check-event-travel-controllers, check-module-boundaries (146 модулей),
+regression/events, shop-inventory и build/diff — PASS.
+check-events ранее искал короткие подписи chat/catch без stat/DC; селекторы
+обновлены под существующий accessibility-контракт с сохранением assertions.
+JSX/CSS не менялись; новый browser/mobile/long-copy/full/WebKit/iPhone прогон
+не выполнялся. Следующий этап — events.ts и eventChecks. Без публикации.

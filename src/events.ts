@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import type { WeatherId } from './weather'
 import type { EventHistoryOutcomeId } from './eventHistoryDefinitions'
 import { illustrateStreetEvent } from './eventArtwork'
@@ -36,6 +37,8 @@ export type EventContext = {
 export type EventOutcome = {
   historyId?: EventHistoryOutcomeId
   message: string
+  /** Complete alternate copy when this outcome reduces the phone to zero. */
+  phoneBreakMessage?: string
   identityCheck?: boolean
   moveToStreet?: boolean
   randomCoin?: boolean
@@ -164,7 +167,7 @@ export const STREET_EVENTS: StreetEvent[] = [
   { id:'borrow-phone-slip', trigger:'location', continuationOnly:true, icon:'📱', title:'One quick call', text:'He finishes the call and holds your phone out. “Thanks, I really—” It slips from his fingers before you can take it. You reach for it.', weight:1, choices:[
     { id:'catch', label:'Try to catch it', icon:'hand', check:{ stat:'reflex', dc:11,
       success:{ historyId:'borrow-phone-slip:catch:success', minutes:5, mood:3, phoneBattery:-2, message:'You catch it just above the pavement. For a second, neither of you speaks. “God, sorry,” he says. You check the screen before putting it safely away.' },
-      failure:{ historyId:'borrow-phone-slip:catch:failure', minutes:5, mood:3, phoneBattery:-2, phoneCondition:-5, message:'Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. The screen still works. There’s a fresh dent in the corner. “I’m really sorry.” You take it back.' },
+      failure:{ phoneBreakMessage:t('event.phoneSlip.broken'), historyId:'borrow-phone-slip:catch:failure', minutes:5, mood:3, phoneBattery:-2, phoneCondition:-5, message:'Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. The screen still works. There’s a fresh dent in the corner. “I’m really sorry.” You take it back.' },
     } },
   ]},
   { id:'station-cleaning', trigger:'location', icon:'🧹', title:'Cleaning the hall', text:'A cleaner approaches with a floor-cleaning machine and gestures towards the area where you are resting. “Could you move over for a few minutes? I need to clean here.”', weight:1, eligible:c=>c.locationId==='station' && (c.observation==='idle' || c.observation==='action') && (c.elapsedMinutes??0)>=15, choices:[

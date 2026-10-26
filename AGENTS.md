@@ -591,3 +591,9 @@ DiceDialog catalogue checkpoint: own descriptions, accessible roll/math template
 controls and critical/ordinary outcome labels live in dialogs.ts. Keep numeric
 roll/modifier/DC and saved-roll/acceptance guards independent of display. Authored
 choice labels/eventText still belong to the pending events catalogue.
+
+Event controller checkpoint: own messages use locales/en/eventController.ts.
+EventOutcome.phoneBreakMessage is the complete broken-phone alternative; check
+presence with !== undefined and numeric phone condition, never replace an English
+sentence. Preserve historyId, numeric damage, follow-up/roll/claim guards and saves.
+Authored events, resolveEventOutcome and eventChecks copy remain pending.

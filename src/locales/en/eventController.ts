@@ -1,0 +1,17 @@
+export const eventController = {
+  "event.controller.resultTitle": "Event result",
+  "event.controller.afterChoice": "After your choice",
+  "event.controller.known": "{message}\n\nYou already know about: {places}.\n\nYou can find out more by asking around or searching on your phone.",
+  "event.controller.unknown": "{message}\n\nYou’re not sure where to start yet.\n\nYou can find out more by asking around or searching on your phone.",
+  "event.controller.rejected": "There was no backpack room for {items}; you left it behind.",
+  "event.controller.shelterNotice": "Arrive before 18:00 on Day {day}. Doors open at 18:00; registration starts at 18:20.",
+  "event.controller.stolen": "Item stolen",
+  "event.controller.caught": "Caught stealing",
+  "event.controller.full": "Backpack full. You have nowhere to hide the item.",
+  "event.controller.stealChoice": "Steal {item}",
+  "event.controller.stealSuccess": "You steal {item} without being stopped.",
+  "event.controller.stealCritical": "Perfect timing. You take {item} without drawing attention.",
+  "event.controller.stealFailure": "The shopkeeper catches you and orders you out. You find yourself back on the street, empty-handed.",
+  "event.controller.stealCriticalFailure": "The shopkeeper spots your attempt immediately and orders you out. You find yourself back on the street, empty-handed.",
+  "event.phoneSlip.broken": "Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. You try the screen, but it stays black. There’s a fresh dent in the corner. “I’m really sorry.” You take it back."
+} as const

@@ -1,3 +1,4 @@
+import { t, locale } from './i18n'
 import { locationName } from './locationText'
 import { STREET_EVENTS, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
 import { illustrateStreetEvent } from './eventArtwork'
@@ -48,27 +49,29 @@ export function createEventController(session: EventSession, context: Context, h
   const checkUnavailableReason = (choice: StreetEventChoice) => eventChoiceUnavailable(choice, game, inventory, discoveredLocations, phoneUnavailable)
   function applyEventOutcome(outcome: EventOutcome, title?: string, actionId?: ResultActionId) {
     let resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents)
-    if (activeEvent?.id === 'borrow-phone-slip' && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
-      resolved = { ...resolved, message: resolved.message.replace('The screen still works.', 'You try the screen, but it stays black.') }
+    if (activeEvent?.id === 'borrow-phone-slip' && resolved.phoneBreakMessage !== undefined && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
+      resolved = { ...resolved, message: resolved.phoneBreakMessage! }
     }
-    runWithResult({ id: actionId ?? (activeEvent ? `event:${activeEvent.id}` : 'event-result'), title: title ?? activeEvent?.title ?? 'Event result', ...(resolved.historyId ? { eventHistory: { outcomeId: resolved.historyId, suppliesRejected: fitEventSupplies(inventory, resolved).rejected.length > 0, documents: inventory.documents ? 'carried' as const : storage.documents ? 'stored' as const : 'missing' as const } } : {}) }, () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
+    runWithResult({ id: actionId ?? (activeEvent ? `event:${activeEvent.id}` : 'event-result'), title: title ?? activeEvent?.title ?? t('event.controller.resultTitle'), ...(resolved.historyId ? { eventHistory: { outcomeId: resolved.historyId, suppliesRejected: fitEventSupplies(inventory, resolved).rejected.length > 0, documents: inventory.documents ? 'carried' as const : storage.documents ? 'stored' as const : 'missing' as const } } : {}) }, () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
   }
   function applyEventOutcomeImpl(outcome: EventOutcome) {
     const { rejected } = fitEventSupplies(inventory, outcome)
     const knownPlaces = outcome.knownLocations?.filter(id => discoveredLocations.includes(id)).flatMap(id => locations.some(place => place.id === id) ? [locationName(id)] : [])
-    const knowledgeText = knownPlaces
-      ? `\n\n${knownPlaces.length ? `You already know about: ${knownPlaces.join(', ')}.` : 'You’re not sure where to start yet.'}\n\nYou can find out more by asking around or searching on your phone.`
-      : ''
-    const outcomeText = rejected.length ? `There was no backpack room for ${rejected.join(' and ')}; you left it behind.` : outcome.message + knowledgeText
+    const outcomeText = rejected.length
+      ? t('event.controller.rejected', { items: new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(rejected) })
+      : knownPlaces ? knownPlaces.length
+        ? t('event.controller.known', { message: outcome.message, places: knownPlaces.join(', ') })
+        : t('event.controller.unknown', { message: outcome.message })
+      : outcome.message
     if (activeEvent?.illustration || outcome.illustration) {
       const place = locations.find(location => location.id === outcome.discoverLocation)
       const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
       const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
-      setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? 'After your choice', text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
+      setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? t('event.controller.afterChoice'), text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
         visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['phoneCondition'] : undefined,
         batteryInSummary: !!outcome.phoneBattery,
         ...(place ? { presentation: { ...locationPresentation([place.id]), lead: outcomeText,
-          ...(place.id === 'shelter' ? { notice: `Arrive before 18:00 on Day ${displayDay(goalDay)}. Doors open at 18:00; registration starts at 18:20.` } : {}) } } : {}) }))
+          ...(place.id === 'shelter' ? { notice: t('event.controller.shelterNotice', { day: displayDay(goalDay) }) } : {}) } } : {}) }))
     }
     setEncounters(previous => ({ ...previous, pendingId: null, pendingRoll: null }))
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
@@ -137,7 +140,7 @@ export function createEventController(session: EventSession, context: Context, h
     if (!diceCheck?.choice.check || diceCheck.roll === null) return
     if (!claimDice(diceCheck)) return
     const { success, outcome } = diceOutcome(diceCheck)!
-    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? 'Item stolen' : 'Caught stealing' : undefined, diceCheck.stealItemId ? success ? 'item-stolen' : 'caught-stealing' : undefined)
+    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? t('event.controller.stolen') : t('event.controller.caught') : undefined, diceCheck.stealItemId ? success ? 'item-stolen' : 'caught-stealing' : undefined)
     if (diceCheck.fareDodgeDestinationId) startFareDodgeTrip(diceCheck.fareDodgeDestinationId, outcome)
     if (diceCheck.stealItemId && success) {
       const item = SHOP_ITEMS.find((entry) => entry.id === diceCheck.stealItemId)
@@ -150,17 +153,17 @@ export function createEventController(session: EventSession, context: Context, h
   function stealItem(item: (typeof SHOP_ITEMS)[number]) {
     if (!open || currentId !== 'shop') return
     if (!canAddToBackpack(inventory, item)) {
-      setMessage('Backpack full. You have nowhere to hide the item.')
+      setMessage(t('event.controller.full'))
       return
     }
     const choice: StreetEventChoice = {
-      label: `Steal ${item.name}`,
+      label: t('event.controller.stealChoice', { item: item.name }),
       check: {
         stat: 'reflex', dc: 12,
-        success: { minutes: 5, message: `You steal ${item.name} without being stopped.` },
-        failure: { minutes: 5, mood: -8, moveToStreet: true, message: 'The shopkeeper catches you and orders you out. You find yourself back on the street, empty-handed.' },
-        criticalSuccess: { minutes: 3, mood: 2, message: `Perfect timing. You take ${item.name} without drawing attention.` },
-        criticalFailure: { minutes: 10, mood: -12, moveToStreet: true, message: 'The shopkeeper spots your attempt immediately and orders you out. You find yourself back on the street, empty-handed.' },
+        success: { minutes: 5, message: t('event.controller.stealSuccess', { item: item.name }) },
+        failure: { minutes: 5, mood: -8, moveToStreet: true, message: t('event.controller.stealFailure') },
+        criticalSuccess: { minutes: 3, mood: 2, message: t('event.controller.stealCritical', { item: item.name }) },
+        criticalFailure: { minutes: 10, mood: -12, moveToStreet: true, message: t('event.controller.stealCriticalFailure') },
       },
     }
     setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false, stealItemId: item.id })

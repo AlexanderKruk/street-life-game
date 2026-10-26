@@ -613,6 +613,29 @@ for(const mode of ['walk','transit','fare-dodge'])for(let total=1;total<=180;tot
 }
 console.log(`PASS: ${travelPhases} travel simulation/display phases preserve timing, walking/exposure and English labels under pseudo-copy.`);
 
+const eventSource=`export * from './src/events'; export * from './src/game'; export * from './src/inventory'; export * from './src/eventController';`;
+const eventBase=bundled({source:eventSource});const eventOld=bundled({source:`export * from './src/events'; export * from './src/game'; export * from './src/inventory'; export * from './test-fixtures/eventController-copy';`});
+const {eventController:eventCatalog}=bundled('src/locales/en/eventController.ts');
+const eventPseudo=Object.fromEntries(Object.entries(eventCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+const eventView=bundled({source:eventSource,catalogs:{eventController:eventPseudo}});
+function executeEventCopy(view,outcome,condition=100,mutated=false){
+ const state={game:{...initialState,day:2,minutes:600},inventory:{...INITIAL_INVENTORY,phoneCondition:condition},message:'',infoModal:null,encounters:{pendingId:'borrow-phone-slip'},firstNightEvents:{pendingId:'borrow-phone-slip'},discoveredLocations:['support'],activeGoal:null,eventResultOpen:false,ports:[]};
+ const setter=key=>value=>{state[key]=typeof value==='function'?value(state[key]):value;};
+ const session={activeEvent:{id:'borrow-phone-slip',title:'Frozen event',illustration:'/fixture.webp'},setActiveEvent:()=>{},diceCheck:null,setDiceCheck:()=>{},firstNightEvents:state.firstNightEvents,setFirstNightEvents:setter('firstNightEvents'),setEncounters:setter('encounters'),ambientEventClock:{current:{}},claimDice:()=>true};
+ const host={...Object.fromEntries(['game','inventory','message','infoModal','discoveredLocations','activeGoal','eventResultOpen'].map(key=>['set'+key[0].toUpperCase()+key.slice(1),setter(key)])),openPage:id=>state.ports.push(id),resultSnapshot:()=>({game:state.game,inventory:state.inventory,effects:[]}),runWithResult:(action,run)=>{state.action=action;run();},applyAction:(game,action)=>view.applyAction(game,action),startFareDodgeTrip:()=>{}};
+ const controller=view.createEventController(session,{game:state.game,inventory:state.inventory,storage:INITIAL_STORAGE,life:{housing:'Street'},discoveredLocations:state.discoveredLocations,phoneUnavailable:null,shelterBooked:false,currentId:'street',open:true},host);
+ const random=Math.random;Math.random=()=>.5;try{controller.applyEventOutcome(mutated?{...outcome,message:'Arbitrary translated wording'}:outcome);return state;}finally{Math.random=random;}
+}
+const slip=eventBase.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure;
+for(const condition of [0,3,5,6,100]){
+ const original=executeEventCopy(eventOld,slip,condition),actual=executeEventCopy(eventBase,slip,condition);assert.deepEqual(actual,original);
+ const changed=executeEventCopy(eventBase,slip,condition,true);assert.equal(changed.message,condition<=5?slip.phoneBreakMessage:'Arbitrary translated wording');
+ const pseudoSlip=eventView.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure,translated=executeEventCopy(eventView,pseudoSlip,condition,true);
+ assert.equal(translated.inventory.phoneCondition,actual.inventory.phoneCondition);assert.deepEqual(translated.action.eventHistory,actual.action.eventHistory);
+}
+for(const outcome of [{message:'fixture'},{message:'fixture',knownLocations:[]},{message:'fixture',knownLocations:['support','station','unknown']},{message:'fixture',discoverLocation:'shelter',minutes:30},{message:'fixture',moveToStreet:true}])assert.deepEqual(executeEventCopy(eventBase,outcome),executeEventCopy(eventOld,outcome));
+console.log('PASS: event controller English parity, knowledge/discovery/movement and broken-phone boundary/translated-message metadata preserve state and History facts.');
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];

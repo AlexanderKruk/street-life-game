@@ -494,3 +494,10 @@ persuasion, -2/0/+2, ready/critical/threshold rolls, event/fare/theft contexts.
 Localisation, event-travel/restored D20, events/shop-inventory, design-system and
 build passed. Desktop critical-result inspected; fresh mobile/long-copy and full
 suites/WebKit/iPhone remain unrun.
+
+Event controller checkpoint: frozen/pseudo controller comparisons cover knowledge,
+discovery, movement and broken-phone 0/3/5/6/100 boundaries with arbitrary base
+message text. Event/event-travel checks, events/shop-inventory regressions,
+boundaries and build passed. check-events selectors now expect existing stat/DC
+accessible labels for company chat and phone catch, retaining gameplay assertions.
+No JSX/CSS changes or fresh browser/full/WebKit/iPhone run.
