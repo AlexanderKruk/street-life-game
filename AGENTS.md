@@ -555,3 +555,15 @@ guards. Attendance has an optional message: test !== undefined for its presence,
 never truthiness of its translated text. Queue/departure save schemas and before
 snapshots remain unchanged. The owner retains one clock, focus/blocking and
 lastQueue/lastDeparture guards. Sleep/rain/travel/event/phone work stays open.
+
+
+Sleep catalogue checkpoint (26 October 2026): sleep.ts and sleepText.ts cover
+sleepController, planning/progress, SleepHeading and App sleep-start/date copy.
+sleepDurationBlock returns a domain reason ID or null; only null means eligible,
+including empty translated reasons. wakeTime returns numeric day/minutes; never
+split translated dates on punctuation. Keep D0 display, numeric hour plurals,
+whole wet/illness result variants, 07:30 truncation, fatigue thresholds, forced
+sleep, recovery/caps, illness RNG, wall-clock catch-up and lastFinishedSleep guards.
+Persisted sleep kinds/housing and save schemas remain unchanged. The shared clock,
+focus/pause and debug command ownership stay with App/controllers. Author-written
+wake events, remaining rain/travel/event/phone copy and final audits stay open.

@@ -38,7 +38,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `travelPhases.ts`, `useTravelController.ts`, `TravelPlanningDialog.tsx` | travel/dialogs | pending | pending | normal/nearby ranges, free/paid/ticketless, arrived/blocked entry, restored trip |
 | `DiceDialog.tsx` | dialogs | pending | pending | ready/rolled, 1/20/threshold, theft/fare-dodge/authored check |
 | `rain.ts`, `RainEventDialog.tsx`, `useRainController.ts` | rain/dialogs | partial: summary resource IDs; prose pending | stopped-search image/text already approved | 3 intensities, 3 choices, tree/awning/passage, early end, illness, recorded costs |
-| `sleepController.ts`, `SleepPlanningDialog.tsx`, `SleepProgressDialog.tsx` | sleep/dialogs | pending | pending | all 4 sleep kinds, forced/normal, wake event/theft/illness, 07:30 truncation, wetness flag |
+| `sleepController.ts`, `sleepRules.ts`, `sleepText.ts`, `SleepPlanningDialog.tsx`, `SleepProgressDialog.tsx`, SleepHeading/App sleep | sleep.ts | moved own copy | original English preserved; numeric wake date/time and domain fatigue reasons | all 4 sleep kinds, forced/normal, wake event/theft/illness, 07:30 truncation, wetness flag |
 | `shelterController.ts`, `shelterRules.ts`, `ShelterQueueDialog.tsx`, `ShelterCheckoutDialog.tsx`, `useShelterLifecycle.ts` | shelter.ts / shelterText.ts | moved own shelter copy | original English/rules; whole checkout variants, numeric plurals | outside/inside/registration, vacancy/refusal, renewal, checkout/charging |
 | `trashSearchController.ts`, `TrashSearchDialog.tsx`, `TrashSearchTime.tsx`, `trashSearchRules.ts` | trash/dialogs | pending | pending | found/damaged, cap/full, manual/deadline, keyboard/touch, aria announcements |
 | `GameOverDialog.tsx` | `dialogs.ts`: `gameOver.*` | moved | exact copy; explains current Health recovery | restart/day/terminal blocking; action regressions |
@@ -67,8 +67,8 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `TravelPlanningDialog` | walking, paid/free/ticketless transit, poor money, nearby timed range, invalid destination | P; `map-travel` |
 | `DiceDialog` | before/after roll, criticals/normal threshold, theft/fare/authored, cancel/continue | P; event/controller checks |
 | `PhoneDialog` | active/expired plan, battery, service expiry hours/minutes, money, auto-renew, blocked behind process | P; phone checks |
-| `SleepPlanningDialog` | ground/bench/shelter/residential; fatigue restrictions; wake day/time; 07:30; wetness flag | P; rest/shelter checks |
-| `SleepProgressDialog` | four kinds; elapsed/cap; forced sleep; wake debug; exposure note | P; sleep/illness checks |
+| `SleepPlanningDialog` | ground/bench/shelter/residential; fatigue restrictions; wake day/time; 07:30; wetness flag | T; sleep.ts; fatigue/date/focus/restore checks |
+| `SleepProgressDialog` | four kinds; elapsed/cap; forced sleep; wake debug; exposure note | T; sleep.ts; elapsed/illness/restore/debug-finish checks |
 | `ShelterQueueDialog` | before 18:00, 18:00–18:20, after 18:20; vacancies, people, elapsed, restored | T; shelter.ts; progress/fallback arrival/restore checks |
 | `ShelterCheckoutWarning` | 07:30–08:00/deadline, focus trap, leave action | T; shelter.ts; focus/charging/restore checks |
 | `ShelterDepartureDialog` | packing progress, phone charging on/off, automatic collection/exit, restored | T; shelter.ts; focus/charging/restore checks |

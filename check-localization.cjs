@@ -516,6 +516,64 @@ for(const test of shelterCases){
 }
 console.log(`PASS: ${auditCases} attendance and ${shelterCases.length} frozen/pseudo shelter scenarios preserve bookings, eligibility, deadlines, RNG/priority, extensions, History and once-only queue/checkout.`);
 
+const {sleep:sleepCatalog}=bundled('src/locales/en/sleep.ts');
+const pseudoSleep=Object.fromEntries(Object.entries(sleepCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+for(const[key,message]of Object.entries(sleepCatalog))if(typeof message==='string'&&!message.includes('{'))pseudoSleep[key]='';
+assert.deepEqual(validateCatalog(sleepCatalog,pseudoSleep),[]);
+const sleepShared=`export {absoluteMinutes,formatTravelTime} from './src/gameTime'; export * from './src/game'; export * from './src/results'; export * from './src/journalIdentity';`;
+const sleepSource=sleepShared+`export * from './src/sleepController'; export * from './src/sleepRules'; export * from './src/sleepText'; export {default as SleepPlanningDialog} from './src/SleepPlanningDialog'; export {default as SleepProgressDialog} from './src/SleepProgressDialog'; export {default as App} from './src/App';`;
+const sleepBase=bundled({source:sleepSource}),sleepView=bundled({source:sleepSource,catalogs:{sleep:pseudoSleep}});
+const sleepLegacy=bundled({source:sleepShared+`export * from './test-fixtures/sleepController-copy'; export * from './test-fixtures/sleepRules-copy'; export {default as SleepPlanningDialog} from './test-fixtures/SleepPlanningDialog-copy'; export {default as SleepProgressDialog} from './test-fixtures/SleepProgressDialog-copy';`});
+for(const energy of [0,25,25.01,50,50.01,75,75.01,100])for(const hours of [1,2,4,6,8,10]){
+ assert.equal(sleepBase.sleepUnavailableReason(hours,energy),sleepLegacy.sleepDurationUnavailable(hours,energy));
+ assert.equal(sleepView.sleepUnavailableReason(hours,energy)===null,sleepBase.sleepDurationBlock(hours,energy)===null);
+}
+for(const total of [0,30,60,90,120,450,480])for(const wet of [false,true])for(const ill of [false,true]){
+ const hours=total/60,duration=Number.isInteger(hours)?`${hours} hour${hours===1?'':'s'}`:sleepBase.formatTravelTime(total);
+ assert.equal(sleepBase.sleepCompletionText(total,wet,ill),`You slept for ${duration}.${wet?' Wet clothes made it harder to rest.':''}${ill?' Your throat feels sore, your nose is blocked, and a chill runs through you as you sit up. You feel unwell — you have caught a cold.':''}`);
+}
+const sleepCases=[];
+for(const kind of ['ground','bench','shelter','residential']){
+ for(const energy of [0,25,50,75,76,100])for(const hours of [2,4,6,8])sleepCases.push({method:'sleep',args:[hours,kind],kind,patch:{game:{energy}}});
+ for(const blocked of [false,true])for(const choice of [null,'ground'])sleepCases.push({method:'requestSleep',args:[kind],kind,patch:{blocked,sleepChoice:choice}});
+ for(const total of [30,60,90,120,450,480])for(const cold of [false,true])for(const fed of [false,true])for(const roll of [0,.99])sleepCases.push({method:'finishSleep',kind,total,repeat:true,roll,patch:{game:{hunger:fed?80:0,thirst:fed?80:0},effects:cold?[{id:'cold',expiresAt:10000}]:[]}});
+ sleepCases.push({method:'forceSleep',kind,repeat:true},{method:'tickSleep',kind});
+}
+for(const kind of ['ground','bench'])for(const roll of [0,.99])sleepCases.push({method:'finishSleep',kind,total:480,repeat:true,roll,patch:{game:{day:1,minutes:1320}}});
+for(const kind of ['ground','bench','shelter','residential'])for(const method of ['requestSleep','sleep'])sleepCases.push({method,kind,args:method==='sleep'?[8,kind]:[kind],patch:{game:{locationId:'shop'},insideNightShelter:false,streetBenchFound:false}});
+for(const locationId of ['shop','station','shelter','residential-shelter'])sleepCases.push({method:'forceSleep',kind:'ground',repeat:true,patch:{game:{locationId}}});
+for(const id of ['street-sleep','shelter-rest','other'])for(const minutes of [60,480])sleepCases.push({method:'finishRestAction',args:[id,'Frozen action',{minutes},initialState],kind:'ground'});
+for(const id of ['quiet-night','night-theft','first-night-bench-wake'])sleepCases.push({method:'presentWakeEvent',args:[STREET_EVENTS.find(event=>event.id===id),'Frozen wake','Frozen completion'],kind:'ground'});
+function executeSleep(view,test,accepted=true){
+ const now=Date.now;Date.now=()=>1800000000000;
+ const patch=test.patch??{},total=test.total??120,kind=test.kind;
+ const locationId=kind==='bench'?'station':kind==='shelter'?'shelter':kind==='residential'?'residential-shelter':'street';
+ const state={game:{...initialState,day:2,minutes:420,energy:25,health:90,mood:25,locationId,rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999,sleepIllnessDose:1,sleepIllnessMinutes:total,...patch.game},life:{housing:'Street'},effects:patch.effects??[],sleeping:null,sleepChoice:patch.sleepChoice??null,sleepHours:8,infoModal:null,message:'',musicOn:true,trip:{id:'fixture'},selectedDestination:'shop',phoneOpen:true,screen:'phone',encounters:{seen:[],pendingId:null},activeEvent:null,ports:[],results:[],draws:0,returned:[]};
+ const snapshot=()=>JSON.parse(JSON.stringify({game:state.game,inventory:INITIAL_INVENTORY,effects:state.effects,housing:state.life.housing}));
+ const setter=key=>value=>{state.ports.push([key]);state[key]=typeof value==='function'?value(state[key]):value;};
+ const sleeping={kind,total,remaining:0,startAbsolute:view.absoluteMinutes(state.game),realStartedAt:Date.now()-6000,realWakeAt:Date.now()+6000,before:snapshot()};
+ if(['finishSleep','tickSleep'].includes(test.method))state.sleeping=sleeping;
+ const session={sleeping:state.sleeping,sleepChoice:state.sleepChoice,setSleeping:setter('sleeping'),setSleepChoice:setter('sleepChoice'),setSleepHours:setter('sleepHours'),lastFinishedSleep:{current:null},groundSleepWindow:{current:null},forcedSleep:{current:null}};
+ const events={firstNightEvents:{seen:[]},encounters:state.encounters,setEncounters:setter('encounters'),setActiveEvent:setter('activeEvent')};
+ const queue={encounterDue:()=>true,rememberEncounter:(event,game)=>state.ports.push(['encounter',event.id,view.absoluteMinutes(game??state.game)]),rememberFirstNightEvent:(event,game)=>state.ports.push(['firstNight',event.id,view.absoluteMinutes(game)])};
+ const context={game:state.game,inventory:INITIAL_INVENTORY,effects:state.effects,current:{id:state.game.locationId},weather:{id:'Cloudy'},underRainCover:false,insideNightShelter:kind==='shelter',streetBenchFound:true,blocked:false,...patch,game:state.game,effects:state.effects};
+ const host={...Object.fromEntries(['game','life','effects','message','infoModal','musicOn','trip','selectedDestination','phoneOpen','screen'].map(key=>['set'+key[0].toUpperCase()+key.slice(1),setter(key)])),recordShelterDeparture:id=>state.ports.push(['departure',id]),moodContext:()=>({housing:state.life.housing,effects:state.effects}),applyAction:(game,result)=>view.applyAction(game,result,{housing:state.life.housing,effects:state.effects}),resultSnapshot:snapshot,runWithResult:(action,run,before=snapshot(),...flags)=>{state.ports.push(['result',action.id,flags]);if(!accepted)return;const facts=run(),summary=view.summarizeResult(before,snapshot()),identity={...action,...(facts?{actionHistory:facts}:{})};state.results.push({...action,facts,summary,journal:view.journalPresentation(identity,summary)});}};
+ const random=Math.random;Math.random=()=>{state.draws++;return test.roll??.99;};
+ try{
+  const controller=view.createSleepController(session,events,queue,context,host),args=test.method==='finishSleep'?[sleeping]:test.args??[];
+  state.returned.push(controller[test.method](...args));if(test.repeat)state.returned.push(controller[test.method](...args));
+  for(const hours of [2,4,6,8]){const expected=sleepLegacy.createSleepController(session,events,queue,context,host).wakeLabel(hours,kind);if(controller.wakeTime){const wake=controller.wakeTime(hours,kind);if(view===sleepBase)assert.equal(view.sleepDateLabel(wake.day,wake.minutes),expected);}}
+  state.guards={finished:!!session.lastFinishedSleep.current,forced:!!session.forcedSleep.current,window:session.groundSleepWindow.current};return state;
+ }finally{Math.random=random;Date.now=now;}
+}
+function sleepMechanics(state){const{message,infoModal,results,...mechanics}=state;return{...mechanics,infoModal:infoModal?{illustration:infoModal.illustration}:null,results:results.map(({title,journal,...result})=>({...result,journal:{decisionId:journal.decisionId,groupId:journal.groupId}}))};}
+for(const test of sleepCases){
+ const old=executeSleep(sleepLegacy,test),actual=executeSleep(sleepBase,test),translated=executeSleep(sleepView,test);
+ assert.deepEqual(actual,old,`sleep frozen parity: ${test.method}/${test.kind}/${test.total}`);assert.deepEqual(sleepMechanics(translated),sleepMechanics(actual),`sleep pseudo mechanics: ${test.method}`);
+ if(test.method==='finishSleep'){assert.equal(actual.results.length,1);const rejected=executeSleep(sleepView,test,false);assert.equal(rejected.draws,0);assert.equal(rejected.results.length,0);}
+}
+console.log(`PASS: ${sleepCases.length} frozen/pseudo sleep commands preserve eligibility, fatigue, dates/cutoff, forced sleep, recovery/illness, RNG, wake scenes, History and once-only guards.`);
+
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'localStorage', 'HTMLElement', 'Node', 'Event']) global[key] = dom.window[key];
@@ -749,6 +807,43 @@ try {
     const audited=restoreShelter(shelterView,{day:4,minutes:600,rainScheduleDay:4},missed,{}),expectedAudit=restoreShelter(shelterBase,{day:4,minutes:600,rainScheduleDay:4},missed,{});assert.deepEqual(savedShelterMechanics(audited),savedShelterMechanics(expectedAudit));assert.equal(audited.life.shelterBlockedUntilDay,31);assert.equal(audited.life.shelterMisses,3);restoredShelterCases++;
     console.log(`PASS: ${shelterDialogCases} shelter dialog DOM/focus/progress variants and ${restoredShelterCases} pseudo App/StrictMode restore/remount states preserve saved clocks, booking/phone and one-time History/rewards.`);
   }finally{cleanup();window.setInterval=shelterTimers.set;window.clearInterval=shelterTimers.clear;Math.random=shelterTimers.random;}
+  let sleepDialogCases=0;
+  for(const kind of ['ground','bench','shelter','residential'])for(const energy of [0,25,50,75,76])for(const wetnessEnabled of [false,true]){
+    const day=kind==='ground'?1:2,minutes=kind==='shelter'?420:1320,selectedHours=sleepBase.availableSleepHours(energy).at(-1);
+    const options=[2,4,6,8].map(hours=>{const total=kind==='shelter'?sleepBase.shelterSleepMinutes((day-1)*1440+minutes,hours*60):hours*60,wake=(day-1)*1440+minutes+total;return{hours,wake:{day:Math.floor(wake/1440)+1,minutes:wake%1440},unavailableReason:sleepBase.sleepUnavailableReason(hours,energy)};});
+    const show=view=>{cleanup();const selected=[],calls=[];const props={kind,dateLabel:sleepBase.sleepDateLabel(day,minutes),energy,options:options.map(option=>view===sleepLegacy?{...option,wakeLabel:sleepBase.sleepDateLabel(option.wake.day,option.wake.minutes)}:{...option,unavailableReason:view.sleepUnavailableReason(option.hours,energy)}),selectedHours,durationLabel:sleepBase.formatSleepDuration(kind==='shelter'?30:selectedHours*60),wetClothesWarning:true,wetnessEnabled,onSelect:hours=>selected.push(hours),onCancel:()=>calls.push('cancel'),onConfirm:()=>calls.push('confirm')};render(React.createElement(view.SleepPlanningDialog,props));const html=document.body.innerHTML;assert.equal(document.querySelector('.sleep-choice-preview strong').textContent,sleepBase.formatTime(options.find(option=>option.hours===selectedHours).wake.minutes),'wake time does not parse translated separators');const buttons=[...document.querySelectorAll('.sleep-duration-option')],disabled=buttons.map(button=>button.disabled);assert.equal(document.activeElement,buttons[[2,4,6,8].indexOf(selectedHours)]);act(()=>{buttons.forEach(button=>button.click());document.querySelectorAll('.sleep-choice-buttons button').forEach(button=>button.click());});assert.deepEqual(selected,sleepBase.availableSleepHours(energy));assert.deepEqual(calls,['cancel','confirm']);assert.equal(document.querySelector('.sleep-choice-note b'),null);return{html,disabled};};
+    const old=show(sleepLegacy),actual=show(sleepBase),translated=show(sleepView);assert.equal(actual.html,old.html,'English planning DOM preserves text, focus and controls');assert.deepEqual(translated.disabled,actual.disabled);sleepDialogCases++;
+  }
+  const sleepClock=Date.now;Date.now=()=>1800000000000;
+  try{
+    for(const kind of ['ground','bench','shelter','residential'])for(const total of [30,120,480])for(const elapsed of [0,total/2,total]){
+      const sleeping={kind,total,remaining:total-elapsed,startAbsolute:1860,realStartedAt:Date.now()-elapsed*100,realWakeAt:Date.now()+(total-elapsed)*100};
+      const show=view=>{cleanup();let wakes=0;render(React.createElement(view.SleepProgressDialog,{sleeping,minute:420+elapsed,onWake:()=>wakes++}));const html=document.body.innerHTML,bar=document.querySelector('[role="progressbar"]');const progress=[bar.getAttribute('aria-valuenow'),bar.getAttribute('aria-valuemax'),bar.querySelector('i').style.width];act(()=>document.querySelector('button').click());assert.equal(wakes,1);return{html,progress};};
+      const old=show(sleepLegacy),actual=show(sleepBase),translated=show(sleepView);assert.equal(actual.html,old.html,'English progress DOM remains identical');assert.deepEqual(translated.progress,actual.progress);sleepDialogCases++;
+    }
+    const timer={set:window.setInterval,clear:window.clearInterval,random:Math.random};window.setInterval=()=>1;window.clearInterval=()=>{};
+    try{
+      const restoreSleep=(view,kind,forced,roll,ongoing=false)=>{
+        cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);Math.random=()=>roll;
+        const start=kind==='shelter'?420:600,total=kind==='shelter'?30:120,locationId=kind==='ground'?'street':kind==='bench'?'station':kind==='shelter'?'shelter':'residential-shelter';
+        const game={...comfortableStatus,energy:25,mood:28,day:2,minutes:ongoing?start:start+total,locationId,rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999,sleepIllnessDose:1,sleepIllnessMinutes:total};
+        const life={housing:kind==='shelter'?'Night shelter':kind==='residential'?'Schronisko':'Street',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1};
+        const before={game:{...game,minutes:start,sleepIllnessDose:0,sleepIllnessMinutes:0},inventory:INITIAL_INVENTORY,effects:[],housing:life.housing};
+        const sleep={kind,total,remaining:ongoing?total:0,startAbsolute:1440+start,realStartedAt:Date.now()-(ongoing?0:total*100),realWakeAt:Date.now()+(ongoing?total*100:0),before,forced};
+        for(const[key,value]of Object.entries({'street-life-save-v3':game,'street-life-situation-v1':life,'street-life-inventory-v1':INITIAL_INVENTORY,'street-life-effects-v1':[],'street-life-sleep-v1':sleep}))localStorage.setItem(key,JSON.stringify(value));localStorage.setItem('street-life-mobile-auto-renew','false');
+        render(React.createElement(React.StrictMode,null,React.createElement(view.App)));
+        if(ongoing){assert(document.querySelector('.sleep-debug-wake'));assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).minutes,start);act(()=>document.querySelector('.sleep-debug-wake').click());}
+        const read=key=>JSON.parse(localStorage.getItem(key)),snapshot=()=>({game:read('street-life-save-v3'),life:read('street-life-situation-v1'),effects:read('street-life-effects-v1'),sleep:read('street-life-sleep-v1'),history:read('street-life-journal-history-v1'),inventory:read('street-life-inventory-v1')});
+        const first=snapshot();assert.equal(first.sleep,null);assert.equal(first.history.length,1);assert.equal(first.game.minutes,start+total);cleanup();render(React.createElement(React.StrictMode,null,React.createElement(view.App)));assert.deepEqual(snapshot(),first,'sleep rewards and History cannot replay on remount');return first;
+      };
+      const mechanics=state=>({...state,history:state.history.map(({actionTitle,title,text,...entry})=>entry)});let restores=0;
+      for(const kind of ['ground','bench','shelter','residential'])for(const forced of [false,true])for(const roll of [0,.99]){
+        assert.deepEqual(mechanics(restoreSleep(sleepView,kind,forced,roll)),mechanics(restoreSleep(sleepBase,kind,forced,roll)));restores++;
+      }
+      for(const kind of ['ground','bench','shelter','residential']){assert.deepEqual(mechanics(restoreSleep(sleepView,kind,false,.99,true)),mechanics(restoreSleep(sleepBase,kind,false,.99,true)));restores++;}
+      console.log(`PASS: ${sleepDialogCases} sleep dialog DOM/focus/progress variants and ${restores} pseudo App/StrictMode restore/remount/debug-finish states preserve dates, fatigue, cutoff, illness and single rewards/History.`);
+    }finally{cleanup();window.setInterval=timer.set;window.clearInterval=timer.clear;Math.random=timer.random;}
+  }finally{Date.now=sleepClock;}
   const intervals={set:window.setInterval,clear:window.clearInterval};window.setInterval=()=>1;window.clearInterval=()=>{};
   try{
     for(const [housing,cap] of [['Street',50],['Night shelter',60],['Schronisko',70],['Hostel',80],['Room',90],['Apartment',100]]){

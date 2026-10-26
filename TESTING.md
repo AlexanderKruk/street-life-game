@@ -453,3 +453,17 @@ IDs/groups and exclude intentionally translated History presentation fields.
 Rest/load/boundary/design checks, shelter-sleep/journal-services/phone-clock
 regressions and build passed. Browser comparisons at390/1280 plus expanded390
 copy match original geometry and fit panels; full suites/WebKit/iPhone unrun.
+
+
+Sleep catalogue checkpoint: check-localization compares 337 commands against
+frozen ee68ae4 and empty-static-message pseudo catalogues, 48 fatigue boundaries
+and 28 whole result variants. It retains full state/ordered ports, RNG counts,
+History facts/IDs/groups, guards and exact English output. 76 planning/progress
+DOM variants cover four kinds, fatigue, wetness notes, selected autofocus, numeric
+wake preview and elapsed bars; translated separators cannot alter the wake time.
+20 App/StrictMode restore/remount/debug-finish cases preserve four kinds, forced
+sleep, new Cold, saves/catch-up and one reward/History entry. Rest/sleep-illness/
+load/boundary/design, shelter-sleep/phone-clock/journal-services regressions and
+build passed. Browser planning/progress comparisons used shell at390/1280, and
+expanded390 copy retained scrolling/reachable controls without horizontal spill.
+No CSS or visual baseline changes; full suites, WebKit/iPhone remain unrun.

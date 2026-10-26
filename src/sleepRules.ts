@@ -24,10 +24,10 @@ export function availableSleepHours(energy: number): readonly number[] {
 }
 
 
-export function sleepDurationUnavailable(hours: number, energy: number) {
+export function sleepDurationBlock(hours: number, energy: number) {
   const available = availableSleepHours(energy)
   if (available.includes(hours)) return null
-  return hours < available[0] ? 'Too tired for a short sleep.' : 'Not tired enough for a long sleep.'
+  return hours < available[0] ? 'too-tired' : 'not-tired'
 }
 
 
