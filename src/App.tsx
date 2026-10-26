@@ -235,10 +235,10 @@ export default function App() {
   const currentExposure = underRainCover ? 'cover' : travelPhase?.exposure ?? weatherExposure(game)
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
-    { id: 'morning' as const, title: 'Get through the morning', description: `Stay alive until Day ${displayDay(2)}, 12:00.` },
-    { id: 'shelter' as const, title: 'Find a safe place to sleep', description: activeGoal ? `Be at Night Shelter on Day ${displayDay(activeGoal.day)} at ${formatTime(activeGoal.minute)} for registration. A bed is not guaranteed.` : 'Register for a shelter bed or move into Schronisko.' },
-    { id: 'support' as const, title: 'Visit social support', description: 'Visit Help Center during opening hours.' },
-    { id: 'work' as const, title: 'Look for work', description: 'Search online for work or visit Job Centre or Day Work while open.' },
+    { id: 'morning' as const, title: t('journal.ui.goal.morning.title'), description: t('journal.ui.goal.morning.description', { day: displayDay(2) }) },
+    { id: 'shelter' as const, title: t('journal.ui.goal.shelter.title'), description: activeGoal ? t('journal.ui.goal.shelter.booked', { day: displayDay(activeGoal.day), time: formatTime(activeGoal.minute) }) : t('journal.ui.goal.shelter.description') },
+    { id: 'support' as const, title: t('journal.ui.goal.support.title'), description: t('journal.ui.goal.support.description') },
+    { id: 'work' as const, title: t('journal.ui.goal.work.title'), description: t('journal.ui.goal.work.description') },
   ], [activeGoal])
   const firstNight = firstNightTime(game) && life.housing === 'Street'
   const openingCallsActive = firstNight && openingCallIndex < OPENING_CALLS.length
@@ -444,12 +444,12 @@ export default function App() {
     const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime, pendingResult.consumedItems)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     const memories = [
-      { id: 'office-routine', actions: ['city-walk'], text: 'In your late thirties, you had a steady office job and a desk by the window. Then came the redundancy notice.' },
-      { id: 'redundancy-savings', actions: ['bench-rest', 'location:station-rest', 'rain-cover'], text: 'After the redundancy, you expected to find another job in a few weeks. As the search dragged on, rent and ordinary expenses used up what you had put aside.' },
-      { id: 'unanswered-applications', actions: ['question:morning'], text: 'Your last job application still has no reply. The redundancy email is still in your inbox.' },
+      { id: 'office-routine', actions: ['city-walk'], text: t('journal.ui.memory.office-routine') },
+      { id: 'redundancy-savings', actions: ['bench-rest', 'location:station-rest', 'rain-cover'], text: t('journal.ui.memory.redundancy-savings') },
+      { id: 'unanswered-applications', actions: ['question:morning'], text: t('journal.ui.memory.unanswered-applications') },
     ]
     const memory = memories.find(fragment => fragment.actions.includes(pendingResult.id) && !seenMemories.includes(fragment.id))
-    const resultText = (infoModal?.text ?? message) + (memory ? `\n\n${memory.text}` : '')
+    const resultText = memory ? t('journal.ui.resultWithMemory', { result: infoModal?.text ?? message, memory: memory.text }) : infoModal?.text ?? message
     if (memory) setSeenMemories(previous => [...new Set([...previous, memory.id])])
     if (lastRecordedResult.current !== pendingResult) {
       lastRecordedResult.current = pendingResult

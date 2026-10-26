@@ -537,3 +537,11 @@ design, phone-clock and build passed. Mobile390 normal and expanded home/plan
 revealed and verified fixes to header/service/pay/toggle wrapping. Header minimum
 is44px, fonts unchanged; long renewal switch works. CSS changed, visual baselines
 unchanged; full suites/WebKit/iPhone and general long-copy audit remain unrun.
+
+Goals/History catalogue: 27 frozen/pseudo DOM/pagination/navigation/priority cases
+cover 0/1/2/30/31/61 saved entries and days1/2/3; singular completed-goal grammar
+corrected. Actual App/StrictMode restored-search memory cases preserve seen IDs,
+saved History and one-time rewards/remount under pseudo-copy. Localisation,
+phone/results/boundaries/design, journal-services/phone-clock and build passed.
+Mobile390 completed expansion and older30→60 loading inspected. CSS/baselines
+unchanged; full suites/general long-copy/WebKit/iPhone remain unrun.

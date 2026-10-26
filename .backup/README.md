@@ -1,13 +1,13 @@
-# Phone UI localisation checkpoint
+# Goals/History localisation checkpoint
 
-Source commit: da7c05e3ea8344affdc574791f41ea2cdb56e8c8
-Source tree excluding .backup: 3d746eada1d042d98dc6739d287306e820cba2f0
+Source commit: 72e2e3e20a5340b9960fdc23a3d975f2f95db6ac
+Source tree excluding .backup: b581c6a8baeb0167711405e44a0c7449df78b928
 
-32 phoneUi entries migrate launcher/header/plan controls, expiry/battery labels and numeric goal plurals (singular grammar corrected). Numeric rounding, callbacks, focus/Tab/Escape/body-lock and blocked inert preserved. Observed long-copy overflow fixed in existing header/service/pay/toggle CSS: 44px minimum header grows when needed, controls wrap without shrinking fonts. Design contract documented in AGENTS.md/GAME_DESIGN.md.
+30 journalUi entries migrate Goals/History controls, dates, counts, goal descriptions and three memory fragments/result composition. Singular completed-goal grammar corrected. Stored entry title/text/reflection, goal conditions/IDs, grouping, batch30 and memory seen guards unchanged.
 
-Passed: 170 frozen/pseudo phone screen/plan variants, phone/controller checks, module boundaries/design, phone-clock regression, build/diff. Mobile390 normal/long home/plan inspected and long renewal switch toggled. Visual baselines unchanged; full suites/WebKit/iPhone and general long-copy audit remain unrun.
+Passed: 27 frozen/pseudo Goals/History variants (days1/2/3, 0/1/2/30/31/61 entries), actual App/StrictMode restored-search memory/remount checks under pseudo-copy, check-localization, phone/results, module boundaries/design, journal-services/phone-clock regressions, build/diff. Mobile390 Goals/History, completed expansion and older30→60 loading inspected. CSS/baselines unchanged; full suites/general long-copy/WebKit/iPhone unrun.
 
-The verified bundle retains 29 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: Goals/History UI, memories and remaining mini-game/residual audit. See LOCALIZATION.md.
+The verified bundle retains 30 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. Public game remains v335; source save with [skip ci] only. Next: trash mini-game/residual copy and final editorial/mobile audits. See LOCALIZATION.md.
 
 Restore in a clone containing the published base:
 
