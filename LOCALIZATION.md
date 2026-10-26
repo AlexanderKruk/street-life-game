@@ -2,7 +2,8 @@
 
 ## Текущее состояние реализации
 
-Последний готовый этап: процессы/диалоги ночлежки (после `1f39ed9`), проверен тематически.
+Последний готовый этап: сон и пробуждение (после `ee68ae4`), проверен тематически.
+Ночлежка сохранена в main через checkpoint `3c2e079`.
 Street/support/work/medical сохранены в main через checkpoint `46543b0`.
 GameAction/LocationScreen и причины отказов сохранены в main через checkpoint `ab8c60e`.
 Локации/карта сохранены в main через checkpoint `a10f6ff`.
@@ -33,12 +34,13 @@ HUD/погода перенесены в hud.ts; weatherAt возвращает 
 перенесены в actions.ts. Причины недоступности имеют ID, доступность обозначается null.
 streetController, supportWorkController и medicalController используют controllerActions.ts.
 Ночлежка (контроллер, посещаемость, очередь, checkout/departure dialogs) перенесена в shelter.ts.
-Не завершено: сон/дождь/поездки, события/телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
+Сон (контроллер/правила/планирование/прогресс/заголовок/даты) перенесён в sleep.ts.
+Не завершено: дождь/поездки, события/телефон, остальные каталоги и редакторский/мобильный аудит. Язык остаётся английским.
 Публикация — только по отдельному указанию.
 
 Инвентарь: [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 History инвентаря также восстановлен через inventoryHistory.ts и факты команд.
-Следующий шаг: сон — sleepController/sleepRules и связанные dialogs; затем дождь/поездки, события/телефон. Сохранившийся пакет иконок не переделывать.
+Следующий шаг: дождь/поездки/D20, затем события/телефон. Сохранившийся пакет иконок не переделывать.
 
 ## Оценка оставшегося объёма — 26 октября 2026
 
@@ -808,3 +810,40 @@ CSS и visual-эталоны сохранены. Полные наборы, WebK
 SleepProgressDialog и оставшиеся SleepHeading/даты. Затем rain/travel/D20,
 события/телефон/History UI, broken-screen metadata и итоговые аудиты.
 Источник сохраняется в main с [skip ci], без публикации игры.
+
+
+### Сон и пробуждение — 26 октября 2026
+
+62 записей sleep.ts и sleepText.ts покрывают собственные тексты sleepController,
+SleepPlanningDialog, SleepProgressDialog, SleepHeading и старт сна в App:
+обычный/принудительный сон, четыре места, усталость, даты/длительности,
+болезнь/иллюстрации и завершение. Исходные английские формулировки сохранены;
+четыре сообщения результата (wet × illness) целые, часы используют числовой plural.
+Текст авторских wake-сцен остаётся в этапе events.
+
+sleepDurationBlock возвращает внутренний reason ID или null; форматирование
+отказа отделено от eligibility. Пустая подпись причины не разрешает выбор.
+wakeTime возвращает числовые day/minutes; планировщик больше не разбирает
+перевод по ` · `. Дата D0 и weekdays форматируются на границе отображения.
+Не менялись 2/4/6/8 часов, пороги Energy, 07:30 truncation, скорость ×10,
+forced/once-only guards, illness dose/RNG, recovery/caps, sleepKind/housing enum,
+сохранения/wall-clock catch-up, порядок History и владение часами/фокусом.
+
+Проверено: check-localization — 337 frozen/pseudo controller-сценариев против
+исходников ee68ae4, 48 fatigue boundary-пар и 28 комбинаций результата.
+76 DOM/focus/progress вариантов сохраняют английскую разметку и handler/disabled
+состояния, включая пустые причины. 20 реальных App/StrictMode restore/remount
+случаев проверяют четыре места, forced, illness, полное/незавершённое сохранение
+и debug-finish без повторной награды/History. Время wake-preview не парсит перевод.
+check-rest-controllers, check-sleep-illness, check-load-game-session,
+check-module-boundaries (141 модуль), check-design-system;
+regression/shelter-sleep, phone-clock, journal-services; build/diff — PASS.
+
+Браузерный стенд с настоящей shell сравнил planning/progress на390×844 и1280×900.
+Планировщик сохранил геометрию, таймер — текст, размеры панели, переносы и progress;
+объединённые text nodes меняют лишь субпиксельную ширину inline-метаданных.
+Длинные подписи planning/progress на390 помещаются без горизонтального overflow;
+внутренняя прокрутка, подтверждение и debug wake доступны. CSS/шрифты/эталоны
+не менялись. Полные наборы, WebKit/iPhone и общий остаточный аудит ещё открыты.
+Следующий этап — rain/travel/D20, затем events/phone и итоговые аудиты.
+Источник сохраняется в main с [skip ci], без публикации.

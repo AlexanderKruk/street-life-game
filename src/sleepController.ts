@@ -1,13 +1,14 @@
+import { t } from './i18n'
+import { sleepCompletionText } from './sleepText'
 import { locationName } from './locationText'
 import type { WeatherId } from './weather'
 import { useEffect } from 'react'
-import { applySleepTime as applyGameSleepTime, weatherAt, formatTime, type ActionResult, type GameState, type TimeContext } from './game'
+import { applySleepTime as applyGameSleepTime, weatherAt, type ActionResult, type GameState, type TimeContext } from './game'
 import { firstNightTime, nextStreetEvent, type StreetEvent } from './events'
-import { displayDay } from './gameDate'
-import { absoluteMinutes, formatTravelTime, weekday } from './gameTime'
+import { absoluteMinutes } from './gameTime'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import { sleepIllnessChance } from './sleepIllness'
-import { availableSleepHours, clearSleepIllness, DEBUG_SLEEP_SPEED, SHELTER_CHECKOUT_WARNING, shelterSleepMinutes, sleepDurationUnavailable, sleepElapsed } from './sleepRules'
+import { availableSleepHours, clearSleepIllness, DEBUG_SLEEP_SPEED, SHELTER_CHECKOUT_WARNING, shelterSleepMinutes, sleepDurationBlock, sleepElapsed } from './sleepRules'
 import type { SleepSession } from './restSessions'
 import type { EncounterQueue } from './encounterQueue'
 import type { EventSession } from './eventSession'
@@ -57,14 +58,14 @@ export function createSleepController(session: SleepSession, eventSession: Event
     return kind === 'shelter' ? shelterSleepMinutes(absoluteMinutes(game), hours * 60) : hours * 60
   }
 
-  function wakeLabel(hours: number, kind: SleepState['kind']) {
+  function wakeTime(hours: number, kind: SleepState['kind']) {
     const wake = absoluteMinutes(game) + chosenSleepMinutes(hours, kind)
     const day = Math.floor(wake / 1440) + 1
-    return `Day ${displayDay(day)} ${weekday(day)} · ${formatTime(wake % 1440)}`
+    return { day, minutes: wake % 1440 }
   }
 
   function sleep(hours: number, kind: SleepState['kind']) {
-    if (!canStartSleep(kind) || sleepDurationUnavailable(hours, game.energy)) return
+    if (!canStartSleep(kind) || sleepDurationBlock(hours, game.energy) !== null) return
     setSleepChoice(null)
     if (kind === 'shelter') {
       const stayNightDay = game.minutes < 480 ? game.day - 1 : game.day
@@ -76,7 +77,7 @@ export function createSleepController(session: SleepSession, eventSession: Event
     const total = chosenSleepMinutes(hours, kind)
     groundSleepWindow.current = kind === 'ground' ? { start: absoluteMinutes(game), end: absoluteMinutes(game) + total } : null
     setSleeping({ kind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot() })
-    setMessage('You are sleeping.')
+    setMessage(t('sleep.started'))
   }
 
   function finishSleep(sleep: SleepState) {
@@ -85,7 +86,7 @@ export function createSleepController(session: SleepSession, eventSession: Event
     forcedSleep.current = null
     setSleeping(null)
     const before = sleep.before ?? { ...resultSnapshot(), game: { ...game, day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 } }
-    runWithResult({ id: 'sleep-complete', title: 'Sleep complete' }, () => {
+    runWithResult({ id: 'sleep-complete', title: t('sleep.complete.title') }, () => {
       setGame(previous => applySleepTime(previous, Math.max(0, sleep.startAbsolute + sleep.total - absoluteMinutes(previous))))
       return finishSleepImpl(sleep)
     }, before, false, true)
@@ -100,10 +101,10 @@ export function createSleepController(session: SleepSession, eventSession: Event
     setEncounters(previous => ({ ...previous, pendingId: null }))
     // Peaceful rest has no decision to make: fold its bonus and artwork into
     // the existing sleep result instead of asking for another confirmation.
-    const text = `${completionText} ${outcome.message}`
+    const text = t('sleep.wake.combined', { completion: completionText, outcome: outcome.message })
     setGame(previous => applyAction(previous, { minutes: outcome.minutes ?? 0, energy: outcome.energy, mood: outcome.mood }))
     setMessage(text)
-    setInfoModal({ title, text, label: 'AFTER REST', illustration: outcome.illustration ?? event.illustration, illustrationAlt: event.text })
+    setInfoModal({ title, text, label: t('sleep.wake.afterRest'), illustration: outcome.illustration ?? event.illustration, illustrationAlt: event.text })
   }
 
   function finishSleepImpl(sleep: SleepState) {
@@ -126,7 +127,6 @@ export function createSleepController(session: SleepSession, eventSession: Event
       delete next.sleepIllnessMinutes
       return next
     })
-    let illnessText = ''
     let newlyIll = false
     let wakeEvent: StreetEvent | null = null
     if (sleep.kind === 'ground' || sleep.kind === 'bench') {
@@ -136,7 +136,6 @@ export function createSleepController(session: SleepSession, eventSession: Event
       newlyIll = !alreadyIll && Math.random() < sleepIllnessChance(wakeState.sleepIllnessDose ?? 0)
       if (newlyIll) {
         setEffects(active => [...active.filter(effect => effect.id !== 'cold'), { id: 'cold', expiresAt: absoluteMinutes(wakeState) + 2 * 1440 }])
-        illnessText = ' Your throat feels sore, your nose is blocked, and a chill runs through you as you sit up. You feel unwell — you have caught a cold.'
       }
       const sleepStart = { day: Math.floor(sleep.startAbsolute / 1440) + 1, minutes: sleep.startAbsolute % 1440 }
       wakeEvent = newlyIll || !encounterDue(wakeState) ? null : nextStreetEvent('wake', { locationId: current.id, weather: sleepWeather.id, housing: 'Street', documents: inventory.documents, firstNight: firstNightTime(sleepStart), sleepKind: sleep.kind, seenEventIds: [...firstNightEvents.seen, ...encounters.seen, ...(firstNightTime(sleepStart) && sleep.kind === 'bench' && !firstNightEvents.seen.includes('first-night-bench-wake') ? ['quiet-night','night-theft'] : [])] })
@@ -150,13 +149,13 @@ export function createSleepController(session: SleepSession, eventSession: Event
     } else {
       setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     }
-    const completionText = `You slept for ${Number.isInteger(hours) ? `${hours} hour${hours === 1 ? '' : 's'}` : formatTravelTime(sleep.total)}.${wetRestLoss >= 0.5 ? ' Wet clothes made it harder to rest.' : ''}${illnessText}`
+    const completionText = sleepCompletionText(sleep.total, wetRestLoss >= 0.5, newlyIll)
     setMessage(completionText)
-    if (newlyIll) setInfoModal({ title: 'Feeling unwell', label: 'WAKE-UP EVENT', text: completionText,
+    if (newlyIll) setInfoModal({ title: t('sleep.illness.title'), label: t('sleep.illness.label'), text: completionText,
       illustration: `/street-life-game/assets/event-sleep-cold-${sleep.kind === 'bench' ? 'bench' : 'ground'}.webp`,
-      illustrationAlt: sleep.kind === 'bench' ? 'You wake on a bench with a sore throat and a blocked nose.' : 'You wake on the pavement, chilled and feeling unwell.',
+      illustrationAlt: t(sleep.kind === 'bench' ? 'sleep.illness.benchAlt' : 'sleep.illness.groundAlt'),
     })
-    else presentWakeEvent(wakeEvent, 'Sleep complete', completionText, wakeState)
+    else presentWakeEvent(wakeEvent, t('sleep.complete.title'), completionText, wakeState)
     return { kind: 'action' as const, sleepIllness: newlyIll }
   }
 
@@ -164,12 +163,12 @@ export function createSleepController(session: SleepSession, eventSession: Event
     if (actionId === 'street-sleep') {
       setLife((status) => ({ ...status, housing: 'Street', housingUntil: undefined }))
       const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.id, housing: 'Street', documents: inventory.documents, sleepKind: current.id === 'station' ? 'bench' : 'ground', seenEventIds: encounters.seen })
-      presentWakeEvent(wakeEvent, actionName, result.message ?? 'Time passes.')
+      presentWakeEvent(wakeEvent, actionName, result.message ?? t('sleep.timePasses'))
       return true
     } else if (actionId === 'shelter-rest' && result.minutes >= 8 * 60) {
       setLife((status) => ({ ...status, housing: 'Night shelter', housingUntil: absoluteMinutes(next) }))
       const wakeEvent = nextStreetEvent('wake', { locationId: current.id, weather: weather.id, housing: 'Night shelter', documents: inventory.documents, seenEventIds: encounters.seen })
-      presentWakeEvent(wakeEvent, actionName, result.message ?? 'Time passes.')
+      presentWakeEvent(wakeEvent, actionName, result.message ?? t('sleep.timePasses'))
       return true
     }
     return false
@@ -202,9 +201,13 @@ export function createSleepController(session: SleepSession, eventSession: Event
     const active: SleepState = { kind: safeKind, total, remaining: total, startAbsolute: absoluteMinutes(game), realStartedAt, realWakeAt: realStartedAt + (total * 1000) / DEBUG_SLEEP_SPEED, before: resultSnapshot(), forced: true }
     forcedSleep.current = active
     setSleeping(active)
-    setMessage(safeKind === 'ground' ? `${current.id !== 'street' ? `You leave ${locationName(current.id)} and step outside. ` : ''}You collapse from exhaustion and fall asleep outside. You may sleep for up to ${hours} hours.` : 'You are too exhausted to stay awake and fall asleep in your bed.')
+    setMessage(safeKind === 'ground'
+      ? current.id !== 'street'
+        ? t('sleep.forced.leave', { place: locationName(current.id), hours })
+        : t('sleep.forced.outside', { hours })
+      : t('sleep.forced.bed'))
   }
-  return { requestSleep, chosenSleepMinutes, wakeLabel, sleep, finishSleep, presentWakeEvent, applySleepTime, tickSleep, forceSleep, finishRestAction }
+  return { requestSleep, chosenSleepMinutes, wakeTime, sleep, finishSleep, presentWakeEvent, applySleepTime, tickSleep, forceSleep, finishRestAction }
 }
 export type SleepController = ReturnType<typeof createSleepController>
 export function useSleepCompletion(session: SleepSession, game: GameState, controller: SleepController) {

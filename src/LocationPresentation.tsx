@@ -1,3 +1,4 @@
+import { sleepKindLabel } from './sleepText'
 import { t } from './i18n'
 import { memo } from 'react'
 import { formatTime } from './game'
@@ -66,7 +67,7 @@ export const PhoneSearchIcon = memo(function PhoneSearchIcon({ calling = false }
 type SleepHeadingProps = { kind: 'ground' | 'bench' | 'shelter' | 'residential' }
 export const SleepHeading = memo(function SleepHeading({ kind }: SleepHeadingProps) {
   return <div className="timed-heading"><Icon name="moon" /><div>
-    <p className="eyebrow">SLEEPING</p>
-    <h2>{kind === 'ground' ? 'On the ground' : kind === 'bench' ? 'On the bench' : kind === 'shelter' ? 'Night shelter' : 'Schronisko'}</h2>
+    <p className="eyebrow">{t('sleep.progress.label')}</p>
+    <h2>{sleepKindLabel(kind)}</h2>
   </div></div>
 })
