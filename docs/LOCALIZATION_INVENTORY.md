@@ -22,9 +22,9 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `CityMap.tsx`, `LocationPresentation.tsx`, `ClosedContent.tsx`, `game.ts` locations | locations | pending | v335 context only | open/closed, bookable shelter, same destination, transit/walk, route arrows |
 | `LocationScreen.tsx`, `game.ts` actions | locations/actions | pending | v335 hints only | every location, available/unavailable, stored/carried documents, referral, shelter interview |
 | `locationActionRules.ts`, `locationController.ts`, `shelterRules.ts`, `sleepRules.ts`, `eventChecks.ts` | actions/dialogs | pending | match current thresholds during transfer | rejected/closed/full/late/intoxicated, unavailable sleep, phone/undiscovered requirement |
-| `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory / effects.ts | partial: chip/freshness messages moved; own copy pending | v335 labels only | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
+| `InventoryScreen.tsx`, `InventorySlot.tsx`, `ShopCard.tsx`, `inventory.ts` | inventory.ts / effects.ts; itemPresentation.ts | moved own item/slot/shop copy | original copy preserved; count grammar via plurals | all items, empty/full, spoiled/mixed, no tap on essentials, buy/steal, return deposits |
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
-| `inventoryCommands.ts`, `inventoryController.ts`, `foodConsumption.ts` | inventory/results | pending | no new story editing | all refusals, medicine absent/already treated, food poisoning, storage/capacity |
+| `inventoryCommands.ts`, `inventoryController.ts`, `foodConsumption.ts` | inventory.ts | moved | whole outcome/refusal messages, original meaning and mechanics preserved | all refusals, medicine absent/already treated, food poisoning, storage/capacity |
 | `StatusScreen.tsx`, `LifeSituation.tsx`, `statusEffects.ts`, `limitingEffects.ts`, App status data | status | pending | needs full model/display split | untreated/treated Cold, tied caps, wetness disabled/enabled, housing/employment/income IDs |
 | `events.ts`, `eventController.ts` | events | pending | reference scenes approved; remaining variants not fully audited | all choices/DC outcomes/critical outcomes, rejected supplies, documents, broken screen |
 | `EventDialog.tsx`, `CompactStreetEvent.tsx` | dialogs/events | pending | pending | illustrated/compact, unavailable choice, check badges/duration/time paused |
@@ -32,6 +32,7 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `PhoneScreen.tsx`, `PhoneDialog.tsx`, `PhoneSearchScreen.tsx`, `PhoneNotesScreen.tsx`, `phoneQuestions.ts` | phone | pending | Notes and search descriptions reviewed v335 | plan paid/unpaid, hidden apps, Notes known/unknown, exhausted searches, charging memory |
 | App goal data, `JournalSections.tsx`, `PhoneHistoryScreen.tsx` | phone/history | pending | v335 reactions/hints only | pending/completed goals, current/past day, grouped/paginated/empty History |
 | `journal.ts` | history; legacy adapter to isolate | partial: resource recognition uses IDs, prose still inline | v335 reactions remain unchanged | failed/success, all event choices, heading-only actions; `journal-services` |
+| Shop/storage blocks in `LocationScreen.tsx` | inventory.ts | moved own copy | names/capacity/return deposits/storage hints unchanged | shared place/hero copy P; shop/storage checks |
 | App memories, closing notice/History, exit confirmation, initial message/footer | history/dialogs/common | pending | exact original copy during structural migration | once-per-run memories, closing transition, leave/cancel, reset, build label |
 | `ActivityDialog.tsx`, `ActivityStatus.tsx` | `common.ts`, formatters | moved own copy | exact time formatting retained | phone/travel visibility, 01m/59m/1h 00m; phase/title supplied by owner |
 | `travelPhases.ts`, `useTravelController.ts`, `TravelPlanningDialog.tsx` | travel/dialogs | pending | pending | normal/nearby ranges, free/paid/ticketless, arrived/blocked entry, restored trip |
@@ -139,3 +140,12 @@ values remain stable. Preview thresholds/counts and saved food mechanics are
 unchanged. Four selected visual checks and eight extra comparison scenarios
 passed; remaining source copy and full editorial/device audits are pending.
 Next: inventory/shop/backpack catalogue and accessible names.
+
+
+Inventory catalogue checkpoint: names/metadata, backpack/shop/storage controls and
+inventory command/food results are in inventory.ts. itemPresentation keeps names
+separate from IDs, with distinct carried Food/shop Cheap food. Full messages and
+numeric plurals preserve former output; buy eligibility no longer uses text
+truthiness. Item/food/command comparisons and selected UI checks passed. Shared
+place/hero metadata, event/theft prose and remaining screen/catalogue rows are
+still pending. Next: Status/Life situation and internal-enum display names.

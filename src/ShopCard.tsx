@@ -1,16 +1,14 @@
+import { t } from './i18n'
+import { formatMoney } from './i18n/formatters'
+import { shopItemCaption } from './itemPresentation'
 import { impactChip } from './effectChips'
 import type { ShopItem } from './stateTypes'
 import { Icon } from './Icon'
 import ItemArt, { type ItemArtId } from './ItemArt'
 import { memo } from 'react'
 
-const captions: Record<string, string> = {
-  water: '3 portions', food: 'Sandwich', bread: '1 roll', cannedFood: 'Keeps well', readyMeal: 'Pasta with meat & herbs',
-  wipes: '5 uses', showerGel: '20 showers', cigarettes: 'Pack of 5', medicines: 'Basic medicine',
-}
-
 type Props = {
-  item: Pick<ShopItem, 'id' | 'name' | 'price' | 'description' | 'impacts'>
+  item: Pick<ShopItem, 'id' | 'name' | 'price' | 'description' | 'impacts' | 'quantity'>
   open: boolean
   fits: boolean
   affordable: boolean
@@ -19,19 +17,20 @@ type Props = {
 }
 
 export default memo(function ShopCard({ item, open, fits, affordable, onBuy, onSteal }: Props) {
-  const reason = !open ? 'Shop closed' : !fits ? 'Backpack full' : !affordable ? 'Not enough money' : ''
+  const reasonId = !open ? 'shop.closed' : !fits ? 'shop.full' : !affordable ? 'shop.unaffordable' : undefined
+  const reason = reasonId ? t(reasonId) : ''
   return <article className="supply-card">
     <div className="supply-picture">
       <ItemArt id={item.id as ItemArtId} className="supply-art" />
     </div>
     <div className="supply-copy">
-      <strong>{item.name}</strong><small title={item.description || undefined}>{captions[item.id]}</small>
-      <div className="shop-impact supply-effects" aria-label="Effects">{item.impacts.map(id => impactChip(id)).map(chip => <em className={chip.kind} key={chip.id}>{chip.label}</em>)}</div>
+      <strong>{item.name}</strong><small title={item.description || undefined}>{shopItemCaption(item.id, item.quantity)}</small>
+      <div className="shop-impact supply-effects" aria-label={t('shop.effects')}>{item.impacts.map(id => impactChip(id)).map(chip => <em className={chip.kind} key={chip.id}>{chip.label}</em>)}</div>
     </div>
     <div className="supply-actions">
-      <button className="supply-steal" onClick={() => onSteal(item.id)} disabled={!open || !fits} aria-label="STEAL" title={`Steal ${item.name}`}><Icon name="thief" /></button>
-      <button className="shop-buy" onClick={() => onBuy(item.id)} disabled={!!reason} aria-label={`Buy ${item.name} for ${item.price.toFixed(2)} zł`} title={reason || `Buy ${item.name}`}>{item.price} zł</button>
+      <button className="supply-steal" onClick={() => onSteal(item.id)} disabled={!open || !fits} aria-label={t('shop.stealAccessible')} title={t('shop.stealTitle', { name: item.name })}><Icon name="thief" /></button>
+      <button className="shop-buy" onClick={() => onBuy(item.id)} disabled={reasonId !== undefined} aria-label={t('shop.buyAccessible', { name: item.name, price: formatMoney(item.price, true) })} title={reasonId ? reason : t('shop.buyTitle', { name: item.name })}>{formatMoney(item.price)}</button>
     </div>
-    {open && reason && <small className="supply-unavailable">{reason}</small>}
+    {open && reasonId && <small className="supply-unavailable">{reason}</small>}
   </article>
 })

@@ -421,3 +421,17 @@ uses resourceId=mood and the mood stat cap; changing a label must not hide it.
 LimitingEffect.limits.stat uses mood/energy/hygiene IDs, with separate catalogue
 labels. Existing reason values (Cold, Health, Night shelter, etc.) remain internal
 identities; do not translate them or use translated cause names for comparisons.
+
+
+Inventory catalogue checkpoint (26 October 2026): itemPresentation.ts resolves
+shared item names, the carried Food/shop Cheap food distinction, descriptions,
+captions and rejected-supply labels by item ID. InventoryScreen/InventorySlot,
+ShopCard, shop/storage blocks in LocationScreen, inventoryCommands and
+foodConsumption use locales/en/inventory.ts. Keep quantity plurals numeric and
+whole command/food-outcome sentences in the catalogue; never compose translated
+condition/noun fragments. Prices use existing i18n formatters, not calculations.
+ShopCard eligibility is reasonId/open/fits/affordable, independent of even an
+empty translated reason. A displayed name passed to food/discard dialogs is
+presentation only; actions keep kind/id/slotIndex/condition. Existing History
+hash salts and saved historical wording must not change when item names move.
+Shared place/hero copy and event/theft prose remain tracked in their own rows.

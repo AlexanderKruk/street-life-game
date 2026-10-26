@@ -1,3 +1,4 @@
+import { itemName, shopItemDescription, rejectedSupplyLabel } from './itemPresentation'
 import type { Inventory, StoredItems, ShopItem } from './stateTypes'
 import type { EventOutcome } from './events'
 import { addFoodPortions, foodPortions, isPerishableFood, withFoodPortions } from './foodInventory'
@@ -30,15 +31,15 @@ export const BOTTLE_DEPOSIT = 0.5
 
 
 export const SHOP_ITEMS: ShopItem[] = [
-  { id: 'water', name: 'Water', icon: '💧', price: 3, quantity: 3, description: '', impacts: ['thirst-large'] },
-  { id: 'food', name: 'Cheap food', icon: '🥪', price: 5, quantity: 1, description: 'Sandwich · stack 4', impacts: ['food-medium', 'mood-gain'] },
-  { id: 'bread', name: 'Bread roll', icon: '🥖', price: 1, quantity: 1, description: 'Stack 4 · fresh for a short time', impacts: ['food-small'] },
-  { id: 'cannedFood', name: 'Canned food', icon: '🥫', price: 10, quantity: 1, description: 'Pull-tab can · stack 4 · keeps well', impacts: ['food-medium', 'mood-gain'] },
-  { id: 'readyMeal', name: 'Ready meal', icon: '🍝', price: 12, quantity: 1, description: 'Pasta with meat and herbs · plastic container · stack 4 · ready to eat', impacts: ['food-large'] },
-  { id: 'wipes', name: 'Wet wipes', icon: '🧻', price: 5, quantity: 5, description: '5 uses · stack 5', impacts: ['hygiene-small'] },
-  { id: 'showerGel', name: '3-in-1 shower gel', icon: '🧴', price: 10, quantity: 20, description: '20 showers · used automatically', impacts: ['hygiene-large'] },
-  { id: 'cigarettes', name: 'Cigarettes', icon: '🚬', price: 6, quantity: 5, description: 'Pack of 5 · stack 20', impacts: ['mood-gain', 'health-loss'] },
-  { id: 'medicines', name: 'Medicine', icon: '💊', price: 9, quantity: 1, description: 'One dose per Cold · stack 4', impacts: ['recovery-fast'] },
+  { id: 'water', name: itemName('water'), icon: '💧', price: 3, quantity: 3, description: shopItemDescription('water'), impacts: ['thirst-large'] },
+  { id: 'food', name: itemName('food'), icon: '🥪', price: 5, quantity: 1, description: shopItemDescription('food'), impacts: ['food-medium', 'mood-gain'] },
+  { id: 'bread', name: itemName('bread'), icon: '🥖', price: 1, quantity: 1, description: shopItemDescription('bread'), impacts: ['food-small'] },
+  { id: 'cannedFood', name: itemName('cannedFood'), icon: '🥫', price: 10, quantity: 1, description: shopItemDescription('cannedFood'), impacts: ['food-medium', 'mood-gain'] },
+  { id: 'readyMeal', name: itemName('readyMeal'), icon: '🍝', price: 12, quantity: 1, description: shopItemDescription('readyMeal'), impacts: ['food-large'] },
+  { id: 'wipes', name: itemName('wipes'), icon: '🧻', price: 5, quantity: 5, description: shopItemDescription('wipes'), impacts: ['hygiene-small'] },
+  { id: 'showerGel', name: itemName('showerGel'), icon: '🧴', price: 10, quantity: 20, description: shopItemDescription('showerGel'), impacts: ['hygiene-large'] },
+  { id: 'cigarettes', name: itemName('cigarettes'), icon: '🚬', price: 6, quantity: 5, description: shopItemDescription('cigarettes'), impacts: ['mood-gain', 'health-loss'] },
+  { id: 'medicines', name: itemName('medicines'), icon: '💊', price: 9, quantity: 1, description: shopItemDescription('medicines'), impacts: ['recovery-fast'] },
 ]
 
 
@@ -84,7 +85,7 @@ export function fitEventSupplies(inventory: Inventory, outcome: EventOutcome) {
     const accepted = Math.min(requested, Math.max(0, capacity - next[item]))
     if (item === 'food') next = addFoodPortions(next, 'food', Array(accepted).fill(100))
     else next[item] += accepted
-    if (requested > accepted) rejected.push(`${requested - accepted} ${item}`)
+    if (requested > accepted) rejected.push(rejectedSupplyLabel(item, requested - accepted))
   }
   if (next.food <= 0) next.foodFreshness = 100
   return { inventory: next, rejected }

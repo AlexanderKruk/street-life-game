@@ -2,10 +2,10 @@
 
 Recovery snapshot only; main remains at d8ff6fac4236badc45df86195d3295d7cfee64af. No publication.
 
-Source commit: 3dfed720f6870cd01d7502c49e87c433b266d6ec
-Source tree (excluding .backup): e2521f161b05179c70f5c82718734175eeb4d755
+Source commit: eecb1c5d37eb9a85a2d1f42316ef66168a4cba49
+Source tree (excluding .backup): 2ab071266014488b17ddeabf8880d16d3e18fc9c
 
-The snapshot source matches the local tree byte for byte. API snapshot commits have different hashes; the bundle preserves all nine original local commits and their hashes:
+The source snapshot matches the local tree byte for byte. API snapshot commits have different hashes; the bundle preserves all ten original local commits and hashes:
 
 - 7bb039f refactor: add typed English catalogs and stable result identities
 - 40175a7 docs: record localization foundation checkpoint
@@ -16,6 +16,7 @@ The snapshot source matches the local tree byte for byte. API snapshot commits h
 - e186132 refactor: decouple choice order and History grouping from copy
 - f29979f refactor: use explicit duration and check presentation metadata
 - 3dfed72 refactor: use stable freshness and effect chip metadata
+- eecb1c5 refactor: move inventory shop and food copy into typed catalogue
 
 Restore from a clone containing the published main base:
 
@@ -27,8 +28,8 @@ git fetch /tmp/localization-2026-10-26.bundle refs/heads/backup/localization-202
 git switch recovered-localization-2026-10-26
 ```
 
-Current stage: 14 ImpactId definitions with explicit kind/resource metadata; effect/freshness catalogue; inventory/shop/action chips no longer infer colour from text. Food previews retain existing average/count thresholds. Cold Mood cap uses resource identity, and limits use stat IDs. Food aging, consumption, storage, RNG, costs and saves are unchanged.
+Current stage: typed inventory catalogue for item names/descriptions/captions, backpack/shop/storage controls, command/food results and accessibility. Numeric plural messages replace English suffix assembly. Shop eligibility is independent of translated reason text. Mechanics, historical salts and save keys are unchanged.
 
-Validation: check-localization (definitions, 30 food-slot cases, misleading pseudo-catalog UI), check-mood, inventory commands, food inventory, module boundaries, rendering, wetness; regression shop-inventory/street-trash/journal-services; build; diff check. Four selected shop/inventory visual cases passed unchanged. Eight extra inventory/status browser scenarios match f29979f in text/colours/sizes/limits/counts/overflow. Full suites/WebKit/iPhone not run. No deployment.
+Validation: localization (72 pseudo-catalog command comparisons, all shop/inventory controls, empty reasons), inventory commands, food inventory, medicine, event-travel controllers, rendering, module boundaries; regression shop-inventory/street-trash/journal-services; build; diff check. Four selected shop/inventory visual cases passed unchanged. Comparison with 3dfed72 matched 9 item definitions, 27 food outcomes, 73 command scenarios and 8 extra browser picker/discard/medicine/storage scenarios. Full suites/long pseudo-copy browser layout/WebKit/iPhone not run.
 
-Next: inventory/shop/backpack catalogue and accessible names. Remaining controller/scene/enum copy, broken-screen outcome metadata and editorial/mobile audit stay open in LOCALIZATION.md. Earlier mobile location-hero overflow remains recorded there.
+Next: Status/Life situation and internal-enum display. Shared place/hero copy, event/theft prose, broken-screen metadata and remaining editorial/mobile audit are still open in LOCALIZATION.md. No deployment.

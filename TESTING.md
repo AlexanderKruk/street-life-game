@@ -363,3 +363,15 @@ Targeted food/inventory/mood/rendering/wetness/module checks and three regressio
 groups passed, plus build. Selected shop/inventory visual cases passed 4/4 with
 unchanged baselines. Eight extra browser scenarios match f29979f on both sizes.
 Full suites, WebKit and physical iPhone not run.
+
+
+Inventory catalogue checkpoint: check-localization can replace selected test-only
+catalogues without enabling a player locale. It verifies 72 translated command
+plans (same updates/RNG/ID/group/seed), numeric plural forms, rejected supplies,
+all 9 shop items with empty unavailable reasons, all 10 inventory controls and
+escaped item names. Node inventory/food/medicine/event-travel/rendering/boundary
+checks plus 3 regression groups/build passed. Four selected shop/inventory visual
+cases passed unchanged. A temporary comparison with 3dfed72 matched 9 item
+definitions, 27 food outcomes and 73 command scenarios, plus 8 extra browser
+food-choice/discard/medicine/storage states on both sizes. Long pseudo-copy
+browser layout, full suites, WebKit and iPhone remain unrun.

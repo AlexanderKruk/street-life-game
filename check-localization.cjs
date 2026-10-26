@@ -3,10 +3,14 @@ const ts = require('typescript');
 const { buildSync } = require('./tests/helpers/build.cjs');
 function bundled(path) {
   const input = typeof path === 'string' ? { entryPoints: [path] } : { stdin: { contents: path.source, resolveDir: process.cwd(), loader: 'tsx' } };
-  const pseudoEffects = typeof path === 'object' ? path.effects : undefined;
-  const code = buildSync({ ...input, bundle: true, platform: 'node', format: 'cjs', write: false, external: ['react', 'react-dom', 'react/jsx-runtime', ...(pseudoEffects ? ['*/locales/en/effects'] : [])] }).outputFiles[0].text;
+  const overrides = typeof path === 'object' ? { ...(path.effects ? { effects: path.effects } : {}), ...path.catalogs } : {};
+  const external = ['react', 'react-dom', 'react/jsx-runtime', ...Object.keys(overrides).map(name => `*/locales/en/${name}`)];
+  const code = buildSync({ ...input, bundle: true, platform: 'node', format: 'cjs', write: false, external }).outputFiles[0].text;
   const module = { exports: {} };
-  const load = name => pseudoEffects && name.endsWith('/locales/en/effects') ? { effects: pseudoEffects } : require(name);
+  const load = name => {
+    const catalog = Object.keys(overrides).find(id => name.endsWith(`/locales/en/${id}`));
+    return catalog ? { [catalog]: overrides[catalog] } : require(name);
+  };
   new Function('require', 'module', 'exports', code)(load, module, module.exports);
   return module.exports;
 }
@@ -216,6 +220,55 @@ const pseudoEffects=Object.fromEntries(Object.entries(effectCatalog).map(([key,v
 pseudoEffects['effectChip.mood.gain']='Spoiled − ⟦positive⟧';pseudoEffects['effectChip.health.loss']='Fresh + ⟦negative⟧';pseudoEffects['freshness.stale.count']='⟦warning⟧ {count}';pseudoEffects['freshness.spoiled.count']='⟦bad⟧ {count}';
 assert.deepEqual(validateCatalog(effectCatalog,pseudoEffects),[]);
 console.log(`PASS: ${Object.keys(chipFixtures).length} impact definitions and ${foodChipCases} food-slot previews, boundaries/counts and unchanged input.`);
+const { inventory:inventoryCatalog }=bundled('src/locales/en/inventory.ts');
+function pseudoMessage(key,message){
+ const variant=value=>`⟦${key} <b>copy</b>⟧ ${(value.match(/\{\w+\}/g)||[]).join(' ')}`;
+ return typeof message==='string'?variant(message):Object.fromEntries(Object.entries(message).map(([k,v])=>[k,k==='plural'?v:variant(v)]));
+}
+const pseudoInventory=Object.fromEntries(Object.entries(inventoryCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
+for(const key of ['shop.closed','shop.full','shop.unaffordable'])pseudoInventory[key]='';
+assert.deepEqual(validateCatalog(inventoryCatalog,pseudoInventory),[]);
+for(const [key,singular,plural] of [['item.caption.water','1 portion','2 portions'],['item.caption.bread','1 roll','2 rolls'],['item.caption.wipes','1 use','2 uses'],['item.caption.showerGel','1 shower','2 showers']]){
+ assert.equal(t(key,{count:1}),singular);assert.equal(t(key,{count:2}),plural);
+}
+assert.equal(t('inventory.result.returned',{count:1}),'You return 1 deposit container and collect the money.');
+assert.equal(t('inventory.result.returned',{count:2}),'You return 2 deposit containers and collect the money.');
+const inventoryView=bundled({source:`export {default as InventoryScreen} from './src/InventoryScreen'; export {default as ShopCard} from './src/ShopCard'; export * from './src/inventory'; export * from './src/inventoryCommands'; export * from './src/journalIdentity'; export * from './src/itemPresentation';`,catalogs:{inventory:pseudoInventory}});
+let translatedCommandCases=0;
+function commandSignature(resolve,identity,context,command){
+ let draws=0;const plan=resolve(context,command,()=>{draws++;return 0.99;});const result=identity(command),action={...plan.action};delete action.message;
+ const info=plan.info?{...plan.info}:undefined;if(info)for(const key of ['title','text','label','illustrationAlt'])delete info[key];
+ const history=plan.history?{...plan.history}:undefined;if(history)delete history.itemName;
+ return {draws,inventory:plan.inventory?.(context.inventory),storage:plan.storage?.(context.storage),effects:plan.effects?.(context.effects),game:plan.game?.(context.game),action,info,history,id:result?.id,consumed:result?.consumedItems,always:result?.always};
+}
+function compareTranslatedCommand(command,patch={}){
+ const context={...inventoryContext,...patch};const other=command.type==='buy'?{...command,item:inventoryView.SHOP_ITEMS.find(i=>i.id===command.item.id)}:command;
+ assert.deepEqual(commandSignature(inventoryView.resolveInventoryCommand,inventoryView.inventoryCommandResult,context,other),commandSignature(resolveInventoryCommand,inventoryCommandResult,context,command));
+ const a=inventoryCommandResult(command),b=inventoryView.inventoryCommandResult(other);
+ if(a){
+  const summary={costs:[],changes:[]};const presented=journalPresentation(a,summary),translated=inventoryView.journalPresentation(b,summary);
+  assert.equal(translated.groupId,presented.groupId);
+  assert.equal(inventoryView.journalDecisionKey([{day:2,minute:700,actionTitle:b.title,...translated}]),journalDecisionKey([{day:2,minute:700,actionTitle:a.title,...presented}]));
+ }
+ translatedCommandCases++;
+}
+for(const item of SHOP_ITEMS)for(const patch of [{},{open:false},{game:{...inventoryContext.game,money:0}},{inventory:{...INITIAL_INVENTORY,medicines:32}}])compareTranslatedCommand({type:'buy',item},patch);
+for(const item of ['water','cannedFood','wipes'])compareTranslatedCommand({type:'use',item},{inventory:{...INITIAL_INVENTORY,[item]:2}});
+for(const item of ['food','bread','readyMeal'])for(const freshness of [0,40,100])compareTranslatedCommand({type:'use',item},{inventory:withFoodPortions(INITIAL_INVENTORY,item,[freshness])});
+compareTranslatedCommand({type:'medicine'});
+for(const treated of [true,false])compareTranslatedCommand({type:'medicine'},{effects:[{id:'cold',expiresAt:2000,treated}]});
+compareTranslatedCommand({type:'smoke'},{inventory:{...INITIAL_INVENTORY,cigarettes:1}});
+for(const count of [1,2,8])compareTranslatedCommand({type:'return-bottles'},{inventory:{...INITIAL_INVENTORY,bottles:count}});
+for(const type of ['store','take'])for(const item of ['documents','medicines','cigarettes'])for(const count of [1,2])compareTranslatedCommand({type,item},{locationId:'shelter',insideNightShelter:true,inventory:{...INITIAL_INVENTORY,[item]:item==='documents'?type==='store':count},storage:{...INITIAL_STORAGE,[item]:item==='documents'?type==='take':count}});
+for(const type of ['store-food','take-food'])for(const count of [1,2])compareTranslatedCommand({type},{locationId:'residential-shelter',inventory:{...INITIAL_INVENTORY,food:count},storage:{...INITIAL_STORAGE,food:count}});
+compareTranslatedCommand({type:'discard',id:'food',quantity:2,slotIndex:0,spoiledOnly:true},{inventory:withFoodPortions(INITIAL_INVENTORY,'food',[0,100])});
+const { fitEventSupplies }=bundled('src/inventory.ts');
+for(const inventory of [INITIAL_INVENTORY,{...INITIAL_INVENTORY,medicines:32}]){
+ const outcome={message:'⟦report⟧',food:8,water:8};const before=fitEventSupplies(inventory,outcome),after=inventoryView.fitEventSupplies(inventory,outcome);
+ assert.deepEqual(after.inventory,before.inventory);assert.equal(after.rejected.length,before.rejected.length);
+}
+console.log(`PASS: inventory captions/plurals and ${translatedCommandCases} pseudo-catalog commands preserve updates, RNG, guards, result IDs, History groups and seeds.`);
+
 
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -316,6 +369,23 @@ try {
   assert.deepEqual([...document.querySelectorAll('.limit-effect b')].map(n=>n.textContent),['⟦effect.statCap⟧ Mood 40','⟦effect.statCap⟧ Energy 60']);
   showStatus([]);assert(!document.querySelector('.illness .effect-impact').textContent.includes('60'));
   console.log('PASS: pseudo-effect labels preserve inventory/shop colours and handlers, treated Cold Mood cap and separate stat identities.');
+  let bought=[],stolen=[];
+  for(const item of inventoryView.SHOP_ITEMS)for(const [open,fits,affordable] of [[true,true,true],[false,true,true],[true,false,true],[true,true,false]]){
+    cleanup();render(React.createElement(inventoryView.ShopCard,{item,open,fits,affordable,onBuy:id=>bought.push(id),onSteal:id=>stolen.push(id)}));
+    const buy=document.querySelector('.shop-buy'),steal=document.querySelector('.supply-steal');
+    assert.equal(buy.disabled,!open||!fits||!affordable,'an empty translated reason must not enable buying');assert.equal(steal.disabled,!open||!fits);
+    assert.equal(document.querySelector('.supply-copy strong').textContent,item.name);assert.equal(document.querySelector('.supply-copy strong b'),null);
+    buy.click();steal.click();
+  }
+  assert.deepEqual(bought,SHOP_ITEMS.map(i=>i.id));assert.deepEqual(stolen,SHOP_ITEMS.flatMap(i=>[i.id,i.id]));
+  const actions=[],discards=[];const fullInventory={...INITIAL_INVENTORY,water:1,food:3,foodPortions:[100,40,0],bread:1,breadPortions:[40],readyMeal:1,readyMealPortions:[0],cannedFood:1,wipes:1,bottles:1,cigarettes:1,medicines:1,showerGel:1};
+  cleanup();render(React.createElement(inventoryView.InventoryScreen,{inventory:fullInventory,hygiene:10,usedBackpackSlots:10,shelterPhoneCharging:true,onUseItem:id=>actions.push(id),onUseSupply:id=>actions.push(id),onSmoke:()=>actions.push('smoke'),onMedicine:()=>actions.push('medicine'),onRequestFood:(id,name,index)=>actions.push([id,name,index]),onDiscard:request=>discards.push(request)}));
+  for(const button of document.querySelectorAll('.inventory-slot-use'))button.click();for(const button of document.querySelectorAll('.inventory-discard'))button.click();
+  assert.deepEqual(actions,['water',['food',inventoryView.backpackItemName('food'),0],['bread',inventoryView.backpackItemName('bread'),0],'cannedFood',['readyMeal',inventoryView.backpackItemName('readyMeal'),0],'wipes','smoke','medicine']);
+  assert.deepEqual(discards.map(r=>r.id),['water','food','bread','cannedFood','readyMeal','wipes','bottles','cigarettes','medicines','showerGel']);assert.equal(discards.find(r=>r.id==='food').spoiledQuantity,1);
+  assert.equal(document.querySelector('.inventory-slot-copy strong b'),null);
+  console.log('PASS: all nine pseudo-labelled shop items retain buy/steal eligibility with empty reasons; all ten backpack item controls dispatch by ID.');
+
 
 
 
