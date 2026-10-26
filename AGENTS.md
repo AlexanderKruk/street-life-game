@@ -531,3 +531,15 @@ existing condition order, numeric costs/timers, crowd RNG and action IDs.
 Shower descriptions and result variants are whole translated messages selected
 by gel/cap facts. LocationScreen owns no English copy except incoming call text,
 tracked with openingCalls. Other controller/process catalogues remain pending.
+
+
+Street/support/work/medical checkpoint (26 October 2026): controllerActions.ts
+contains their complete messages, result titles and music illustration alt.
+Keep action IDs, outcome facts, guards and numeric calculations independent of
+these messages. In particular employment='Day work' is a persisted domain enum;
+controller.work.title is display only despite identical English. Begging formats
+its existing fixed-two-decimal amount with formatMoney; ambulance hours select
+a whole plural message without changing the 4–8-hour draw. Do not reintroduce
+the removed ordinary-walk UI while maintaining its legacy command. No new
+persistence fields or clock ownership. Remaining shelter/sleep/rain/travel,
+event/phone and final-editorial work is in LOCALIZATION.md.

@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import type { ActionResult, GameState } from './game'
 import { phoneDrainMultiplier } from './phonePower'
 import type { ActiveEffect, Inventory, Screen, Trip } from './stateTypes'
@@ -26,21 +27,21 @@ export function createMedicalController(context: Context, host: Host) {
   const { setGame, setInventory, setEffects, setMessage, setSelectedDestination, setTrip, setScreen, applyAction, runWithResult } = host
   function hospitalVisitImpl() {
     if (activeEvent || currentId !== 'hospital') return
-    if (!open) { setMessage('Regular medical care is closed.'); return }
-    if (!inventory.documents) { setMessage('You need your documents for a regular medical appointment.'); return }
+    if (!open) { setMessage(t("controller.medical.regular.closed")); return }
+    if (!inventory.documents) { setMessage(t("controller.medical.regular.documents")); return }
     setGame((prev) => {
       const afterTime = applyAction(prev, { minutes: 90, mood: 3 })
       return { ...afterTime, health: Math.max(afterTime.health, 65) }
     })
     setEffects((active) => active.filter((effect) => effect.id !== 'cold'))
-    setMessage('A doctor examines you and treats what they can. Your condition is brought back to a stable level.')
+    setMessage(t("controller.medical.regular.treated"))
   }
 
   function callAmbulanceImpl() {
     if (activeEvent) return
-    if (shelterPhoneCharging) { setMessage('Collect your phone from the charger first.'); return }
-    if (game.health > 20) { setMessage('Emergency care requires Health 20 or lower. Visit a doctor for regular care.'); return }
-    if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0) { setMessage('Your phone is not working, so you cannot call an ambulance.'); return }
+    if (shelterPhoneCharging) { setMessage(t("controller.medical.emergency.charging")); return }
+    if (game.health > 20) { setMessage(t("controller.medical.emergency.health")); return }
+    if (inventory.phoneBattery <= 0 || inventory.phoneCondition <= 0) { setMessage(t("controller.medical.emergency.phone")); return }
     const hours = 4 + Math.floor(Math.random() * 5)
     setInventory((prev) => ({ ...prev, phoneBattery: Math.max(0, prev.phoneBattery - 2 * phoneDrainMultiplier(prev.phoneCondition)) }))
     setGame((prev) => {
@@ -50,10 +51,10 @@ export function createMedicalController(context: Context, host: Host) {
     setSelectedDestination(null)
     setTrip(null)
     setScreen('location')
-    setMessage(`You call an ambulance. Emergency staff stabilise your condition without requiring documents. About ${hours} hours pass.`)
+    setMessage(t('controller.medical.emergency.treated', { hours }))
   }
 
-  function hospitalVisit() { runWithResult({ id: 'medical-appointment', title: 'Medical appointment' }, hospitalVisitImpl) }
-  function callAmbulance() { runWithResult({ id: 'emergency-care', title: 'Emergency care' }, callAmbulanceImpl) }
+  function hospitalVisit() { runWithResult({ id: 'medical-appointment', title: t("controller.medical.regular.title") }, hospitalVisitImpl) }
+  function callAmbulance() { runWithResult({ id: 'emergency-care', title: t("controller.medical.emergency.title") }, callAmbulanceImpl) }
   return { hospitalVisit, callAmbulance }
 }
