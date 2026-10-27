@@ -16,6 +16,20 @@ let accepted=null,applied=0,started=0;const dice={choice,roll:20,modifier:0,reso
 const session={activeEvent:null,diceCheck:dice,firstNightEvents:{pendingId:null},ambientEventClock:{current:{locationId:'street',minutes:0}},claimDice:value=>accepted===value?false:(accepted=value,true),setEncounters:()=>{},setFirstNightEvents:()=>{},setActiveEvent:()=>{},setDiceCheck:()=>{}};
 const command=createEventController(session,{game,inventory:INITIAL_INVENTORY,storage:INITIAL_STORAGE,life:{housing:'Street'},discoveredLocations:[],phoneUnavailable:null,shelterBooked:false,currentId:'street',open:true},{setGame:()=>{},setInventory:()=>{},setMessage:()=>{},setInfoModal:()=>{},setEventResultOpen:()=>{},setDiscoveredLocations:()=>{},setActiveGoal:()=>{},openPage:()=>{},resultSnapshot:()=>trip.before,applyAction:state=>state,runWithResult:(_title,action)=>{applied++;action()},startFareDodgeTrip:()=>started++});
 command.acceptDiceResult();command.acceptDiceResult();assert.equal(applied,1);assert.equal(started,1);
+// Fines retain their nominal amount, but the actual deduction is limited to cash.
+const {applyAction}=bundle('src/game.ts');
+for(const [roll,fine] of [[10,20],[1,35]])for(const money of [0,3.5,20,35,100]) {
+ const before={...game,money},check={label:'fare',check:{stat:'reflex',dc:12,success:{message:'success'},failure:{money:-20,mood:-8,message:'Fine 20'},criticalFailure:{money:-35,mood:-12,message:'Fine 35'}}};
+ const diceState={choice:check,roll,modifier:0,resolved:false,fareDodgeDestinationId:'station'};
+ const session={activeEvent:null,diceCheck:diceState,firstNightEvents:{pendingId:null},ambientEventClock:{current:{}},claimDice:()=>true,setEncounters:()=>{},setFirstNightEvents:()=>{},setActiveEvent:()=>{},setDiceCheck:()=>{}};
+ let actual=before,message='',startedOutcome;
+ const update=value=>{actual=typeof value==='function'?value(actual):value};
+ const host={setGame:update,setInventory:()=>{},setMessage:value=>{message=value},setInfoModal:()=>{},setEventResultOpen:()=>{},setDiscoveredLocations:()=>{},setActiveGoal:()=>{},openPage:()=>{},resultSnapshot:()=>({game:before,inventory:INITIAL_INVENTORY,effects:[]}),applyAction,runWithResult:(_identity,run)=>run(),startFareDodgeTrip:(_id,outcome)=>{startedOutcome=outcome}};
+ createEventController(session,{game:before,inventory:INITIAL_INVENTORY,storage:INITIAL_STORAGE,life:{housing:'Street'},discoveredLocations:[],phoneUnavailable:null,shelterBooked:false,currentId:'street',open:true},host).acceptDiceResult();
+ assert.equal(actual.money,Math.max(0,money-fine));assert.equal(startedOutcome.money,-fine);
+ if(money<fine)assert.equal(message,`An inspector catches you. The fine is ${fine} zł; you pay ${money.toFixed(2)} zł.`);
+ else assert.equal(message,`Fine ${fine}`);
+}
 assert.equal(eventCheckModifier({...game,energy:80},choice),2);assert.equal(eventCheckModifier({...game,energy:19},choice),-2);
 
 const {JSDOM}=require('jsdom');const dom=new JSDOM('<html><body></body></html>',{url:'http://localhost/street-life-game/',pretendToBeVisual:true});

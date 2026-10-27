@@ -1,5 +1,6 @@
 import { eventChoiceUnavailable } from './eventChoiceText'
 import { t, locale } from './i18n'
+import { formatMoney } from './i18n/formatters'
 import { locationName } from './locationText'
 import { STREET_EVENTS, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
 import { illustrateStreetEvent } from './eventArtwork'
@@ -148,7 +149,11 @@ export function createEventController(session: EventSession, context: Context, h
   function acceptDiceResult() {
     if (!diceCheck?.choice.check || diceCheck.roll === null) return
     if (!claimDice(diceCheck)) return
-    const { success, outcome } = diceOutcome(diceCheck)!
+    const { success, outcome: rolledOutcome } = diceOutcome(diceCheck)!
+    const fine = diceCheck.fareDodgeDestinationId && (rolledOutcome.money ?? 0) < 0 ? -(rolledOutcome.money ?? 0) : 0
+    const outcome = fine > 0 && fine > game.money
+      ? { ...rolledOutcome, message: t('travel.fare.partial', { fine: formatMoney(fine), paid: formatMoney(Math.max(0, game.money), true) }) }
+      : rolledOutcome
     applyEventOutcome(outcome, diceCheck.stealItemId ? success ? t('event.controller.stolen') : t('event.controller.caught') : undefined, diceCheck.stealItemId ? success ? 'item-stolen' : 'caught-stealing' : undefined)
     if (diceCheck.fareDodgeDestinationId) startFareDodgeTrip(diceCheck.fareDodgeDestinationId, outcome)
     if (diceCheck.stealItemId && success) {

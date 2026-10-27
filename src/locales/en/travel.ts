@@ -15,6 +15,7 @@ export const travel = {
   "travel.fare.failure": "A ticket inspector catches you. You receive a 20 zł penalty.",
   "travel.fare.criticalSuccess": "You avoid inspection completely and ride for free.",
   "travel.fare.criticalFailure": "Bad luck: inspectors catch you immediately. The penalty is 35 zł.",
+  "travel.fare.partial": "An inspector catches you. The fine is {fine}; you pay {paid}.",
   "travel.noMoney": "You do not have enough money for public transport.",
   "travel.underCover": "Under cover",
   "travel.plan.accessible": "Travel to {place}",
