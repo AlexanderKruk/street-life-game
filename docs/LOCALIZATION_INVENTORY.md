@@ -67,6 +67,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | `TravelPlanningDialog` | walking, paid/free/ticketless transit, poor money, nearby timed range, invalid destination | T; travel.ts; phase/planner/controller/map-travel checks |
 | `DiceDialog` | before/after roll, criticals/normal threshold, theft/fare/authored, cancel/continue | T own copy; 144 DOM/pseudo variants and event/controller checks |
 | `PhoneDialog` | active/expired plan, battery, service expiry hours/minutes, money, auto-renew, blocked behind process | T; phoneUi.ts; 170 launcher/plan/focus/expiry variants and phone checks |
+| `PhoneHistoryScreen` / `JournalGoals` | current/older/empty day, batches, pending/completed goals | T; Chromium component long-copy QA at 320×568, 390×844, 850×390: normal/extended copy, completed-goal disclosure, day controls and 30→35 pagination; other device/restore and extreme-content cases remain open. |
 | `SleepPlanningDialog` | ground/bench/shelter/residential; fatigue restrictions; wake day/time; 07:30; wetness flag | T; sleep.ts; fatigue/date/focus/restore checks |
 | `SleepProgressDialog` | four kinds; elapsed/cap; forced sleep; wake debug; exposure note | T; sleep.ts; elapsed/illness/restore/debug-finish checks |
 | `ShelterQueueDialog` | before 18:00, 18:00–18:20, after 18:20; vacancies, people, elapsed, restored | T; shelter.ts; progress/fallback arrival/restore checks |
