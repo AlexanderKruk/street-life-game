@@ -178,7 +178,7 @@ try {
   assert(!document.querySelector('.compact-info-saved'));cleanup();
   for (const [id, places, heading, important] of [
     ['bed', ['shelter'], 'Night Shelter', ['18:00–08:00', 'A bed for the night, meals and a shower.', 'Try to arrive before 18:00', 'better chance of getting a bed']],
-    ['supplies', ['shop'], 'Small Shop', ['07:00–22:00', 'A small shop selling affordable food and water.', 'Registered Night Shelter guests can also get free meals.']],
+    ['supplies', ['shop'], 'Small Shop', ['07:00–22:00', 'A small shop selling affordable food and water.', 'Registered Night Shelter guests can get free meals at the shelter.']],
     ['charging', ['station'], 'Station', ['24 hours', '+60%', 'one hour', 'No internet needed']],
     ['no-place', [], 'If there is no bed', ['Schronisko', 'Day Center', 'safe sleep']],
   ]) for (const saved of [false, true]) {

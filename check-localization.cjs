@@ -813,8 +813,9 @@ const {trash:trashCatalog}=bundled('src/locales/en/trash.ts');const trashPseudo=
 
 const answersBase=bundled('src/resultPresentation.ts'),answersOld=bundled('test-fixtures/resultPresentation-copy.ts');
 const {phoneAnswers:answersCatalog}=bundled('src/locales/en/phoneAnswers.ts');const answersPseudo=Object.fromEntries(Object.entries(answersCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));assert.deepEqual(validateCatalog(answersCatalog,answersPseudo),[]);const answersView=bundled({source:`export * from './src/resultPresentation';`,catalogs:{phoneAnswers:answersPseudo}});
+assert.equal(answersBase.questionPresentation('supplies',['shop']).places[0].detail,'A small shop selling affordable food and water. Registered Night Shelter guests can get free meals at the shelter.');
 let answerCases=0;
-for(const id of ['morning','bed','no-place','supplies','work','clinic','charging','unknown'])for(const places of [[],['unknown'],['shelter'],['support','daycenter','shelter']])for(const saved of [false,true])for(const known of [false,true]){
+for(const id of ['morning','bed','no-place','supplies','work','clinic','charging','unknown'])for(const places of [[],['unknown'],['shelter'],['shop'],['support','daycenter','shelter']])for(const saved of [false,true])for(const known of [false,true]){
  const old=answersOld.questionPresentation(id,places,saved,known),actual=answersBase.questionPresentation(id,places,saved,known),translated=answersView.questionPresentation(id,places,saved,known);
  assert.deepEqual(actual,old);
  const mechanics=value=>value?(({heading,lead,notice,...rest})=>rest)(value):value;assert.deepEqual(mechanics(translated),mechanics(actual));
