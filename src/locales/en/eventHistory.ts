@@ -62,6 +62,7 @@ export const eventHistory = {
   "history.event.quiet-night.title": "Peaceful rest",
   "history.event.quiet-night.get-up.complete": "My legs feel less heavy. It helps to stop for a while.",
   "history.event.night-theft.title": "Belongings stolen",
+  "history.event.night-theft.checkedTitle": "Checked my belongings",
   "history.event.night-theft.check-bag.complete": "My stomach sank when I checked my bag. I don’t feel safe here anymore.",
   "history.event.spare-change.title": "Have you got any change?",
   "history.event.spare-change.give.complete": "I feel a little steadier. Right now, that matters.",

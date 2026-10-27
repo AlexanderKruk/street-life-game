@@ -53,6 +53,11 @@ export function createEventController(session: EventSession, context: Context, h
     if (activeEvent?.id === 'borrow-phone-slip' && resolved.phoneBreakMessage !== undefined && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
       resolved = { ...resolved, message: resolved.phoneBreakMessage! }
     }
+    if (activeEvent?.id === 'night-theft' && resolved.historyId === 'night-theft:check-bag:complete') {
+      if (game.money <= 0 || !inventory.documents) {
+        resolved = { ...resolved, message: t(game.money > 0 ? 'event.theft.cashOnly' : inventory.documents ? 'event.theft.documentsOnly' : 'event.theft.nothing') }
+      }
+    }
     runWithResult({ id: actionId ?? (activeEvent ? `event:${activeEvent.id}` : 'event-result'), title: title ?? activeEvent?.title ?? t('event.controller.resultTitle'), ...(resolved.historyId ? { eventHistory: { outcomeId: resolved.historyId, suppliesRejected: fitEventSupplies(inventory, resolved).rejected.length > 0, documents: inventory.documents ? 'carried' as const : storage.documents ? 'stored' as const : 'missing' as const } } : {}) }, () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
   }
   function applyEventOutcomeImpl(outcome: EventOutcome) {

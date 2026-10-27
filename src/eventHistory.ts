@@ -22,5 +22,7 @@ export function eventHistoryReflection(facts: EventHistoryFacts, summary?: Resul
     if (facts.documents === 'stored') key = 'history.event.special.documents-stored'
     if (facts.documents === 'missing') key = 'history.event.special.documents-missing'
   }
-  return { title: translate(definition.titleKey), text: translate(key) }
+  const titleKey = definition.eventId === 'night-theft' && facts.documents !== 'carried' && !changed('money', 'negative')
+    ? 'history.event.night-theft.checkedTitle' : definition.titleKey
+  return { title: translate(titleKey), text: translate(key) }
 }

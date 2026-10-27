@@ -113,6 +113,7 @@ for (const event of STREET_EVENTS) for (const choice of event.choices) {
         const expected = oldReflection(event.title, outcome.message, summary);
         if (authored.historyId === 'borrow-phone:decline:complete') expected.text = 'He needed a quick call, but I said no and carried on.';
         if (authored.historyId === 'borrow-phone-slip:catch:failure') expected.text = 'I helped him, but my phone hit the pavement. I need to be more careful with it.';
+        if (authored.historyId === 'night-theft:check-bag:complete' && documents !== 'carried' && capped) expected.title = 'Checked my belongings';
         assert.deepEqual(eventHistoryReflection(facts, summary), expected, authored.historyId);
       }
     }
@@ -658,12 +659,13 @@ const eventBase=bundled({source:eventSource});const eventOld=bundled({source:`ex
 const {eventController:eventCatalog}=bundled('src/locales/en/eventController.ts');
 const eventPseudo=Object.fromEntries(Object.entries(eventCatalog).map(([key,message])=>[key,pseudoMessage(key,message)]));
 const eventView=bundled({source:eventSource,catalogs:{eventController:eventPseudo}});
-function executeEventCopy(view,outcome,condition=100,mutated=false){
+function executeEventCopy(view,outcome,condition=100,mutated=false,scenario={}){
  const state={game:{...initialState,day:2,minutes:600},inventory:{...INITIAL_INVENTORY,phoneCondition:condition},message:'',infoModal:null,encounters:{pendingId:'borrow-phone-slip'},firstNightEvents:{pendingId:'borrow-phone-slip'},discoveredLocations:['support'],activeGoal:null,eventResultOpen:false,ports:[]};
+ if (scenario.money !== undefined) state.game.money = scenario.money; if (scenario.documents !== undefined) state.inventory.documents = scenario.documents;
  const setter=key=>value=>{state[key]=typeof value==='function'?value(state[key]):value;};
- const session={activeEvent:{id:'borrow-phone-slip',title:'Frozen event',illustration:'/fixture.webp'},setActiveEvent:()=>{},diceCheck:null,setDiceCheck:()=>{},firstNightEvents:state.firstNightEvents,setFirstNightEvents:setter('firstNightEvents'),setEncounters:setter('encounters'),ambientEventClock:{current:{}},claimDice:()=>true};
+ const session={activeEvent:{id:scenario.eventId ?? 'borrow-phone-slip',title:'Frozen event',illustration:'/fixture.webp'},setActiveEvent:()=>{},diceCheck:null,setDiceCheck:()=>{},firstNightEvents:state.firstNightEvents,setFirstNightEvents:setter('firstNightEvents'),setEncounters:setter('encounters'),ambientEventClock:{current:{}},claimDice:()=>true};
  const host={...Object.fromEntries(['game','inventory','message','infoModal','discoveredLocations','activeGoal','eventResultOpen'].map(key=>['set'+key[0].toUpperCase()+key.slice(1),setter(key)])),openPage:id=>state.ports.push(id),resultSnapshot:()=>({game:state.game,inventory:state.inventory,effects:[]}),runWithResult:(action,run)=>{state.action=action;run();},applyAction:(game,action)=>view.applyAction(game,action),startFareDodgeTrip:()=>{}};
- const controller=view.createEventController(session,{game:state.game,inventory:state.inventory,storage:INITIAL_STORAGE,life:{housing:'Street'},discoveredLocations:state.discoveredLocations,phoneUnavailable:null,shelterBooked:false,currentId:'street',open:true},host);
+ const controller=view.createEventController(session,{game:state.game,inventory:state.inventory,storage:{...INITIAL_STORAGE,documents:scenario.stored ?? false},life:{housing:'Street'},discoveredLocations:state.discoveredLocations,phoneUnavailable:null,shelterBooked:false,currentId:'street',open:true},host);
  const random=Math.random;Math.random=()=>.5;try{controller.applyEventOutcome(mutated?{...outcome,message:'Arbitrary translated wording'}:outcome);return state;}finally{Math.random=random;}
 }
 const slip=eventBase.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure;
@@ -673,6 +675,17 @@ for(const condition of [0,3,5,6,100]){
  const pseudoSlip=eventView.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure,translated=executeEventCopy(eventView,pseudoSlip,condition,true);
  assert.equal(translated.inventory.phoneCondition,actual.inventory.phoneCondition);assert.deepEqual(translated.action.eventHistory,actual.action.eventHistory);
 }
+const theft=eventBase.STREET_EVENTS.find(event=>event.id==='night-theft').choices[0].outcome;
+for(const [money,documents,message] of [[10,true,'Some cash is gone, and your documents are missing.'],[10,false,'Some cash is gone.'],[0,true,'Your documents are missing.'],[0,false,'You check your things. Nothing appears to be missing.']]) {
+ const result=executeEventCopy(eventBase,theft,100,false,{eventId:'night-theft',money,documents});
+ assert.equal(result.message,message);assert.equal(result.game.money,Math.max(0,money-5));assert.equal(result.inventory.documents,false);
+ assert.equal(result.action.eventHistory.documents,documents?'carried':'missing');
+}
+const storedTheft=executeEventCopy(eventBase,theft,100,false,{eventId:'night-theft',money:0,documents:false,stored:true});
+assert.equal(storedTheft.message,'You check your things. Nothing appears to be missing.');
+assert.equal(storedTheft.action.eventHistory.documents,'stored');
+const noLossHistory=eventHistoryReflection(storedTheft.action.eventHistory,{costs:[],changes:[]});
+assert.equal(noLossHistory.title,'Checked my belongings');
 for(const outcome of [{message:'fixture'},{message:'fixture',knownLocations:[]},{message:'fixture',knownLocations:['support','station','unknown']},{message:'fixture',discoverLocation:'shelter',minutes:30},{message:'fixture',moveToStreet:true}])assert.deepEqual(executeEventCopy(eventBase,outcome),executeEventCopy(eventOld,outcome));
 console.log('PASS: event controller English parity, knowledge/discovery/movement and broken-phone boundary/translated-message metadata preserve state and History facts.');
 
