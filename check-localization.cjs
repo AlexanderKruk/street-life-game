@@ -662,7 +662,7 @@ const eventPseudo=Object.fromEntries(Object.entries(eventCatalog).map(([key,mess
 const eventView=bundled({source:eventSource,catalogs:{eventController:eventPseudo}});
 function executeEventCopy(view,outcome,condition=100,mutated=false,scenario={}){
  const state={game:{...initialState,day:2,minutes:600},inventory:{...INITIAL_INVENTORY,phoneCondition:condition},message:'',infoModal:null,encounters:{pendingId:'borrow-phone-slip'},firstNightEvents:{pendingId:'borrow-phone-slip'},discoveredLocations:['support'],activeGoal:null,eventResultOpen:false,ports:[]};
- if (scenario.money !== undefined) state.game.money = scenario.money; if (scenario.documents !== undefined) state.inventory.documents = scenario.documents;
+ if (scenario.money !== undefined) state.game.money = scenario.money; if (scenario.documents !== undefined) state.inventory.documents = scenario.documents; if (scenario.inventory) Object.assign(state.inventory,scenario.inventory);
  const setter=key=>value=>{state[key]=typeof value==='function'?value(state[key]):value;};
  const session={activeEvent:{id:scenario.eventId ?? 'borrow-phone-slip',title:'Frozen event',illustration:'/fixture.webp'},setActiveEvent:()=>{},diceCheck:null,setDiceCheck:()=>{},firstNightEvents:state.firstNightEvents,setFirstNightEvents:setter('firstNightEvents'),setEncounters:setter('encounters'),ambientEventClock:{current:{}},claimDice:()=>true};
  const host={...Object.fromEntries(['game','inventory','message','infoModal','discoveredLocations','activeGoal','eventResultOpen'].map(key=>['set'+key[0].toUpperCase()+key.slice(1),setter(key)])),openPage:id=>state.ports.push(id),resultSnapshot:()=>({game:state.game,inventory:state.inventory,effects:[]}),runWithResult:(action,run)=>{state.action=action;run();},applyAction:(game,action)=>view.applyAction(game,action),startFareDodgeTrip:()=>{}};
@@ -676,6 +676,17 @@ for(const condition of [0,3,5,6,100]){
  const pseudoSlip=eventView.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure,translated=executeEventCopy(eventView,pseudoSlip,condition,true);
  assert.equal(translated.inventory.phoneCondition,actual.inventory.phoneCondition);assert.deepEqual(translated.action.eventHistory,actual.action.eventHistory);
 }
+const neighbourGift=eventBase.STREET_EVENTS.find(event=>event.id==='first-night-door').choices.find(choice=>choice.id==='explain').outcome;
+for(const [inventory, food, water, message] of [
+ [{medicines:32,food:0,water:0},0,0,'There was no backpack room for 1 portion of food and 1 portion of water.'],
+ [{medicines:28,food:0,water:0},1,0,'There was no backpack room for 1 portion of water.'],
+ [{medicines:28,food:0,water:3},0,4,'There was no backpack room for 1 portion of food.'],
+]) {
+ const result=executeEventCopy(eventBase,neighbourGift,100,false,{eventId:'first-night-door',inventory});
+ assert.equal(result.message,message);assert.equal(result.inventory.food,food);assert.equal(result.inventory.water,water);assert.equal(result.action.eventHistory.suppliesRejected,true);
+}
+assert.equal(t('inventory.rejected.food',{count:2}),'2 portions of food');
+assert.equal(t('inventory.rejected.water',{count:2}),'2 portions of water');
 const phoneDrop=eventBase.STREET_EVENTS.find(event=>event.id==='phone-drop');
 for (const outcome of [phoneDrop.choices[0].check.failure,phoneDrop.choices[0].check.criticalFailure,phoneDrop.choices[1].outcome]) {
  const broken=executeEventCopy(eventBase,outcome,0,false,{eventId:'phone-drop'});

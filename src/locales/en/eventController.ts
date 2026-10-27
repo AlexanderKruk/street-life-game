@@ -3,7 +3,7 @@ export const eventController = {
   "event.controller.afterChoice": "After your choice",
   "event.controller.known": "{message}\n\nYou already know about: {places}.\n\nYou can find out more by asking around or searching on your phone.",
   "event.controller.unknown": "{message}\n\nYou’re not sure where to start yet.\n\nYou can find out more by asking around or searching on your phone.",
-  "event.controller.rejected": "There was no backpack room for {items}; you left it behind.",
+  "event.controller.rejected": "There was no backpack room for {items}.",
   "event.theft.cashOnly": "Some cash is gone.",
   "event.theft.documentsOnly": "Your documents are missing.",
   "event.theft.nothing": "You check your things. Nothing appears to be missing.",

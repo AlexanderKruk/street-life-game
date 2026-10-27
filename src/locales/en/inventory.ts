@@ -153,6 +153,6 @@ export const inventory = {
   "inventory.storage.foodHint": "Separate food shelf · {freshness} · {percent}%",
   "inventory.storage.foodEmpty": "Separate food shelf · empty",
   'inventory.storage.capacity': { plural: 'capacity', one: '{used}/{capacity} slot', other: '{used}/{capacity} slots' },
-  'inventory.rejected.food': '{count} food',
-  'inventory.rejected.water': '{count} water',
+  'inventory.rejected.food': { plural: 'count', one: '{count} portion of food', other: '{count} portions of food' },
+  'inventory.rejected.water': { plural: 'count', one: '{count} portion of water', other: '{count} portions of water' },
 } as const
