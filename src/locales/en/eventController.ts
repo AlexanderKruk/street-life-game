@@ -16,5 +16,6 @@ export const eventController = {
   "event.controller.stealCritical": "Perfect timing. You take {item} without drawing attention.",
   "event.controller.stealFailure": "The shopkeeper catches you and orders you out. You find yourself back on the street, empty-handed.",
   "event.controller.stealCriticalFailure": "The shopkeeper spots your attempt immediately and orders you out. You find yourself back on the street, empty-handed.",
-  "event.phoneSlip.broken": "Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. You try the screen, but it stays black. There’s a fresh dent in the corner. “I’m really sorry.” You take it back."
+  "event.phoneSlip.broken": "Your fingers brush the edge, but the phone hits the pavement. He picks it up, apologising. You try the screen, but it stays black. There’s a fresh dent in the corner. “I’m really sorry.” You take it back.",
+  "event.phoneDrop.alreadyBroken": "The phone hits the pavement. It was already broken."
 } as const

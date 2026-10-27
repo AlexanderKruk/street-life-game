@@ -114,6 +114,7 @@ for (const event of STREET_EVENTS) for (const choice of event.choices) {
         if (authored.historyId === 'borrow-phone:decline:complete') expected.text = 'He needed a quick call, but I said no and carried on.';
         if (authored.historyId === 'borrow-phone-slip:catch:failure') expected.text = 'I helped him, but my phone hit the pavement. I need to be more careful with it.';
         if (authored.historyId === 'night-theft:check-bag:complete' && documents !== 'carried' && capped) expected.title = 'Checked my belongings';
+        if (authored.historyId.startsWith('phone-drop:') && !['phone-drop:catch:success','phone-drop:catch:criticalSuccess'].includes(authored.historyId) && capped) expected.text = 'My heart sank. I can’t afford to lose my link to everything.';
         assert.deepEqual(eventHistoryReflection(facts, summary), expected, authored.historyId);
       }
     }
@@ -675,6 +676,17 @@ for(const condition of [0,3,5,6,100]){
  const pseudoSlip=eventView.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure,translated=executeEventCopy(eventView,pseudoSlip,condition,true);
  assert.equal(translated.inventory.phoneCondition,actual.inventory.phoneCondition);assert.deepEqual(translated.action.eventHistory,actual.action.eventHistory);
 }
+const phoneDrop=eventBase.STREET_EVENTS.find(event=>event.id==='phone-drop');
+for (const outcome of [phoneDrop.choices[0].check.failure,phoneDrop.choices[0].check.criticalFailure,phoneDrop.choices[1].outcome]) {
+ const broken=executeEventCopy(eventBase,outcome,0,false,{eventId:'phone-drop'});
+ assert.equal(broken.message,'The phone hits the pavement. It was already broken.');
+ assert.equal(broken.inventory.phoneCondition,0);
+ assert.equal(eventHistoryReflection(broken.action.eventHistory,{costs:[],changes:[]}).text,'My heart sank. I can’t afford to lose my link to everything.');
+ const working=executeEventCopy(eventBase,outcome,100,false,{eventId:'phone-drop'});
+ assert.equal(working.message,outcome.message);assert(working.inventory.phoneCondition<100);
+}
+const caught=eventHistoryReflection({outcomeId:'phone-drop:catch:success',documents:'carried',suppliesRejected:false},{costs:[],changes:[]});
+assert.equal(caught.text,'My hands are still shaking. That was too close.');
 const theft=eventBase.STREET_EVENTS.find(event=>event.id==='night-theft').choices[0].outcome;
 for(const [money,documents,message] of [[10,true,'Some cash is gone, and your documents are missing.'],[10,false,'Some cash is gone.'],[0,true,'Your documents are missing.'],[0,false,'You check your things. Nothing appears to be missing.']]) {
  const result=executeEventCopy(eventBase,theft,100,false,{eventId:'night-theft',money,documents});

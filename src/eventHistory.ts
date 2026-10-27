@@ -13,7 +13,8 @@ export function eventHistoryReflection(facts: EventHistoryFacts, summary?: Resul
   const changed = (id: string, kind: string) => rows.some(row => resultChangeId(row) === id && row.kind === kind)
   let key: Extract<MessageKey, `history.event.${string}`> = definition.textKey
   if (definition.eventId === 'spare-change' || definition.eventId === 'dropped-glove') key = changed('mood', 'negative') || changed('health', 'negative') ? 'history.event.generic.negative' : changed('mood', 'positive') ? 'history.event.generic.positive' : 'history.event.generic.empty'
-  if (definition.eventId === 'phone-drop') key = changed('phoneCondition', 'negative') ? 'history.event.special.phone-damaged' : 'history.event.special.phone-caught'
+  if (definition.eventId === 'phone-drop') key = facts.outcomeId === 'phone-drop:catch:success' || facts.outcomeId === 'phone-drop:catch:criticalSuccess'
+    ? 'history.event.special.phone-caught' : 'history.event.special.phone-damaged'
   if (facts.suppliesRejected) {
     if (definition.eventId === 'first-night-door') key = 'history.event.special.supplies-full'
     if (definition.eventId === 'free-snack' || definition.eventId === 'station-food') key = 'history.event.special.food-declined'

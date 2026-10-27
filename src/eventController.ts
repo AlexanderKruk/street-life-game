@@ -53,6 +53,9 @@ export function createEventController(session: EventSession, context: Context, h
     if (activeEvent?.id === 'borrow-phone-slip' && resolved.phoneBreakMessage !== undefined && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
       resolved = { ...resolved, message: resolved.phoneBreakMessage! }
     }
+    if (activeEvent?.id === 'phone-drop' && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition <= 0) {
+      resolved = { ...resolved, message: t('event.phoneDrop.alreadyBroken') }
+    }
     if (activeEvent?.id === 'night-theft' && resolved.historyId === 'night-theft:check-bag:complete') {
       if (game.money <= 0 || !inventory.documents) {
         resolved = { ...resolved, message: t(game.money > 0 ? 'event.theft.cashOnly' : inventory.documents ? 'event.theft.documentsOnly' : 'event.theft.nothing') }
