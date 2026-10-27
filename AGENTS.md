@@ -69,6 +69,19 @@ Linux environment are documented there; do not claim unrun CI or WebKit checks.
   `--color-warning` (#af9868). Use their surface/border tokens. Preserve the
   established red critical/negative indicators and capacity hatching.
 
+## Scrolling contract
+
+The shell fits `100dvh`. `GameHeader` and `BottomNavigation` sit outside
+`.game-content`, the bounded central scroller; never restore document scrolling
+or fixed-height guesses for the chrome. Use `contentRef` for internal-link
+scroll resets; bottom navigation and modal closing do not request resets.
+Keep page gutters inside `.game-content`. Map uses its own bounded
+`.map-surface`: portrait fits the centre; the existing taller landscape map
+scrolls there only. Clip projected anchors to `.district-plot` so cover-sized
+coordinates cannot create extra scrolling. Active modal overlays lock the
+central scroller. ModalPanel never scrolls horizontally; results and illustrated
+events keep their outer frame clipped and their existing inner content scroller.
+
 ## Templates to reuse
 
 | Interface | Required template/reference |

@@ -5,6 +5,7 @@ Object.defineProperty(global,'navigator',{value:dom.window.navigator});
 global.IS_REACT_ACT_ENVIRONMENT=true;
 const scrollCalls=[];
 window.scrollTo=(...args)=>scrollCalls.push(args);
+window.HTMLElement.prototype.scrollTo=(...args)=>scrollCalls.push(args);
 let now=1800000000000, nextId=1;
 Date.now=()=>now;
 const callbacks=new Map();

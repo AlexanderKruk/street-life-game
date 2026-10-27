@@ -124,9 +124,10 @@ export default function App() {
   const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => initial.activeGoal)
   const [screen, setScreen] = useState<Screen>(() => initial.screen)
   const [phoneApp, setPhoneApp] = useState<PhoneApp>('home')
+  const contentRef = useRef<HTMLDivElement>(null)
   const [scrollResetRequest, setScrollResetRequest] = useState(0)
   useEffect(() => {
-    if (scrollResetRequest) window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    if (scrollResetRequest) contentRef.current?.scrollTo?.({ top: 0, left: 0, behavior: 'instant' })
   }, [scrollResetRequest])
   // Only links inside a page request this reset. Bottom navigation keeps the
   // existing scroll behavior; ticks and closing a modal do not move the page.
@@ -728,6 +729,7 @@ export default function App() {
 
     <div className={`game-background${eventInteractionBlocked ? ' event-background-blocked' : ''}`} inert={eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} onClickCapture={event => { if (eventInteractionBlocked) { event.preventDefault(); event.stopPropagation() } }}>
     <GameHeader game={game} weatherId={weather.id} temperature={temperature} battery={inventory.phoneBattery} />
+    <div className="game-content" ref={contentRef}>
 
     {screen === 'location' && <LocationScreen state={{
       current, open, firstNight, game, message, currentActions, shelterInterview, choiceSeed, choiceDecisionKey,
@@ -784,6 +786,9 @@ export default function App() {
     </PhoneScreen>}
     {screen === 'phone' && phoneApp === 'home' && phoneUnavailable === null && game.health <= 20 && <ChoiceButton className="action phone-emergency" aria-label={t('app.emergency')} onClick={callAmbulance} icon="ambulance" label={t('app.emergency')} detail={<small>{t('app.emergencyDescription')}</small>} />}
 
+    {autosave.saveFailed && <p role="alert" className="save-warning">{t('app.saveFailed')}</p>}
+    <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>{t('app.reset')}</button><small className="header-version" title={BUILD_VERSION} aria-label={t('app.buildAccessible', { version: BUILD_VERSION })}>{t('app.buildShort', { version: BUILD_VERSION.split('-').pop() ?? '' })}</small></footer>
+    </div>
     </div>
 
     {gameOver && <GameOverDialog day={game.day} onReset={reset} />}
@@ -810,8 +815,6 @@ export default function App() {
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={eventModalRef}
     />}
 
-    {autosave.saveFailed && <p role="alert" className="save-warning">{t('app.saveFailed')}</p>}
-    <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>{t('app.reset')}</button><small className="header-version" title={BUILD_VERSION} aria-label={t('app.buildAccessible', { version: BUILD_VERSION })}>{t('app.buildShort', { version: BUILD_VERSION.split('-').pop() ?? '' })}</small></footer>
     <BottomNavigation screen={screen} blocked={eventInteractionBlocked} phoneBusy={!!phoneActivity} travelling={travelling} current={current} mood={game.mood} onNavigate={setScreen} />
   </main>
 }

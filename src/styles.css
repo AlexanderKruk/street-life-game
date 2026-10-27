@@ -24,10 +24,14 @@
 @media (min-width:768px) { :root { --font-title:24px; } }
 :root { font-family:var(--font-family); font-size:var(--font-body); line-height:1.45; color:var(--text-primary); background:#0b0e12; font-synthesis:none; }
 * { box-sizing:border-box; }
-body { margin:0; min-width:320px; min-height:100vh; background:radial-gradient(circle at 50% 0%,#1d2731 0,#0b0e12 42%); }
+html, body, #root { height:100%; overflow:hidden; }
+body { margin:0; min-width:320px; background:radial-gradient(circle at 50% 0%,#1d2731 0,#0b0e12 42%); }
 button { font:inherit; }
 button:disabled { cursor:not-allowed; }
-.shell { width:min(760px,100%); margin:0 auto; padding:22px 18px 48px; }
+.shell { --page-gutter:18px; width:min(760px,100%); margin:0 auto; height:100dvh; min-height:0; padding:0; display:flex; flex-direction:column; overflow:hidden; }
+.game-background { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; }
+.game-content { flex:1; min-height:0; min-width:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding:18px var(--page-gutter) 40px; }
+.shell:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) .game-content, .game-background[inert] .game-content { overflow-y:hidden; }
 header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin:8px 0 20px; }
 h1,h2,p { margin-top:0; }
 h1 { margin-bottom:0; font-size:var(--font-title); }
@@ -84,7 +88,7 @@ footer { border-top:1px solid #222b33; margin-top:24px; padding-top:18px; color:
 footer p { margin:0; }
 .reset { background:transparent; border:1px solid #303b45; color:var(--text-secondary); padding:8px 10px; border-radius:10px; white-space:nowrap; }
 @media (max-width:520px) {
-  .shell { padding:18px 12px 36px; }
+  .shell { --page-gutter:12px; }
   .needs { grid-template-columns:repeat(2,1fr); }
   .stat { grid-template-columns:22px 1fr; padding:9px; }
   .current { min-height:130px; padding:18px; }
@@ -94,7 +98,6 @@ footer p { margin:0; }
 }
 
 /* Stage 3 navigation and city map */
-.shell { padding-bottom:110px; }
 .map-title { margin-top:22px; }
 .city-map { position:relative; height:520px; overflow:hidden; border:1px solid #34404c; border-radius:24px; background:linear-gradient(145deg,#1b2926,#111b1c 48%,#1a2026); box-shadow:inset 0 0 70px rgba(0,0,0,.35); }
 .city-map::before,.city-map::after { content:""; position:absolute; border-radius:50%; background:#24352d; opacity:.8; }
@@ -668,8 +671,7 @@ button.inventory-item { width:100%; }
 .sleep-choice-modal :focus-visible{outline:2px solid var(--color-warning);outline-offset:2px}
 
 /* v97: shared pinned chrome; the new illustration and choice styling is Street-only. */
-.shell { padding-top:0; padding-bottom:calc(110px + env(safe-area-inset-bottom, 0px)); min-height:100dvh; }
-.game-header { position:sticky; top:0; z-index:25; display:block; margin:0 -18px 18px; padding:calc(12px + env(safe-area-inset-top, 0px)) 18px 12px; color:var(--text-primary); background:#13171a; border-bottom:1px solid #343a3e; }
+.game-header { position:sticky; top:0; z-index:25; display:block; flex-shrink:0; margin:0; padding:calc(12px + env(safe-area-inset-top, 0px)) 18px 12px; color:var(--text-primary); background:#13171a; border-bottom:1px solid #343a3e; }
 .header-brand-row,.header-state-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .header-brand-row { padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #303639; }
 .game-brand { display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin:0; color:var(--text-secondary); font-size:var(--font-small); font-weight:var(--weight-semibold); letter-spacing:.25em; }
@@ -687,7 +689,7 @@ button.inventory-item { width:100%; }
 .game-header .money,.game-header .weather { border:0; border-radius:0; background:transparent; padding:8px 10px; font-size:var(--font-small); font-weight:var(--weight-regular); font-variant-numeric:tabular-nums; }
 .game-header .weather { display:flex; align-items:center; gap:6px; border-left:1px solid #343c42; }
 .game-header .weather svg { width:19px; height:19px; color:var(--text-secondary); }
-.bottom-nav { position:fixed; z-index:20; bottom:0; left:50%; transform:translateX(-50%); width:min(760px,100%); padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); border:0; border-top:1px solid #343a3e; border-radius:0; background:#13171a; box-shadow:none; }
+.bottom-nav { position:relative; flex-shrink:0; z-index:20; bottom:auto; left:auto; transform:none; width:100%; padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); border:0; border-top:1px solid #343a3e; border-radius:0; background:#13171a; box-shadow:none; }
 .bottom-nav .nav-item { position:relative; min-height:52px; padding:4px 2px 9px; gap:5px; color:var(--text-secondary); border-radius:0; cursor:pointer; }
 .bottom-nav .nav-item svg { width:23px; height:23px; flex-shrink:0; }
 .bottom-nav .nav-item small { font-size:var(--font-small); line-height:1.2; }
@@ -702,6 +704,7 @@ button.inventory-item { width:100%; }
 .nav-condition.very-good { background:var(--color-positive); }
 .stat > span svg { width:24px; height:24px; color:var(--text-secondary); }
 .location-screen .game-header { margin-bottom:0; }
+.location-screen .game-content { padding-top:0; }
 .location-surface > .event { margin-top:16px; }
 .game-header + .event { margin-top:0; }
 .build-version { color:var(--text-muted); font-size:var(--font-small); font-variant-numeric:tabular-nums; }
@@ -728,7 +731,7 @@ button.inventory-item { width:100%; }
 @media (hover:hover) { .street-screen .story-actions .action:hover:not(:disabled) { border-color:#7d7e78; background:#202527; } }
 @media (max-width:520px) {
   .shell { padding-top:0; }
-  .game-header { margin-left:-12px; margin-right:-12px; padding-left:14px; padding-right:14px; }
+  .game-header { margin-left:0; margin-right:0; padding-left:14px; padding-right:14px; }
   .street-art { margin-left:-12px; margin-right:-12px; }
   .game-header .header-state-row { gap:8px; }
   .game-header h1 { font-size:var(--font-small); gap:8px; }
@@ -751,7 +754,7 @@ button.inventory-item { width:100%; }
 .result-card-heading { flex-shrink:0; margin-bottom:9px; }
 .result-card-label { font-size:var(--font-small); font-weight:var(--weight-regular); letter-spacing:.16em; color:var(--text-secondary); margin:0 0 5px; }
 .result-modal .result-card-heading h2 { font-size:var(--font-title); font-weight:var(--weight-semibold); line-height:1.25; margin:0; }
-.result-card-content { min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#555d60 transparent; }
+.result-card-content { min-height:0; min-width:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#555d60 transparent; }
 .result-lead,.result-description { margin:0 0 9px; font-size:var(--font-small); line-height:1.45; color:var(--text-secondary); }
 .result-description { white-space:pre-line; }
 .result-places { margin-bottom:7px; }
@@ -1175,19 +1178,16 @@ footer .header-version { margin-left:auto; align-self:center; }
 .rain-cover-status { display:flex; align-items:center; gap:7px; margin:0 0 16px; color:var(--color-positive); font-size:var(--font-small); }
 .rain-cover-status svg { width:18px; height:18px; }
 
-/* v254: fit the pins while the city continues behind the title and card. */
-body:has(.map-screen) { min-height:100dvh; }
-.map-screen { height:100dvh; min-height:0; overflow:clip; padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)); }
-.map-screen > .game-background { height:100%; display:flex; flex-direction:column; min-height:0; }
-.map-screen .game-header { flex-shrink:0; margin-bottom:0; }
-.map-screen .goal-reminder { flex-shrink:0; margin:8px 0 0; }
-.map-screen .map-surface { flex:1; min-height:0; margin:0 -18px; overflow-y:auto; overflow-x:hidden; }
-@media(max-width:520px) { .map-screen .map-surface { margin-left:-12px; margin-right:-12px; } }
-.map-screen > footer { display:none; }
-.map-screen .district-map { position:relative; isolation:isolate; height:100%; min-height:320px; margin:0; display:flex; flex-direction:column; padding-bottom:0; }
+/* The map fills the same bounded centre as the other screens. */
+.map-screen .game-header { margin-bottom:0; }
+.map-screen .game-content { padding:0; overflow:hidden; }
+.map-screen .goal-reminder { margin:8px var(--page-gutter) 0; }
+.map-screen .map-surface { height:100%; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+.map-screen footer { display:none; }
+.map-screen .district-map { position:relative; isolation:isolate; height:100%; min-height:0; margin:0; display:flex; flex-direction:column; padding-bottom:0; }
 .map-screen .district-map-heading { position:relative; z-index:5; flex-shrink:0; align-items:center; justify-content:flex-end; gap:10px; padding:8px 14px 6px; text-shadow:0 2px 10px #000; }
 .map-screen .district-map-heading h2 { flex-shrink:0; }
-.district-plot { position:relative; flex:1; min-height:0; width:100%; }
+.district-plot { position:relative; flex:1; min-height:0; width:100%; overflow:clip; }
 .district-backdrop { position:absolute; z-index:-1; inset:0; overflow:hidden; pointer-events:none; }
 .district-backdrop > img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
 .district-backdrop::after { content:""; position:absolute; inset:0; background:linear-gradient(#10171d66,transparent 20%,transparent 65%,#11171999); }
@@ -1230,7 +1230,7 @@ body:has(.map-screen) { min-height:100dvh; }
 
 
 /* Phone launcher and apps share the existing game typography and navigation. */
-.phone-shell .game-header { margin-bottom:4px; }
+.phone-shell .game-content { padding-top:4px; }
 .phone-screen { min-width:0; overflow-wrap:anywhere; }
 .phone-screen-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; min-height:44px; margin:0 0 14px; padding:0; border-bottom:1px solid #2b3742; }
 .phone-home-header { margin-bottom:0; }

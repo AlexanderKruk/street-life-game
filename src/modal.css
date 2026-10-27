@@ -50,7 +50,8 @@ html:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) { overflow:hidde
   min-width:0;
   overflow-wrap:anywhere;
   max-height:calc(100dvh - var(--modal-inset) * 2 - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
   overscroll-behavior:contain;
   padding:var(--modal-padding-y) var(--modal-padding-x);
   border:1px solid var(--modal-border);
@@ -59,6 +60,7 @@ html:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) { overflow:hidde
   box-shadow:var(--modal-shadow);
   color:var(--text-primary);
 }
+.modal-panel.result-modal, .modal-panel.illustrated-event { overflow:hidden; }
 .modal-panel--compact { width:min(var(--modal-width-compact),100%); padding:var(--modal-padding-compact); }
 .modal-panel[tabindex="-1"]:focus { outline:none; }
 .modal-panel :focus-visible { outline:2px solid var(--color-warning); outline-offset:2px; }

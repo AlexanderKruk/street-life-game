@@ -1130,6 +1130,15 @@ Three approved openings and nine choice results are connected to the shared even
 
 ## Internal navigation scroll — v320
 
+Scroll containment correction (27 October 2026, after v337): only the bounded
+central content scrolls between the HUD and bottom navigation. The browser
+document stays fixed, so its scrollbar cannot extend alongside the chrome.
+Map fills the centre on portrait screens; the existing taller landscape map
+scrolls inside that area. Projected map anchors cannot add overflow outside the
+plot. Result/event frames do not scroll horizontally; long content uses their
+inner scroller, and opening a modal locks background content. Internal links
+reset the central container rather than the browser document.
+
 Internal page links (Station/other location suggestions to Map, Street to Phone, and Phone app/back/saved-note links) open the destination at the top with an instant scroll reset after rendering. Bottom navigation preserves its previous scroll behavior. Passive ticks, modal closing and in-page map selection do not request a scroll reset.
 
 Shelter-discovery questions are hidden once Night Shelter is on the discovered map: the first-night Station and bench conversations, patrol waking, and the nighttime police check-in. This uses `undiscoveredLocationRequired` for both event layouts, including restored pending events. Remaining answers keep their original artwork and consequences.

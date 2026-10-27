@@ -144,3 +144,61 @@ for (const fixture of saves.cases) {
     }
   })
 }
+
+
+for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 664 }, { width: 850, height: 390 }]) {
+  test(`scroll stays inside the centre and result at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    await openGame(page, entries('event'))
+    await page.getByRole('button', { name: 'Let me help with those bags.', exact: true }).click()
+    const result = page.locator('.result-modal')
+    await expect(result).toBeVisible()
+    await expect.poll(() => result.evaluate(node => ({
+      horizontal: node.scrollWidth - node.clientWidth,
+      overflow: getComputedStyle(node).overflow,
+      bodyHorizontal: node.querySelector('.result-card-content').scrollWidth - node.querySelector('.result-card-content').clientWidth,
+    }))).toEqual({ horizontal: 0, overflow: 'hidden', bodyHorizontal: 0 })
+    expect(await page.locator('.game-content').evaluate(node => getComputedStyle(node).overflowY)).toBe('hidden')
+    const panel = await result.boundingBox()
+    expect(panel.y).toBeGreaterThanOrEqual(0)
+    expect(panel.y + panel.height).toBeLessThanOrEqual(viewport.height)
+    await acknowledge(page)
+    await page.getByRole('button', { name: 'Status', exact: true }).click()
+    const centre = page.locator('.game-content')
+    const headerBefore = await page.locator('.game-header').boundingBox()
+    const navBefore = await page.locator('.bottom-nav').boundingBox()
+    const centreBox = await centre.boundingBox()
+    expect(centreBox.y).toBeGreaterThanOrEqual(headerBefore.y + headerBefore.height)
+    expect(centreBox.y + centreBox.height).toBeLessThanOrEqual(navBefore.y)
+    await centre.hover()
+    await page.mouse.wheel(0, 1500)
+    await expect.poll(() => centre.evaluate(node => node.scrollTop)).toBeGreaterThan(0)
+    expect(await page.locator('.game-header').boundingBox()).toEqual(headerBefore)
+    expect(await page.locator('.bottom-nav').boundingBox()).toEqual(navBefore)
+    expect(await page.evaluate(() => ({ x: scrollX, y: scrollY, extraWidth: document.documentElement.scrollWidth - innerWidth, extraHeight: document.documentElement.scrollHeight - innerHeight }))).toEqual({ x: 0, y: 0, extraWidth: 0, extraHeight: 0 })
+    await expect(page.getByRole('button', { name: 'Reset save', exact: true })).toBeInViewport()
+    await page.getByRole('button', { name: 'Map', exact: true }).click()
+    expect(await centre.evaluate(node => ({ x: node.scrollWidth - node.clientWidth, y: node.scrollHeight - node.clientHeight }))).toEqual({ x: 0, y: 0 })
+    const map = page.locator('.map-surface')
+    expect(await map.evaluate(node => node.scrollWidth - node.clientWidth)).toBe(0)
+    if (viewport.width < 600) {
+      expect(await map.evaluate(node => node.scrollHeight - node.clientHeight)).toBe(0)
+    } else {
+      // The existing landscape map needs height to keep all city points reachable.
+      // Its scroll must stay between the HUD and menu.
+      await map.hover()
+      await page.mouse.wheel(0, 1500)
+      await expect.poll(() => map.evaluate(node => node.scrollTop)).toBeGreaterThan(0)
+      expect(await page.locator('.game-header').boundingBox()).toEqual(headerBefore)
+      expect(await page.locator('.bottom-nav').boundingBox()).toEqual(navBefore)
+      expect(await page.evaluate(() => scrollY)).toBe(0)
+    }
+    await page.getByRole('button', { name: 'Phone', exact: true }).click()
+    await page.getByRole('button', { name: 'Find Help', exact: true }).click()
+    expect(await centre.evaluate(node => node.scrollTop)).toBe(0)
+    await centre.hover()
+    await page.mouse.wheel(0, 1500)
+    await page.getByRole('button', { name: 'Back to phone', exact: true }).click()
+    expect(await centre.evaluate(node => node.scrollTop)).toBe(0)
+  })
+}
