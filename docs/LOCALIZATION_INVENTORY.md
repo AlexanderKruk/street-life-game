@@ -1,7 +1,8 @@
 # Localisation inventory
 
-Baseline: v335 / `d8ff6fa`. This is an implementation inventory, not a claim
-that every branch has passed editorial or browser review. See
+Baseline: v335 / `d8ff6fa`; current status updated 27 October 2026. This is an
+implementation inventory, not a claim that every branch has passed browser
+or device review. See
 [the live plan](../LOCALIZATION.md) and [writing rules](../TEXT_STYLE.md).
 
 Status: **moved** means the component's own copy is in a catalogue; strings
@@ -26,12 +27,12 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `InventoryDialog.tsx`, `DiscardDialog.tsx`, `FoodChoiceDialog.tsx` | `dialogs.ts` | moved | wording unchanged; Body 16px for narrative/risk; risk values checked against `foodConsumption.ts` | every freshness group, 0 spoiled, discard slot vs spoiled, cancel/focus/pause |
 | `inventoryCommands.ts`, `inventoryController.ts`, `foodConsumption.ts` | inventory.ts | moved | whole outcome/refusal messages, original meaning and mechanics preserved | all refusals, medicine absent/already treated, food poisoning, storage/capacity |
 | `StatusScreen.tsx`, `LifeSituation.tsx`, `statusEffects.ts`, `limitingEffects.ts`, App status data | status.ts / effects.ts / common.ts; statusPresentation.ts | moved | machine enums separate from labels; caps/focus/ceil unchanged, 1 day grammar fixed | untreated/treated Cold, tied caps, wetness disabled/enabled, housing/employment/income IDs; long-copy component QA for focus, life situation and several effects at three viewports |
-| `events.ts`, `eventController.ts` | eventController.ts / events.ts | moved own controller and authored scenes/choices/outcomes; document/coin templates moved | original English preserved; final editorial/long-copy audit open | all choices/DC outcomes/critical outcomes, rejected supplies, documents, broken screen |
+| `events.ts`, `eventController.ts` | eventController.ts / events.ts | moved own controller and authored scenes/choices/outcomes; document/coin templates moved | contextual review and corrections recorded in LOCALIZATION.md; ticket-check timing is an open gameplay question | choices/DC outcomes, rejected supplies, documents and broken screen; representative long-copy checks |
 | `EventDialog.tsx`, `CompactStreetEvent.tsx` | eventUi.ts / events.ts | moved own label/pause/refusal copy; authored content in events.ts | English preserved; null-only eligibility | illustrated/compact, unavailable choice, check badges/duration/time paused |
 | `openingCalls.ts`, `usePhoneController.ts`, `phoneActivity.ts`, `phoneSession.ts` | phoneContent.ts / phoneProcess.ts | opening call and controller/activity own copy moved; UI headers/plan tracked separately | opening calls approved; controller refusals need review | call/search, interrupted/complete, battery/service/checkout, restored processes |
 | `PhoneScreen.tsx`, `PhoneDialog.tsx`, `PhoneSearchScreen.tsx`, `PhoneNotesScreen.tsx`, `phoneQuestions.ts` | phoneContent.ts / phoneUi.ts | questions/Find Help/Notes and PhoneScreen/PhoneDialog own copy moved | Notes and search descriptions reviewed v335 | plan paid/unpaid, hidden apps, Notes known/unknown, exhausted searches, charging memory; long-copy Chromium component QA for expanded Notes and Find Help saved/available/low-battery/unpaid at three viewports, normal and extended text |
 | App goal data, `JournalSections.tsx`, `PhoneHistoryScreen.tsx` | journalUi.ts | moved own copy | v335 reactions/hints only | pending/completed goals, current/past day, grouped/paginated/empty History |
-| `journal.ts`, `eventHistory.ts`, `inventoryHistory.ts`, `actionHistory.ts`, `legacyJournalCompatibility.ts` | History catalogues; legacy adapter isolated | new reflections, direct rain/closing, memories and own History UI moved; rain first-person reactions separated; saved text preserved | original reactions preserved except documented purchase fix | failed/success, all event choices, heading-only actions; `journal-services` |
+| `journal.ts`, `eventHistory.ts`, `inventoryHistory.ts`, `actionHistory.ts`, `legacyJournalCompatibility.ts` | History catalogues; legacy adapter isolated | new reflections, direct rain/closing, memories and own History UI moved; rain first-person reactions separated; saved text preserved | contextual corrections recorded in LOCALIZATION.md | failed/success, event choices, heading-only actions; `journal-services` |
 | Shop/storage blocks in `LocationScreen.tsx` | inventory.ts | moved own copy | names/capacity/return deposits/storage hints reviewed in LOCALIZATION.md | place/hero copy tracked separately; long-copy Chromium component QA for shelter/residential storage, support and all interview steps at three viewports; other cases as documented |
 | App memories, closing notice/History, exit confirmation, initial message/footer | locations.ts / journalUi.ts / app.ts | moved closing/exit/History/memory/reset/footer copy; initial message is empty | exact original copy during structural migration | once-per-run memories, closing transition, leave/cancel, reset, build label |
 | `ActivityDialog.tsx`, `ActivityStatus.tsx` | `common.ts`, formatters | moved own copy | exact time formatting retained | phone/travel visibility, 01m/59m/1h 00m; phase/title supplied by owner |
@@ -42,18 +43,19 @@ to moved copy unless explicitly stated. Existing approved wording is preserved.
 | `shelterController.ts`, `shelterRules.ts`, `ShelterQueueDialog.tsx`, `ShelterCheckoutDialog.tsx`, `useShelterLifecycle.ts` | shelter.ts / shelterText.ts | moved own shelter copy | original English/rules; whole checkout variants, numeric plurals | outside/inside/registration, vacancy/refusal, renewal, checkout/charging |
 | `trashSearchController.ts`, `TrashSearchDialog.tsx`, `TrashSearchTime.tsx`, `trashSearchRules.ts` | trash.ts | moved own copy; rules contain only domain data | original copy; singular aria corrected | found/damaged, cap/full, manual/deadline, keyboard/touch, aria announcements |
 | `GameOverDialog.tsx` | `dialogs.ts`: `gameOver.*` | moved | exact copy; explains current Health recovery | restart/day/terminal blocking; action regressions |
-| `medicalController.ts`, `supportWorkController.ts`, `streetController.ts` | controllerActions.ts / shared actions.ts | moved own prose/title/alt | original English and mechanics preserved; legacy walk day/night editorial question open | refusals and rare messages; documents/referral/transit/benefits/work/begging/bench |
+| `medicalController.ts`, `supportWorkController.ts`, `streetController.ts` | controllerActions.ts / shared actions.ts | moved own prose/title/alt | contextual follow-ups recorded in LOCALIZATION.md; legacy walk is time-neutral | refusals and rare messages; documents/referral/transit/benefits/work/begging/bench |
 | `Icon.tsx`, `MoodIcon.tsx`, `ItemArt.tsx`, `ChoiceButton.tsx`, `ChoiceOptions.tsx`, `AvailableFirst.tsx` | common/accessibility | primary source audit completed | symbol-only/hidden markup and machine IDs exempt | icon/duration/order/freshness metadata moved; see LOCALIZATION_RESIDUAL_AUDIT.md; final device audit open |
 | `index.html`, `public/manifest*` if added | app.ts / Vite title injection | primary audit completed | title unchanged; lang=en; no manifest | viewport/theme technical; decorative empty alt or catalogue/owner alt; language selection remains future work |
 
 ## Modal and variant matrix
 
-`T` = template's own copy moved; `P` = pending. All rows still need the final
-long-text/browser matrix. UI styles and timers are not changed by extraction.
+`T` = template's own copy moved; `P` = pending. Representative long-copy
+Chromium checks are recorded in LOCALIZATION.md; the matrix below is not a
+claim that every combination or device was tested. Timers are unchanged.
 
 | Template / owner | Distinct variants to exercise | Status / relevant checks |
 | --- | --- | --- |
-| `ResultCard` | ordinary; illustrated; slow/failed illustration; full-answer disclosure; compact single/multi/no place; costs/battery/Mood; bottle 0/1/many; forced visible small loss | T; `check-results`, `check-localization`; producer narrative P |
+| `ResultCard` | ordinary; illustrated; slow/failed illustration; full-answer disclosure; compact single/multi/no place; costs/battery/Mood; bottle 0/1/many; forced visible small loss | T; `check-results`, `check-localization`; producer catalogues tracked in source rows |
 | `InventoryDialog` | generic; backdrop/Escape/cancel; Tab wrap and focus restoration; blocked background | T; inventory and regression checks |
 | `DiscardDialog` | non-food; fresh food; mixed freshness; 0 spoiled disabled; spoiled-only/all; cancel | T; `street-trash` and inventory checks |
 | `FoodChoiceDialog` | fresh/stale/spoiled and mixed; only present groups; risk description and accessible relation | T; food/inventory checks |

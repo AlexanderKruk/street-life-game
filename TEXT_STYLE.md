@@ -228,7 +228,16 @@ now expects the approved present-tense checkout sentence while retaining its
 resource/time/charging assertions. Physical iPhone and WebKit remain unverified.
 
 
-## Localisation preparation — first local package
+## Localisation preparation — current state
+
+The English source catalogue and the separation of gameplay from displayed
+wording are prepared in the scope recorded in [LOCALIZATION.md](LOCALIZATION.md).
+New History uses action/outcome IDs and facts; historical text adapters remain
+isolated for existing saves. The editorial review is grouped and long-copy
+checks are representative, not a claim that every condition or device was
+tested. Translations and language selection are a separate task.
+
+## Localisation preparation — first local package (historical)
 
 Use `src/locales/en/` for migrated copy and `t` from `src/i18n` in views.
 Keep the roles and canonical names above; parameterise whole messages instead
