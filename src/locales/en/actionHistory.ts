@@ -189,7 +189,7 @@ export const actionHistory = {
   "history.action.question.work.neutral": "I have a next step to follow up on.",
   "history.action.question.work.moodNegative": "I need to work out what I can try next.",
   "history.action.question.clinic.title": "Where can I get medical help?",
-  "history.action.question.clinic.neutral": "It helps to have someone look after me. I need to give myself time to recover.",
+  "history.action.question.clinic.neutral": "I know where I can ask for medical care when I need it.",
   "history.action.question.clinic.failed": "I still need care. I’ll have to find another way to get it.",
   "history.action.question.charging.title": "Remembered a charging point",
   "history.action.question.charging.neutral": "I feel less cut off. This phone is my link to people and places I need.",

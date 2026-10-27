@@ -129,7 +129,6 @@ const aliases = {
   "history.action.call.call-friend.moodPositive": "history.event.spare-change.give.complete",
   "history.action.question.work.neutral": "history.action.shelter-extension.neutral",
   "history.action.question.work.moodNegative": "history.action.shelter-extension.moodNegative",
-  "history.action.question.clinic.neutral": "history.action.medical-appointment.neutral",
   "history.action.question.clinic.failed": "history.action.medical-appointment.failed",
   "history.action.question.charging.neutral": "history.action.phone-charge.neutral",
   "history.action.support.unchanged": "history.event.spare-change.decline.complete"
