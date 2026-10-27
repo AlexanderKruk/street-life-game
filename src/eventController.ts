@@ -8,6 +8,7 @@ import { locations, type GameState, type ActionResult } from './game'
 import { displayDay } from './gameDate'
 import { absoluteMinutes } from './gameTime'
 import { SHOP_ITEMS, addShopItem, canAddToBackpack, fitEventSupplies } from './inventory'
+import { rejectedSupplyLabel as supplyLabel } from './itemPresentation'
 import { locationPresentation } from './resultPresentation'
 import { SHELTER_ENTRY_OPEN } from './shelterRules'
 import { eventCheckModifier, eventChoiceBlock, diceOutcome } from './eventChecks'
@@ -65,10 +66,16 @@ export function createEventController(session: EventSession, context: Context, h
     runWithResult({ id: actionId ?? (activeEvent ? `event:${activeEvent.id}` : 'event-result'), title: title ?? activeEvent?.title ?? t('event.controller.resultTitle'), ...(resolved.historyId ? { eventHistory: { outcomeId: resolved.historyId, suppliesRejected: fitEventSupplies(inventory, resolved).rejected.length > 0, documents: inventory.documents ? 'carried' as const : storage.documents ? 'stored' as const : 'missing' as const } } : {}) }, () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
   }
   function applyEventOutcomeImpl(outcome: EventOutcome) {
-    const { rejected } = fitEventSupplies(inventory, outcome)
+    const { inventory: fittedInventory, rejected } = fitEventSupplies(inventory, outcome)
+    const accepted = (['food', 'water'] as const).flatMap(item => {
+      const count = Math.max(0, fittedInventory[item] - inventory[item])
+      return count ? [supplyLabel(item, count)] : []
+    })
     const knownPlaces = outcome.knownLocations?.filter(id => discoveredLocations.includes(id)).flatMap(id => locations.some(place => place.id === id) ? [locationName(id)] : [])
     const outcomeText = rejected.length
-      ? t('event.controller.rejected', { items: new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(rejected) })
+      ? accepted.length
+        ? t('event.controller.partiallyAccepted', { accepted: new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(accepted), rejected: new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(rejected) })
+        : t('event.controller.rejected', { items: new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(rejected) })
       : knownPlaces ? knownPlaces.length
         ? t('event.controller.known', { message: outcome.message, places: knownPlaces.join(', ') })
         : t('event.controller.unknown', { message: outcome.message })

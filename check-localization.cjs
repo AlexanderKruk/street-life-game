@@ -719,12 +719,15 @@ for(const eventId of ['street-patrol-wake','station-patrol-wake']) {
 const neighbourGift=eventBase.STREET_EVENTS.find(event=>event.id==='first-night-door').choices.find(choice=>choice.id==='explain').outcome;
 for(const [inventory, food, water, message] of [
  [{medicines:32,food:0,water:0},0,0,'There was no backpack room for 1 portion of food and 1 portion of water.'],
- [{medicines:28,food:0,water:0},1,0,'There was no backpack room for 1 portion of water.'],
- [{medicines:28,food:0,water:3},0,4,'There was no backpack room for 1 portion of food.'],
+ [{medicines:28,food:0,water:0},1,0,'You put 1 portion of food in your backpack. There was no room for 1 portion of water.'],
+ [{medicines:28,food:0,water:3},0,4,'You put 1 portion of water in your backpack. There was no room for 1 portion of food.'],
 ]) {
  const result=executeEventCopy(eventBase,neighbourGift,100,false,{eventId:'first-night-door',inventory});
  assert.equal(result.message,message);assert.equal(result.inventory.food,food);assert.equal(result.inventory.water,water);assert.equal(result.action.eventHistory.suppliesRejected,true);
+ assert.equal(result.infoModal.text,message,'the illustrated result shows the same accepted and rejected supplies');
 }
+const fullGift=executeEventCopy(eventBase,neighbourGift,100,false,{eventId:'first-night-door',inventory:{food:0,water:0}});
+assert.equal(fullGift.message,neighbourGift.message);assert.equal(fullGift.inventory.food,1);assert.equal(fullGift.inventory.water,1);assert.equal(fullGift.action.eventHistory.suppliesRejected,false);
 assert.equal(t('inventory.rejected.food',{count:2}),'2 portions of food');
 assert.equal(t('inventory.rejected.water',{count:2}),'2 portions of water');
 const phoneDrop=eventBase.STREET_EVENTS.find(event=>event.id==='phone-drop');
