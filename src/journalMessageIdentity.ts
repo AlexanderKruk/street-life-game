@@ -130,7 +130,6 @@ const aliases = {
   "history.action.question.work.neutral": "history.action.shelter-extension.neutral",
   "history.action.question.work.moodNegative": "history.action.shelter-extension.moodNegative",
   "history.action.question.clinic.failed": "history.action.medical-appointment.failed",
-  "history.action.question.charging.neutral": "history.action.phone-charge.neutral",
   "history.action.support.unchanged": "history.event.spare-change.decline.complete"
 } as const
 export function journalMessageIdentity(key: string): string { return aliases[key as keyof typeof aliases] ?? key }

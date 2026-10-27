@@ -192,7 +192,7 @@ export const actionHistory = {
   "history.action.question.clinic.neutral": "I know where I can ask for medical care when I need it.",
   "history.action.question.clinic.failed": "I still need care. I’ll have to find another way to get it.",
   "history.action.question.charging.title": "Remembered a charging point",
-  "history.action.question.charging.neutral": "I feel less cut off. This phone is my link to people and places I need.",
+  "history.action.question.charging.neutral": "I remember where I can charge my phone when I need to.",
   "history.action.support.needed": "I need my papers before I can go ahead with this.",
   "history.action.support.restored": "Having my papers again means I can ask for things I couldn’t before.",
   "history.action.support.referral": "I have somewhere to take the referral. I still need to go there.",

@@ -190,6 +190,7 @@ const actionSummaries = [{costs:[],changes:[]}, ...[['mood',1],['mood',-1],['hea
 for (const [id,title] of Object.entries(actionTitles)) for (const summary of actionSummaries) {
   const expected=walkEdited(oldReflection(title,'',summary));
   if(id==='question:clinic') expected.text='I know where I can ask for medical care when I need it.';
+  if(id==='question:charging') expected.text='I remember where I can charge my phone when I need to.';
   assert.deepEqual(actionHistoryReflection({id,title:'⟦translated heading⟧'},summary),expected,id);
 }
 function actionCase(id,facts,report,title=actionTitles[id],memoryId) {
@@ -228,6 +229,13 @@ const medicalVisit=journalPresentation({id:'medical-appointment',title:'Medical 
 assert.equal(clinicSearch.text,'I know where I can ask for medical care when I need it.');
 assert.equal(medicalVisit.text,'It helps to have someone look after me. I need to give myself time to recover.');
 assert.notEqual(clinicSearch.groupId,medicalVisit.groupId);
+const chargingMemory=journalPresentation({id:'question:charging',title:'Where can I charge my phone?'});
+const chargingAction=journalPresentation({id:'phone-charge',title:'Charge phone'});
+assert.equal(chargingMemory.text,'I remember where I can charge my phone when I need to.');
+assert.equal(chargingAction.text,'I feel less cut off. This phone is my link to people and places I need.');
+assert.notEqual(chargingMemory.groupId,chargingAction.groupId);
+const oldCharging={day:2,minute:700,actionId:'question:charging',actionTitle:'Where can I charge my phone?',reflection:true,...chargingMemory,text:chargingAction.text,groupId:chargingAction.groupId};
+assert.deepEqual(loadJournalEntries([oldCharging]),[oldCharging],'saved charging memories retain their text and group');
 const borrowLend=journalPresentation({id:'event:borrow-phone',title:'One quick call',eventHistory:{outcomeId:'borrow-phone:lend:complete',documents:'carried',suppliesRejected:false}});
 const borrowDecline=journalPresentation({id:'event:borrow-phone',title:'One quick call',eventHistory:{outcomeId:'borrow-phone:decline:complete',documents:'carried',suppliesRejected:false}});
 assert.notEqual(borrowLend.groupId,borrowDecline.groupId,'declining must not group with helping');
