@@ -23,12 +23,13 @@ export default function RainEventDialog({ rain, waiting, elapsed, orderSeed, dec
   const opening = rainOpening(rain.level)
   const waitingText = rainWaitingText(rain)
   const illustrationAlt = waiting ? rainWaitingAlt(rain) : opening.text
-  return <EventFrame titleId="rain-event-title" illustration={rainArt(rain, waiting ? rain.choice! : 'opening')} illustrationAlt={illustrationAlt} panelRef={panelRef}>
+  const artChoice = waiting ? rain.choice === 'proper' && rain.searchRemaining > 0 ? 'continue' : rain.choice! : 'opening'
+  return <EventFrame titleId="rain-event-title" illustration={rainArt(rain, artChoice)} illustrationAlt={illustrationAlt} panelRef={panelRef}>
     <EventBody titleId="rain-event-title" title={opening.title} label={t(waiting ? 'rain.wait.label' : 'rain.opening.label')} description={waiting ? waitingText : opening.text}>
       {waiting ? <>
         <ActivityStatus elapsed={elapsed} timeLabel={t('rain.wait.elapsedAccessible')} label={t(rain.searchRemaining > 0 ? 'rain.wait.searchingPhase' : 'rain.wait.waitingPhase')} />
         {rain.choice === 'nearby' && <ChoiceButton icon="search" aria-label={t('rain.choice.proper')} label={t('rain.choice.proper')} duration={t('choice.duration.searchMinutes', { minutes: 5 })} onClick={onFindProperShelter} detail={<small>{t('rain.wait.properDetail')}</small>} />}
-        <ChoiceButton icon="walk" aria-label={t('rain.choice.continue')} label={t('rain.choice.continue')} onClick={onContinue} detail={<small>{t('rain.wait.continueDetail')}</small>} />
+        <ChoiceButton icon="walk" aria-label={t('rain.choice.continue')} label={t('rain.choice.continue')} onClick={onContinue} detail={<small>{t(rain.choice === 'proper' && rain.searchRemaining > 0 ? 'rain.choice.continueDetail' : 'rain.wait.continueDetail')}</small>} />
       </> : <ChoiceOptions className="event-choices" seed={orderSeed} decision={`${decisionKey}|rain:${rain.id}`}>
         <ChoiceButton icon="umbrella" aria-label={t('rain.choice.nearby')} label={t('rain.choice.nearby')} data-order-id="rain:nearby" onClick={() => onChoose('nearby')} detail={<small>{t('rain.choice.nearbyDetail')}</small>} />
         <ChoiceButton icon="search" aria-label={t('rain.choice.proper')} label={t('rain.choice.proper')} data-order-id="rain:proper" onClick={() => onChoose('proper')} duration={t('choice.duration.searchMinutes', { minutes: 5 })} detail={<small>{t('rain.choice.properDetail')}</small>} />

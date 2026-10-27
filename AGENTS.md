@@ -14,6 +14,8 @@ Notes. Copy must match implemented mechanics. Never expose development plans
 inside story text. Before editing action titles/outcome phrases, check their
 dispatch, memory and History consumers and preserve saved-text compatibility.
 
+Image inconsistencies and missing variants are tracked in [IMAGE_AUDIT.md](IMAGE_AUDIT.md); add findings there as they are discovered.
+
 Localisation work is tracked in [LOCALIZATION.md](LOCALIZATION.md); the source
 and modal branch inventory is [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
 Use `t` from `src/i18n` and semantic keys in `src/locales/en/` for migrated

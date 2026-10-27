@@ -7,6 +7,7 @@ export function rainWaitingText(rain: RainEpisode) {
     : rain.shelter === 'tree' ? 'rain.wait.tree' : 'rain.wait.awning')
 }
 export function rainWaitingAlt(rain: RainEpisode) {
+  if (rain.choice === 'proper' && rain.searchRemaining > 0) return t('rain.wait.searching')
   return t(rain.choice === 'proper' ? 'rain.wait.passageAlt' : rain.shelter === 'tree' ? 'rain.wait.treeAlt' : 'rain.wait.awningAlt')
 }
 export function rainResultText(rain: RainEpisode, newlyCold = false) {
