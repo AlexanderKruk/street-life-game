@@ -698,13 +698,26 @@ function executeEventCopy(view,outcome,condition=100,mutated=false,scenario={}){
 }
 const slip=eventBase.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure;
 // A discovery before and after the queue closes keeps the existing goal date,
-// while the notice describes the actual queue window even after 18:00.
+// while the concise discovery omits a second narrative and queue timetable.
 const shelterOutcome=eventBase.STREET_EVENTS.find(event=>event.id==='street-patrol-wake').choices.find(choice=>choice.id==='ask-shelter').outcome;
-for(const [minutes,goalDay,displayedDay] of [[1069,2,1],[1070,2,1],[1309,2,1],[1310,3,2]]) {
+for(const [minutes,goalDay] of [[1069,2],[1070,2],[1309,2],[1310,3]]) {
  const result=executeEventCopy(eventBase,shelterOutcome,100,false,{eventId:'street-patrol-wake',documents:true,game:{day:2,minutes}});
  assert.deepEqual(result.activeGoal,{type:'night-shelter',day:goalDay,minute:1080});
- assert.equal(result.infoModal.presentation.notice,`On Day ${displayedDay}, join the queue from 08:00 and before 22:00. Registration starts at 18:20; places can fill up.`);
+ assert.equal(result.infoModal.presentation.notice,undefined);
+ assert.equal(result.infoModal.presentation.lead,'');
+ assert.equal(result.infoModal.presentation.places[0].detail,'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.');
  assert(result.discoveredLocations.includes('shelter'));
+}
+for(const id of ['first-night-station','first-night-bench','night-patrol','street-patrol-wake']) {
+ const outcome=eventBase.STREET_EVENTS.find(event=>event.id===id).choices.find(choice=>choice.outcome?.discoverLocation==='shelter').outcome;
+ const result=executeEventCopy(eventBase,outcome,100,false,{eventId:id,documents:true});
+ assert.equal(result.infoModal.presentation.lead,'',id+' uses shared shelter description');
+ assert.equal(result.infoModal.presentation.notice,undefined,id+' omits detailed queue notice');
+ assert.equal(result.infoModal.presentation.places.length,1);
+ assert.equal(result.infoModal.presentation.places[0].detail,locationsBase.locationService('shelter'));
+ assert.equal(result.game.minutes,600+outcome.minutes);
+ assert(result.discoveredLocations.includes('shelter'));
+ assert.equal(result.action.eventHistory.outcomeId,outcome.historyId);
 }
 for(const condition of [0,3,5,6,100]){
  const original=executeEventCopy(eventOld,slip,condition),actual=executeEventCopy(eventBase,slip,condition);assert.deepEqual(actual,original);
@@ -767,7 +780,10 @@ const noLossHistory=eventHistoryReflection(storedTheft.action.eventHistory,{cost
 assert.equal(noLossHistory.title,'Checked my belongings');
 for(const outcome of [{message:'fixture'},{message:'fixture',knownLocations:[]},{message:'fixture',knownLocations:['support','station','unknown']},{message:'fixture',discoverLocation:'shelter',minutes:30},{message:'fixture',moveToStreet:true}]) {
  const actual=executeEventCopy(eventBase,outcome),old=executeEventCopy(eventOld,outcome);
- if(outcome.discoverLocation==='shelter') old.infoModal.presentation.notice=actual.infoModal.presentation.notice;
+ if(outcome.discoverLocation==='shelter') {
+  // Intentional presentation change only; all state, costs, goal, History facts and ports still compare.
+  delete old.infoModal.presentation.notice; old.infoModal.presentation.lead='';
+ }
  assert.deepEqual(actual,old);
 }
 console.log('PASS: event controller English parity, knowledge/discovery/movement and broken-phone boundary/translated-message metadata preserve state and History facts.');

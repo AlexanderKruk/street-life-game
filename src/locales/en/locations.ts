@@ -54,7 +54,7 @@ export const locations = {
   "location.service.support": "Accommodation, documents and benefits",
   "location.service.daycenter": "A place indoors, shower, laundry and phone charging",
   "location.service.free-clinic": "Free basic medical care · no insurance needed",
-  "location.service.shelter": "A bed for the night, meals and a shower. Try to arrive before 18:00 for a better chance of getting a bed.",
+  "location.service.shelter": "Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.",
   "location.service.shop": "A small shop selling affordable food and water. Registered Night Shelter guests can get free meals at the shelter.",
   "location.service.station": "Outlet in the waiting room · +60% charge in one hour, capped at 100%",
   "location.leaveTitle": "Leave {place}?",

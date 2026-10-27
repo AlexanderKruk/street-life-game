@@ -1202,3 +1202,14 @@ The rain-ending result still uses ResultCard and the existing appropriate art.
 Travel has the same ochre outlined X beside the text. Cancelling returns to
 Street, keeps elapsed time/date, current needs, money and all paid costs, clears
 the route and creates no arrival result. Reload cannot revive a cancelled trip.
+
+
+## Concise shelter discovery — 27 October 2026
+
+The shared discovery description is: “Night Shelter offers a bed, meals and a
+shower. Try to arrive before 18:00, as places are limited.” All four authored
+shelter discoveries, including asking the police, show it as one Body 16px
+paragraph. Opening hours and On map stay in the heading. Repeated conversation
+prose and the queue timetable are omitted from the modal. Actual ID-check time,
+resource changes, discovery, scheduled goal and History remain unchanged.
+Detailed registration rules remain in Notes and the shelter actions.

@@ -144,7 +144,7 @@ for(const id of ambientIds){
   if(id==='night-rustle')assert(!/\bcat\b/i.test(screen.getByRole('dialog').textContent));
   const paused=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),paused);
   click(choice.label);
-  const result=screen.getByRole('dialog').textContent;assert(result.includes(choice.outcome.message));
+  const result=screen.getByRole('dialog').textContent;assert(result.includes(choice.outcome.discoverLocation === 'shelter' ? 'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.' : choice.outcome.message));
   const answerArt=newEventArt[id][event.choices.indexOf(choice)+1];
   assertEventImage('.result-illustration',answerArt);
   assert.equal(read(stateKey).minutes,paused.minutes+(choice.outcome.minutes??0));
@@ -191,7 +191,7 @@ for(const places of [
  const screenBefore=document.querySelector('[aria-current="page"]').textContent;
  click(choice.label);
  const text=screen.getByRole('dialog').textContent;
- assert(text.includes(choice.outcome.message));
+ assert(text.includes(choice.outcome.discoverLocation === 'shelter' ? 'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.' : choice.outcome.message));
  const expected=(choice.outcome.knownLocations??[]).filter(id=>places.includes(id));
  if(index<2) {
   assert(text.includes('You can find out more by asking around or searching on your phone.'));
@@ -284,7 +284,7 @@ for(const known of [false,true])for(const documents of [false,true])for(const in
  const choice=patrol.choices[index];click(choice.label);
  assertEventImage('.result-illustration',`event-night-patrol-${['reassured','directions','declined'][index]}`);
  assert(screen.getByRole('dialog').classList.contains('illustrated-result'));
- assert(screen.getByRole('dialog').textContent.includes(choice.outcome.message));
+ assert(screen.getByRole('dialog').textContent.includes(choice.outcome.discoverLocation === 'shelter' ? 'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.' : choice.outcome.message));
  assert.equal(read(stateKey).minutes,before.minutes+(choice.outcome.minutes??0));
  assert.equal(read(stateKey).mood,before.mood+(choice.outcome.mood??0));
  assert.equal(read(invKey).documents,documents,'no ID check or document changes');
@@ -292,8 +292,8 @@ for(const known of [false,true])for(const documents of [false,true])for(const in
  assert.equal(read('street-life-discovered-v1').filter(id=>id==='shelter').length,known||index===1?1:0);
  if(index===1){
   assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:3,minute:1080});
-  assert(screen.getByRole('dialog').textContent.includes('On Day 2, join the queue from 08:00 and before 22:00'));
-  assert(screen.getByRole('dialog').textContent.includes('Registration starts at 18:20'));
+  assert.equal(screen.getByRole('dialog').querySelectorAll('.result-description').length,1,'one concise discovery paragraph');
+  assert(!screen.getByRole('dialog').textContent.includes('18:20'),'queue timetable stays outside the discovery result');
  }
  const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after,'result pauses time');
  assert.equal(read(encountersKey).pendingId,null);
@@ -505,7 +505,10 @@ for(const locationId of ['street','station'])for(const [documents,storedDocument
   click(choice.label);
   assertEventImage('.result-illustration',newEventArt[id][event.choices.indexOf(choice)+1]);
   const result=screen.getByRole('dialog').textContent;
-  assert(result.includes(documents?'You show your documents.':storedDocuments?'your documents are stored at the shelter':'your documents are missing.'));
+  if(choice.outcome.discoverLocation==='shelter') {
+   assert(result.includes('Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.'));
+   assert.equal(screen.getByRole('dialog').querySelectorAll('.result-description').length,1,'police shelter discovery uses the same short paragraph; ID-check costs remain below');
+  } else assert(result.includes(documents?'You show your documents.':storedDocuments?'your documents are stored at the shelter':'your documents are missing.'));
   assert.equal(/train ticket/i.test(result),locationId==='station');
   assert.equal(read(stateKey).minutes,before.minutes+choice.outcome.minutes+(documents?0:10));
   assert.equal(read(invKey).documents,documents,'identity check neither loses nor restores ID');
@@ -555,7 +558,7 @@ for(const locationId of ['street','station']){
   cleanup();render(React.createElement(App));assertEventImage('.event-illustration',scene);
   const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
   click(choice.label);assertEventImage('.result-illustration',`${prefix}-${suffix}`);
-  assert(screen.getByRole('dialog').textContent.includes(choice.outcome.message));
+  assert(screen.getByRole('dialog').textContent.includes(choice.outcome.discoverLocation === 'shelter' ? 'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.' : choice.outcome.message));
   assert.equal(read(stateKey).minutes,before.minutes+choice.outcome.minutes);
   assert.equal(read(stateKey).locationId,locationId,'moving to another seat stays at the same place');
   ok();assert.equal(read('street-life-first-night-events-v1').pendingId,null);

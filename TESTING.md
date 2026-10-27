@@ -717,3 +717,18 @@ Verification was completed in the initial and focused passes documented above;
 no claim of a single uninterrupted41-case pass. All three final layout tests
 passed at320/390/1280px after the natural-row adjustment (search/wait144px at
 320px,116px at390px,126px desktop). WebKit and physical iPhone were not run.
+
+
+## Concise shelter discovery — 27 October 2026 (source update)
+
+The shared shelter paragraph replaces the repeated result lead and registration
+notice in all four shelter-discovery scenes. Single-place descriptions use
+Body 16px/400 via modal-narrative. check-localization, check-results, check-events,
+design-system, regression/street-trash and production build passed. Existing
+assertions now expect the approved concise copy; costs/ID checks, goal-date
+boundaries, map discovery, History and reload assertions remain.
+Four focused Chromium cases (station, bench, night police and waking police)
+passed at 320/390/1280px: one exact paragraph, 16px/400, no timetable/overflow,
+visible Got it, correct time costs and map discovery. These were temporary
+review cases; canonical screenshot baselines were not changed. No full-suite,
+WebKit, physical iPhone or publication in this source update; v339 unchanged.

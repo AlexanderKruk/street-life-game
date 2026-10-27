@@ -122,7 +122,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           <p className="bottle-search-reward">{result.bottleSearch.found > 0 ? <><span aria-hidden="true">{t('result.containers', { count: result.bottleSearch.found })}</span><span className="sr-only">{t('result.returnableContainers', { count: result.bottleSearch.found })}</span></> : t('result.noContainers')}</p>
           {result.bottleSearch.found > 0 && <p className="result-description">{t('result.returnAtShop', { amount: formatMoney(result.bottleSearch.found * .5, true) })}</p>}
         </> : compactInfo ? <>
-          {compactPlace ? <p className="result-description">{compactPlace.detail}</p> : !!presentation?.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
+          {compactPlace ? <p className="result-description modal-narrative">{compactPlace.detail}</p> : !!presentation?.places?.length && <div className="result-places">{presentation.places.map(place => <div className="result-place" key={place.id}>
             <div><div className="result-place-title"><strong>{place.name}</strong><span>{place.hours}</span></div><p>{place.detail}</p></div>
           </div>)}</div>}
           {presentation?.lead && <p className="result-description result-narrative modal-narrative">{presentation.lead}</p>}

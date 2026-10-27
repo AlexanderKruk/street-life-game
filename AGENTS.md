@@ -698,7 +698,7 @@ The existing hero rule now sets width from its container plus existing gutters,
 with min-width:0 and overflow-wrap:anywhere on copy. Cards can grow vertically;
 no font reduction. Street/station/shelter long-copy and unbroken-name fixtures
 fit at320/390/850 iframe widths; measured client/scroll widths matched
-305/305,375/375,835/835. Title20px mobile/24px desktop and Body16px preserved.
+305/305,375/375,835/835. Title20px mobile/24px desktop and Body 16px preserved.
 Short-title component states also inspected. No screenshot baselines updated.
 Legacy ordinary-walk result/reflection now avoid lit windows, closed shops and
 an empty road; the removed ordinary-walk UI remains removed. Old saved prose
@@ -758,3 +758,12 @@ and shelter arrival, return to Street, preserve current date/time/needs/cash and
 paid fare/fine/battery. Never restore trip.before, produce arrival rewards or
 resume cancelled travel on reload. App retains shared clocks and modal focus/Tab.
 Inventory section names use the shared Title/600 role and1.25 line-height.
+
+
+Shelter discovery copy — 27 October 2026: location.service.shelter is the shared
+two-sentence service/arrival hint for discoveries, including first-night station/
+bench and night/waking police patrols. Shelter event results show this paragraph
+without an additional outcome lead or queue timetable. Keep original outcome
+messages/History facts, identity-check costs, map discovery and goal scheduling.
+The single-place ResultCard description uses modal-narrative (Body 16px/400, primary
+text); schedules/map state and numeric costs keep their existing metadata roles.

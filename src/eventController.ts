@@ -5,7 +5,6 @@ import { locationName } from './locationText'
 import { STREET_EVENTS, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
 import { illustrateStreetEvent } from './eventArtwork'
 import { locations, type GameState, type ActionResult } from './game'
-import { displayDay } from './gameDate'
 import { absoluteMinutes } from './gameTime'
 import { SHOP_ITEMS, addShopItem, canAddToBackpack, fitEventSupplies } from './inventory'
 import { rejectedSupplyLabel as supplyLabel } from './itemPresentation'
@@ -82,13 +81,10 @@ export function createEventController(session: EventSession, context: Context, h
       : outcome.message
     if (activeEvent?.illustration || outcome.illustration) {
       const place = locations.find(location => location.id === outcome.discoverLocation)
-      const end = absoluteMinutes(game) + (outcome.minutes ?? 0)
-      const goalDay = Math.floor(end / 1440) + 1 + (end % 1440 >= 1320 ? 1 : 0)
       setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? t('event.controller.afterChoice'), text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
         visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['phoneCondition'] : undefined,
         batteryInSummary: !!outcome.phoneBattery,
-        ...(place ? { presentation: { ...locationPresentation([place.id]), lead: outcomeText,
-          ...(place.id === 'shelter' ? { notice: t('event.controller.shelterNotice', { day: displayDay(goalDay) }) } : {}) } } : {}) }))
+        ...(place ? { presentation: { ...locationPresentation([place.id]), lead: place.id === 'shelter' ? '' : outcomeText } } : {}) }))
     }
     setEncounters(previous => ({ ...previous, pendingId: null, pendingRoll: null }))
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
