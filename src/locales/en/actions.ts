@@ -106,7 +106,7 @@ export const actions = {
   "action.support.documentsDone": "Documents complete",
   "action.support.documentsDetail": "Restore missing documents",
   "action.support.transport": "Transport",
-  "action.support.transportDetail": "Apply for 3 days of free public transport",
+  "action.support.transportDetail": "Apply for free public transport for up to 3 days",
   "action.support.benefits": "Benefits",
   "action.support.benefitsDetail": "Ask what financial support is available",
   "action.charge.public": "Charge phone",

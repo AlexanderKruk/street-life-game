@@ -96,7 +96,7 @@ assert(loadLeftHome(reader), 'translated arrival title still prevents opening-ne
 const { STREET_EVENTS, resolveEventOutcome } = bundled('src/events.ts');
 const { eventHistoryReflection } = bundled('src/eventHistory.ts');
 const { eventHistoryDefinitions } = bundled('src/eventHistoryDefinitions.ts');
-const walkEditorialChanges = {"You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.": "You pass familiar streets and shopfronts. Half an hour has passed. You are still outside.", "I keep looking at the lit windows. I miss having somewhere to return to.": "I keep looking at the buildings around me. I miss having somewhere to return to."};
+const walkEditorialChanges = {"You receive a pass for 3 days of free public transport.": "You receive a free transport pass. It expires 3 days after you started the application.", "You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.": "You pass familiar streets and shopfronts. Half an hour has passed. You are still outside.", "I keep looking at the lit windows. I miss having somewhere to return to.": "I keep looking at the buildings around me. I miss having somewhere to return to."};
 const walkEdited = value => typeof value === 'string' ? walkEditorialChanges[value] ?? value : Array.isArray(value) ? value.map(walkEdited) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key,item])=>[key,walkEdited(item)])) : value;
 const { journalReflection: oldReflection } = bundled('src/journal.ts');
 const ids = new Set();
@@ -488,6 +488,10 @@ for(const test of copyCases){
  assert.deepEqual(commandMechanics(translated),commandMechanics(actual),`pseudo controller mechanics: ${test.domain}/${test.method}`);
  const rejected=executeController(controllerPseudo,test,false);assert.equal(rejected.draws,0);assert.equal(rejected.results.length,0);assert(rejected.ports.every(port=>port[0]==='result'),'result guard rejects before controller updates');
 }
+const passAudit=executeController(controllerBase,{domain:'support',method:'socialSupport',args:['transport'],patch:{inventory:{documents:true}}});
+assert.equal(passAudit.game.minutes,805);
+assert.equal(passAudit.effects.find(effect=>effect.id==='free-transit').expiresAt,2*1440+780+3*1440);
+assert.equal(passAudit.message,'You receive a free transport pass. It expires 3 days after you started the application.');
 assert.equal(t('controller.medical.emergency.treated',{hours:4}),'You call an ambulance. Emergency staff stabilise your condition without requiring documents. About 4 hours pass.');
 console.log(`PASS: ${copyCases.length} frozen/pseudo street, support/work and medical scenarios preserve English reports, ordered ports, costs, RNG, effects, decisions/groups and result rejection.`);
 

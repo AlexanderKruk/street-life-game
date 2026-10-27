@@ -17,7 +17,7 @@ export const controllerActions = {
   "controller.support.housing.granted": "The social worker gives you a referral to Schronisko. The address is saved on your map.",
   "controller.support.documents.complete": "Your basic documents are currently complete.",
   "controller.support.documents.restored": "The social worker helps you replace your missing documents.",
-  "controller.support.transport.granted": "You receive a pass for 3 days of free public transport.",
+  "controller.support.transport.granted": "You receive a free transport pass. It expires 3 days after you started the application.",
   "controller.support.benefits.information": "The social worker explains which benefits may be available. You leave with information about your options.",
   "controller.work.completed": "You finish the shift and collect your pay. After three hours of physical work, you could use something to eat and drink.",
   "controller.support.title": "Social support",
