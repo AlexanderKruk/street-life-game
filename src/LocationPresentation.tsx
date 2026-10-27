@@ -56,6 +56,14 @@ export const TravelHeading = memo(function TravelHeading({ from, to, walking, mo
   </>
 })
 
+export const RainActivityIcon = memo(function RainActivityIcon({ searching }: { searching: boolean }) {
+  return <div className={`travel-visual walking rain-activity-icon${searching ? ' searching' : ' waiting'}`} aria-hidden="true">
+    {!searching && <svg className="rain-canopy" viewBox="0 0 98 98" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M10 89V12H64" /></svg>}
+    <img className="travel-walker" src="/street-life-game/assets/travel-walker.webp" width="90" height="90" alt="" />
+    <span className="activity-rain"><i /><i /><i /><i /><i /><i /></span>
+  </div>
+})
+
 export const PhoneSearchIcon = memo(function PhoneSearchIcon({ calling = false }: { calling?: boolean }) {
   return <div className="travel-visual phone-search-icon" aria-hidden="true">
     <Icon name="phone" className="phone-search-outline" />

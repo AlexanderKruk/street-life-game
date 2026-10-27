@@ -144,9 +144,23 @@ try {
     assert(document.querySelector('.result-modal img').getAttribute('src').includes('event-rain-stopped-search'),'all unfinished searches use the shared stopped-rain illustration');
     assert(screen.getByRole('dialog',{name:'The rain has stopped'}).textContent.includes('There’s no need to keep searching.'));
   }
-  setup('downpour');fireEvent.click(screen.getByRole('button',{name:'Take cover nearby'}));tick(250);
-  const originalRoll=save().rain.coldRoll;
-  fireEvent.click(screen.getByRole('button',{name:'Find proper shelter'}));assert.equal(save().rain.coldRoll,originalRoll,'changing shelter never rerolls illness');
+  for (const label of ['Take cover nearby','Find proper shelter']) {
+    setup('downpour',{rain:episode('downpour',20)});
+    fireEvent.click(screen.getByRole('button',{name:label}));tick(250);
+    const covered=save();
+    assert(document.querySelector('.travel-screen'),'shelter search and waiting use the activity template');
+    assert(!document.querySelector('.event-illustration'),'no illustration until the result');
+    assert.equal(screen.getAllByRole('button',{name:'Cancel'}).length,1);
+    assert(!screen.queryByRole('button',{name:'Find proper shelter'}),'choose cover only once');
+    fireEvent.click(screen.getByRole('button',{name:'Cancel'}));
+    const continued=save();
+    assert.equal(continued.minutes,covered.minutes,'cancel never rewinds time');
+    for(const key of ['id','end','coldRoll','energyLoss','moodLoss']) assert.equal(continued.rain[key],covered.rain[key],key);
+    assert.equal(continued.rain.choice,'continue');assert(!screen.queryByRole('dialog'));
+    cleanup();render(React.createElement(App));assert.equal(save().rain.choice,'continue');
+    for(let n=0;n<19;n++)tick(1000);
+    assert(document.querySelector('.result-modal img'),'background rain ends with an illustrated result');
+  }
   setup('rain',{rain:undefined,rainResults:[{...caught,start:now-60,end:now,reported:false}]});
   assert(screen.getByRole('dialog').textContent.includes('caught a cold'));
   const coldExpiry=JSON.parse(localStorage.getItem('street-life-effects-v1')).find(effect=>effect.id==='cold').expiresAt;

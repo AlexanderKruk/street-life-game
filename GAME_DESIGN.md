@@ -1188,3 +1188,17 @@ check-localization, rendering, regression/map-travel, module boundaries(157),
 design-system, build and diff checks passed. Baselines/full suites/WebKit/iPhone
 unrun. Remaining specialised-modal matrix and rain-art time context stay open.
 No publication; v335 unchanged.
+
+
+## Compact activity cancellation — 27 October 2026
+
+Inventory section headings use Title typography (20px mobile,24px desktop).
+Rain opening choices remain illustrated. Once a shelter is chosen, search and
+waiting use the common ActivityDialog; searching animates the existing walker,
+waiting freezes the same figure under a canopy with rain outside. There is no
+second shelter-choice screen. Cancel on either stage resumes ordinary gameplay
+with rain in the background; it keeps the episode deadline, risk draw and costs.
+The rain-ending result still uses ResultCard and the existing appropriate art.
+Travel has the same ochre outlined X beside the text. Cancelling returns to
+Street, keeps elapsed time/date, current needs, money and all paid costs, clears
+the route and creates no arrival result. Reload cannot revive a cancelled trip.

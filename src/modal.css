@@ -97,6 +97,10 @@ html:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) { overflow:hidde
 .modal-panel .modal-action--primary:active:not(:disabled) { background:var(--color-warning-pressed); }
 .modal-panel .modal-action--secondary { background:var(--control-secondary-surface); border-color:var(--control-secondary-border); color:var(--text-secondary); }
 .modal-panel .modal-action--danger { background:var(--control-danger-surface); border-color:var(--control-danger-border); color:var(--control-danger-text); }
+.modal-panel .modal-action--outline { background:transparent; border-color:var(--color-warning); color:var(--color-warning); }
+.modal-panel .modal-action--outline:active:not(:disabled) { background:var(--color-warning-surface); }
+.modal-panel .modal-action--icon-only { display:flex; align-items:center; justify-content:center; width:44px; height:44px; min-height:44px; padding:10px; }
+.modal-panel .modal-action--icon-only .icon { width:22px; height:22px; }
 .modal-panel .modal-action:disabled { opacity:.42; cursor:not-allowed; }
 
 /* A scene and its illustrated outcome share width, framing and inner edges. */

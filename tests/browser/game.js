@@ -27,7 +27,7 @@ export function entries(id, overrides = {}) {
 }
 
 export async function openGame(page, seed = entries()) {
-  await page.clock.install({ time: NOW })
+  await page.clock.install({ time: new Date(new Date(NOW).getTime() - 60000) })
   await page.clock.pauseAt(NOW)
   await page.addInitScript(({ seed }) => {
     // Each test gets a new browser context. Reloads keep actual game progress.

@@ -202,3 +202,86 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 664 }
     expect(await centre.evaluate(node => node.scrollTop)).toBe(0)
   })
 }
+
+for (const mode of ['walk', 'transit', 'fare-dodge']) {
+  test(`cancel ${mode} travel keeps elapsed time and costs after reload`, async ({ page }) => {
+    const seed = entries('trip')
+    const trip = JSON.parse(seed[keys.trip])
+    const game = JSON.parse(seed[keys.game])
+    await openGame(page, { ...seed, [keys.trip]: JSON.stringify({ ...trip, mode }),
+      [keys.game]: JSON.stringify({ ...game, day: 3, minutes: 1439, locationId: 'shop' }) })
+    await expect(page.locator('.activity-cancel')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(page.locator('.activity-cancel')).toBeFocused()
+    for (const button of await page.locator('.bottom-nav button').all()) await expect(button).toBeDisabled()
+    await advance(page, 1000)
+    const before = await read(page, keys.game)
+    expect(before.day).toBe(4)
+    const inventory = await read(page, keys.inventory)
+    const history = await read(page, keys.history)
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+    expect(await read(page, keys.game)).toEqual({ ...before, locationId: 'street' })
+    expect(await read(page, keys.inventory)).toEqual(inventory)
+    expect(await read(page, keys.trip)).toBeNull()
+    expect(await read(page, keys.history)).toEqual(history)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await page.reload()
+    expect(await read(page, keys.trip)).toBeNull()
+    expect(await read(page, keys.game)).toEqual({ ...before, locationId: 'street' })
+    await advance(page, 1000)
+    expect((await read(page, keys.game)).minutes).toBe(before.minutes + 1)
+  })
+}
+
+function rainySeed(choice = null, searchRemaining = 0, duration = 20) {
+  const seed = entries()
+  const game = JSON.parse(seed[keys.game])
+  const start = (game.day - 1) * 1440 + game.minutes
+  const rain = { id: 'browser:rain', level: 'rain', start, end: start + duration,
+    choice, choiceAt: choice ? start : undefined, searchRemaining, protection: .4,
+    shelter: 'tree', exposure: 0, energyLoss: 0, moodLoss: 0, waited: 0, coldRoll: .99, cold: false }
+  return { ...seed, [keys.game]: JSON.stringify({ ...game, rain }) }
+}
+
+for (const [choice, searchRemaining] of [['proper', 3], ['proper', 0], ['nearby', 0]]) {
+  test(`cancel rain ${choice} search ${searchRemaining} continues episode in background`, async ({ page }) => {
+    await openGame(page, rainySeed(choice, searchRemaining))
+    await assertLocked(page)
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.locator('.event-illustration')).toHaveCount(0)
+    await expect(dialog.getByRole('button')).toHaveCount(1)
+    await expect(dialog.locator(searchRemaining ? '.searching' : '.rain-canopy')).toBeVisible()
+    await advance(page, 250)
+    const before = await read(page, keys.game)
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+    const after = await read(page, keys.game)
+    expect(after.minutes).toBe(before.minutes)
+    for (const key of ['id', 'end', 'coldRoll', 'energyLoss', 'moodLoss']) expect(after.rain[key]).toBe(before.rain[key])
+    expect(after.rain.choice).toBe('continue')
+    await expect(dialog).toHaveCount(0)
+    await page.reload()
+    expect((await read(page, keys.game)).rain).toEqual(after.rain)
+    await advance(page, 19000)
+    await expect(page.locator('.result-illustration')).toBeVisible()
+    await expect(page.locator('.result-modal')).toContainText('The rain has passed')
+    await acknowledge(page)
+    await page.reload()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+}
+
+test('shelter choice transitions from search to compact waiting and illustrated result', async ({ page }) => {
+  await openGame(page, rainySeed(null, 0, 8))
+  await page.getByRole('button', { name: 'Find proper shelter', exact: true }).click()
+  await expect(page.locator('.rain-activity-icon.searching')).toBeVisible()
+  const rain = (await read(page, keys.game)).rain
+  await advance(page, rain.searchRemaining * 250)
+  await expect(page.locator('.rain-canopy')).toBeVisible()
+  await expect(page.getByRole('dialog').getByRole('button')).toHaveCount(1)
+  await expect(page.getByRole('button', { name: 'Find proper shelter', exact: true })).toHaveCount(0)
+  await page.reload()
+  await expect(page.locator('.rain-canopy')).toBeVisible()
+  await advance(page, (8 - rain.searchRemaining) * 250)
+  await expect(page.locator('.result-illustration')).toBeVisible()
+  await expect(page.locator('.result-modal')).toContainText('Shelter from the rain')
+})

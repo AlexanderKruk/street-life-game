@@ -45,14 +45,14 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
   const { game, trip, selectedDestination, streetExitPending, blocked, freeTransitActive, shelterPhoneCharging, shelterBooked, shelterNightDay } = context
   const { setGame, setTrip, setSelectedDestination, setStreetExitPending, setStreetBenchFound, setShelterArrival, setLife, setScreen, setMessage, openPage, recordShelterDeparture, resultSnapshot, runWithResult, applyAction } = host
   const { observeFirstNight, observeOrdinaryEvent } = queue
-  const lastArrival = useRef<Trip | null>(null)
+  const lastFinishedTrip = useRef<Trip | null>(null)
   useEffect(() => {
-    if (!trip || trip.remaining > 0 || lastArrival.current === trip) return
+    if (!trip || trip.remaining > 0 || lastFinishedTrip.current === trip) return
     const destination = locations.find(location => location.id === trip.destinationId)
     if (!destination) { setTrip(null); return }
     runWithResult({ id: 'arrival', title: t('travel.arrivalTitle'), actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : locationName(destination.id) } }, () => {
-      if (lastArrival.current === trip) return
-      lastArrival.current = trip
+      if (lastFinishedTrip.current === trip) return
+      lastFinishedTrip.current = trip
       setGame(previous => ({ ...previous, locationId: destination.id }))
       const shelterArrival = destination.id === 'shelter' && shelterBooked
       const admitted = game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10
@@ -66,6 +66,20 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
       if (!observeFirstNight('location', arrived)) observeOrdinaryEvent('location', arrived, undefined, { observation: 'arrival' })
     }, trip.before ?? resultSnapshot(), true, true)
   }, [trip])
+
+  function cancelTravel() {
+    if (!trip || trip.remaining <= 0 || blocked || session.activeEvent || session.diceCheck || lastFinishedTrip.current === trip) return
+    lastFinishedTrip.current = trip
+    setTrip(null)
+    setSelectedDestination(null)
+    setStreetExitPending(false)
+    setStreetBenchFound(false)
+    setShelterArrival(null)
+    ambientEventClock.current = { locationId: 'street', minutes: 0 }
+    // Keep the latest clock, needs and all costs already paid, including fares.
+    setGame(previous => ({ ...previous, locationId: 'street' }))
+    openPage('location')
+  }
 
   function chooseDestination(id: string) {
     if (blocked) return
@@ -144,5 +158,5 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     setSelectedDestination(null)
     setScreen('travel')
   }
-  return { chooseDestination, confirmStreetExit, attemptFareDodge, startTravel, startFareDodgeTrip }
+  return { cancelTravel, chooseDestination, confirmStreetExit, attemptFareDodge, startTravel, startFareDodgeTrip }
 }

@@ -88,10 +88,10 @@ events keep their outer frame clipped and their existing inner content scroller.
 | --- | --- |
 | Any modal backdrop | `ModalOverlay` from `src/Modal.tsx` |
 | Modal frame | `ModalPanel`: regular 480px or compact 408px |
-| Confirm/cancel/destructive button | `ModalAction`: primary, secondary or danger |
-| Travel, internet search or call in progress | `ActivityDialog` (`kind="travel"` or `kind="phone"`); elapsed/phase text uses `ActivityStatus` |
+| Confirm/cancel/destructive button | `ModalAction`: primary, secondary, danger or outline; `iconOnly` for compact controls |
+| Travel, rain search/wait, internet search or call in progress | `ActivityDialog` (`kind="travel"`, `kind="rain"` or `kind="phone"`); elapsed/phase text uses `ActivityStatus` |
 | Authored event, with or without an illustration | `EventDialog`; use its `EventFrame` / `EventBody` for another event presentation |
-| Rain choices and waiting under cover | `RainEventDialog`, built on `EventFrame` / `EventBody` |
+| Rain opening choices | `RainEventDialog`, built on `EventFrame` / `EventBody` |
 | Travel mode planning | `TravelPlanningDialog` |
 | D20 roll and outcome confirmation | `DiceDialog` |
 | Bottle-search minigame | `TrashSearchDialog` with `TrashSearchTime` |
@@ -744,3 +744,17 @@ check-localization, rendering, regression/map-travel, module boundaries(157),
 design-system, build and diff checks passed. Baselines/full suites/WebKit/iPhone
 unrun. Remaining specialised-modal matrix and rain-art time context stay open.
 No publication; v335 unchanged.
+
+
+Activity cancellation checkpoint — 27 October 2026: ActivityDialog accepts actions
+in a third column beside both text rows. ActivityCancel reuses ModalAction outline
+and iconOnly with a44px ochre border/X and a localised Cancel accessible name.
+RainEventDialog retains opening choices; all search/cover waiting uses the activity
+template with the existing walking figure (animated search, stationary under a
+canopy for waiting) and rain outside. Choose cover once; Cancel resumes background
+rain with the same episode, end, costs and coldRoll. Final results retain artwork.
+Travel cancellation belongs to useTravelController: clear the trip/route, bench
+and shelter arrival, return to Street, preserve current date/time/needs/cash and
+paid fare/fine/battery. Never restore trip.before, produce arrival rewards or
+resume cancelled travel on reload. App retains shared clocks and modal focus/Tab.
+Inventory section names use the shared Title/600 role and1.25 line-height.

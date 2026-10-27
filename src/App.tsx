@@ -9,7 +9,7 @@ import type { InventoryHistoryFacts } from './inventoryHistory'
 import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,RAIN_RESPONSE_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
 import { INITIAL_LIFE,SHELTER_DEPARTURE_MINUTES,loadGameSession } from './loadGameSession'
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
-import ActivityDialog from './ActivityDialog'
+import ActivityDialog, { ActivityCancel } from './ActivityDialog'
 import BottomNavigation from './BottomNavigation'
 import ChoiceButton from './ChoiceButton'
 import CityMap from './CityMap'
@@ -270,11 +270,22 @@ export default function App() {
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
   const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver)
-  useEffect(() => { if (travelVisible) travelModalRef.current?.focus({ preventScroll: true }) }, [travelVisible])
+  useEffect(() => {
+    if (!travelVisible) return
+    const panel = travelModalRef.current
+    panel?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true })
+    const trap = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      event.preventDefault()
+      panel?.querySelector<HTMLButtonElement>('button')?.focus()
+    }
+    document.addEventListener('keydown', trap)
+    return () => document.removeEventListener('keydown', trap)
+  }, [travelVisible])
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver || closingNotice)
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
   const visibleEventChoices = activeEvent?.choices.filter(choice => !choice.undiscoveredLocationRequired || !discoveredLocations.includes(choice.undiscoveredLocationRequired)) ?? []
-  const { respondToRain, findProperShelter, continueInRain } = useRainScheduling({ game, gameOver, currentExposure, sleeping: !!sleeping, currentId: current.id }, setGame, setRainChoice)
+  const { respondToRain, continueInRain } = useRainScheduling({ game, gameOver, currentExposure, sleeping: !!sleeping, currentId: current.id }, setGame, setRainChoice)
   useEffect(() => {
     if ((!rainChoice && !rainWaiting) || infoModal || pendingResult || activeEvent || diceCheck) return
     const previous = document.activeElement as HTMLElement | null
@@ -523,7 +534,7 @@ export default function App() {
     return () => window.clearInterval(timer)
   }, [tickGameClock, gameClockInterval])
 
-  const { chooseDestination, confirmStreetExit, attemptFareDodge, startTravel, startFareDodgeTrip } = useTravelController(eventSession, encounterQueue, {
+  const { cancelTravel, chooseDestination, confirmStreetExit, attemptFareDodge, startTravel, startFareDodgeTrip } = useTravelController(eventSession, encounterQueue, {
     game, trip, selectedDestination, streetExitPending, blocked: !!(sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue),
     freeTransitActive, shelterPhoneCharging, shelterBooked, shelterNightDay,
   }, {
@@ -765,6 +776,7 @@ export default function App() {
       const phase = getTravelDisplayPhase(trip)
       return <ActivityDialog kind="travel" visible={travelVisible} panelRef={travelModalRef}
         from={locationName(current.id)} to={destination ? locationName(destination.id) : undefined} walking={trip.mode === 'walk'} moving={phase.walking}
+        actions={<ActivityCancel onClick={() => { if (travelVisible) cancelTravel() }} />}
         elapsed={elapsed} phase={underRainCover ? t('travel.underCover') : travelPhaseLabel(phase.id)}
       />
     })()}
@@ -796,7 +808,7 @@ export default function App() {
     {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <RainEventDialog
       rain={game.rain} waiting={rainWaiting} elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))}
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={rainModalRef} onChoose={respondToRain}
-      onFindProperShelter={findProperShelter} onContinue={continueInRain}
+      onContinue={continueInRain}
     />}
     {!gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck} eventText={activeEvent?.text}
       onRoll={rollDice} onAccept={acceptDiceResult} onCancel={() => setDiceCheck(null)} />}

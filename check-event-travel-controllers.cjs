@@ -41,6 +41,18 @@ function setup(state={},extra={}){cleanup();localStorage.clear();require('./test
 try{
  setup({}, {'street-life-trip-v1':{...trip,remaining:0}});
  assert.equal(read('street-life-save-v3').locationId,'station');assert.equal(read('street-life-save-v3').money,100);assert.equal(read('street-life-trip-v1'),null);assert.equal(read('street-life-journal-history-v1').length,1,'one restored arrival under StrictMode');
+ for(const mode of ['walk','transit','fare-dodge'])for(const locationId of ['street','shop']) {
+   const current={...game,day:3,minutes:2,locationId,money:73.6,energy:51};
+   setup(current,{'street-life-trip-v1':{...trip,mode,remaining:20,total:40,before:{...trip.before,game:{...game,day:2,minutes:1422,money:100,energy:70}}}});
+   const before=read('street-life-save-v3'),inventory=read('street-life-inventory-v1');
+   fireEvent.click(screen.getByRole('button',{name:'Cancel'}));fireEvent(window,new window.Event('pagehide'));
+   assert.deepEqual(read('street-life-save-v3'),{...before,locationId:'street'},'cancel retains elapsed time/date and current needs/money');
+   assert.deepEqual(read('street-life-inventory-v1'),inventory,'no fare/battery refund');
+   assert.equal(read('street-life-trip-v1'),null);assert.equal((read('street-life-journal-history-v1')??[]).length,0,'no arrival result');
+   cleanup();render(React.createElement(React.StrictMode,null,React.createElement(App)));
+   assert.equal(read('street-life-trip-v1'),null,'cancelled trip cannot return after reload');
+   assert.equal(read('street-life-save-v3').locationId,'street');
+ }
  setup({day:2,minutes:60},{'street-life-encounters-v1':{seen:['borrow-phone','borrow-phone-slip'],lastAt:1500,pendingId:'borrow-phone-slip',pendingRoll:17}});
  assert(screen.getByLabelText('Rolled 17'));let draws=0;Math.random=()=>{draws++;return 0};cleanup();render(React.createElement(React.StrictMode,null,React.createElement(App)));
  assert(screen.getByLabelText('Rolled 17'));assert.equal(draws,0,'saved D20 restored without reroll');fireEvent.click(screen.getByRole('button',{name:'Continue'}));fireEvent(window,new window.Event('pagehide'));assert.equal(read('street-life-encounters-v1').pendingRoll,null);assert.equal(read('street-life-journal-history-v1').length,1);

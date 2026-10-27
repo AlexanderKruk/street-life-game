@@ -141,3 +141,9 @@
 проекта и адаптивные варианты отдельно не
 проверялись. Добавлять новые находки по мере проверки, не отмечая весь аудит
 завершённым преждевременно.
+
+
+27 October 2026: active rain search/wait now use the existing travel-walker
+asset with CSS rain and a simple canopy contour for waiting. No new bitmap.
+Opening and completed rain results retain existing intensity/choice artwork;
+unfinished search at rain end retains event-rain-stopped-search.

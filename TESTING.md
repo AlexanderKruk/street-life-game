@@ -663,3 +663,18 @@ check-localization, rendering, regression/map-travel, module boundaries(157),
 design-system, build and diff checks passed. Baselines/full suites/WebKit/iPhone
 unrun. Remaining specialised-modal matrix and rain-art time context stay open.
 No publication; v335 unchanged.
+
+
+## Activity cancellation source checkpoint — 27 October 2026
+
+Restored after the transient working checkout was lost. Production build,
+check-rain, check-event-travel-controllers, check-localization, design-system
+and module boundaries passed on the restored sources. Added six StrictMode
+travel-cancellation variants (three modes × Street/shop origins), including
+midnight-crossing current state, no refund/arrival and remount persistence.
+Rain checks now cover one-time shelter choice, compact search/wait, Cancel to
+background, stable episode/end/coldRoll/costs and the illustrated final result.
+Seven browser scenarios were added: three travel modes, three restored rain
+stages and full search→wait→result. Browser verification is still in progress;
+full Node suite is reserved for the publication CI gate. The test clock now
+installs before the fixed NOW and pauses at NOW before loading App.
