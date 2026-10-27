@@ -1,7 +1,6 @@
 // Historical equivalent messages retain one semantic identity after rewording.
 const aliases = {
   "history.event.borrow-phone.speaker.complete": "history.event.borrow-phone.lend.complete",
-  "history.event.borrow-phone.decline.complete": "history.event.borrow-phone.lend.complete",
   "history.event.borrow-phone-slip.title": "history.event.borrow-phone.title",
   "history.event.station-cleaning.stretch.complete": "history.event.station-cleaning.move.complete",
   "history.event.station-cleaning.ask-seat.complete": "history.event.station-cleaning.move.complete",

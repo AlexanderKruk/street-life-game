@@ -109,7 +109,12 @@ for (const event of STREET_EVENTS) for (const choice of event.choices) {
       const outcome = resolveEventOutcome(authored, () => 0.5, documents === 'carried', documents === 'stored');
       const summary = { costs: [], changes: capped ? [] : ['money','mood','health','phoneCondition'].filter(id => outcome[id]).map(id => ({ id, label: '⟦resource⟧', value: '⟦value⟧', amount: outcome[id], kind: outcome[id] > 0 ? 'positive' : 'negative' })) };
       const facts = { outcomeId: authored.historyId, documents, suppliesRejected: false };
-      if (!(authored.randomCoin && capped)) assert.deepEqual(eventHistoryReflection(facts, summary), oldReflection(event.title, outcome.message, summary), authored.historyId);
+      if (!(authored.randomCoin && capped)) {
+        const expected = oldReflection(event.title, outcome.message, summary);
+        if (authored.historyId === 'borrow-phone:decline:complete') expected.text = 'He needed a quick call, but I said no and carried on.';
+        if (authored.historyId === 'borrow-phone-slip:catch:failure') expected.text = 'I helped him, but my phone hit the pavement. I need to be more careful with it.';
+        assert.deepEqual(eventHistoryReflection(facts, summary), expected, authored.historyId);
+      }
     }
   }
 }
@@ -212,6 +217,11 @@ for(const event of STREET_EVENTS)for(const choice of event.choices){
 }
 for(const item of ['food','bread','cannedFood','readyMeal','water','wipes'])for(const summary of actionSummaries)presentationCase(inventoryCommandResult({type:'use',item}),summary);
 for(const item of SHOP_ITEMS)presentationCase(inventoryCommandResult({type:'buy',item}));
+const borrowLend=journalPresentation({id:'event:borrow-phone',title:'One quick call',eventHistory:{outcomeId:'borrow-phone:lend:complete',documents:'carried',suppliesRejected:false}});
+const borrowDecline=journalPresentation({id:'event:borrow-phone',title:'One quick call',eventHistory:{outcomeId:'borrow-phone:decline:complete',documents:'carried',suppliesRejected:false}});
+assert.notEqual(borrowLend.groupId,borrowDecline.groupId,'declining must not group with helping');
+const savedBorrow={day:2,minute:700,actionId:'event:borrow-phone',actionTitle:'One quick call',reflection:true,...borrowLend,outcomeId:'borrow-phone:decline:complete'};
+assert.deepEqual(loadJournalEntries([savedBorrow]),[savedBorrow],'saved History text and grouping stay unchanged');
 for(let i=0;i<samples.length;i++)for(let j=i;j<samples.length;j++){
  const a=samples[i],b=samples[j];assert.equal(a.groupId===b.groupId,a.actionTitle===b.actionTitle&&a.title===b.title&&a.text===b.text,`${a.actionId} / ${b.actionId}`);
 }
