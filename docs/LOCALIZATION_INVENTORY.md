@@ -63,7 +63,7 @@ long-text/browser matrix. UI styles and timers are not changed by extraction.
 | App closing notice using `ResultCard` | every closable place; open→closed only; behind another result; reload | T; locations.ts; transition/reload checks retained |
 | `EventDialog` / `EventFrame` / `EventBody` | with/without illustration; unavailable choices; D20; rejected supplies; continuation | T own label/refusal and authored events.ts text; `check-events`, event regressions |
 | `CompactStreetEvent` | event IDs and choices, missing icon fallback, duration/check badge | T; eventUi/events and explicit choice/check metadata |
-| `RainEventDialog` | drizzle/rain/downpour; opening, nearby/passage search/wait; tree/awning; carry on; shelter search finishes/ends early | T; rain.ts; all intensities/choices/early end/Cold/restore checks |
+| `RainEventDialog` | drizzle/rain/downpour; opening, nearby/passage search/wait; tree/awning; carry on; shelter search finishes/ends early | T; rain.ts; intensity/choice/early end/Cold/restore checks. Long-copy Chromium component QA: opening, nearby cover, passage search and waiting in passage, all 3 intensities at 320×568, 390×844, 850×390; remaining result/interaction/device variants open. |
 | `TravelPlanningDialog` | walking, paid/free/ticketless transit, poor money, nearby timed range, invalid destination | T; travel.ts; phase/planner/controller/map-travel checks |
 | `DiceDialog` | before/after roll, criticals/normal threshold, theft/fare/authored, cancel/continue | T own copy; 144 DOM/pseudo variants and event/controller checks |
 | `PhoneDialog` | active/expired plan, battery, service expiry hours/minutes, money, auto-renew, blocked behind process | T; phoneUi.ts; 170 launcher/plan/focus/expiry variants and phone checks |
