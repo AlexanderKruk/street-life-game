@@ -795,14 +795,14 @@ button.inventory-item { width:100%; }
 .result-details .result-change-list { margin:8px 0; }
 .result-confirm { flex-shrink:0; width:100%; margin-top:10px; }
 .compact-info-result { --result-heading-size:var(--font-title); --result-text-size:var(--font-small); font-size:var(--result-text-size); }
-.compact-info-heading { display:flex; flex-wrap:nowrap; align-items:center; gap:8px; }
-.result-modal .compact-info-heading h2 { display:flex; flex:1; align-items:center; gap:6px; min-width:0; font-size:var(--result-heading-size); white-space:nowrap; }
-.compact-info-heading h2 span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.compact-info-heading { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.result-modal .compact-info-heading h2 { display:flex; flex:1 1 140px; align-items:center; gap:6px; min-width:0; font-size:var(--result-heading-size); }
+.compact-info-heading h2 span { min-width:0; overflow-wrap:anywhere; }
 .compact-info-heading h2 svg { width:18px; height:18px; flex-shrink:0; align-self:center; color:var(--text-secondary); }
 .compact-info-hours { flex-shrink:0; color:var(--color-warning); font-size:var(--result-text-size); white-space:nowrap; font-variant-numeric:tabular-nums; }
 .compact-info-saved { display:flex; align-items:center; gap:6px; margin:0 0 8px; color:var(--color-positive); font-size:var(--font-small); line-height:1.4; }
 .compact-info-saved svg { width:16px; height:16px; flex-shrink:0; }
-.compact-info-heading .compact-info-saved { display:inline-flex; flex-shrink:0; align-items:center; gap:4px; margin:0; font-size:var(--result-text-size); white-space:nowrap; }
+.compact-info-heading .compact-info-saved { display:inline-flex; flex:0 1 auto; min-width:0; max-width:100%; align-items:center; gap:4px; margin:0; font-size:var(--result-text-size); overflow-wrap:anywhere; }
 .compact-info-heading .compact-info-saved svg { width:14px; height:14px; align-self:center; }
 @media (max-width:360px) {
   .compact-info-result { --result-heading-size:var(--font-title); padding-left:12px; padding-right:12px; }
