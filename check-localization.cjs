@@ -800,7 +800,8 @@ const authoredData=events=>JSON.parse(JSON.stringify(events));
 const authoredMechanics=events=>JSON.parse(JSON.stringify(events,(key,value)=>['title','text','label','message','phoneBreakMessage'].includes(key)?undefined:value));
 const authoredExpected=authoredData(authoredOld.STREET_EVENTS);
 authoredExpected.find(event=>event.id==='quiet-night').choices[0].outcome.message='You get up after a peaceful rest.';
-assert.deepEqual(authoredData(authoredBase.STREET_EVENTS),authoredExpected,'English scene/choice/outcome and metadata preserved apart from the quiet-rest correction');
+authoredExpected.find(event=>event.id==='spare-change').choices.find(choice=>choice.id==='decline').outcome.message='You say you cannot help. They nod and turn to ask someone else.';
+assert.deepEqual(authoredData(authoredBase.STREET_EVENTS),authoredExpected,'English scene/choice/outcome and metadata preserved apart from documented copy corrections');
 assert.deepEqual(authoredMechanics(authoredView.STREET_EVENTS),authoredMechanics(authoredBase.STREET_EVENTS));
 let authoredEligibility=0;
 for(let i=0;i<authoredBase.STREET_EVENTS.length;i++)for(const day of [1,2,3])for(const minutes of [0,239,240,479,480,599,600,1140,1320,1439])for(const locationId of ['street','station'])for(const observation of ['idle','action','arrival']){

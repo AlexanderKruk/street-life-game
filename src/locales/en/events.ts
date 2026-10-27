@@ -132,7 +132,7 @@ export const events = {
   "event.spare-change.choice.give": "Give 1 zł",
   "event.outcome.spare-change.give.complete": "You give them a złoty. They thank you and move on. You check what you have left.",
   "event.spare-change.choice.decline": "Sorry, I can’t",
-  "event.outcome.spare-change.decline.complete": "You say you cannot help. They nod and ask someone further down the pavement.",
+  "event.outcome.spare-change.decline.complete": "You say you cannot help. They nod and turn to ask someone else.",
   "event.spare-change.choice.avoid": "Keep my distance",
   "event.outcome.spare-change.avoid.complete": "You keep your distance and carry on. They do not follow you.",
   "event.dropped-glove.title": "Someone dropped a glove",

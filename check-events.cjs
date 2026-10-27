@@ -98,6 +98,10 @@ for(const id of ['spare-change','dropped-glove','free-snack']){
  for(const minute of [360,1319])assert(onlyScene(id,{minutes:minute,travelMode:'walk'}));
 }
 assert(onlyScene('spare-change',{locationId:'station',minutes:60}));
+for(const [locationId,minutes] of [['station',60],['street',600]]) {
+ const event=onlyScene('spare-change',{locationId,minutes});
+ assert.equal(event.choices.find(choice=>choice.id==='decline').outcome.message,'You say you cannot help. They nod and turn to ask someone else.');
+}
 const rustle=STREET_EVENTS.find(event=>event.id==='night-rustle');
 assert(!/car|bush/i.test(rustle.text),'opening does not locate the sound');
 assert(!/\bcat\b/i.test(JSON.stringify({title:rustle.title,text:rustle.text,icon:rustle.icon,choices:rustle.choices.map(choice=>choice.label)})),'mystery opening must not reveal the cat');
