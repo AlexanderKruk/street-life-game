@@ -2,6 +2,11 @@ const assert=require('node:assert/strict');
 const originalRandom=Math.random;
 require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/foodConsumption.ts'],bundle:true,platform:'node',format:'cjs',outfile:'food-consumption-app.cjs'});
 const {foodConsumption}=require('./food-consumption-app.cjs');
+for(const [kind,name] of [['bread','bread roll'],['readyMeal','ready meal']]) {
+ for(const [freshness,condition,rolls] of [[40,'stale',[0,.95,.99]],[0,'spoiled',[0,.5,.99]]]) {
+  for(const roll of rolls) assert(foodConsumption(kind,freshness,()=>roll).message.startsWith(`You eat a ${condition} ${name}.`));
+ }
+}
 for(const [kind,gains] of [['food',[28,20,10]],['bread',[12,8,4]],['readyMeal',[48,34,16]]]) {
  const fresh=foodConsumption(kind,51,()=>{throw Error('Fresh food must not roll')});assert.equal(fresh.hunger,gains[0]);assert.equal(fresh.mood,kind==='food'?2:0);
  for(const [freshness,gain,expected] of [[50,gains[1],[900,80,20]],[20,gains[2],[250,450,300]]]) {
