@@ -10,9 +10,8 @@ import { responsiveImageProps } from './responsiveImages'
 // Percent coordinates in the 1024×1536 artwork, attached to city blocks and rail buildings.
 
 
-type SceneProps = { places: Location[]; currentId: string; selectedId: string; openFlags: string; onFocus: (id: string) => void }
-const DistrictScene = memo(function DistrictScene({ places, currentId, selectedId, openFlags, onFocus }: SceneProps) {
-  const backdropRef = useRef<HTMLDivElement>(null)
+type SceneProps = { backdropRef: React.RefObject<HTMLDivElement | null>; places: Location[]; currentId: string; selectedId: string; openFlags: string; onFocus: (id: string) => void }
+const DistrictScene = memo(function DistrictScene({ backdropRef, places, currentId, selectedId, openFlags, onFocus }: SceneProps) {
   const sceneRef = useRef<HTMLDivElement>(null)
   const [projection, setProjection] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
   const [labelOffsets, setLabelOffsets] = useState<ReturnType<typeof layoutMapLabels>>({})
@@ -46,9 +45,7 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
   }, [])
   const origin = positions[currentId]
   const target = positions[selectedId]
-  return <div className="district-plot"><div ref={backdropRef} className="district-backdrop">
-      <img {...responsiveImageProps('/street-life-game/assets/city-map-dark.webp')} width="1024" height="1536" alt={t('location.mapAlt')} />
-    </div><div ref={sceneRef} className="district-scene">{projection && <svg className="district-label-links" viewBox={`0 0 ${sceneRef.current?.clientWidth ?? 1} ${sceneRef.current?.clientHeight ?? 1}`} preserveAspectRatio="none" aria-hidden="true">{Object.entries(labelOffsets).map(([id,offset])=>offset.line && <line key={id} {...offset.line}/>)}</svg>}<div className="district-anchors" style={projection ?? undefined}>
+  return <div className="district-plot"><div ref={sceneRef} className="district-scene">{projection && <svg className="district-label-links" viewBox={`0 0 ${sceneRef.current?.clientWidth ?? 1} ${sceneRef.current?.clientHeight ?? 1}`} preserveAspectRatio="none" aria-hidden="true">{Object.entries(labelOffsets).map(([id,offset])=>offset.line && <line key={id} {...offset.line}/>)}</svg>}<div className="district-anchors" style={projection ?? undefined}>
       {origin && target && selectedId !== currentId && <svg className="district-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={`M ${origin[0]} ${origin[1]} C ${origin[0] + (target[0] - origin[0]) * .55} ${origin[1]}, ${origin[0] + (target[0] - origin[0]) * .2} ${target[1]}, ${target[0]} ${target[1]}`} /></svg>}
       {places.map((place, index) => {
         if (place.id === 'street' || place.id === 'shop') return null
@@ -66,6 +63,7 @@ const DistrictScene = memo(function DistrictScene({ places, currentId, selectedI
 export default function CityMap({ places, currentId, initialFocusId, minutes, reservedBed, routeId, onRoute }: {
   places: Location[]; currentId: string; initialFocusId?: string; minutes: number; reservedBed: boolean; routeId: string | null; onRoute: (id: string) => void
 }) {
+  const backdropRef = useRef<HTMLDivElement>(null)
   const [focusedId, setFocusedId] = useState(initialFocusId ?? currentId)
   const selected = places.find(place => place.id === (routeId ?? focusedId)) ?? places.find(place => place.id === currentId) ?? places[0]
   const shop = places.find(place => place.id === 'shop')
@@ -75,13 +73,14 @@ export default function CityMap({ places, currentId, initialFocusId, minutes, re
   const shopHours = shop ? shopOpen ? t('location.map.shopOpen', { open: formatTime(shop.open), close: formatTime(shop.close) }) : t('location.opensAt', { time: formatTime(shop.open) }) : ''
   const openFlags = places.map(place => (place.id === 'shop' ? shopOpen : isOpen(place, minutes)) ? '1' : '0').join('')
   return <section className="district-map" aria-label={t('location.mapAccessible')}>
+    <div ref={backdropRef} className="district-backdrop"><img {...responsiveImageProps('/street-life-game/assets/city-map-dark.webp')} width="1024" height="1536" alt={t('location.mapAlt')} /></div>
     <div className="district-map-heading">
       <div className="district-shortcuts" aria-label={t('location.nearbyAccessible')}>
         <button className={`district-shortcut${selected.id === 'street' ? ' selected' : ''}`} aria-label={locationName('street')} aria-describedby="street-shortcut-hours" onClick={() => { setFocusedId('street'); onRoute('street') }}><Icon name="walk" /><span className="district-shortcut-copy"><span>{locationName('street')}</span><small id="street-shortcut-hours">{t('location.map.openAllDay')}</small></span></button>
         <button className={`district-shortcut${selected.id === 'shop' ? ' selected' : ''}`} aria-label={locationName('shop')} aria-describedby="shop-shortcut-hours" disabled={!shopOpen} onClick={() => { setFocusedId('shop'); onRoute('shop') }}><Icon name="shop" /><span className="district-shortcut-copy"><span>{locationName('shop')}</span><small id="shop-shortcut-hours">{shopHours}</small></span></button>
       </div>
     </div>
-    <DistrictScene places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />
+    <DistrictScene backdropRef={backdropRef} places={places} currentId={currentId} selectedId={selected.id} openFlags={openFlags} onFocus={setFocusedId} />
     {selected.id !== 'street' && selected.id !== 'shop' && <div className="district-card" aria-live="polite">
       <div className="district-place-icon"><Icon name={locationIcon(selected.id)} /></div>
       <div className="district-place-copy"><div className="district-place-heading"><h3>{locationName(selected.id)}</h3><p className={`district-hours ${isOpen(selected, minutes) ? 'open' : 'closed'}`}>{locationHours(selected, 'map')}</p></div><small>{selected.id === 'shelter' ? reservedBed ? t('location.map.shelterReserved') : t('location.map.shelterUnreserved') : locationDescription(selected.id)}</small></div>
