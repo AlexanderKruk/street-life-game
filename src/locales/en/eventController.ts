@@ -7,7 +7,7 @@ export const eventController = {
   "event.theft.cashOnly": "Some cash is gone.",
   "event.theft.documentsOnly": "Your documents are missing.",
   "event.theft.nothing": "You check your things. Nothing appears to be missing.",
-  "event.controller.shelterNotice": "Arrive before 18:00 on Day {day}. Doors open at 18:00; registration starts at 18:20.",
+  "event.controller.shelterNotice": "On Day {day}, join the queue from 08:00 and before 22:00. Registration starts at 18:20; places can fill up.",
   "event.controller.stolen": "Item stolen",
   "event.controller.caught": "Caught stealing",
   "event.controller.full": "Backpack full. You have nowhere to hide the item.",

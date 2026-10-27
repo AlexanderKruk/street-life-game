@@ -288,8 +288,8 @@ for(const known of [false,true])for(const documents of [false,true])for(const in
  assert.equal(read('street-life-discovered-v1').filter(id=>id==='shelter').length,known||index===1?1:0);
  if(index===1){
   assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:3,minute:1080});
-  assert(screen.getByRole('dialog').textContent.includes('Arrive before 18:00 on Day 2'));
-  assert(screen.getByRole('dialog').textContent.includes('registration starts at 18:20'));
+  assert(screen.getByRole('dialog').textContent.includes('On Day 2, join the queue from 08:00 and before 22:00'));
+  assert(screen.getByRole('dialog').textContent.includes('Registration starts at 18:20'));
  }
  const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after,'result pauses time');
  assert.equal(read(encountersKey).pendingId,null);

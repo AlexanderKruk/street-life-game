@@ -675,6 +675,7 @@ const eventPseudo=Object.fromEntries(Object.entries(eventCatalog).map(([key,mess
 const eventView=bundled({source:eventSource,catalogs:{eventController:eventPseudo}});
 function executeEventCopy(view,outcome,condition=100,mutated=false,scenario={}){
  const state={game:{...initialState,day:2,minutes:600},inventory:{...INITIAL_INVENTORY,phoneCondition:condition},message:'',infoModal:null,encounters:{pendingId:'borrow-phone-slip'},firstNightEvents:{pendingId:'borrow-phone-slip'},discoveredLocations:['support'],activeGoal:null,eventResultOpen:false,ports:[]};
+ if (scenario.game) Object.assign(state.game,scenario.game);
  if (scenario.money !== undefined) state.game.money = scenario.money; if (scenario.documents !== undefined) state.inventory.documents = scenario.documents; if (scenario.inventory) Object.assign(state.inventory,scenario.inventory);
  const setter=key=>value=>{state[key]=typeof value==='function'?value(state[key]):value;};
  const session={activeEvent:{id:scenario.eventId ?? 'borrow-phone-slip',title:'Frozen event',illustration:'/fixture.webp'},setActiveEvent:()=>{},diceCheck:null,setDiceCheck:()=>{},firstNightEvents:state.firstNightEvents,setFirstNightEvents:setter('firstNightEvents'),setEncounters:setter('encounters'),ambientEventClock:{current:{}},claimDice:()=>true};
@@ -683,6 +684,15 @@ function executeEventCopy(view,outcome,condition=100,mutated=false,scenario={}){
  const random=Math.random;Math.random=()=>.5;try{controller.applyEventOutcome(mutated?{...outcome,message:'Arbitrary translated wording'}:outcome);return state;}finally{Math.random=random;}
 }
 const slip=eventBase.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure;
+// A discovery before and after the queue closes keeps the existing goal date,
+// while the notice describes the actual queue window even after 18:00.
+const shelterOutcome=eventBase.STREET_EVENTS.find(event=>event.id==='street-patrol-wake').choices.find(choice=>choice.id==='ask-shelter').outcome;
+for(const [minutes,goalDay,displayedDay] of [[1069,2,1],[1070,2,1],[1309,2,1],[1310,3,2]]) {
+ const result=executeEventCopy(eventBase,shelterOutcome,100,false,{eventId:'street-patrol-wake',documents:true,game:{day:2,minutes}});
+ assert.deepEqual(result.activeGoal,{type:'night-shelter',day:goalDay,minute:1080});
+ assert.equal(result.infoModal.presentation.notice,`On Day ${displayedDay}, join the queue from 08:00 and before 22:00. Registration starts at 18:20; places can fill up.`);
+ assert(result.discoveredLocations.includes('shelter'));
+}
 for(const condition of [0,3,5,6,100]){
  const original=executeEventCopy(eventOld,slip,condition),actual=executeEventCopy(eventBase,slip,condition);assert.deepEqual(actual,original);
  const changed=executeEventCopy(eventBase,slip,condition,true);assert.equal(changed.message,condition<=5?slip.phoneBreakMessage:'Arbitrary translated wording');
@@ -739,7 +749,11 @@ assert.equal(storedTheft.message,'You check your things. Nothing appears to be m
 assert.equal(storedTheft.action.eventHistory.documents,'stored');
 const noLossHistory=eventHistoryReflection(storedTheft.action.eventHistory,{costs:[],changes:[]});
 assert.equal(noLossHistory.title,'Checked my belongings');
-for(const outcome of [{message:'fixture'},{message:'fixture',knownLocations:[]},{message:'fixture',knownLocations:['support','station','unknown']},{message:'fixture',discoverLocation:'shelter',minutes:30},{message:'fixture',moveToStreet:true}])assert.deepEqual(executeEventCopy(eventBase,outcome),executeEventCopy(eventOld,outcome));
+for(const outcome of [{message:'fixture'},{message:'fixture',knownLocations:[]},{message:'fixture',knownLocations:['support','station','unknown']},{message:'fixture',discoverLocation:'shelter',minutes:30},{message:'fixture',moveToStreet:true}]) {
+ const actual=executeEventCopy(eventBase,outcome),old=executeEventCopy(eventOld,outcome);
+ if(outcome.discoverLocation==='shelter') old.infoModal.presentation.notice=actual.infoModal.presentation.notice;
+ assert.deepEqual(actual,old);
+}
 console.log('PASS: event controller English parity, knowledge/discovery/movement and broken-phone boundary/translated-message metadata preserve state and History facts.');
 
 const eventRulesSource=`export * from './src/eventChecks'; export * from './src/eventChoiceText'; export * from './src/eventController'; export {default as EventDialog} from './src/EventDialog';`;
