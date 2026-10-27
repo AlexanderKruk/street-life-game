@@ -98,7 +98,7 @@ test('shelter sleep wakes by checkout, reload retains packing and departure happ
   await openGame(page, { ...seed, 'street-life-shelter-departure-v1': 'null',
     [keys.game]: JSON.stringify({ ...game, minutes: 449, energy: 65 }) })
   await page.getByRole('button', { name: /Use your reserved bed/ }).click()
-  await page.getByRole('button', { name: 'Start sleeping', exact: true }).click()
+  await page.getByRole('button', { name: 'Sleep', exact: true }).click()
   await expect(page.getByRole('dialog', { name: 'Sleeping', exact: true })).toBeVisible()
   await advance(page, 2000)
   await expect(page.locator('.result-modal')).toBeVisible()

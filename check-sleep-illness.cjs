@@ -37,7 +37,7 @@ const React=require('react');const {render,screen,fireEvent,act,cleanup}=require
 const effectsKey='street-life-effects-v1',sleepKey='street-life-sleep-v1';const read=k=>JSON.parse(localStorage.getItem(k));
 const flush=()=>fireEvent(window,new window.Event('pagehide'));
 function setup(state={},effects=[]){cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);Math.random=()=>.99;Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});localStorage.setItem(SAVE_KEY,JSON.stringify({...base,minutes:600,rainSystemStarted:true,nextRainAt:999999,...state}));localStorage.setItem(effectsKey,JSON.stringify(effects));localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-mobile-service-until','10000');render(React.createElement(App));flush();}
-function sleep(){fireEvent.click(screen.getByRole('button',{name:/Lie down here/}));fireEvent.click(screen.getByRole('button',{name:'Start sleeping',exact:true}));flush();}
+function sleep(){fireEvent.click(screen.getByRole('button',{name:/Lie down here/}));fireEvent.click(screen.getByRole('button',{name:'Sleep',exact:true}));flush();}
 function step(ms){now+=ms;act(()=>{for(const fn of [...timers.values()])fn()});flush();}
 function reloadApp(){cleanup();render(React.createElement(App));flush();}
 function wake(){Math.random=()=>0;fireEvent.click(screen.getByRole('button',{name:'Wake up (debug)',exact:true}));flush();}
@@ -51,7 +51,7 @@ try{
  const stopped=read(SAVE_KEY);step(5000);assert.deepEqual(read(SAVE_KEY),stopped,'wake illness event pauses time');
  fireEvent.click(screen.getByRole('button',{name:'Got it',exact:true}));assert(!screen.queryByRole('dialog'),'illness replaces competing wake events');
  const expiry=read(effectsKey).find(e=>e.id==='cold').expiresAt;reloadApp();assert(!screen.queryByRole('dialog',{name:'Feeling unwell'}));assert.equal(read(effectsKey).find(e=>e.id==='cold').expiresAt,expiry,'reload neither rerolls illness nor duplicates the event');
- setup({locationId:'station'});fireEvent.click(screen.getByRole('button',{name:/Try to sleep/}));fireEvent.click(screen.getByRole('button',{name:'Start sleeping',exact:true}));wake();assert(screen.getByRole('dialog',{name:'Feeling unwell'}));assert(document.querySelector('.result-illustration').src.endsWith('event-sleep-cold-bench-480.webp'));assert(document.querySelector('.result-illustration').srcset.includes('event-sleep-cold-bench-1024.webp'));
+ setup({locationId:'station'});fireEvent.click(screen.getByRole('button',{name:/Try to sleep/}));fireEvent.click(screen.getByRole('button',{name:'Sleep',exact:true}));wake();assert(screen.getByRole('dialog',{name:'Feeling unwell'}));assert(document.querySelector('.result-illustration').src.endsWith('event-sleep-cold-bench-480.webp'));assert(document.querySelector('.result-illustration').srcset.includes('event-sleep-cold-bench-1024.webp'));
  setup();sleep();Math.random=()=>0;step(24000);const halfway=read(SAVE_KEY);assert.equal(halfway.sleepIllnessMinutes,240);assert(halfway.sleepIllnessDose>0);
  reloadApp();near(read(SAVE_KEY).sleepIllnessDose,halfway.sleepIllnessDose);Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});step(24000);
  assert(screen.getByRole('dialog',{name:'Feeling unwell'}));assert.equal(read(SAVE_KEY).sleepIllnessDose,undefined);const resumed=read(SAVE_KEY);

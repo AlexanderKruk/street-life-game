@@ -1116,8 +1116,19 @@ try {
   for(const kind of ['ground','bench','shelter','residential'])for(const energy of [0,25,50,75,76])for(const wetnessEnabled of [false,true]){
     const day=kind==='ground'?1:2,minutes=kind==='shelter'?420:1320,selectedHours=sleepBase.availableSleepHours(energy).at(-1);
     const options=[2,4,6,8].map(hours=>{const total=kind==='shelter'?sleepBase.shelterSleepMinutes((day-1)*1440+minutes,hours*60):hours*60,wake=(day-1)*1440+minutes+total;return{hours,wake:{day:Math.floor(wake/1440)+1,minutes:wake%1440},unavailableReason:sleepBase.sleepUnavailableReason(hours,energy)};});
-    const show=view=>{cleanup();const selected=[],calls=[];const props={kind,dateLabel:sleepBase.sleepDateLabel(day,minutes),energy,options:options.map(option=>view===sleepLegacy?{...option,wakeLabel:sleepBase.sleepDateLabel(option.wake.day,option.wake.minutes)}:{...option,unavailableReason:view.sleepUnavailableReason(option.hours,energy)}),selectedHours,durationLabel:sleepBase.formatSleepDuration(kind==='shelter'?30:selectedHours*60),wetClothesWarning:true,wetnessEnabled,onSelect:hours=>selected.push(hours),onCancel:()=>calls.push('cancel'),onConfirm:()=>calls.push('confirm')};render(React.createElement(view.SleepPlanningDialog,props));const html=document.body.innerHTML;assert.equal(document.querySelector('.sleep-choice-preview strong').textContent,sleepBase.formatTime(options.find(option=>option.hours===selectedHours).wake.minutes),'wake time does not parse translated separators');const buttons=[...document.querySelectorAll('.sleep-duration-option')],disabled=buttons.map(button=>button.disabled);assert.equal(document.activeElement,buttons[[2,4,6,8].indexOf(selectedHours)]);act(()=>{buttons.forEach(button=>button.click());document.querySelectorAll('.sleep-choice-buttons button').forEach(button=>button.click());});assert.deepEqual(selected,sleepBase.availableSleepHours(energy));assert.deepEqual(calls,['cancel','confirm']);assert.equal(document.querySelector('.sleep-choice-note b'),null);return{html,disabled};};
-    const old=show(sleepLegacy),actual=show(sleepBase),translated=show(sleepView);assert.equal(actual.html,old.html,'English planning DOM preserves text, focus and controls');assert.deepEqual(translated.disabled,actual.disabled);sleepDialogCases++;
+    const show=view=>{
+      cleanup();const selected=[],calls=[];
+      const props={kind,dateLabel:sleepBase.sleepDateLabel(day,minutes),energy,options:options.map(option=>view===sleepLegacy?{...option,wakeLabel:sleepBase.sleepDateLabel(option.wake.day,option.wake.minutes)}:{...option,unavailableReason:view.sleepUnavailableReason(option.hours,energy)}),selectedHours,durationLabel:sleepBase.formatSleepDuration(kind==='shelter'?30:selectedHours*60),wetClothesWarning:true,wetnessEnabled,onSelect:hours=>selected.push(hours),onCancel:()=>calls.push('cancel'),onConfirm:()=>calls.push('confirm')};
+      render(React.createElement(view.SleepPlanningDialog,props));
+      if(view===sleepLegacy)assert.equal(document.querySelector('.sleep-choice-preview strong').textContent,sleepBase.formatTime(options.find(option=>option.hours===selectedHours).wake.minutes),'legacy wake time does not parse translated separators');
+      else assert.equal(document.querySelector('.sleep-choice-preview'),null,'compact planning omits the wake-time prediction');
+      const buttons=[...document.querySelectorAll('.sleep-duration-option')],disabled=buttons.map(button=>button.disabled);
+      assert.equal(buttons.length,4);assert.equal(document.activeElement,buttons[[2,4,6,8].indexOf(selectedHours)]);
+      act(()=>{buttons.forEach(button=>button.click());document.querySelectorAll('.sleep-choice-buttons button').forEach(button=>button.click());});
+      assert.deepEqual(selected,sleepBase.availableSleepHours(energy));assert.deepEqual(calls,['cancel','confirm']);assert.equal(document.querySelector('.sleep-choice-note b'),null);
+      return{disabled};
+    };
+    const old=show(sleepLegacy),actual=show(sleepBase),translated=show(sleepView);assert.deepEqual(actual.disabled,old.disabled,'compact planning preserves legacy duration eligibility');assert.deepEqual(translated.disabled,actual.disabled);sleepDialogCases++;
   }
   const sleepClock=Date.now;Date.now=()=>1800000000000;
   try{

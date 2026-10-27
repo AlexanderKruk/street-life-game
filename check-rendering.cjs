@@ -96,7 +96,7 @@ function measure(App) {
   setup(App, 'location', { locationId: 'station', minutes: 1380, energy: 20 });
   fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ }));
   fireEvent.click(screen.getByRole('button', { name: /^2 h/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Start sleeping', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Sleep', exact: true }));
   clearCounts(); const initialSleep = document.querySelector('.sleep-progress i').style.width;
   advance(3); output.sleep = counts();
   assert.notEqual(document.querySelector('.sleep-progress i').style.width, initialSleep);
@@ -325,7 +325,7 @@ function measure(App) {
   fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ })); advance(3);
   assert.deepEqual([...timers.keys()], sleepClockIds, 'planning pauses without restarting the clock');
   fireEvent.click(screen.getByRole('button', { name: /^2 h/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Start sleeping', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Sleep', exact: true }));
   const beforeSleepMinute = JSON.parse(localStorage.getItem('street-life-save-v3')).minutes;
   Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
   advance(3); assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).minutes, beforeSleepMinute + 30, 'sleep keeps its wall-clock behavior while hidden');

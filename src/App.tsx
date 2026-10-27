@@ -1,5 +1,5 @@
 import { travelPhaseLabel } from './travelText'
-import { formatSleepDuration, sleepDateLabel, sleepUnavailableReason } from './sleepText'
+import { sleepUnavailableReason } from './sleepText'
 import { locationName } from './locationText'
 import { limitReasonsLabel } from './statusPresentation'
 import { t } from './i18n'
@@ -411,7 +411,7 @@ export default function App() {
     insideNightShelter, streetBenchFound, blocked: !!(activeEvent || shelterQueue || shelterDeparture || shelterCheckoutDue || trip || screen === 'travel' || gameOver),
   }, { setGame, setLife, setEffects, setMessage, setInfoModal, setMusicOn, setTrip, setSelectedDestination, setPhoneOpen, setScreen,
     recordShelterDeparture, moodContext, applyAction, resultSnapshot, runWithResult })
-  const { requestSleep, chosenSleepMinutes, wakeTime, sleep, finishSleep, tickSleep, finishRestAction } = sleepController
+  const { requestSleep, sleep, finishSleep, tickSleep, finishRestAction } = sleepController
 
   const { checkUnavailableReason, resolveStreetEvent, rollDice, acceptDiceResult, stealItem } = createEventController(eventSession, {
     game, inventory, storage, life, discoveredLocations, phoneUnavailable, shelterBooked, currentId: current.id, open,
@@ -713,11 +713,11 @@ export default function App() {
     {foodChoice && <FoodChoiceDialog name={foodChoice.name} counts={foodSlot(inventory, foodChoice.kind, foodChoice.slotIndex)} onCancel={cancelFoodChoice} onChoose={chooseFood} />}
     {discardItem && <DiscardDialog name={discardItem.name} quantity={discardItem.quantity} spoiledQuantity={discardItem.spoiledQuantity} onCancel={cancelDiscard} onConfirm={() => confirmDiscard(false)} onDiscardSpoiled={() => confirmDiscard(true)} />}
     {sleepChoice && <SleepPlanningDialog
-      kind={sleepChoice} dateLabel={sleepDateLabel(game.day, game.minutes)} energy={game.energy}
-      options={SLEEP_HOURS.map(hours => ({ hours, wake: wakeTime(hours, sleepChoice), unavailableReason: sleepUnavailableReason(hours, game.energy) }))}
-      selectedHours={sleepHours} durationLabel={formatSleepDuration(chosenSleepMinutes(sleepHours, sleepChoice))}
+      kind={sleepChoice} energy={game.energy}
+      options={SLEEP_HOURS.map(hours => ({ hours, unavailableReason: sleepUnavailableReason(hours, game.energy) }))}
+      selectedHours={sleepHours}
       wetClothesWarning={CLOTHING_WETNESS_ENABLED && (sleepChoice === 'ground' || (sleepChoice === 'bench' && current.id === 'street')) && ((game.wetness ?? 0) > 0 || weather.id === 'Rain' || weather.id === 'Showers')}
-      wetnessEnabled={CLOTHING_WETNESS_ENABLED} onSelect={setSleepHours} onCancel={() => setSleepChoice(null)}
+      onSelect={setSleepHours} onCancel={() => setSleepChoice(null)}
       onConfirm={() => runWithResult({ id: 'sleep-start', title: t('sleep.start.title') }, () => sleep(sleepHours, sleepChoice))}
     />}
     {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}

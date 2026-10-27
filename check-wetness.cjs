@@ -65,7 +65,7 @@ function sleepRun(wetness,resume=false){
  render(React.createElement(App));
  fireEvent.click(screen.getByRole('button',{name:/Lie down here/}));
  fireEvent.click(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:/^2 h/}));
- fireEvent.click(screen.getByRole('button',{name:'Start sleeping',exact:true}));
+ fireEvent.click(screen.getByRole('button',{name:'Sleep',exact:true}));
  if(resume){cleanup();render(React.createElement(App));}
  fireEvent.click(screen.getByRole('button',{name:'Wake up (debug)',exact:true}));
  fireEvent(window,new window.Event('pagehide'));

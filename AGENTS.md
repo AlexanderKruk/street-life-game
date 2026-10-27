@@ -99,8 +99,8 @@ events keep their outer frame clipped and their existing inner content scroller.
 | Sleep in progress | `SleepProgressDialog` |
 | Shelter registration queue | `ShelterQueueDialog` |
 | Morning warning / packing and departure | `ShelterCheckoutWarning` / `ShelterDepartureDialog` |
-| Sleep duration and wake-time planning | `SleepPlanningDialog` |
-| Event answer / action / transport / search / sleep option | `ChoiceButton`, grouped with `ChoiceOptions` |
+| Sleep duration planning | `SleepPlanningDialog`; four compact hour buttons in one row |
+| Event answer / action / transport / search option | `ChoiceButton`, grouped with `ChoiceOptions` |
 | Finished action / discovery / illustrated outcome | `ResultCard` |
 | Inventory choice or confirmation | `InventoryDialog`, `FoodChoiceDialog`, `DiscardDialog` |
 | Phone app and header | `PhoneScreen` |
@@ -767,3 +767,14 @@ without an additional outcome lead or queue timetable. Keep original outcome
 messages/History facts, identity-check costs, map discovery and goal scheduling.
 The single-place ResultCard description uses modal-narrative (Body 16px/400, primary
 text); schedules/map state and numeric costs keep their existing metadata roles.
+
+Sleep planning — 27 October 2026: duration selectors are compact native hour
+buttons (2h/4h/6h/8h), not full narrative ChoiceButton cards. The first row is
+the heading, the second the four hour buttons, and the third is the sleep place
+on the left and current Energy on the right, wrapping if needed. This entire row
+uses Body/400; only the percentage is semibold. Omit predicted wake time,
+repeated duration, outdoor illness/theft warnings, fatigue prose and paused-time eyebrow. Keep disabled
+reasons accessible, selected autofocus, pause/Escape and confirm/cancel behavior.
+The confirm button says Sleep without repeating the selected hours. Keep
+conditional wet-clothing/checkout hints.
+Random early waking remains unimplemented; this is a presentation change only.
