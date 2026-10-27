@@ -285,3 +285,31 @@ test('shelter choice transitions from search to compact waiting and illustrated 
   await expect(page.locator('.result-illustration')).toBeVisible()
   await expect(page.locator('.result-modal')).toContainText('Shelter from the rain')
 })
+
+for (const [name, seed] of [['travel', entries('trip')], ['search', rainySeed('proper', 3)], ['waiting', rainySeed('nearby')]]) {
+  test(`compact ${name} action fits beside text on narrow and desktop screens`, async ({ page }) => {
+      await openGame(page, seed)
+      for (const width of [320, 390, 1280]) {
+        await page.setViewportSize({ width, height: 844 })
+        const panel = page.locator('.activity-with-actions')
+        const metrics = await panel.evaluate(node => {
+          const box = node.getBoundingClientRect()
+          const button = node.querySelector('.activity-cancel').getBoundingClientRect()
+          const text = node.querySelector('.activity-status').getBoundingClientRect()
+          const style = getComputedStyle(node.querySelector('.activity-cancel'))
+          return { overflow: node.scrollWidth > node.clientWidth, panelHeight: box.height, right: box.right,
+            buttonRight: button.right, buttonLeft: button.left, textRight: text.right,
+            width: button.width, height: button.height, colour: style.color, border: style.borderTopColor }
+        })
+        expect(metrics.overflow).toBe(false)
+        expect(metrics.panelHeight).toBeLessThanOrEqual(width === 320 ? 180 : 150)
+        expect(metrics.width).toBe(44)
+        expect(metrics.height).toBe(44)
+        expect(metrics.buttonRight).toBeLessThan(metrics.right)
+        expect(metrics.buttonLeft).toBeGreaterThanOrEqual(metrics.textRight)
+        expect(metrics.colour).toBe('rgb(175, 152, 104)')
+        expect(metrics.border).toBe(metrics.colour)
+        await panel.screenshot({ path: `test-results/activity-layout/${name}-${width}.png`, animations: 'disabled' })
+      }
+  })
+}

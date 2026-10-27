@@ -678,3 +678,27 @@ Seven browser scenarios were added: three travel modes, three restored rain
 stages and full search→wait→result. Browser verification is still in progress;
 full Node suite is reserved for the publication CI gate. The test clock now
 installs before the fixed NOW and pauses at NOW before loading App.
+
+
+## v339 release preflight — 27 October 2026
+
+All16 visual states verified across the initial and focused reruns. Seven
+changed baselines were reviewed: inventory title typography at both widths,
+build footer in Street/Find Help, and tiny compositor/antialias differences
+in mobile Shop/Find Help. No tolerance changes. The first combined visual
+process stalled after12 cases; the remaining and affected states passed in
+focused processes (4mobile+7desktop).
+
+All22 functional Chromium smoke scenarios verified:19 passed in the first
+smoke pass; three new travel tests initially assumed a nav inert attribute
+that journeys do not use. They now assert the existing disabled navigation
+and Cancel focus/Tab behavior; all three passed with their original clock,
+needs/costs, midnight and reload assertions intact.
+
+The three layout variants inspect travel/search/wait at320,390 and1280px,
+including44px ochre outline/X, action beside text, no horizontal overflow and
+bounded card height. Search/wait use natural grid rows to avoid blank height
+when copy wraps. Waiting copy is the whole catalogue message “Waiting out the
+rain”. Production build passed after this final presentation adjustment.
+Full Node suite and release build run in the GitHub Pages publication gate;
+CI outcome is recorded after completion. WebKit/physical iPhone remain unrun.

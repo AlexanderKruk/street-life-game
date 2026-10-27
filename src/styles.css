@@ -148,7 +148,7 @@ footer p { margin:0; }
 .travel-option div { display:flex; flex-direction:column; gap:4px; }
 .travel-option small { color:var(--text-secondary); }
 .travel-screen { display:grid; grid-template-columns:74px minmax(0,1fr); column-gap:14px; row-gap:6px; grid-template-rows:1fr 1fr; align-items:center; }
-.activity-with-actions { grid-template-columns:74px minmax(0,1fr) 44px; }
+.activity-with-actions { grid-template-columns:74px minmax(0,1fr) 44px; grid-template-rows:auto auto; }
 .activity-actions { grid-column:3; grid-row:1 / 3; align-self:center; }
 .rain-canopy { position:absolute; inset:0; width:98px; height:98px; }
 .rain-activity-icon.waiting .travel-walker { width:70px; height:70px; transform:translate(-8px,10px); }

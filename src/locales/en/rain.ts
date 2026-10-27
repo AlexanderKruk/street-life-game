@@ -49,7 +49,7 @@ export const rain = {
   "rain.opening.label": "STREET EVENT",
   "rain.wait.elapsedAccessible": "Elapsed waiting time",
   "rain.wait.searchingPhase": "Looking for shelter",
-  "rain.wait.waitingPhase": "Waiting for the rain to stop",
+  "rain.wait.waitingPhase": "Waiting out the rain",
   "rain.choice.nearby": "Take cover nearby",
   "rain.choice.proper": "Find proper shelter",
   "rain.choice.continue": "Carry on",
