@@ -623,6 +623,10 @@ for(const test of sleepCases){
  assert.deepEqual(actual,old,`sleep frozen parity: ${test.method}/${test.kind}/${test.total}`);assert.deepEqual(sleepMechanics(translated),sleepMechanics(actual),`sleep pseudo mechanics: ${test.method}`);
  if(test.method==='finishSleep'){assert.equal(actual.results.length,1);const rejected=executeSleep(sleepView,test,false);assert.equal(rejected.draws,0);assert.equal(rejected.results.length,0);}
 }
+const quietAtCap=executeSleep(sleepBase,{method:'presentWakeEvent',args:[STREET_EVENTS.find(event=>event.id==='quiet-night'),'Sleep complete','Rest complete.'],kind:'ground',patch:{game:{energy:100}}});
+assert.equal(quietAtCap.game.energy,100,'quiet rest cannot exceed the energy cap');
+assert(quietAtCap.infoModal.text.includes('You get up after a peaceful rest.'));
+assert(!quietAtCap.infoModal.text.includes('more strength'));
 console.log(`PASS: ${sleepCases.length} frozen/pseudo sleep commands preserve eligibility, fatigue, dates/cutoff, forced sleep, recovery/illness, RNG, wake scenes, History and once-only guards.`);
 
 const {rain:rainCatalog}=bundled('src/locales/en/rain.ts');
@@ -764,7 +768,9 @@ assert.deepEqual(validateCatalog(authoredCatalog,authoredPseudo),[]);
 const authoredView=bundled({source:authoredSource,catalogs:{events:authoredPseudo}});
 const authoredData=events=>JSON.parse(JSON.stringify(events));
 const authoredMechanics=events=>JSON.parse(JSON.stringify(events,(key,value)=>['title','text','label','message','phoneBreakMessage'].includes(key)?undefined:value));
-assert.deepEqual(authoredData(authoredBase.STREET_EVENTS),authoredData(authoredOld.STREET_EVENTS),'all English scene/choice/outcome and metadata bytes preserved');
+const authoredExpected=authoredData(authoredOld.STREET_EVENTS);
+authoredExpected.find(event=>event.id==='quiet-night').choices[0].outcome.message='You get up after a peaceful rest.';
+assert.deepEqual(authoredData(authoredBase.STREET_EVENTS),authoredExpected,'English scene/choice/outcome and metadata preserved apart from the quiet-rest correction');
 assert.deepEqual(authoredMechanics(authoredView.STREET_EVENTS),authoredMechanics(authoredBase.STREET_EVENTS));
 let authoredEligibility=0;
 for(let i=0;i<authoredBase.STREET_EVENTS.length;i++)for(const day of [1,2,3])for(const minutes of [0,239,240,479,480,599,600,1140,1320,1439])for(const locationId of ['street','station'])for(const observation of ['idle','action','arrival']){

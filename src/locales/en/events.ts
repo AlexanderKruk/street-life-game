@@ -122,7 +122,7 @@ export const events = {
   "event.quiet-night.title": "Peaceful rest",
   "event.quiet-night.text": "For once, you get some rest without trouble.",
   "event.quiet-night.choice.get-up": "Get up",
-  "event.outcome.quiet-night.get-up.complete": "You get up with a little more strength after a peaceful rest.",
+  "event.outcome.quiet-night.get-up.complete": "You get up after a peaceful rest.",
   "event.night-theft.title": "While you were asleep",
   "event.night-theft.text": "You wake up and notice that someone went through your things.",
   "event.night-theft.choice.check-bag": "Check my things",
