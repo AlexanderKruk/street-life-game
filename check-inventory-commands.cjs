@@ -99,6 +99,13 @@ assert.deepEqual(foodPortions(collected.inventory, 'food'), [80, 100, 40, 0, 25,
 assert.equal(collected.storage.food, 0);
 noChange({ ...shelf, locationId: 'shelter' }, { type: 'store-food' });
 noChange(context({ locationId: 'residential-shelter', inventory: { medicines: 32 }, storage: { food: 1 } }), { type: 'take-food' }, 'Backpack full.');
+// The shelf accepts the backpack's Food category, not the other food types.
+const otherFood = context({ locationId: 'residential-shelter', inventory: { food: 0, bread: 1, cannedFood: 1, readyMeal: 1 } });
+noChange(otherFood, { type: 'store-food' });
+const mixedFood = context({ locationId: 'residential-shelter', inventory: { food: 1, bread: 1, cannedFood: 1, readyMeal: 1 } });
+const storedMixed = run(mixedFood, { type: 'store-food' }).next;
+assert.equal(storedMixed.storage.food, 1);
+for (const id of ['bread', 'cannedFood', 'readyMeal']) assert.equal(storedMixed.inventory[id], 1);
 
 const bottles = run(context({ inventory: { bottles: 3 } }), { type: 'return-bottles' });
 assert.deepEqual(bottles.changes.action, { minutes: 5, money: 1.5 });
