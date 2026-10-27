@@ -29,7 +29,8 @@ Math.random=()=>.4;click(/Is there a bench nearby/);ok();Math.random=()=>.4;clic
 assert(screen.getByRole('dialog').textContent.includes('Making a bed on a bench'));
 assert(!read('street-life-discovered-v1').includes('shelter'));
 click('Ask how they get through the night');
-assert(screen.getByRole('dialog').textContent.includes('You explain that you have nowhere'));
+assert.equal(screen.getByRole('dialog').querySelector('.result-description').textContent,'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.');
+assert.equal(screen.getByRole('dialog').querySelectorAll('.result-description').length,1,'bench shelter discovery uses one shared service paragraph');
 assert(read('street-life-discovered-v1').includes('shelter'));
 assert.deepEqual(read('street-life-goal-v1'),{type:'night-shelter',day:2,minute:1080});ok();
 
