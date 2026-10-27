@@ -160,7 +160,9 @@ try {
  setup({locationId:'shelter',day:2,minutes:449},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7,shelterLastStayDay:1},'street-life-mobile-service-until':'5000'});
  click('Phone');click('Find Help');Math.random=()=>.34;fireEvent.click(screen.getByRole('button',{name:'Work',exact:true}));advance(1000);
  assert(!read('street-life-phone-activity-v1'));assert.equal(screen.getAllByRole('dialog').length,1);
- assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));ok();
+ assert(screen.getByRole('dialog').textContent.includes('Search interrupted'));
+ const interruption=read('street-life-journal-history-v1').find(entry=>entry.actionId==='search-interrupted');
+ assert.equal(interruption.text,'I didn’t find the answer I was looking for. I still need to find out.');ok();
  assert(screen.getByRole('dialog',{name:'Leave the night shelter'}));
  console.log('PASS: Phone apps, migration, offline notes, plan payment, indoor timed search/reload, work/clinic discovery, dead-phone travel, service expiry.');
 } finally { cleanup();dom.window.close(); }

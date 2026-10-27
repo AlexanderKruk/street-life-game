@@ -58,7 +58,7 @@ export const actionHistory = {
   "history.action.call-interrupted.moodNegative": "I feel unsettled. I need a moment to work out what to do next.",
   "history.action.call-interrupted.moodPositive": "I feel a little steadier. Right now, that matters.",
   "history.action.search-interrupted.title": "Search interrupted",
-  "history.action.search-interrupted.neutral": "I was so close to finding an answer. I feel more cut off now.",
+  "history.action.search-interrupted.neutral": "I didn’t find the answer I was looking for. I still need to find out.",
   "history.action.mobile-service.title": "Mobile service",
   "history.action.mobile-service.neutral": "",
   "history.action.mobile-service.moodNegative": "I feel unsettled. I need a moment to work out what to do next.",

@@ -191,6 +191,7 @@ for (const [id,title] of Object.entries(actionTitles)) for (const summary of act
   const expected=walkEdited(oldReflection(title,'',summary));
   if(id==='question:clinic') expected.text='I know where I can ask for medical care when I need it.';
   if(id==='question:charging') expected.text='I remember where I can charge my phone when I need to.';
+  if(id==='search-interrupted') expected.text='I didn’t find the answer I was looking for. I still need to find out.';
   assert.deepEqual(actionHistoryReflection({id,title:'⟦translated heading⟧'},summary),expected,id);
 }
 function actionCase(id,facts,report,title=actionTitles[id],memoryId) {
@@ -236,6 +237,10 @@ assert.equal(chargingAction.text,'I feel less cut off. This phone is my link to 
 assert.notEqual(chargingMemory.groupId,chargingAction.groupId);
 const oldCharging={day:2,minute:700,actionId:'question:charging',actionTitle:'Where can I charge my phone?',reflection:true,...chargingMemory,text:chargingAction.text,groupId:chargingAction.groupId};
 assert.deepEqual(loadJournalEntries([oldCharging]),[oldCharging],'saved charging memories retain their text and group');
+const interruptedSearch=journalPresentation({id:'search-interrupted',title:'Search interrupted'});
+assert.equal(interruptedSearch.text,'I didn’t find the answer I was looking for. I still need to find out.');
+const oldInterrupted={day:2,minute:700,actionId:'search-interrupted',actionTitle:'Search interrupted',reflection:true,...interruptedSearch,text:'I was so close to finding an answer. I feel more cut off now.'};
+assert.deepEqual(loadJournalEntries([oldInterrupted]),[oldInterrupted],'saved interruption text stays unchanged');
 const borrowLend=journalPresentation({id:'event:borrow-phone',title:'One quick call',eventHistory:{outcomeId:'borrow-phone:lend:complete',documents:'carried',suppliesRejected:false}});
 const borrowDecline=journalPresentation({id:'event:borrow-phone',title:'One quick call',eventHistory:{outcomeId:'borrow-phone:decline:complete',documents:'carried',suppliesRejected:false}});
 assert.notEqual(borrowLend.groupId,borrowDecline.groupId,'declining must not group with helping');
