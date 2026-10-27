@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.25-335`.
+**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.27-336`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
