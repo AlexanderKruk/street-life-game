@@ -676,6 +676,23 @@ for(const condition of [0,3,5,6,100]){
  const pseudoSlip=eventView.STREET_EVENTS.find(event=>event.id==='borrow-phone-slip').choices[0].check.failure,translated=executeEventCopy(eventView,pseudoSlip,condition,true);
  assert.equal(translated.inventory.phoneCondition,actual.inventory.phoneCondition);assert.deepEqual(translated.action.eventHistory,actual.action.eventHistory);
 }
+// A patrol's document state controls the complete report, extra time and History,
+// independently of which of the three choices the player makes.
+for(const eventId of ['street-patrol-wake','station-patrol-wake']) {
+ const event=eventBase.STREET_EVENTS.find(event=>event.id===eventId);
+ for(const choice of event.choices) for(const [documents,stored,key] of [[true,false,'carried'],[false,true,'stored'],[false,false,'missing']]) {
+  const result=executeEventCopy(eventBase,choice.outcome,100,false,{eventId,documents,stored});
+  assert.equal(result.message,t(`event.identity.${key}`,{outcome:choice.outcome.message}));
+  assert.equal(result.game.minutes,600+choice.outcome.minutes+(documents?0:10));
+  assert.equal(result.inventory.documents,documents);
+  assert.equal(result.action.eventHistory.documents,key);
+  const reflection=eventHistoryReflection(result.action.eventHistory,{costs:[],changes:[]});
+  if(key==='stored')assert.equal(reflection.text,'My papers are safe at the shelter. I wish I had them with me for that conversation.');
+  if(key==='missing')assert.equal(reflection.text,'I felt exposed having to explain my missing documents. I need to get them sorted out.');
+  if(choice.outcome.moveToStreet)assert.equal(result.game.locationId,'street');
+  if(choice.outcome.discoverLocation)assert(result.discoveredLocations.includes(choice.outcome.discoverLocation));
+ }
+}
 const neighbourGift=eventBase.STREET_EVENTS.find(event=>event.id==='first-night-door').choices.find(choice=>choice.id==='explain').outcome;
 for(const [inventory, food, water, message] of [
  [{medicines:32,food:0,water:0},0,0,'There was no backpack room for 1 portion of food and 1 portion of water.'],
