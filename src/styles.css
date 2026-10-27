@@ -1225,7 +1225,7 @@ body:has(.map-screen) { min-height:100dvh; }
 
 /* Phone launcher and apps share the existing game typography and navigation. */
 .phone-shell .game-header { margin-bottom:4px; }
-.phone-screen { min-width:0; }
+.phone-screen { min-width:0; overflow-wrap:anywhere; }
 .phone-screen-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; min-height:44px; margin:0 0 14px; padding:0; border-bottom:1px solid #2b3742; }
 .phone-home-header { margin-bottom:0; }
 .phone-home-header + .phone-app-grid { margin-top:16px; }
@@ -1255,8 +1255,8 @@ body:has(.map-screen) { min-height:100dvh; }
 .phone-unavailable { padding:36px 12px; text-align:center; color:var(--text-secondary); font-size:var(--font-small); line-height:1.5; }
 .phone-unavailable > svg { width:36px; height:36px; color:var(--text-muted); }
 .phone-unavailable h3 { color:var(--text-primary); font-size:var(--font-body); margin:14px 0 8px; }
-.phone-notes-list, .phone-search-list { display:grid; gap:10px; }
-.phone-note { margin:0; padding:12px; border:1px solid #2f3c48; border-radius:10px; background:#151e26; }
+.phone-notes-list, .phone-search-list { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+.phone-note { min-width:0; margin:0; padding:12px; border:1px solid #2f3c48; border-radius:10px; background:#151e26; }
 .phone-note-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 10px; margin-bottom:6px; }
 .phone-note-heading h3 { margin:0; font-size:var(--font-body); font-weight:var(--weight-semibold); }
 .phone-note-meta { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; color:var(--text-secondary); font-size:var(--font-small); margin-bottom:7px; }
