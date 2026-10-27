@@ -1,6 +1,6 @@
 # Тестирование Street Life
 
-Обновлено: 27 октября 2026. Проверенная игровая база: **v336**.
+Обновлено: 27 октября 2026. Проверенная игровая база: **v339**.
 
 Документ описывает существующие проверки и план их развития. Правила для
 агентов — в [AGENTS.md](AGENTS.md), механики — в
@@ -702,3 +702,18 @@ when copy wraps. Waiting copy is the whole catalogue message “Waiting out the
 rain”. Production build passed after this final presentation adjustment.
 Full Node suite and release build run in the GitHub Pages publication gate;
 CI outcome is recorded after completion. WebKit/physical iPhone remain unrun.
+
+
+## v339 publication completed — 27 October 2026
+
+GitHub Actions run40583666469 succeeded:29/29 Node suites passed in135.22s,
+production build and Pages deployment both succeeded. Release commit:
+e9fb4a0b3e21991efa44c1d3a6bfb79f71e4ce5e. The live page was fetched and served
+assets/index-B8m4vyfW.js with v2026.10.27-339, activity-cancel and the final
+Waiting out the rain catalogue message.
+
+Browser coverage now totals41 cases (16visual,22functional smoke and3layout).
+Verification was completed in the initial and focused passes documented above;
+no claim of a single uninterrupted41-case pass. All three final layout tests
+passed at320/390/1280px after the natural-row adjustment (search/wait144px at
+320px,116px at390px,126px desktop). WebKit and physical iPhone were not run.

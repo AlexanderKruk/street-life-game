@@ -16,3 +16,9 @@ git fetch .backup/activity-2026-10-27.bundle refs/heads/backup/activity-2026-10-
 
 This source checkpoint alone does not publish a release. v339 is a later
 commit and follows the existing Node-check/build/Pages gate.
+
+Published v339: e9fb4a0b3e21991efa44c1d3a6bfb79f71e4ce5e.
+The release tree8cdccdc8853fd1529d650756df854c2f0453f473 matched local
+83241237dbf5777ad8957081401b7790cbcf2a3a exactly before publishing.
+CI run40583666469 passed all29 Node suites/build/Pages; the live bundle
+index-B8m4vyfW.js was checked for v2026.10.27-339.
