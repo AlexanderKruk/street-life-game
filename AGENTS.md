@@ -64,6 +64,9 @@ Linux environment are documented there; do not claim unrun CI or WebKit checks.
   Body/400; Notes prose uses primary text. `choice-description` marks readable
   action copy inside `ChoiceButton`; keep times, hours, prices, effect chips
   and short metadata Small in secondary/muted text. Titles use Title/600.
+- Every modal's main description, service prose, practical notice and expanded
+  full answer use Body/400, including compact ResultCard variants and lists of
+  discovered places. Compact layouts must not shrink these paragraphs to Small.
 - Keep charcoal surfaces, off-white primary text and cool gray secondary text.
   Positive sage is `--color-positive` (#7f9b87); warning/selected ochre is
   `--color-warning` (#af9868). Use their surface/border tokens. Preserve the
