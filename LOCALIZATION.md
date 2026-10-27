@@ -1223,3 +1223,20 @@ check-localization, rendering, regression/map-travel, module boundaries(157),
 design-system, build and diff checks passed. Baselines/full suites/WebKit/iPhone
 unrun. Remaining specialised-modal matrix and rain-art time context stay open.
 No publication; v335 unchanged.
+
+
+## Проверка длинного текста в диалогах — 27 октября 2026
+
+В Chromium проверены EventDialog, ResultCard, DiscardDialog, FoodChoiceDialog и
+TravelPlanningDialog с длинными тестовыми строками и длинным словом без пробелов
+на 320×568, 390×844 и 850×390. Длинный заголовок результата и удлинённая
+подпись длительности действий вызывали горизонтальное переполнение. Общая
+панель теперь допускает перенос длинных слов; подпись длительности ограничена
+по ширине и переносится с выравниванием вправо. После исправления ширина
+содержимого панелей совпадает с доступной во всех 15 проверенных состояниях.
+Размеры шрифтов, механики и переводы не менялись.
+
+check-localization, check-design-system, check-rendering и production build прошли. Это ограниченная проверка пяти представлений: прочие
+специализированные модалки, визуальные эталоны, WebKit/iPhone и контекст
+иллюстраций дождя остаются открытыми. Полные наборы не запускались; публикации
+не было.

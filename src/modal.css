@@ -48,6 +48,7 @@ html:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) { overflow:hidde
   position:relative;
   width:min(var(--modal-width),100%);
   min-width:0;
+  overflow-wrap:anywhere;
   max-height:calc(100dvh - var(--modal-inset) * 2 - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
   overflow:auto;
   overscroll-behavior:contain;
