@@ -1,0 +1,2 @@
+/* Ignore release numbers in visual baselines; keep their layout space intact. */
+.header-version { visibility: hidden !important; }

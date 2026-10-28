@@ -793,3 +793,18 @@ History and horizontal fit. Both passed. Existing phone/localisation checks,
 design-system, module boundaries and production build passed; a narrow-screen
 visual inspection covered phone home, Settings and Russian Language. No full
 suites, baseline updates, WebKit, physical iPhone or deployment in this pass.
+
+## Release verification — v342
+
+Production build passed. All 27 Chromium smoke scenarios passed, including both
+language-switching cases at 320/1280 with unchanged game/inventory/History.
+At the user's request, visual.spec.js now applies screenshot.css only while
+capturing baselines: .header-version is invisible but keeps its layout space.
+The game still displays its version normally. Five baselines were individually
+reviewed and updated to remove only the version text; the complete 16-case
+visual suite then passed. A separate check at 390/1280 replaced v342 with
+v99999 and confirmed identical screenshot pixels while the live version stayed
+visible. Future version bumps do not require baseline updates for this label.
+The full 30-script Node suite and release build run in the GitHub Pages gate.
+Polish/Russian translations remain partial as stated in Settings. WebKit and
+physical iPhone remain unverified.

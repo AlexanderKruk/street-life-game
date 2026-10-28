@@ -37,6 +37,9 @@ for (const [name, prepare] of Object.entries(states)) {
   test(name, async ({ page }) => {
     await prepare(page)
     await readyForScreenshot(page)
-    await expect(page).toHaveScreenshot(`${name}.png`)
+    await expect(page).toHaveScreenshot(`${name}.png`, {
+      // Release numbers do not represent a visual change to the game.
+      stylePath: 'tests/browser/screenshot.css',
+    })
   })
 }
