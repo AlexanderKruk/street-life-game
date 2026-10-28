@@ -592,9 +592,15 @@ for(const energy of [0,25,25.01,50,50.01,75,75.01,100])for(const hours of [1,2,4
  assert.equal(sleepBase.sleepUnavailableReason(hours,energy),sleepLegacy.sleepDurationUnavailable(hours,energy));
  assert.equal(sleepView.sleepUnavailableReason(hours,energy)===null,sleepBase.sleepDurationBlock(hours,energy)===null);
 }
+const approvedSleepCopy = new Map();
 for(const total of [0,30,60,90,120,450,480])for(const wet of [false,true])for(const ill of [false,true]){
  const hours=total/60,duration=Number.isInteger(hours)?`${hours} hour${hours===1?'':'s'}`:sleepBase.formatTravelTime(total);
- assert.equal(sleepBase.sleepCompletionText(total,wet,ill),`You slept for ${duration}.${wet?' Wet clothes made it harder to rest.':''}${ill?' Your throat feels sore, your nose is blocked, and a chill runs through you as you sit up. You feel unwell — you have caught a cold.':''}`);
+ const legacy=`You slept for ${duration}.${wet?' Wet clothes made it harder to rest.':''}${ill?' Your throat feels sore, your nose is blocked, and a chill runs through you as you sit up. You feel unwell — you have caught a cold.':''}`;
+ const expected=ill
+  ? wet ? `You slept for ${duration}, though wet clothes made it harder to rest. You wake with a sore throat and a cold.` : `You slept for ${duration}. You wake with a sore throat and a cold.`
+  : `You slept for ${duration}.${wet?' Wet clothes made it harder to rest.':''}`;
+ approvedSleepCopy.set(legacy,expected);
+ assert.equal(sleepBase.sleepCompletionText(total,wet,ill),expected);
 }
 const sleepCases=[];
 for(const kind of ['ground','bench','shelter','residential']){
@@ -633,6 +639,10 @@ function executeSleep(view,test,accepted=true){
 function sleepMechanics(state){const{message,infoModal,results,...mechanics}=state;return{...mechanics,infoModal:infoModal?{illustration:infoModal.illustration}:null,results:results.map(({title,journal,...result})=>({...result,journal:{decisionId:journal.decisionId,groupId:journal.groupId}}))};}
 for(const test of sleepCases){
  const old=executeSleep(sleepLegacy,test),actual=executeSleep(sleepBase,test),translated=executeSleep(sleepView,test);
+ // Apply only the approved wording change to the frozen expectation. State,
+ // History, timing, illness/RNG, artwork and completion guards still compare in full.
+ old.message=approvedSleepCopy.get(old.message)??old.message;
+ if(old.infoModal)old.infoModal.text=approvedSleepCopy.get(old.infoModal.text)??old.infoModal.text;
  assert.deepEqual(actual,old,`sleep frozen parity: ${test.method}/${test.kind}/${test.total}`);assert.deepEqual(sleepMechanics(translated),sleepMechanics(actual),`sleep pseudo mechanics: ${test.method}`);
  if(test.method==='finishSleep'){assert.equal(actual.results.length,1);const rejected=executeSleep(sleepView,test,false);assert.equal(rejected.draws,0);assert.equal(rejected.results.length,0);}
 }
@@ -650,11 +660,72 @@ const rainSource=rainShared+`export * from './src/rain'; export * from './src/ra
 const rainBase=bundled({source:rainSource}),rainView=bundled({source:rainSource,catalogs:{rain:pseudoRain}});
 const rainLegacy=bundled({source:rainShared+`export * from './test-fixtures/rain-copy'; export * from './test-fixtures/useRainController-copy'; export {default as RainEventDialog} from './test-fixtures/RainEventDialog-copy';`});
 function rainFixture(level='rain',patch={}){return{id:'rain:2040',level,start:2040,end:2100,choice:null,searchRemaining:0,protection:.5,shelter:level==='rain'?'tree':'canopy',exposure:40,energyLoss:4.44,moodLoss:2.55,waited:30,coldRoll:.99,...patch};}
+// Approved reports replace the old prose while the frozen numerical/risk checks remain.
+const rainResultExpectations = {
+  "drizzle": {
+    "stoppedSearch": [
+      "The drizzle stops before you find cover.",
+      "The drizzle stops before you find cover. Your throat feels sore — you’ve caught a cold."
+    ],
+    "nearby": [
+      "You wait under a small awning until the drizzle stops. A few drops still reach you.",
+      "You wait under a small awning until the drizzle stops. A few drops still reach you. You’ve caught a cold."
+    ],
+    "proper": [
+      "You find a covered passage and wait in the dry until the drizzle stops.",
+      "You find a covered passage and wait in the dry until the drizzle stops. Your throat feels sore — you’ve caught a cold."
+    ],
+    "continue": [
+      "The drizzle stops. For now, there is a break in the rain.",
+      "The drizzle stops. Your throat feels sore — you’ve caught a cold."
+    ]
+  },
+  "rain": {
+    "stoppedSearch": [
+      "The rain stops before you find cover.",
+      "The rain stops before you find cover. Your throat feels sore — you’ve caught a cold."
+    ],
+    "nearby": [
+      "You wait under a tree until the rain stops. Drops still fall through the leaves.",
+      "You wait under a tree until the rain stops. Drops still fall through the leaves. You’ve caught a cold."
+    ],
+    "proper": [
+      "You wait in a dry covered passage until the rain stops.",
+      "You wait in a dry covered passage until the rain stops. Your throat feels sore — you’ve caught a cold."
+    ],
+    "continue": [
+      "The steady rain finally stops. Water still drips from roofs and trees.",
+      "The rain stops. Your throat feels sore — you’ve caught a cold."
+    ]
+  },
+  "downpour": {
+    "stoppedSearch": [
+      "The downpour ends before you find cover.",
+      "The downpour ends before you find cover. Your throat feels sore — you’ve caught a cold."
+    ],
+    "nearby": [
+      "You wait under a small awning, but rain still reaches you. At last, the downpour passes.",
+      "You wait under a small awning, but rain still reaches you. When the downpour passes, your throat feels sore. You’ve caught a cold."
+    ],
+    "proper": [
+      "Hood up, you wait in a dry covered passage until the downpour passes.",
+      "Hood up, you wait in a dry covered passage until the downpour passes. Your throat feels sore — you’ve caught a cold."
+    ],
+    "continue": [
+      "The downpour finally passes. Water runs along the kerb.",
+      "The downpour passes. Your throat feels sore — you’ve caught a cold."
+    ]
+  }
+};
 let rainRuleCases=0;
 for(const level of ['drizzle','rain','downpour']){
  const {title,text,...numbers}=rainLegacy.RAIN[level];assert.deepEqual(rainBase.RAIN[level],numbers);assert.deepEqual(rainView.RAIN[level],numbers);assert.deepEqual(rainBase.rainOpening(level),{title,text});
  for(const choice of [null,'nearby','proper','continue'])for(const searchRemaining of [0,1,5])for(const newlyCold of [false,true]){
-  const rain=rainFixture(level,{choice,searchRemaining});if(choice!==null&&choice!=='continue')assert.equal(rainBase.rainResultText(rain,newlyCold),rainLegacy.rainResultText(rain)+(newlyCold?' A chill lingers, and your throat feels sore. You have caught a cold.':''));else assert(!/walk|boots|jacket|nuisance/i.test(rainBase.rainResultText(rain,newlyCold)));assert(/\bI[’ ]|\bmy\b|\bme\b/.test(rainBase.rainHistoryText(rain,newlyCold)));assert(!/\byou(?:r)?\b/i.test(rainBase.rainHistoryText(rain,newlyCold)));assert.equal(rainView.rainHistoryText(rain,newlyCold),'');
+  const rain=rainFixture(level,{choice,searchRemaining});
+  const report=choice==='proper'&&searchRemaining>0?'stoppedSearch':choice??'continue';
+  assert.equal(rainBase.rainResultText(rain,newlyCold),rainResultExpectations[level][report][Number(newlyCold)]);
+  if(choice===null||choice==='continue')assert(!/walk|boots|jacket|nuisance/i.test(rainBase.rainResultText(rain,newlyCold)));
+  assert(/\bI[’ ]|\bmy\b|\bme\b/.test(rainBase.rainHistoryText(rain,newlyCold)));assert(!/\byou(?:r)?\b/i.test(rainBase.rainHistoryText(rain,newlyCold)));assert.equal(rainView.rainHistoryText(rain,newlyCold),'');
   const actionId=choice==='proper'&&searchRemaining>0?'rain-stopped':choice==='continue'?'rain-passed':'rain-cover';assert.equal(rainBase.rainResultActionId(rain),actionId);assert.equal(rainView.rainResultActionId(rain),actionId);assert.equal(rainView.rainResultText(rain,newlyCold),'');rainRuleCases++;
  }
  for(const exposure of [0,20,21,40,60,100])assert.equal(rainBase.rainRisk(rainFixture(level,{exposure})),rainLegacy.rainRisk(rainFixture(level,{exposure})));
@@ -817,6 +888,29 @@ const authoredMechanics=events=>JSON.parse(JSON.stringify(events,(key,value)=>['
 const authoredExpected=authoredData(authoredOld.STREET_EVENTS);
 authoredExpected.find(event=>event.id==='quiet-night').choices[0].outcome.message='You get up after a peaceful rest.';
 authoredExpected.find(event=>event.id==='spare-change').choices.find(choice=>choice.id==='decline').outcome.message='You say you cannot help. They nod and turn to ask someone else.';
+const revisedPatrols = {
+  "street-patrol-wake": {
+    "text": "A police officer wakes you. “Are you alright? Please sit up and show us your documents.” You reach for your backpack.",
+    "outcomes": {
+      "answer": "You tell the officer you’re alright. The patrol moves on, and you keep your backpack close.",
+      "ask-shelter": "You explain that you have nowhere to stay. The officer gives you directions to Night Shelter.",
+      "leave": "You gather your backpack and move further along the street, still tired."
+    }
+  },
+  "station-patrol-wake": {
+    "text": "A police officer wakes you on the bench. “Please sit up. Your documents, please. Do you have a train ticket?” You pull your backpack closer.",
+    "outcomes": {
+      "answer": "You explain that you have no train ticket. The officer asks you to sit upright and leave room for others, then moves on.",
+      "ask-seat": "You explain that you have no train ticket. The officer points out where you can sit, and you move there with your backpack.",
+      "leave": "You explain that you have no train ticket, collect your backpack and step out into the street."
+    }
+  }
+};
+for(const [id,copy] of Object.entries(revisedPatrols)) {
+ const event=authoredExpected.find(event=>event.id===id);
+ event.text=copy.text;
+ for(const choice of event.choices)choice.outcome.message=copy.outcomes[choice.id];
+}
 assert.deepEqual(authoredData(authoredBase.STREET_EVENTS),authoredExpected,'English scene/choice/outcome and metadata preserved apart from documented copy corrections');
 assert.deepEqual(authoredMechanics(authoredView.STREET_EVENTS),authoredMechanics(authoredBase.STREET_EVENTS));
 let authoredEligibility=0;
@@ -827,8 +921,14 @@ for(let i=0;i<authoredBase.STREET_EVENTS.length;i++)for(const day of [1,2,3])for
  for(const trigger of ['location','travel','wake','walk','bench']){const scoped={...context,seenEventIds:authoredBase.STREET_EVENTS.filter(e=>e.id!==actual.id).map(e=>e.id)};assert.equal(authoredBase.nextStreetEvent(trigger,scoped)?.id,authoredOld.nextStreetEvent(trigger,scoped)?.id);assert.equal(authoredView.nextStreetEvent(trigger,scoped)?.id,authoredBase.nextStreetEvent(trigger,scoped)?.id);}authoredEligibility++;
 }
 for(const documents of [false,true])for(const stored of [false,true])for(const roll of [0,.09999,.1,.24999,.25,.99999,1])for(const outcome of [{message:'Frozen result',identityCheck:true,minutes:5},{message:'Frozen result',randomCoin:true},{message:'Frozen result',identityCheck:true,randomCoin:true}]){
- assert.deepEqual(authoredBase.resolveEventOutcome(outcome,()=>roll,documents,stored),authoredOld.resolveEventOutcome(outcome,()=>roll,documents,stored));
- const actual=authoredBase.resolveEventOutcome(outcome,()=>roll,documents,stored),translated=authoredView.resolveEventOutcome(outcome,()=>roll,documents,stored);assert.deepEqual({...translated,message:undefined},{...actual,message:undefined});
+ const old=authoredOld.resolveEventOutcome(outcome,()=>roll,documents,stored);
+ if(outcome.identityCheck&&!outcome.randomCoin) {
+  const prefix=documents?'The officer checks your documents and hands them back.':stored?'Your documents are stored at the shelter, so checking your details takes longer.':'Your documents are missing, so checking your details takes longer.';
+  old.message=`${prefix} ${outcome.message}`;
+ }
+ const actual=authoredBase.resolveEventOutcome(outcome,()=>roll,documents,stored),translated=authoredView.resolveEventOutcome(outcome,()=>roll,documents,stored);
+ assert.deepEqual(actual,old);
+ assert.deepEqual({...translated,message:undefined},{...actual,message:undefined});
 }
 console.log(`PASS: 25 authored scenes preserve exact English data, ${authoredEligibility} eligibility/spawn contexts, empty-copy mechanics and document/coin outcomes.`);
 
@@ -1192,7 +1292,7 @@ try {
     const first=JSON.parse(JSON.stringify(state));cleanup();mount();assert.deepEqual(state.effects,first.effects,'reported rain cannot extend or duplicate Cold');assert.deepEqual(state.journalEntries,first.journalEntries,'reported rain cannot append History twice');cleanup();return first;
   }
   const rainMechanics=state=>({...state,infoModal:state.infoModal?(({title,text,label,illustrationAlt,...modal})=>modal)(state.infoModal):null,journalEntries:state.journalEntries.map(({title,text,actionTitle,...entry})=>entry)});
-  for(const test of rainReportCases){const old=executeRainReport(rainLegacy,test),actual=executeRainReport(rainBase,test),translated=executeRainReport(rainView,test);assert.deepEqual(rainMechanics(actual),rainMechanics(old),'rain editorial changes preserve frozen state/ports');if(actual.infoModal){assert.equal(actual.infoModal.title,old.infoModal.title);assert.equal(actual.infoModal.label,old.infoModal.label);if(test.rain.choice!==null&&test.rain.choice!=='continue')assert.equal(actual.infoModal.text,old.infoModal.text);if(actual.journalEntries.length>1)assert.notEqual(actual.journalEntries[1].text,actual.infoModal.text);}assert.deepEqual(rainMechanics(translated),rainMechanics(actual),'rain report IDs, losses, grouping, effects and replay guards ignore all-empty copy');}
+  for(const test of rainReportCases){const old=executeRainReport(rainLegacy,test),actual=executeRainReport(rainBase,test),translated=executeRainReport(rainView,test);assert.deepEqual(rainMechanics(actual),rainMechanics(old),'rain editorial changes preserve frozen state/ports');if(actual.infoModal){assert.equal(actual.infoModal.title,old.infoModal.title);assert.equal(actual.infoModal.label,old.infoModal.label);const report=test.rain.choice==='proper'&&test.rain.searchRemaining>0?'stoppedSearch':test.rain.choice??'continue';const cold=test.rain.coldGranted??(!!test.rain.cold&&!test.activeCold);assert.equal(actual.infoModal.text,rainResultExpectations[test.rain.level][report][Number(cold)]);if(actual.journalEntries.length>1)assert.notEqual(actual.journalEntries[1].text,actual.infoModal.text);}assert.deepEqual(rainMechanics(translated),rainMechanics(actual),'rain report IDs, losses, grouping, effects and replay guards ignore all-empty copy');}
   const rainTimers={set:window.setInterval,clear:window.clearInterval,random:Math.random};window.setInterval=()=>1;window.clearInterval=()=>{};Math.random=()=>.99;
   try{
     function restoreRain(view,rain,activeCold=false){

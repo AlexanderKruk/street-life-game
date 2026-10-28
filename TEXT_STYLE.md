@@ -282,3 +282,25 @@ system, build and diff checks passed. Full suites/WebKit/iPhone unrun.
 Map stress QA with extended catalogue names confirmed the top Hospital label
 can sit behind shortcuts; that projection/overlap issue remains OPEN, as does
 rain-art time context and the rest of the long-copy/modal matrix. No publication.
+
+
+## Concise routine reports — 28 October 2026
+
+Applied the approved shorter patrol/document, downpour/Cold, discard and
+wet-sleep/Cold examples, plus related variants: 41 messages across events,
+rain, sleep and dialogs. Rain History reactions now use at most two sentences.
+Food poisoning numbers and expanded shelter registration Notes stay intact.
+Only catalogue prose and matching test expectations change; action/outcome IDs,
+parameters, gameplay, timings, artwork and previously saved History are unchanged.
+Frozen compatibility fixtures are retained. Migration parity checks allow only
+the explicitly revised prose and still compare state, costs, RNG and History.
+
+Verification before the runtime disconnected: production build; check-events,
+check-rain, check-sleep-illness, check-food-inventory; regression groups events,
+shelter-sleep, shop-inventory and journal-services passed. The localisation
+check's old prose expectations were updated; its final complete run could not
+be confirmed after the runtime disconnected. Reconstructed source/test files
+were checked for syntax, unchanged catalogue keys/parameters and the exact
+approved replacements before the GitHub source save. Browser inspection did
+not start; full suites, screenshot baselines, WebKit and iPhone were not run.
+This is a source save with [skip ci], without a release or deployment.

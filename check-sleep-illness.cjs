@@ -42,7 +42,7 @@ function step(ms){now+=ms;act(()=>{for(const fn of [...timers.values()])fn()});f
 function reloadApp(){cleanup();render(React.createElement(App));flush();}
 function wake(){Math.random=()=>0;fireEvent.click(screen.getByRole('button',{name:'Wake up (debug)',exact:true}));flush();}
 try{
- setup();sleep();wake();assert(screen.getByRole('dialog',{name:'Feeling unwell'}).textContent.includes('Your throat feels sore'));
+ setup();sleep();wake();assert(screen.getByRole('dialog',{name:'Feeling unwell'}).textContent.includes('You wake with a sore throat and a cold.'));
  assert(document.querySelector('.result-illustration').src.endsWith('event-sleep-cold-ground-480.webp'));
  assert(document.querySelector('.result-illustration').srcset.includes('event-sleep-cold-ground-1024.webp'));
  assert.equal(document.querySelector('.result-card-label').textContent,'WAKE-UP EVENT');assert.equal(read(effectsKey).filter(e=>e.id==='cold').length,1);

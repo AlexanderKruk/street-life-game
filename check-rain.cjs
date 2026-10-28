@@ -81,7 +81,7 @@ try {
     tick(choice==='continue'?1000:250);
     assert(document.querySelector('.result-modal'),'rain end opens the shared event result');
     assert(document.querySelector('.result-modal img').getAttribute('src').includes(`${level}-${choice}`),'result illustration matches choice and intensity');
-    if(choice==='nearby') assert(screen.getByRole('dialog').textContent.includes(level==='rain'?'street tree':'awning'));
+    if(choice==='nearby') assert(screen.getByRole('dialog').textContent.includes(level==='rain'?'under a tree':'awning'));
     if(choice==='proper') assert(screen.getByRole('dialog').textContent.includes('passage'));
     const minutes=save().minutes; tick(1000);tick(250);assert.equal(save().minutes,minutes,'result pauses time');
     fireEvent.click(screen.getByRole('button',{name:'Got it'}));
@@ -142,7 +142,7 @@ try {
     const finishing={...episode(level,5),start:now-3,end:now+2};
     setup(level,{rain:finishing});fireEvent.click(screen.getByRole('button',{name:'Find proper shelter'}));tick(250);tick(250);
     assert(document.querySelector('.result-modal img').getAttribute('src').includes('event-rain-stopped-search'),'all unfinished searches use the shared stopped-rain illustration');
-    assert(screen.getByRole('dialog',{name:'The rain has stopped'}).textContent.includes('There’s no need to keep searching.'));
+    assert(screen.getByRole('dialog',{name:'The rain has stopped'}).textContent.includes('before you find cover.'));
   }
   for (const label of ['Take cover nearby','Find proper shelter']) {
     setup('downpour',{rain:episode('downpour',20)});

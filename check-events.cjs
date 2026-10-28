@@ -508,7 +508,7 @@ for(const locationId of ['street','station'])for(const [documents,storedDocument
   if(choice.outcome.discoverLocation==='shelter') {
    assert(result.includes('Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.'));
    assert.equal(screen.getByRole('dialog').querySelectorAll('.result-description').length,1,'police shelter discovery uses the same short paragraph; ID-check costs remain below');
-  } else assert(result.includes(documents?'You show your documents.':storedDocuments?'your documents are stored at the shelter':'your documents are missing.'));
+  } else assert(result.includes(documents?'The officer checks your documents':storedDocuments?'Your documents are stored at the shelter':'Your documents are missing'));
   assert.equal(/train ticket/i.test(result),locationId==='station');
   assert.equal(read(stateKey).minutes,before.minutes+choice.outcome.minutes+(documents?0:10));
   assert.equal(read(invKey).documents,documents,'identity check neither loses nor restores ID');
