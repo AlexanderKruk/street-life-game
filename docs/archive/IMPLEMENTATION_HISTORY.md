@@ -1,6 +1,11 @@
 # Historical implementation notes — through v279
 
-Archived on 2026-10-21 from the pre-audit GAME_DESIGN.md. This file preserves version notes, earlier designs and measurements. Descriptions of “current” behavior below refer to their original version and may be superseded. For the maintained rules, read [GAME_DESIGN.md](../GAME_DESIGN.md).
+> **ARCHIVED — 28 October 2026.** Historical record of completed work or
+> measurements from the stated version. Do not read or resume it by default.
+> Current rules and document navigation: [AGENTS.md](../../AGENTS.md).
+> Inline code paths refer to the repository root unless stated otherwise.
+
+Archived on 2026-10-21 from the pre-audit GAME_DESIGN.md. This file preserves version notes, earlier designs and measurements. Descriptions of “current” behavior below refer to their original version and may be superseded. For the maintained rules, read [GAME_DESIGN.md](../../GAME_DESIGN.md).
 
 ---
 
@@ -559,7 +564,7 @@ The selected day's timeline renders its 30 most recent entries first. A framed `
 
 Switching the selected day or reopening Journal starts with that day's latest 30 entries. Ordinary game ticks preserve the expanded count, and unchanged history continues to skip timeline renders. A keyed day-view component owns transient display state; it does not add save keys or change migrations. Regression checks cover complete ordering without duplicate/missing entries, short and empty days, day/reopen/tick behavior, new actions and unchanged saved history.
 
-Two local production builds (v155 and v156) were compared in isolated Chromium profiles at 390×844, DPR 2 and CPU slowed 4×, with five Journal openings per build and 500 entries for the selected day. Median click-to-second-frame time changed from 287.7 ms to 28.7 ms; maximum from 321.3 ms to 39.4 ms. Long tasks were observed on all five baseline openings and none on the five new openings. This is a lab navigation measurement, not internet startup, INP or an iPhone/Safari result. Browser checks also verified all 500 entries remain reachable, day switching, mobile append scroll delta of 0 px and desktop layout. Full `npm test` and production build passed. Detailed comparison: [journal optimization report](../JOURNAL_OPTIMIZATION.md) and `journal-performance.json`.
+Two local production builds (v155 and v156) were compared in isolated Chromium profiles at 390×844, DPR 2 and CPU slowed 4×, with five Journal openings per build and 500 entries for the selected day. Median click-to-second-frame time changed from 287.7 ms to 28.7 ms; maximum from 321.3 ms to 39.4 ms. Long tasks were observed on all five baseline openings and none on the five new openings. This is a lab navigation measurement, not internet startup, INP or an iPhone/Safari result. Browser checks also verified all 500 entries remain reachable, day switching, mobile append scroll delta of 0 px and desktop layout. Full `npm test` and production build passed. Detailed comparison: [journal optimization report](JOURNAL_OPTIMIZATION.md) and `journal-performance.json`.
 
 ### Measured performance and extended-session QA (v155 · 2026-10-12)
 
@@ -581,7 +586,7 @@ These are lab observations, not physical iPhone/Safari, battery, INP or real-dev
 
 **Follow-up implemented in v156:** selected-day records now render in batches of 30, as described above. The v155 QA results remain a historical baseline; the separate v156 comparison measures the improvement. Real iPhone/Safari validation remains outstanding, and application JS splitting is still deferred.
 
-Detailed methods, samples and coverage limits: [startup/navigation report](../PERFORMANCE_REPORT.md), [extended-session report](../SESSION_REPORT.md), `performance-report.json` and `session-report.json`. Reproduction tools are `scripts/benchmark.cjs`, `scripts/soak.cjs` and `scripts/lifecycle-lab.cjs`.
+Detailed methods, samples and coverage limits: [startup/navigation report](PERFORMANCE_REPORT.md), [extended-session report](SESSION_REPORT.md), `performance-report.json` and `session-report.json`. Reproduction tools are `scripts/benchmark.cjs`, `scripts/soak.cjs` and `scripts/lifecycle-lab.cjs`.
 
 ### Stable game clock (v155)
 

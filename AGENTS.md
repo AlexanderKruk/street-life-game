@@ -25,8 +25,8 @@ and formatting. Continue using this structure for new or revised copy.
 Actual translations into other languages and a language switch are separate
 future tasks, not unfinished stages of this migration.
 
-Do not read or resume `LOCALIZATION.md`, `LOCALIZATION_TASK.md`,
-`docs/LOCALIZATION_INVENTORY.md` or `docs/LOCALIZATION_RESIDUAL_AUDIT.md`
+Do not read or resume `docs/archive/LOCALIZATION.md`, `docs/archive/LOCALIZATION_TASK.md`,
+`docs/archive/LOCALIZATION_INVENTORY.md` or `docs/archive/LOCALIZATION_RESIDUAL_AUDIT.md`
 during ordinary work. These files are archived migration records; open them
 only for an explicit historical investigation or when a concrete bug requires
 their details. Their old "pending", "next", recovery instructions and unchecked
@@ -42,11 +42,16 @@ Closing the task does not claim that previously unrun device checks were run.
 | `TEXT_STYLE.md` | Current writing rules; read for player-facing text changes. |
 | `TESTING.md` | Current checks and verification limits; consult when selecting/running or changing tests. |
 | `IMAGE_AUDIT.md` | Active artwork issues; consult for image work, not unrelated tasks. |
-| `REFACTORING.md` | Completed agreed refactoring plan and history; consult only for relevant architecture/history questions. |
-| `LOCALIZATION*.md`, `docs/LOCALIZATION_*.md` | Completed migration archive; no default reading or automatic continuation. |
-| `PERFORMANCE_REPORT.md`, `SESSION_REPORT.md`, `JOURNAL_OPTIMIZATION.md` | Historical measurements/reports; consult for the corresponding performance issue. |
-| `docs/IMPLEMENTATION_HISTORY.md` | Historical mechanics/version notes; current rules are in GAME_DESIGN.md. |
+| `docs/archive/REFACTORING.md` | Completed agreed refactoring plan and history; consult only for relevant architecture/history questions. |
+| `docs/archive/LOCALIZATION*.md` | Completed migration archive; no default reading or automatic continuation. |
+| `docs/archive/PERFORMANCE_REPORT.md`, `docs/archive/SESSION_REPORT.md`, `docs/archive/JOURNAL_OPTIMIZATION.md` | Historical measurements/reports; consult for the corresponding performance issue. |
+| `docs/archive/IMPLEMENTATION_HISTORY.md` | Historical mechanics/version notes; current rules are in GAME_DESIGN.md. |
 | `docs/art/`, `docs/*-art.md` | Artwork references and generation records; consult for the corresponding asset. |
+
+Completed plans, historical measurements and old implementation notes are stored
+in [docs/archive/](docs/archive/README.md). Do not read the archive by default;
+open only the specific record needed for the current task. Active references stay
+at the repository root; artwork references remain in `docs/art/` and `docs/*-art.md`.
 
 ## Maintaining text catalogues
 
@@ -70,7 +75,7 @@ a separate user task. For catalogue/i18n changes, run `node check-localization.c
 plus affected thematic checks; documentation-only changes follow the testing
 exception below.
 
-The agreed refactoring plan is completed; [REFACTORING.md](REFACTORING.md)
+The agreed refactoring plan is completed; [REFACTORING.md](docs/archive/REFACTORING.md)
 is its implementation record. Read it only when the current task needs that
 architecture/history, not as a default prerequisite or an automatic next task.
 For any newly authorised refactoring, update the relevant record after each
@@ -413,8 +418,8 @@ The legacy button adapter has now been removed. This historical checkpoint
 does not claim that the missing earlier local batches are present.
 
 
-Historical recovery checkpoint (26 October 2026; superseded): LOCALIZATION.md /
-LOCALIZATION_TASK.md were the recovery plan at that time; they are now archived.
+Historical recovery checkpoint (26 October 2026; superseded): docs/archive/LOCALIZATION.md /
+docs/archive/LOCALIZATION_TASK.md were the recovery plan at that time; they are now archived.
 Earlier reported local batches 2–4 were absent at that checkpoint.
 Authored event History now uses EventOutcome.historyId / EventHistoryFacts and
 `eventHistoryReflection`, with messages in locales/en/eventHistory.ts. Do not

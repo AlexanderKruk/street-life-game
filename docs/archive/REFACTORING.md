@@ -1,10 +1,15 @@
 # Рефакторинг Street Life
 
+> **ARCHIVED — 28 October 2026.** Historical record of completed work or
+> measurements from the stated version. Do not read or resume it by default.
+> Current rules and document navigation: [AGENTS.md](../../AGENTS.md).
+> Inline code paths refer to the repository root unless stated otherwise.
+
 Обновлено: 25 октября 2026. Проверенная база: **v332**.
 
 Этот файл — список выполненного и оставшихся этапов. Текущие правила работы и
-шаблоны находятся в [AGENTS.md](AGENTS.md), механики — в
-[GAME_DESIGN.md](GAME_DESIGN.md). После каждого завершённого этапа обновлять
+шаблоны находятся в [AGENTS.md](../../AGENTS.md), механики — в
+[GAME_DESIGN.md](../../GAME_DESIGN.md). После каждого завершённого этапа обновлять
 отметки, версию и результаты проверок здесь.
 
 Публикация серии отложена до завершения рефакторинга по просьбе пользователя.
@@ -340,5 +345,5 @@ CSS не менялся; новый визуальный прогон в бра�
 Status/Life situation now use statusPresentation/status catalogue. Persisted
 enums and numeric caps remain stable, condition bands expose level IDs and all
 condition text is rendered separately. Main source checkpoints are authorised
-with [skip ci]; publishing remains separate. See LOCALIZATION.md for verification
+with [skip ci]; publishing remains separate. See docs/archive/LOCALIZATION.md for verification
 and the next HUD/weather stage.

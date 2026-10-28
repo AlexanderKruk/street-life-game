@@ -1,5 +1,10 @@
 # Extended session QA — v155, 2026-10-12
 
+> **ARCHIVED — 28 October 2026.** Historical record of completed work or
+> measurements from the stated version. Do not read or resume it by default.
+> Current rules and document navigation: [AGENTS.md](../../AGENTS.md).
+> Inline code paths refer to the repository root unless stated otherwise.
+
 The sampled session stayed responsive over ten real minutes. Saved state survived the tested offline action, reconnect/reload and tab reopen. A deliberately extreme journal exposes a useful next optimization: rendering 500 entries of one day at once.
 
 ## Results

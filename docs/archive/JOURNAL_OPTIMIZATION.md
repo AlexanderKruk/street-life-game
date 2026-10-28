@@ -1,5 +1,10 @@
 # Journal batching — v156, 2026-10-12
 
+> **ARCHIVED — 28 October 2026.** Historical record of completed work or
+> measurements from the stated version. Do not read or resume it by default.
+> Current rules and document navigation: [AGENTS.md](../../AGENTS.md).
+> Inline code paths refer to the repository root unless stated otherwise.
+
 The journal opens with the latest 30 entries of the selected day. `Show older entries` appends another 30 until all stored entries of that day are visible. The count updates below the button, which disappears at the end. Short and empty days need no additional control. Changing days or reopening the screen resets the batch count; ordinary ticks preserve it. History order, reflections, save format and the 500-entry retention cap remain unchanged.
 
 | Five Journal openings with 500 selected-day entries | v155 | v156 |

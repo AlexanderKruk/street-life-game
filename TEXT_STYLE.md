@@ -231,7 +231,7 @@ resource/time/charging assertions. Physical iPhone and WebKit remain unverified.
 ## Localisation preparation — current state
 
 The English source catalogue and the separation of gameplay from displayed
-wording are prepared in the scope recorded in [LOCALIZATION.md](LOCALIZATION.md).
+wording are prepared in the scope recorded in [LOCALIZATION.md](docs/archive/LOCALIZATION.md).
 New History uses action/outcome IDs and facts; historical text adapters remain
 isolated for existing saves. The editorial review is grouped and long-copy
 checks are representative, not a claim that every condition or device was
@@ -247,7 +247,7 @@ prose and food-risk consequences now reuse `modal-narrative` (Body).
 
 Result/action identities have moved to domain IDs; History outcome recognition
 and choice presentation still have English dependencies. Follow
-[LOCALIZATION.md](LOCALIZATION.md) and its source/modal inventory before moving
+[LOCALIZATION.md](docs/archive/LOCALIZATION.md) and its source/modal inventory before moving
 those strings. Existing stored reflections, including empty ones, remain intact.
 The first catalogues preserve approved wording; this is not a completed audit
 of every event, controller refusal or modal branch. No new story or translation

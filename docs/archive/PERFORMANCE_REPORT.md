@@ -1,5 +1,10 @@
 # Performance measurement — v155, 2026-10-12
 
+> **ARCHIVED — 28 October 2026.** Historical record of completed work or
+> measurements from the stated version. Do not read or resume it by default.
+> Current rules and document navigation: [AGENTS.md](../../AGENTS.md).
+> Inline code paths refer to the repository root unless stated otherwise.
+
 Measured the live production site in Chromium 153.0.8010.0. Three fresh-context cold loads and three cached loads per profile. Desktop: 1365×900, DPR 1, 10 Mbps, 40 ms latency. Mobile lab: 390×844, DPR 2, 1.5 Mbps, 100 ms latency, CPU slowed 4×. Isolated browser saves only.
 
 | Metric | Desktop | Mobile lab |

@@ -4,7 +4,7 @@
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
-Earlier version notes and superseded designs are preserved in [Implementation history](docs/IMPLEMENTATION_HISTORY.md). That archive is historical; it does not override this file. Art prompts and measurements remain in their existing `docs/` files, `PERFORMANCE_REPORT.md` and `JOURNAL_OPTIMIZATION.md`.
+Earlier version notes and superseded designs are preserved in [Implementation history](docs/archive/IMPLEMENTATION_HISTORY.md). That archive is historical; it does not override this file. Art prompts and measurements remain in their existing `docs/` files, `docs/archive/PERFORMANCE_REPORT.md` and `docs/archive/JOURNAL_OPTIMIZATION.md`.
 
 ## Current release at a glance
 
