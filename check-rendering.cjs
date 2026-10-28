@@ -52,7 +52,7 @@ async function loadApp(disableMemo) {
         let source = fs.readFileSync(path, 'utf8').replace(/memo\(function (\w+)\(([\s\S]*?)\) \{/g,
           (match, name) => `${match} globalThis.__uiRenders['${name}'] = (globalThis.__uiRenders['${name}'] ?? 0) + 1;`);
         source = source.replace('export default function App() {', "export default function App() { globalThis.__uiRenders.App = (globalThis.__uiRenders.App ?? 0) + 1;");
-        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview: shelterSession.setShelterInterview, setGame, searchStreetBottles, setTrashGame: trashSession.setTrashGame };\n  return <main className=');
+        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview: shelterSession.setShelterInterview, setGame, setInventory, searchStreetBottles, setTrashGame: trashSession.setTrashGame };\n  return <main className=');
         if (disableMemo) source = source.replace(/memo\(function /g, '((component) => component)(function ');
         return { contents: source, loader: 'tsx' };
       });
@@ -110,7 +110,7 @@ function measure(App) {
     assert.equal(after[section][name] ?? 0, 0, `${name}: unchanged data must skip rendering`);
   }
   assert(after.travel.TravelHeading > 0 && after.travel.TravelHeading < before.travel.TravelHeading, 'travel headings update for changing walking phases, skipping unchanged ticks');
-  // Relevant changes must still render: opening hours, selected map pin, completed goal, journal day.
+  // Relevant changes must still render: opening hours, selected map pin, discovered goal, journal day.
   setup(App, 'map', { minutes: 1319 }); advance(1);
   assert.equal(count('DistrictScene'), 1);
   assert(screen.getByRole('button', { name: 'Small Shop' }).disabled);
@@ -124,9 +124,12 @@ function measure(App) {
   assert.equal(count('DistrictScene'), 1);
   assert(!document.querySelector('.district-card'));
   assert(document.querySelector('.travel-sheet').textContent.includes('Small Shop'));
-  setup(App, 'goals', { day: 2, minutes: 719 }); advance(1);
-  assert(count('JournalGoals') > 0);
-  assert(document.querySelector('.completed-goals .goal strong').textContent.includes('morning'));
+  // The current Goals list is event-driven, not a clock-based morning checklist.
+  // Crossing the low-battery threshold adds a real pending goal and must repaint.
+  setup(App, 'goals', { day: 2, minutes: 719 }, { 'street-life-inventory-v1': { phoneBattery: 30 } });
+  act(() => global.__auditSetters.setInventory(previous => ({ ...previous, phoneBattery: 19 })));
+  assert(count('JournalGoals') > 0, 'newly discovered goal updates memoized Goals');
+  assert([...document.querySelectorAll('.goal-list strong')].some(node => node.textContent === 'Recharge your phone'));
   setup(App, 'journal', { day: 2 }, { 'street-life-journal-history-v1': [
     { day: 1, minute: 500, title: 'First day', text: 'First thought', reflection: true }, { day: 2, minute: 480, title: 'Second day', text: 'Second thought', reflection: true },
   ] });
