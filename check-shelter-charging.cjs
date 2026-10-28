@@ -15,7 +15,10 @@ function flush(){fireEvent(window,new window.Event('pagehide'))}
 function setup({battery=10,charging=false,state={},life={},extra={},strict=false}={}){
  cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});
  localStorage.setItem(gameKey,JSON.stringify({day:2,minutes:1140,money:100,hunger:20,thirst:60,energy:60,health:100,hygiene:55,mood:28,intoxication:0,locationId:'shelter',...state}));
- localStorage.setItem(invKey,JSON.stringify({phoneBattery:battery,phoneCondition:100,water:0,food:0}));localStorage.setItem(lifeKey,JSON.stringify({housing:'Night shelter',shelterUntilDay:7,shelterRegisteredDay:1,shelterLastStayDay:2,shelterAuditDay:1,...life}));
+ localStorage.setItem(invKey,JSON.stringify({phoneBattery:battery,phoneCondition:100,water:0,food:0}));
+ // This suite checks charging accounting, not the goal-completion pause.
+ // Treat Recharge your phone as already completed; the goal modal has its own regressions.
+ localStorage.setItem('street-life-journal-goals-v1',JSON.stringify({version:2,charge:true,battery}));localStorage.setItem(lifeKey,JSON.stringify({housing:'Night shelter',shelterUntilDay:7,shelterRegisteredDay:1,shelterLastStayDay:2,shelterAuditDay:1,...life}));
  localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-mobile-service-until','20000');localStorage.setItem('street-life-effects-v1','[]');
  if(charging)localStorage.setItem(chargeKey,'true');for(const [k,v]of Object.entries(extra))localStorage.setItem(k,JSON.stringify(v));
  render(strict?React.createElement(React.StrictMode,null,React.createElement(App)):React.createElement(App));flush();
