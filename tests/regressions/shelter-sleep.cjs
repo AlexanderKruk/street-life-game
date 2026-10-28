@@ -208,9 +208,19 @@ for(const debug of [false,true]) {
  }
 }
 
+// Every sleep entry shows the shared lower-bound estimate without a second prompt.
+for(const [locationId,minutes,id] of [['street',1380,'street-sleep'],['station',600,'station-sleep'],['shelter',1200,'shelter-rest'],['residential-shelter',600,'residential-sleep']]) {
+ setup({day:3,locationId,minutes},{[lifeKey]:{housing:locationId==='shelter'?'Night shelter':'Street',shelterRegisteredDay:2,shelterUntilDay:8,shelterLastStayDay:2}});
+ const entry=document.querySelector(`[data-choice="${id}"]`);assert(entry,id);
+ assert.equal(entry.querySelector('.choice-duration').textContent,'≈2h+');
+ assert(!/Choose duration|disturb|stolen|at risk|backpack/i.test(entry.textContent),id+' has no redundant sleep warning');
+ const before=read(stateKey);fireEvent.click(entry);assert(screen.getByRole('group',{name:'Sleep duration'}));
+ click('Cancel');assert.deepEqual(read(stateKey),before,'opening/cancelling still consumes nothing');
+}
+
 // Station, street bench and Schronisko all use the same paused chooser.
 setup({locationId:'station',minutes:1380});beginSleep(/Try to sleep/,2);assert.equal(read('street-life-sleep-v1').kind,'bench');assert.equal(read('street-life-sleep-v1').total,120);
-setup({day:3,minutes:1380}, {'street-life-answers-v1':['morning','bed']});Math.random=()=>0;click(/Is there a bench nearby\? My legs could use a break./);ok();Math.random=()=>.99;click(/Could I sleep here\? What about my backpack…/);assert(screen.getByLabelText('Sleep duration'));click('Sleep');assert.equal(read('street-life-sleep-v1').kind,'bench');
+setup({day:3,minutes:1380}, {'street-life-answers-v1':['morning','bed']});Math.random=()=>0;click(/Is there a bench nearby\? My legs could use a break./);ok();Math.random=()=>.99;assert.equal(document.querySelector('[data-choice="bench-sleep"] .choice-duration').textContent,'≈2h+');click(/Could I sleep here for a while\?/);assert(screen.getByLabelText('Sleep duration'));click('Sleep');assert.equal(read('street-life-sleep-v1').kind,'bench');
 setup({locationId:'residential-shelter',minutes:449});click(/Sleep safely/);chooseHours(2);assert(within(screen.getByRole('group',{name:'Sleep duration'})).getByRole('button',{name:'2 h',pressed:true}));click('Sleep');assert.equal(read('street-life-sleep-v1').total,120);
 
 // Fatigue gates both short and long choices, including exact thresholds.

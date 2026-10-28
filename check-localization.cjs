@@ -436,7 +436,7 @@ const actionsSource=`export {default as LocationScreen} from './src/LocationScre
 const actionsBase=bundled({source:actionsSource}),actionsView=bundled({source:actionsSource,catalogs:{actions:pseudoActions}});
 for(const old of oldActions){
  const action=actionsBase.actions.find(a=>a.id===old.id);const {name,description,resolve,...mechanics}=old;const {resolve:newResolve,...actual}=action;
- assert.deepEqual(actual,mechanics);assert.equal(actionsBase.actionName(action.id),name);assert.equal(actionsBase.actionDescription(action.id),description);
+ assert.deepEqual(actual,mechanics);assert.equal(actionsBase.actionName(action.id),name);assert.equal(actionsBase.actionDescription(action.id),({'street-sleep':'Lie down on the ground and rest.','station-sleep':'Rest on a station bench.'})[action.id]??description);
  for(const state of [{...initialState,hunger:10,thirst:10,health:20},{...initialState,hunger:70,thirst:70,health:90}])assert.deepEqual(newResolve(state),resolve(state));
 }
 for(const gel of [false,true])for(const cap of [30,70,100]){
@@ -941,7 +941,7 @@ assert.deepEqual(phoneContentBase.OPENING_CALLS,phoneContentOld.OPENING_CALLS);
 const oldBedIntro = 'Arrive before 18:00. Doors open at 18:00; registration runs 18:20–22:00. Wait at least 20 minutes and until registration opens.';
 const newBedIntro = 'Arrive before 18:00 for a better chance. Doors open at 18:00; registration starts at 18:20. Join the queue before 22:00. Wait at least 20 minutes and until registration opens.';
 assert(phoneContentBase.practicalQuestions.find(question=>question.id==='bed').text.startsWith(newBedIntro));
-assert.deepEqual(phoneContentBase.practicalQuestions.map(({hasDetails,...question})=>({...question,text:question.text.replace(newBedIntro,oldBedIntro)})),phoneContentOld.practicalQuestions);
+assert.deepEqual(phoneContentBase.practicalQuestions.map(({hasDetails,...question})=>({...question,text:question.text.replace(newBedIntro,oldBedIntro)+(question.id==='no-place'?' Neither guarantees safe sleep.':'')})),phoneContentOld.practicalQuestions);
 const phoneContentNumbers=data=>JSON.parse(JSON.stringify(data,(key,value)=>['label','callingTitle','title','text','noteTitle'].includes(key)?undefined:value));assert.deepEqual(phoneContentNumbers(phoneContentView.OPENING_CALLS),phoneContentNumbers(phoneContentBase.OPENING_CALLS));assert.deepEqual(phoneContentNumbers(phoneContentView.practicalQuestions),phoneContentNumbers(phoneContentBase.practicalQuestions));
 for(const raw of [null,'0','1','2','3','4','-1','null','{}','broken'])for(const existing of [false,true]){const storage={getItem:()=>raw};assert.equal(phoneContentView.loadOpeningCallIndex(storage,existing),phoneContentOld.loadOpeningCallIndex(storage,existing));}
 console.log('PASS: three calls, seven questions, explicit Notes detail metadata and 20 old/corrupt call-progress cases preserve English and domain data under empty copy.');
@@ -1342,7 +1342,7 @@ try {
     const show=view=>{cleanup();const calls=[];render(React.createElement(view.PhoneSearchScreen,{serviceActive,battery,answeredQuestions,phoneSearchCost:5,onOpenNotes:()=>calls.push('notes'),onSearch:id=>calls.push(id)}));const html=document.body.innerHTML,controls=[...document.querySelectorAll('button')].map(n=>[n.getAttribute('data-choice'),n.disabled]);act(()=>document.querySelectorAll('button').forEach(n=>n.click()));return{html,controls,calls};};const old=show(phoneContentOld),actual=show(phoneContentBase),translated=show(phoneContentView);assert.equal(actual.html,old.html);assert.deepEqual(translated.controls,actual.controls);assert.deepEqual(translated.calls,actual.calls);phoneContentCases++;
   }
   for(const answeredQuestions of [[],['morning'],['bed','no-place','supplies','work','clinic','charging','morning']]){
-    const show=view=>{cleanup();render(React.createElement(view.PhoneNotesScreen,{mapPlaces:locationsView.locations,answeredQuestions}));return{html:document.body.innerHTML,details:document.querySelectorAll('details').length,articles:document.querySelectorAll('article').length};};const old=show(phoneContentOld),actual=show(phoneContentBase),translated=show(phoneContentView);assert.equal(actual.html.replace(newBedIntro,oldBedIntro),old.html);assert.equal(translated.details,actual.details);assert.equal(translated.articles,actual.articles);phoneContentCases++;
+    const show=view=>{cleanup();render(React.createElement(view.PhoneNotesScreen,{mapPlaces:locationsView.locations,answeredQuestions}));return{html:document.body.innerHTML,details:document.querySelectorAll('details').length,articles:document.querySelectorAll('article').length};};const old=show(phoneContentOld),actual=show(phoneContentBase),translated=show(phoneContentView);assert.equal(actual.html.replace(newBedIntro,oldBedIntro),old.html.replace(' Neither guarantees safe sleep.',''));assert.equal(translated.details,actual.details);assert.equal(translated.articles,actual.articles);phoneContentCases++;
   }
   console.log(`PASS: ${phoneContentCases} search/Notes variants preserve English DOM, eligibility, command IDs and saved detail visibility under empty content.`);
   const processTests=[];

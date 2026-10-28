@@ -1229,3 +1229,11 @@ Find Help categories, place/item names and settings; other messages use English.
 The language page states this limitation for these languages. Saved History
 retains its original wording. More story translations can extend the catalogues
 without changing gameplay identities or saves.
+
+Sleep entry presentation — 28 October 2026: ground, street bench, station bench,
+reserved Night Shelter bed and Schronisko bed display ≈2h+ via the common
+estimate formatter. There is no Choose duration subtitle or advance warning
+about theft/disturbance. The estimate is the existing minimum selectable sleep
+length, not a change to fatigue eligibility, actual duration, recovery, illness,
+theft, wake scenes or checkout. Unbooked shelter registration retains its queue
+estimate and access conditions, rather than showing a sleep duration.

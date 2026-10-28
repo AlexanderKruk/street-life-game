@@ -814,3 +814,14 @@ launcher assertion still expected four apps. Updated it to assert the exact
 five-app sequence including Settings; all plan, focus, elapsed-time and saved
 resource assertions remain intact. The affected map-travel regression passed.
 No gameplay source changed in this correction.
+
+Sleep entry simplification — 28 October 2026: production build, check-localization,
+check-ui and regression/shelter-sleep passed. Existing shelter/sleep regressions
+now check all five sleep-entry estimates, removed warning/prompt text and
+cost-free chooser cancellation while retaining duration/fatigue/wake checks.
+Actual-App Chromium QA passed for ground/station/shelter/Schronisko at 320/1280:
+≈2h+, no duplicate prompt/warning, chooser/cancel, unchanged time/resources and
+no horizontal overflow. The narrow Station screen was visually inspected.
+Only explicit prose expectations changed in frozen parity checks; compatibility
+fixtures, saved History and mechanics remain unchanged. No full suites,
+screenshot-baseline updates, WebKit/iPhone or publication in this pass.

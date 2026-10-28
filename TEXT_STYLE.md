@@ -316,3 +316,12 @@ sleep/Cold, discard and food choice at 320×568 and 1280×900: all ten states
 showed the approved copy at Body 16px, no horizontal overflow and working
 confirmation/cancel controls. WebKit and physical iPhone remain unverified.
 The full Node suite and release build run in the GitHub Pages workflow.
+
+## Sleep-entry copy — 28 October 2026
+
+Sleep choices omit Choose duration and advance warnings about disturbed sleep,
+theft or the backpack. Station/ground/bench descriptions are short and factual;
+the station route and no-bed Notes omit generic safe-sleep warnings. The unused
+sleep-planner risk messages no longer mention theft. Actual wake/theft scenes
+and outcomes remain intact. All five sleep entry points display the shared
+approximate lower bound ≈2h+; durations remain selectable in the existing chooser.

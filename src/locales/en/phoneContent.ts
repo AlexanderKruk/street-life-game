@@ -25,7 +25,7 @@ export const phoneContent = {
   "phone.question.bed.text": "Arrive before 18:00 for a better chance. Doors open at 18:00; registration starts at 18:20. Join the queue before 22:00. Wait at least 20 minutes and until registration opens.\n\nArrival sets your queue priority; leaving loses it. Only 0–3 beds are free each day, so arriving early does not guarantee a place. Successful registration reserves seven nights.",
   "phone.question.no-place.title": "What if the shelter has no places?",
   "phone.question.no-place.noteTitle": "If there is no shelter bed",
-  "phone.question.no-place.text": "Try registration earlier the next evening. During the day, ask Help Center about accommodation and a Schronisko referral.\n\nStation benches and outdoor cover are temporary options. Neither guarantees safe sleep.",
+  "phone.question.no-place.text": "Try registration earlier the next evening. During the day, ask Help Center about accommodation and a Schronisko referral.\n\nStation benches and outdoor cover are temporary options.",
   "phone.question.supplies.title": "Where can I get food and water?",
   "phone.question.supplies.noteTitle": "Food and meals",
   "phone.question.supplies.text": "Buy supplies at Small Shop or use food and water in your backpack.\n\nRegistered Night Shelter guests get dinner 19:00–20:30 and breakfast 06:30–07:00. You need a reserved bed and access to the shelter; knowing the address is not enough.",
