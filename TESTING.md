@@ -833,3 +833,23 @@ No baseline updates were needed: screenshot-only version hiding also covered
 the new v343 label. The release includes the verified ≈2h+ sleep entries and
 shorter sleep hints. The full 30-script Node suite and production build run in
 the GitHub Pages publication gate. WebKit and physical iPhone remain unverified.
+
+
+## Event-driven goals — 28 October 2026
+
+The `journal-services` regression group now checks the single opening goal,
+battery threshold (including 0/20/20.01), actual/early charging, search versus paid
+shift, cold onset/treatment/expiry/reinfection, reload, legacy goal migration,
+reset, counts, collapsed Completed and the existing shelter appointment rules.
+Frozen localisation UI fixtures are retained; the comparison permits the approved
+empty-goals message change only.
+
+Verification: journal-services; check-load-game-session, check-save-compatibility,
+check-autosave, check-phone-controller, check-shelter-charging,
+check-module-boundaries and check-localization passed. Production build passed.
+Six targeted Chromium cases in smoke.spec.js cover opening/unlocked goals and
+reload at 320/390/1280px; all passed. The narrow unlocked screen was visually
+inspected and has no horizontal overflow. Existing frozen save fixtures remain
+unchanged; compatibility assertions explicitly cover the new goal schema.
+Full suites, WebKit and physical iPhone were not run. Source save only; v343
+and publication remain unchanged.

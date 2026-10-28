@@ -46,6 +46,14 @@ for (const fixture of fixtures) {
         assert.deepEqual(upgraded, original, `v${fixture.build}, reopen ${reopen}: needs, clock, funds and location retained during weather migration`);
       } else if (key === 'street-life-inventory-v1') {
         assert.deepEqual(JSON.parse(localStorage.getItem(key)), { readyMeal: 0, readyMealFreshness: 100, ...JSON.parse(value) }, `v${fixture.build}, reopen ${reopen}: old inventory retained with empty ready-meal stock`);
+      } else if (key === 'street-life-journal-goals-v1') {
+        // These historical fixtures know no work and have no Cold/low battery.
+        // Preserve the original fixtures and verify the intentional goal migration.
+        assert.deepEqual(JSON.parse(localStorage.getItem(key)), {
+          version: 2, shelter: JSON.parse(value).shelter, charge: false, work: false, cold: false,
+          chargeKnown: false, workKnown: false, coldKnown: false,
+          battery: JSON.parse(fixture.entries['street-life-inventory-v1']).phoneBattery,
+        }, `v${fixture.build}, reopen ${reopen}: event-driven goals migrate without inventing completion`);
       } else if (key === 'street-life-screen' && value === 'journal') {
         assert.equal(localStorage.getItem(key), 'phone', 'old Journal selection migrates to Phone');
       } else {

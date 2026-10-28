@@ -845,3 +845,16 @@ Partial Polish/Russian interface translations explicitly retain English fallback
 do not describe these as complete game translations. Check catalogues/parameters
 and English fallback plurals with check-language.cjs. The legacy launcher DOM
 comparison omits only the new Settings tile; dedicated browser checks cover it.
+
+
+Event-driven goals — 28 October 2026: `journalGoals.ts` owns pure goal loading and
+progression; App observes game/inventory/life/effects/discoveries through its existing
+lifecycle and persists via the existing autosave key. Shelter is visible from the
+opening; charging unlocks at <=20% battery, paid-work goal on a concrete Day Work
+lead, and cold recovery on active illness. Battery gain, paid employment and the
+end of illness complete those goals; search/arrival/tablets alone do not. Unknown
+goals do not enter the active count. Preserve completion/unlock flags, early
+completion, legacy shelter progress and the shelter appointment description.
+Legacy work search is not earned pay. New copy belongs in journalUi.ts.
+Run the journal-services regression group, restoration, phone and localisation
+checks for changes here; full suites remain reserved for publication.
