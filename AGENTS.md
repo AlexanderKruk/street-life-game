@@ -16,10 +16,42 @@ dispatch, memory and History consumers and preserve saved-text compatibility.
 
 Image inconsistencies and missing variants are tracked in [IMAGE_AUDIT.md](IMAGE_AUDIT.md); add findings there as they are discovered.
 
-Localisation work is tracked in [LOCALIZATION.md](LOCALIZATION.md); the source
-and modal branch inventory is [docs/LOCALIZATION_INVENTORY.md](docs/LOCALIZATION_INVENTORY.md).
-Use `t` from `src/i18n` and semantic keys in `src/locales/en/` for migrated
-surfaces and new text. Translate whole messages with named parameters. Use
+## Current status and document navigation — 28 October 2026
+
+The localisation/text-extraction project is **completed and closed**, as confirmed
+by the user on 28 October 2026. Player-facing English copy lives in the 27
+catalogues in `src/locales/en/`; `src/i18n/` supplies typed translation, plurals
+and formatting. Continue using this structure for new or revised copy.
+Actual translations into other languages and a language switch are separate
+future tasks, not unfinished stages of this migration.
+
+Do not read or resume `LOCALIZATION.md`, `LOCALIZATION_TASK.md`,
+`docs/LOCALIZATION_INVENTORY.md` or `docs/LOCALIZATION_RESIDUAL_AUDIT.md`
+during ordinary work. These files are archived migration records; open them
+only for an explicit historical investigation or when a concrete bug requires
+their details. Their old "pending", "next", recovery instructions and unchecked
+items do not reopen the completed project. The same applies to dated migration
+checkpoints later in this file: their architectural safeguards remain useful,
+but their progress/next-step statements are historical.
+Closing the task does not claim that previously unrun device checks were run.
+
+| File or area | Purpose / when to read |
+| --- | --- |
+| `AGENTS.md` | Read first before working on the project; current agent rules and navigation. |
+| `GAME_DESIGN.md` | Current implemented mechanics; consult the relevant sections for gameplay changes. |
+| `TEXT_STYLE.md` | Current writing rules; read for player-facing text changes. |
+| `TESTING.md` | Current checks and verification limits; consult when selecting/running or changing tests. |
+| `IMAGE_AUDIT.md` | Active artwork issues; consult for image work, not unrelated tasks. |
+| `REFACTORING.md` | Completed agreed refactoring plan and history; consult only for relevant architecture/history questions. |
+| `LOCALIZATION*.md`, `docs/LOCALIZATION_*.md` | Completed migration archive; no default reading or automatic continuation. |
+| `PERFORMANCE_REPORT.md`, `SESSION_REPORT.md`, `JOURNAL_OPTIMIZATION.md` | Historical measurements/reports; consult for the corresponding performance issue. |
+| `docs/IMPLEMENTATION_HISTORY.md` | Historical mechanics/version notes; current rules are in GAME_DESIGN.md. |
+| `docs/art/`, `docs/*-art.md` | Artwork references and generation records; consult for the corresponding asset. |
+
+## Maintaining text catalogues
+
+Use `t` from `src/i18n` and semantic keys in `src/locales/en/` for all new
+player-facing text. Translate whole messages with named parameters. Use
 plural messages with a numeric selector rather than appending English endings;
 keep markup in React, never inject translated HTML. Format display values with
 `src/i18n/formatters.ts` without changing calculation/rounding rules.
@@ -32,14 +64,17 @@ New History entries retain `actionId` alongside historical `actionTitle`.
 `legacyActionCompatibility.ts` and `legacyResultCompatibility.ts` handle old
 missing IDs only. Do not extend those adapters to infer IDs from new copy.
 New History outcome recognition, ordering and grouping use explicit IDs;
-legacy salts preserve existing seeds and old records retain saved text. Do not claim the
-whole game is localised or add a language switch yet. Run
-`node check-localization.cjs` plus the affected thematic checks during this work.
+legacy salts preserve existing seeds and old records retain saved text. The English
+catalogue migration is complete; translated languages and a language switch need
+a separate user task. For catalogue/i18n changes, run `node check-localization.cjs`
+plus affected thematic checks; documentation-only changes follow the testing
+exception below.
 
-The completed refactoring stages and remaining checklist are maintained in
-[REFACTORING.md](REFACTORING.md). Read it before continuing structural work and
-update the relevant checkboxes, baseline version and verification notes after
-each completed stage. Partial extraction is not a completed gameplay controller.
+The agreed refactoring plan is completed; [REFACTORING.md](REFACTORING.md)
+is its implementation record. Read it only when the current task needs that
+architecture/history, not as a default prerequisite or an automatic next task.
+For any newly authorised refactoring, update the relevant record after each
+completed stage. Partial extraction is not a completed gameplay controller.
 
 The test inventory, verification limits and prioritized additions are maintained
 in [TESTING.md](TESTING.md). Read it before adding/changing tests or planning a
@@ -360,9 +395,15 @@ use existing responsive-image helpers for runtime artwork.
 Publish through the existing GitHub Pages workflow after authorized changes;
 preserve the repository and the current hosting setup.
 
-Current localisation batch (26 October 2026): the user now requests saving
-completed stages in main without waiting for a CI build or publishing. Use the
-source-save procedure below. Publication remains a separate explicit request.
+Historical source-save instruction (26 October 2026): save completed work in
+main without waiting for a CI build or publishing, using the procedure below.
+The localisation batch is now closed. Publication remains a separate explicit request.
+
+## Historical implementation checkpoints
+
+Dated progress statements below record their original stage, not current open
+work. For document/task status use the current-status section above; retain the
+implementation contracts and compatibility safeguards.
 
 
 Icon metadata checkpoint (26 October 2026): `GameAction.icon`, authored
@@ -372,8 +413,9 @@ The legacy button adapter has now been removed. This historical checkpoint
 does not claim that the missing earlier local batches are present.
 
 
-Recovery checkpoint (26 October 2026): use LOCALIZATION.md / LOCALIZATION_TASK.md
-as the current plan; earlier reported local batches 2–4 are absent here.
+Historical recovery checkpoint (26 October 2026; superseded): LOCALIZATION.md /
+LOCALIZATION_TASK.md were the recovery plan at that time; they are now archived.
+Earlier reported local batches 2–4 were absent at that checkpoint.
 Authored event History now uses EventOutcome.historyId / EventHistoryFacts and
 `eventHistoryReflection`, with messages in locales/en/eventHistory.ts. Do not
 parse new event wording to select a reflection. Other History producers still

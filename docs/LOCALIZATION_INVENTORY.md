@@ -1,9 +1,17 @@
 # Localisation inventory
 
+> **ARCHIVED — completed, 28 October 2026.** The user confirmed this
+> localisation/text-extraction project is closed. This file preserves historical
+> migration evidence, not an active plan. Do not read it by default or resume old
+> pending/next-step instructions. Use [AGENTS.md](../AGENTS.md) for current rules,
+> `src/locales/en/` for copy and `src/i18n/` for translation/formatting.
+> Other languages and a language switch require a separate task. Historical
+> verification limits remain factual; no previously unrun checks are implied.
+
 Baseline: v335 / `d8ff6fa`; current status updated 27 October 2026. This is an
 implementation inventory, not a claim that every branch has passed browser
 or device review. See
-[the live plan](../LOCALIZATION.md) and [writing rules](../TEXT_STYLE.md).
+[the archived migration log](../LOCALIZATION.md) and [writing rules](../TEXT_STYLE.md).
 
 Status: **moved** means the component's own copy is in a catalogue; strings
 received from its owner are tracked separately. **partial** identifies mixed
