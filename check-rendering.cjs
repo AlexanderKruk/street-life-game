@@ -254,7 +254,15 @@ function measure(App) {
   fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
   assert(document.querySelector('.travel-sheet')); clearCounts(); advance(3);
   modalAudit.push({ name: 'travel choices (time continues)', renders: counts() });
-  fireEvent.click(screen.getByRole('button', { name: /Ride without ticket/ })); pauseAudit('dice check', '.dice-overlay');
+  fireEvent.click(screen.getByRole('button', { name: /Ride without ticket/ }));
+  assert(document.querySelector('.travel-screen'), 'fare evasion now begins a trip, without an immediate roll');
+  assert(!document.querySelector('.dice-overlay'), 'inspection is triggered while riding');
+  // Restore a trip already at its scheduled on-board inspection, keeping the
+  // rendering/pause audit deterministic and independent of random trip length.
+  setup(App, 'travel', {}, { 'street-life-trip-v1': {
+    destinationId: 'shop', mode: 'fare-dodge', total: 60, remaining: 25, inspection: { at: 35, status: 'scheduled' },
+  } });
+  pauseAudit('dice check', '.dice-overlay');
   setup(App, 'inventory'); fireEvent.click(screen.getByRole('button', { name: /^Phone$/ }));
   assert(document.querySelector('.phone-screen')); clearCounts(); advance(3);
   assert(count('App') > 0, 'phone panel intentionally keeps time running');
