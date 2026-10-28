@@ -22,8 +22,10 @@ The localisation/text-extraction project is **completed and closed**, as confirm
 by the user on 28 October 2026. Player-facing English copy lives in the 27
 catalogues in `src/locales/en/`; `src/i18n/` supplies typed translation, plurals
 and formatting. Continue using this structure for new or revised copy.
-Actual translations into other languages and a language switch are separate
-future tasks, not unfinished stages of this migration.
+Phone Settings now offers English, Polish and Russian via a separate language
+preference. Polish/Russian interface catalogues are partial; missing messages
+fall back to English with English plural rules. Full story translation remains
+a separate task, not an unfinished stage of the closed migration.
 
 Do not read or resume `docs/archive/LOCALIZATION.md`, `docs/archive/LOCALIZATION_TASK.md`,
 `docs/archive/LOCALIZATION_INVENTORY.md` or `docs/archive/LOCALIZATION_RESIDUAL_AUDIT.md`
@@ -828,3 +830,18 @@ reasons accessible, selected autofocus, pause/Escape and confirm/cancel behavior
 The confirm button says Sleep without repeating the selected hours. Keep
 conditional wet-clothing/checkout hints.
 Random early waking remains unimplemented; this is a presentation change only.
+
+
+Phone language settings — 28 October 2026: Settings is the fifth phone app;
+Language is a nested screen whose Back returns to Settings. The preference
+street-life-language-v1 is independent of run saves and survives Reset save.
+Apply a language by flushing the existing pagehide autosave, saving the preference
+and reloading the existing session so module-level event/action text resolves
+consistently. A session-only return hint restores the language screen and is
+cleared after mount, not during StrictMode initialisation. Never retranslate saved
+History or reset game/phone activity. Native language names have no flags. Phone
+availability/pause rules remain unchanged; language selection needs no paid plan.
+Partial Polish/Russian interface translations explicitly retain English fallback;
+do not describe these as complete game translations. Check catalogues/parameters
+and English fallback plurals with check-language.cjs. The legacy launcher DOM
+comparison omits only the new Settings tile; dedicated browser checks cover it.

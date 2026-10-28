@@ -780,3 +780,16 @@ passed at 320/390/1280px: one exact paragraph, 16px/400, no timetable/overflow,
 visible Got it, correct time costs and map discovery. These were temporary
 review cases; canonical screenshot baselines were not changed. No full-suite,
 WebKit, physical iPhone or publication in this source update; v339 unchanged.
+
+
+## Phone language settings — 28 October 2026
+
+Added check-language.cjs as the 30th Node suite: saved/default/invalid language,
+translated-message parameter validation, Polish/Russian plurals, English fallback
+plural selection, pagehide-before-reload, StrictMode-safe return hint and denied
+storage. New focused Chromium smoke cases at 320/1280 exercise all three languages,
+reload/return/back/focus, unpaid mobile service, unchanged game/inventory/saved
+History and horizontal fit. Both passed. Existing phone/localisation checks,
+design-system, module boundaries and production build passed; a narrow-screen
+visual inspection covered phone home, Settings and Russian Language. No full
+suites, baseline updates, WebKit, physical iPhone or deployment in this pass.

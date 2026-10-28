@@ -1,9 +1,12 @@
+import { language } from './i18n'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './styles.css'
 import './modal.css'
 import { warmImageUrls } from './responsiveImages'
+
+document.documentElement.lang = language
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

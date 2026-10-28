@@ -1,3 +1,5 @@
+import PhoneSettingsScreen from './PhoneSettingsScreen'
+import { languageReturn, clearLanguageReturn } from './i18n/language'
 import { travelPhaseLabel } from './travelText'
 import { sleepUnavailableReason } from './sleepText'
 import { locationName } from './locationText'
@@ -95,6 +97,8 @@ type TrashItem = { id: number; layer: number; art: TrashArt; x: number; y: numbe
 
 export default function App() {
   const [initial] = useState(() => loadGameSession(localStorage))
+  const [languageResumed] = useState(languageReturn)
+  useEffect(() => { if (languageResumed) clearLanguageReturn() }, [languageResumed])
   const [game, commitGame] = useState<GameState>(() => initial.game)
   const [choiceSeed, setChoiceSeed] = useState(() => initial.choiceSeed)
   const sleepSession = useSleepSession(initial)
@@ -122,8 +126,8 @@ export default function App() {
   const lastRecordedResult = useRef<unknown>(null)
   const [journalGoals, setJournalGoals] = useState<JournalGoalState>(() => initial.journalGoals)
   const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => initial.activeGoal)
-  const [screen, setScreen] = useState<Screen>(() => initial.screen)
-  const [phoneApp, setPhoneApp] = useState<PhoneApp>('home')
+  const [screen, setScreen] = useState<Screen>(() => languageResumed ? 'phone' : initial.screen)
+  const [phoneApp, setPhoneApp] = useState<PhoneApp>(() => languageResumed ? 'language' : 'home')
   const contentRef = useRef<HTMLDivElement>(null)
   const [scrollResetRequest, setScrollResetRequest] = useState(0)
   useEffect(() => {
@@ -790,6 +794,7 @@ export default function App() {
     {screen === 'status' && <StatusScreen game={game} statusEffects={statusEffects} statLimits={statLimits} separateLimits={separateLimits} statusNeeds={statusNeeds} focusedNeed={focusedNeed}
       situation={{ housing: life.housing, employment: life.employment, income: life.income, documents: inventory.documents ? 'carried' : storage.documents ? 'stored' : 'missing' }} />}
     {screen === 'phone' && <PhoneScreen busy={!!phoneActivity} app={phoneApp} onApp={openPhoneApp} pendingGoals={pendingGoals.length} unavailable={phoneUnavailable} serviceActive={mobileServiceActive} serviceMinutesLeft={mobileServiceMinutesLeft} onPlan={() => setPhoneOpen(true)}>
+      {(phoneApp === 'settings' || phoneApp === 'language') && <PhoneSettingsScreen page={phoneApp} onLanguage={() => openPhoneApp('language')} />}
       {phoneApp === 'goals' && <JournalGoals pending={pendingGoals} completed={completedGoals} />}
       {phoneApp === 'history' && <PhoneHistoryScreen journalDay={journalDay} today={game.day} entries={journalEntries} onDayChange={setSelectedJournalDay} />}
       {phoneApp === 'notes' && <PhoneNotesScreen mapPlaces={mapPlaces} answeredQuestions={answeredQuestions} />}

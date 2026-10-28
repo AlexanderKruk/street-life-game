@@ -65,7 +65,7 @@ try {
   assert(!read('street-life-phone-activity-v1'));assert(!screen.queryByRole('dialog'));
   if(extra[invKey])assert(screen.getByText('Phone unavailable'));
   else {
-   assert.equal(document.querySelectorAll('.phone-app-grid button').length,4);
+   assert.equal(document.querySelectorAll('.phone-app-grid button').length,5);
    assert.equal(screen.getByRole('button',{name:'Find Help',exact:true}).disabled,!!extra['street-life-mobile-service-until']);
    click('Notes');click('Street');click(phoneLabel);
    assert(document.querySelector('.phone-app-grid'),'Street always opens the phone home, not the previously viewed app');
@@ -94,8 +94,8 @@ try {
  setup({locationId:'station',minutes:600});
  scrollCalls.length=0;click('Phone');
  assert.equal(scrollCalls.length,0,'bottom navigation retains existing scroll behavior');
- assert.equal(document.querySelectorAll('.phone-app-grid button').length,4);
- assert.deepEqual([...document.querySelectorAll('.phone-app-grid button')].map(node=>node.getAttribute('aria-label')),['Find Help','Goals','Notes','History']);
+ assert.equal(document.querySelectorAll('.phone-app-grid button').length,5);
+ assert.deepEqual([...document.querySelectorAll('.phone-app-grid button')].map(node=>node.getAttribute('aria-label')),['Find Help','Goals','Notes','History','Settings']);
  assert(!screen.queryByRole('button',{name:'Journal',exact:true}));
  assert(!screen.queryByRole('button',{name:'Music',exact:true}));
  assert(!screen.queryByRole('button',{name:'Video',exact:true}));

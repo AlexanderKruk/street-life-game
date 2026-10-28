@@ -1213,3 +1213,19 @@ paragraph. Opening hours and On map stay in the heading. Repeated conversation
 prose and the queue timetable are omitted from the modal. Actual ID-check time,
 resource changes, discovery, scheduled goal and History remain unchanged.
 Detailed registration rules remain in Notes and the shelter actions.
+
+
+## Phone settings and language — 28 October 2026
+
+Settings is the fifth app after Find Help, Goals, Notes and History. Its Language
+row opens native-name radio choices English, Polski and Русский. The selected
+language persists on the device, independently of the current run. Switching
+flushes saved progress and reloads the same session, returning to Language;
+Back returns to Settings, then the phone home. No internet payment, game-time
+cost or resource reward is attached to the setting. Existing phone access and
+busy/blocking rules still apply. Reset save retains the language preference.
+Polish and Russian currently translate core interface labels, phone navigation,
+Find Help categories, place/item names and settings; other messages use English.
+The language page states this limitation for these languages. Saved History
+retains its original wording. More story translations can extend the catalogues
+without changing gameplay identities or saves.

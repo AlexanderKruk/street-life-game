@@ -1,4 +1,12 @@
 export const phoneUi = {
+  'phone.ui.app.settings': 'Settings',
+  'phone.ui.language': 'Language',
+  'phone.ui.backSettings': 'Back to settings',
+  'phone.ui.language.en': 'English',
+  'phone.ui.language.pl': 'Polski',
+  'phone.ui.language.ru': 'Русский',
+  'phone.ui.language.partial': 'Some text is shown in English.',
+  'phone.ui.language.error': 'Could not save the language. Try again.',
   'phone.ui.searchTitle': 'Looking for information',
   'phone.ui.elapsedCall': 'Elapsed call time',
   'phone.ui.elapsedBrowsing': 'Elapsed browsing time',

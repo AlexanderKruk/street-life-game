@@ -313,3 +313,28 @@ for (const [name, seed] of [['travel', entries('trip')], ['search', rainySeed('p
       }
   })
 }
+
+for (const width of [320, 1280]) test(`phone language switching preserves progress at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 844 })
+  const seed = entries(null, { 'street-life-screen': 'phone', 'street-life-mobile-service-until': '0',
+    [keys.history]: JSON.stringify([{ day: 3, minute: 590, actionTitle: 'Old heading', title: 'Saved heading', text: 'Saved English reflection.', reflection: true }]) })
+  await openGame(page, seed)
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('button', { name: /Language English/ }).click()
+  const before = await read(page, keys.game), inventory = await read(page, keys.inventory), history = await read(page, keys.history)
+  for (const [id, title, back] of [['ru', 'Язык', 'Назад к настройкам'], ['pl', 'Język', 'Wróć do ustawień'], ['en', 'Language', 'Back to settings']]) {
+    await page.locator(`input[name="game-language"][value="${id}"]`).check()
+    await expect(page.locator('html')).toHaveAttribute('lang', id)
+    await expect(page.locator('.phone-screen h2')).toHaveText(title)
+    await expect(page.locator(`input[value="${id}"]`)).toBeChecked()
+    expect(await read(page, keys.game)).toEqual(before)
+    expect(await read(page, keys.inventory)).toEqual(inventory)
+    expect(await read(page, keys.history)).toEqual(history)
+    await expect(page.getByRole('button', { name: back, exact: true })).toBeVisible()
+    expect(await page.locator('.phone-app-content').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+  }
+  await page.getByRole('button', { name: 'Back to settings', exact: true }).click()
+  await expect(page.locator('.phone-screen h2')).toHaveText('Settings')
+  await page.getByRole('button', { name: 'Back to phone', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeFocused()
+})

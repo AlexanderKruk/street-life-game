@@ -1,3 +1,5 @@
+import { loadLanguage } from './language'
+import { pl, ru } from '../locales/interfaceTranslations'
 import { app } from '../locales/en/app'
 import { phoneAnswers } from '../locales/en/phoneAnswers'
 import { trash } from '../locales/en/trash'
@@ -26,11 +28,17 @@ import { common } from '../locales/en/common'
 import { dialogs } from '../locales/en/dialogs'
 import { results } from '../locales/en/results'
 import { createTranslator } from './core'
-import type { TranslationCatalog } from './types'
+import type { ParameterValue, TranslationCatalog } from './types'
 
 export const en = { ...app, ...phoneAnswers, ...trash, ...journalUi, ...phoneUi, ...phoneProcess, ...phoneContent, ...events, ...eventUi, ...eventController, ...travel, ...rain, ...sleep, ...shelter, ...controllerActions, ...actions, ...locations, ...hud, ...status, ...inventory, ...effects, ...common, ...dialogs, ...results, ...eventHistory, ...inventoryHistory, ...actionHistory } as const
 export type MessageKey = keyof typeof en
 export type Catalog = TranslationCatalog<typeof en>
-export const locale = 'en-GB'
-export const t = createTranslator(locale, en)
+export const language = loadLanguage()
+export const locale = { en: 'en-GB', pl: 'pl-PL', ru: 'ru-RU' }[language]
+const overrides = language === 'pl' ? pl : language === 'ru' ? ru : {}
+const english = createTranslator('en-GB', en)
+const translated = createTranslator(locale, { ...en, ...overrides } as typeof en)
+type RuntimeTranslator = (key: string, params?: Record<string, ParameterValue>) => string
+export const t = ((key: string, params?: Record<string, ParameterValue>) =>
+  ((Object.hasOwn(overrides, key) ? translated : english) as RuntimeTranslator)(key, params)) as typeof english
 export { createTranslator, validateCatalog } from './core'
