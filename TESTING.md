@@ -808,3 +808,9 @@ visible. Future version bumps do not require baseline updates for this label.
 The full 30-script Node suite and release build run in the GitHub Pages gate.
 Polish/Russian translations remain partial as stated in Settings. WebKit and
 physical iPhone remain unverified.
+
+The first v342 Pages gate stopped at regression/map-travel because its old
+launcher assertion still expected four apps. Updated it to assert the exact
+five-app sequence including Settings; all plan, focus, elapsed-time and saved
+resource assertions remain intact. The affected map-travel regression passed.
+No gameplay source changed in this correction.

@@ -78,7 +78,7 @@ assert.equal(Number(localStorage.getItem('street-life-mobile-service-until')),60
 setup({locationId:'shop',minutes:600},{[invKey]:{phoneBattery:43,phoneCondition:72},'street-life-mobile-service-until':'5000'});
 click('Inventory');click('Phone');
 assert(screen.getByRole('region',{name:'Phone'}));assert(!screen.queryByRole('dialog'));
-assert.equal(document.querySelectorAll('.phone-app-grid button').length,4);
+assert.deepEqual([...document.querySelectorAll('.phone-app-grid button')].map(button=>button.getAttribute('aria-label')),['Find Help','Goals','Notes','History','Settings']);
 assert(!screen.queryByRole('switch',{name:'Music'}));assert(!screen.queryByRole('switch',{name:'Navigation'}));
 click('Mobile plan');assert(screen.getByRole('dialog',{name:'Mobile plan'}));
 assert(document.activeElement===screen.getByRole('button',{name:'Close mobile plan'}));assert.equal(document.body.style.position,'fixed');
