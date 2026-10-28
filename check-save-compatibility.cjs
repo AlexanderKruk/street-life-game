@@ -53,6 +53,7 @@ for (const fixture of fixtures) {
           version: 2, shelter: JSON.parse(value).shelter, charge: false, work: false, cold: false,
           chargeKnown: false, workKnown: false, coldKnown: false,
           battery: JSON.parse(fixture.entries['street-life-inventory-v1']).phoneBattery,
+          pendingCompletions: [], // Newly added acknowledgement queue defaults to empty for legacy saves.
         }, `v${fixture.build}, reopen ${reopen}: event-driven goals migrate without inventing completion`);
       } else if (key === 'street-life-screen' && value === 'journal') {
         assert.equal(localStorage.getItem(key), 'phone', 'old Journal selection migrates to Phone');
