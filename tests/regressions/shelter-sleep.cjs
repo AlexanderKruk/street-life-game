@@ -1,8 +1,8 @@
 const env = require('../helpers/regression-env.cjs');
 const { React, render, screen, fireEvent, within, cleanup, assert, App, stateKey, invKey, lifeKey, read, ambientSceneIds, setup, click, chooseHours, beginSleep, ok, advance, callbacks, booking } = env;
 // Full backpack rejects new stacks; a partial stack still accepts food.
-setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:ambientSceneIds,lastAt:null,pendingId:null},[invKey]:{food:4,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);assert(screen.getByRole('dialog').textContent.includes('no backpack room'));
-setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:ambientSceneIds,lastAt:null,pendingId:null},[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();click('Accept');assert.equal(read(invKey).food,4);
+setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:ambientSceneIds,lastAt:null,pendingId:null},[invKey]:{food:4,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();advance(6000);click('Accept');assert.equal(read(invKey).food,4);assert(screen.getByRole('dialog').textContent.includes('no backpack room'));
+setup({locationId:'station',minutes:1140},{'street-life-encounters-v1':{seen:ambientSceneIds,lastAt:null,pendingId:null},[invKey]:{food:3,water:4,medicines:24,cigarettes:0,bottles:0,foodFreshness:100}});Math.random=()=>.01;click(/Sit and recover/);ok();advance(6000);click('Accept');assert.equal(read(invKey).food,4);
 
 // Daily begging allowance survives reload and resets only on the next game day.
 setup({money:0});for(let i=0;i<3;i++){click(/Ask someone for change\? It’s hard, but I could try./);ok();}assert(!screen.queryByRole('button',{name:/Ask someone for change\? It’s hard, but I could try./}));
