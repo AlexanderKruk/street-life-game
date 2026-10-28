@@ -304,3 +304,15 @@ were checked for syntax, unchanged catalogue keys/parameters and the exact
 approved replacements before the GitHub source save. Browser inspection did
 not start; full suites, screenshot baselines, WebKit and iPhone were not run.
 This is a source save with [skip ci], without a release or deployment.
+
+## Release verification — v341
+
+The final check-localization run passed after restoring the runtime. Production
+build passed. Of 41 Chromium scenarios, 36 passed immediately; five screenshot
+differences were confined to the version digits (8×10 pixels each). Those five
+baselines were reviewed and updated; targeted reruns passed 2/2 mobile and 3/3
+desktop. Additional actual-App QA covered patrol/stored documents, downpour/Cold,
+sleep/Cold, discard and food choice at 320×568 and 1280×900: all ten states
+showed the approved copy at Body 16px, no horizontal overflow and working
+confirmation/cancel controls. WebKit and physical iPhone remain unverified.
+The full Node suite and release build run in the GitHub Pages workflow.
