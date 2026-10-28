@@ -929,20 +929,36 @@ Main current-location headers also have dedicated environment imagery for Statio
 
 Daily history displays completed actions/events at their completion day and time, newest first. Each entry has an action heading and one or two short first-person sentences about the character's thoughts, feelings or physical sensations. Reflections respond to actual outcomes and can incorporate an action-linked memory. They do not repeat the action report or resource numbers; an entry can omit its description when there is no useful reflection. Full narrative and actual resource deltas remain in the action result. Purchases, item use, travel arrivals, completed sleep, laundry, registration results and event outcomes feed the shared completion pipeline. Starting an ongoing activity does not log its completion early.
 
-The selected day initially shows its latest 30 entries; `Show older entries` appends another 30 without jumping the reading position. Switching days or reopening History resets the display count; ordinary ticks preserve expanded entries. The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Phone → History opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on displayed Day 0 and forward on the current day. Reopening History returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals and their progression retain their existing behavior.
+The selected day initially shows its latest 30 entries; `Show older entries` appends another 30 without jumping the reading position. Switching days or reopening History resets the display count; ordinary ticks preserve expanded entries. The last 500 compact entries persist across reloads. Existing reports migrate to reflections in the same save key, preserving completion dates/times; original action titles are retained separately for Street's choice logic. Phone → History opens on the current day. A centered `Day N · weekday` heading replaces Today, with large framed previous/next buttons; browsing moves one day at a time, including days with no records. Back is disabled on displayed Day 0 and forward on the current day. Reopening History returns to the current day. A new run clears history. The fake current-situation entry and header notebook illustration are removed. Goals follow the event-driven progression below.
 
-Goals use persistent completion flags. First morning completes at noon of displayed Day 1 (stored day 2, or on a later day alive), after the opening night. Safe sleep completes on a successful reserved-bed registration or residence in Schronisko, not on discovering an address or failing the queue. Social support completes on arriving at an open Help Center; existing referral holders migrate as completed. Work search completes on a successful online work search, arrival at an open Job Centre/Day Work, or existing employment. Completed goals stay completed across days and reloads and reset for a new run. Existing saves infer only progress evidenced by current game state.
+Goals appear from actual needs and discoveries rather than all being shown at the start.
 
-Phone → Goals displays incomplete goals in priority order: morning, safe sleep, social support, work. A pending shelter appointment promotes safe sleep to the top and displays the appointment day/time within that goal's description, without duplicating it in a separate next-important panel. Only the first incomplete goal has a warm yellow border. Goals shows the incomplete count; Completed shows the completed count in a separate subsection below, collapsed by default. Completed cards have a green check, muted title and strikethrough. The shelter arrival reminder clears on attendance during registration hours or obtaining accommodation, and missed appointments move to the next available registration day.
+| Goal | Appears after | Completion condition |
+|---|---|---|
+| Find a safe place to sleep | The opening at 22:00 on displayed D0 | Successful reserved shelter bed or living in Schronisko |
+| Recharge your phone | Battery first reaches 20% or less, including a low-battery save | Actual battery gain from charging; charging earlier also counts |
+| Earn your first pay | Discovering Day Work through a conversation/search, visiting it, or completing a shift | Completing paid day work; a search or visit alone does not count |
+| Recover from your cold | An active Cold effect | The cold has passed; taking medicine alone does not count |
 
-| Goal | Completion condition |
-|---|---|
-| Get through the morning | Alive at noon on displayed Day 1 (stored day 2), or alive on a later day |
-| Find a safe place to sleep | Active reserved shelter bed or living in Schronisko |
-| Visit social support | At an open Help Center; existing referral also proves progress |
-| Look for work | Successful online work search, visit to open Job Centre/Day Work, or existing employment |
+Unlocked goals remain visible until completed, even if the triggering need changes.
+Goals may unlock in parallel; they do not gate movement or actions. Completed goals
+remain completed across days/reloads, including after another cold. A new run resets
+all progress. Unknown goals are hidden and excluded from the active counter. With no
+pending known goals the screen says “No active goals for now.”
 
-The counter is calculated from the four saved flags. Completion never rolls back just because a booking expires or a location is left. A reset clears all flags and history. History uses completion time: an action crossing midnight is recorded on the day it finishes. Entries contain compact reflections; exact resource deltas and the detailed explanation remain in the action result. Passive clock ticks and navigation between screens are not individual actions.
+Pending goals are ordered shelter, charging, work, cold. Only the first pending goal
+has the warm yellow border. A pending shelter appointment retains its day/time inside
+the shelter goal, clears on attendance or accommodation, and moves to the next
+registration day when missed. Completed is a separate collapsed section with its own
+count, green checks and muted strikethrough titles.
+
+Completion/discovery flags and the last observed battery persist in the existing
+journal-goals save key with schema version 2. Old shelter completion is preserved;
+old morning/support goals are retired and an old work-search flag does not count as
+paid work. Existing employment proves completed day work; discovered places and
+current needs reveal relevant goals when the session resumes. Existing History is
+preserved. History uses completion time, including actions crossing midnight;
+passive ticks and navigation are not individual actions.
 
 ## Known implementation gaps and deferred features
 
@@ -1105,7 +1121,7 @@ Displayed D1 (stored day 2) begins at midnight, two game hours after the D0 22:0
 
 The opening evening is displayed as D0; midnight changes it to D1, and later midnights continue D2, D3, etc. `src/gameDate.ts` supplies one display conversion for the header (including its accessible name), History heading/list, goals and shelter notices, sleep start/wake dates and game-over day. Weekdays stay attached to their existing calendar dates: D0 Monday → D1 Tuesday.
 
-Stored game days remain one-based. No save migration or rewrite of dates, history keys, effects, cooldowns, daily allowances, mobile renewal, shelter bookings or weekday schedules is required. The first-morning goal still completes at the same real game moment: displayed D1 at noon. Older saves display their day with the same conversion.
+Stored game days remain one-based. No save migration or rewrite of dates, history keys, effects, cooldowns, daily allowances, mobile renewal, shelter bookings or weekday schedules is required. The retired first-morning goal is no longer shown; stored game dates remain unchanged. Older saves display their day with the same conversion.
 
 Event audit: neighbour returning with shopping is D0 22:00–23:00; neighbour with dog is D0 22:00–00:00. Both require staying near home before any actual trip. The broader first-night context remains D0 22:00 through D1 06:00 (exclusive), preserving bench, station, wake and phone-call behavior after midnight. General events retain their existing time/weather/place restrictions. Idle observations now evaluate the clock after the elapsed tick, so a 23:00/00:00 boundary cannot admit an expired home meeting from the preceding minute.
 

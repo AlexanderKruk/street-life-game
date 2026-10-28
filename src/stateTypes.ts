@@ -23,7 +23,12 @@ export type Screen = 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'tr
 
 export type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null }
 export type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot; pausedMinutes?: number }
-export type JournalGoals = { morning: boolean; shelter: boolean; support: boolean; work: boolean }
+export type JournalGoals = {
+  version: 2
+  shelter: boolean; charge: boolean; work: boolean; cold: boolean
+  chargeKnown: boolean; workKnown: boolean; coldKnown: boolean
+  battery: number
+}
 export type TravelMode = 'walk' | 'transit' | 'fare-dodge'
 export type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
 export type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }

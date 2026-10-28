@@ -1,3 +1,4 @@
+import { initialJournalGoals, progressJournalGoals, journalGoalKnown } from './journalGoals'
 import PhoneSettingsScreen from './PhoneSettingsScreen'
 import { languageReturn, clearLanguageReturn } from './i18n/language'
 import { travelPhaseLabel } from './travelText'
@@ -240,28 +241,20 @@ export default function App() {
   const currentExposure = underRainCover ? 'cover' : travelPhase?.exposure ?? weatherExposure(game)
   const temperature = temperatureAt(weather.temp, game.minutes)
   const goals = useMemo(() => [
-    { id: 'morning' as const, title: t('journal.ui.goal.morning.title'), description: t('journal.ui.goal.morning.description', { day: displayDay(2) }) },
     { id: 'shelter' as const, title: t('journal.ui.goal.shelter.title'), description: activeGoal ? t('journal.ui.goal.shelter.booked', { day: displayDay(activeGoal.day), time: formatTime(activeGoal.minute) }) : t('journal.ui.goal.shelter.description') },
-    { id: 'support' as const, title: t('journal.ui.goal.support.title'), description: t('journal.ui.goal.support.description') },
+    { id: 'charge' as const, title: t('journal.ui.goal.charge.title'), description: t('journal.ui.goal.charge.description') },
     { id: 'work' as const, title: t('journal.ui.goal.work.title'), description: t('journal.ui.goal.work.description') },
+    { id: 'cold' as const, title: t('journal.ui.goal.cold.title'), description: t('journal.ui.goal.cold.description') },
   ], [activeGoal])
   const firstNight = firstNightTime(game) && life.housing === 'Street'
   const openingCallsActive = firstNight && openingCallIndex < OPENING_CALLS.length
   const nextOpeningCall = openingCallsActive ? OPENING_CALLS[openingCallIndex] : undefined
   const completedGoals = useMemo(() => goals.filter(goal => journalGoals[goal.id]), [goals, journalGoals])
-  const pendingGoals = useMemo(() => goals.filter(goal => !journalGoals[goal.id])
+  const pendingGoals = useMemo(() => goals.filter(goal => !journalGoals[goal.id] && journalGoalKnown(journalGoals, goal.id))
     .sort((a, b) => Number(!!activeGoal && b.id === 'shelter') - Number(!!activeGoal && a.id === 'shelter')), [goals, journalGoals, activeGoal])
   useEffect(() => {
-    setJournalGoals(previous => {
-      const next = {
-        morning: previous.morning || (game.health > 0 && (game.day > 2 || (game.day === 2 && game.minutes >= 720))),
-        shelter: previous.shelter || life.housing === 'Schronisko' || (life.shelterUntilDay ?? 0) >= game.day,
-        support: previous.support || life.schroniskoReferral === true || (current.id === 'support' && open && !trip),
-        work: previous.work || life.employment === 'Day work' || ((current.id === 'jobcenter' || current.id === 'work') && open && !trip),
-      }
-      return goals.every(goal => previous[goal.id] === next[goal.id]) ? previous : next
-    })
-  }, [game.day, game.minutes, game.health, life.housing, life.shelterUntilDay, life.schroniskoReferral, life.employment, current.id, open, trip])
+    setJournalGoals(previous => progressJournalGoals(previous, { game, inventory, life, effects, discoveredLocations, answeredQuestions }))
+  }, [game.day, game.minutes, game.locationId, inventory.phoneBattery, life.housing, life.shelterUntilDay, life.employment, effects, discoveredLocations, answeredQuestions])
   useEffect(() => {
     if (!activeGoal) return
     if ((life.shelterUntilDay ?? 0) >= game.day || life.housing === 'Schronisko' ||
@@ -588,7 +581,7 @@ export default function App() {
     localStorage.removeItem(SAVE_KEYS.discoveryVersion)
     setDiscoveredLocations(['street', 'station', 'shop'])
     setActiveGoal(null)
-    setJournalGoals({ morning: false, shelter: false, support: false, work: false })
+    setJournalGoals(initialJournalGoals(INITIAL_INVENTORY.phoneBattery))
     setJournalEntries([])
     setMusicWalkUsed(false)
     localStorage.removeItem(MUSIC_WALK_USED_KEY)

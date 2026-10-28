@@ -131,7 +131,7 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
       setGame(next)
       setAnsweredQuestions(previous => [...new Set([...previous, id])])
       setDiscoveredLocations(previous => [...new Set([...previous, ...foundPlaces])])
-      if (id === 'work') setJournalGoals(previous => ({ ...previous, work: true }))
+      if (id === 'work') setJournalGoals(previous => ({ ...previous, workKnown: true }))
       if (id === 'bed' && !shelterBooked) setActiveGoal({ type: 'night-shelter', day: game.minutes >= 1320 ? game.day + 1 : game.day, minute: SHELTER_ENTRY_OPEN })
       setInfoModal({ title: id === 'morning' && !foundPlace ? t('phone.process.noInfoTitle') : question.title, text: t(memory ? 'phone.process.rememberAnswer' : 'phone.process.aiAnswer', { answer: answerText }), presentation })
     }, before)

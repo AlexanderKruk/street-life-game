@@ -1,15 +1,16 @@
-# Neighbouring map labels / modal stress checkpoint — 26 October 2026
+# Event-driven goals source checkpoint — 28 October 2026
 
-Source commit: 84ef4871666a6d8e626bea474b5ad0cbdbb51237
-Source tree: f1a434e4e7d9d7aba3541d19d7756e3fe24dfc99
-Recovery bundle preserves 36 original local commits from published base d8ff6fac4236badc45df86195d3295d7cfee64af. API source tree matched the local committed source tree before recovery files.
+Source-only save; no game publication. Published version remains v343.
 
-mapLabelLayout keeps original marker coordinates and places measured labels within plot bounds, avoiding other labels/markers with deterministic candidate offsets and connector lines. Selected-card descriptions wrap long words. Gameplay/routes/saves and clock ownership unchanged. Best-effort placement does not guarantee arbitrary viewport/font/input.
+- Local source commit: c504dc20c88ca25656b2a1373101e387ad501f49
+- Verified source tree: 68261a49605aa7c154056cbe4aaa634dfc76595c
+- GitHub source snapshot: 34ac73a8b1d2b9d9e32270bb6a61e63be47fd38a
+- Backup branch: backup/goals-2026-10-28
+- Original local history: .backup/goals-2026-10-28.bundle
 
-Geometry regression covers four widths/two label lengths: bounds, non-overlap, marker/connector endpoints, determinism, input immutability. Browser component QA normal/expanded names at320x568,390x844,850x390 measured zero label intersections. Pointer Help Center selection/full name/card preserved; narrow description client/scroll widths104/104.
+The API source tree was verified equal to the committed local tree before adding these recovery files. The bundle was verified with git bundle verify and retains the original local commit. Restore it after fetching base 3926974838a85aed2ef75791de93f271cd3abf66:
 
-Shared ModalPanel/narrative/ChoiceButton/ModalAction long-copy stress scrolled to clickable confirmation without horizontal overflow at those viewports. Specialised modal variants still need their matrix.
+    git bundle verify .backup/goals-2026-10-28.bundle
+    git fetch .backup/goals-2026-10-28.bundle HEAD:refs/heads/recovered-goals-2026-10-28
 
-Passed: check-localization, rendering, regression/map-travel, module boundaries(157), design-system, build, diff check. No baseline updates/full suites/WebKit/iPhone. Remaining specialised-modal matrix and rain-art context open.
-
-Source save only with [skip ci]; published v335 unchanged. No deployment.
+Checks passed: journal-services regression, session restoration, legacy-save compatibility, autosave, phone controller, shelter charging, module boundaries, localisation and production build. Six targeted Chromium opening/unlocked-goals/reload cases passed at 320/390/1280px. Full suites, WebKit and physical iPhone were not run. Workflow files and release/build ID are unchanged; [skip ci] suppresses push-triggered publication.

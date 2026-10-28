@@ -73,21 +73,54 @@ assert.deepEqual(read(historyKey).slice(0,yesterday.length),yesterday,'copy chan
 const stolen=journalReflection('While you were asleep','Some cash is gone, and your documents are missing.');
 assert.equal(stolen.title,'Belongings stolen');assert(!/overnight/i.test(stolen.title));
 assert.deepEqual(journalReflection('Something happened overnight','Some cash is gone, and your documents are missing.'),stolen,'legacy event titles retain their reflection');
-// Journal goals follow real progress, stay completed, and reminders expire sensibly.
+// Goals emerge from needs/discoveries and complete only on real outcomes.
 const journalKey='street-life-journal-goals-v1',reminderKey='street-life-goal-v1';
-setup({minutes:600});click('Phone');click('Goals');assert.equal(document.querySelector('.phone-goals-count').textContent,'4');assert(!document.querySelector('.completed-goals'));assert.equal(document.querySelector('.main-goal strong').textContent,'Get through the morning');assert(!document.querySelector('.next-event'));
-setup({day:1,minutes:1320});assert(!read(journalKey).morning);
-setup({day:2,minutes:719});assert(!read(journalKey).morning);
-setup({day:2,minutes:720});assert(read(journalKey).morning);
+const unknownPlaces={'street-life-discovered-v1':['street','station','shop']};
+setup({day:1,minutes:1320},unknownPlaces);click('Phone');click('Goals');
+assert.equal(document.querySelector('.phone-goals-count').textContent,'1');
+assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');
+assert(!document.querySelector('.completed-goals'));assert(!document.querySelector('.next-event'));
+for(const battery of [20.01,20,0]) {
+ setup({}, {...unknownPlaces,[invKey]:{phoneBattery:battery}});
+ assert.equal(read(journalKey).chargeKnown,battery<=20);assert(!read(journalKey).charge);
+}
+setup({locationId:'station'}, {...unknownPlaces,[invKey]:{phoneBattery:19}});
+const lowCharge=read(journalKey);assert(lowCharge.chargeKnown);
+click(/Charge phone/);assert(read(journalKey).charge);assert(read(invKey).phoneBattery>19);ok();
+cleanup();render(React.createElement(App));assert(read(journalKey).charge);
+click('Phone');click('Goals');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'1');assert(!document.querySelector('.completed-goals').open);
+assert(within(document.querySelector('.completed-goals')).getByText('Recharge your phone').closest('.goal').classList.contains('done'));
+// Charging before the low-battery trigger also counts.
+setup({locationId:'station'}, {...unknownPlaces,[invKey]:{phoneBattery:62}});assert(!read(journalKey).chargeKnown);
+click(/Charge phone/);assert(read(journalKey).charge);ok();
+setup({}, {...unknownPlaces,[invKey]:{phoneBattery:35},[journalKey]:lowCharge});assert(read(journalKey).charge,'restored battery gain counts');
 setup({locationId:'shelter',minutes:1140},{[lifeKey]:{housing:'Street',shelterRegistrationAttemptDay:1,shelterVacancies:0}});assert(!read(journalKey).shelter);
 setup({locationId:'street'},{[lifeKey]:{housing:'Night shelter',shelterUntilDay:7}});assert(read(journalKey).shelter);
-setup({locationId:'support',minutes:1000});assert(!read(journalKey).support);
-setup({locationId:'support',minutes:600});assert(read(journalKey).support);click('Phone');click('Goals');assert.equal(document.querySelector('.phone-goals-count').textContent,'3');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'1');assert(!document.querySelector('.completed-goals').open);assert(!within(document.querySelector('.journal-goals > .goal-list')).queryByText('Visit social support'));assert(within(document.querySelector('.completed-goals')).getByText('Visit social support').closest('.goal').classList.contains('done'));cleanup();render(React.createElement(App));assert(read(journalKey).support);
-setup({locationId:'work',minutes:1200});assert(!read(journalKey).work);
-setup({locationId:'street',minutes:600},{'street-life-discovered-v1':['street','station','shop']});const directSearchBattery=read(invKey).phoneBattery;click('Phone');click('Find Help');click('Work');assert(read(journalKey).work);assert(Math.abs(read(invKey).phoneBattery-(directSearchBattery-15*.4*1.196))<1e-8);ok();
-setup({locationId:'street',day:2,minutes:1000},{[journalKey]:{morning:true,shelter:true,support:true,work:true}});click('Phone');click('Goals');assert.equal(document.querySelector('.phone-goals-count').textContent,'0');assert.equal(document.querySelector('.completed-goals summary > span').textContent,'4');assert(!document.querySelector('.main-goal'));assert(screen.getByText('All starting goals completed.'));
-click('Reset save');assert.deepEqual(read(journalKey),{morning:false,shelter:false,support:false,work:false});
-assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('Behind the lit windows, people are getting ready for bed.'));cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).morning);
+setup({locationId:'work',minutes:1200});assert(read(journalKey).workKnown);assert(!read(journalKey).work);
+setup({locationId:'street',minutes:600},unknownPlaces);assert(!read(journalKey).workKnown);
+const directSearchBattery=read(invKey).phoneBattery;click('Phone');click('Find Help');click('Work');
+assert(read(journalKey).workKnown);assert(!read(journalKey).work,'finding work is not receiving pay');
+assert(Math.abs(read(invKey).phoneBattery-(directSearchBattery-15*.4*1.196))<1e-8);ok();
+setup({locationId:'work',minutes:600});const beforePay=read(stateKey).money;
+click(/Take a short shift/);assert(read(journalKey).work);assert.equal(read(stateKey).money,beforePay+35);ok();
+cleanup();render(React.createElement(App));assert(read(journalKey).work);
+// Old search flags do not migrate as first earnings; equivalent shelter progress does.
+setup({}, {...unknownPlaces,[journalKey]:{morning:true,shelter:true,support:true,work:true}});
+assert(read(journalKey).shelter);assert(!read(journalKey).work);assert(!read(journalKey).workKnown);
+const effectsKey='street-life-effects-v1';
+setup({}, {...unknownPlaces,[effectsKey]:[{id:'cold',expiresAt:99999}]});assert(read(journalKey).coldKnown);assert(!read(journalKey).cold);
+const illGoals=read(journalKey);
+cleanup();render(React.createElement(App));assert(!read(journalKey).cold,'reload during illness does not complete it');
+setup({}, {...unknownPlaces,[journalKey]:illGoals,[effectsKey]:[{id:'cold',expiresAt:99999,treated:true}]});assert(!read(journalKey).cold,'medicine is not immediate recovery');
+setup({}, {...unknownPlaces,[journalKey]:illGoals,[effectsKey]:[{id:'cold',expiresAt:1}]});assert(read(journalKey).cold,'expired illness completes recovery');
+const recovered=read(journalKey);
+setup({}, {...unknownPlaces,[journalKey]:recovered,[effectsKey]:[{id:'cold',expiresAt:99999}]});assert(read(journalKey).cold,'later illness does not undo completion');
+setup({},unknownPlaces);assert(!read(journalKey).coldKnown);assert(!read(journalKey).cold);
+// No active goals means no known tasks, not completion of hidden future goals.
+setup({}, {...unknownPlaces,[journalKey]:{version:2,shelter:true,battery:62}});click('Phone');click('Goals');assert(screen.getByText('No active goals for now.'));assert.equal(document.querySelector('.phone-goals-count').textContent,'0');
+click('Reset save');assert.equal(read(journalKey).shelter,false);assert(!read(journalKey).chargeKnown);assert(!read(journalKey).workKnown);assert(!read(journalKey).coldKnown);
+assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert.equal(read(stateKey).locationId,'street');assert(document.querySelector('.story-scene').textContent.includes('Behind the lit windows, people are getting ready for bed.'));
+cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).workKnown);
 setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click('Phone');click('Goals');assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 1 at 18:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
 setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1080}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
 // Clothing caps every gain, migrates wear, and laundry cleans without repairing it.

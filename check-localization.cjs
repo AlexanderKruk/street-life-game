@@ -1376,7 +1376,7 @@ try {
   }
   for(const pendingCount of [0,1,3])for(const completedCount of [0,1,2]){
     const goals=n=>Array.from({length:n},(_,i)=>({id:`goal:${i}`,title:`Goal ${i}`,description:`Description ${i}`}));
-    const show=view=>{cleanup();render(React.createElement(view.JournalGoals,{pending:goals(pendingCount),completed:goals(completedCount)}));return{html:document.body.innerHTML,main:document.querySelectorAll('.main-goal').length,done:document.querySelectorAll('.goal.done').length};};const old=show(journalUiOld),actual=show(journalUiBase),translated=show(journalUiView);assert.equal(actual.html,old.html.replaceAll('1 completed goals','1 completed goal'));assert.equal(translated.main,actual.main);assert.equal(translated.done,actual.done);journalUiCases++;
+    const show=view=>{cleanup();render(React.createElement(view.JournalGoals,{pending:goals(pendingCount),completed:goals(completedCount)}));return{html:document.body.innerHTML,main:document.querySelectorAll('.main-goal').length,done:document.querySelectorAll('.goal.done').length};};const old=show(journalUiOld),actual=show(journalUiBase),translated=show(journalUiView);assert.equal(actual.html,old.html.replaceAll('1 completed goals','1 completed goal').replace('All starting goals completed.','No active goals for now.'));assert.equal(translated.main,actual.main);assert.equal(translated.done,actual.done);journalUiCases++;
   }
   console.log(`PASS: ${journalUiCases} Goals/History frozen/pseudo variants preserve day navigation, pagination, priority/completion and saved text (singular-goal grammar corrected).`);
   const memoryTimers={set:window.setInterval,clear:window.clearInterval,random:Math.random};window.setInterval=()=>1;window.clearInterval=()=>{};Math.random=()=>.99;

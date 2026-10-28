@@ -338,3 +338,35 @@ for (const width of [320, 1280]) test(`phone language switching preserves progre
   await page.getByRole('button', { name: 'Back to phone', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeFocused()
 })
+
+for (const width of [320, 390, 1280]) for (const needs of [false, true]) {
+  test(`goals appear from needs and discoveries at ${width}px (${needs ? 'unlocked' : 'opening'})`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: width === 1280 ? 900 : 844 })
+    const base = entries()
+    const inventory = JSON.parse(base[keys.inventory])
+    const overrides = needs ? {
+      [keys.inventory]: JSON.stringify({ ...inventory, phoneBattery: 19 }),
+      'street-life-discovered-v1': JSON.stringify(['street', 'station', 'shop', 'work']),
+      'street-life-effects-v1': JSON.stringify([{ id: 'cold', expiresAt: 99999 }]),
+    } : {
+      [keys.game]: JSON.stringify({ ...JSON.parse(base[keys.game]), day: 1, minutes: 1320 }),
+    }
+    await openGame(page, entries(null, overrides))
+    await page.getByRole('button', { name: 'Phone', exact: true }).click()
+    await page.getByRole('button', { name: /^Goals/ }).click()
+    await expect(page.locator('.journal-goals > .goal-list > li')).toHaveCount(needs ? 4 : 1)
+    await expect(page.locator('.main-goal strong')).toHaveText('Find a safe place to sleep')
+    if (needs) {
+      await expect(page.locator('.journal-goals strong')).toHaveText([
+        'Find a safe place to sleep', 'Recharge your phone', 'Earn your first pay', 'Recover from your cold',
+      ])
+    }
+    const progress = await read(page, 'street-life-journal-goals-v1')
+    await page.reload()
+    expect(await read(page, 'street-life-journal-goals-v1')).toEqual(progress)
+    // Phone returns to its launcher on reload; reopen the saved list.
+    await page.getByRole('button', { name: /^Goals/ }).click()
+    expect(await page.locator('.phone-app-content').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath('goals.png') })
+  })
+}

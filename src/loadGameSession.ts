@@ -1,3 +1,4 @@
+import { loadJournalGoals } from './journalGoals'
 import { STREET_EVENTS,firstNightTime,firstMorningTime } from './events'
 import { createInitialState,applySleepTime as applyGameSleepTime,locations,type GameState } from './game'
 import { absoluteMinutes } from './gameTime'
@@ -12,7 +13,7 @@ import { SHELTER_ENTRY_OPEN,SHELTER_QUEUE_MINUTES,SHELTER_REGISTRATION_OPEN } fr
 import { DEBUG_SLEEP_SPEED,shelterSleepMinutes } from './sleepRules'
 import { loadChoiceSeed } from './streetChoiceOrder'
 import type { ResultSnapshot } from './results'
-import type { ActiveEffect,FirstNightEvents,Inventory,JournalGoals,LifeSituation,PhoneActivity,Screen,ShelterArrival,ShelterDeparture,ShelterQueue,SleepState,StoredItems,Trip } from './stateTypes'
+import type { ActiveEffect,FirstNightEvents,Inventory,LifeSituation,PhoneActivity,Screen,ShelterArrival,ShelterDeparture,ShelterQueue,SleepState,StoredItems,Trip } from './stateTypes'
 import { FIRST_NIGHT_EVENTS_KEY,ENCOUNTERS_KEY,LEFT_HOME_KEY,PHONE_ACTIVITY_KEY,MUSIC_WALK_USED_KEY,GOAL_KEY,JOURNAL_GOALS_KEY,JOURNAL_HISTORY_KEY,SHELTER_ARRIVAL_KEY,SAVE_KEYS } from './saveKeys'
 
 import { PHONE_SEARCH_MIN, PHONE_SEARCH_MAX } from './phoneActivity'
@@ -158,11 +159,9 @@ export function loadGameSession(source: SaveReader) {
     const inHistory = journalEntries.some(entry => entry.actionId === 'music-walk')
     try { return reader.getItem(MUSIC_WALK_USED_KEY) === 'true' || inHistory } catch { return inHistory }
   })()
-  const journalGoals: JournalGoals = (() => {
-    try {
-      const raw = JSON.parse(reader.getItem(JOURNAL_GOALS_KEY) ?? '{}')
-      return { morning: raw.morning === true, shelter: raw.shelter === true, support: raw.support === true, work: raw.work === true }
-    } catch { return { morning: false, shelter: false, support: false, work: false } }
+  const savedJournalGoals: unknown = (() => {
+    try { return JSON.parse(reader.getItem(JOURNAL_GOALS_KEY) ?? '{}') }
+    catch { return null }
   })()
   const activeGoal: { type: 'night-shelter'; day: number; minute: number } | null = (() => {
     try {
@@ -277,6 +276,7 @@ export function loadGameSession(source: SaveReader) {
       return []
     }
   })()
+  const journalGoals = loadJournalGoals(savedJournalGoals, inventory.phoneBattery)
   return { game,phoneActivity,trip,closingNotice,journalEntries,musicWalkUsed,journalGoals,activeGoal,screen,answeredQuestions,seenMemories,shelterPhoneCharging,mobileServiceUntil,mobileAutoRenew,mobileRenewedDay,shelterQueue,shelterArrival,shelterDeparture,sleeping,begging,inventory,storage,life,effects,
     choiceSeed: loadChoiceSeed(reader), openingCallIndex: loadOpeningCallIndex(reader, !!readSavedGame(reader)),
     discoveredLocations: loadDiscoveredLocations(reader), firstNightEvents: loadFirstNightEvents(reader),
