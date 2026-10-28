@@ -825,3 +825,11 @@ no horizontal overflow. The narrow Station screen was visually inspected.
 Only explicit prose expectations changed in frozen parity checks; compatibility
 fixtures, saved History and mechanics remain unchanged. No full suites,
 screenshot-baseline updates, WebKit/iPhone or publication in this pass.
+
+## Release verification — v343
+
+Production build and all 43 Chromium cases passed (16 visual, 27 smoke).
+No baseline updates were needed: screenshot-only version hiding also covered
+the new v343 label. The release includes the verified ≈2h+ sleep entries and
+shorter sleep hints. The full 30-script Node suite and production build run in
+the GitHub Pages publication gate. WebKit and physical iPhone remain unverified.
