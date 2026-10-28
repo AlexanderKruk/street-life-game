@@ -1,6 +1,7 @@
 import type { Catalog } from '../i18n'
 // Whole-message interface translations. Missing story messages retain English.
 export const pl: Partial<Catalog> = {
+ 'journal.ui.goalCompleted':'Cel wykonany',
  'app.reset':'Nowa gra','app.emergency':'Wezwij pogotowie','app.emergencyDescription':'Pomoc ratunkowa · bez internetu',
  'phone.ui.app.settings':'Ustawienia','phone.ui.language':'Język','phone.ui.backSettings':'Wróć do ustawień','phone.ui.language.partial':'Część tekstów jest wyświetlana po angielsku.','phone.ui.language.error':'Nie udało się zapisać języka. Spróbuj ponownie.',
  'phone.ui.app.search':'Znajdź pomoc','phone.ui.app.goals':'Cele','phone.ui.app.notes':'Notatki','phone.ui.app.history':'Historia','phone.ui.phone':'Telefon','phone.ui.back':'Wróć do telefonu','phone.ui.plan':'Internet mobilny','phone.ui.dailyPrice':'1 zł/dzień','phone.ui.paid':'Opłacone','phone.ui.unpaid':'Nieopłacone','phone.ui.apps':'Aplikacje telefonu','phone.ui.internetUnpaid':'Internet nieopłacony','phone.ui.unavailableTitle':'Telefon niedostępny','phone.ui.mapHint':'Nadal możesz korzystać z mapy, aby dotrzeć do znanych miejsc.',
@@ -15,6 +16,7 @@ export const pl: Partial<Catalog> = {
  'item.name.water':'Woda','item.name.food':'Tanie jedzenie','item.backpack.food':'Jedzenie','item.name.bread':'Bułka','item.name.cannedFood':'Konserwa','item.name.readyMeal':'Gotowy posiłek','item.name.wipes':'Chusteczki nawilżane','item.name.showerGel':'Żel 3 w 1','item.name.cigarettes':'Papierosy','item.name.medicines':'Lek','item.name.bottles':'Butelki i puszki','item.name.phone':'Telefon','item.name.clothing':'Ubranie','item.name.documents':'Dokumenty','item.name.transitCard':'Karta miejska',
 }
 export const ru: Partial<Catalog> = {
+ 'journal.ui.goalCompleted':'Цель выполнена',
  'app.reset':'Новая игра','app.emergency':'Вызвать скорую','app.emergencyDescription':'Экстренная помощь · интернет не нужен',
  'phone.ui.app.settings':'Настройки','phone.ui.language':'Язык','phone.ui.backSettings':'Назад к настройкам','phone.ui.language.partial':'Часть текстов отображается на английском.','phone.ui.language.error':'Не удалось сохранить язык. Попробуй ещё раз.',
  'phone.ui.app.search':'Найти помощь','phone.ui.app.goals':'Цели','phone.ui.app.notes':'Заметки','phone.ui.app.history':'История','phone.ui.phone':'Телефон','phone.ui.back':'Назад к телефону','phone.ui.plan':'Мобильный интернет','phone.ui.dailyPrice':'1 zł/день','phone.ui.paid':'Оплачено','phone.ui.unpaid':'Не оплачено','phone.ui.apps':'Приложения телефона','phone.ui.internetUnpaid':'Интернет не оплачен','phone.ui.unavailableTitle':'Телефон недоступен','phone.ui.mapHint':'Ты по-прежнему можешь дойти до известных мест по карте.',

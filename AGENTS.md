@@ -141,6 +141,7 @@ events keep their outer frame clipped and their existing inner content scroller.
 | D20 roll and outcome confirmation | `DiceDialog` |
 | Bottle-search minigame | `TrashSearchDialog` with `TrashSearchTime` |
 | End of run | `GameOverDialog` |
+| Completed goal acknowledgement | `GoalCompletedDialog`, using compact `ModalPanel` and `ModalAction` |
 | Sleep in progress | `SleepProgressDialog` |
 | Shelter registration queue | `ShelterQueueDialog` |
 | Morning warning / packing and departure | `ShelterCheckoutWarning` / `ShelterDepartureDialog` |
@@ -858,3 +859,57 @@ completion, legacy shelter progress and the shelter appointment description.
 Legacy work search is not earned pay. New copy belongs in journalUi.ts.
 Run the journal-services regression group, restoration, phone and localisation
 checks for changes here; full suites remain reserved for publication.
+
+
+Goal acknowledgement — 28 October 2026: completion is observed independently of
+whether Goals was opened or its introduction trigger fired. `journalGoals.ts`
+queues newly completed IDs in optional `pendingCompletions` inside the existing
+v2 goal save. Validate/deduplicate restored IDs against completed flags. Old saves
+reconcile historical achievements without replaying congratulations. Pending
+acknowledgements survive reload; confirmation/Escape consumes only the first ID.
+App presents one `GoalCompletedDialog` after action results and other active
+scenes/processes settle; keep the shared clock paused, background/navigation
+inert, keyboard focus trapped and mobile body scroll locked while visible.
+Reuse the compact modal frame and ochre primary action. The ochre party-popper
+uses the shared 32px modal-heading size without a circle or background. Completion label
+is Body/400 in secondary text; the goal name is Title/600. Opening animations
+honour reduced motion. No repeated reward, additional clock or save key.
+
+
+In-transit ticket inspection — 28 October 2026: `travelInspection.ts` samples a
+single saved elapsed minute inside the shared On the bus phase. Paid-transit
+catalogue inspection keeps its existing cooldown/seen eligibility but is observed
+there rather than at departure. Fare-dodge starts the trip immediately, then
+uses the existing DC/fines in an unavoidable on-board D20. `Trip.inspection`
+persists schedule/status/roll/modifier in the existing trip save; validate it
+in the read-only loader and restore pending dice through `useEventSession`.
+Inspection transitions are autosave milestones. Keep the shared clock paused
+through scene/D20/result, then resume the same Trip with its exact remaining
+minutes and original before snapshot; never restart the ride or charge again.
+Legacy trips without this field remain compatible and do not acquire another
+fare-dodge roll. New copy is in locales/en/travel.ts. Run map-travel,
+check-event-travel-controllers, restoration/autosave and localisation checks;
+full suites remain reserved for publication.
+
+
+Post-action breathing space — 28 October 2026: location actions and awake bench
+rest use `deferActionEncounter`, not immediate first-night/ordinary observation.
+`encounters.deferred` stores origin, trigger, action duration and a sampled 5–15s
+remaining real-time budget; loaders validate it without selecting a scene. The
+existing App world-clock callback advances this budget before ordinary ticks;
+never add another timer. Start after the result is acknowledged, reset the full
+delay while blocked/hidden, preserve remaining time through reload, and discard
+on departure/reset. Idle observers must not bypass it. Select/revalidate and mark
+the scene seen only on release. Keep arrival/wake/travel-inspection and mandatory
+morning behavior. `recordFareInspectionRoll` now commits the roll to Trip in the
+same command as dice state, avoiding a passive-effect save race.
+
+
+Spare-change station art — 28 October 2026: `spare-change` uses the approved cool
+station opening and three matching result images (give/decline/avoid) only when
+`locationId === 'station'`. Street retains its former unillustrated card until
+outdoor variants exist; track that gap in IMAGE_AUDIT.md. Mapping is presentation
+only; choice IDs, eligibility, the 1 zł cost and existing History are unchanged.
+RGB WebP masters and 480/768/1024 variants use the shared responsive-image helper.
+References, selected generation sources and prompts are recorded in
+`docs/art/spare-change-station-generation.json`.

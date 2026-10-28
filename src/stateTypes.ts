@@ -21,21 +21,25 @@ export type StoredItems = { documents: boolean; medicines: number; cigarettes: n
 
 export type Screen = 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
 
-export type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null }
+export type DeferredEncounter = { token: number; locationId: string; trigger: 'location' | 'bench'; elapsedMinutes: number; delayMs: number; remainingMs: number }
+export type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null; deferred?: DeferredEncounter }
 export type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot; pausedMinutes?: number }
+export type JournalGoalId = 'shelter' | 'charge' | 'work' | 'cold'
 export type JournalGoals = {
   version: 2
   shelter: boolean; charge: boolean; work: boolean; cold: boolean
   chargeKnown: boolean; workKnown: boolean; coldKnown: boolean
   battery: number
+  pendingCompletions?: JournalGoalId[]
 }
 export type TravelMode = 'walk' | 'transit' | 'fare-dodge'
-export type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot }
+export type TripInspection = { at: number; status: 'scheduled' | 'rolling' | 'done'; roll?: number | null; modifier?: number }
+export type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot; inspection?: TripInspection }
 export type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
 export type ShelterArrival = { day: number; minute: number }
 export type ShelterQueue = { day: number; remaining: number; total?: number; arrivalMinute?: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }
 export type SleepState = { kind: 'ground' | 'bench' | 'shelter' | 'residential'; total: number; remaining: number; startAbsolute: number; realStartedAt: number; realWakeAt: number; forced?: boolean; before?: ResultSnapshot }
 
-export type EventDiceState = { choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string }
+export type EventDiceState = { choice: StreetEventChoice; roll: number | null; modifier: number; resolved: boolean; stealItemId?: ShopItem['id']; fareDodgeDestinationId?: string; fareDodgeInTransit?: boolean }
 
 export type ShelterInterview = { step: 'reason' | 'action' | 'plan'; reason?: string; action?: string }

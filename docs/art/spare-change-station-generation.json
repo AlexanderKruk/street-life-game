@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-28",
+  "tool": "Built-in image_gen",
+  "references": [
+    "docs/art/hero-reference.webp",
+    "docs/art/illustration-style-reference.webp",
+    "docs/art/muted-palette-reference.webp"
+  ],
+  "sharedPrompt": "Realistic painterly Street Life scene in a lived-in Warsaw station. Preserve hero identity, one black backpack and secondary-person continuity. Muted slate/charcoal architecture and shadows, weathered browns, natural skin; warm accents only near lamps. Opening colour-corrected to remove the initial global amber cast. Results use the approved corrected opening as edit target. Wide 16:9, no UI, captions or exchanged coin before choice.",
+  "packaging": "RGB WebP master quality 92; 480/768/1024px variants quality 80, LANCZOS. No further colour editing.",
+  "assets": [
+    {
+      "file": "event-spare-change-station",
+      "source": "/workspace/scratch/2002d30f1c5f/generated_images/exec-54653640-17aa-40dc-8573-35db2c2bc6f3.png",
+      "sourceSha256": "fe44d330d1efd4cf00c785ad4fc7530e18c2d64680f56d85567f86426b99bd28",
+      "prompt": "Opening: the passer-by asks for one z\u0142oty; the protagonist has not chosen.",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "master": "public/assets/event-spare-change-station.webp",
+      "responsive": [
+        "event-spare-change-station-480.webp",
+        "event-spare-change-station-768.webp",
+        "event-spare-change-station-1024.webp"
+      ]
+    },
+    {
+      "file": "event-spare-change-give",
+      "source": "/workspace/scratch/2002d30f1c5f/generated_images/exec-1666dad2-6d49-4140-9d9a-c54ba8e84bcf.png",
+      "sourceSha256": "c8bb4bc14fdad419c1fbb2fa4f1d63d17bf6ee5276dfea750d626d6f25b40315",
+      "prompt": "Give 1 z\u0142: the protagonist transfers a single silver coin to the same passer-by.",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "master": "public/assets/event-spare-change-give.webp",
+      "responsive": [
+        "event-spare-change-give-480.webp",
+        "event-spare-change-give-768.webp",
+        "event-spare-change-give-1024.webp"
+      ]
+    },
+    {
+      "file": "event-spare-change-decline",
+      "source": "/workspace/scratch/2002d30f1c5f/generated_images/exec-8b194f49-c585-4983-9882-520589b3c995.png",
+      "sourceSha256": "5ed67cb6385b98db54d8bbd30d31c4ab1d856c062c0e07a13c8de2816b38dc9f",
+      "prompt": "Sorry, I cannot: a restrained refusal gesture; the passer-by lowers his hand and disengages.",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "master": "public/assets/event-spare-change-decline.webp",
+      "responsive": [
+        "event-spare-change-decline-480.webp",
+        "event-spare-change-decline-768.webp",
+        "event-spare-change-decline-1024.webp"
+      ]
+    },
+    {
+      "file": "event-spare-change-avoid",
+      "source": "/workspace/scratch/2002d30f1c5f/generated_images/exec-91956878-58a5-4be1-ada0-1ccbfc671692.png",
+      "sourceSha256": "20cc30a4bbbb1a6dbe41c73cc4bf35a9f6b33f619c53a34afd62a2129b06ef19",
+      "prompt": "Keep my distance: the protagonist walks away; the passer-by stays behind and does not follow.",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "master": "public/assets/event-spare-change-avoid.webp",
+      "responsive": [
+        "event-spare-change-avoid-480.webp",
+        "event-spare-change-avoid-768.webp",
+        "event-spare-change-avoid-1024.webp"
+      ]
+    }
+  ]
+}

@@ -39,7 +39,7 @@ type Host = {
 export function createStreetController(context: Context, host: Host, queue: EncounterQueue) {
   const { game, inventory, currentId, activeEvent, sleeping, trip, infoModal, musicWalkUsed, mobileServiceActive, musicOn, streetBenchFound, begging } = context
   const { setGame, setInventory, setInfoModal, setMessage, setBegging, setMusicWalkUsed, setRainChoice, setStreetBenchFound, moodContext, resultSnapshot, runWithResult, requestSleep, applyAction } = host
-  const { observeFirstNight, observeOrdinaryEvent } = queue
+  const { observeFirstNight, observeOrdinaryEvent, deferActionEncounter } = queue
   function askForMoneyImpl() {
     if (activeEvent || currentId !== 'street') return
     const attemptsToday = begging.day === game.day ? begging.attempts : 0
@@ -92,7 +92,7 @@ export function createStreetController(context: Context, host: Host, queue: Enco
       const next = applyGameAction(game, { minutes: 45, energy: 18, mood: 2 }, { ...moodContext(), exposure: 'outside', music: musicOn })
       setGame(next)
       setMessage(t("controller.street.bench.restText"))
-      if (!observeFirstNight('bench', next)) observeOrdinaryEvent('location', next, undefined, { observation: 'action', elapsedMinutes: 45 })
+      deferActionEncounter('bench', next, 45)
       return
     }
     requestSleep('bench')

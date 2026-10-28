@@ -119,5 +119,11 @@ for (const fixture of currentFixtures.cases) {
 function storageForCurrent(entries) { return { getItem: key => entries[key] ?? null }; }
 const denied = loadGameSession({ getItem() { throw new Error('storage unavailable'); } });
 assert.equal(denied.game.day, 1); assert.equal(denied.phoneActivity, null);
+// Deferred ordinary observations restore a remaining real-time budget, not a selected/seen scene.
+const deferredObservation={token:1,locationId:'station',trigger:'location',elapsedMinutes:60,delayMs:10000,remainingMs:4000};
+const deferredState=extra=>({[gameKey]:JSON.stringify({...game,locationId:'station'}),'street-life-encounters-v1':JSON.stringify({seen:[],lastAt:null,pendingId:null,deferred:{...deferredObservation,...extra}})});
+assert.deepEqual(restore(deferredState()).encounters.deferred,deferredObservation);
+for(const invalid of [{locationId:'street'},{delayMs:4999},{delayMs:15001},{remainingMs:-1},{remainingMs:10001},{token:0},{trigger:'travel'}])assert.equal(restore(deferredState(invalid)).encounters.deferred,undefined);
+assert.equal(restore({...deferredState(),'street-life-encounters-v1':JSON.stringify({seen:[],lastAt:null,pendingId:'station-cleaning',deferred:deferredObservation})}).encounters.deferred,undefined,'an already presented scene takes priority over stale deferral');
 cleanup(); dom.window.close();
 console.log('PASS: read-only session restore, partial/corrupt data, one-read keys, trip/search/call/sleep, fixed-search and illness migration, D20, repeated mount and reset.');

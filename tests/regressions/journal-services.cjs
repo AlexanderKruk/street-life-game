@@ -123,6 +123,58 @@ assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);ass
 cleanup();localStorage.clear();render(React.createElement(App));assert.equal(read(stateKey).minutes,1320);assert.equal(read(stateKey).day,1);assert(!read(journalKey).workKnown);
 setup({day:2,minutes:600},{[reminderKey]:{type:'night-shelter',day:1,minute:1140}});assert.equal(read(reminderKey).day,2);click('Phone');click('Goals');assert.equal(document.querySelector('.main-goal strong').textContent,'Find a safe place to sleep');assert(document.querySelector('.main-goal small').textContent.includes('Day 1 at 18:00'));assert.equal(screen.getAllByText('Find a safe place to sleep').length,1);
 setup({locationId:'shelter',day:2,minutes:1140},{[reminderKey]:{type:'night-shelter',day:2,minute:1080}});assert(!localStorage.getItem(reminderKey));assert(!read(journalKey).shelter);
+// Early completion still announces even if the player never opened Goals.
+setup({locationId:'station'}, {...unknownPlaces,[invKey]:{phoneBattery:62}});
+assert(!read(journalKey).chargeKnown);
+click(/Charge phone/);
+assert.deepEqual(read(journalKey).pendingCompletions,['charge']);
+assert(!document.querySelector('.goal-completed-modal'),'action result has priority');
+env.fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Got it',exact:true}));
+assert(screen.getByRole('dialog',{name:'Recharge your phone'}));
+assert(screen.getByText('Goal completed'));
+assert(document.querySelector('.game-background[inert]'));
+assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
+const pausedGoalState=read(stateKey),pausedGoalBattery=read(invKey).phoneBattery;
+env.advance(3000);
+assert.deepEqual(read(stateKey),pausedGoalState);assert.equal(read(invKey).phoneBattery,pausedGoalBattery);
+for(const shiftKey of [false,true]) {env.fireEvent.keyDown(document,{key:'Tab',shiftKey});assert(screen.getByRole('dialog').contains(document.activeElement));}
+// An unacknowledged celebration survives reload/StrictMode and acknowledges once.
+cleanup();render(React.createElement(React.StrictMode,null,React.createElement(App)));
+assert(screen.getByRole('dialog',{name:'Recharge your phone'}));
+assert.deepEqual(read(journalKey).pendingCompletions,['charge']);
+env.fireEvent.keyDown(document,{key:'Escape'});
+assert(!screen.queryByRole('dialog'));assert.deepEqual(read(journalKey).pendingCompletions,[]);
+cleanup();render(React.createElement(App));assert(!screen.queryByRole('dialog'));
+click('Phone');click('Goals');assert(within(document.querySelector('.completed-goals')).getByText('Recharge your phone'));
+// Persisted batches keep order, discard invalid IDs and never replay older completion flags.
+setup({}, {...unknownPlaces,[journalKey]:{version:2,shelter:true,charge:true,work:true,battery:62,pendingCompletions:['charge','work','charge','cold','unknown']}});
+assert.deepEqual(read(journalKey).pendingCompletions,['charge','work']);
+assert(screen.getByRole('dialog',{name:'Recharge your phone'}));
+env.fireEvent.click(screen.getByRole('button',{name:'Got it',exact:true}));
+assert(screen.getByRole('dialog',{name:'Earn your first pay'}));
+assert.deepEqual(read(journalKey).pendingCompletions,['work']);
+env.fireEvent.keyDown(document,{key:'Escape'});assert.deepEqual(read(journalKey).pendingCompletions,[]);
+// Recovery is observed without opening Goals, even with a dead phone.
+setup({locationId:'station',minutes:600}, {...unknownPlaces,[invKey]:{phoneBattery:0},[effectsKey]:[{id:'cold',expiresAt:601}]});
+assert(!read(journalKey).cold);
+env.advance(1000);
+assert(read(journalKey).cold);assert.deepEqual(read(journalKey).pendingCompletions,['cold']);
+assert(screen.getByRole('dialog',{name:'Recover from your cold'}));
+env.fireEvent.click(screen.getByRole('button',{name:'Got it',exact:true}));
+assert.deepEqual(read(journalKey).pendingCompletions,[]);
+// Pure progression does not require discovery flags for actual pay or charging.
+require('../helpers/build.cjs').buildSync({entryPoints:['src/journalGoals.ts'],bundle:true,platform:'node',format:'cjs',outfile:process.env.STREET_REGRESSION_JOURNAL+'.goals.cjs'});
+const {initialJournalGoals,progressJournalGoals}=require(process.env.STREET_REGRESSION_JOURNAL+'.goals.cjs');
+const unseen=initialJournalGoals(62);
+const hiddenContext={game:pausedGoalState,inventory:{phoneBattery:70},life:{housing:'Street',employment:'Day work'},effects:[],discoveredLocations:[],answeredQuestions:[]};
+const early=progressJournalGoals(unseen,hiddenContext);
+assert(early.charge&&early.work);assert.deepEqual(early.pendingCompletions,['charge','work']);
+assert.equal(progressJournalGoals(early,hiddenContext),early,'replayed observation cannot duplicate a completion');
+assert(!unseen.work&&!unseen.charge,'progression is pure');
+const sick=progressJournalGoals(unseen,{...hiddenContext,inventory:{phoneBattery:62},life:{housing:'Street',employment:'Unemployed'},effects:[{id:'cold',expiresAt:99999}]});
+assert(!sick.cold);
+const earlyRecovery=progressJournalGoals(sick,{...hiddenContext,inventory:{phoneBattery:62},life:{housing:'Street',employment:'Unemployed'}});
+assert(earlyRecovery.cold);assert.deepEqual(earlyRecovery.pendingCompletions,['cold']);
 // Clothing caps every gain, migrates wear, and laundry cleans without repairing it.
 setup({hygiene:90},{[invKey]:{jacket:42}});assert.equal(read(invKey).jacket,42);assert.equal(read(invKey).clothingCleanliness,90);assert.equal(read(stateKey).hygiene,90);
 for(const [cleanliness,cap] of [[80,100],[60,80],[20,60]]) {

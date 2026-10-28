@@ -370,3 +370,188 @@ for (const width of [320, 390, 1280]) for (const needs of [false, true]) {
     await page.screenshot({ path: testInfo.outputPath('goals.png') })
   })
 }
+
+for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
+  test(`goal completion before discovery at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    const base = entries()
+    const seed = entries(null, {
+      [keys.game]: JSON.stringify({ ...JSON.parse(base[keys.game]), locationId: 'station', minutes: 600 }),
+      [keys.inventory]: JSON.stringify({ ...JSON.parse(base[keys.inventory]), phoneBattery: 62 }),
+    })
+    await openGame(page, seed)
+    const goalKey = 'street-life-journal-goals-v1'
+    expect((await read(page, goalKey)).chargeKnown).toBe(false)
+    await page.getByRole('button', { name: /Charge phone/ }).click()
+    await expect(page.locator('.result-modal')).toBeVisible()
+    await expect(page.locator('.goal-completed-modal')).toHaveCount(0)
+    expect((await read(page, goalKey)).pendingCompletions).toEqual(['charge'])
+    await acknowledge(page)
+    const dialog = page.getByRole('dialog', { name: 'Recharge your phone' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByText('Goal completed', { exact: true })).toBeVisible()
+    await assertLocked(page)
+    await dialog.evaluate(node => node.getAnimations({ subtree: true }).forEach(animation => animation.finish()))
+    const dimensions = await dialog.evaluate(node => {
+      const icon = node.querySelector('.goal-completed-emblem svg')
+      const circle = node.querySelector('.goal-completed-emblem')
+      const heading = node.querySelector('h2')
+      const label = node.querySelector('.goal-completed-label')
+      return { icon: icon.getBoundingClientRect().width, circle: circle.getBoundingClientRect().width,
+        label: getComputedStyle(label).fontSize, heading: getComputedStyle(heading).fontSize,
+        colour: getComputedStyle(icon).color,
+        overflow: node.scrollWidth > node.clientWidth, documentOverflow: document.documentElement.scrollWidth > innerWidth }
+    })
+    expect(dimensions).toEqual({ icon: 32, circle: 32, label: '16px', heading: viewport.width < 768 ? '20px' : '24px', colour: 'rgb(175, 152, 104)', overflow: false, documentOverflow: false })
+    const paused = await read(page, keys.game)
+    await advance(page, 3000)
+    expect(await read(page, keys.game)).toEqual(paused)
+    await page.screenshot({ path: `test-results/goal-completed-${viewport.width}.png` })
+    await page.reload()
+    await expect(page.getByRole('dialog', { name: 'Recharge your phone' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.goal-completed-modal')).toHaveCount(0)
+    expect((await read(page, goalKey)).pendingCompletions).toEqual([])
+    await page.reload()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect((await read(page, goalKey)).charge).toBe(true)
+  })
+}
+
+for (const mode of ['transit', 'fare-dodge']) {
+  test(`ticket inspection interrupts and resumes ${mode} mid-journey`, async ({ page }) => {
+    const base = entries()
+    const encounters = JSON.parse(base[keys.encounters])
+    encounters.seen = encounters.seen.filter(id => id !== 'ticket-check')
+    encounters.lastAt = null
+    await openGame(page, entries(null, { [keys.encounters]: JSON.stringify(encounters) }))
+    await page.getByRole('button', { name: 'Map', exact: true }).click()
+    await page.getByRole('button', { name: 'Small Shop', exact: true }).click()
+    await page.getByRole('button', { name: mode === 'transit' ? /Public transport/ : /Ride without ticket/ }).click()
+    const started = await read(page, keys.trip)
+    expect(started.inspection.status).toBe('scheduled')
+    await expect(page.locator('.dice-overlay, .event-card')).toHaveCount(0)
+    const paidMoney = (await read(page, keys.game)).money
+    await advance(page, (started.inspection.at - 1) * 250)
+    await expect(page.locator('.dice-overlay, .event-card')).toHaveCount(0)
+    await page.reload()
+    expect((await read(page, keys.trip)).inspection).toEqual(started.inspection)
+    await advance(page, 250)
+    const during = await read(page, keys.trip)
+    expect(during.remaining).toBe(started.total - started.inspection.at)
+    expect(during.remaining).toBeGreaterThan(0)
+    await expect(page.getByRole('dialog', { name: mode === 'transit' ? 'Ticket inspection' : 'Avoid inspection' })).toBeVisible()
+    await assertLocked(page)
+    await page.screenshot({ path: `test-results/inspection-${mode}.png`, animations: 'disabled' })
+    const paused = await read(page, keys.game)
+    await advance(page, 2000)
+    expect(await read(page, keys.game)).toEqual(paused)
+    expect((await read(page, keys.trip)).remaining).toBe(during.remaining)
+    if (mode === 'transit') {
+      await page.getByRole('button', { name: 'Show my ticket', exact: true }).click()
+    } else {
+      await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toHaveCount(0)
+      await page.evaluate(() => { Math.random = () => 0 })
+      await page.getByRole('button', { name: 'Avoid inspection', exact: true }).click()
+      expect((await read(page, keys.trip)).inspection.roll).toBe(1)
+      await page.reload()
+      await expect(page.getByLabel('Rolled 1', { exact: true })).toBeVisible()
+      await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    }
+    await expect(page.locator('.result-modal')).toBeVisible()
+    const afterCheck = await read(page, keys.trip)
+    expect(afterCheck.remaining).toBe(during.remaining)
+    expect(afterCheck.before).toEqual(started.before)
+    expect(afterCheck.inspection.status).toBe('done')
+    const money = (await read(page, keys.game)).money
+    expect(money).toBe(mode === 'transit' ? paidMoney : Math.max(0, paidMoney - 35))
+    await acknowledge(page)
+    await advance(page, during.remaining * 250)
+    await expect(page.locator('.result-modal')).toContainText('Arrival')
+    expect((await read(page, keys.game)).locationId).toBe('shop')
+    expect((await read(page, keys.game)).money).toBe(money)
+    expect(await read(page, keys.trip)).toBeNull()
+    await acknowledge(page)
+    await page.reload()
+    expect(await read(page, keys.trip)).toBeNull()
+    expect((await read(page, keys.game)).money).toBe(money)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+}
+
+for (const { draw, action } of [{ draw: 0, action: 'Sit and recover' }, { draw: .999999, action: 'Sit and recover' }, { draw: 0, action: 'Charge phone' }]) {
+  test(`station action leaves a real-time breather after ${action} with draw ${draw}`, async ({ page }) => {
+    const base = entries()
+    const encounters = JSON.parse(base[keys.encounters])
+    encounters.seen = encounters.seen.filter(id => id !== 'station-cleaning')
+    encounters.lastAt = null
+    await openGame(page, entries(null, {
+      [keys.game]: JSON.stringify({ ...JSON.parse(base[keys.game]), locationId: 'station', minutes: 600 }),
+      [keys.encounters]: JSON.stringify(encounters),
+    }))
+    await page.evaluate(draw => { Math.random = () => draw }, draw)
+    await page.getByRole('button', { name: new RegExp(action) }).click()
+    await expect(page.locator('.result-modal')).toBeVisible()
+    const saved = await read(page, keys.encounters)
+    expect(saved.seen).not.toContain('station-cleaning')
+    expect(saved.pendingId).toBeNull()
+    const delay = saved.deferred.delayMs
+    expect(delay).toBeGreaterThanOrEqual(5000)
+    expect(delay).toBeLessThanOrEqual(15000)
+    const resultGame = await read(page, keys.game)
+    await advance(page, 30_000)
+    expect(await read(page, keys.game)).toEqual(resultGame)
+    expect((await read(page, keys.encounters)).deferred.remainingMs).toBe(delay)
+    await acknowledge(page)
+    if (action === 'Charge phone') {
+      await expect(page.getByRole('dialog', { name: 'Recharge your phone' })).toBeVisible()
+      await advance(page, 10_000)
+      expect((await read(page, keys.encounters)).deferred.remainingMs).toBe(delay)
+      await acknowledge(page)
+    }
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.locator('.game-background')).not.toHaveAttribute('inert', '')
+    for (const button of await page.locator('.bottom-nav button').all()) await expect(button).toBeEnabled()
+    const roundedDelay = Math.ceil(delay / 1000) * 1000
+    await advance(page, roundedDelay - 1000)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect((await read(page, keys.game)).minutes).toBeGreaterThan(resultGame.minutes)
+    const remaining = (await read(page, keys.encounters)).deferred
+    await page.reload()
+    expect((await read(page, keys.encounters)).deferred).toEqual(remaining)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await advance(page, 1000)
+    await expect(page.getByRole('dialog', { name: 'Cleaning the hall' })).toBeVisible()
+    expect((await read(page, keys.encounters)).deferred).toBeUndefined()
+    expect((await read(page, keys.encounters)).seen.filter(id => id === 'station-cleaning')).toHaveLength(1)
+  })
+}
+
+for (const [choice, asset, cost] of [['Give 1 zł', 'give', 1], ['Sorry, I can’t', 'decline', 0], ['Keep my distance', 'avoid', 0]]) {
+  test(`station spare-change artwork for ${asset}`, async ({ page }) => {
+    const seed = entries()
+    const game = { ...JSON.parse(seed[keys.game]), locationId: 'station' }
+    const encounters = { ...JSON.parse(seed[keys.encounters]), pendingId: 'spare-change' }
+    await openGame(page, { ...seed, [keys.game]: JSON.stringify(game), [keys.encounters]: JSON.stringify(encounters) })
+    await expect(page.locator('.event-illustration')).toHaveAttribute('src', /event-spare-change-station-480.webp$/)
+    await page.locator('.event-illustration').evaluate(img => img.decode())
+    await page.getByRole('button', { name: choice, exact: true }).click()
+    await expect(page.locator('.result-illustration')).toHaveAttribute('src', new RegExp(`event-spare-change-${asset}-480.webp$`))
+    await page.locator('.result-illustration').evaluate(img => img.decode())
+    expect((await read(page, keys.game)).money).toBe(game.money - cost)
+    expect(await page.locator('.result-modal').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(false)
+    await page.screenshot({ path: `test-results/spare-change-${asset}.png`, animations: 'disabled' })
+    await acknowledge(page)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+}
+
+test('street spare-change does not show the station interior', async ({ page }) => {
+  const seed = entries()
+  const encounters = { ...JSON.parse(seed[keys.encounters]), pendingId: 'spare-change' }
+  await openGame(page, { ...seed, [keys.encounters]: JSON.stringify(encounters) })
+  await expect(page.getByRole('dialog', { name: 'Have you got any change?' })).toBeVisible()
+  await expect(page.locator('.event-illustration')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Sorry, I can’t', exact: true }).click()
+  await expect(page.locator('.result-illustration')).toHaveCount(0)
+})

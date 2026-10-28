@@ -26,6 +26,7 @@ click('Reset save');assert.deepEqual(read(firstNightKey).seen,[]);assert.equal(r
 // Sitting awake does not make a stranger assume the hero has no home.
 setup({minutes:1320,energy:100},{'street-life-left-home-v1':true,'street-life-answers-v1':['morning','bed'],'street-life-discovered-v1':['street','station','shop','support','daycenter','free-clinic'],'street-life-discovery-version':'2'});
 Math.random=()=>.4;click(/Is there a bench nearby/);ok();Math.random=()=>.4;click(/I’ll sit for a bit/);ok();
+assert(!screen.queryByRole('dialog'),'rest returns control before the observation');advance(15000);
 assert(screen.getByRole('dialog').textContent.includes('Making a bed on a bench'));
 assert(!read('street-life-discovered-v1').includes('shelter'));
 click('Ask how they get through the night');
@@ -159,7 +160,7 @@ for(const original of observationEvents) {
  Math.random=()=>0;
  const chosen=eventModule.exports.nextStreetEvent(original.trigger,artContext);
  assert.equal(chosen?.id,original.id);
- if (['spare-change','dropped-glove'].includes(original.id)) { assert(!chosen.illustration); continue }
+ if (original.id==='dropped-glove') { assert(!chosen.illustration); continue }
  assert.deepEqual(stripArt(chosen),stripArt(original),'illustration must not change gameplay');
  const images=[chosen.illustration,...chosen.choices.flatMap(choice=>choice.check?[choice.check.success.illustration,choice.check.failure.illustration,choice.check.criticalSuccess?.illustration,choice.check.criticalFailure?.illustration]:[choice.outcome?.illustration])].filter(Boolean);
  for(const image of images) {
@@ -184,4 +185,39 @@ for(const [roll,art,damage] of [[.99,'caught',0],[0,'fallen',15]]) {
  ok();
 }
 
+// Ordinary actions leave 5–15 real seconds of free control after the result.
+const deferredKey='street-life-encounters-v1';
+const finishedScenes=JSON.parse(require('../../test-fixtures/v332-saves.json').base[deferredKey]);
+const cleaningOnly={...finishedScenes,lastAt:null,pendingId:null,seen:finishedScenes.seen.filter(id=>id!=='station-cleaning')};
+for(const [draw,delay] of [[0,5000],[.999999,15000]]) {
+ setup({day:3,minutes:600,locationId:'station'},{[deferredKey]:cleaningOnly});
+ Math.random=()=>draw;click(/Sit and recover/);
+ assert(!read(deferredKey).seen.includes('station-cleaning'));assert.equal(read(deferredKey).pendingId,null);
+ assert(read(deferredKey).deferred.delayMs>=5000&&read(deferredKey).deferred.delayMs<=15000);
+ const resultTime=read(stateKey);advance(30000);assert.deepEqual(read(stateKey),resultTime);
+ assert.equal(read(deferredKey).deferred.remainingMs,read(deferredKey).deferred.delayMs,'reading the result does not consume the pause');
+ ok();assert(!screen.queryByRole('dialog'));assert(!document.querySelector('.game-background[inert]'));
+ advance(delay-1);assert(!screen.queryByRole('dialog'),'no scene before the free-control pause expires');
+ advance(1);assert(screen.getByRole('dialog',{name:'Cleaning the hall'}));assert.equal(read(deferredKey).deferred,undefined);
+}
+// Starting another action resets the breathing space; only one observation is pending.
+setup({day:3,minutes:600,locationId:'station'},{[deferredKey]:cleaningOnly});
+Math.random=()=>0;click(/Sit and recover/);ok();advance(4000);click(/Sit and recover/);ok();
+advance(4999);assert(!screen.queryByRole('dialog'));advance(1);assert(screen.getByRole('dialog',{name:'Cleaning the hall'}));
+// Pauses survive StrictMode/reload without sampling again; leaving drops the old place's observation.
+setup({day:3,minutes:600,locationId:'station'},{[deferredKey]:cleaningOnly});
+Math.random=()=>0;click(/Sit and recover/);ok();advance(2000);
+const pendingPause=read(deferredKey).deferred;
+cleanup();Math.random=()=>{throw new Error('restoration must not resample a delay')};render(React.createElement(React.StrictMode,null,React.createElement(App)));
+assert.deepEqual(read(deferredKey).deferred,pendingPause);advance(2000);assert(!screen.queryByRole('dialog'));advance(1000);assert(screen.getByRole('dialog',{name:'Cleaning the hall'}));
+setup({day:3,minutes:600,locationId:'station'},{[deferredKey]:cleaningOnly});
+Math.random=()=>0;click(/Sit and recover/);ok();advance(2000);
+Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});fireEvent(document,new window.Event('visibilitychange'));advance(30000);
+assert(!screen.queryByRole('dialog'));assert.equal(read(deferredKey).deferred.remainingMs,5000);
+Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});fireEvent(document,new window.Event('visibilitychange'));
+advance(4999);assert(!screen.queryByRole('dialog'));advance(1);assert(screen.getByRole('dialog',{name:'Cleaning the hall'}));
+setup({day:3,minutes:600,locationId:'station'},{[deferredKey]:cleaningOnly});
+Math.random=()=>0;click(/Sit and recover/);ok();click('Map');click('Street');click('Go to Street');
+assert.equal(read(stateKey).locationId,'street');assert.equal(read(deferredKey).deferred,undefined);
+advance(20000);assert(!screen.queryByRole('dialog'));assert(!read(deferredKey).seen.includes('station-cleaning'));
 env.finish();

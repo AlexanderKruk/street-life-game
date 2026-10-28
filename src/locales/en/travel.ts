@@ -1,4 +1,9 @@
 export const travel = {
+  "travel.inspection.choice": "Avoid inspection",
+  "travel.inspection.description": "Ticket inspectors move through the bus. You try to avoid being caught without a ticket.",
+  "travel.inspection.success": "You avoid being caught. The journey continues.",
+  "travel.inspection.criticalSuccess": "You slip past the inspection. The journey continues.",
+  "travel.inspection.criticalFailure": "The inspector catches you. The penalty is 35 zł.",
   "travel.phase.walking": "Walking",
   "travel.phase.approachingCrossing": "Near a crossing",
   "travel.phase.waitingForGreen": "Red light",

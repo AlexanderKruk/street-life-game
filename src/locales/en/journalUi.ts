@@ -1,4 +1,5 @@
 export const journalUi = {
+  "journal.ui.goalCompleted": "Goal completed",
   "journal.ui.goals": "Goals",
   "journal.ui.priority": "Goals ordered by priority",
   "journal.ui.mainPending": "Main goal, not completed",

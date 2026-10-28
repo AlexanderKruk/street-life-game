@@ -698,6 +698,7 @@ advance(30000);assert(!screen.queryByRole('dialog'),'shared 45-minute cooldown')
 // Daytime bench rest and arrival use the deterministic location queue.
 setup({day:3,minutes:600,energy:70},{'street-life-answers-v1':['morning','bed']});Math.random=()=>.4;
 click(/Is there a bench nearby/);ok();click(/I’ll sit for a bit/);ok();
+assert(!screen.queryByRole('dialog'));advance(15000);
 assert(screen.getByRole('dialog').textContent.includes('Have you got any change?'));click('Sorry, I can’t');ok();
 setup({day:3,minutes:1200},{[encountersKey]:{seen:['city-waking','night-rustle','station-cleaning','platform-question'],lastAt:null,pendingId:null},'street-life-trip-v1':{destinationId:'station',mode:'walk',total:20,remaining:1}});
 advance(250);assert(screen.getByRole('dialog').textContent.includes('Arrival'));ok();

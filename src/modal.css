@@ -1,6 +1,7 @@
 /* The modal visual contract. Layout-specific rules live in styles.css;
    surfaces, spacing, narrative typography and action themes live here. */
 :root {
+  --modal-heading-icon-size: 32px;
   --modal-width: 480px;
   --modal-width-compact: 408px;
   --modal-surface: #191e21;
@@ -125,3 +126,14 @@ html:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) { overflow:hidde
 
 @media(max-width:360px) { :root { --modal-padding-compact:20px; } }
 @media(max-height:650px) { .event-illustration, .result-illustration { max-height:150px; } }
+
+/* Goal acknowledgement reuses the compact frame and the shared primary action. */
+.goal-completed-modal { text-align:center; animation:goal-completed-enter .38s cubic-bezier(.2,.8,.2,1) both; }
+.goal-completed-emblem { display:flex; align-items:center; justify-content:center; width:var(--modal-heading-icon-size); height:var(--modal-heading-icon-size); margin:0 auto 22px; color:var(--color-warning); animation:goal-completed-emblem-enter .5s .12s cubic-bezier(.2,.8,.2,1) both; }
+.goal-completed-emblem > svg { width:var(--modal-heading-icon-size); height:var(--modal-heading-icon-size); flex:none; }
+.goal-completed-modal .goal-completed-label { margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); color:var(--text-secondary); }
+.goal-completed-modal h2 { margin:12px 0 28px; font-size:var(--font-title); font-weight:var(--weight-semibold); line-height:1.3; }
+.goal-completed-modal .modal-action { width:100%; }
+@keyframes goal-completed-enter { from { opacity:0; transform:translateY(16px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes goal-completed-emblem-enter { from { opacity:0; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
+@media(prefers-reduced-motion:reduce) { .goal-completed-modal, .goal-completed-emblem { animation:none; } }

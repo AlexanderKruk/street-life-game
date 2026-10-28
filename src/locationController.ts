@@ -32,7 +32,7 @@ type Host = {
 export function createLocationController(context: Context, host: Host, queue: EncounterQueue) {
   const { game, inventory, life, current, open, activeEvent, shelterQueue, shelterBooked, shelterAdmitted, hygieneLimit } = context
   const { setGame, setInventory, setLife, setEffects, setMessage, laundryCleanAt, runWithResult, resultSnapshot, applyAction, moodContext, beginShelterInterview, prepareShelterAction, requestSleep, finishRestAction, finishLocationPhoneCharge } = host
-  const { observeFirstNight, observeOrdinaryEvent } = queue
+  const { deferActionEncounter } = queue
   function actionUnavailableReason(action: (typeof actions)[number]) {
     return locationActionUnavailable(action, { game, inventory, life, current, open, shelterBooked, shelterAdmitted })
   }
@@ -90,7 +90,7 @@ export function createLocationController(context: Context, host: Host, queue: En
     setMessage(isShower ? showerResult(useGel, hygieneLimit) : result.message ?? t('action.controller.timePasses'))
 
     if (!finishRestAction(actionId, actionName(action.id), result, next)) {
-      if (!observeFirstNight('location', next)) observeOrdinaryEvent('location', next, undefined, { observation: 'action', elapsedMinutes: result.minutes })
+      deferActionEncounter('location', next, result.minutes)
     }
     if (actionId === 'residential-stay') setLife((status) => ({ ...status, housing: 'Schronisko', housingUntil: undefined }))
     if (actionId === 'shop-meal') {

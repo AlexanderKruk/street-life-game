@@ -42,6 +42,7 @@ type Host = {
   runWithResult: RunWithResult
   applyAction: (state: GameState, action: ActionResult) => GameState
   startFareDodgeTrip: (id: string, outcome: EventOutcome) => void
+  recordFareInspectionRoll?: (roll: number) => void
 }
 export function createEventController(session: EventSession, context: Context, host: Host) {
   const { activeEvent, setActiveEvent, diceCheck, setDiceCheck, firstNightEvents, setFirstNightEvents, setEncounters, ambientEventClock, claimDice } = session
@@ -145,6 +146,7 @@ export function createEventController(session: EventSession, context: Context, h
   function rollDice() {
     if (!diceCheck?.choice.check || diceCheck.roll !== null) return
     const roll = Math.floor(Math.random() * 20) + 1
+    if (diceCheck.fareDodgeInTransit) host.recordFareInspectionRoll?.(roll)
     setDiceCheck({ ...diceCheck, roll, resolved: false })
     if (['borrow-phone-slip', 'park-company'].includes(activeEvent?.id ?? '')) setEncounters(previous => ({ ...previous, pendingRoll: roll }))
   }
