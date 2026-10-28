@@ -218,7 +218,7 @@ export const STREET_EVENTS: StreetEvent[] = [
   { id:'night-theft', trigger:'wake', icon:'🎒', title:t('event.night-theft.title'), text:t('event.night-theft.text'), weight:2, eligible:c=>c.housing==='Street', choices:[
     { id:'check-bag', icon:'search', label:t('event.night-theft.choice.check-bag'), outcome:{ historyId:'night-theft:check-bag:complete', money:-5, mood:-7, loseDocuments:true, message:t('event.outcome.night-theft.check-bag.complete') } }
   ]},
-  { id:'spare-change', trigger:'location', icon:'🪙', title:t('event.spare-change.title'), text:t('event.spare-change.text'), weight:2, eligible:c=>c.locationId==='station' || (c.locationId==='street' && streetHasPassersBy(c)), choices:[
+  { id:'spare-change', trigger:'location', icon:'🪙', title:t('event.spare-change.title'), text:t('event.spare-change.text'), weight:2, eligible:c=>c.locationId==='station' || (c.locationId==='street' && c.minutes!==undefined && c.minutes>=480 && c.minutes<1080), choices:[
     { id:'give', icon:'coins', label:t('event.spare-change.choice.give'), moneyRequired:1, outcome:{ historyId:'spare-change:give:complete', money:-1, mood:1, message:t('event.outcome.spare-change.give.complete') } },
     { id:'decline', icon:'chat', label:t('event.spare-change.choice.decline'), outcome:{ historyId:'spare-change:decline:complete', message:t('event.outcome.spare-change.decline.complete') } },
     { id:'avoid', icon:'walk', label:t('event.spare-change.choice.avoid'), outcome:{ historyId:'spare-change:avoid:complete', message:t('event.outcome.spare-change.avoid.complete') } },
@@ -259,5 +259,19 @@ export const STREET_EVENTS: StreetEvent[] = [
 // selection consumes no randomness; D20 and consequence rolls remain separate.
 export function nextStreetEvent(trigger: EventTrigger, context: EventContext): StreetEvent | null {
   const event = STREET_EVENTS.find(event => !event.continuationOnly && event.trigger === trigger && !context.seenEventIds?.includes(event.id) && (!event.eligible || event.eligible(context)))
-  return event ? illustrateStreetEvent(event, context) : null
+  return event ? prepareStreetEvent(event, context) : null
+}
+
+// Both locations share the saved spare-change ID: one encounter per run.
+// Resolve costs/copy here so fresh selection and pending-save restoration agree.
+export function prepareStreetEvent(event: StreetEvent, context: Pick<EventContext, 'locationId' | 'housing' | 'sleepKind'>): StreetEvent {
+  if (event.id === 'spare-change' && context.locationId === 'street') {
+    event = { ...event, text: t('event.spare-change.street.text'), choices: event.choices.map(choice => {
+      if (choice.id === 'give') return { ...choice, label: t('event.spare-change.street.choice.give'), moneyRequired: 2,
+        outcome: { ...choice.outcome!, money: -2, message: t('event.spare-change.street.outcome.give') } }
+      return { ...choice, outcome: { ...choice.outcome!, message: t(choice.id === 'decline'
+        ? 'event.spare-change.street.outcome.decline' : 'event.spare-change.street.outcome.avoid') } }
+    }) }
+  }
+  return illustrateStreetEvent(event, context)
 }

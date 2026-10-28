@@ -147,3 +147,9 @@
 asset with CSS rain and a simple canopy contour for waiting. No new bitmap.
 Opening and completed rain results retain existing intensity/choice artwork;
 unfinished search at rain end retains event-rain-stopped-search.
+
+## Закрыто — 28 октября 2026
+
+Просьба о мелочи: добавлены дневные вступление и три результата с женщиной
+у магазина (`event-spare-change-street{,-give,-decline,-avoid}`). Уличная сцена
+доступна 08:00–18:00; вокзальные изображения остаются только на вокзале.

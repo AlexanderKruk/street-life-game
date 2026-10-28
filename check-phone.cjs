@@ -111,7 +111,7 @@ try {
  setup({locationId:'station',minutes:600},{'street-life-screen':'journal','street-life-journal-history-v1':[entry],'street-life-journal-goals-v1':{morning:true,shelter:false,support:false,work:false}});
  assert.equal(localStorage.getItem('street-life-screen'),'phone');click('History');assert(screen.getByText('I remember this.'));
  assert.equal(read('street-life-journal-history-v1').length,1);
- click('Back to phone');click('Goals');assert(document.querySelector('.completed-goals').textContent.includes('Get through the morning'));
+ click('Back to phone');click('Goals');assert(!document.querySelector('.completed-goals'),'retired morning goal does not migrate as a completed current goal');assert(document.querySelector('.main-goal').textContent.includes('Find a safe place to sleep'));assert(!read('street-life-journal-goals-v1').work);
  // No internet locks only Search; stored notes, goals, history stay accessible.
  setup({locationId:'station',money:0},{'street-life-mobile-service-until':'0'});
  click('Phone');assert(screen.getByRole('button',{name:'Find Help',exact:true}).disabled);
@@ -137,7 +137,7 @@ try {
  advance(749);assert.equal(read('street-life-phone-activity-v1').remaining,1);advance(1);assert.equal(read('street-life-phone-activity-v1'),null);
  assert.equal(read(stateKey).minutes,beforeSearch.minutes+15);
  assert(read(invKey).phoneBattery<beforeBattery);assert(read('street-life-discovered-v1').includes('work'));
- assert.equal(read('street-life-journal-goals-v1').work,true);assert(screen.getByRole('dialog').textContent.includes('Day Work'));
+ assert.equal(read('street-life-journal-goals-v1').workKnown,true);assert.equal(read('street-life-journal-goals-v1').work,false,'finding Day Work is not earned pay');assert(screen.getByRole('dialog').textContent.includes('Day Work'));
  advance(1000);assert.equal(read(stateKey).minutes,beforeSearch.minutes+15);ok();
  advance(999);assert.equal(read(stateKey).minutes,beforeSearch.minutes+15);advance(1);assert.equal(read(stateKey).minutes,beforeSearch.minutes+16);
  click('Phone');click('Notes');assert(screen.getByRole('heading',{name:/Day Work/}));

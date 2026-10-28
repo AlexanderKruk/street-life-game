@@ -1,3 +1,5 @@
+import { loadTripInspection } from './travelInspection'
+import { loadDeferredEncounter } from './deferredEncounter'
 import { loadJournalGoals } from './journalGoals'
 import { STREET_EVENTS,firstNightTime,firstMorningTime } from './events'
 import { createInitialState,applySleepTime as applyGameSleepTime,locations,type GameState } from './game'
@@ -79,7 +81,8 @@ export function loadFirstNightEvents(storage: SaveReader, key = FIRST_NIGHT_EVEN
       && morningPendingValid && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome(storage)) ? saved.pendingId : null
     const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
     const pendingRoll = ['borrow-phone-slip', 'park-company'].includes(pendingId ?? '') && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
-    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingRoll ? { pendingRoll } : {}) }
+    const deferred = key === ENCOUNTERS_KEY && !pendingId && state ? loadDeferredEncounter(saved?.deferred, state.locationId) : undefined
+    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingRoll ? { pendingRoll } : {}), ...(deferred ? { deferred } : {}) }
   } catch { return { seen: [], lastAt: null, pendingId: null } }
 }
 
@@ -106,7 +109,11 @@ export function loadTrip(storage: SaveReader): Trip | null {
     return locations.some(location => location.id === saved.destinationId) &&
       ['walk', 'transit', 'fare-dodge'].includes(saved.mode) &&
       Number.isFinite(saved.total) && saved.total > 0 && Number.isFinite(saved.remaining) &&
-      saved.remaining >= 0 && saved.remaining <= saved.total && (saved.before === undefined || validSnapshot(saved.before)) ? saved : null
+      saved.remaining >= 0 && saved.remaining <= saved.total && (saved.before === undefined || validSnapshot(saved.before)) ? (() => {
+        const { inspection: rawInspection, ...trip } = saved
+        const inspection = loadTripInspection(rawInspection, trip as Trip)
+        return { ...trip, ...(inspection ? { inspection } : {}) } as Trip
+      })() : null
   } catch { return null }
 }
 

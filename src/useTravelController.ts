@@ -2,8 +2,9 @@ import { t } from './i18n'
 import { locationName } from './locationText'
 import { useEffect, useRef } from 'react'
 import { locations, destinationTravelTimeRange, randomTravelMinutes, type GameState, type ActionResult } from './game'
-import type { EventOutcome, StreetEventChoice } from './events'
-import { eventCheckModifier } from './eventChecks'
+import type { EventOutcome } from './events'
+import { fareInspectionDice, scheduleTripInspection } from './travelInspection'
+import { getTravelPhase } from './travelPhases'
 import type { EncounterQueue } from './encounterQueue'
 import type { EventSession } from './eventSession'
 import type { LifeSituation, Screen, ShelterArrival, TravelMode, Trip } from './stateTypes'
@@ -16,6 +17,7 @@ type Context = {
   selectedDestination: string | null
   streetExitPending: boolean
   blocked: boolean
+  inspectionBlocked?: boolean
   freeTransitActive: boolean
   shelterPhoneCharging: boolean
   shelterBooked: boolean
@@ -42,10 +44,28 @@ export function advanceTrip(previous: Trip | null, minutes: number): Trip | null
 }
 export function useTravelController(session: EventSession, queue: EncounterQueue, context: Context, host: Host) {
   const { setLeftHome, setDiceCheck, ambientEventClock } = session
-  const { game, trip, selectedDestination, streetExitPending, blocked, freeTransitActive, shelterPhoneCharging, shelterBooked, shelterNightDay } = context
+  const { game, trip, selectedDestination, streetExitPending, blocked, inspectionBlocked, freeTransitActive, shelterPhoneCharging, shelterBooked, shelterNightDay } = context
   const { setGame, setTrip, setSelectedDestination, setStreetExitPending, setStreetBenchFound, setShelterArrival, setLife, setScreen, setMessage, openPage, recordShelterDeparture, resultSnapshot, runWithResult, applyAction } = host
   const { observeFirstNight, observeOrdinaryEvent } = queue
   const lastFinishedTrip = useRef<Trip | null>(null)
+  const lastStartedInspection = useRef<Trip['inspection']>(undefined)
+  useEffect(() => {
+    const inspection = trip?.inspection
+    if (!trip || !inspection || inspection.status !== 'scheduled' || blocked || inspectionBlocked || session.activeEvent || session.diceCheck ||
+      trip.remaining <= 0 || trip.total - trip.remaining < inspection.at || lastStartedInspection.current === inspection) return
+    lastStartedInspection.current = inspection
+    // A restored trip already beyond the bus stage must not inspect at arrival.
+    const riding = getTravelPhase(trip).id === 'riding'
+    if (riding && trip.mode === 'fare-dodge') {
+      const dice = fareInspectionDice(trip, game)
+      setTrip(previous => previous === trip ? { ...trip, inspection: { ...inspection, status: 'rolling', roll: null, modifier: dice.modifier } } : previous)
+      setDiceCheck(dice)
+    } else {
+      setTrip(previous => previous === trip ? { ...trip, inspection: { ...inspection, status: 'done' } } : previous)
+      if (riding) observeOrdinaryEvent('travel', game, trip.mode)
+    }
+  }, [trip, blocked, inspectionBlocked, session.activeEvent, session.diceCheck])
+
   useEffect(() => {
     if (!trip || trip.remaining > 0 || lastFinishedTrip.current === trip) return
     const destination = locations.find(location => location.id === trip.destinationId)
@@ -113,21 +133,11 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (freeTransitActive || blocked) return
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
-    const choice: StreetEventChoice = {
-      label: t('travel.fare.choice'),
-      check: {
-        stat: 'reflex', dc: 12,
-        success: { message: t('travel.fare.success') },
-        failure: { money: -20, mood: -8, message: t('travel.fare.failure') },
-        criticalSuccess: { mood: 2, message: t('travel.fare.criticalSuccess') },
-        criticalFailure: { money: -35, mood: -12, message: t('travel.fare.criticalFailure') },
-      },
-    }
-    setDiceCheck({ choice, roll: null, modifier: eventCheckModifier(game, choice), resolved: false, fareDodgeDestinationId: destination.id })
+    startTravel('fare-dodge')
   }
 
   function startTravel(mode: TravelMode) {
-    if (blocked) return
+    if (blocked || (mode === 'fare-dodge' && freeTransitActive)) return
     const destination = locations.find((x) => x.id === selectedDestination)
     if (!destination) return
     const fare = freeTransitActive ? 0 : 4.4
@@ -141,13 +151,19 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (shelterPhoneCharging) setMessage(t('travel.collectedPhone'))
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
-    setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot() })
+    setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot(), ...(mode !== 'walk' ? { inspection: scheduleTripInspection(total, mode) } : {}) })
     setSelectedDestination(null)
     setScreen('travel')
-    observeOrdinaryEvent('travel', game, mode)
+    if (mode === 'walk') observeOrdinaryEvent('travel', game, mode)
   }
 
   function startFareDodgeTrip(id: string, outcome: EventOutcome) {
+    if (trip?.mode === 'fare-dodge' && trip.destinationId === id && trip.inspection?.status === 'rolling') {
+      // The outcome is already applied by the event controller. Resume this trip
+      // with its original departure snapshot and exact remaining distance.
+      setTrip(previous => previous === trip ? { ...trip, inspection: { ...trip.inspection!, status: 'done' } } : previous)
+      return
+    }
     const destination = locations.find(entry => entry.id === id)
     if (!destination) return
     const total = randomTravelMinutes(destinationTravelTimeRange(destination, 'fare-dodge'))

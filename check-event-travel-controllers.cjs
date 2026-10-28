@@ -32,6 +32,18 @@ for(const [roll,fine] of [[10,20],[1,35]])for(const money of [0,3.5,20,35,100]) 
 }
 assert.equal(eventCheckModifier({...game,energy:80},choice),2);assert.equal(eventCheckModifier({...game,energy:19},choice),-2);
 
+// Every sampled inspection falls strictly within the shared on-board phase.
+const {scheduleTripInspection,loadTripInspection}=bundle('src/travelInspection.ts');
+const {getTravelPhase}=bundle('src/travelPhases.ts');
+for(const mode of ['transit','fare-dodge'])for(let total=5;total<=180;total++)for(const draw of [0,.25,.5,.999999]) {
+ const inspection=scheduleTripInspection(total,mode,()=>draw);
+ assert(inspection.at>0&&inspection.at<total);assert.equal(getTravelPhase({mode,total,remaining:total-inspection.at}).id,'riding');
+ assert.deepEqual(loadTripInspection(inspection,{mode,total}),inspection);
+}
+assert.equal(scheduleTripInspection(20,'walk',()=>{throw new Error('walking must not draw')}),undefined);
+assert.equal(loadTripInspection({at:0,status:'scheduled'},{mode:'transit',total:20}),undefined);
+assert.equal(loadTripInspection({at:12,status:'rolling',roll:99,modifier:0},{mode:'fare-dodge',total:20}),undefined);
+assert.equal(loadTripInspection(undefined,{mode:'fare-dodge',total:20}),undefined,'legacy trips do not repeat their departure check');
 const {JSDOM}=require('jsdom');const dom=new JSDOM('<html><body></body></html>',{url:'http://localhost/street-life-game/',pretendToBeVisual:true});
 for(const k of ['window','document','localStorage','HTMLElement','Node','Event','MouseEvent'])global[k]=dom.window[k];Object.defineProperty(global,'navigator',{value:dom.window.navigator});global.IS_REACT_ACT_ENVIRONMENT=true;
 window.scrollTo=()=>{};window.setInterval=()=>1;window.clearInterval=()=>{};Math.random=()=>.99;

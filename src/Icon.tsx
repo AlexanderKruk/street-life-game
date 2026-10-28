@@ -1,6 +1,6 @@
 import { memo, useId, type ReactNode } from 'react'
 
-export type IconName = 'settings' | 'exit' | 'dice' | 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'building' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
+export type IconName = 'party-popper' | 'settings' | 'exit' | 'dice' | 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'building' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
 
 const WalkingGlyph = memo(function WalkingGlyph() {
   const maskId = useId()
@@ -8,6 +8,7 @@ const WalkingGlyph = memo(function WalkingGlyph() {
 })
 
 const paths: Record<IconName, ReactNode> = {
+  'party-popper': <><path d="m5.8 10.8-3.6 11 11-3.6M4 3h.01M22 8h.01M17 2h.01M22 20h.01M22 2l-2.2.7a2.3 2.3 0 0 0-1.5 2.1v.4c0 .7-.5 1.4-1.2 1.6l-1.1.4M22 13l-.8-.4a2.3 2.3 0 0 0-2.5.4l-.5.4c-.7.6-1.7.6-2.4 0L15 13M11 2l.4.8a2.3 2.3 0 0 1-.4 2.5l-.4.5c-.6.7-.6 1.7 0 2.4l.4.8" /><path d="M14.7 14.3c2.5 2.5 3.7 5.4 2.7 6.4s-3.9-.2-6.4-2.7-3.7-5.4-2.7-6.4 3.9.2 6.4 2.7Z" transform="translate(-2 -2)" /></>,
   settings: <><path d="m9 3 1-1h4l1 3 3 1 3-1 2 4-2 2v3l1 2-2 4-3-1-3 1-1 2h-4l-1-3-3-1-2 1-2-4 2-2v-3L2 8l2-4 3 1 2-2Z" /><circle cx="12" cy="12" r="3" /></>,
   exit: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></>,
   dice: <><rect x="2" y="2" width="13" height="13" rx="2" /><rect x="9" y="9" width="13" height="13" rx="2" fill="#11181e" /><path d="M6 6h.01M13 13h.01M18 13h.01M15.5 15.5h.01M13 18h.01M18 18h.01" /></>,

@@ -64,7 +64,7 @@ click(/^.*Station/);click("Go →");click(/Walk/);assert.equal(read(lifeKey).she
 setup({locationId:'shop',energy:.15});fireEvent.click(screen.getAllByRole('button',{name:'STEAL',exact:true})[0]);const frozen=read(stateKey);advance(3000);
 assert.deepEqual(read(stateKey),frozen);assert(document.querySelector('.dice-overlay'));assert(!document.querySelector('.sleep-overlay'));
 fireEvent.click(document.querySelector('.dice-attempt'));advance(3000);assert.deepEqual(read(stateKey),frozen);click('Continue');assert(read(stateKey).minutes > frozen.minutes);
-setup({energy:.15},{[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Ride without/);const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
+setup({energy:.15},{[invKey]:{transitCard:false}});click(/Map$/);click(/^.*Station/);click("Go →");click(/Ride without/);assert(!document.querySelector('.dice-overlay'));const scheduledFare=read('street-life-trip-v1');advanceTravelMinutes(scheduledFare.inspection.at);assert(document.querySelector('.dice-overlay'));const fareFrozen=read(stateKey);advance(3000);assert.deepEqual(read(stateKey),fareFrozen);assert(!document.querySelector('.sleep-overlay'));
 
 // Auto renewal keeps prepaid time and money; expired service buys a full day.
 setup({day:2},{'street-life-mobile-auto-renew':'true','street-life-mobile-renewed-day':'1','street-life-mobile-service-until':'6000'});
@@ -102,19 +102,14 @@ for(const mode of ['walk','transit','free','fare-dodge'])for(const draw of [0,.9
  click('Map');click(/^.*Station/);click('Go →');
  assert(screen.getByRole('button',{name:/Public transport/}).textContent.includes('≈35m'));
  assert(screen.getByRole('button',{name:/Walk/}).textContent.includes('≈1h 5m'));
- if(mode==='fare-dodge') {
-  click(/Ride without/);Math.random=()=>.99;fireEvent.click(document.querySelector('.dice-attempt'));Math.random=()=>draw;click('Continue');
-  if(screen.queryByRole('button',{name:'Got it',exact:true}))ok();
- } else {
-  let draws=0;Math.random=()=>draws++===0?draw:.99;click(mode==='walk'?/Walk/:/Public transport/);
- }
+ let draws=0;Math.random=()=>draws++===0?draw:.99;click(mode==='fare-dodge'?/Ride without/:mode==='walk'?/Walk/:/Public transport/);
  const chosenTrip=read('street-life-trip-v1'),expected=mode==='walk'?(draw===0?62:78):(draw===0?32:39);
  assert.equal(chosenTrip.total,expected);assert.equal(chosenTrip.remaining,expected);
  assert.equal(read(stateKey).money,mode==='transit'?95.6:100);
  advanceTravelMinutes(1);const partialTrip=read('street-life-trip-v1');let reloadDraws=0;Math.random=()=>{reloadDraws++;return .5};
  cleanup();render(React.createElement(App));assert.equal(reloadDraws,0,'loading a trip never samples again');assert.deepEqual(read('street-life-trip-v1'),partialTrip);
  advanceTravelMinutes(1);assert.equal(read('street-life-trip-v1').remaining,expected-2);
- Math.random=()=>.99;advanceTravelMinutes(expected-2);assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,480+expected);assert(!localStorage.getItem('street-life-trip-v1'));ok();
+ Math.random=()=>.99;if(mode==='fare-dodge'){advanceTravelMinutes(chosenTrip.inspection.at-2);fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');ok();advanceTravelMinutes(expected-chosenTrip.inspection.at);}else advanceTravelMinutes(expected-2);assert.equal(read(stateKey).locationId,'station');assert.equal(read(stateKey).minutes,480+expected);assert(!localStorage.getItem('street-life-trip-v1'));ok();
 }
 
 // Found money uses one Polish coin, awards the actual grosz amount once,
@@ -168,9 +163,9 @@ for(const mode of ['walk','transit','fare-dodge']) {
 for(const mode of ['walk','transit','fare-dodge']) {
  setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click('Small Shop');
  const options=document.querySelectorAll('.travel-option');assert.equal(options.length,3);for(const option of options)assert(option.textContent.includes('≈5–15m'));
- if(mode==='fare-dodge'){click(/Ride without ticket/);fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');ok();}else click(mode==='walk'?/^Walk/:/Public transport/);
+ click(mode==='fare-dodge'?/Ride without ticket/:mode==='walk'?/^Walk/:/Public transport/);
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
- advanceTravelMinutes(15);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
+ if(mode==='fare-dodge'){advanceTravelMinutes(original.inspection.at);fireEvent.click(document.querySelector('.dice-attempt'));click('Continue');ok();advanceTravelMinutes(15-original.inspection.at);}else advanceTravelMinutes(15);assert.equal(read(stateKey).locationId,'shop');assert.equal(read(stateKey).minutes,615);ok();
 }
 // Short walks retain ×4 travel and outdoor rain costs. No label sequence can
 // delay arrival; reloading restores the text from saved progress.
@@ -236,5 +231,39 @@ click(/Public transport/);assert.equal(read(stateKey).money,95.6);
 setup({money:0},{[invKey]:{transitCard:false},'street-life-effects-v1':[{id:'free-transit',expiresAt:479}]});click(/Map$/);click(/^.*Station/);click("Go →");
 assert(screen.getByRole('button',{name:/Public transport/}).disabled);assert(screen.getByRole('button',{name:/Ride without/}));
 
+
+
+
+// Ticket checks happen inside the riding phase, pause progress, and retain the route.
+for(const mode of ['transit','fare-dodge'])for(const rollDraw of [0,.99]) {
+ const onlyTicket={seen:require('../../test-fixtures/v332-saves.json').base['street-life-encounters-v1']};
+ const encounters=JSON.parse(onlyTicket.seen);encounters.seen=encounters.seen.filter(id=>id!=='ticket-check');
+ setup({day:3,minutes:600},{[invKey]:{transitCard:false},'street-life-encounters-v1':encounters});
+ click('Map');click(/^.*Station/);click('Go →');Math.random=()=>.5;
+ click(mode==='transit'?/Public transport/:/Ride without ticket/);
+ const started=read('street-life-trip-v1');assert(started.inspection);assert(!document.querySelector('.event-card'));assert(!document.querySelector('.dice-overlay'));
+ const paidMoney=read(stateKey).money;
+ advanceTravelMinutes(started.inspection.at-1);assert(!document.querySelector('.dice-overlay'));assert(!document.querySelector('.event-card'));
+ advanceTravelMinutes(1);
+ const during=read('street-life-trip-v1');assert(during.remaining>0&&during.remaining<during.total);
+ const now=read(stateKey);advance(2500);assert.deepEqual(read(stateKey),now);assert.equal(read('street-life-trip-v1').remaining,during.remaining);
+ cleanup();render(React.createElement(React.StrictMode,null,React.createElement(App)));
+ assert.equal(read('street-life-trip-v1').remaining,during.remaining);
+ if(mode==='transit') {
+   assert(screen.getByRole('dialog',{name:'Ticket inspection'}));click(/Show.*ticket/);
+ } else {
+   assert(screen.getByRole('dialog',{name:'Avoid inspection'}));assert(!screen.queryByRole('button',{name:'Cancel',exact:true}));
+   Math.random=()=>rollDraw;fireEvent.click(document.querySelector('.dice-attempt'));
+   const savedRoll=read('street-life-trip-v1').inspection.roll;assert.equal(savedRoll,rollDraw===0?1:20);
+   cleanup();let restoreDraws=0;Math.random=()=>{restoreDraws++;return .5};render(React.createElement(React.StrictMode,null,React.createElement(App)));
+   assert.equal(restoreDraws,0);assert(screen.getByLabelText('Rolled '+savedRoll));click('Continue');
+ }
+ assert.equal(read('street-life-trip-v1').remaining,during.remaining);
+ assert.deepEqual(read('street-life-trip-v1').before,started.before,'inspection does not replace the departure snapshot');
+ const chargedMoney=read(stateKey).money;assert.equal(chargedMoney,mode==='fare-dodge'&&rollDraw===0?Math.max(0,paidMoney-35):paidMoney);
+ ok();advanceTravelMinutes(during.remaining);assert.equal(read(stateKey).locationId,'station');
+ assert.equal(read(stateKey).money,chargedMoney);assert.equal(read('street-life-trip-v1'),null);ok();
+ cleanup();render(React.createElement(App));assert.equal(read(stateKey).money,chargedMoney);assert(!screen.queryByRole('dialog'));
+}
 
 env.finish();

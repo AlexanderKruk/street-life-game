@@ -19,6 +19,7 @@ const art: Record<string, EventArt> = {
   'night-patrol': { scene: 'event-night-patrol', choices: ['event-night-patrol-reassured', 'event-night-patrol-directions', 'event-night-patrol-declined'] },
   'borrow-phone-slip': { scene: 'event-borrow-phone-slip', choices: [{ success: 'event-borrow-phone-caught', failure: 'event-borrow-phone-dropped' }] },
   'station-cleaning': { scene: 'event-station-cleaning', choices: ['event-cleaning-move', 'event-cleaning-stretch', 'event-cleaning-ask'] },
+  'spare-change': { scene: 'event-spare-change-station', choices: ['event-spare-change-give', 'event-spare-change-decline', 'event-spare-change-avoid'], locations: { street: { scene: 'event-spare-change-street', choices: ['event-spare-change-street-give', 'event-spare-change-street-decline', 'event-spare-change-street-avoid'] } } },
   'platform-question': { scene: 'event-platform-question', choices: ['event-platform-board', 'event-platform-point', 'event-platform-unsure'] },
   'street-patrol-wake': { scene: 'event-street-patrol-wake', choices: ['event-street-patrol-answer', 'event-street-patrol-help', 'event-street-patrol-move'] },
   'station-patrol-wake': { scene: 'event-station-patrol-wake', choices: ['event-station-patrol-answer', 'event-station-patrol-wait', 'event-station-patrol-exit'] },

@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-28",
+  "tool": "built-in imagegen",
+  "references": [
+    "docs/art/daylight-reference.png",
+    "docs/art/hero-reference.webp",
+    "docs/art/illustration-style-reference.webp"
+  ],
+  "sources": {
+    "event-spare-change-street": "exec-1ce20771-a694-41d9-85a5-770fcc6bc4a0.png",
+    "event-spare-change-street-give": "exec-e737f800-e254-4c26-b616-01d76bbac6e5.png",
+    "event-spare-change-street-decline": "exec-5cf410fa-9e39-4c4f-8f15-6e93b2d8adc0.png",
+    "event-spare-change-street-avoid": "exec-7162e9cd-af4f-4ac7-a33c-16b9108f87c2.png"
+  },
+  "prompt": "Same protagonist and older woman outside Warsaw grocery. Opening: requests 2 z\u0142 for bread. Outcomes: give one 2 z\u0142 coin, politely decline, walk past. Preserve identities, clothing, single backpack and cloth bag. Muted neutral cool overcast daylight, natural skin, gentle cream warmth confined to shop, no global amber cast, no text or UI. Corrected opening is reference for all outcomes.",
+  "encoding": "RGB WebP master quality 92; 480/768/1024 variants quality 80."
+}

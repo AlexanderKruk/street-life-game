@@ -1,3 +1,4 @@
+import GoalCompletedDialog from './GoalCompletedDialog'
 import { initialJournalGoals, progressJournalGoals, journalGoalKnown } from './journalGoals'
 import PhoneSettingsScreen from './PhoneSettingsScreen'
 import { languageReturn, clearLanguageReturn } from './i18n/language'
@@ -84,7 +85,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.28-343'
+const BUILD_VERSION = 'v2026.10.28-344'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -126,6 +127,10 @@ export default function App() {
   const [musicWalkUsed, setMusicWalkUsed] = useState(() => initial.musicWalkUsed)
   const lastRecordedResult = useRef<unknown>(null)
   const [journalGoals, setJournalGoals] = useState<JournalGoalState>(() => initial.journalGoals)
+  const goalsObserved = useRef(false)
+  const acknowledgeGoalCompletion = useCallback(() => {
+    setJournalGoals(previous => ({ ...previous, pendingCompletions: previous.pendingCompletions?.slice(1) ?? [] }))
+  }, [])
   const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => initial.activeGoal)
   const [screen, setScreen] = useState<Screen>(() => languageResumed ? 'phone' : initial.screen)
   const [phoneApp, setPhoneApp] = useState<PhoneApp>(() => languageResumed ? 'language' : 'home')
@@ -253,7 +258,10 @@ export default function App() {
   const pendingGoals = useMemo(() => goals.filter(goal => !journalGoals[goal.id] && journalGoalKnown(journalGoals, goal.id))
     .sort((a, b) => Number(!!activeGoal && b.id === 'shelter') - Number(!!activeGoal && a.id === 'shelter')), [goals, journalGoals, activeGoal])
   useEffect(() => {
-    setJournalGoals(previous => progressJournalGoals(previous, { game, inventory, life, effects, discoveredLocations, answeredQuestions }))
+    // Reconcile historical saves without congratulating already achieved progress.
+    const announce = goalsObserved.current
+    goalsObserved.current = true
+    setJournalGoals(previous => progressJournalGoals(previous, { game, inventory, life, effects, discoveredLocations, answeredQuestions }, announce))
   }, [game.day, game.minutes, game.locationId, inventory.phoneBattery, life.housing, life.shelterUntilDay, life.employment, effects, discoveredLocations, answeredQuestions])
   useEffect(() => {
     if (!activeGoal) return
@@ -301,7 +309,12 @@ export default function App() {
     document.addEventListener('keydown', trap)
     return () => { if (ownsScrollLock) document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
   }, [rainChoice, rainWaiting, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay])
-  const eventInteractionBlocked = (shelterCheckoutDue && !sleeping) || !!shelterDeparture || inventoryDialogOpen || !!activeEvent || !!diceCheck || rainWaiting || (rainChoice && !infoModal && !pendingResult) || eventResultOpen || !!infoModal || !!pendingResult || !!closingNotice
+  const completedGoalId = journalGoals.pendingCompletions?.[0]
+  const goalCompletionVisible = !!completedGoalId && !(gameOver || activeEvent || diceCheck || pendingResult || infoModal || eventResultOpen ||
+    closingNotice || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture ||
+    trashGame || trip || phoneActivity || phoneOpen || travelChoiceOpen || inventoryDialogOpen || rainChoice || rainWaiting ||
+    (game.rain && !game.rain.choice && currentExposure === 'outside'))
+  const eventInteractionBlocked = goalCompletionVisible || (shelterCheckoutDue && !sleeping) || !!shelterDeparture || inventoryDialogOpen || !!activeEvent || !!diceCheck || rainWaiting || (rainChoice && !infoModal && !pendingResult) || eventResultOpen || !!infoModal || !!pendingResult || !!closingNotice
   useEffect(() => {
     if (!streetEventVisible) return
     const previous = document.activeElement as HTMLElement | null
@@ -397,7 +410,9 @@ export default function App() {
     return { game: { ...game }, housing: moodContext().housing, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
   }
 
-  const encounterQueue = createEncounterQueue(eventSession, { game, life, inventory, weather, trip: !!trip, infoModal: !!infoModal, currentId: current.id, firstNight })
+  const encounterQueue = createEncounterQueue(eventSession, { game, life, inventory, weather, trip: !!trip, infoModal: !!infoModal, currentId: current.id, firstNight,
+    deferredBlocked: !!(eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver || phoneOpen || travelChoiceOpen),
+  })
   const { observeFirstNight, observeOrdinaryEvent, observeIdle } = encounterQueue
   const shelterController = createShelterController(shelterSession, { game, life, current, shelterCheckoutDue,
     departureBlocked: !!(sleeping || infoModal || pendingResult || activeEvent || diceCheck || gameOver), shelterPhoneCharging, shelterBooked,
@@ -415,6 +430,8 @@ export default function App() {
   }, {
     setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal,
     openPage, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),
+    recordFareInspectionRoll: roll => setTrip(previous => previous?.mode === 'fare-dodge' && previous.inspection?.status === 'rolling'
+      ? { ...previous, inspection: { ...previous.inspection, roll } } : previous),
   })
 
   const { executeInventoryCommand, returnBottles, storeItem, takeStoredItem, storeFood, takeStoredFood, buyItem, useSupply, useMedicine, smokeCigarette, useItem } = createInventoryController(
@@ -470,7 +487,7 @@ export default function App() {
     setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }))
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
-  useRainResults({ game, effects, blocked: !!(gameOver || activeEvent || diceCheck || infoModal || pendingResult || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterDeparture || closingNotice || inventoryDialogOpen || trashGame || trip?.remaining === 0 || phoneActivity?.remaining === 0) }, {
+  useRainResults({ game, effects, blocked: !!(goalCompletionVisible || gameOver || activeEvent || diceCheck || infoModal || pendingResult || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterDeparture || closingNotice || inventoryDialogOpen || trashGame || trip?.remaining === 0 || phoneActivity?.remaining === 0) }, {
     setGame, setEffects, setInfoModal, setEventResultOpen, setJournalEntries, resultSnapshot,
   })
 
@@ -497,9 +514,10 @@ export default function App() {
   }, [game.day, game.minutes])
   useShelterAttendance(game, life, setLife, setMessage)
 
-  useForcedSleep(sleepSession, game, !!(locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult), sleepController)
+  useForcedSleep(sleepSession, game, !!(goalCompletionVisible || locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult), sleepController)
 
   const tickGameClock = useLatestAction(() => {
+    if (goalCompletionVisible) return
     if (closingNotice) return
     if (rainChoice || (game.rain && !game.rain.choice && currentExposure === 'outside' && !sleeping)) return
     // Waiting/searching pauses the interrupted trip or phone activity, but time
@@ -519,11 +537,12 @@ export default function App() {
     if (inventoryDialogOpen || rainChoice || (document.visibilityState !== 'visible' && !sleeping) || activeEvent || diceCheck || shelterInterview || gameOver || infoModal || pendingResult || sleepChoice || trashGame || (shelterCheckoutDue && !sleeping) || (shelterDeparture && shelterDepartureRemaining === 0)) return
     if (sleeping) tickSleep()
     if (sleeping) return
+    const observationReleased = encounterQueue.tickDeferredEncounter(() => applyAction(game, { minutes: 1 }))
     const tickMinutes = trip ? Math.min(1, trip.remaining) : 1
     if (shelterQueue) tickShelterQueue(tickMinutes)
     setGame(prev => applyAction(prev, { minutes: tickMinutes }))
     if (!underRainCover) setTrip(active => advanceTrip(active, tickMinutes))
-    if (!trip && !shelterQueue && !shelterDeparture) observeIdle(tickMinutes, () => applyAction(game, { minutes: tickMinutes }))
+    if (!observationReleased && !trip && !shelterQueue && !shelterDeparture) observeIdle(tickMinutes, () => applyAction(game, { minutes: tickMinutes }))
   })
   const gameClockInterval = activeCall ? 1000 : trip || shelterDeparture || phoneActivity || rainWaiting ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
@@ -533,6 +552,7 @@ export default function App() {
 
   const { cancelTravel, chooseDestination, confirmStreetExit, attemptFareDodge, startTravel, startFareDodgeTrip } = useTravelController(eventSession, encounterQueue, {
     game, trip, selectedDestination, streetExitPending, blocked: !!(sleepChoice || shelterQueue || shelterDeparture || shelterCheckoutDue),
+    inspectionBlocked: !!(infoModal || pendingResult || gameOver || rainChoice || rainWaiting || goalCompletionVisible || inventoryDialogOpen || closingNotice || sleeping || phoneActivity),
     freeTransitActive, shelterPhoneCharging, shelterBooked, shelterNightDay,
   }, {
     setGame, setTrip, setSelectedDestination, setStreetExitPending, setStreetBenchFound, setShelterArrival, setLife, setScreen,
@@ -540,7 +560,7 @@ export default function App() {
   })
 
   useEncounterObservers(encounterQueue, eventSession, { game, currentId: current.id, firstNight,
-    blocked: !!(eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver),
+    blocked: !!(eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver || phoneOpen || travelChoiceOpen),
   })
 
   useEffect(() => {
@@ -674,7 +694,7 @@ export default function App() {
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
     discoveredLocations, activeGoal, journalGoals, journalEntries, musicWalkUsed, answeredQuestions, seenMemories, firstNightEvents, leftHome, encounters, choiceSeed,
     rainChoice, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
-    game.day, gameOver, !!trip, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
+    game.day, gameOver, !!trip, trip?.inspection, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
     phoneActivity?.questionId ?? null, openingCallIndex, infoModal, shelterPhoneCharging, closingNotice,
   ])
 
@@ -717,6 +737,7 @@ export default function App() {
       onSelect={setSleepHours} onCancel={() => setSleepChoice(null)}
       onConfirm={() => runWithResult({ id: 'sleep-start', title: t('sleep.start.title') }, () => sleep(sleepHours, sleepChoice))}
     />}
+    {goalCompletionVisible && <GoalCompletedDialog key={completedGoalId} title={goals.find(goal => goal.id === completedGoalId)!.title} onClose={acknowledgeGoalCompletion} />}
     {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: t('location.closedTitle', { place: locationName(closingNotice) }),

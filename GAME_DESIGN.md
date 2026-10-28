@@ -268,7 +268,7 @@ Ordinary destinations have walking bases of 65–120 minutes; public transport u
 
 Public transport normally costs 4.40 zł. An active Transit card or an unexpired Free transport effect reduces the fare to 0. UI pricing, money requirements and fare payment use the same entitlement check. Since v218 a new run starts without a Transit card.
 
-When there is neither an active Transit card nor an unexpired Free transport effect, the player can also choose **Ride without ticket** for 0 zł. With either entitlement this option is hidden; the normal Public transport option says FREE and is usable with 0 zł. When a temporary effect expires without a card, the ticketless option reappears. This uses the same transit travel time but first makes a visible **Reflex DC 12** D20 check. Success means a free ride; failure currently applies a 20 zł penalty and -8 Mood; natural 20 gives a small Mood bonus, while natural 1 applies a 35 zł penalty and -12 Mood.
+When there is neither an active Transit card nor an unexpired Free transport effect, the player can also choose **Ride without ticket** for 0 zł. With either entitlement this option is hidden; the normal Public transport option says FREE and is usable with 0 zł. When a temporary effect expires without a card, the ticketless option reappears. The ride starts immediately using the same transit travel time. A visible **Reflex DC 12** D20 inspection interrupts it at a random minute while on the bus. Success avoids a fine; failure currently applies a 20 zł penalty and -8 Mood; natural 20 gives a small Mood bonus, while natural 1 applies a 35 zł penalty and -12 Mood.
 
 Walking adds on top of normal elapsed-time decay:
 - Food drain: +25% of baseline (about 0.00868/min, 0.52 extra points/hour).
@@ -281,7 +281,19 @@ Walking also adds Hygiene loss per minute based on the current temperature: 0.02
 
 Travel uses a centered blocking card over the blurred map. The route is muted; the changing activity is bold white with three animated dots. Bus display stages are To the stop, Waiting, On the bus and Final walk. Walking cycles through Walking, Near a crossing, Red light, Crossing and Walking on; longer routes can show further crossings. Waiting changes the animation without changing the sampled trip duration. Weather-exposure phases distinguish outdoor walks from covered stops/transit, though wetness is currently disabled.
 
-Travel has its own progress screen. Active trips persist their mode, destination, remaining minutes and initial result snapshot; reloading resumes the progress screen without repeating fare payment. Arrival opens a result window summarizing changes since departure; changes from a travel event can also be included in that overall trip summary. A travel encounter is selected when travel begins if the shared encounter interval has elapsed. The next unseen eligible walking/transit scene is presented once; no spawn-probability or weighted-selection roll is used. The opening-night observation has priority before ordinary travel encounters.
+Travel has its own progress screen. Active trips persist their mode, destination, remaining minutes and initial result snapshot; reloading resumes the progress screen without repeating fare payment. Arrival opens a result window summarizing changes since departure; changes from a travel event can also be included in that overall trip summary. Walking encounters are selected at departure when the shared encounter interval has elapsed. Paid-transit ticket inspection is checked at a random saved minute strictly inside the On the bus stage, with the existing once-per-run/cooldown eligibility. The next unseen eligible scene is presented once; no spawn-probability or weighted-selection roll is used. The opening-night observation has priority before ordinary travel encounters.
+
+Inspection timing is sampled once with the trip and persists across reloads. Checks
+never start while walking to a stop, waiting or walking from the bus to the destination.
+The trip and clock pause during the inspection and its result; acknowledgement resumes
+the original route with unchanged remaining minutes, sampled duration and departure
+snapshot. No second fare is charged. Fare-dodge checks save the current roll/modifier
+in the trip and restore the same D20 without a reroll; acceptance marks the check done
+and applies the fine once. At an ongoing inspection the player must resolve the check;
+there is no Cancel that skips it. Ordinary trip cancellation before the inspection
+still works. Older trips without inspection metadata retain their previous progress;
+a legacy fare-dodge trip has already resolved its pre-departure check and is not checked
+again. No additional world clock or save key is introduced.
 
 ## Inventory and backpack
 
@@ -564,11 +576,24 @@ Catalog events follow a deterministic, saved queue. A scene appears at most once
 
 The shared minimum interval between catalog scenes is 45 game minutes. Awake Street/Station time checks every 15 idle game minutes during the opening night and every 30 thereafter, on all normal screens. Active travel, phone searches, sleep, queues and blocking dialogs do not accrue idle minutes. The idle check counter is session-local; the last presented time and seen/pending scene IDs persist through reload. Empty or ineligible queues do not force an unrelated scene.
 
+Ordinary location actions and awake bench rest no longer immediately select a
+catalogue encounter behind their result. They schedule one observation after a
+random 5–15 seconds of real, visible, unblocked control following acknowledgement.
+The countdown uses the existing shared clock; game time and ordinary controls
+continue during this breathing space. Reading a result does not consume it. A new
+location action replaces the pending observation; another blocking activity or
+hidden tab resets its full delay until control returns. Departing drops the old
+location's observation. The remaining budget persists with encounters, without
+marking a scene seen/pending until it is actually presented. Eligibility, cooldown
+and current context are rechecked on release. Idle checks cannot bypass this pause.
+Arrivals, waking scenes, in-transit checks and the mandatory first-morning scene
+retain their existing triggers. The common 45-game-minute interval is unchanged.
+
 First-night observations take priority over ordinary encounters, keep their no-repeat flags, and appear on a matching walk, awake bench rest, station arrival or idle observation. The opening observation establishes the first night before ordinary encounters. A familiar face uses the ordinary first-night encounter flow while still at the old home: a matching walk, 15 minutes of idle observation, or a due observation after a phone search. Once the first 15 game minutes have passed an observation also becomes due after a phone search, and waits for the search result to be acknowledged. Location actions, awake bench rest, arrival and wandering also check the queue when the interval allows. Daytime Street choices offer walking or awake bench rest when the hero has enough energy.
 
 Wake scenes use the same no-repeat queue and interval. First-night bench waking prioritizes Someone needs the bench. Its scene and all three answers select artwork from the actual location: the outdoor bench has an older male passer-by, while the Station hall has a distinct female passenger with a suitcase. Pending-scene reload restores the same location variant. Quiet rest merges into the sleep result; illness keeps its separate wake result and does not consume an unshown catalog scene. Food before closing is restricted to Station after 19:00 and outside the first-night window. Coin-on-pavement and passer-by food encounters require walking; ticket inspection requires paid transit.
 
-The catalog has nineteen standalone general events, a continuation-only phone-catching stage, and five opening-night observations (A familiar face, An old friend, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The two earlier everyday passer-by scenes still use compact icon cards. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
+The catalog has nineteen standalone general events, a continuation-only phone-catching stage, and five opening-night observations (A familiar face, An old friend, Making a bed on a bench, The last departures, Someone needs the bench). The five ambient scenes and two patrol wake scenes have generated illustrations for their openings and all three choices (28 images total). The spare-change scene shares one saved ID across both locations: at most one request per run, in either order, including old saves. Station keeps the 1 zł request and station artwork; Street uses the woman outside a grocery asking 2 zł for bread, only 08:00–18:00, with matching opening and three results. Payment requires/spends 2 zł on Street and 1 zł at Station; refusal and passing by spend nothing. Pending scenes restore their location-specific copy, cost and artwork. The dropped-glove scene retains a compact icon card. Ambient scenes are checked before older general scenes when their context fits; the first-night observations retain priority and the same shared 45-minute interval prevents a cluster of encounters. Ground/bench illness and closing notices remain separate system events.
 
 The unsolicited-help event **A useful tip** (`useful-tip`) is retired. It no longer spawns, including from saved pending scenes/checks. Existing discovered addresses and journal entries are retained. Other conversations and phone searches remain the ways to find help.
 
@@ -946,6 +971,16 @@ remain completed across days/reloads, including after another cold. A new run re
 all progress. Unknown goals are hidden and excluded from the active counter. With no
 pending known goals the screen says “No active goals for now.”
 
+Actual completion is checked even before the goal is introduced or the player opens
+Goals. A new completion queues a compact acknowledgement: an ochre party-popper
+without a circle, “Goal completed”, the goal title and Got it. It appears after the
+current result and other active scenes/processes finish. Several completions are
+shown one at a time. The shared clock pauses and background controls are blocked.
+Got it or Escape acknowledges the current item. The queue persists in the existing
+goal save, survives reload and does not replay acknowledged goals. Existing saves
+reconcile historical progress without retroactive congratulations. This adds no
+rewards or changes to completion conditions.
+
 Pending goals are ordered shelter, charging, work, cold. Only the first pending goal
 has the warm yellow border. A pending shelter appointment retains its day/time inside
 the shelter goal, clears on attendance or accommodation, and moves to the next
@@ -1162,7 +1197,7 @@ Shelter-discovery questions are hidden once Night Shelter is on the discovered m
 
 ## Action checks — v322
 
-All D20 checks share the contour SVG dice icon, a concrete action title/button, contextual narrative, and compact D20 + modifier ≥ target notation. The action and Cancel buttons sit together in one centered row. Cancel is available only before a roll: shop theft returns to Shop, fare dodging returns to route choices, and event checks return to the original event choices, without time, resources or consequences. Rolled checks cannot be cancelled or rerolled; persisted rolls retain their existing behavior. The dice card scrolls on short screens.
+All D20 checks share the contour SVG dice icon, a concrete action title/button, contextual narrative, and compact D20 + modifier ≥ target notation. The action and Cancel buttons sit together in one centered row. Cancel is available before a roll for shop theft and event choices, returning to Shop or the original scene without time, resources or consequences. The in-transit fare inspection must be resolved and has no Cancel button; the ordinary trip can be cancelled before inspection begins. Rolled checks cannot be cancelled or rerolled; persisted rolls retain their existing behavior. The dice card scrolls on short screens.
 
 Theft confirmation names the item and warns of ejection. Both ordinary and critical failures grant no goods and move the hero to Street through the existing event outcome path; acknowledgement leaves the main Street screen visible. Existing time/Mood costs, success rewards, DC, modifiers and natural 1/20 rules remain in force.
 

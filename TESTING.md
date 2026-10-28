@@ -853,3 +853,103 @@ inspected and has no horizontal overflow. Existing frozen save fixtures remain
 unchanged; compatibility assertions explicitly cover the new goal schema.
 Full suites, WebKit and physical iPhone were not run. Source save only; v343
 and publication remain unchanged.
+
+
+## Goal completion acknowledgement — 28 October 2026
+
+The journal-services regression group now covers early charging/paid work with
+no discovery flags, cold recovery without opening Goals (including a dead phone),
+once-only queues, invalid/duplicate restored queue IDs, queued item ordering,
+StrictMode/reload, acknowledgement via button/Escape, focus trapping and clock
+pause. The shared regression acknowledgement helper dismisses these explicitly
+recognised goal dialogs after action results. Dedicated cases inspect them first.
+Phone expectations now distinguish a Day Work discovery from earned pay and no
+longer expect the retired morning goal to migrate.
+
+Three targeted Chromium smoke cases at 320×568, 390×844 and 1280×900 verify actual
+early charging, result-before-goal ordering, background/focus blocking, pause,
+reload and once-only acknowledgement, no horizontal overflow, the shared 32px ochre icon
+without a circle, Body 16px label and Title 20/24px. Their screenshots were
+visually inspected. Opening CSS animations are settled before geometry checks;
+the shared reduced-motion rule disables both animations.
+
+Passed: journal-services, check-phone, check-load-game-session, check-localization,
+check-design-system, check-module-boundaries and production build. Full suites,
+visual baseline updates, WebKit and physical iPhone were not run. Source save only;
+the published game remains v343.
+
+## In-transit ticket inspection — 28 October 2026
+
+`check-event-travel-controllers.cjs` checks inspection positions against the shared
+riding phase for 5–180-minute trips and four random draws, plus invalid metadata
+and legacy trips. `map-travel` covers departures without immediate inspection,
+sampled timing, paused travel/needs, paid and ticketless outcomes, natural 1/20,
+StrictMode/reload with a saved roll, unchanged departure snapshot/remaining minutes,
+single fine/fare and continued travel through arrival. Existing duration/cadence,
+cancellation, free-pass and weather-phase checks remain covered.
+
+Passed: check-event-travel-controllers, map-travel, check-load-game-session,
+check-autosave, check-events, check-localization, check-module-boundaries,
+check-design-system and production build. Three targeted Chromium scenarios passed:
+paid inspection, ticketless inspection with restored D20/fine, and the existing
+paused-trip event/result flow. Both inspection screens were visually inspected at
+390×844. Full suites, screenshot baselines, WebKit and physical iPhone were not run.
+No publication; published version remains v343.
+
+## Post-action breathing space — 28 October 2026
+
+Event regressions cover the 5s/15s real-time boundaries after ordinary Station
+rest, result-reading time excluded, free background/navigation, a new action
+restarting the delay, hidden-tab reset, StrictMode/reload without a new random
+draw, leaving the location and no premature seen/pending flags. Restoration
+checks validate the remaining budget and reject malformed, wrong-location and
+stale already-presented observations. Frozen localisation command-port mocks
+compare the semantic observation context; actual scheduling is exercised by
+the dedicated regressions and browser cases.
+
+Passed: check-events, regression/events, journal-services and map-travel,
+check-action-controllers, check-autosave, check-load-game-session,
+check-localization, check-module-boundaries and production build. Five targeted
+Chromium cases cover shortest/longest rest pauses, charging plus the goal
+acknowledgement, and both ticket-inspection flows. D20 rolls now update Trip in
+the same command as dice state, eliminating the passive-effect persistence race.
+Full suites, screenshot baselines, WebKit and physical iPhone were not run.
+The change uses the existing world clock and encounter save; no new interval or
+save key. Source remains local; no publication.
+
+
+## Spare-change station illustrations — 28 October 2026
+
+Approved opening and give/decline/avoid results are mapped to Station only, with
+RGB WebP masters and 480/768/1024 responsive variants. Street keeps its existing
+card; the missing outdoor set is recorded in IMAGE_AUDIT.md. Event IDs, resource
+changes and saved History are unchanged.
+
+Passed: check-events, regression/events, check-responsive-images,
+check-image-cache and production build. Four targeted Chromium cases verify all
+three station outcome images decode, the 1 zł deduction remains correct, narrow
+results fit and acknowledge, and the Street encounter never shows the station
+interior. Full suites, baseline updates, WebKit and physical iPhone were not run.
+Source save with [skip ci]; no game publication or release-version change.
+
+
+## Дневная просьба у магазина — 28 октября 2026
+
+Добавлены вступление и три результата; Street просит/списывает 2 zł, Station
+сохраняет 1 zł. Общий сохранённый ID исключает вторую встречу в обе стороны.
+Прошли check-events (включая оба порядка после сохранения, границы 08–18,
+недоступность оплаты при 0/1 zł и отсутствие повтора), check-localization
+(явно учтён новый дневной интервал), event-travel-controllers, module-boundaries,
+responsive-images, image-cache, production build и diff check.
+Chromium: 6/6 целевых spare-change случаев — три результата на вокзале и три
+на улице, включая reload до ответа, загрузку картинок и точную стоимость.
+Три мобильных снимка уличных результатов просмотрены. Полные наборы,
+WebKit/iPhone и обновление эталонов не запускались; публикации не было.
+
+
+## Подготовка v344 — 28 октября 2026
+
+Production build и полный Chromium browser-набор прошли: 63/63
+(16 visual, 47 smoke), 2.2 минуты. Эталоны не менялись. WebKit и физический
+iPhone не запускались. Полный Node-набор и повторную production-сборку
+выполнит обязательный build job существующего Pages workflow перед выпуском.

@@ -2,8 +2,7 @@ import { eventChoiceUnavailable } from './eventChoiceText'
 import { t, locale } from './i18n'
 import { formatMoney } from './i18n/formatters'
 import { locationName } from './locationText'
-import { STREET_EVENTS, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
-import { illustrateStreetEvent } from './eventArtwork'
+import { STREET_EVENTS, prepareStreetEvent, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
 import { locations, type GameState, type ActionResult } from './game'
 import { absoluteMinutes } from './gameTime'
 import { SHOP_ITEMS, addShopItem, canAddToBackpack, fitEventSupplies } from './inventory'
@@ -42,6 +41,7 @@ type Host = {
   runWithResult: RunWithResult
   applyAction: (state: GameState, action: ActionResult) => GameState
   startFareDodgeTrip: (id: string, outcome: EventOutcome) => void
+  recordFareInspectionRoll?: (roll: number) => void
 }
 export function createEventController(session: EventSession, context: Context, host: Host) {
   const { activeEvent, setActiveEvent, diceCheck, setDiceCheck, firstNightEvents, setFirstNightEvents, setEncounters, ambientEventClock, claimDice } = session
@@ -128,7 +128,7 @@ export function createEventController(session: EventSession, context: Context, h
       const event = STREET_EVENTS.find(event => event.id === choice.followUp!.eventId && event.continuationOnly)
       if (event) {
         setEncounters(previous => ({ ...previous, seen: [...new Set([...previous.seen, event.id])], pendingId: event.id, pendingRoll: null }))
-        setActiveEvent(illustrateStreetEvent(event, { locationId: game.locationId, housing: life.housing }))
+        setActiveEvent(prepareStreetEvent(event, { locationId: game.locationId, housing: life.housing }))
         return
       }
     }
@@ -145,6 +145,7 @@ export function createEventController(session: EventSession, context: Context, h
   function rollDice() {
     if (!diceCheck?.choice.check || diceCheck.roll !== null) return
     const roll = Math.floor(Math.random() * 20) + 1
+    if (diceCheck.fareDodgeInTransit) host.recordFareInspectionRoll?.(roll)
     setDiceCheck({ ...diceCheck, roll, resolved: false })
     if (['borrow-phone-slip', 'park-company'].includes(activeEvent?.id ?? '')) setEncounters(previous => ({ ...previous, pendingRoll: roll }))
   }

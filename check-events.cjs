@@ -93,15 +93,22 @@ assert(!STREET_EVENTS.some(event=>event.id==='cold-hands'));
 assert(onlyScene('station-cleaning',{locationId:'station',elapsedMinutes:15}));
 for(const changes of [{locationId:'station',elapsedMinutes:14},{locationId:'station',observation:'arrival'},{locationId:'street'}])assert(!onlyScene('station-cleaning',changes));
 assert(onlyScene('platform-question',{locationId:'station'}));assert(!onlyScene('platform-question'));
-for(const id of ['spare-change','dropped-glove','free-snack']){
+for(const id of ['dropped-glove','free-snack']){
  for(const minute of [0,359,1320,1439])assert(!onlyScene(id,{minutes:minute,travelMode:'walk'}));
  for(const minute of [360,1319])assert(onlyScene(id,{minutes:minute,travelMode:'walk'}));
 }
 assert(onlyScene('spare-change',{locationId:'station',minutes:60}));
 for(const [locationId,minutes] of [['station',60],['street',600]]) {
  const event=onlyScene('spare-change',{locationId,minutes});
- assert.equal(event.choices.find(choice=>choice.id==='decline').outcome.message,'You say you cannot help. They nod and turn to ask someone else.');
+ assert.equal(event.choices.find(choice=>choice.id==='give').moneyRequired,locationId==='street'?2:1);
+ assert.equal(event.choices.find(choice=>choice.id==='give').outcome.money,locationId==='street'?-2:-1);
 }
+// The location variant never creates a second saved event identity.
+for(const locationId of ['station','street']) {
+ assert(!nextStreetEvent('location',{...context,locationId,seenEventIds:complete.seen}), 'shared seen ID excludes both variants, including old saves');
+}
+for(const minutes of [479,1080,1319])assert(!onlyScene('spare-change',{minutes}));
+for(const minutes of [480,1079])assert(onlyScene('spare-change',{minutes}));
 const rustle=STREET_EVENTS.find(event=>event.id==='night-rustle');
 assert(!/car|bush/i.test(rustle.text),'opening does not locate the sound');
 assert(!/\bcat\b/i.test(JSON.stringify({title:rustle.title,text:rustle.text,icon:rustle.icon,choices:rustle.choices.map(choice=>choice.label)})),'mystery opening must not reveal the cat');
@@ -698,6 +705,7 @@ advance(30000);assert(!screen.queryByRole('dialog'),'shared 45-minute cooldown')
 // Daytime bench rest and arrival use the deterministic location queue.
 setup({day:3,minutes:600,energy:70},{'street-life-answers-v1':['morning','bed']});Math.random=()=>.4;
 click(/Is there a bench nearby/);ok();click(/I’ll sit for a bit/);ok();
+assert(!screen.queryByRole('dialog'));advance(15000);
 assert(screen.getByRole('dialog').textContent.includes('Have you got any change?'));click('Sorry, I can’t');ok();
 setup({day:3,minutes:1200},{[encountersKey]:{seen:['city-waking','night-rustle','station-cleaning','platform-question'],lastAt:null,pendingId:null},'street-life-trip-v1':{destinationId:'station',mode:'walk',total:20,remaining:1}});
 advance(250);assert(screen.getByRole('dialog').textContent.includes('Arrival'));ok();
@@ -723,15 +731,23 @@ for(const pendingRoll of [null,17]) {
 }
 
 // Money request is unconditional when due; unaffordable payment is disabled.
-for(const money of [0,2]){
+for(const money of [0,1,2]){
  setup({day:3,minutes:600,money},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id==='spare-change'?false:true)}});
  Math.random=()=>.99;advance(30000);
  assert(screen.getByRole('dialog').textContent.includes('Have you got any change?'));
- assert.equal(screen.getByRole('button',{name:/Give 1 zł/}).disabled,money===0);
- if(money){click(/Give 1 zł/);assert.equal(read(stateKey).money,1);ok();}
- else{click('Sorry, I can’t');assert.equal(read(stateKey).money,0);ok();}
+ assert.equal(screen.getByRole('button',{name:/Give 2 zł/}).disabled,money<2);
+ if(money>=2){click(/Give 2 zł/);assert.equal(read(stateKey).money,0);ok();}
+ else{click('Sorry, I can’t');assert.equal(read(stateKey).money,money);ok();}
  advance(60000);assert(!screen.queryByRole('dialog'),'encounter never repeats');
  cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'seen state survives reload');
+}
+// Completion in either location excludes the other after a saved reload.
+for(const [origin,destination] of [['station','street'],['street','station']]) {
+ setup({day:3,minutes:600,locationId:origin},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='spare-change')}});
+ advance(30000);click('Sorry, I can’t');ok();
+ const seen=read(encountersKey);assert(seen.seen.includes('spare-change'));
+ setup({day:3,minutes:600,locationId:destination},{[encountersKey]:seen});advance(60000);
+ assert(!screen.queryByRole('dialog'),'opposite location cannot replay the request');
 }
 setup({day:3,minutes:600},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='dropped-glove')}});advance(30000);
 assert(screen.getByRole('dialog').textContent.includes('Someone dropped a glove'));const t=read(stateKey).minutes;
