@@ -1,3 +1,5 @@
+Release v347 is published (29 October 2026): Story comparison is the sixth tab. GitHub Pages run 40935688299 passed all 31 Node suites, production build and deployment for 6536720c84de8427900fde546629fe75b67f152f. The location-art navigation assertion now explicitly checks six tabs and Story. Browser layout comparison remains unverified because managed preview could not start; do not claim Chromium/iPhone screenshot parity.
+
 # Street Life: implementation and visual rules
 
 Read this file before changing the project. For mechanics, schedules and current

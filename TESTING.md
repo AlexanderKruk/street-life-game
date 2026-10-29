@@ -1,3 +1,7 @@
+## Публикация v347 подтверждена — 29 октября 2026
+
+[GitHub Pages run 40935688299](https://github.com/AlexanderKruk/street-life-game/actions/runs/40935688299) для `6536720c84de8427900fde546629fe75b67f152f` завершился success: 31/31 Node-наборов (140,15 с), production build и deploy. Story доступна отдельной шестой вкладкой. Первый CI остановился на старом ожидании пяти кнопок в check-location-art; проверка обновлена до шести и дополнена явным наличием Story, остальные проверки иллюстраций сохранены. Полный успешный CI локально не дублировали. Скриншотное совпадение анимации и физический iPhone не проверены.
+
 ## Story comparison — 29 October 2026
 
 `node check-story.cjs` covers the sixth navigation tab, classic clock/stat/inventory
