@@ -1299,6 +1299,36 @@ the approved timeline prototype for comparison: progressive text, a hollow
 pulsing cursor carrying live time, fixed timestamp imprints, dark image reveal
 with line extension, staggered options, narrative selected choice and a text-only
 outcome in the same block. The presentation clock pauses at choices. Classic
-world time is paused while the tab is open. Story has no costs, rewards,
+world time is paused while the tab is open. The comparison itself has no costs, rewards,
 persistence or effects on the classic run. Leaving/reopening restarts the
 comparison; the existing History and gameplay remain available.
+
+
+## Story — passive recording (source implementation, 29 October 2026)
+
+Classic encounter/dice/result dialogs remain the active interface. A shared
+recorder captures every authored event from the existing controller, including
+continuations, actual D20 values and net results; no per-event recording setup.
+Rain and standalone shop/fare checks feed the same archive. A block retains
+scene copy/art, selected answer ID/label, real place/time, optional dice facts,
+resolved action/outcome identity and the actual settled result summary. Follow-ups
+remain in the original block. It never computes another outcome or infers facts
+from translated wording. New catalogue events use this same pipeline.
+
+Story opens the recorded chronology; older blocks display fully, with optional
+presentation-only Replay. The approved rain comparison remains behind Animation
+example. Native replay uses progressive text, dark picture reveal with extension
+of the line, fixed factual stamps and a pulsing hollow cursor. It does not advance
+the world or change the archive. Reduced motion skips animation; typing can be
+revealed with a tap or keyboard. No active choice buttons are offered in replay.
+
+`street-life-story-v1` is an optional validated v1 archive, loaded with the session
+and written by the existing autosave. Reset clears it. Up to 500 blocks persist;
+the view initially shows the latest 30, with batches of 30 earlier records.
+The archive keeps the language used when the scene occurred. Pending classic
+results restore for acknowledgement without reapplying rewards/costs; unfinished
+scenes without a restorable owner are shown honestly without an invented ending.
+Old History remains unchanged and is not expanded into imaginary full scenes.
+Other player actions, opening calls, services and a live Story modal are later
+stages in STORY_PLAN.md. The temporary pause while browsing Story remains from
+the comparison release; animations introduce no extra gameplay clock.

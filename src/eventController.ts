@@ -41,6 +41,7 @@ type Host = {
   runWithResult: RunWithResult
   applyAction: (state: GameState, action: ActionResult) => GameState
   startFareDodgeTrip: (id: string, outcome: EventOutcome) => void
+  recordStoryChoice?: (choice: StreetEventChoice, dice?: EventSession['diceCheck']) => number
   recordFareInspectionRoll?: (roll: number) => void
 }
 export function createEventController(session: EventSession, context: Context, host: Host) {
@@ -49,7 +50,7 @@ export function createEventController(session: EventSession, context: Context, h
   const { setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal, openPage, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip } = host
   const checkModifier = (choice: StreetEventChoice) => eventCheckModifier(game, choice)
   const checkUnavailableReason = (choice: StreetEventChoice) => eventChoiceUnavailable(choice, game, inventory, discoveredLocations, phoneUnavailable)
-  function applyEventOutcome(outcome: EventOutcome, title?: string, actionId?: ResultActionId) {
+  function applyEventOutcome(outcome: EventOutcome, title?: string, actionId?: ResultActionId, storyEpisodeId?: number) {
     let resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents)
     if (activeEvent?.id === 'borrow-phone-slip' && resolved.phoneBreakMessage !== undefined && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
       resolved = { ...resolved, message: resolved.phoneBreakMessage! }
@@ -62,7 +63,7 @@ export function createEventController(session: EventSession, context: Context, h
         resolved = { ...resolved, message: t(game.money > 0 ? 'event.theft.cashOnly' : inventory.documents ? 'event.theft.documentsOnly' : 'event.theft.nothing') }
       }
     }
-    runWithResult({ id: actionId ?? (activeEvent ? `event:${activeEvent.id}` : 'event-result'), title: title ?? activeEvent?.title ?? t('event.controller.resultTitle'), ...(resolved.historyId ? { eventHistory: { outcomeId: resolved.historyId, suppliesRejected: fitEventSupplies(inventory, resolved).rejected.length > 0, documents: inventory.documents ? 'carried' as const : storage.documents ? 'stored' as const : 'missing' as const } } : {}) }, () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
+    runWithResult({ ...(storyEpisodeId !== undefined ? { storyEpisodeId } : {}), id: actionId ?? (activeEvent ? `event:${activeEvent.id}` : 'event-result'), title: title ?? activeEvent?.title ?? t('event.controller.resultTitle'), ...(resolved.historyId ? { eventHistory: { outcomeId: resolved.historyId, suppliesRejected: fitEventSupplies(inventory, resolved).rejected.length > 0, documents: inventory.documents ? 'carried' as const : storage.documents ? 'stored' as const : 'missing' as const } } : {}) }, () => { setEventResultOpen(true); applyEventOutcomeImpl(resolved) }, resultSnapshot(), true, true)
   }
   function applyEventOutcomeImpl(outcome: EventOutcome) {
     const { inventory: fittedInventory, rejected } = fitEventSupplies(inventory, outcome)
@@ -124,6 +125,7 @@ export function createEventController(session: EventSession, context: Context, h
 
   function resolveStreetEvent(choice: StreetEventChoice) {
     if (eventChoiceBlock(choice, game, inventory, discoveredLocations, phoneUnavailable) !== null) return
+    const storyEpisodeId = host.recordStoryChoice?.(choice)
     if (choice.followUp && Math.random() < choice.followUp.chance) {
       const event = STREET_EVENTS.find(event => event.id === choice.followUp!.eventId && event.continuationOnly)
       if (event) {
@@ -138,7 +140,7 @@ export function createEventController(session: EventSession, context: Context, h
       setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false })
       return
     }
-    if (choice.outcome) applyEventOutcome(choice.outcome)
+    if (choice.outcome) applyEventOutcome(choice.outcome, undefined, undefined, storyEpisodeId)
     setActiveEvent(null)
   }
 
@@ -158,7 +160,8 @@ export function createEventController(session: EventSession, context: Context, h
     const outcome = fine > 0 && fine > game.money
       ? { ...rolledOutcome, message: t('travel.fare.partial', { fine: formatMoney(fine), paid: formatMoney(Math.max(0, game.money), true) }) }
       : rolledOutcome
-    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? t('event.controller.stolen') : t('event.controller.caught') : undefined, diceCheck.stealItemId ? success ? 'item-stolen' : 'caught-stealing' : undefined)
+    const storyEpisodeId = host.recordStoryChoice?.(diceCheck.choice, diceCheck)
+    applyEventOutcome(outcome, diceCheck.stealItemId ? success ? t('event.controller.stolen') : t('event.controller.caught') : undefined, diceCheck.stealItemId ? success ? 'item-stolen' : 'caught-stealing' : undefined, storyEpisodeId)
     if (diceCheck.fareDodgeDestinationId) startFareDodgeTrip(diceCheck.fareDodgeDestinationId, outcome)
     if (diceCheck.stealItemId && success) {
       const item = SHOP_ITEMS.find((entry) => entry.id === diceCheck.stealItemId)

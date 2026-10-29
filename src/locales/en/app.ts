@@ -1,4 +1,12 @@
 export const app = {
+  "story.chosen": "Your choice: {choice}",
+  "story.roll": "D20: {roll} · modifier {modifier} · target {target}",
+  "story.pending": "This event is still in progress.",
+  "story.unfinished": "This scene has no recorded ending.",
+  "story.recordings": "Your story",
+  "story.comparison": "Animation example",
+  "story.empty": "New events will appear here as you play.",
+  "story.earlier": "Earlier events",
   "story.nav": "Story",
   "story.place": "By the station",
   "story.intro": "It is dry under the canopy by the side entrance. You can wait out the rain here.",

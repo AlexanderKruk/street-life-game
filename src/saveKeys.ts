@@ -10,6 +10,8 @@ export const JOURNAL_GOALS_KEY = 'street-life-journal-goals-v1'
 export const JOURNAL_HISTORY_KEY = 'street-life-journal-history-v1'
 export const SHELTER_ARRIVAL_KEY = 'street-life-shelter-arrival-v1'
 
+export const STORY_KEY = 'street-life-story-v1'
+
 export const SAVE_KEYS = {
   trip: 'street-life-trip-v1',
   sleep: 'street-life-sleep-v1',

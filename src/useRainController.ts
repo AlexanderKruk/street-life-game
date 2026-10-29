@@ -3,7 +3,7 @@ import { formatResultDelta } from './i18n/formatters'
 import { useEffect, useRef } from 'react'
 import { rainDailyLimit, type GameState } from './game'
 import { absoluteMinutes } from './gameTime'
-import { chooseRain, createRain, planRainDay, rainArt, rainResultActionId, type RainChoice } from './rain'
+import { chooseRain, createRain, planRainDay, rainArt, rainResultActionId, type RainChoice, type RainEpisode } from './rain'
 import { summarizeResult, type ResultSnapshot } from './results'
 import { resultResourceLabel } from './resultResources'
 import { t } from './i18n'
@@ -51,6 +51,7 @@ export function useRainScheduling(context: { game: GameState; gameOver: boolean;
   return { respondToRain, findProperShelter, continueInRain }
 }
 export function useRainResults(context: { game: GameState; effects: ActiveEffect[]; blocked: boolean }, host: {
+  recordStoryResult?: (rain: RainEpisode, result: ResultCardData) => void
   setGame: GameSetter; setEffects: Setter<ActiveEffect[]>; setInfoModal: Setter<ResultCardData | null>; setEventResultOpen: Setter<boolean>; setJournalEntries: Setter<JournalEntry[]>; resultSnapshot: () => ResultSnapshot
 }) {
   const { game, effects, blocked } = context
@@ -88,7 +89,9 @@ export function useRainResults(context: { game: GameState; effects: ActiveEffect
     const illustration = rain.choice === 'proper' && rain.searchRemaining > 0
       ? '/street-life-game/assets/event-rain-stopped-search.webp'
       : rainArt(rain, rain.choice ?? 'continue')
-    setInfoModal({ title, text, label: t('rain.result.label'), illustration, illustrationAlt: text, visibleStats: ['energy', 'mood'], rainResultId: rain.id, ...summary })
+    const result: ResultCardData = { title, text, label: t('rain.result.label'), illustration, illustrationAlt: text, visibleStats: ['energy', 'mood'], rainResultId: rain.id, ...summary }
+    host.recordStoryResult?.(rain, result)
+    setInfoModal(result)
     setEventResultOpen(true)
     if (newlyReported) {
       const entry: JournalEntry = { day: game.day, minute: game.minutes, title, text: rainHistoryText(rain, granted), actionId, decisionId: actionId, groupId: JSON.stringify([actionId,rain.level,rain.choice ?? 'continue',granted]), actionTitle: title, reflection: true }

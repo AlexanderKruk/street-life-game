@@ -1,3 +1,24 @@
+## Passive Story recording — 29 October 2026 (source-only)
+
+`node check-story-recording.cjs` is included as the 32nd release suite. It walks
+all 25 catalogue scenes / 61 answer routes through the actual classic App and
+verifies snapshots, choice IDs, real completion stamps and archival round trips.
+It also covers both spare-change prices/art variants, unacknowledged result
+restoration in StrictMode without repeated consequences, continuation + restored
+D20, in-transit fine/reload/resumption, rain search/cancel/background completion,
+corrupt optional archives, reset, progressive native text/dark reveal completion
+and archive/game/RNG isolation during replay. The existing check-story.cjs now
+opens Animation example explicitly after checking the real empty archive; its
+original three prototype branches and classic pause/resume coverage remain.
+
+Passed targeted checks: check-story-recording, check-story, event/travel controllers,
+rain, read-only session restoration, autosave, map-travel regression, localisation,
+complete-language coverage, module boundaries, design system and production build.
+Full Node suites are reserved for publication and were not run locally. Browser
+QA remains unverified: managed preview exits with `vite: not found`; status is
+stopped. Physical iPhone/WebKit and visual parity are not claimed. No release,
+workflow or build-version change; published game remains v347.
+
 ## Публикация v347 подтверждена — 29 октября 2026
 
 [GitHub Pages run 40935688299](https://github.com/AlexanderKruk/street-life-game/actions/runs/40935688299) для `6536720c84de8427900fde546629fe75b67f152f` завершился success: 31/31 Node-наборов (140,15 с), production build и deploy. Story доступна отдельной шестой вкладкой. Первый CI остановился на старом ожидании пяти кнопок в check-location-art; проверка обновлена до шести и дополнена явным наличием Story, остальные проверки иллюстраций сохранены. Полный успешный CI локально не дублировали. Скриншотное совпадение анимации и физический iPhone не проверены.

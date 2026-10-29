@@ -1,16 +1,18 @@
-# Event-driven goals source checkpoint — 28 October 2026
+# Story events source checkpoint — 29 October 2026
 
-Source-only save; no game publication. Published version remains v343.
+Source-only save; the published game remains v347. No game publication or workflow changes.
 
-- Local source commit: c504dc20c88ca25656b2a1373101e387ad501f49
-- Verified source tree: 68261a49605aa7c154056cbe4aaa634dfc76595c
-- GitHub source snapshot: 34ac73a8b1d2b9d9e32270bb6a61e63be47fd38a
-- Backup branch: backup/goals-2026-10-28
-- Original local history: .backup/goals-2026-10-28.bundle
+- Local source commit: 9e3f596eb6aec4e4417058350cbb067da5557074
+- Verified source tree: 03173a721dde402f68d420ab9e36698eef0304e2
+- GitHub source snapshot: 8daea6505c46fb52ac7549f45dcc1e2feb572ddd
+- Backup branch: backup/story-2026-10-29
+- Original local history: .backup/story-2026-10-29.bundle
 
-The API source tree was verified equal to the committed local tree before adding these recovery files. The bundle was verified with git bundle verify and retains the original local commit. Restore it after fetching base 3926974838a85aed2ef75791de93f271cd3abf66:
+The API source tree was verified equal to the tested local committed tree before adding these recovery files. The bundle was verified with git bundle verify and retains the original local commit and documentation history. Restore after fetching published base 6536720c84de8427900fde546629fe75b67f152f:
 
-    git bundle verify .backup/goals-2026-10-28.bundle
-    git fetch .backup/goals-2026-10-28.bundle HEAD:refs/heads/recovered-goals-2026-10-28
+    git bundle verify .backup/story-2026-10-29.bundle
+    git fetch .backup/story-2026-10-29.bundle HEAD:refs/heads/recovered-story-2026-10-29
 
-Checks passed: journal-services regression, session restoration, legacy-save compatibility, autosave, phone controller, shelter charging, module boundaries, localisation and production build. Six targeted Chromium opening/unlocked-goals/reload cases passed at 320/390/1280px. Full suites, WebKit and physical iPhone were not run. Workflow files and release/build ID are unchanged; [skip ci] suppresses push-triggered publication.
+Implemented: one passive recorder for all 25 authored scenes / 61 answers, chains/D20, standalone shop/fare checks and rain; actual saved texts/art/choices/stamps/results; read-only Story archive with safe native replay; classic dialogs and History retained. Reset clears the optional validated v1 archive. Old summaries are not expanded into fabricated scenes.
+
+Passed: check-story-recording (all catalogue answers; real cost variants, StrictMode/reload/ack, chain/D20, in-transit resume, rain cancellation, native animation/replay isolation and reset), check-story, event/travel controllers, rain, session restoration, autosave, map-travel regression, localisation, language completeness, module boundaries, design system, production build and diff checks. Full Node suites are reserved for publication and were not run locally. Managed browser preview could not start (vite: not found); Chromium layout, WebKit and physical iPhone appearance remain unverified. [skip ci] suppresses push-triggered publication.
