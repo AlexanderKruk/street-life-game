@@ -10,29 +10,28 @@ assert.equal(preference.loadLanguage(),'en');values.set(preference.LANGUAGE_KEY,
 const translations={...bundled('src/locales/pl/index.ts'),...bundled('src/locales/ru/index.ts')};
 const openingPackages={pl:bundled('src/locales/pl/opening.ts').opening,ru:bundled('src/locales/ru/opening.ts').opening};
 assert.deepEqual(Object.keys(openingPackages.pl).sort(),Object.keys(openingPackages.ru).sort(),'the reference package covers the same messages in both languages');
-const interfacePackages={};
+const completedPackages={};
 for(const id of ['pl','ru']) {
  const original=bundled('src/locales/interfaceTranslations.ts')[id];
- const ui=bundled(`src/locales/${id}/interface.ts`).interfaceMessages;
- const inventory=bundled(`src/locales/${id}/inventory.ts`).inventoryMessages;
- const keys=[...Object.keys(original),...Object.keys(openingPackages[id]),...Object.keys(ui),...Object.keys(inventory)];
+ const packages=['interface','inventory','services','rest'].map(name=>bundled(`src/locales/${id}/${name}.ts`)[`${name}Messages`]);
+ const keys=[...Object.keys(original),...Object.keys(openingPackages[id]),...packages.flatMap(Object.keys)];
  assert.equal(new Set(keys).size,keys.length,`${id}: packages must not silently override each other`);
- interfacePackages[id]={...ui,...inventory};
- for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory']) {
+ completedPackages[id]=Object.assign({},...packages);
+ for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory','locations','actions','controllerActions','sleep','shelter']) {
   const english=Object.values(bundled(`src/locales/en/${name}.ts`))[0];
   for(const key of Object.keys(english))assert(Object.hasOwn(translations[id],key),`${id}: completed interface package is missing ${key}`);
  }
 }
-assert.deepEqual(Object.keys(interfacePackages.pl).sort(),Object.keys(interfacePackages.ru).sort(),'interface and inventory packages cover the same messages');
+assert.deepEqual(Object.keys(completedPackages.pl).sort(),Object.keys(completedPackages.ru).sort(),'completed packages cover the same messages');
 for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Ustawienia','21 aktywnych celów'],['ru','Настройки','21 активная цель']]) {
  values.set(preference.LANGUAGE_KEY,id);const actual=bundled('src/i18n/index.ts');
  assert.equal(actual.t('phone.ui.app.settings'),settings);
  assert.equal(actual.t('phone.ui.activeGoals',{count:21}),plural);
- assert.equal(actual.t('sleep.duration.hours',{hours:21}),'21 hours','English fallback uses English plural rules');
+ assert.equal(actual.t('trash.kept',{found:21}),'21 containers kept','English fallback uses English plural rules');
  for(const override of [translations.pl,translations.ru])assert.deepEqual(actual.validateCatalog(actual.en,{...actual.en,...override}),[]);
  if(id!=='en') {
   const plurals=new Intl.PluralRules(actual.locale);
-  for(const [key,message] of Object.entries(interfacePackages[id]))if(typeof message!=='string') {
+  for(const [key,message] of Object.entries(completedPackages[id]))if(typeof message!=='string') {
    for(const count of [0,1,2,4,5,11,12,14,21,22,25,101,102,1.5]) {
     const category=plurals.select(count);
     assert(Object.hasOwn(message,category),`${id}: ${key} needs a ${category} form`);
@@ -45,6 +44,16 @@ for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Us
   }
   assert.equal(actual.t('item.caption.water',{count:21}),id==='ru'?'21 порция':'21 porcji');
   assert.equal(actual.t('result.containers',{count:22}),id==='ru'?'+22 ёмкости':'+22 opakowania');
+  const sleep=bundled('src/sleepText.ts');
+  assert.equal(sleep.sleepCompletionText(60,false,false),id==='ru'?'Ты спал 1 час.':'Przespałeś 1 godzinę.','sleep duration fits the surrounding sentence');
+  assert.equal(sleep.sleepCompletionText(240,false,false),id==='ru'?'Ты спал 4 часа.':'Przespałeś 4 godziny.');
+  assert.equal(sleep.sleepCompletionText(330,false,false),id==='ru'?'Ты спал 5 ч 30 мин.':'Przespałeś 5 godz. 30 min.','shortened sleep keeps both duration parameters');
+  const rest=bundled(`src/locales/${id}/rest.ts`).restMessages;
+  const {shelterDepartureText}=bundled('src/shelterText.ts');
+  for(const charging of [false,true])for(const booked of [false,true]) {
+   const key=charging?booked?'shelter.departure.resultChargingBooked':'shelter.departure.resultCharging':booked?'shelter.departure.resultBooked':'shelter.departure.result';
+   assert.equal(shelterDepartureText(charging,booked),rest[key],`${id}: departure retains the charging/booking alternative`);
+  }
   const opening=openingPackages[id];
   // Module-level bindings must resolve the selected language after the existing reload.
   const {OPENING_CALLS}=bundled('src/openingCalls.ts');
@@ -73,4 +82,4 @@ preference.changeLanguage('ru');assert.equal(flushed,1);assert.equal(reloaded,1)
 assert(preference.languageReturn());assert(preference.languageReturn(),'StrictMode reads do not consume the navigation hint');preference.clearLanguageReturn();assert(!preference.languageReturn());
 localStorage.setItem=()=>{throw new Error('blocked')};assert.throws(()=>preference.changeLanguage('pl'),/blocked/);assert.equal(reloaded,1,'failed preference write does not reload');
 delete global.localStorage;delete global.sessionStorage;delete global.window;
-console.log('PASS: languages, parameter validation, complete interface/inventory packages without duplicate keys, RU/PL plural boundaries, English fallback plurals, opening calls/event/History, preference validation, flush-before-reload, StrictMode-safe return and blocked storage.');
+console.log('PASS: languages, parameter validation, 14 completed catalogues without duplicate keys, RU/PL plural boundaries, sleep sentence grammar and truncated duration, four shelter departure contexts, English fallback plurals, opening calls/event/History, preference validation, flush-before-reload, StrictMode-safe return and blocked storage.');
