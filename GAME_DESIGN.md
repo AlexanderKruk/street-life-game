@@ -1332,3 +1332,5 @@ Old History remains unchanged and is not expanded into imaginary full scenes.
 Other player actions, opening calls, services and a live Story modal are later
 stages in STORY_PLAN.md. The temporary pause while browsing Story remains from
 the comparison release; animations introduce no extra gameplay clock.
+
+Story metadata presentation — 29 October 2026: an episode starts with a compact HH:MM · saved place name · Dn row and its Replay control. The separate event-name heading and place line are omitted. End/cursor stamps also put time first. Stored scene titles and classic event dialogs are unchanged.

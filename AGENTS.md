@@ -977,3 +977,5 @@ catalogue answers, actual money variants, StrictMode/reload/ack, chain/D20, rain
 cancellation, in-transit resumption, animation/replay isolation and reset. Browser
 appearance remains unverified because managed preview reports vite: not found.
 STORY_PLAN.md tracks remaining action sources and later opt-in live Story modal.
+
+Story metadata — 29 October 2026: recorded episodes omit the event-title heading and separate place row. Keep the opening metadata compact: HH:MM · saved place name · Dn. Cursor stamps also show time before day. Event titles remain stored for compatibility; this presentation change does not rewrite archives or touch classic dialogs. The replay control remains beside the metadata.

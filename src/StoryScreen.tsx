@@ -8,7 +8,7 @@ import StoryComparison from './StoryComparison'
 import type { StoryEpisode, StoryStamp } from './story'
 
 type Piece = { kind: 'text' | 'image' | 'choice'; text: string; at: StoryStamp; image?: string }
-const timeLabel = (at: StoryStamp) => `D${displayDay(at.day)} · ${formatTime(at.minute)}`
+const timeLabel = (at: StoryStamp) => `${formatTime(at.minute)} · D${displayDay(at.day)}`
 function episodePieces(episode: StoryEpisode): Piece[] {
   const pieces: Piece[] = []
   for (const scene of episode.scenes) {
@@ -77,7 +77,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
   const cursorAt = animation ? pieces[animation.index]?.at ?? last : last
   const summary = [...(episode.result?.costs ?? []), ...(episode.result?.changes ?? [])]
   return <article className="story-episode" data-story-id={episode.id}>
-    <div className="story-episode-heading"><div><time>{timeLabel(first.at)}</time><h2>{first.title}</h2><span>{first.at.locationName}</span></div>
+    <div className="story-episode-heading"><div className="story-stamp"><time>{formatTime(first.at.minute)}</time><span> · {first.at.locationName} · D{displayDay(first.at.day)}</span></div>
       <ModalAction variant="secondary" onClick={() => setReplay(value => value + 1)}>{t('story.replay')}</ModalAction></div>
     <div className={`story-track${animation ? ' is-replaying' : ''}`} ref={track} style={{ '--story-y': `${animation?.y ?? 0}px` } as CSSProperties}>
       <div className="story-thread" aria-hidden="true" />
