@@ -1,3 +1,15 @@
+## Публикация v349 подтверждена — 29 октября 2026
+
+[GitHub Pages run 40956345997](https://github.com/AlexanderKruk/street-life-game/actions/runs/40956345997)
+для `5ed006e18935efb00f3e1e14b930820f69f0084b` завершился success:
+32/32 Node-наборов за 92,30 с, production build и deploy. Включены компактная
+строка времени/места/дня и отдельная точка результата с общими полосками без
+рамки. Набор показателей и затрат совпадает с классической модалкой; лишние
+фоновые потери скрыты. Проверка Story/classic parity и анимации прошла в CI.
+Полный CI локально не дублировали. Дизайн опубликован по просьбе пользователя
+для просмотра завтра, а не как окончательно одобренный. Браузерное совпадение,
+WebKit и физический iPhone по-прежнему не проверены.
+
 ## Story result fields and animation — 29 October 2026 (source-only)
 
 `check-results.cjs` now renders the same normal, call, compact discovery and

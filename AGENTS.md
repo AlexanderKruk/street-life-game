@@ -1,3 +1,5 @@
+Release v349 is published (29 October 2026): compact Story metadata (time · place · day), separate result points, unframed shared stat meters and the exact classic result field selection. GitHub Pages run 40956345997 passed all 32 Node suites in 92.30s, production build and deploy for 5ed006e18935efb00f3e1e14b930820f69f0084b. The design is intentionally available for the user to review tomorrow; do not treat it as final visual approval. The phone-call recording gap remains deferred. Browser appearance remains unverified.
+
 Release v348 is published (29 October 2026): passive Story recording for all authored events, chains/D20 and rain. GitHub Pages run 40947063001 passed 32/32 Node suites (86.73s), production build and deploy for 1012bc00ea76020b445b16951e234d69c7823cdf. Existing classic dialogs remain the active event UI; new recorded episodes are available in Story. Browser appearance remains unverified because managed preview could not start.
 
 Release v347 is published (29 October 2026): Story comparison is the sixth tab. GitHub Pages run 40935688299 passed all 31 Node suites, production build and deployment for 6536720c84de8427900fde546629fe75b67f152f. The location-art navigation assertion now explicitly checks six tabs and Story. Browser layout comparison remains unverified because managed preview could not start; do not claim Chromium/iPhone screenshot parity.
@@ -980,7 +982,7 @@ STORY_PLAN.md tracks remaining action sources and later opt-in live Story modal.
 
 Story metadata — 29 October 2026: recorded episodes omit the event-title heading and separate place row. Keep the opening metadata compact: HH:MM · saved place name · Dn. Cursor stamps also show time before day. Event titles remain stored for compatibility; this presentation change does not rewrite archives or touch classic dialogs. The replay control remains beside the metadata.
 
-Story result presentation — 29 October 2026 (source-only): each saved result is a
+Story result presentation — 29 October 2026 (published v349): each saved result is a
 separate visual point inside its original episode, with fixed completion time,
 narrative/art and the same visible consequences/costs as its classic ResultCard.
 Use the exported shared `resultDisplay` selector and `ResultStat` component; never
