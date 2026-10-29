@@ -29,7 +29,11 @@ its plural rules remain for future missing keys. Existing saved History keeps
 its original language; only new messages use the selected language. The language
 screen explains this instead of describing the translation as partial.
 Technical coverage/parameter/History checks pass; final mobile layout review
-belongs to the user and is not claimed complete. This source save is unpublished.
+belongs to the user and is not claimed complete. Release v346 was published on
+29 October 2026: GitHub Pages run 40858288240 passed all 30 Node suites, the
+production build and deployment. Local Chromium checks passed all 16 unchanged
+visual baselines; after updating one stale Try-button selector, both affected
+ticket-inspection smoke scenarios passed. See TESTING.md for the exact sequence.
 
 For the active RU/PL translation, preserve the existing layout. On 29 October
 the user reserved card/text/image rearrangements and wrapping review for manual

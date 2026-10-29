@@ -1,6 +1,6 @@
 # Street Life — Game Design & Implemented Mechanics
 
-**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.27-339`.
+**Documentation audit:** 2026-10-24. **Application build:** `v2026.10.29-346`.
 
 This is the current implementation reference, checked against the source and regression checks. It describes game rules, not universal rules for Polish social services. Prototype rules based on the user's experience are identified where relevant. Future ideas are listed separately from implemented behavior.
 
@@ -1055,7 +1055,7 @@ The v283 GitHub Pages workflow passed the full tests and production build before
 - Source: [AlexanderKruk/street-life-game](https://github.com/AlexanderKruk/street-life-game), branch `main`.
 - Game: [Street Life](https://alexanderkruk.github.io/street-life-game/).
 - Existing deployment: `.github/workflows/deploy.yml`, push to `main`, Node 24, `npm ci`, `npm test`, `npm run build`, then GitHub Pages artifact/deployment. Preserve this host; the project is not a Sites-hosted repository.
-- Last confirmed successful deployment: v298 on 2026-10-22, commit `a28bb40f4c254507031f2d46a94be34a127b5235` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/39803827586)). The current source prepares v299, halving the clear space between map labels and the selected marker ring from about 8px to 4px on both sides. Publication is verified separately from a local build.
+- Last confirmed successful deployment: v346 on 2026-10-29, commit `aaaac6147c1480e1d106dcc0f81ac1a71cc22aca` ([successful workflow](https://github.com/AlexanderKruk/street-life-game/actions/runs/40858288240)). Full RU/PL translation covers all 1641 current English keys. The workflow passed 30/30 Node suites, the production build and GitHub Pages deployment. Documentation-only source saves after this commit do not change the deployed game.
 - Documentation-only commits retain the visible application build number. Update this file when mechanics/UI change, and archive superseded version details instead of treating them as current rules.
 
 ## Design principles
@@ -1277,11 +1277,11 @@ flushes saved progress and reloads the same session, returning to Language;
 Back returns to Settings, then the phone home. No internet payment, game-time
 cost or resource reward is attached to the setting. Existing phone access and
 busy/blocking rules still apply. Reset save retains the language preference.
-Polish and Russian currently translate core interface labels, phone navigation,
-Find Help categories, place/item names and settings; other messages use English.
-The language page states this limitation for these languages. Saved History
-retains its original wording. More story translations can extend the catalogues
-without changing gameplay identities or saves.
+Polish and Russian cover all 1641 current English messages across 27 catalogues,
+including interface, services, stories and new History. The language page explains
+that saved History retains its original language. English fallback remains for
+future missing keys without changing gameplay identities or saves. Translation
+does not rearrange cards or shrink text; the user is reviewing mobile wrapping.
 
 Sleep entry presentation — 28 October 2026: ground, street bench, station bench,
 reserved Night Shelter bed and Schronisko bed display ≈2h+ via the common
