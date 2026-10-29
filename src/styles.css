@@ -1388,8 +1388,8 @@ body { min-width:0; }
 .story-toolbar, .story-episode-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
 .story-toolbar h1 { font-size:var(--font-title); font-weight:var(--weight-semibold); }
 .story-episode { min-width:0; margin:22px 0 32px; overflow-wrap:anywhere; }
-.story-episode-heading { padding-left:28px; }
-.story-episode-heading h2 { margin:4px 0; font-size:var(--font-title); font-weight:var(--weight-semibold); }
+.story-episode-heading { padding-left:28px; align-items:center; }
+.story-stamp { min-width:0; flex:1; }
 .story-episode-heading time, .story-episode-heading span, .story-head time { font-size:var(--font-small); color:var(--text-muted); font-variant-numeric:tabular-nums; }
 .story-track { position:relative; padding:0 0 38px 28px; min-height:56px; }
 .story-thread { position:absolute; left:5px; top:6px; bottom:0; width:1px; background:#424a4c; }
