@@ -1304,7 +1304,7 @@ persistence or effects on the classic run. Leaving/reopening restarts the
 comparison; the existing History and gameplay remain available.
 
 
-## Story — passive recording (source implementation, 29 October 2026)
+## Story — passive recording (published v348, 29 October 2026)
 
 Classic encounter/dice/result dialogs remain the active interface. A shared
 recorder captures every authored event from the existing controller, including

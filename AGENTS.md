@@ -1,3 +1,5 @@
+Release v348 is published (29 October 2026): passive Story recording for all authored events, chains/D20 and rain. GitHub Pages run 40947063001 passed 32/32 Node suites (86.73s), production build and deploy for 1012bc00ea76020b445b16951e234d69c7823cdf. Existing classic dialogs remain the active event UI; new recorded episodes are available in Story. Browser appearance remains unverified because managed preview could not start.
+
 Release v347 is published (29 October 2026): Story comparison is the sixth tab. GitHub Pages run 40935688299 passed all 31 Node suites, production build and deployment for 6536720c84de8427900fde546629fe75b67f152f. The location-art navigation assertion now explicitly checks six tabs and Story. Browser layout comparison remains unverified because managed preview could not start; do not claim Chromium/iPhone screenshot parity.
 
 # Street Life: implementation and visual rules
@@ -954,7 +956,7 @@ fixed stamps, pulse, sequential choices, selected narrative and same-block
 text-only results. The choice clock is paused; leaving the tab destroys the
 comparison. Run check-story.cjs for isolation, all three answers and replay.
 
-Story recording — 29 October 2026 (source-only, v347 remains published):
+Story recording — 29 October 2026 (published v348):
 `story.ts` / `useStorySession.ts` provide one passive archive for the entire authored
 catalogue (25 scenes / 61 answers), chains/D20 and standalone shop/fare checks;
 rain uses an explicit port from its separate result owner. Do not add per-event

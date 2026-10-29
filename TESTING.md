@@ -1,3 +1,12 @@
+## Публикация v348 подтверждена — 29 октября 2026
+
+[GitHub Pages run 40947063001](https://github.com/AlexanderKruk/street-life-game/actions/runs/40947063001)
+для `1012bc00ea76020b445b16951e234d69c7823cdf` завершился success:
+32/32 Node-наборов за 86,73 с, production build и deploy. Новый общий сбор
+ивентов в Story опубликован; классические окна остаются рабочими. Локально
+полный набор не дублировали. Браузерное совпадение с макетом, WebKit и
+физический iPhone по-прежнему не проверены из-за недоступного managed preview.
+
 ## Passive Story recording — 29 October 2026 (source-only)
 
 `node check-story-recording.cjs` is included as the 32nd release suite. It walks
