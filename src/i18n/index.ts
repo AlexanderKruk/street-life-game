@@ -1,5 +1,6 @@
 import { loadLanguage } from './language'
-import { pl, ru } from '../locales/interfaceTranslations'
+import { pl } from '../locales/pl'
+import { ru } from '../locales/ru'
 import { app } from '../locales/en/app'
 import { phoneAnswers } from '../locales/en/phoneAnswers'
 import { trash } from '../locales/en/trash'

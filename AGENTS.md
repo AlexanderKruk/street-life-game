@@ -42,6 +42,7 @@ Closing the task does not claim that previously unrun device checks were run.
 | `AGENTS.md` | Read first before working on the project; current agent rules and navigation. |
 | `GAME_DESIGN.md` | Current implemented mechanics; consult the relevant sections for gameplay changes. |
 | `TEXT_STYLE.md` | Current writing rules; read for player-facing text changes. |
+| `TRANSLATION.md` | Active RU/PL translation plan, terminology, completed packages and verification; separate from the closed extraction migration. |
 | `TESTING.md` | Current checks and verification limits; consult when selecting/running or changing tests. |
 | `IMAGE_AUDIT.md` | Active artwork issues; consult for image work, not unrelated tasks. |
 | `docs/archive/REFACTORING.md` | Completed agreed refactoring plan and history; consult only for relevant architecture/history questions. |
