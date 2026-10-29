@@ -337,7 +337,7 @@ for(const [hygiene,mood,roll,success]of [[55,30,9,false],[55,30,10,true],[80,30,
  assert(!document.querySelector('.dice-description'),'D20 never repeats the previous scene');
  assert.equal(screen.getByRole('dialog').querySelector('.dice-card h2').textContent,company.choices[0].label,'selected action stays in the title');
  assert(screen.getByRole('button',{name:'Try',exact:true}),'D20 uses one short action label');
- assert(!screen.getByRole('button',{name:company.choices[0].label,exact:true}),'D20 button does not repeat the title');
+ assert(!screen.queryByRole('button',{name:company.choices[0].label,exact:true}),'D20 button does not repeat the title');
  assert([...document.querySelectorAll('.bottom-nav button')].every(button=>button.disabled));
  Math.random=()=>(roll-.5)/20;fireEvent.click(document.querySelector('.dice-attempt'));assert.equal(read(encountersKey).pendingRoll,roll);
  cleanup();Math.random=()=>{throw new Error('Company check must restore the rolled D20')};render(React.createElement(App));
