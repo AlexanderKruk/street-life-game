@@ -1054,7 +1054,7 @@ try {
     }
     cleanup();render(React.createElement(view.DiceDialog,{diceCheck:{choice:changed,roll:null,modifier:0,resolved:false},onRoll:()=>{},onAccept:()=>{},onCancel:()=>{}}));
     assert.equal(document.querySelector('#dice-action-title').textContent,changed.label);
-    assert.equal(document.querySelector('.dice-attempt').textContent,changed.label);
+    assert.equal(document.querySelector('.dice-attempt').textContent,'Try','the D20 button does not duplicate translated action titles');
   }
   const anyCheck=STREET_EVENTS.flatMap(e=>e.choices).find(c=>c.check);
   for(const item of SHOP_ITEMS){
