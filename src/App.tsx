@@ -829,7 +829,7 @@ export default function App() {
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={rainModalRef} onChoose={respondToRain}
       onContinue={continueInRain}
     />}
-    {!gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck} eventText={activeEvent?.text}
+    {!gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck}
       onRoll={rollDice} onAccept={acceptDiceResult} onCancel={() => setDiceCheck(null)} />}
 
     {!gameOver && shelterQueue && <ShelterQueueDialog shelterQueue={shelterQueue} minute={game.minutes} />}
