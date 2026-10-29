@@ -72,6 +72,17 @@ function setup(level,extra={},storage={}) {
 function tick(delay) { act(()=>{for(const timer of [...timers.values()]) if(timer.delay===delay)timer.fn();}); }
 function save() { fireEvent(window,new window.Event('pagehide'));return JSON.parse(localStorage.getItem(SAVE_KEY)); }
 try {
+  const headerWeather = () => document.querySelector('.weather');
+  setup('rain');
+  assert.match(headerWeather().getAttribute('aria-label'), /^Rain, /, 'active rain appears in the header');
+  assert.equal(headerWeather().querySelectorAll('svg path').length, 2, 'active rain uses the rain icon');
+  setup('downpour');
+  assert.match(headerWeather().getAttribute('aria-label'), /^Downpour, /, 'downpour intensity appears in the header');
+  setup('rain', { rain: undefined, nextRainAt: now + 120 });
+  assert.match(headerWeather().getAttribute('aria-label'), /^Cloudy, /, 'the header is cloudy between rain episodes');
+  assert.equal(headerWeather().querySelectorAll('svg path').length, 1, 'a dry spell uses the cloud icon');
+  setup('rain', { day: 5, rain: undefined, nextRainAt: now + 120 });
+  assert.match(headerWeather().getAttribute('aria-label'), /^Cloudy, /, 'showery days also display clouds between episodes');
   for (const level of ['drizzle','rain','downpour']) for (const [choice,label] of [['nearby','Take cover nearby'],['proper','Find proper shelter'],['continue','Carry on']]) {
     setup(level);
     const start=save(); tick(1000); assert.equal(save().minutes,start.minutes,'decision pauses time');
@@ -80,6 +91,7 @@ try {
     for(let i=0;i<4;i++) {tick(choice==='continue'?1000:250); if(choice==='continue') assert(!screen.queryByRole('dialog'));}
     tick(choice==='continue'?1000:250);
     assert(document.querySelector('.result-modal'),'rain end opens the shared event result');
+    assert.match(headerWeather().getAttribute('aria-label'), /^Cloudy, /, 'the rain icon clears when the episode ends');
     assert(document.querySelector('.result-modal img').getAttribute('src').includes(`${level}-${choice}`),'result illustration matches choice and intensity');
     if(choice==='nearby') assert(screen.getByRole('dialog').textContent.includes(level==='rain'?'under a tree':'awning'));
     if(choice==='proper') assert(screen.getByRole('dialog').textContent.includes('passage'));
