@@ -452,7 +452,7 @@ for (const mode of ['transit', 'fare-dodge']) {
     } else {
       await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toHaveCount(0)
       await page.evaluate(() => { Math.random = () => 0 })
-      await page.getByRole('button', { name: 'Avoid inspection', exact: true }).click()
+      await page.getByRole('button', { name: 'Try', exact: true }).click()
       expect((await read(page, keys.trip)).inspection.roll).toBe(1)
       await page.reload()
       await expect(page.getByLabel('Rolled 1', { exact: true })).toBeVisible()
