@@ -210,6 +210,50 @@ try {
     assert.equal(document.querySelectorAll('.result-place').length, places.length === 1 ? 0 : places.length);
     cleanup();
   }
+  // Story must display the same result fields, with historical values settled
+  // and the original meter animation confined to presentation-only replay.
+  const StoryScreen = bundled('src/StoryScreen.tsx').default;
+  const at = { day: 2, minute: 600, locationId: 'station', locationName: 'Station' };
+  const fixtures = [
+    { title: 'Action', text: 'You finish the action.', ...summary },
+    { title: 'Call', text: 'The call ends.', batteryInSummary: true, ...summary },
+    { title: 'Discovery', text: 'You find an address.', presentation: questionPresentation('morning', ['support']), ...searchSummary },
+    { title: 'Small effort', text: 'You take a detour.', visibleStats: ['energy'], ...summarizeResult(before, { ...before, game: { ...before.game, energy: before.game.energy - 1, thirst: before.game.thirst - .2 } }) },
+  ];
+  for (const [index, result] of fixtures.entries()) {
+    render(React.createElement(ResultCard, { result, onClose: () => {} }));
+    const classicMeters = [...document.querySelectorAll('.result-stat-panel [data-resource-id]')].map(node => node.dataset.resourceId);
+    const classicRows = [...document.querySelectorAll('.result-change-list > .result-change')].map(node => node.textContent);
+    const classicCosts = [...document.querySelectorAll('.result-cost-line > span')].map(node => node.textContent);
+    cleanup();
+    const episode = { id: 1, source: 'encounter', sourceId: 'fixture', status: 'complete', scenes: [{ eventId: 'fixture', title: 'Scene', text: 'You stop here.', at }], result, endedAt: { ...at, minute: 620 } };
+    const saved = JSON.stringify(episode);
+    render(React.createElement(StoryScreen, { episodes: [episode] }));
+    assert.deepEqual([...document.querySelectorAll('.story-stat-panel [data-resource-id]')].map(node => node.dataset.resourceId), classicMeters, 'Story uses precisely the classic meter set');
+    const storyRows = [...document.querySelectorAll('.story-summary li')].map(node => node.textContent);
+    assert.equal(storyRows.length, classicRows.length + classicCosts.length, 'no extra Story summary rows');
+    for (const classicRow of [...classicRows, ...classicCosts]) assert(storyRows.map(value => value.replace(/\s/g, '')).includes(classicRow.replace(/\s/g, '')), 'Story keeps the classic expense/consequence: ' + classicRow);
+    assert(!document.querySelector('.story-result-effects [data-resource-id="hunger"]'), 'minor passive food drain remains hidden');
+    assert(!document.querySelector('.story-result-effects [data-resource-id="thirst"]'), 'minor passive water drain remains hidden');
+    assert(!document.querySelector('.story-stat-panel.status-needs'), 'Story omits the framed status panel');
+    assert(document.querySelector('.story-result-start .story-result-imprint'), 'result has its own timeline point');
+    assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · D1');
+    if (index === 0) {
+      const energy = () => document.querySelector('.story-stat-panel [data-resource-id="energy"] [role="meter"]');
+      assert.equal(Number(energy().getAttribute('aria-valuenow')), 47, 'old records open at the real final value');
+      assert.equal(frames.size, 0, 'reading old records does not run meter animation');
+      fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+      let clock = 0;
+      while (!energy() && clock < 40000) { clock += 32; frame(clock); }
+      assert(energy(), 'replay reaches the effects after narrative text');
+      assert.equal(Number(energy().getAttribute('aria-valuenow')), 34, 'replay starts the original meter at before');
+      for (let n = 0; n < 80; n++) { clock += 32; frame(clock); }
+      assert.equal(Number(energy().getAttribute('aria-valuenow')), 47, 'replay reaches the real after value');
+    }
+    assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
+    cleanup();
+  }
+  console.log('PASS: Story matches classic visible meters/costs/consequences, hides passive drain, adds an unframed result point, settles old records and replays meter values without archive mutation.');
   console.log('PASS: shared Status result bars, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
   console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without duplicate details, names, bars or arrival imagery; other full answers, saved answers and no-new-information still work.');
 } finally { cleanup(); dom.window.close(); }

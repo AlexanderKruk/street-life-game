@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { t } from './i18n'
 import { formatTime } from './game'
+import { formatNumber } from './i18n/formatters'
 import { displayDay } from './gameDate'
 import { responsiveImageProps } from './responsiveImages'
+import { ResultStat, resultDisplay, wholeStatDelta, resultLabel, type ResultCardData } from './ResultCard'
+import { resultChangeId } from './legacyResultCompatibility'
 import { ModalAction } from './Modal'
 import StoryComparison from './StoryComparison'
 import type { StoryEpisode, StoryStamp } from './story'
 
-type Piece = { kind: 'text' | 'image' | 'choice'; text: string; at: StoryStamp; image?: string }
-const timeLabel = (at: StoryStamp) => `${formatTime(at.minute)} · D${displayDay(at.day)}`
+type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean }
+const timeLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${t('hud.day', { day: formatNumber(displayDay(at.day)) })}`
 function episodePieces(episode: StoryEpisode): Piece[] {
   const pieces: Piece[] = []
   for (const scene of episode.scenes) {
@@ -19,11 +22,30 @@ function episodePieces(episode: StoryEpisode): Piece[] {
   if (episode.result) {
     const result = episode.result
     const at = episode.endedAt ?? episode.scenes[0].at
+    const start = pieces.length
     if (result.text) pieces.push({ kind: 'text', text: result.text, at })
     const art = result.illustration ?? result.presentation?.illustration
     if (art) pieces.push({ kind: 'image', text: result.illustrationAlt ?? result.text, image: art, at })
+    const effects = storyEffects(result)
+    if (effects.meters.length || effects.rows.length || result.presentation?.places?.length || result.presentation?.notice || episode.scenes.some(scene => scene.roll)) pieces.push({ kind: 'stats', text: '', at })
+    if (pieces[start]) pieces[start].resultStart = true
   }
   return pieces
+}
+function storyEffects(result: ResultCardData) {
+  const { statMeters, gainRows, consequenceRows, costRows, summaryMood } = resultDisplay(result)
+  return { meters: statMeters, summaryMood, rows: [...gainRows, ...consequenceRows, ...costRows, ...(summaryMood ? [summaryMood] : [])] }
+}
+function StoryResult({ episode, animate }: { episode: StoryEpisode; animate: boolean }) {
+  const result = episode.result!
+  const { meters, rows, summaryMood } = storyEffects(result)
+  return <div className="story-result-effects">
+    {episode.scenes.filter(scene => scene.roll).map((scene, index) => <p key={index} className="story-roll">{t('story.roll', { roll: scene.roll!.value, modifier: scene.roll!.modifier, target: scene.roll!.target })}</p>)}
+    {result.presentation?.places?.map(place => <div className="story-place" key={place.id}><strong>{place.name}</strong><span>{place.hours}</span><p>{place.detail}</p></div>)}
+    {result.presentation?.notice && <p>{result.presentation.notice}</p>}
+    {!!meters.length && <div className="result-stat-panel story-stat-panel">{meters.map((change, index) => <ResultStat key={index} change={change} animationReady animate={animate} />)}</div>}
+    {!!rows.length && <ul className="story-summary">{rows.map((change, index) => <li className={change.kind} key={index}><span>{resultLabel(change.label)}</span><strong>{resultChangeId(change) === 'phoneBattery' || change === summaryMood ? wholeStatDelta(change) : change.value}</strong></li>)}</ul>}
+  </div>
 }
 function Episode({ episode }: { episode: StoryEpisode }) {
   const pieces = useMemo(() => episodePieces(episode), [episode])
@@ -47,7 +69,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
       let shown = piece.kind === 'image' ? length : Math.min(length, Math.floor(elapsed / 28))
       let progress = 0
       if (phase === 'typing') {
-        if (piece.kind === 'image') { phase = 'move'; elapsed = 0; from = y }
+        if ((piece.kind === 'image' || piece.kind === 'stats')) { phase = 'move'; elapsed = 0; from = y }
         else if (skipped || shown >= length) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
       } else if (phase === 'pause') {
         shown = length
@@ -59,7 +81,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
       } else {
         shown = length
         const current = pieces[index]
-        progress = Math.min(1, elapsed / (current.kind === 'image' ? 1150 : 750))
+        progress = Math.min(1, elapsed / (current.kind === 'image' ? 1150 : current.kind === 'stats' ? 2200 : 750))
         const node = nodes.current[index]
         const end = node && track.current ? node.offsetTop + node.offsetHeight : from
         y = from + (end - from) * (1 - Math.pow(1 - progress, 3))
@@ -75,9 +97,8 @@ function Episode({ episode }: { episode: StoryEpisode }) {
   const first = episode.scenes[0]
   const last = episode.endedAt ?? first.at
   const cursorAt = animation ? pieces[animation.index]?.at ?? last : last
-  const summary = [...(episode.result?.costs ?? []), ...(episode.result?.changes ?? [])]
   return <article className="story-episode" data-story-id={episode.id}>
-    <div className="story-episode-heading"><div className="story-stamp"><time>{formatTime(first.at.minute)}</time><span> · {first.at.locationName} · D{displayDay(first.at.day)}</span></div>
+    <div className="story-episode-heading"><div className="story-stamp"><time>{formatTime(first.at.minute)}</time><span> · {first.at.locationName} · {t('hud.day', { day: formatNumber(displayDay(first.at.day)) })}</span></div>
       <ModalAction variant="secondary" onClick={() => setReplay(value => value + 1)}>{t('story.replay')}</ModalAction></div>
     <div className={`story-track${animation ? ' is-replaying' : ''}`} ref={track} style={{ '--story-y': `${animation?.y ?? 0}px` } as CSSProperties}>
       <div className="story-thread" aria-hidden="true" />
@@ -88,8 +109,9 @@ function Episode({ episode }: { episode: StoryEpisode }) {
           const current = !!animation && index === animation.index
           const imageProgress = !animation || index < animation.index ? 1 : current ? animation.progress : 0
           const visibleText = current ? Array.from(piece.text).slice(0, animation.shown).join('') : piece.text
-          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}`} hidden={future}>
-            {piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${imageProgress}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
+          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${piece.resultStart ? ' story-result-start' : ''}`} hidden={future}>
+            {piece.resultStart && <><span className="story-result-imprint" hidden={!!animation && animation.index === index} aria-hidden="true" /><time className="story-result-stamp">{timeLabel(piece.at)}</time></>}
+            {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${imageProgress}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{visibleText}</button> : <p>{visibleText}</p>}
           </div>
         })}
@@ -97,10 +119,6 @@ function Episode({ episode }: { episode: StoryEpisode }) {
       <div className="story-head" aria-hidden="true"><span /><time>{timeLabel(cursorAt)}</time></div>
     </div>
     {!animation && <div className="story-episode-end">
-      {episode.scenes.filter(scene => scene.roll).map((scene, index) => <p key={index} className="story-roll">{t('story.roll', { roll: scene.roll!.value, modifier: scene.roll!.modifier, target: scene.roll!.target })}</p>)}
-      {episode.result?.presentation?.places?.map(place => <div className="story-place" key={place.id}><strong>{place.name}</strong><span>{place.hours}</span><p>{place.detail}</p></div>)}
-      {episode.result?.presentation?.notice && <p>{episode.result.presentation.notice}</p>}
-      {!!summary.length && <ul className="story-summary">{summary.map((change, index) => <li className={change.kind} key={index}><span>{change.label}</span><strong>{change.value}</strong></li>)}</ul>}
       {episode.status === 'active' && <p className="story-note">{t('story.pending')}</p>}
       {episode.status === 'interrupted' && <p className="story-note">{t('story.unfinished')}</p>}
     </div>}
