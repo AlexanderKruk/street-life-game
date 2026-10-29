@@ -7,7 +7,7 @@ export const dialogs = {
   'dice.math.energy': 'Energy',
   'dice.math.ready': 'D20 {sign} {modifier} ≥ {target}',
   'dice.math.rolled': '{roll} {sign} {modifier} = {total}',
-  'dice.attempt': 'Try to steal',
+  'dice.attempt': 'Try',
   'dice.continue': 'Continue',
   'dice.result.criticalSuccess': 'CRITICAL SUCCESS',
   'dice.result.criticalFailure': 'CRITICAL FAILURE',
