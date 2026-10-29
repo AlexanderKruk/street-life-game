@@ -138,7 +138,7 @@ events keep their outer frame clipped and their existing inner content scroller.
 | Authored event, with or without an illustration | `EventDialog`; use its `EventFrame` / `EventBody` for another event presentation |
 | Rain opening choices | `RainEventDialog`, built on `EventFrame` / `EventBody` |
 | Travel mode planning | `TravelPlanningDialog` |
-| D20 roll and outcome confirmation | `DiceDialog` |
+| D20 roll and outcome confirmation | `DiceDialog` (selected action title, check, D20 and maths; no repeated scene paragraph; primary `Try`, post-roll `Continue`) |
 | Bottle-search minigame | `TrashSearchDialog` with `TrashSearchTime` |
 | End of run | `GameOverDialog` |
 | Completed goal acknowledgement | `GoalCompletedDialog`, using compact `ModalPanel` and `ModalAction` |
