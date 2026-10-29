@@ -47,7 +47,8 @@ try{
    const original=image.src.split('/').pop().replace('-480.webp','.webp');
    for(const variant of manifest[original].variants)assert(fs.statSync('public/assets/'+variant.file).size>0);
   }
-  assert.equal(document.querySelectorAll('.bottom-nav button').length,5);
+  assert.equal(document.querySelectorAll('.bottom-nav button').length,6,'five classic tabs plus Story');
+  assert(screen.getByRole('button',{name:'Story'}),'Story is available alongside every classic location');
   assert(!screen.queryByRole('dialog'),'decorative location art does not open a modal');
  }
  assert.equal(seen.size,locations.length);
