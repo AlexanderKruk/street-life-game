@@ -574,6 +574,8 @@ Documents are included in event context and life status. Help-center Transport a
 
 Catalog events follow a deterministic, saved queue. A scene appears at most once per run, in catalog order among scenes that fit the current action, place, time, weather and sleep context. There is no random spawn chance or weighted selection. D20 checks, coin denominations and ordinary gameplay consequences retain their existing randomness.
 
+The shared D20 confirmation retains the chosen action as its title, check type, die and modifier. It does not repeat the previous scene or show a risk paragraph. Before rolling the primary button reads **Try** in every check (including theft and fare inspection), with **Cancel** where allowed; afterwards it reads **Continue**. The die, difficulty, outcome, mandatory in-transit inspection and pause/save behavior are unchanged.
+
 The shared minimum interval between catalog scenes is 45 game minutes. Awake Street/Station time checks every 15 idle game minutes during the opening night and every 30 thereafter, on all normal screens. Active travel, phone searches, sleep, queues and blocking dialogs do not accrue idle minutes. The idle check counter is session-local; the last presented time and seen/pending scene IDs persist through reload. Empty or ineligible queues do not force an unrelated scene.
 
 Ordinary location actions and awake bench rest no longer immediately select a
