@@ -54,6 +54,7 @@ Closing the task does not claim that previously unrun device checks were run.
 | File or area | Purpose / when to read |
 | --- | --- |
 | `AGENTS.md` | Read first before working on the project; current agent rules and navigation. |
+| `STORY_PLAN.md` | Active gradual migration of all player actions and random encounters into the shared Story tab/modal; current scope, acceptance checks and next step. |
 | `GAME_DESIGN.md` | Current implemented mechanics; consult the relevant sections for gameplay changes. |
 | `TEXT_STYLE.md` | Current writing rules; read for player-facing text changes. |
 | `TRANSLATION.md` | Active RU/PL translation plan, terminology, completed packages and verification; separate from the closed extraction migration. |
@@ -952,3 +953,5 @@ central scroller. Copy uses the EN/RU/PL catalogues. Preserve the approved
 fixed stamps, pulse, sequential choices, selected narrative and same-block
 text-only results. The choice clock is paused; leaving the tab destroys the
 comparison. Run check-story.cjs for isolation, all three answers and replay.
+
+Story roadmap — 29 October 2026: STORY_PLAN.md is the active incremental plan. In this task, “event” means any gameplay action as well as random encounters. Location/inventory/phone controls remain in place; Story collects their shared chronology. Start by passively recording the actual spare-change encounter into Story while the player uses the unchanged classic event/result dialogs; extend recording to other random encounters/checks before ordinary actions. Live Story presentation is a later opt-in step. Do not remove or redesign classic event dialogs as part of the recording phase. The current iframe remains a comparison fixture until replacement. No implementation stage is completed merely by adding this plan.
