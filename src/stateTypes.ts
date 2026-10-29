@@ -19,7 +19,7 @@ export type LifeSituation = { shelterEntry?: { night: number; admitted: boolean 
 export type StoredItems = { documents: boolean; medicines: number; cigarettes: number; food: number; foodFreshness: number } & FoodPortionFields
 
 
-export type Screen = 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
+export type Screen = 'story' | 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
 
 export type DeferredEncounter = { token: number; locationId: string; trigger: 'location' | 'bench'; elapsedMinutes: number; delayMs: number; remainingMs: number }
 export type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null; deferred?: DeferredEncounter }

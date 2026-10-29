@@ -1376,3 +1376,9 @@ body { min-width:0; }
 .phone-language-options { color-scheme:dark; padding:0; margin:0; border:0; min-width:0; }
 .phone-language-options input { margin:0 0 0 auto; width:22px; height:22px; flex:none; accent-color:var(--color-warning); }
 .phone-language-notice { font-size:var(--font-body); font-weight:var(--weight-regular); color:var(--text-secondary); }
+
+/* Experimental Story comparison, alongside the classic screens. */
+.bottom-nav.with-story { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.story-preview { display:block; width:100%; border:0; background:transparent; }
+.bottom-nav.with-story .nav-item { min-width:0; }
+.bottom-nav.with-story .nav-item small { max-width:100%; overflow-wrap:anywhere; }

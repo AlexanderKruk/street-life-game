@@ -1,3 +1,15 @@
+## Story comparison — 29 October 2026
+
+`node check-story.cjs` covers the sixth navigation tab, classic clock/stat/inventory
+isolation and resumption, three actual embedded-script answer paths, paused
+choices, one-block text-only outcomes, immutable stamps and replay. It is included
+in the release test runner. The shared esbuild helper now treats HTML imports as
+text, matching Vite raw template imports without weakening source-copy checks.
+Passed: check-story, check-language, check-localization, check-ui and production
+build. These are behavior/build checks, not screenshot equivalence.
+Managed browser preview failed to start (`vite: not found` in the preview daemon);
+Chromium layout and physical iPhone appearance are not verified for this change.
+
 # Тестирование Street Life
 
 ## Публикация v346 подтверждена — 29 октября 2026

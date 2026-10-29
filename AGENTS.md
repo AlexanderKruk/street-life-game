@@ -936,3 +936,17 @@ resolves location-specific text/cost before artwork for selection and restoratio
 keep mechanics out of eventArtwork. All four Street images use responsive WebP.
 Generation sources/prompt are in docs/art/spare-change-street-generation.json.
 This supersedes the prior Street artwork gap; no second event/save ID.
+
+
+Story comparison — 29 October 2026: the sixth bottom tab opens an isolated
+animation comparison through StoryScreen and the retained storyPreview.html.
+This is the approved short rain scene, not a migration of classic gameplay.
+Its separate presentation clock and replay are ephemeral; App pauses the classic
+world clock while Story is selected and excludes Story from the saved screen.
+The frame contains no storage/network commands and is sandboxed to scripts only.
+Height messages are accepted only from its own window, keeping the existing
+central scroller. Copy uses the EN/RU/PL catalogues. Preserve the approved
+28ms character pace, 250ms reading pause, 1150ms dark image reveal/line movement,
+fixed stamps, pulse, sequential choices, selected narrative and same-block
+text-only results. The choice clock is paused; leaving the tab destroys the
+comparison. Run check-story.cjs for isolation, all three answers and replay.

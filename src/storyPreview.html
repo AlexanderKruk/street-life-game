@@ -1,0 +1,186 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;background:transparent}body{font-family:system-ui,sans-serif}.btn{font:inherit;padding:11px 16px;min-height:44px;background:#252a2c;color:#e3e3dd;border:1px solid #424a4c;border-radius:8px}.btn:focus-visible,button:focus-visible{outline:2px solid #d4bc78;outline-offset:2px}</style></head><body><div id="sl-story-choice" class="viz-dotted-background">
+  <style>
+    #sl-story-choice .pv-stage {min-height:0;padding:18px 10px;}
+    #sl-story-choice .pv-screen {--pv-bg:#171b1d;--pv-text:#e3e3dd;--pv-muted:#adb3af;--pv-line:#424a4c;--pv-gold:#d4bc78;max-width:390px;margin:auto;padding:20px;border:1px solid var(--pv-line);border-radius:14px;background:var(--pv-bg);color:var(--pv-text);font:16px/1.5 system-ui,sans-serif;}
+    #sl-story-choice .pv-screen * {box-sizing:border-box;}
+    #sl-story-choice .pv-title {margin:0 0 24px;font-weight:500;}
+    #sl-story-choice .pv-timeline {position:relative;min-height:82px;}
+    #sl-story-choice .pv-line {position:absolute;left:5.5px;top:11px;width:1px;height:0;background:var(--pv-line);}
+    #sl-story-choice .pv-record {position:relative;padding:0 0 28px 28px;}
+    #sl-story-choice .pv-mark,#sl-story-choice .pv-ring {position:absolute;left:0;top:5px;width:12px;height:12px;border-radius:50%;}
+    #sl-story-choice .pv-mark {background:var(--pv-gold);visibility:hidden;}
+    #sl-story-choice .pv-stamp {display:block;min-height:24px;font-size:14px;font-variant-numeric:tabular-nums;color:var(--pv-muted);visibility:hidden;}
+    #sl-story-choice .pv-done .pv-mark,#sl-story-choice .pv-done .pv-stamp {visibility:visible;animation:pv-story-imprint 400ms ease-out both;}
+    #sl-story-choice .pv-text {display:block;width:100%;margin:7px 0 0;padding:0;border:0;background:transparent;color:var(--pv-text);font:inherit;text-align:left;white-space:pre-line;}
+    #sl-story-choice .pv-media {position:relative;width:100%;height:0;overflow:hidden;border-radius:7px;}
+    #sl-story-choice .pv-picture {position:absolute;left:0;top:0;display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;opacity:0;}
+    #sl-story-choice .pv-cursor {position:absolute;left:0;top:0;width:100%;padding-left:28px;}
+    #sl-story-choice .pv-ring {border:1.5px solid var(--pv-gold);background:var(--pv-bg);}
+    #sl-story-choice .pv-running .pv-ring {animation:pv-story-breathe 1600ms ease-in-out infinite;}
+    #sl-story-choice .pv-live {font-size:14px;font-variant-numeric:tabular-nums;color:var(--pv-gold);}
+    #sl-story-choice .pv-temporary {margin:7px 0 0;color:var(--pv-muted);font-style:italic;}
+    #sl-story-choice .pv-controls {display:flex;max-width:390px;margin:12px auto 0;}
+    #sl-story-choice .pv-status {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+    #sl-story-choice [hidden] {display:none !important;}
+    @keyframes pv-story-breathe {0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pv-gold) 0%,transparent);}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--pv-gold) 16%,transparent);}}
+    @keyframes pv-story-imprint {0%,30%{opacity:0;}100%{opacity:1;}}
+    @media(prefers-reduced-motion:reduce){#sl-story-choice .pv-running .pv-ring,#sl-story-choice .pv-done .pv-mark,#sl-story-choice .pv-done .pv-stamp {animation:none;}}
+    @media(max-width:350px){#sl-story-choice .pv-stage{min-height:0;padding:14px 0;}#sl-story-choice .pv-screen{padding:18px 14px;}}
+  </style>
+  <style>
+    #sl-story-choice .pv-actions {display:grid;gap:9px;margin-top:16px;}
+    #sl-story-choice .pv-choice {display:block;width:100%;min-height:48px;padding:11px 13px;border:1px solid var(--pv-line);border-radius:8px;background:#252a2c;color:var(--pv-text);font:inherit;text-align:left;}
+    #sl-story-choice .pv-choice:disabled {opacity:.55;}
+    #sl-story-choice .pv-choice.pv-chosen {opacity:1;border-color:var(--pv-gold);}
+    #sl-story-choice .pv-next {text-align:center;color:var(--pv-gold);border-color:var(--pv-gold);}
+    #sl-story-choice .pv-choice-enter {animation:pv-story-answer-enter 650ms ease-out both;}
+    #sl-story-choice .pv-choice-group {margin-top:40px;}
+    #sl-story-choice .pv-selected {margin:40px 0 0;color:var(--pv-text);font-size:16px;}
+    #sl-story-choice .pv-outcome {margin-top:14px;}
+    #sl-story-choice .pv-outcome .pv-text {margin-top:0;}
+    @keyframes pv-story-answer-enter {from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+    @media(prefers-reduced-motion:reduce){#sl-story-choice .pv-choice-enter {animation:none;}}
+  </style>
+  <div class="pv-stage">
+    <section class="pv-screen">
+      <p class="pv-title"></p>
+      <div class="pv-timeline">
+        <div class="pv-line" aria-hidden="true"></div>
+        <div class="pv-records"></div>
+        <div class="pv-cursor"><span class="pv-ring" aria-hidden="true"></span><time class="pv-live">22:43</time><p class="pv-temporary"></p></div>
+      </div>
+      <span class="pv-status" role="status"></span>
+    </section>
+    <div class="pv-controls"><button type="button" class="btn btn-primary pv-play"></button></div>
+  </div>
+  <template class="pv-art"><img src="__STORY_ART__"></template>
+  <script>
+    (()=>{
+      const copy=__STORY_COPY__;
+      const root=document.getElementById('sl-story-choice');
+      root.querySelector('.pv-title').textContent=copy.place;
+      root.querySelector('.pv-play').textContent=copy.start;
+      root.querySelector('.pv-temporary').textContent=copy.search;
+      const screen=root.querySelector('.pv-screen'),timeline=root.querySelector('.pv-timeline'),records=root.querySelector('.pv-records');
+      const cursor=root.querySelector('.pv-cursor'),line=root.querySelector('.pv-line'),live=root.querySelector('.pv-live');
+      const temporary=root.querySelector('.pv-temporary'),play=root.querySelector('.pv-play'),status=root.querySelector('.pv-status');
+      const source=root.querySelector('.pv-art').content.firstElementChild.getAttribute('src');
+      const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const options=[
+        {label:copy.wait,selected:copy.waitSelected,pending:copy.waitPending,text:copy.waitResult,wait:4},
+        {label:copy.phone,selected:copy.phoneSelected,pending:copy.phonePending,text:copy.phoneResult,wait:2},
+        {label:copy.leave,selected:copy.leaveSelected,pending:copy.leavePending,text:copy.leaveResult,wait:2}
+      ];
+      let phase='idle',phaseTime=0,gameElapsed=0,last=null,frame=null,y=0,fromY=0,current=null,writing=null,choices=[],waitingFor=0,selected=null;
+      let choiceGroup=null,choiceAnchor=0,isOutcome=false;
+      function label(){const m=22*60+43+Math.floor(gameElapsed/1000);return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+      function layout(){cursor.style.transform='translateY('+y+'px)';line.style.height=y+'px';timeline.style.height=Math.ceil(Math.max(records.offsetHeight,y+72))+'px';}
+      function makeRecord(withImage){
+        const row=document.createElement('div');row.className='pv-record';
+        const mark=document.createElement('span');mark.className='pv-mark';mark.setAttribute('aria-hidden','true');
+        const stamp=document.createElement('time');stamp.className='pv-stamp';
+        const body=document.createElement('div');body.className='pv-body';
+        const text=document.createElement('button');text.type='button';text.className='pv-text cursor-interaction';text.setAttribute('aria-label',copy.skip);
+        body.append(text);row.append(mark,stamp,body);
+        let media=null,picture=null;
+        if(withImage){media=document.createElement('div');media.className='pv-media';picture=document.createElement('img');picture.className='pv-picture';picture.src=source;picture.alt=copy.art;media.append(picture);body.append(media);}
+        records.append(row);
+        text.addEventListener('click',()=>{if(phase==='typing' && current && current.row===row && writing)phaseTime=writing.characters.length*28;});
+        return {row,stamp,body,text,media,picture};
+      }
+      function beginText(message,withImage){
+        fromY=y;isOutcome=false;current=makeRecord(withImage);writing={characters:Array.from(message),message,shown:-1};
+        temporary.textContent='';phase='typing';phaseTime=0;
+      }
+      function beginOutcome(message){
+        fromY=y;isOutcome=true;
+        const container=document.createElement('div');container.className='pv-outcome';
+        const text=document.createElement('button');text.type='button';text.className='pv-text cursor-interaction';text.setAttribute('aria-label',copy.skip);container.append(text);current.body.append(container);
+        current.text=text;writing={characters:Array.from(message),message,shown:-1};
+        text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)phaseTime=writing.characters.length*28;});
+        temporary.textContent='';phase='typing';phaseTime=0;
+      }
+      function seal(){current.row.classList.add('pv-done');current.stamp.textContent=label();status.textContent=current.stamp.textContent+'. '+writing.message;}
+      function reveal(progress){
+        if(!current || !current.media)return;
+        const ease=1-Math.pow(1-progress,3);
+        current.media.style.marginTop=(12*ease)+'px';current.media.style.height=(current.media.clientWidth*9/16*ease)+'px';
+        current.picture.style.opacity=String(.25+.75*progress);
+        current.picture.style.filter='brightness('+(.08+.92*Math.pow(progress,1.5))+') saturate('+(.6+.4*progress)+')';
+      }
+      function presentChoices(){
+        phase='choices';phaseTime=0;choices=[];
+        const group=document.createElement('div');group.className='pv-actions pv-choice-group';group.setAttribute('aria-label',copy.choices);choiceGroup=group;
+        let delay=100;
+        options.forEach(option=>{
+          const button=document.createElement('button');button.type='button';button.className='pv-choice cursor-interaction';button.textContent=option.label;button.hidden=true;button.disabled=true;group.append(button);
+          choices.push({button,at:reduced?0:delay});delay+=650+Math.max(0,Array.from(option.label).length-10)*25;
+          button.addEventListener('click',()=>{
+            if(phase!=='choices')return;
+            choices.forEach(item=>{item.button.disabled=true;});
+            const selectedText=document.createElement('p');selectedText.className='pv-selected';selectedText.textContent=option.selected;group.replaceWith(selectedText);
+            selected=option;temporary.textContent='';waitingFor=(option.wait+Math.floor(Math.random()*3))*1000;phase='waiting';phaseTime=0;
+          });
+        });
+        current.body.append(group);
+        choiceAnchor=y;
+      }
+      function showFinish(){
+        phase='result';phaseTime=0;
+        const group=document.createElement('div');group.className='pv-actions';
+        const button=document.createElement('button');button.type='button';button.className='pv-choice pv-next cursor-interaction';button.textContent=copy.next;group.append(button);current.body.append(group);
+        button.addEventListener('click',()=>{button.disabled=true;button.textContent=copy.walking;phase='free';phaseTime=0;});
+      }
+      function tick(now){
+        if(!root.isConnected)return;
+        const delta=last===null?0:Math.min(80,now-last);last=now;phaseTime+=delta;
+        const timeRuns=!['idle','choices','result'].includes(phase);
+        screen.classList.toggle('pv-running',timeRuns);if(timeRuns)gameElapsed+=delta;live.textContent=label();
+        if(phase==='typing'){
+          const n=reduced?writing.characters.length:Math.min(writing.characters.length,Math.floor(phaseTime/28));
+          if(n!==writing.shown){current.text.textContent=writing.characters.slice(0,n).join('');writing.shown=n;}
+          if(n===writing.characters.length){
+            current.text.setAttribute('aria-label',writing.message);
+            if(isOutcome){status.textContent=writing.message;phase='textmove';phaseTime=0;fromY=y;}
+            else {phase='pause';phaseTime=0;}
+          }
+        }else if(phase==='pause' && (reduced || phaseTime>=250)){
+          seal();phase=current.media?'picture':'textmove';phaseTime=0;
+        }else if(phase==='picture'){
+          const progress=reduced?1:Math.min(1,phaseTime/1150);reveal(progress);
+          const end=Math.max(fromY,records.offsetHeight-16);
+          y=fromY+(end-fromY)*(1-Math.pow(1-progress,3));
+          if(progress===1){y=end;presentChoices();}
+        }else if(phase==='choices'){
+          choices.forEach(item=>{
+            if(phaseTime>=item.at && item.button.hidden){item.button.hidden=false;item.button.classList.add('pv-choice-enter');}
+            if(phaseTime>=item.at+(reduced?0:650))item.button.disabled=false;
+          });
+          if(choiceGroup && choiceGroup.isConnected){
+            const bounds=choiceGroup.getBoundingClientRect();
+            const origin=timeline.getBoundingClientRect();
+            choiceAnchor=bounds.top-origin.top-28;
+          }
+          y=reduced?choiceAnchor:y+(choiceAnchor-y)*Math.min(1,delta/100);
+        }else if(phase==='waiting'){
+          if(phaseTime>=waitingFor)beginOutcome(selected.text);
+        }else if(phase==='textmove'){
+          const progress=reduced?1:Math.min(1,phaseTime/750);
+          y=fromY+(records.offsetHeight-fromY)*(1-Math.pow(1-progress,3));
+          if(progress===1){y=records.offsetHeight;showFinish();}
+        }else if(phase==='result' || phase==='free'){
+          y=reduced?records.offsetHeight:y+(records.offsetHeight-y)*Math.min(1,delta/100);
+        }
+        layout();frame=requestAnimationFrame(tick);
+      }
+      play.addEventListener('click',()=>{
+        cancelAnimationFrame(frame);records.replaceChildren();phase='idle';phaseTime=0;gameElapsed=0;last=null;y=0;fromY=0;current=null;writing=null;choices=[];selected=null;choiceGroup=null;choiceAnchor=0;isOutcome=false;
+        live.textContent='22:43';status.textContent='';play.textContent=copy.replay;
+        beginText(copy.intro,true);layout();frame=requestAnimationFrame(tick);
+      });
+      const resize=new ResizeObserver(()=>{if(current && current.media && phase!=='typing' && phase!=='pause')reveal(phase==='picture'?Math.min(1,phaseTime/1150):1);layout();});resize.observe(screen);
+      layout();
+    })();
+  </script>
+</div>
+<script>new ResizeObserver(()=>parent.postMessage({type:"street-life-story-height",height:document.body.scrollHeight},"*")).observe(document.body);</script></body></html>

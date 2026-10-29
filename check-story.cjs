@@ -1,0 +1,65 @@
+const assert = require('node:assert/strict');
+const { mkdtempSync, rmSync } = require('node:fs');
+const { tmpdir } = require('node:os');
+const { join, resolve } = require('node:path');
+const { JSDOM } = require('jsdom');
+const { buildSync } = require('./tests/helpers/build.cjs');
+const temporary = mkdtempSync(join(tmpdir(), 'street-story-'));
+process.env.NODE_PATH = resolve('node_modules');
+require('node:module').Module._initPaths();
+try {
+  const app = join(temporary, 'app.cjs');
+  buildSync({ entryPoints: ['src/App.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile: app, external: ['react', 'react-dom', 'react/jsx-runtime'] });
+  process.env.STREET_REGRESSION_APP = app;
+  const env = require('./tests/helpers/regression-env.cjs');
+  env.setup();
+  env.click('Story');
+  const frame = document.querySelector('iframe.story-preview');
+  assert(frame, 'Story opens its isolated comparison');
+  const game = env.read(env.stateKey), inventory = env.read(env.invKey);
+  env.advance(10000);
+  assert.deepEqual(env.read(env.stateKey), game, 'classic clock and stats pause');
+  assert.deepEqual(env.read(env.invKey), inventory, 'Story does not consume classic inventory');
+  const html = frame.getAttribute('srcdoc');
+  assert(!html.includes('__STORY_COPY__') && !html.includes('__STORY_ART__'));
+  for (let choice = 0; choice < 3; choice++) {
+    let now = 0, nextId = 0;
+    const frames = new Map(), errors = [];
+    const scene = new JSDOM(html, { url: 'http://localhost/street-life-game/', runScripts: 'dangerously', beforeParse(window) {
+      window.matchMedia = () => ({ matches: false });
+      window.ResizeObserver = class { observe() {} };
+      window.requestAnimationFrame = callback => { frames.set(++nextId, callback); return nextId; };
+      window.cancelAnimationFrame = id => frames.delete(id);
+      window.addEventListener('error', event => errors.push(event.message));
+      window.HTMLElement.prototype.getClientRects = () => [{ width: 320, height: 600 }];
+      window.HTMLElement.prototype.getBoundingClientRect = () => ({ top: 360, width: 280, height: 48 });
+      Object.defineProperty(window.HTMLElement.prototype, 'clientWidth', { get: () => 280 });
+      Object.defineProperty(window.HTMLElement.prototype, 'offsetHeight', { get() { return this.classList.contains('pv-records') ? 360 : 72; } });
+    } });
+    const doc = scene.window.document;
+    const advance = duration => { const end = now + duration; while (now < end) { now += 16; const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(now)); } };
+    doc.querySelector('.pv-play').click(); advance(8000);
+    assert.equal(doc.querySelectorAll('.pv-choice-group button:not([hidden])').length, 3);
+    const clock = doc.querySelector('.pv-live').textContent;
+    advance(2000);
+    assert.equal(doc.querySelector('.pv-live').textContent, clock, 'clock stops during choices');
+    const stamp = doc.querySelector('.pv-stamp').textContent;
+    doc.querySelectorAll('.pv-choice-group button')[choice].click(); advance(14000);
+    assert.equal(doc.querySelectorAll('.pv-record').length, 1, 'choice and outcome share a block');
+    assert.equal(doc.querySelectorAll('.pv-picture').length, 1, 'outcome has no extra image');
+    assert(doc.querySelector('.pv-selected').textContent.startsWith('You '));
+    assert(doc.querySelector('.pv-outcome .pv-text').textContent.length > 20);
+    assert.equal(doc.querySelector('.pv-stamp').textContent, stamp, 'past stamp remains fixed');
+    assert(doc.querySelector('.pv-next'));
+    assert.deepEqual(errors, []);
+    doc.querySelector('.pv-play').click();
+    assert.equal(doc.querySelectorAll('.pv-selected').length, 0, 'replay resets choices');
+    scene.window.close();
+  }
+  env.click('Inventory');
+  assert(!document.querySelector('iframe.story-preview'), 'leaving Story stops its scene');
+  env.advance(2000);
+  assert(env.read(env.stateKey).minutes > game.minutes, 'classic clock resumes');
+  env.finish();
+  console.log('PASS: Story navigation, classic-run isolation/resume, all three animation branches, paused choices, single-block text results, fixed stamps and replay.');
+} finally { rmSync(temporary, { recursive: true, force: true }); }

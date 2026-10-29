@@ -1290,3 +1290,15 @@ about theft/disturbance. The estimate is the existing minimum selectable sleep
 length, not a change to fatigue eligibility, actual duration, recovery, illness,
 theft, wake scenes or checkout. Unbooked shelter registration retains its queue
 estimate and access conditions, rather than showing a sleep duration.
+
+
+## Story — animation comparison
+
+Story is a separate experimental bottom tab with a short rain scene. It retains
+the approved timeline prototype for comparison: progressive text, a hollow
+pulsing cursor carrying live time, fixed timestamp imprints, dark image reveal
+with line extension, staggered options, narrative selected choice and a text-only
+outcome in the same block. The presentation clock pauses at choices. Classic
+world time is paused while the tab is open. Story has no costs, rewards,
+persistence or effects on the classic run. Leaving/reopening restarts the
+comparison; the existing History and gameplay remain available.

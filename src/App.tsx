@@ -15,6 +15,7 @@ import { INITIAL_LIFE,SHELTER_DEPARTURE_MINUTES,loadGameSession } from './loadGa
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
 import ActivityDialog, { ActivityCancel } from './ActivityDialog'
 import BottomNavigation from './BottomNavigation'
+import StoryScreen from './StoryScreen'
 import ChoiceButton from './ChoiceButton'
 import CityMap from './CityMap'
 import DiceDialog from './DiceDialog'
@@ -85,7 +86,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.29-346'
+const BUILD_VERSION = 'v2026.10.29-347'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -517,6 +518,7 @@ export default function App() {
   useForcedSleep(sleepSession, game, !!(goalCompletionVisible || locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult), sleepController)
 
   const tickGameClock = useLatestAction(() => {
+    if (screen === 'story') return
     if (goalCompletionVisible) return
     if (closingNotice) return
     if (rainChoice || (game.rain && !game.rain.choice && currentExposure === 'outside' && !sleeping)) return
@@ -682,7 +684,7 @@ export default function App() {
     [ENCOUNTERS_KEY]: encounters,
     [SAVE_KEYS.rainChoice]: rainChoice,
     [RAIN_RESPONSE_KEY]: null,
-    [SAVE_KEYS.screen]: screen === 'travel' ? undefined : screen,
+    [SAVE_KEYS.screen]: screen === 'travel' || screen === 'story' ? undefined : screen,
     [SAVE_KEYS.mobileServiceUntil]: mobileServiceUntil,
     [SAVE_KEYS.mobileAutoRenew]: mobileAutoRenew,
     [SAVE_KEYS.mobileRenewedDay]: mobileRenewedDay,
@@ -760,6 +762,8 @@ export default function App() {
     <GameHeader game={game} weatherId={weather.id} temperature={temperature} battery={inventory.phoneBattery} />
     <div className="game-content" ref={contentRef}>
 
+    {screen === 'story' && <StoryScreen />}
+    {screen !== 'story' && <>
     {screen === 'location' && <LocationScreen state={{
       current, open, firstNight, game, message, currentActions, shelterInterview, choiceSeed, choiceDecisionKey,
       usedBackpackSlots, inventory, life, insideNightShelter, usedStorageSlots, storageCapacity, storage,
@@ -819,6 +823,7 @@ export default function App() {
 
     {autosave.saveFailed && <p role="alert" className="save-warning">{t('app.saveFailed')}</p>}
     <footer inert={activityOverlay || eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} className={eventInteractionBlocked ? 'event-background-blocked' : undefined}><button className="reset" disabled={eventInteractionBlocked} onClick={() => { if (!eventInteractionBlocked) reset() }}>{t('app.reset')}</button><small className="header-version" title={BUILD_VERSION} aria-label={t('app.buildAccessible', { version: BUILD_VERSION })}>{t('app.buildShort', { version: BUILD_VERSION.split('-').pop() ?? '' })}</small></footer>
+    </>}
     </div>
     </div>
 

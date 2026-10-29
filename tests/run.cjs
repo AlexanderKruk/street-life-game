@@ -31,7 +31,8 @@ const suites = [
   "check-ui.cjs",
   "check-results.cjs",
   "check-localization.cjs",
-  "check-language.cjs"
+  "check-language.cjs",
+  "check-story.cjs"
 ];
 const start = performance.now();
 let passed = 0;
