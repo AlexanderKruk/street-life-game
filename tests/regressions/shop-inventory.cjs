@@ -34,13 +34,13 @@ setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});
 const cancelledTheftState=read(stateKey),cancelledTheftInventory=read(invKey);
 fireEvent.click(screen.getByTitle('Steal Water'));
 assert(document.querySelector('.dice-card svg'));
-assert(screen.getByRole('button',{name:'Try to steal'}));
+assert(screen.getByRole('button',{name:'Try'}));
 advance(3000);click('Cancel');
 assert(!document.querySelector('.dice-overlay'));
 assert.deepEqual(read(stateKey),cancelledTheftState);assert.deepEqual(read(invKey),cancelledTheftInventory);
 for(const draw of [0,.15]) {
  setup({locationId:'shop',minutes:600},{[invKey]:{water:0}});
- fireEvent.click(screen.getByTitle('Steal Water'));Math.random=()=>draw;click('Try to steal');
+ fireEvent.click(screen.getByTitle('Steal Water'));Math.random=()=>draw;click('Try');
  assert(!screen.queryByRole('button',{name:'Cancel',exact:true}));
  click('Continue');
  assert.equal(read(stateKey).locationId,'street');assert.equal(read(invKey).water,0);
