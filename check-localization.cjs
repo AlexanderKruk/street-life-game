@@ -1329,7 +1329,14 @@ try {
     const choice={label:'Frozen authored choice',check:{stat,dc:12,success:{message:'success'},failure:{message:'failure'}}};
     const diceCheck={choice,modifier,roll,resolved:false,...(kind==='fare'?{fareDodgeDestinationId:'station'}:kind==='event'?{}:{stealItemId:kind})};
     const show=Component=>{cleanup();const calls=[];render(React.createElement(Component,{diceCheck,eventText:'Frozen authored description',onRoll:()=>calls.push('roll'),onAccept:()=>calls.push('accept'),onCancel:()=>calls.push('cancel')}));const html=document.body.innerHTML,shape=[...document.querySelectorAll('button')].map(n=>[n.className,n.disabled]);const face=document.querySelector('.d20').className;act(()=>document.querySelectorAll('button').forEach(n=>n.click()));assert.equal(document.querySelector('.dice-description b'),null);return{html,shape,face,calls};};
-    const old=show(diceOld),actual=show(diceBase),translated=show(diceView);assert.equal(actual.html,old.html);assert.deepEqual({...translated,html:undefined},{...actual,html:undefined});diceCases++;
+    const old=show(diceOld),actual=show(diceBase),translated=show(diceView);
+     // Historical fixture keeps the previous prose/button; only these two intentional
+     // presentation changes are excluded from the exact D20 DOM comparison.
+     const compactLegacy=old.html.replace(/<p class="dice-description modal-narrative">.*?<\/p>/,'')
+       .replace(/(<button type="button" class="modal-action modal-action--primary dice-attempt">).*?(<\/button>)/,'$1Try$2');
+     assert.equal(actual.html,compactLegacy);
+     assert(!actual.html.includes('dice-description'),'D20 never repeats the authored scene');
+     assert.deepEqual({...translated,html:undefined},{...actual,html:undefined});diceCases++;
   }
   console.log(`PASS: ${diceCases} frozen/pseudo D20 variants preserve English DOM, critical/threshold states, modifiers, buttons and handlers.`);
   for(const illustration of [undefined,'/fixture.webp'])for(const reason of [null,'','Refused']){
