@@ -8,14 +8,14 @@ import type { ResultResourceId } from './resultResources'
 
 type StatChange = { from: number; value: string; kind: 'positive' | 'negative' | 'neutral' }
 
-export default memo(function Stat({ id, label, value, icon, cap = 100, capReason, focus = false, change, animationReady = true }: { id?: ResultResourceId; label: string; value: number; icon: ReactNode; cap?: number; capReason?: string; focus?: boolean; change?: StatChange; animationReady?: boolean }) {
+export default memo(function Stat({ id, label, value, icon, cap = 100, capReason, focus = false, change, animationReady = true, animate = true }: { id?: ResultResourceId; label: string; value: number; icon: ReactNode; cap?: number; capReason?: string; focus?: boolean; change?: StatChange; animationReady?: boolean; animate?: boolean }) {
   const resourceId = id ?? legacyResourceId(label)
-  const [animatedValue, setAnimatedValue] = useState(change?.from ?? value)
+  const [animatedValue, setAnimatedValue] = useState(animate ? change?.from ?? value : value)
   const from = change?.from
   const loss = from !== undefined && from > value
   useEffect(() => {
     if (from === undefined) return
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    if (!animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       setAnimatedValue(value)
       return
     }
@@ -23,16 +23,16 @@ export default memo(function Stat({ id, label, value, icon, cap = 100, capReason
     if (!animationReady) return
     let frame = 0
     let started: number | undefined
-    function animate(now: number) {
+    function animateFrame(now: number) {
       started ??= now
       const progress = Math.min(1, Math.max(0, (now - started - 300) / (loss ? 1600 : 1200)))
       const eased = loss ? progress * progress * (3 - 2 * progress) : 1 - (1 - progress) ** 3
       setAnimatedValue(from! + (value - from!) * eased)
-      if (progress < 1) frame = window.requestAnimationFrame(animate)
+      if (progress < 1) frame = window.requestAnimationFrame(animateFrame)
     }
-    frame = window.requestAnimationFrame(animate)
+    frame = window.requestAnimationFrame(animateFrame)
     return () => window.cancelAnimationFrame(frame)
-  }, [from, value, loss, animationReady])
+  }, [from, value, loss, animationReady, animate])
   const displayed = change ? animatedValue : value
   const level = displayed > 60 ? 'good' : displayed > 30 ? 'warning' : 'critical'
   const blocked = (resourceId === 'hygiene' || resourceId === 'mood') && cap < 100

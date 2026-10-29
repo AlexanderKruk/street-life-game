@@ -1,3 +1,18 @@
+## Story result fields and animation — 29 October 2026 (source-only)
+
+`check-results.cjs` now renders the same normal, call, compact discovery and
+explicit minor-effect fixtures through classic ResultCard and Story. It compares
+visible meter IDs and summary fields/counts, verifies passive food/water drain is
+hidden, and checks a separate result point without a framed status panel. Old
+records show final values without RAF callbacks; native Replay reaches the saved
+before/after meter values without mutating the archive. Classic gain/loss/cap,
+reduced-motion and compact-result regressions remain in the same check.
+
+Targeted results, Story recording/comparison, module boundaries, design-system,
+localisation and production build checks pass. Full suites remain reserved for
+publication; browser QA remains unavailable as previously documented. Gameplay,
+saves and publication version are unchanged.
+
 ## Публикация v348 подтверждена — 29 октября 2026
 
 [GitHub Pages run 40947063001](https://github.com/AlexanderKruk/street-life-game/actions/runs/40947063001)

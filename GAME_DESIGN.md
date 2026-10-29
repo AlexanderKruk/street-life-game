@@ -1334,3 +1334,12 @@ stages in STORY_PLAN.md. The temporary pause while browsing Story remains from
 the comparison release; animations introduce no extra gameplay clock.
 
 Story metadata presentation — 29 October 2026: an episode starts with a compact HH:MM · saved place name · Dn row and its Replay control. The separate event-name heading and place line are omitted. End/cursor stamps also put time first. Stored scene titles and classic event dialogs are unchanged.
+
+Story result presentation — 29 October 2026 (source change): a completed result is
+its own point within the same episode. Its fixed completion stamp precedes the
+narrative and illustration; effects follow as unframed shared animated stat rows
+and ordinary time/money/item/effect rows. Story uses exactly the classic result
+visibility selector, including explicit visibleStats, compact Mood and call
+battery summaries; small hidden passive losses are not added to the feed. Saved
+records open at final values, and Replay animates before→after after the narrative.
+The original archive and classic result presentation remain intact.

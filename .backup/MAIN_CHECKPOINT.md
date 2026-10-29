@@ -1,18 +1,18 @@
-# Story metadata source checkpoint — 29 October 2026
+# Story result presentation checkpoint — 29 October 2026
 
-Source-only save. Published game remains v348.
-Local source commit: 89a1f0894fa66804b3b0ed3bda7a7cd83bba2ba0
-Verified source tree: 24691134431ad949c50bd800e6b6bf69f60681fb
-GitHub source snapshot: f1e7be603b8d9b8e54cf3f7d62e375bed078d313
-Backup branch: backup/story-metadata-2026-10-29
+Source-only save; published game remains v348. No game publication.
+Local source commit: 447d7d7c02ba17c568b56062a6c7523baae276cf
+Verified source tree: 52c3f5fc60f5bb6197ca580e95ce91912dd8e69e
+GitHub source snapshot: cead7648c568450adee6c77457b7ffe7a2244d8d
+Backup branch: backup/story-results-2026-10-29
 
-Story omits the event title and separate place line; opening metadata is HH:MM · saved place name · Dn, with Replay alongside. Cursor timestamps put time before day. Existing archives, classic dialogs and call behavior remain unchanged. The phone-call recording gap remains explicitly deferred at the user's request.
+Results are separate points inside the original Story episode, with narrative and unframed shared result meters. Both classic ResultCard and Story use resultDisplay to select exactly the same visible stat meters, effects and expenses. Minor hidden passive losses stay hidden. Historic records show after values immediately; Replay uses the same before→after stat animation after the narrative. Archives, costs, gameplay and classic-dialog appearance are unchanged. The phone-call recording gap remains deferred at the user's request.
 
-Targeted Story recording/comparison checks and design-system check passed. Production build and diff check passed after the final metadata order change. No full suite or browser QA was repeated; deployment is not requested.
+Checks passed: check-results (classic/Story visible-field parity, compact/call summaries, explicit minor effects, fixed result points, no frame, historic settling, native meter replay, immutable archive; existing gain/loss/cap/reduced-motion coverage retained), check-story-recording, check-story, check-design-system, check-module-boundaries, check-localization, production build and diff checks. Full suites and browser/device QA were not run.
 
-Original local history is preserved in .backup/story-metadata-2026-10-29.bundle, verified with git bundle verify. After fetching base 1012bc00ea76020b445b16951e234d69c7823cdf:
+Original local history is preserved in .backup/story-results-2026-10-29.bundle, verified with git bundle verify. Restore after fetching base 1012bc00ea76020b445b16951e234d69c7823cdf:
 
-    git bundle verify .backup/story-metadata-2026-10-29.bundle
-    git fetch .backup/story-metadata-2026-10-29.bundle HEAD:refs/heads/recovered-story-metadata-2026-10-29
+    git bundle verify .backup/story-results-2026-10-29.bundle
+    git fetch .backup/story-results-2026-10-29.bundle HEAD:refs/heads/recovered-story-results-2026-10-29
 
-The API source tree matched the local committed tree before these recovery files were added. [skip ci] suppresses automatic game publication.
+The API source tree matched the tested local committed tree before adding these recovery files. [skip ci] suppresses automatic publication.

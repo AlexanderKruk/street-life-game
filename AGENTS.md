@@ -979,3 +979,17 @@ appearance remains unverified because managed preview reports vite: not found.
 STORY_PLAN.md tracks remaining action sources and later opt-in live Story modal.
 
 Story metadata — 29 October 2026: recorded episodes omit the event-title heading and separate place row. Keep the opening metadata compact: HH:MM · saved place name · Dn. Cursor stamps also show time before day. Event titles remain stored for compatibility; this presentation change does not rewrite archives or touch classic dialogs. The replay control remains beside the metadata.
+
+Story result presentation — 29 October 2026 (source-only): each saved result is a
+separate visual point inside its original episode, with fixed completion time,
+narrative/art and the same visible consequences/costs as its classic ResultCard.
+Use the exported shared `resultDisplay` selector and `ResultStat` component; never
+render raw summary arrays or duplicate threshold/filter rules in Story. Unframed
+Story meters use result-stat-panel without the status-needs frame. Normal reading
+shows saved after values; replay runs the existing gain/loss animation only when
+the effects step is reached. Stat's optional animate=false settles historic bars
+without scheduling frames; classic dialogs retain their default animation. No save
+schema, gameplay, costs or classic-dialog design change. `check-results.cjs` covers
+real classic/Story field parity, explicit minor effects, compact/call summaries,
+fixed result points, old-value settling, replay and immutable archives. Day labels
+reuse hud.day, preserving the time/place/day metadata order in all locales.
