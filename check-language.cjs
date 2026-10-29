@@ -14,11 +14,11 @@ assert.deepEqual(Object.keys(openingPackages.pl).sort(),Object.keys(openingPacka
 const completedPackages={};
 for(const id of ['pl','ru']) {
  const original=bundled('src/locales/interfaceTranslations.ts')[id];
- const packages=['interface','inventory','services','rest','phone','events','activities'].map(name=>bundled(`src/locales/${id}/${name}.ts`)[`${name}Messages`]);
+ const packages=['interface','inventory','services','rest','phone','events','activities','history'].map(name=>bundled(`src/locales/${id}/${name}.ts`)[`${name}Messages`]);
  const keys=[...Object.keys(original),...Object.keys(openingPackages[id]),...packages.flatMap(Object.keys)];
  assert.equal(new Set(keys).size,keys.length,`${id}: packages must not silently override each other`);
  completedPackages[id]=Object.assign({},...packages);
- for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory','locations','actions','controllerActions','sleep','shelter','phoneUi','phoneProcess','phoneContent','phoneAnswers','journalUi','events','eventController','rain','travel','trash']) {
+ for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory','locations','actions','controllerActions','sleep','shelter','phoneUi','phoneProcess','phoneContent','phoneAnswers','journalUi','events','eventController','rain','travel','trash','actionHistory','inventoryHistory','eventHistory']) {
   const english=Object.values(bundled(`src/locales/en/${name}.ts`))[0];
   for(const key of Object.keys(english))assert(Object.hasOwn(translations[id],key),`${id}: completed interface package is missing ${key}`);
  }
@@ -28,6 +28,13 @@ for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Us
  values.set(preference.LANGUAGE_KEY,id);const actual=bundled('src/i18n/index.ts',true);
  assert.equal(actual.t('phone.ui.app.settings'),settings);
  assert.equal(actual.t('phone.ui.activeGoals',{count:21}),plural);
+ if(id!=='en') {
+  assert.deepEqual(Object.keys(translations[id]).sort(),Object.keys(actual.en).sort(),`${id}: every current English key has a translation`);
+  for(const [key,message]of Object.entries(actual.en))if(typeof message==='string') {
+   if(message==='')assert.equal(translations[id][key],'',`${id}: preserve intentional empty message ${key}`);
+   else assert(translations[id][key].trim(),`${id}: nonempty source must not silently disappear: ${key}`);
+  }
+ }
  // Every real plural is now translated. Remove one only in this isolated test
  // instance to keep exercising production fallback with English plural rules.
  const override=id==='en'?null:actual[id],kept=override?.['trash.kept'];
@@ -52,6 +59,17 @@ for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Us
   assert.equal(actual.t('item.caption.water',{count:21}),id==='ru'?'21 порция':'21 porcji');
   assert.equal(actual.t('result.containers',{count:22}),id==='ru'?'+22 ёмкости':'+22 opakowania');
   assert.equal(actual.t('trash.kept',{found:21}),id==='ru'?'Собрана 21 ёмкость':'Zebrano 21 opakowań');
+  const {inventoryHistoryReflection}=bundled('src/inventoryHistory.ts');
+  const water=inventoryHistoryReflection('use:water',{status:'success'});
+  assert.equal(water.title,id==='ru'?'Попил воды':'Napiłem się wody','new History headings use the protagonist’s voice');
+  assert.equal(water.text,actual.t('history.inventory.drink'));
+  const {actionHistoryReflection}=bundled('src/actionHistory.ts');
+  assert.equal(actionHistoryReflection({id:'social-support',title:'OLD TITLE',actionHistory:{kind:'action',supportOutcome:'referral'}}).text,actual.t('history.action.support.referral'));
+  const saved=[
+   {day:3,minute:600,title:'Old saved heading',text:'My old English reflection.',actionTitle:'Drink water',actionId:'use:water',decisionId:'old-decision',groupId:'old-group',reflection:true},
+   {day:3,minute:620,title:'Another saved heading',text:'',actionTitle:'Store belongings',actionId:'store-belongings',reflection:true},
+  ];
+  assert.deepEqual(bundled('src/journal.ts').loadJournalEntries(saved),saved,'switching language preserves stored prose, empty reflections, IDs and grouping');
   const events=bundled('src/events.ts'),spare=events.STREET_EVENTS.find(event=>event.id==='spare-change');
   for(const [locationId,cost]of [['station',1],['street',2]]) {
    const scene=events.prepareStreetEvent(spare,{locationId,housing:'Street'});
@@ -110,4 +128,4 @@ preference.changeLanguage('ru');assert.equal(flushed,1);assert.equal(reloaded,1)
 assert(preference.languageReturn());assert(preference.languageReturn(),'StrictMode reads do not consume the navigation hint');preference.clearLanguageReturn();assert(!preference.languageReturn());
 localStorage.setItem=()=>{throw new Error('blocked')};assert.throws(()=>preference.changeLanguage('pl'),/blocked/);assert.equal(reloaded,1,'failed preference write does not reload');
 delete global.localStorage;delete global.sessionStorage;delete global.window;
-console.log('PASS: languages, parameter validation, 24 completed catalogues without duplicate keys, RU/PL plural boundaries, isolated English fallback plurals, shared 1/2-zl encounter identity/costs, 24 rain result/History contexts per language, phone questions and native names, sleep/departure contexts, opening calls/event/History and language preference lifecycle.');
+console.log('PASS: complete RU/PL coverage of all 27 catalogues, no duplicate keys or accidental empty messages, translated new History and untouched saved records, parameter/plural boundaries, isolated English fallback, event/rain/phone/sleep contexts and language preference lifecycle.');

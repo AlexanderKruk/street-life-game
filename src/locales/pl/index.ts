@@ -8,5 +8,6 @@ import { restMessages } from './rest'
 import { phoneMessages } from './phone'
 import { eventsMessages } from './events'
 import { activitiesMessages } from './activities'
+import { historyMessages } from './history'
 
-export const pl = { ...interfaceTranslations, ...opening, ...interfaceMessages, ...inventoryMessages, ...servicesMessages, ...restMessages, ...phoneMessages, ...eventsMessages, ...activitiesMessages } as const satisfies Partial<Catalog>
+export const pl = { ...interfaceTranslations, ...opening, ...interfaceMessages, ...inventoryMessages, ...servicesMessages, ...restMessages, ...phoneMessages, ...eventsMessages, ...activitiesMessages, ...historyMessages } as const satisfies Partial<Catalog>

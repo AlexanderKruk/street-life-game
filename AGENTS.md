@@ -16,16 +16,20 @@ dispatch, memory and History consumers and preserve saved-text compatibility.
 
 Image inconsistencies and missing variants are tracked in [IMAGE_AUDIT.md](IMAGE_AUDIT.md); add findings there as they are discovered.
 
-## Current status and document navigation — 28 October 2026
+## Current status and document navigation — 29 October 2026
 
 The localisation/text-extraction project is **completed and closed**, as confirmed
 by the user on 28 October 2026. Player-facing English copy lives in the 27
 catalogues in `src/locales/en/`; `src/i18n/` supplies typed translation, plurals
 and formatting. Continue using this structure for new or revised copy.
-Phone Settings now offers English, Polish and Russian via a separate language
-preference. Polish/Russian interface catalogues are partial; missing messages
-fall back to English with English plural rules. Full story translation remains
-a separate task, not an unfinished stage of the closed migration.
+Phone Settings offers English, Polish and Russian via a separate language
+preference. The separate RU/PL translation is complete for all 1641 current
+English keys across 27 catalogues; see `TRANSLATION.md`. English fallback and
+its plural rules remain for future missing keys. Existing saved History keeps
+its original language; only new messages use the selected language. The language
+screen explains this instead of describing the translation as partial.
+Technical coverage/parameter/History checks pass; final mobile layout review
+belongs to the user and is not claimed complete. This source save is unpublished.
 
 For the active RU/PL translation, preserve the existing layout. On 29 October
 the user reserved card/text/image rearrangements and wrapping review for manual

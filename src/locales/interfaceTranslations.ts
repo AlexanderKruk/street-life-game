@@ -3,7 +3,7 @@ import type { Catalog } from '../i18n'
 export const pl: Partial<Catalog> = {
  'journal.ui.goalCompleted':'Cel wykonany',
  'app.reset':'Nowa gra','app.emergency':'Wezwij pogotowie','app.emergencyDescription':'Pomoc ratunkowa · bez internetu',
- 'phone.ui.app.settings':'Ustawienia','phone.ui.language':'Język','phone.ui.backSettings':'Wróć do ustawień','phone.ui.language.partial':'Część tekstów jest wyświetlana po angielsku.','phone.ui.language.error':'Nie udało się zapisać języka. Spróbuj ponownie.',
+ 'phone.ui.app.settings':'Ustawienia','phone.ui.language':'Język','phone.ui.backSettings':'Wróć do ustawień','phone.ui.language.partial':'Wcześniejsze wpisy w historii pozostają w języku, w którym je zapisano.','phone.ui.language.error':'Nie udało się zapisać języka. Spróbuj ponownie.',
  'phone.ui.app.search':'Znajdź pomoc','phone.ui.app.goals':'Cele','phone.ui.app.notes':'Notatki','phone.ui.app.history':'Historia','phone.ui.phone':'Telefon','phone.ui.back':'Wróć do telefonu','phone.ui.plan':'Internet mobilny','phone.ui.dailyPrice':'1 zł/dzień','phone.ui.paid':'Opłacone','phone.ui.unpaid':'Nieopłacone','phone.ui.apps':'Aplikacje telefonu','phone.ui.internetUnpaid':'Internet nieopłacony','phone.ui.unavailableTitle':'Telefon niedostępny','phone.ui.mapHint':'Nadal możesz korzystać z mapy, aby dotrzeć do znanych miejsc.',
  'phone.ui.plan.hours':'Internet mobilny: pozostało {hours} godz. Zarządzaj pakietem.','phone.ui.plan.minutes':'Internet mobilny: pozostało {minutes} min. Zarządzaj pakietem.','phone.ui.plan.unpaid':'Internet mobilny jest nieopłacony. Zarządzaj pakietem.',
  'phone.ui.incompleteGoals':{plural:'count',one:'{count} niezrealizowany cel',few:'{count} niezrealizowane cele',many:'{count} niezrealizowanych celów',other:'{count} niezrealizowanego celu'},
@@ -18,7 +18,7 @@ export const pl: Partial<Catalog> = {
 export const ru: Partial<Catalog> = {
  'journal.ui.goalCompleted':'Цель выполнена',
  'app.reset':'Новая игра','app.emergency':'Вызвать скорую','app.emergencyDescription':'Экстренная помощь · интернет не нужен',
- 'phone.ui.app.settings':'Настройки','phone.ui.language':'Язык','phone.ui.backSettings':'Назад к настройкам','phone.ui.language.partial':'Часть текстов отображается на английском.','phone.ui.language.error':'Не удалось сохранить язык. Попробуй ещё раз.',
+ 'phone.ui.app.settings':'Настройки','phone.ui.language':'Язык','phone.ui.backSettings':'Назад к настройкам','phone.ui.language.partial':'Старые записи истории остаются на языке, на котором были созданы.','phone.ui.language.error':'Не удалось сохранить язык. Попробуй ещё раз.',
  'phone.ui.app.search':'Найти помощь','phone.ui.app.goals':'Цели','phone.ui.app.notes':'Заметки','phone.ui.app.history':'История','phone.ui.phone':'Телефон','phone.ui.back':'Назад к телефону','phone.ui.plan':'Мобильный интернет','phone.ui.dailyPrice':'1 zł/день','phone.ui.paid':'Оплачено','phone.ui.unpaid':'Не оплачено','phone.ui.apps':'Приложения телефона','phone.ui.internetUnpaid':'Интернет не оплачен','phone.ui.unavailableTitle':'Телефон недоступен','phone.ui.mapHint':'Ты по-прежнему можешь дойти до известных мест по карте.',
  'phone.ui.plan.hours':'Мобильный интернет: осталось {hours} ч. Управление тарифом.','phone.ui.plan.minutes':'Мобильный интернет: осталось {minutes} мин. Управление тарифом.','phone.ui.plan.unpaid':'Мобильный интернет не оплачен. Управление тарифом.',
  'phone.ui.incompleteGoals':{plural:'count',one:'{count} незавершённая цель',few:'{count} незавершённые цели',many:'{count} незавершённых целей',other:'{count} незавершённой цели'},
