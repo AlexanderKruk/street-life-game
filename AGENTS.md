@@ -27,6 +27,10 @@ preference. Polish/Russian interface catalogues are partial; missing messages
 fall back to English with English plural rules. Full story translation remains
 a separate task, not an unfinished stage of the closed migration.
 
+For the active RU/PL translation, preserve the existing layout. On 29 October
+the user reserved card/text/image rearrangements and wrapping review for manual
+inspection; do not move copy below artwork or shrink type to fit translations.
+
 Do not read or resume `docs/archive/LOCALIZATION.md`, `docs/archive/LOCALIZATION_TASK.md`,
 `docs/archive/LOCALIZATION_INVENTORY.md` or `docs/archive/LOCALIZATION_RESIDUAL_AUDIT.md`
 during ordinary work. These files are archived migration records; open them
