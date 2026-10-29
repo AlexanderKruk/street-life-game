@@ -5,5 +5,6 @@ import { interfaceMessages } from './interface'
 import { inventoryMessages } from './inventory'
 import { servicesMessages } from './services'
 import { restMessages } from './rest'
+import { phoneMessages } from './phone'
 
-export const pl = { ...interfaceTranslations, ...opening, ...interfaceMessages, ...inventoryMessages, ...servicesMessages, ...restMessages } as const satisfies Partial<Catalog>
+export const pl = { ...interfaceTranslations, ...opening, ...interfaceMessages, ...inventoryMessages, ...servicesMessages, ...restMessages, ...phoneMessages } as const satisfies Partial<Catalog>

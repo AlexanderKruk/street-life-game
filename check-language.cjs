@@ -13,11 +13,11 @@ assert.deepEqual(Object.keys(openingPackages.pl).sort(),Object.keys(openingPacka
 const completedPackages={};
 for(const id of ['pl','ru']) {
  const original=bundled('src/locales/interfaceTranslations.ts')[id];
- const packages=['interface','inventory','services','rest'].map(name=>bundled(`src/locales/${id}/${name}.ts`)[`${name}Messages`]);
+ const packages=['interface','inventory','services','rest','phone'].map(name=>bundled(`src/locales/${id}/${name}.ts`)[`${name}Messages`]);
  const keys=[...Object.keys(original),...Object.keys(openingPackages[id]),...packages.flatMap(Object.keys)];
  assert.equal(new Set(keys).size,keys.length,`${id}: packages must not silently override each other`);
  completedPackages[id]=Object.assign({},...packages);
- for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory','locations','actions','controllerActions','sleep','shelter']) {
+ for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory','locations','actions','controllerActions','sleep','shelter','phoneUi','phoneProcess','phoneContent','phoneAnswers','journalUi']) {
   const english=Object.values(bundled(`src/locales/en/${name}.ts`))[0];
   for(const key of Object.keys(english))assert(Object.hasOwn(translations[id],key),`${id}: completed interface package is missing ${key}`);
  }
@@ -44,6 +44,12 @@ for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Us
   }
   assert.equal(actual.t('item.caption.water',{count:21}),id==='ru'?'21 порция':'21 porcji');
   assert.equal(actual.t('result.containers',{count:22}),id==='ru'?'+22 ёмкости':'+22 opakowania');
+  for(const [key,value]of [['en','English'],['pl','Polski'],['ru','Русский']])assert.equal(actual.t(`phone.ui.language.${key}`),value,'language options keep native names');
+  assert.equal(actual.t('journal.ui.completedCount',{count:21}),id==='ru'?'21 выполненная цель':'21 wykonanych celów');
+  const {practicalQuestions}=bundled('src/phoneQuestions.ts');
+  for(const question of practicalQuestions)for(const field of ['title','noteTitle','text'])assert.equal(question[field],translations[id][`phone.question.${question.id}.${field}`],`${id}: practical question ${question.id} ${field}`);
+  assert.equal(practicalQuestions.find(question=>question.id==='morning').text,'','the morning answer intentionally uses places rather than extra prose');
+  assert.equal(actual.t('phone.process.rememberAnswer',{answer:'ANSWER'}),id==='ru'?'Ты вспоминаешь\n\nANSWER':'Przypominasz sobie\n\nANSWER','whole answer keeps its paragraph separator');
   const sleep=bundled('src/sleepText.ts');
   assert.equal(sleep.sleepCompletionText(60,false,false),id==='ru'?'Ты спал 1 час.':'Przespałeś 1 godzinę.','sleep duration fits the surrounding sentence');
   assert.equal(sleep.sleepCompletionText(240,false,false),id==='ru'?'Ты спал 4 часа.':'Przespałeś 4 godziny.');
@@ -82,4 +88,4 @@ preference.changeLanguage('ru');assert.equal(flushed,1);assert.equal(reloaded,1)
 assert(preference.languageReturn());assert(preference.languageReturn(),'StrictMode reads do not consume the navigation hint');preference.clearLanguageReturn();assert(!preference.languageReturn());
 localStorage.setItem=()=>{throw new Error('blocked')};assert.throws(()=>preference.changeLanguage('pl'),/blocked/);assert.equal(reloaded,1,'failed preference write does not reload');
 delete global.localStorage;delete global.sessionStorage;delete global.window;
-console.log('PASS: languages, parameter validation, 14 completed catalogues without duplicate keys, RU/PL plural boundaries, sleep sentence grammar and truncated duration, four shelter departure contexts, English fallback plurals, opening calls/event/History, preference validation, flush-before-reload, StrictMode-safe return and blocked storage.');
+console.log('PASS: languages, parameter validation, 19 completed catalogues without duplicate keys, RU/PL plural boundaries, seven practical questions and native language names, whole-answer paragraphs, sleep sentence grammar and truncated duration, four shelter departure contexts, English fallback plurals, opening calls/event/History, preference validation, flush-before-reload, StrictMode-safe return and blocked storage.');
