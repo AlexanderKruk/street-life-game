@@ -51,6 +51,28 @@ const React=require('react');const {render,screen,fireEvent,cleanup}=require('@t
 const read=k=>JSON.parse(localStorage.getItem(k));
 function setup(state={},extra={}){cleanup();localStorage.clear();require('./test-fixtures/finished-encounters.cjs')(localStorage);localStorage.setItem('street-life-save-v3',JSON.stringify({...game,...state}));localStorage.setItem('street-life-effects-v1','[]');localStorage.setItem('street-life-mobile-auto-renew','false');localStorage.setItem('street-life-inventory-v1',JSON.stringify(INITIAL_INVENTORY));for(const[k,v]of Object.entries(extra))localStorage.setItem(k,JSON.stringify(v));render(React.createElement(React.StrictMode,null,React.createElement(App)));fireEvent(window,new window.Event('pagehide'))}
 try{
+ // All D20 entry points share the same compact presentation, without duplicate scene copy.
+ const DiceDialog=bundle('src/DiceDialog.tsx').default;
+ for (const variant of [
+  {label:'scene',state:{}},
+  {label:'shop theft',state:{stealItemId:'water'}},
+  {label:'ticketless travel',state:{fareDodgeDestinationId:'station'}},
+  {label:'in-transit inspection',state:{fareDodgeInTransit:true,fareDodgeDestinationId:'station'}},
+ ]) {
+  let rolls=0;
+  render(React.createElement(DiceDialog,{diceCheck:{choice,roll:null,modifier:1,resolved:false,...variant.state},onRoll:()=>rolls++,onAccept:()=>{},onCancel:()=>{}}));
+  const dialog=screen.getByRole('dialog');
+  assert(!dialog.querySelector('.dice-description'),variant.label+' does not repeat an event description');
+  assert(screen.getByRole('button',{name:'Try',exact:true}),variant.label+' has the same neutral confirm button');
+  assert.equal(!!screen.queryByRole('button',{name:'Cancel'}),!variant.state.fareDodgeInTransit,'mandatory inspection remains uncancellable');
+  fireEvent.click(screen.getByRole('button',{name:'Try'}));assert.equal(rolls,1,'Try triggers one roll');
+  cleanup();
+ }
+ render(React.createElement(DiceDialog,{diceCheck:{choice,roll:11,modifier:1,resolved:false},onRoll:()=>{},onAccept:()=>{},onCancel:()=>{}}));
+ assert(!screen.queryByRole('button',{name:'Try'}),'a completed D20 cannot roll again');
+ assert(screen.getByRole('button',{name:'Continue'}),'a completed D20 keeps its Continue button');
+ assert(!document.querySelector('.dice-description'),'a completed roll stays compact');
+ cleanup();
  setup({}, {'street-life-trip-v1':{...trip,remaining:0}});
  assert.equal(read('street-life-save-v3').locationId,'station');assert.equal(read('street-life-save-v3').money,100);assert.equal(read('street-life-trip-v1'),null);assert.equal(read('street-life-journal-history-v1').length,1,'one restored arrival under StrictMode');
  for(const mode of ['walk','transit','fare-dodge'])for(const locationId of ['street','shop']) {
