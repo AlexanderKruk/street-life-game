@@ -1,7 +1,8 @@
 const assert = require('node:assert/strict');
 const { buildSync } = require('./tests/helpers/build.cjs');
-function bundled(path) {
- const code=buildSync({entryPoints:[path],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
+function bundled(path, exposeCatalogs=false) {
+ const entry=exposeCatalogs?{stdin:{contents:`export * from './${path}'; export { ru } from './src/locales/ru'; export { pl } from './src/locales/pl';`,resolveDir:process.cwd(),sourcefile:'language-test.ts'}}:{entryPoints:[path]};
+ const code=buildSync({...entry,bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
  const module={exports:{}};new Function('require','module','exports',code)(require,module,module.exports);return module.exports;
 }
 const values=new Map();global.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
@@ -13,21 +14,27 @@ assert.deepEqual(Object.keys(openingPackages.pl).sort(),Object.keys(openingPacka
 const completedPackages={};
 for(const id of ['pl','ru']) {
  const original=bundled('src/locales/interfaceTranslations.ts')[id];
- const packages=['interface','inventory','services','rest','phone'].map(name=>bundled(`src/locales/${id}/${name}.ts`)[`${name}Messages`]);
+ const packages=['interface','inventory','services','rest','phone','events','activities'].map(name=>bundled(`src/locales/${id}/${name}.ts`)[`${name}Messages`]);
  const keys=[...Object.keys(original),...Object.keys(openingPackages[id]),...packages.flatMap(Object.keys)];
  assert.equal(new Set(keys).size,keys.length,`${id}: packages must not silently override each other`);
  completedPackages[id]=Object.assign({},...packages);
- for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory','locations','actions','controllerActions','sleep','shelter','phoneUi','phoneProcess','phoneContent','phoneAnswers','journalUi']) {
+ for(const name of ['common','hud','status','effects','dialogs','results','eventUi','app','inventory','locations','actions','controllerActions','sleep','shelter','phoneUi','phoneProcess','phoneContent','phoneAnswers','journalUi','events','eventController','rain','travel','trash']) {
   const english=Object.values(bundled(`src/locales/en/${name}.ts`))[0];
   for(const key of Object.keys(english))assert(Object.hasOwn(translations[id],key),`${id}: completed interface package is missing ${key}`);
  }
 }
 assert.deepEqual(Object.keys(completedPackages.pl).sort(),Object.keys(completedPackages.ru).sort(),'completed packages cover the same messages');
 for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Ustawienia','21 aktywnych celów'],['ru','Настройки','21 активная цель']]) {
- values.set(preference.LANGUAGE_KEY,id);const actual=bundled('src/i18n/index.ts');
+ values.set(preference.LANGUAGE_KEY,id);const actual=bundled('src/i18n/index.ts',true);
  assert.equal(actual.t('phone.ui.app.settings'),settings);
  assert.equal(actual.t('phone.ui.activeGoals',{count:21}),plural);
- assert.equal(actual.t('trash.kept',{found:21}),'21 containers kept','English fallback uses English plural rules');
+ // Every real plural is now translated. Remove one only in this isolated test
+ // instance to keep exercising production fallback with English plural rules.
+ const override=id==='en'?null:actual[id],kept=override?.['trash.kept'];
+ try {
+  if(override)delete override['trash.kept'];
+  assert.equal(actual.t('trash.kept',{found:21}),'21 containers kept','English fallback uses English plural rules');
+ } finally {if(override)override['trash.kept']=kept;}
  for(const override of [translations.pl,translations.ru])assert.deepEqual(actual.validateCatalog(actual.en,{...actual.en,...override}),[]);
  if(id!=='en') {
   const plurals=new Intl.PluralRules(actual.locale);
@@ -44,6 +51,21 @@ for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Us
   }
   assert.equal(actual.t('item.caption.water',{count:21}),id==='ru'?'21 порция':'21 porcji');
   assert.equal(actual.t('result.containers',{count:22}),id==='ru'?'+22 ёмкости':'+22 opakowania');
+  assert.equal(actual.t('trash.kept',{found:21}),id==='ru'?'Собрана 21 ёмкость':'Zebrano 21 opakowań');
+  const events=bundled('src/events.ts'),spare=events.STREET_EVENTS.find(event=>event.id==='spare-change');
+  for(const [locationId,cost]of [['station',1],['street',2]]) {
+   const scene=events.prepareStreetEvent(spare,{locationId,housing:'Street'});
+   const give=scene.choices.find(choice=>choice.id==='give');
+   assert.equal(scene.id,'spare-change');assert.equal(give.moneyRequired,cost);assert.equal(give.outcome.money,-cost);
+   assert.equal(scene.text,actual.t(locationId==='street'?'event.spare-change.street.text':'event.spare-change.text'));
+   assert.equal(give.label,actual.t(locationId==='street'?'event.spare-change.street.choice.give':'event.spare-change.choice.give'));
+  }
+  const rain=bundled('src/rainText.ts');
+  for(const level of ['drizzle','rain','downpour'])for(const choice of ['nearby','proper','continue','stoppedSearch'])for(const cold of [false,true]) {
+   const episode={level,choice:choice==='stoppedSearch'?'proper':choice,searchRemaining:choice==='stoppedSearch'?1:0};
+   assert.equal(rain.rainResultText(episode,cold),actual.t(`rain.result.${level}.${choice}${cold?'.cold':''}`));
+   assert.equal(rain.rainHistoryText(episode,cold),actual.t(`rain.history.${choice}${cold?'.cold':''}`));
+  }
   for(const [key,value]of [['en','English'],['pl','Polski'],['ru','Русский']])assert.equal(actual.t(`phone.ui.language.${key}`),value,'language options keep native names');
   assert.equal(actual.t('journal.ui.completedCount',{count:21}),id==='ru'?'21 выполненная цель':'21 wykonanych celów');
   const {practicalQuestions}=bundled('src/phoneQuestions.ts');
@@ -88,4 +110,4 @@ preference.changeLanguage('ru');assert.equal(flushed,1);assert.equal(reloaded,1)
 assert(preference.languageReturn());assert(preference.languageReturn(),'StrictMode reads do not consume the navigation hint');preference.clearLanguageReturn();assert(!preference.languageReturn());
 localStorage.setItem=()=>{throw new Error('blocked')};assert.throws(()=>preference.changeLanguage('pl'),/blocked/);assert.equal(reloaded,1,'failed preference write does not reload');
 delete global.localStorage;delete global.sessionStorage;delete global.window;
-console.log('PASS: languages, parameter validation, 19 completed catalogues without duplicate keys, RU/PL plural boundaries, seven practical questions and native language names, whole-answer paragraphs, sleep sentence grammar and truncated duration, four shelter departure contexts, English fallback plurals, opening calls/event/History, preference validation, flush-before-reload, StrictMode-safe return and blocked storage.');
+console.log('PASS: languages, parameter validation, 24 completed catalogues without duplicate keys, RU/PL plural boundaries, isolated English fallback plurals, shared 1/2-zl encounter identity/costs, 24 rain result/History contexts per language, phone questions and native names, sleep/departure contexts, opening calls/event/History and language preference lifecycle.');
