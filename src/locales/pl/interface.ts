@@ -1,6 +1,14 @@
 import type { Catalog } from '../../i18n'
 
 export const interfaceMessages = {
+  "story.chosen": "Twój wybór: {choice}",
+  "story.roll": "D20: {roll} · modyfikator {modifier} · próg {target}",
+  "story.pending": "To zdarzenie jeszcze trwa.",
+  "story.unfinished": "Ta scena nie ma zapisanego zakończenia.",
+  "story.recordings": "Twoja historia",
+  "story.comparison": "Przykład animacji",
+  "story.empty": "Nowe zdarzenia pojawią się tutaj w trakcie gry.",
+  "story.earlier": "Wcześniejsze zdarzenia",
   "story.nav": "Story",
   "story.place": "Przy dworcu",
   "story.intro": "Pod daszkiem przy bocznym wejściu jest sucho. Możesz tu przeczekać deszcz.",

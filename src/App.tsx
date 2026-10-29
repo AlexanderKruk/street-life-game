@@ -1,3 +1,10 @@
+import { useStorySession } from './useStorySession'
+import type { StoryStamp } from './story'
+import type { StreetEventChoice } from './events'
+import type { EventDiceState } from './stateTypes'
+import { STORY_KEY } from './saveKeys'
+import { rainOpening } from './rainText'
+import { rainArt, rainResultActionId, type RainChoice, type RainEpisode } from './rain'
 import GoalCompletedDialog from './GoalCompletedDialog'
 import { initialJournalGoals, progressJournalGoals, journalGoalKnown } from './journalGoals'
 import PhoneSettingsScreen from './PhoneSettingsScreen'
@@ -112,13 +119,16 @@ export default function App() {
   const { phoneActivity, openingCallIndex, answeredQuestions, shelterPhoneCharging, setShelterPhoneCharging,
     mobileServiceUntil, mobileAutoRenew, setMobileAutoRenew, mobileRenewedDay, resetPhoneSession } = phone
   const activeCall = phoneActivity ? openingCall(phoneActivity.questionId) : undefined
+  const story = useStorySession(initial.story)
+  const restoredStoryResult = initial.story.episodes.find(entry => entry.status === 'awaiting-ack')?.result
   const [message, setMessage] = useState('')
-  const [infoModal, setInfoModal] = useState<ResultCardData | null>(null)
+  const [infoModal, setInfoModal] = useState<ResultCardData | null>(() => restoredStoryResult ?? null)
   const [closingNotice, setClosingNotice] = useState<string | null>(() => initial.closingNotice)
   const [pendingResult, setPendingResult] = useState<(ResultAction & { before: ResultSnapshot; includeTime: boolean; always: boolean; consumedItems: ConsumedItem[] }) | null>(null)
-  const [eventResultOpen, setEventResultOpen] = useState(false)
+  const [eventResultOpen, setEventResultOpen] = useState(!!restoredStoryResult)
   const closeResult = useCallback(() => {
     if (infoModal?.rainResultId) commitGame(previous => ({ ...previous, rainResults: previous.rainResults?.filter(rain => rain.id !== infoModal.rainResultId) }))
+    story.acknowledge()
     setInfoModal(null); setEventResultOpen(false)
   }, [infoModal?.rainResultId])
   const buyShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) buyItem(item) })
@@ -215,6 +225,28 @@ export default function App() {
   const eventSession = useEventSession(initial, game)
   const { firstNightEvents, leftHome, encounters, openingSearchObservation,
     ambientEventClock, activeEvent, setActiveEvent, diceCheck, setDiceCheck, resetEventSession } = eventSession
+  function storyStamp(): StoryStamp { return { day: game.day, minute: game.minutes, locationId: game.locationId, locationName: locationName(game.locationId) } }
+  function recordStoryChoice(choice: StreetEventChoice, dice?: EventDiceState | null) {
+    if (activeEvent) return story.choose(activeEvent, choice, storyStamp(), dice ?? undefined)
+    const sourceId = dice?.stealItemId ? `steal:${dice.stealItemId}` : `fare:${dice?.fareDodgeDestinationId ?? game.locationId}`
+    const id = story.begin('check', sourceId, { eventId: sourceId, title: choice.label, text: '', at: storyStamp() })
+    return story.chooseScene(id, choice, storyStamp(), dice ?? undefined)
+  }
+  useEffect(() => {
+    if (activeEvent) story.openEvent(activeEvent, storyStamp())
+    if (diceCheck && !activeEvent) recordStoryChoice(diceCheck.choice, diceCheck)
+    if (diceCheck?.roll !== null && diceCheck?.roll !== undefined && activeEvent) story.choose(activeEvent, diceCheck.choice, storyStamp(), diceCheck)
+  }, [activeEvent, diceCheck])
+  useEffect(() => {
+    // Old/cancelled checks without a restorable owner remain readable as unfinished.
+    for (const entry of story.current().episodes) {
+      if (entry.status !== 'active') continue
+      const stillActive = entry.source === 'encounter' ? entry.scenes.at(-1)?.eventId === activeEvent?.id
+        : entry.source === 'check' ? !!diceCheck
+        : game.rain?.id === entry.sourceId || game.rainResults?.some(rain => rain.id === entry.sourceId)
+      if (!stillActive && !pendingResult) story.interrupt(entry.id)
+    }
+  }, [activeEvent, diceCheck, game.rain, game.rainResults, pendingResult])
   const [inventory, setInventory] = useState<Inventory>(() => initial.inventory)
   const [storage, setStorage] = useState<StoredItems>(() => initial.storage)
   const [life, setLife] = useState<LifeSituation>(() => initial.life)
@@ -292,6 +324,20 @@ export default function App() {
   const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
   const visibleEventChoices = activeEvent?.choices.filter(choice => !choice.undiscoveredLocationRequired || !discoveredLocations.includes(choice.undiscoveredLocationRequired)) ?? []
   const { respondToRain, continueInRain } = useRainScheduling({ game, gameOver, currentExposure, sleeping: !!sleeping, currentId: current.id }, setGame, setRainChoice)
+  function rainStoryId(rain: RainEpisode) {
+    const existing = story.current().episodes.find(entry => entry.source === 'rain' && entry.sourceId === rain.id)
+    if (existing) return existing.id
+    const opening = rainOpening(rain.level)
+    return story.begin('rain', rain.id, { eventId: rain.id, title: opening.title, text: rain.choice ? '' : opening.text, illustration: rain.choice ? undefined : rainArt(rain, 'opening'), at: storyStamp() })
+  }
+  function recordRainChoice(choice: RainChoice) {
+    if (!game.rain) return
+    const id = rainStoryId(game.rain)
+    story.chooseScene(id, { id: choice, label: t(`rain.choice.${choice}`) }, storyStamp())
+  }
+  useEffect(() => {
+    if (rainChoice && game.rain && !activeEvent && !diceCheck && !infoModal && !pendingResult && !sleeping && !gameOver) rainStoryId(game.rain)
+  }, [rainChoice, game.rain?.id, activeEvent, diceCheck, infoModal, pendingResult, sleeping, gameOver])
   useEffect(() => {
     if ((!rainChoice && !rainWaiting) || infoModal || pendingResult || activeEvent || diceCheck) return
     const previous = document.activeElement as HTMLElement | null
@@ -431,6 +477,7 @@ export default function App() {
   }, {
     setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal,
     openPage, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),
+    recordStoryChoice,
     recordFareInspectionRoll: roll => setTrip(previous => previous?.mode === 'fare-dodge' && previous.inspection?.status === 'rolling'
       ? { ...previous, inspection: { ...previous.inspection, roll } } : previous),
   })
@@ -485,11 +532,14 @@ export default function App() {
       const entry: JournalEntry = { day: game.day, minute: game.minutes, actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}), actionTitle, reflection: true, ...reflection }
       setJournalEntries(previous => [...previous, entry].slice(-500))
     }
-    setInfoModal(previous => ({ ...previous, title: previous?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }))
+    const result = { ...infoModal, title: infoModal?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }
+    if (pendingResult.storyEpisodeId !== undefined) story.finish(pendingResult.storyEpisodeId, result, storyStamp(), { actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}) })
+    setInfoModal(result)
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
   useRainResults({ game, effects, blocked: !!(goalCompletionVisible || gameOver || activeEvent || diceCheck || infoModal || pendingResult || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterDeparture || closingNotice || inventoryDialogOpen || trashGame || trip?.remaining === 0 || phoneActivity?.remaining === 0) }, {
     setGame, setEffects, setInfoModal, setEventResultOpen, setJournalEntries, resultSnapshot,
+    recordStoryResult: (rain, result) => story.finish(rainStoryId(rain), result, storyStamp(), { actionId: rainResultActionId(rain) }),
   })
 
   const closingWatch = useRef({ id: game.locationId, minute: absoluteMinutes(game), travelling: !!trip })
@@ -605,6 +655,8 @@ export default function App() {
     setActiveGoal(null)
     setJournalGoals(initialJournalGoals(INITIAL_INVENTORY.phoneBattery))
     setJournalEntries([])
+    story.reset()
+    localStorage.removeItem(STORY_KEY)
     setMusicWalkUsed(false)
     localStorage.removeItem(MUSIC_WALK_USED_KEY)
     setSelectedJournalDay(null)
@@ -667,6 +719,7 @@ export default function App() {
     [GOAL_KEY]: activeGoal,
     [JOURNAL_GOALS_KEY]: journalGoals,
     [JOURNAL_HISTORY_KEY]: journalEntries,
+    [STORY_KEY]: story.store,
     [MUSIC_WALK_USED_KEY]: musicWalkUsed,
     [PHONE_ACTIVITY_KEY]: phoneActivity,
     [OPENING_CALLS_KEY]: openingCallIndex,
@@ -694,7 +747,7 @@ export default function App() {
     [SHELTER_ARRIVAL_KEY]: shelterArrival,
     [SAVE_KEYS.shelterDeparture]: shelterDeparture,
   }, inventoryAgedAt === absoluteMinutes(game) && game.hygiene <= hygieneLimit && !pendingResult, [
-    discoveredLocations, activeGoal, journalGoals, journalEntries, musicWalkUsed, answeredQuestions, seenMemories, firstNightEvents, leftHome, encounters, choiceSeed,
+    story.store, discoveredLocations, activeGoal, journalGoals, journalEntries, musicWalkUsed, answeredQuestions, seenMemories, firstNightEvents, leftHome, encounters, choiceSeed,
     rainChoice, screen, life, effects, begging, mobileServiceUntil, mobileAutoRenew, mobileRenewedDay,
     game.day, gameOver, !!trip, trip?.inspection, !!sleeping, !!shelterQueue, !!shelterDeparture, shelterArrival,
     phoneActivity?.questionId ?? null, openingCallIndex, infoModal, shelterPhoneCharging, closingNotice,
@@ -762,7 +815,7 @@ export default function App() {
     <GameHeader game={game} weatherId={weather.id} temperature={temperature} battery={inventory.phoneBattery} />
     <div className="game-content" ref={contentRef}>
 
-    {screen === 'story' && <StoryScreen />}
+    {screen === 'story' && <StoryScreen episodes={story.store.episodes} />}
     {screen !== 'story' && <>
     {screen === 'location' && <LocationScreen state={{
       current, open, firstNight, game, message, currentActions, shelterInterview, choiceSeed, choiceDecisionKey,
@@ -831,8 +884,8 @@ export default function App() {
 
     {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <RainEventDialog
       rain={game.rain} waiting={rainWaiting} elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))}
-      orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={rainModalRef} onChoose={respondToRain}
-      onContinue={continueInRain}
+      orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={rainModalRef} onChoose={choice => { recordRainChoice(choice); respondToRain(choice) }}
+      onContinue={() => { recordRainChoice('continue'); continueInRain() }}
     />}
     {!gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck}
       onRoll={rollDice} onAccept={acceptDiceResult} onCancel={() => setDiceCheck(null)} />}

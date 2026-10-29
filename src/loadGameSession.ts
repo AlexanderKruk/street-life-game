@@ -1,3 +1,5 @@
+import { loadStory } from './story'
+import { STORY_KEY } from './saveKeys'
 import { loadTripInspection } from './travelInspection'
 import { loadDeferredEncounter } from './deferredEncounter'
 import { loadJournalGoals } from './journalGoals'
@@ -162,6 +164,10 @@ export function loadGameSession(source: SaveReader) {
       return loadJournalEntries(saved)
     } catch { return [] }
   })()
+  const story = (() => {
+    try { return loadStory(JSON.parse(reader.getItem(STORY_KEY) ?? 'null')) }
+    catch { return loadStory(null) }
+  })()
   const musicWalkUsed = (() => {
     const inHistory = journalEntries.some(entry => entry.actionId === 'music-walk')
     try { return reader.getItem(MUSIC_WALK_USED_KEY) === 'true' || inHistory } catch { return inHistory }
@@ -284,7 +290,7 @@ export function loadGameSession(source: SaveReader) {
     }
   })()
   const journalGoals = loadJournalGoals(savedJournalGoals, inventory.phoneBattery)
-  return { game,phoneActivity,trip,closingNotice,journalEntries,musicWalkUsed,journalGoals,activeGoal,screen,answeredQuestions,seenMemories,shelterPhoneCharging,mobileServiceUntil,mobileAutoRenew,mobileRenewedDay,shelterQueue,shelterArrival,shelterDeparture,sleeping,begging,inventory,storage,life,effects,
+  return { story,game,phoneActivity,trip,closingNotice,journalEntries,musicWalkUsed,journalGoals,activeGoal,screen,answeredQuestions,seenMemories,shelterPhoneCharging,mobileServiceUntil,mobileAutoRenew,mobileRenewedDay,shelterQueue,shelterArrival,shelterDeparture,sleeping,begging,inventory,storage,life,effects,
     choiceSeed: loadChoiceSeed(reader), openingCallIndex: loadOpeningCallIndex(reader, !!readSavedGame(reader)),
     discoveredLocations: loadDiscoveredLocations(reader), firstNightEvents: loadFirstNightEvents(reader),
     encounters: loadFirstNightEvents(reader, ENCOUNTERS_KEY), leftHome: loadLeftHome(reader),

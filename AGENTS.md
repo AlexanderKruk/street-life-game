@@ -954,4 +954,24 @@ fixed stamps, pulse, sequential choices, selected narrative and same-block
 text-only results. The choice clock is paused; leaving the tab destroys the
 comparison. Run check-story.cjs for isolation, all three answers and replay.
 
-Story roadmap — 29 October 2026: STORY_PLAN.md is the active incremental plan. In this task, “event” means any gameplay action as well as random encounters. Location/inventory/phone controls remain in place; Story collects their shared chronology. Start by passively recording the actual spare-change encounter into Story while the player uses the unchanged classic event/result dialogs; extend recording to other random encounters/checks before ordinary actions. Live Story presentation is a later opt-in step. Do not remove or redesign classic event dialogs as part of the recording phase. The current iframe remains a comparison fixture until replacement. No implementation stage is completed merely by adding this plan.
+Story recording — 29 October 2026 (source-only, v347 remains published):
+`story.ts` / `useStorySession.ts` provide one passive archive for the entire authored
+catalogue (25 scenes / 61 answers), chains/D20 and standalone shop/fare checks;
+rain uses an explicit port from its separate result owner. Do not add per-event
+recording implementations or a spare-change-only whitelist. App observes openings,
+passes choice metadata through the existing controller and records the settled
+result summary once. Source/choice/action/outcome IDs are independent of copy;
+scene text/art, place and timestamps are immutable snapshots in their original
+language. `STORY_KEY` is optional/versioned, loaded by loadGameSession, staged by
+useGameAutosave and cleared on reset. Unacknowledged recorded results restore the
+classic ResultCard without rerunning consequences. Orphaned scenes stay unfinished.
+Keep all classic event/dice/result dialogs, costs/RNG/clock/History and pending-roll
+compatibility intact. Story is read-only; replay is ephemeral and never calls game
+commands. StoryScreen renders the archive, 30 episodes at a time (500 retained),
+with dark image reveal/progressive text; StoryComparison retains the exact isolated
+iframe example behind its own button. Prototype tab-level world pause remains until
+a separately authorised live-mode task. Check check-story-recording.cjs for all
+catalogue answers, actual money variants, StrictMode/reload/ack, chain/D20, rain
+cancellation, in-transit resumption, animation/replay isolation and reset. Browser
+appearance remains unverified because managed preview reports vite: not found.
+STORY_PLAN.md tracks remaining action sources and later opt-in live Story modal.

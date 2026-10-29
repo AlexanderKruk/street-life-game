@@ -14,6 +14,8 @@ try {
   const env = require('./tests/helpers/regression-env.cjs');
   env.setup();
   env.click('Story');
+  assert(document.querySelector('.story-screen').textContent.includes('New events will appear here as you play.'), 'Story starts with the real archive');
+  env.click('Animation example');
   const frame = document.querySelector('iframe.story-preview');
   assert(frame, 'Story opens its isolated comparison');
   const game = env.read(env.stateKey), inventory = env.read(env.invKey);
