@@ -8,6 +8,9 @@ function bundled(path) {
   const module = { exports: {} }; new Function('require', 'module', 'exports', code)(require, module, module.exports); return module.exports;
 }
 require('./tests/helpers/travel-story.cjs')({ ...bundled('src/travelStory.ts'), ...bundled('src/storyAutoClose.ts'), ...bundled('src/story.ts'), ...bundled('src/loadGameSession.ts') });
+const { initialState } = bundled('src/game.ts');
+const { INITIAL_INVENTORY } = bundled('src/inventory.ts');
+const { loadStory } = bundled('src/story.ts');
 const temporary = mkdtempSync(join(tmpdir(), 'street-story-travel-'));
 process.env.NODE_PATH = resolve('node_modules'); require('node:module').Module._initPaths();
 try {
@@ -27,9 +30,9 @@ try {
   const progress = () => document.querySelector('.story-travel-progress');
   const remount = (App = env.App) => { save(); env.cleanup(); env.render(env.React.createElement(env.React.StrictMode, null, env.React.createElement(App))); };
   function setup(mode = 'walk', remaining = 8, total = 8, inspection) {
-    const game = { day: 2, minutes: 600, locationId: 'street', money: mode === 'transit' ? 95.6 : 100, health: 100, energy: 100 };
-    const before = { game: { ...game, money: 100 }, inventory: { water: 3, food: 2, medicines: 0, phoneBattery: 90, phoneCondition: 100, clothingCleanliness: 100, jacket: 100, documents: true, cigarettes: 0, bottles: 0, transitCard: false }, effects: [] };
-    env.setup(game, { 'street-life-screen': 'map', [tripKey]: { destinationId: 'station', mode, total, remaining, before, ...(inspection ? { inspection } : {}) } });
+    const game = { ...initialState, day: 2, minutes: 600, locationId: 'street', money: mode === 'transit' ? 95.6 : 100, health: 100, energy: 100, mood: 28 };
+    const before = { game: { ...game, money: 100 }, inventory: { ...INITIAL_INVENTORY, water: 3, food: 2, medicines: 0, phoneBattery: 90, phoneCondition: 100, clothingCleanliness: 100, jacket: 100 }, effects: [] };
+    env.setup(game, { 'street-life-screen': 'map', [env.invKey]: before.inventory, [tripKey]: { destinationId: 'station', mode, total, remaining, before, ...(inspection ? { inspection } : {}) } });
   }
   for (const mode of ['walk', 'transit', 'fare-dodge']) {
     setup(mode); remount(ClassicApp); env.advance(2000); const expected = facts(); env.ok();
@@ -47,7 +50,9 @@ try {
     assert.equal(env.read(tripKey), null); assert(modal()); assert(!progress());
     assert(modal().textContent.includes('Arrived at the station.'));
     assert.equal(save().episodes[0].status, 'awaiting-ack'); assert.deepEqual(facts(), expected, `${mode} retains classic arrival costs, time and History`);
-    const arrived = facts(); remount(); assert.deepEqual(facts(), arrived, 'pending arrival does not run again');
+    const arrived = facts(), pendingArrival = save();
+    assert.deepEqual(loadStory(pendingArrival), pendingArrival, 'actual arrival consequences retain valid finite values through persistence');
+    remount(); assert.deepEqual(facts(), arrived, 'pending arrival does not run again');
     assert(modal(), `pending ${mode} arrival restores its modal: ${JSON.stringify({ screen: localStorage.getItem('street-life-screen'), story: save(), timers: [...timers.values()].map(timer => timer.at - now) })}`);
     timeout(999); assert(modal()); assert(document.querySelector('.map-surface'));
     timeout(1); assert(!modal()); assert(document.querySelector('.location-surface'));
