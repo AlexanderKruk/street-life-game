@@ -19,6 +19,30 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   const [awayFromBottom, setAwayFromBottom] = useState(false)
   const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
   const [closing, setClosing] = useState(false)
+  useLayoutEffect(() => {
+    const overlay = panel.current?.parentElement
+    const navigation = document.querySelector<HTMLElement>('.bottom-nav')
+    if (!overlay || !navigation) return
+    const home = navigation.querySelector<HTMLElement>('.nav-item.home')
+    const measure = () => {
+      const top = Math.min(navigation.getBoundingClientRect().top, home?.getBoundingClientRect().top ?? Infinity)
+      const clearance = Math.max(0, overlay.getBoundingClientRect().bottom - top)
+      overlay.style.setProperty('--story-nav-clearance', `${clearance}px`)
+    }
+    // Reserve the actual menu, including its raised location button, before
+    // first paint. Completion changes stacking only, never modal geometry.
+    measure()
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure)
+    observer?.observe(navigation)
+    if (home) observer?.observe(home)
+    window.addEventListener('resize', measure)
+    window.visualViewport?.addEventListener('resize', measure)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+      window.visualViewport?.removeEventListener('resize', measure)
+    }
+  }, [])
   useEffect(() => {
     const visibility = () => setVisible(document.visibilityState !== 'hidden')
     document.addEventListener('visibilitychange', visibility)

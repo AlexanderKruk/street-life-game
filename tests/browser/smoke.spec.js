@@ -1,5 +1,39 @@
 import { test, expect, openGame, entries, findHelp, advance, read, keys, assertLocked, acknowledge, saves, presentStoryChoices, storyVisible } from './game.js'
 
+for (const width of [320, 390, 1280]) {
+  test(`Story modal and navigation keep their bounds on completion at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 320 ? 568 : width === 390 ? 844 : 900 })
+    const seed = entries()
+    const game = { ...JSON.parse(seed[keys.game]), locationId: 'street', day: 1, minutes: 1350 }
+    const pending = JSON.stringify({ seen: [], lastAt: null, pendingId: 'first-night-door' })
+    await openGame(page, { ...seed, 'street-life-screen': 'inventory', 'street-life-left-home-v1': 'false',
+      'street-life-first-night-events-v1': pending, [keys.game]: JSON.stringify(game) })
+    await presentStoryChoices(page)
+    const geometry = () => page.evaluate(() => {
+      const navigation = document.querySelector('.bottom-nav'), overlay = document.querySelector('.story-event-overlay')
+      const box = node => { const r = node.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, height: r.height } }
+      return { navigation: box(navigation), home: box(navigation.querySelector('.home')), panel: box(overlay.querySelector('.story-event-panel')),
+        overlay: box(overlay), navLayer: Number(getComputedStyle(navigation).zIndex), overlayLayer: Number(getComputedStyle(overlay).zIndex) }
+    })
+    const before = await geometry()
+    expect(before.navLayer).toBeLessThan(before.overlayLayer)
+    await expect(page.locator('.bottom-nav')).toHaveAttribute('inert', '')
+    expect(before.panel.bottom).toBeLessThanOrEqual(Math.min(before.navigation.top, before.home.top))
+    await page.getByRole('button', { name: 'No, thanks. Just going for a walk.', exact: true }).click()
+    await storyVisible(page, page.locator('.story-event-close'))
+    const after = await geometry()
+    for (const element of ['navigation', 'home', 'panel', 'overlay']) {
+      for (const field of ['top', 'bottom', 'height']) expect(after[element][field]).toBeCloseTo(before[element][field], 1)
+    }
+    expect(after.navLayer).toBeGreaterThan(after.overlayLayer)
+    await expect(page.locator('.bottom-nav')).not.toHaveAttribute('inert')
+    await page.locator('.story-event-close').click()
+    const closed = await page.locator('.bottom-nav').boundingBox()
+    expect(closed.y).toBeCloseTo(before.navigation.top, 1)
+    expect(closed.height).toBeCloseTo(before.navigation.height, 1)
+  })
+}
+
 test('new run reaches its first scene and releases the UI after acknowledgement', async ({ page }) => {
   await openGame(page, {})
   await expect(page.getByRole('dialog')).toHaveCount(0)

@@ -1,3 +1,15 @@
+Stable Story modal / navigation geometry — 30 October 2026, source only:
+remove the completion-only 112px overlay bottom inset. The overlay covers the
+whole viewport in both phases; a layout-time measurement of the actual bottom
+navigation and its raised location button reserves panel clearance from first
+paint. ResizeObserver and window/visualViewport resize maintain it, without a
+second game clock or App state. Completion changes only navigation stacking and
+availability. Resize listeners/observer clean up with the existing modal. Added
+Chromium/WebKit smoke cases at 320/390/1280px comparing menu/home/panel/overlay
+bounds before and after completion, locked/unlocked layers and closing. JS syntax
+passed; build/browser execution is unavailable because tsc/dependencies are absent.
+No new full suite, browser/device validation or publication; v357 remains live.
+
 Release v357 is published — 30 October 2026. GitHub Pages run 41118328115
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41118328115)
 succeeded for source d8d121bec68c23ec888c86ef6775064c53dbf0f8: all 34 Node
