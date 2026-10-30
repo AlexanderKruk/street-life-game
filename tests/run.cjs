@@ -1,9 +1,10 @@
 const { spawnSync } = require('node:child_process');
 const { resolve } = require('node:path');
-// Keep existing suite order; output bundles still prohibit parallel runs.
+// Fail fast on Story travel; output bundles still prohibit parallel runs.
 const suites = [
   "check-design-system.cjs",
   "check-module-boundaries.cjs",
+  "check-story-travel.cjs",
   "check-action-controllers.cjs",
   "check-rain.cjs",
   "check-events.cjs",
@@ -36,7 +37,6 @@ const suites = [
   "check-story-recording.cjs",
   "check-story-live.cjs",
   "check-story-modal.cjs",
-  "check-story-travel.cjs"
 ];
 const start = performance.now();
 let passed = 0;

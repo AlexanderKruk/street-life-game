@@ -48,6 +48,7 @@ try {
     assert(modal().textContent.includes('Arrived at the station.'));
     assert.equal(save().episodes[0].status, 'awaiting-ack'); assert.deepEqual(facts(), expected, `${mode} retains classic arrival costs, time and History`);
     const arrived = facts(); remount(); assert.deepEqual(facts(), arrived, 'pending arrival does not run again');
+    assert(modal(), `pending ${mode} arrival restores its modal: ${JSON.stringify({ screen: localStorage.getItem('street-life-screen'), story: save(), timers: [...timers.values()].map(timer => timer.at - now) })}`);
     timeout(999); assert(modal()); assert(document.querySelector('.map-surface'));
     timeout(1); assert(!modal()); assert(document.querySelector('.location-surface'));
     assert.equal(save().episodes[0].status, 'complete'); assert.equal(save().episodes.length, 1); assert.deepEqual(facts(), arrived);
