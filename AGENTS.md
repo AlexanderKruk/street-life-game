@@ -1,4 +1,4 @@
-Release v350 preparation — 30 October 2026: compact icon/delta result groups in Story and ResultCard, 260ms between whole indicators, no duration badges or meters. Targeted source checks and production build passed; full Node checks/build/deployment run in the existing GitHub Pages gate. Browser layout/animation QA remains unverified because managed preview cannot start (`vite: not found`). Deployment is pending; do not claim success before the Pages workflow completes.
+Release v350 is published (30 October 2026): compact Status icon/delta groups in Story and ResultCard, each complete indicator revealed 260ms after the previous one; duration badges, current percentages and result meters removed. GitHub Pages run 41009905740 passed all 32 Node suites in 88.02s, production build and deploy for 0df6203c8cc3fc9aa4ca9fbeafcb94c33e90e3e7. The first run stopped on obsolete result DOM/duration expectations; the remaining call/Mood/sleep/shelter checks were updated while retaining gameplay, caps, time, battery, pause and reload assertions. Full CI was not duplicated locally. Browser/iPhone/WebKit appearance remains unverified because managed preview is unavailable. The phone-call Story-recording gap remains deferred.
 
 Release v349 is published (29 October 2026): compact Story metadata (time · place · day), separate result points, unframed shared stat meters and the exact classic result field selection. GitHub Pages run 40956345997 passed all 32 Node suites in 92.30s, production build and deploy for 5ed006e18935efb00f3e1e14b930820f69f0084b. The design is intentionally available for the user to review tomorrow; do not treat it as final visual approval. The phone-call recording gap remains deferred. Browser appearance remains unverified.
 
@@ -12,8 +12,8 @@ each icon/value appears together, 260ms between groups, after result art is read
 Omit duration badges, bars, current percentages and cap reasons from these results.
 Keep actual costs, filtering, explicit visibleStats, item/effect changes and archive
 snapshots. Historic Story opens settled; Replay starts group appearance at the
-effects step. Status retains Stat meters. Tap an icon for its label. This is a
-source save, not a release; v349 remains published. Managed browser preview is
+effects step. Status retains Stat meters. Tap an icon for its label. Published in v350; the
+source checkpoint below describes the earlier save. Managed browser preview is
 unavailable (`vite: not found`), so device/layout parity is not claimed.
 
 # Street Life: implementation and visual rules
