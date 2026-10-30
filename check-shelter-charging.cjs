@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const {buildSync}=require('./tests/helpers/build.cjs');
-function bundle(entry){const code=buildSync({entryPoints:[entry],bundle:true,platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const m={exports:{}};new Function('require','module','exports',code)(require,m,m.exports);return m.exports}
+function bundle(entry){const code=buildSync({legacyEventDialogs:true,entryPoints:[entry],bundle:true,platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const m={exports:{}};new Function('require','module','exports',code)(require,m,m.exports);return m.exports}
 const {shelterChargingMinutes,SHELTER_PHONE_CHARGE_KEY:chargeKey}=bundle('src/shelterCharging.ts');
 for(const [from,to,minutes] of [[1079,1100,0],[1080,1140,60],[1430,1450,20],[1440,1500,60],[479,480,1],[479,600,1],[480,1080,0],[1140,4000,780],[1140,1130,0]])assert.equal(shelterChargingMinutes(from,to),minutes);
 for(let start=1080;start<1920;start+=17){const end=Math.min(start+83,1920);let ticks=0;for(let n=start;n<end;n++)ticks+=shelterChargingMinutes(n,n+1);assert.equal(shelterChargingMinutes(start,end),ticks,'action jumps and minute ticks agree')}

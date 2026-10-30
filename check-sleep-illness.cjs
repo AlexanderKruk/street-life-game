@@ -1,7 +1,7 @@
 // Exercise the deferred wetness feature explicitly; check-wetness-disabled.cjs covers release defaults.
 const assert=require('node:assert/strict');
 const {buildSync}=require('./tests/helpers/build.cjs');
-function bundle(path){const code=buildSync({entryPoints:[path],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const mod={exports:{}};new Function('require','module','exports',code)(require,mod,mod.exports);return mod.exports;}
+function bundle(path){const code=buildSync({legacyEventDialogs:true,entryPoints:[path],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const mod={exports:{}};new Function('require','module','exports',code)(require,mod,mod.exports);return mod.exports;}
 const {sleepIllnessHazard:hazard,sleepIllnessChance:chance}=bundle('src/sleepIllness.ts');
 const {initialState,applySleepTime,temperatureAt,WEATHER}=bundle('src/game.ts');
 const {readSavedGame,SAVE_KEY}=bundle('src/saveCompatibility.ts');

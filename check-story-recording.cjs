@@ -7,7 +7,7 @@ const temporary = mkdtempSync(join(tmpdir(), 'street-story-record-'));
 process.env.NODE_PATH = resolve('node_modules'); require('node:module').Module._initPaths();
 try {
   const app = join(temporary, 'app.cjs'), model = join(temporary, 'story.cjs'), events = join(temporary, 'events.cjs');
-  for (const [entry, outfile] of [['src/App.tsx', app], ['src/story.ts', model], ['src/events.ts', events]]) buildSync({ entryPoints: [entry], bundle: true, platform: 'node', format: 'cjs', outfile, external: ['react', 'react-dom', 'react/jsx-runtime'] });
+  for (const [entry, outfile] of [['src/App.tsx', app], ['src/story.ts', model], ['src/events.ts', events]]) buildSync({legacyEventDialogs:true, entryPoints: [entry], bundle: true, platform: 'node', format: 'cjs', outfile, external: ['react', 'react-dom', 'react/jsx-runtime'] });
   process.env.STREET_REGRESSION_APP = app;
   const env = require('./tests/helpers/regression-env.cjs');
   const { STREET_EVENTS } = require(events), { loadStory } = require(model);

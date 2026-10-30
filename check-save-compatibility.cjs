@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const esbuild = require('./tests/helpers/build.cjs');
-esbuild.buildSync({ entryPoints: ['src/saveCompatibility.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'save-compatibility-app.cjs' });
+esbuild.buildSync({legacyEventDialogs:true, entryPoints: ['src/saveCompatibility.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'save-compatibility-app.cjs' });
 const { readSavedGame, SAVE_KEY } = require('./save-compatibility-app.cjs');
 const storageFor = entries => ({ getItem: key => entries[key] ?? null });
 // Ten recent published builds share v3. Ancient keys are not loaded or deleted.
@@ -22,7 +22,7 @@ global.IS_REACT_ACT_ENVIRONMENT = true;
 window.scrollTo = () => {};
 window.setInterval = () => 1; window.clearInterval = () => {};
 Date.now = () => 1800000000000; Math.random = () => .99;
-esbuild.buildSync({ entryPoints: ['src/App.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile: 'save-upgrade-app.cjs', external: ['react', 'react-dom', 'react/jsx-runtime'] });
+esbuild.buildSync({legacyEventDialogs:true, entryPoints: ['src/App.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile: 'save-upgrade-app.cjs', external: ['react', 'react-dom', 'react/jsx-runtime'] });
 const React = require('react');
 const { render, screen, fireEvent, cleanup } = require('@testing-library/react');
 const App = require('./save-upgrade-app.cjs').default;

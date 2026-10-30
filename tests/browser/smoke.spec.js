@@ -1,9 +1,12 @@
-import { test, expect, openGame, entries, findHelp, advance, read, keys, assertLocked, acknowledge, saves } from './game.js'
+import { test, expect, openGame, entries, findHelp, advance, read, keys, assertLocked, acknowledge, saves, presentStoryChoices, storyVisible } from './game.js'
 
 test('new run reaches its first scene and releases the UI after acknowledgement', async ({ page }) => {
   await openGame(page, {})
   await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Status', exact: true }).click()
+  const scroll = await page.locator('.game-content').evaluate(node => { node.scrollTop = 200; return node.scrollTop })
   await advance(page, 15_000)
+  await presentStoryChoices(page)
   await expect(page.getByRole('dialog', { name: 'A familiar face', exact: true })).toBeVisible()
   await assertLocked(page)
   const paused = await read(page, keys.game)
@@ -12,6 +15,8 @@ test('new run reaches its first scene and releases the UI after acknowledgement'
   await page.getByRole('button', { name: 'No, thanks. Just going for a walk.', exact: true }).click()
   await acknowledge(page)
   await expect(page.locator('.bottom-nav')).not.toHaveAttribute('inert')
+  await expect(page.getByRole('button', { name: 'Status', exact: true })).toBeFocused()
+  expect(await page.locator('.game-content').evaluate(node => node.scrollTop)).toBe(scroll)
   await page.getByRole('button', { name: 'Map', exact: true }).click()
   await expect(page.locator('.map-surface')).toBeVisible()
 })
@@ -71,8 +76,9 @@ test('pending travel pauses for an event and result, then resumes without a seco
   const trip = await read(page, keys.trip)
   await advance(page, 3000)
   expect(await read(page, keys.trip)).toEqual(trip)
+  await presentStoryChoices(page)
   await page.getByRole('button', { name: 'Keep going', exact: true }).click()
-  await expect(page.locator('.result-modal')).toBeVisible()
+  await expect(page.locator('.story-event-panel')).toBeVisible()
   await advance(page, 2000)
   expect(await read(page, keys.trip)).toEqual(trip)
   await acknowledge(page)
@@ -150,13 +156,14 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 664 }
   test(`scroll stays inside the centre and result at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport)
     await openGame(page, entries('event'))
+    await presentStoryChoices(page)
     await page.getByRole('button', { name: 'Let me help with those bags.', exact: true }).click()
-    const result = page.locator('.result-modal')
+    const result = page.locator('.story-event-panel')
     await expect(result).toBeVisible()
     await expect.poll(() => result.evaluate(node => ({
       horizontal: node.scrollWidth - node.clientWidth,
       overflow: getComputedStyle(node).overflow,
-      bodyHorizontal: node.querySelector('.result-card-content').scrollWidth - node.querySelector('.result-card-content').clientWidth,
+      bodyHorizontal: node.querySelector('.story-event-content').scrollWidth - node.querySelector('.story-event-content').clientWidth,
     }))).toEqual({ horizontal: 0, overflow: 'hidden', bodyHorizontal: 0 })
     expect(await page.locator('.game-content').evaluate(node => getComputedStyle(node).overflowY)).toBe('hidden')
     const panel = await result.boundingBox()
@@ -248,9 +255,9 @@ for (const [choice, searchRemaining] of [['proper', 3], ['proper', 0], ['nearby'
     await openGame(page, rainySeed(choice, searchRemaining))
     await assertLocked(page)
     const dialog = page.getByRole('dialog')
-    await expect(dialog.locator('.event-illustration')).toHaveCount(0)
-    await expect(dialog.getByRole('button')).toHaveCount(1)
-    await expect(dialog.locator(searchRemaining ? '.searching' : '.rain-canopy')).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible()
+    await expect(dialog.getByRole('status')).toContainText(searchRemaining ? 'Looking' : 'Waiting')
+    await advance(page, 750)
     await advance(page, 250)
     const before = await read(page, keys.game)
     await page.getByRole('button', { name: 'Cancel', exact: true }).click()
@@ -262,31 +269,30 @@ for (const [choice, searchRemaining] of [['proper', 3], ['proper', 0], ['nearby'
     await page.reload()
     expect((await read(page, keys.game)).rain).toEqual(after.rain)
     await advance(page, 19000)
-    await expect(page.locator('.result-illustration')).toBeVisible()
-    await expect(page.locator('.result-modal')).toContainText('The rain has passed')
-    await acknowledge(page)
+    expect((await read(page, 'street-life-story-v1')).episodes.at(-1).result.title).toBe('The rain has passed')
+    if (await page.locator('.story-event-overlay').count()) await acknowledge(page)
     await page.reload()
     await expect(page.getByRole('dialog')).toHaveCount(0)
   })
 }
 
-test('shelter choice transitions from search to compact waiting and illustrated result', async ({ page }) => {
+test('shelter choice transitions through Story search, waiting and illustrated result', async ({ page }) => {
   await openGame(page, rainySeed(null, 0, 8))
-  await page.getByRole('button', { name: 'Find proper shelter', exact: true }).click()
-  await expect(page.locator('.rain-activity-icon.searching')).toBeVisible()
+  await presentStoryChoices(page)
+  await page.locator('[data-order-id="rain:proper"]').click()
+  await expect(page.locator('.story-live-controls [role="status"]')).toContainText('Looking')
   const rain = (await read(page, keys.game)).rain
   await advance(page, rain.searchRemaining * 250)
-  await expect(page.locator('.rain-canopy')).toBeVisible()
-  await expect(page.getByRole('dialog').getByRole('button')).toHaveCount(1)
-  await expect(page.getByRole('button', { name: 'Find proper shelter', exact: true })).toHaveCount(0)
+  await expect(page.locator('.story-live-controls [role="status"]')).toContainText('Waiting')
+  await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible()
+  await expect(page.locator('[data-order-id="rain:proper"]')).toHaveCount(0)
   await page.reload()
-  await expect(page.locator('.rain-canopy')).toBeVisible()
+  await expect(page.locator('.story-live-controls [role="status"]')).toContainText('Waiting')
   await advance(page, (8 - rain.searchRemaining) * 250)
-  await expect(page.locator('.result-illustration')).toBeVisible()
-  await expect(page.locator('.result-modal')).toContainText('Shelter from the rain')
+  expect((await read(page, 'street-life-story-v1')).episodes.at(-1).result.title).toBe('Shelter from the rain')
 })
 
-for (const [name, seed] of [['travel', entries('trip')], ['search', rainySeed('proper', 3)], ['waiting', rainySeed('nearby')]]) {
+for (const [name, seed] of [['travel', entries('trip')]]) {
   test(`compact ${name} action fits beside text on narrow and desktop screens`, async ({ page }) => {
       await openGame(page, seed)
       for (const width of [320, 390, 1280]) {
@@ -448,6 +454,7 @@ for (const mode of ['transit', 'fare-dodge']) {
     expect(await read(page, keys.game)).toEqual(paused)
     expect((await read(page, keys.trip)).remaining).toBe(during.remaining)
     if (mode === 'transit') {
+      await presentStoryChoices(page)
       await page.getByRole('button', { name: 'Show my ticket', exact: true }).click()
     } else {
       await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toHaveCount(0)
@@ -458,7 +465,7 @@ for (const mode of ['transit', 'fare-dodge']) {
       await expect(page.getByLabel('Rolled 1', { exact: true })).toBeVisible()
       await page.getByRole('button', { name: 'Continue', exact: true }).click()
     }
-    await expect(page.locator('.result-modal')).toBeVisible()
+    await expect(page.locator(mode === 'transit' ? '.story-event-panel' : '.result-modal')).toBeVisible()
     const afterCheck = await read(page, keys.trip)
     expect(afterCheck.remaining).toBe(during.remaining)
     expect(afterCheck.before).toEqual(started.before)
@@ -533,13 +540,15 @@ for (const [choice, asset, cost] of [['Give 1 zÅ‚', 'give', 1], ['Sorry, I canâ€
     const game = { ...JSON.parse(seed[keys.game]), locationId: 'station' }
     const encounters = { ...JSON.parse(seed[keys.encounters]), pendingId: 'spare-change' }
     await openGame(page, { ...seed, [keys.game]: JSON.stringify(game), [keys.encounters]: JSON.stringify(encounters) })
-    await expect(page.locator('.event-illustration')).toHaveAttribute('src', /event-spare-change-station-480.webp$/)
-    await page.locator('.event-illustration').evaluate(img => img.decode())
+    await presentStoryChoices(page)
+    await expect(page.locator('.story-image img').first()).toHaveAttribute('src', /event-spare-change-station-480.webp$/)
+    await page.locator('.story-image img').first().evaluate(img => img.decode())
     await page.getByRole('button', { name: choice, exact: true }).click()
-    await expect(page.locator('.result-illustration')).toHaveAttribute('src', new RegExp(`event-spare-change-${asset}-480.webp$`))
-    await page.locator('.result-illustration').evaluate(img => img.decode())
+    const art = page.locator(`.story-image img[src$="event-spare-change-${asset}-480.webp"]`)
+    await storyVisible(page, art)
+    await art.evaluate(img => img.decode())
     expect((await read(page, keys.game)).money).toBe(game.money - cost)
-    expect(await page.locator('.result-modal').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(false)
+    expect(await page.locator('.story-event-panel').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(false)
     await page.screenshot({ path: `test-results/spare-change-${asset}.png`, animations: 'disabled' })
     await acknowledge(page)
     await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -547,6 +556,68 @@ for (const [choice, asset, cost] of [['Give 1 zÅ‚', 'give', 1], ['Sorry, I canâ€
 }
 
 for (const width of [390, 1280]) {
+  test(`live Story stamp and cursor stay centered through the dog result at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
+    const seed = entries()
+    const game = { ...JSON.parse(seed[keys.game]), locationId: 'street', day: 1, minutes: 1350 }
+    const pending = JSON.stringify({ seen: [], lastAt: null, pendingId: 'first-night-dog' })
+    await openGame(page, { ...seed, 'street-life-screen': 'story', 'street-life-left-home-v1': 'false',
+      'street-life-first-night-events-v1': pending, [keys.encounters]: pending, [keys.game]: JSON.stringify(game) })
+    await advance(page, 20000)
+    const alignment = () => page.evaluate(() => {
+      const head = document.querySelector('.story-head'), ring = head.querySelector('span'), time = head.querySelector('time')
+      const r = ring.getBoundingClientRect(), t = time.getBoundingClientRect()
+      const range = document.createRange(); range.selectNodeContents(time)
+      const glyph = range.getBoundingClientRect()
+      return { box: Math.abs(r.y + r.height / 2 - t.y - t.height / 2), glyph: Math.abs(r.y + r.height / 2 - glyph.y - glyph.height / 2) }
+    })
+    const choosing = await alignment()
+    expect(choosing.box).toBeLessThan(.1)
+    expect(choosing.glyph).toBeLessThanOrEqual(1)
+    await page.locator('[data-order-id="event:first-night-dog:greet"]').click()
+    const initialY = await page.locator('.story-track').evaluate(node => parseFloat(node.style.getPropertyValue('--story-y')))
+    let closingChecked = false, departureChecked = false
+    for (let guard = 0; guard < 450; guard++) {
+      await advance(page, 64)
+      const state = await page.evaluate(() => {
+        const track = document.querySelector('.story-track'), stamp = document.querySelector('.story-result-stamp')
+        const texts = [...document.querySelectorAll('.story-text')], closing = texts.at(-1)
+        const head = track.querySelector('.story-head'), time = head?.querySelector('time')
+        const button = closing?.querySelector('.story-reveal')
+        const style = stamp && getComputedStyle(stamp), clockStyle = time && getComputedStyle(time)
+        return { settling: track.classList.contains('is-settling'), y: parseFloat(track.style.getPropertyValue('--story-y')),
+          closing: texts.length === 3 && !!button && button.textContent.length > 0,
+          clockBottom: time?.getBoundingClientRect().bottom, closingTop: button?.getBoundingClientRect().top,
+          stamp: stamp?.textContent, clockHidden: clockStyle?.visibility === 'hidden', stampColor: style?.color, clockColor: clockStyle?.color,
+          stampFont: style?.font, clockFont: clockStyle?.font,
+          sealed: stamp?.dataset.storyStamp === 'sealed', finished: !!document.querySelector('.story-idle') }
+      })
+      if (state.closing && !closingChecked) {
+        closingChecked = true
+        expect(state.y).toBeCloseTo(initialY, 1)
+        expect(state.clockBottom).toBeLessThan(state.closingTop)
+      }
+      if (state.settling && state.sealed && state.y > initialY && !departureChecked) {
+        departureChecked = true
+        expect(state.clockHidden).toBe(true)
+        expect(state.stamp.length).toBeLessThan('22:30 Â· Street Â· D0'.length)
+        expect(state.stampColor).toBe(state.clockColor)
+        expect(state.stampFont).toBe(state.clockFont)
+        const centered = await alignment()
+        expect(centered.box).toBeLessThan(.1)
+        expect(centered.glyph).toBeLessThanOrEqual(1)
+        await page.screenshot({ path: `test-results/story-stamp-${width}-departing.png` })
+      }
+      if (state.finished) break
+    }
+    expect(closingChecked).toBe(true)
+    expect(departureChecked).toBe(true)
+    await expect(page.locator('.story-idle')).toBeVisible()
+    await expect(page.locator('.story-piece').last()).toHaveClass(/story-stats/)
+    const finalAlignment = await alignment()
+    expect(finalAlignment.box).toBeLessThan(.1)
+    expect(finalAlignment.glyph).toBeLessThanOrEqual(1)
+  })
   test(`live Story encounter, inline result and reload at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
     const seed = entries()
@@ -562,18 +633,17 @@ for (const width of [390, 1280]) {
     await page.screenshot({ path: `test-results/story-live-${width}-choices.png` })
     await page.locator('[data-order-id="event:spare-change:give"]').click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    await advance(page, 30000)
-    await expect(page.locator('[data-order-id="story:acknowledge"]')).toBeEnabled()
+    for (let guard = 0; guard < 160 && (await read(page, 'street-life-story-v1')).episodes.at(-1).status !== 'complete'; guard++) await advance(page, 250)
+    await expect(page.locator('[data-order-id="story:acknowledge"]')).toHaveCount(0)
+    await expect(page.locator('.story-idle.is-running')).toBeVisible()
     const result = await read(page, keys.game)
     expect(result.money).toBe(game.money - 2)
     await page.reload()
-    await advance(page, 30000)
     await expect(page.getByRole('dialog')).toHaveCount(0)
     expect(await read(page, keys.game)).toEqual(result)
-    await page.locator('[data-order-id="story:acknowledge"]').scrollIntoViewIfNeeded()
+    await page.locator('.story-idle').scrollIntoViewIfNeeded()
     await page.screenshot({ path: `test-results/story-live-${width}-result.png` })
     expect(await page.locator('.game-content').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(false)
-    await page.locator('[data-order-id="story:acknowledge"]').click()
     await expect(page.locator('.bottom-nav')).not.toHaveAttribute('inert')
     expect((await read(page, 'street-life-story-v1')).episodes.at(-1).status).toBe('complete')
   })
@@ -585,13 +655,71 @@ for (const [choice, asset, cost] of [['Give 2 zÅ‚', 'give', 2], ['Sorry, I canâ€
     const game = { ...JSON.parse(seed[keys.game]), locationId: 'street', day: 3, minutes: 600 }
     const encounters = { ...JSON.parse(seed[keys.encounters]), pendingId: 'spare-change' }
     await openGame(page, { ...seed, [keys.game]: JSON.stringify(game), [keys.encounters]: JSON.stringify(encounters) })
-    await expect(page.locator('.event-illustration')).toHaveAttribute('src', /event-spare-change-street-480.webp$/)
-    await page.locator('.event-illustration').evaluate(img => img.decode())
+    await presentStoryChoices(page)
+    await expect(page.locator('.story-image img').first()).toHaveAttribute('src', /event-spare-change-street-480.webp$/)
+    await page.locator('.story-image img').first().evaluate(img => img.decode())
     await page.reload()
+    await presentStoryChoices(page)
     await page.getByRole('button', { name: choice, exact: true }).click()
-    await expect(page.locator('.result-illustration')).toHaveAttribute('src', new RegExp(`event-spare-change-street-${asset}-480.webp$`))
-    await page.locator('.result-illustration').evaluate(img => img.decode())
+    const art = page.locator(`.story-image img[src$="event-spare-change-street-${asset}-480.webp"]`)
+    await storyVisible(page, art)
+    await art.evaluate(img => img.decode())
     expect((await read(page, keys.game)).money).toBe(game.money - cost)
     await page.screenshot({ path: `test-results/spare-change-street-${asset}.png` })
   })
 }
+
+for (const width of [390, 1280]) test(`Story event modal preserves the previous screen at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
+  const seed = entries(), encounters = JSON.parse(seed[keys.encounters])
+  await openGame(page, { ...seed, 'street-life-screen': 'inventory', [keys.encounters]: JSON.stringify({ ...encounters, pendingId: 'spare-change' }) })
+  await expect(page.locator('.story-event-overlay')).toBeVisible()
+  await expect(page.locator('.story-toolbar, .event-overlay, .dice-overlay, .result-overlay')).toHaveCount(0)
+  await presentStoryChoices(page)
+  await assertLocked(page)
+  await expect(page.locator('.game-background')).toHaveAttribute('inert', '')
+  expect(await page.evaluate(() => document.body.style.position)).toBe('fixed')
+  const before = await read(page, keys.game)
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.story-event-overlay')).toBeVisible()
+  expect(await read(page, keys.game)).toEqual(before)
+  const panel = page.locator('.story-event-panel')
+  expect(await panel.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(false)
+  const box = await panel.boundingBox()
+  expect(box.y).toBeGreaterThanOrEqual(0)
+  expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize().height)
+  await page.screenshot({ path: `test-results/story-modal-${width}-choices.png` })
+  await page.locator('[data-order-id="event:spare-change:give"]').click()
+  const after = await read(page, keys.game)
+  await page.reload()
+  expect(await read(page, keys.game)).toEqual(after)
+  await expect(page.locator('.story-event-overlay')).toBeVisible()
+  for (let guard = 0; guard < 320 && !await page.locator('.story-event-close').count(); guard++) await advance(page, 250)
+  await expect(page.locator('.story-event-overlay')).toBeVisible()
+  await expect(page.locator('.bottom-nav')).not.toHaveAttribute('inert', '')
+  await expect(page.getByRole('button', { name: 'Map', exact: true })).toBeEnabled()
+  const finishedPanel = await page.locator('.story-event-panel').boundingBox()
+  const menuTop = await page.locator('.bottom-nav .home').boundingBox()
+  expect(finishedPanel.y + finishedPanel.height).toBeLessThanOrEqual(menuTop.y)
+  await page.screenshot({ path: `test-results/story-modal-${width}-complete.png` })
+  await page.locator('.story-event-overlay').click({ position: { x: 2, y: 2 } })
+  await expect(page.locator('.inventory-screen')).toBeVisible()
+  expect(await page.evaluate(() => document.body.style.position)).toBe('')
+  await expect(page.locator('.game-background')).not.toHaveAttribute('inert', '')
+  expect((await read(page, 'street-life-story-v1')).episodes.at(-1).status).toBe('complete')
+  await page.reload()
+  await expect(page.locator('.story-event-overlay')).toHaveCount(0)
+  expect(await read(page, keys.game)).toEqual(after)
+})
+
+test('shop purchases and theft keep their existing dialogs', async ({ page }) => {
+  const seed = entries(), game = JSON.parse(seed[keys.game])
+  await openGame(page, { ...seed, [keys.game]: JSON.stringify({ ...game, locationId: 'shop', money: 100 }) })
+  await page.locator('.shop-buy:not(:disabled)').first().click()
+  await expect(page.locator('.result-modal')).toBeVisible()
+  await expect(page.locator('.story-event-overlay')).toHaveCount(0)
+  await acknowledge(page)
+  await page.locator('.supply-steal:not(:disabled)').first().click()
+  await expect(page.locator('.dice-overlay')).toBeVisible()
+  await expect(page.locator('.story-event-overlay')).toHaveCount(0)
+})

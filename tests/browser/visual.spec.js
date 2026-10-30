@@ -1,4 +1,4 @@
-import { test, expect, openGame, entries, findHelp, advance, readyForScreenshot, keys } from './game.js'
+import { test, expect, openGame, entries, findHelp, advance, readyForScreenshot, keys, presentStoryChoices } from './game.js'
 
 const states = {
   street: async page => openGame(page),
@@ -11,11 +11,13 @@ const states = {
     await openGame(page, entries(null, { 'street-life-screen': 'inventory' }))
   },
   'find-help': async page => { await openGame(page); await findHelp(page) },
-  event: async page => openGame(page, entries('event')),
+  event: async page => { await openGame(page, entries('event')); await presentStoryChoices(page); await advance(page, 3000) },
   result: async page => {
     await openGame(page, entries('event'))
+    await presentStoryChoices(page)
     await page.getByRole('button', { name: 'Let me help with those bags.', exact: true }).click()
-    await expect(page.locator('.result-modal')).toBeVisible()
+    await advance(page, 2000)
+    await expect(page.locator('.story-event-panel')).toBeVisible()
   },
   discovery: async page => {
     await openGame(page)

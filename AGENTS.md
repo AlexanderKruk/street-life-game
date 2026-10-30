@@ -1,3 +1,84 @@
+Story modal dismissal — 30 October 2026, source only: supersedes the
+previous automatic modal-dismissal rule. During the entire event/result reveal,
+navigation stays inert under the blurred backdrop, with no close control and no
+backdrop/Escape dismissal. Once the full result has been presented, the modal
+remains open, a top-right close button appears and the bottom menu is raised
+above the blur and unlocked. Close, backdrop, Escape or selecting another tab
+acknowledges the result exactly once. World/action time remains paused while the
+completed result is still open. Inline Story retains automatic acknowledgement.
+English, Russian and Polish share a neutral accessible close label.
+Validation: 61 default modal routes, close/backdrop and navigation dismissal,
+reload/StrictMode, locale coverage and production build passed. Focus/scroll
+restore and completion controls passed Chromium at 390/1280; the completed panel
+stays above the exposed menu. Screenshots inspected. No full suites or publication.
+
+Story event modal — 30 October 2026, source only: authored encounters,
+continuations/D20 and rain now use the live Story presentation on every tab.
+Story stays inline; other tabs show only the current episode in one shared modal.
+The previous screen/scroll/focus are preserved. The modal locks the background,
+traps Tab, rejects Escape/backdrop dismissal and automatically acknowledges the
+fully presented result once. Restored legacy rain processes get working controls;
+running rain status/cancel remain visible while the selected answer animates.
+Purchases, standalone shop theft/transport checks, travel planning/progress and
+other action dialogs keep their existing UI and controllers. All 61 modal routes
+match exact classic game/inventory/History/archive facts; reload/StrictMode,
+checks, chains, rain and the inline exception pass. Existing frozen classic-UI
+regressions opt into VITE_LEGACY_EVENT_DIALOGS through the Node build adapter;
+check-story-modal builds actual release defaults and an explicit classic reference.
+There is no player-facing switch. The new suite is the 34th release suite.
+Targeted Story/recording/example, controllers, restoration/autosave, localisation,
+design/module checks and production build passed. Full release suites and
+physical iPhone/WebKit were not run. Publication remains a separate request.
+Targeted Chromium verification passed 21 affected smoke flows across mobile,
+desktop and short landscape: event arrival, prior tab/scroll/focus restoration,
+reload, rain search/cancel/result, all spare-change artwork branches, interrupted
+travel/inspection resumption and unchanged shop/transport dialogs. Four event/
+result snapshots at 390/1280 were intentionally regenerated and visually reviewed;
+result snapshots freeze the running presentation before automatic completion.
+Only these four visual baselines changed; the complete browser suite was not run.
+
+Approved joint-block cursor/stamp motion — 30 October 2026, source only:
+the cursor waits above an entire opening or selected-answer/result part through
+all its paragraphs, art, closing copy and final indicators. Paragraphs retain
+their 500ms rhythm; they do not release the point. At full completion, the real
+saved HH:MM is fixed immediately and the metadata suffix prints rightward at
+50ms/character with 100ms soft reveal while the hollow point descends. Both run
+for max(500ms, suffix typing + fade); the moving point has no clock label. The
+current clock reappears on arrival. Fixed metadata keeps the same ochre colour,
+Small/400 font and 24px line-height as the clock; both 12px dots are centred at
+6px within that row. Pending checks reserve the joint stamp row before their
+outcome exists, without inventing a completion stamp or changing saved facts.
+The retained example uses the same timing/ordering. Targeted results/example,
+61 live and 61 recorded routes, design/module checks and production build passed.
+Four focused Chromium flows at 390/1280 verify actual row/glyph centres, equal
+fonts/colours, no post-image writing over the cursor, concurrent stamp/departure,
+status-last ordering and automatic completion/reload. Screenshots inspected.
+Full release suites and physical iPhone/WebKit were not run. No publication.
+
+Approved breathing point — 30 October 2026, source only: the user selected
+2.2s breathing plus a soft outgoing wave. Both native Story and the retained
+example now scale the 12px point from 1 to 4/3 and back, never below its default
+size; opacity varies .8–1. A separate, synchronised pseudo-element expands its
+shadow to 8px while fading. Removing the running class restores a static 12px
+point and hides the wave. Reduced-motion rules disable both animations. No layout,
+clock, choices, gameplay or saved facts changed. Story/design-system and build
+passed; Chromium verified both sizes, unchanged layout width, wave and stop state.
+The reduced-motion CSS branch was forced for this headless check; OS preference
+emulation and physical iPhone were not verified. No publication.
+
+Continuous Story cursor — 30 October 2026, source only: the user removed
+inline result confirmation. Story automatically calls the existing acknowledgement
+once its full result presentation finishes, including after reload/reduced motion;
+classic ResultCard keeps its button. The live timeline has one current clock/point,
+which keeps ticking/breathing during narrative, results, rain processes and idle
+time, pausing on actual event/D20 decisions. useStoryClock is presentation-only:
+shared gameplay clocks, fixed saved stamps and actual costs are unchanged. The
+idle point continues the visual clock without a completion jump; historical parts
+omit their old cursor slots in continuous mode. The 500ms paragraph/piece rhythm
+is retained. Targeted 61-route live/recording, results/example and build checks
+passed; Chromium 390/1280 flows verify automatic completion and no confirmation.
+No publication; published v353 still has the prior confirmation behavior.
+
 Release v353 is published — 30 October 2026. GitHub Pages run 41046054282 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41046054282) completed successfully for source 0f8d51526b928d3579dc58a87ced8d1e7a8f3e44: 33/33 Node suites passed in 123.97s, production build and deploy succeeded. This releases dog encounter endings after their illustrations, one 500ms pause per mini-block/paragraph, and playable authored events/D20/rain inside the Story tab. Classic dialogs remain on other screens; the shared controllers preserve costs, RNG, History and once-only outcomes. Idle Story runs world time, while decisions and explicit replay/comparison pause it. Targeted Chromium flows at 390/1280 were checked before release; physical iPhone/WebKit were not checked. The successful full CI was not duplicated locally. Earlier source-only and pending-release notes below are historical and now included in v353.
 
 Live Story tab — 30 October 2026, source only, explicitly authorised by the

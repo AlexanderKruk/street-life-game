@@ -66,8 +66,13 @@ try {
     assert.equal(doc.querySelector('.pv-picture').style.opacity, '1', 'example fully reveals its image');
     advance(480);
     assert(!doc.querySelector('.pv-choice-group'), 'example holds the complete image before presenting choices');
-    advance(32);
-    assert(doc.querySelector('.pv-choice-group'), 'example uses the same single 500ms mini-block pause');
+    assert(doc.querySelector('.pv-screen.pv-settling'), 'metadata prints concurrently with cursor departure');
+    assert(doc.querySelector('.pv-stamp').textContent.startsWith('22:43'), 'saved time is fixed before the cursor departs');
+    assert(!doc.querySelector('.pv-stamp').textContent.endsWith('D0'), 'metadata is still being revealed character by character');
+    const stampLetter = doc.querySelector('.pv-stamp .pv-letter');
+    advance(50); assert.equal(doc.querySelector('.pv-stamp .pv-letter'), stampLetter, 'stamp letters retain their existing fade nodes');
+    advance(720);
+    assert(doc.querySelector('.pv-choice-group'), 'choices follow the complete 1200ms stamp/departure transition');
     advance(8000);
     assert(doc.querySelector('.pv-done'));
     assert(doc.querySelector('.pv-stamp').textContent.includes(' · By the station · D0'), 'the completed part gains place and day together');

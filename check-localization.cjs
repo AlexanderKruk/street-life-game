@@ -5,7 +5,7 @@ function bundled(path) {
   const input = typeof path === 'string' ? { entryPoints: [path] } : { stdin: { contents: path.source, resolveDir: process.cwd(), loader: 'tsx' } };
   const overrides = typeof path === 'object' ? { ...(path.effects ? { effects: path.effects } : {}), ...path.catalogs } : {};
   const external = ['react', 'react-dom', 'react/jsx-runtime', ...Object.keys(overrides).map(name => `*/locales/en/${name}`)];
-  const code = buildSync({ ...input, bundle: true, platform: 'node', format: 'cjs', write: false, external }).outputFiles[0].text;
+  const code = buildSync({legacyEventDialogs:true, ...input, bundle: true, platform: 'node', format: 'cjs', write: false, external }).outputFiles[0].text;
   const module = { exports: {} };
   const load = name => {
     const catalog = Object.keys(overrides).find(id => name.endsWith(`/locales/en/${id}`));

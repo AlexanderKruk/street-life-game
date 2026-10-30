@@ -266,6 +266,9 @@ try {
       while (clock - entered < fullyVisibleAt + 128) { clock += 32; frame(clock); }
       assert.equal(energy().querySelector('strong').textContent, delta, 'replay retains the actual delta');
       assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'sealed', 'the result becomes a fixed stamp only when fully revealed');
+      assert(document.querySelector('.story-track.is-settling'), 'the stamp starts printing as the cursor departs');
+      assert(document.querySelector('.story-result-start time').textContent.startsWith('10:20'), 'the fixed saved time is present from the start of departure');
+      for (const end = clock + 1000; clock < end;) { clock += 32; frame(clock); }
       assert(!document.querySelector('.story-track.is-running'), 'clock stops only when the whole result block has finished');
       assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · D1', 'replay duration cannot change the event-start timestamp');
     }
@@ -351,18 +354,18 @@ try {
     const step = () => { clock += 16; frame(clock); };
     const pieces = [...document.querySelectorAll('.story-piece')];
     const waitFor = predicate => { const deadline = clock + 5000; while (!predicate() && clock < deadline) step(); assert(predicate(), 'replay advances to the next mini-block'); };
-    const pauseTo = (piece, label, letterFade = 0) => {
+    const pauseTo = (piece, label, letterFade = 0, duration = 500) => {
       const completed = clock;
-      while (clock - completed < letterFade + 480) { step(); assert(piece.hidden, `${label} waits after the preceding mini-block`); }
+      while (clock - completed < letterFade + duration - 20) { step(); assert(piece.hidden, `${label} waits after the preceding mini-block`); }
       waitFor(() => !piece.hidden);
-      assert(clock - completed >= letterFade + 500 && clock - completed <= letterFade + 532, `${label} follows exactly one 500ms pause after full visibility (within frame rounding)`);
+      assert(clock - completed >= letterFade + duration && clock - completed <= letterFade + duration + 32, `${label} follows its reading/part transition after full visibility (within frame rounding)`);
     };
     waitFor(() => pieces[0].querySelector('button')?.textContent === 'A');
     pauseTo(pieces[1], 'second opening paragraph', 100);
     waitFor(() => pieces[1].querySelector('button')?.textContent === 'B');
     pauseTo(pieces[2], 'opening image', 100);
     waitFor(() => pieces[2].querySelector('.story-media').style.gridTemplateRows === '1fr');
-    pauseTo(pieces[3], 'selected answer');
+    pauseTo(pieces[3], 'selected answer', 0, 850);
     const selectedAt = clock;
     while (clock - selectedAt < 1120) { step(); assert(pieces[4].hidden, 'selected answer finishes its 650ms entrance and shared pause before outcome text'); }
     waitFor(() => !pieces[4].hidden);
@@ -452,7 +455,7 @@ try {
     while (clock - imageAt < 575) step();
     const fraction = parseFloat(document.querySelector('.story-media').style.gridTemplateRows);
     assert(fraction > .8 && fraction < 1, 'picture geometry uses the reference cubic reveal, not a linear half-height');
-    assert(y() > 0 && y() < 400, 'line follows the growing image');
+    assert.equal(y(), 0, 'the cursor waits above the entire opening until its picture is fully shown');
     while (document.querySelector('.story-choice').hidden && clock < 5000) step();
     assert(track.classList.contains('is-running'), 'selected answer and outcome remain one running stage');
     const choiceClock = live();

@@ -7,7 +7,7 @@ const temporary = mkdtempSync(join(tmpdir(), 'street-story-live-'));
 process.env.NODE_PATH = resolve('node_modules'); require('node:module').Module._initPaths();
 try {
   const app = join(temporary, 'app.cjs'), events = join(temporary, 'events.cjs');
-  for (const [entry, outfile] of [['src/App.tsx', app], ['src/events.ts', events]]) buildSync({ entryPoints: [entry], bundle: true, platform: 'node', format: 'cjs', outfile, external: ['react', 'react-dom', 'react/jsx-runtime'] });
+  for (const [entry, outfile] of [['src/App.tsx', app], ['src/events.ts', events]]) buildSync({legacyEventDialogs:true, entryPoints: [entry], bundle: true, platform: 'node', format: 'cjs', outfile, external: ['react', 'react-dom', 'react/jsx-runtime'] });
   process.env.STREET_REGRESSION_APP = app;
   const env = require('./tests/helpers/regression-env.cjs');
   const { STREET_EVENTS } = require(events);
@@ -34,6 +34,7 @@ try {
     setup(event.id, 'location');
     clickId(`event:${event.id}:${choice.id}`); finishCheck();
     const classic = facts();
+    classic.story.episodes[0].status = 'complete'; // Story acknowledges presentation automatically.
     const classicIndicators = [...document.querySelectorAll('.result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]);
     setup(event.id);
     noModal();
@@ -43,7 +44,7 @@ try {
     noModal();
     assert.deepEqual(facts(), classic, `${event.id}:${choice.id} has exactly the classic costs, outcomes, History and archive`);
     assert.deepEqual([...document.querySelectorAll('.story-result-effects .result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]), classicIndicators, 'inline result retains the same filtered consequences');
-    clickId('story:acknowledge');
+    assert(!document.querySelector('[data-order-id="story:acknowledge"]'));
     assert.equal(save().episodes[0].status, 'complete');
     assert(!document.querySelector('.bottom-nav[inert]'), 'acknowledgement releases navigation');
     cases++;
@@ -53,8 +54,8 @@ try {
   remount(); noModal(); assert.deepEqual(facts(), opening);
   assert.deepEqual([...document.querySelectorAll('.story-live-choice')].map(button => button.dataset.orderId), order, 'reload preserves choice order');
   clickId('event:spare-change:give');
-  const result = facts(); remount(); noModal(); assert.deepEqual(facts(), result, 'unacknowledged inline result restores without paying twice');
-  clickId('story:acknowledge');
+  const result = facts(); remount(); noModal(); assert.deepEqual(facts(), result, 'automatically completed inline result restores without paying twice');
+  assert(!document.querySelector('[data-order-id="story:acknowledge"]'));
   const complete = facts(); remount(); assert.deepEqual(facts(), complete); assert(!document.querySelector('[data-order-id="story:acknowledge"]'));
   // Checks outside the old two special scenes also restore before and after a roll.
   const checked = STREET_EVENTS.find(event => !['borrow-phone-slip', 'park-company'].includes(event.id) && event.choices.some(choice => choice.check));
@@ -64,7 +65,7 @@ try {
   const beforeRoll = facts(); Math.random = () => .2; env.click('Try');
   const rolled = facts(); assert.equal(rolled.story.episodes[0].scenes[0].roll.value, 5);
   remount(); noModal(); assert.deepEqual(facts(), rolled); assert(!env.screen.queryByRole('button', { name: 'Try', exact: true }));
-  env.click('Continue'); assert.equal(save().episodes[0].status, 'awaiting-ack');
+  env.click('Continue'); assert.equal(save().episodes[0].status, 'complete');
   assert.notDeepEqual(facts().game, beforeRoll.game);
   setup(checked.id); clickId(`event:${checked.id}:${checkedChoice.id}`); env.click('Cancel'); remount();
   assert(!document.querySelector('.story-live-check')); assert(document.querySelector(`[data-order-id="event:${checked.id}:${checkedChoice.id}"]`));
@@ -89,7 +90,7 @@ try {
   clickId('rain:proper'); noModal(); const started = env.read(env.stateKey).minutes; env.advance(1000);
   assert(env.read(env.stateKey).minutes > started, 'rain process advances the shared clock');
   clickId('rain:cancel'); env.advance(20000); noModal();
-  assert.equal(save().episodes[0].status, 'awaiting-ack'); clickId('story:acknowledge');
+  assert.equal(save().episodes[0].status, 'complete');
   // Non-reduced presentation appends the outcome without retyping the opening.
   reduced = false;
   const frames = new Map(); let frameId = 0, clock = 0;
@@ -100,10 +101,18 @@ try {
   assert(!document.querySelector('.story-live-controls'), 'choices wait for the opening animation');
   env.fireEvent.click(document.querySelector('.story-reveal')); animate(6000);
   const firstText = document.querySelector('.story-text p'); assert(firstText);
+  const choiceClock = document.querySelector('.story-head time').textContent;
+  animate(1500); assert.equal(document.querySelector('.story-head time').textContent, choiceClock, 'the clock pauses for a decision');
   clickId('event:spare-change:give');
   assert.equal(document.querySelector('.story-text p'), firstText, 'the already-read opening keeps its DOM and does not replay');
   assert(!document.querySelector('[data-order-id="story:acknowledge"]'), 'result acknowledgement waits for its own presentation');
-  animate(30000); noModal(); assert(document.querySelector('[data-order-id="story:acknowledge"]'));
+  const movingClock = document.querySelector('.story-head time').textContent;
+  animate(1500); assert.notEqual(document.querySelector('.story-head time').textContent, movingClock, 'clock resumes during the result');
+  animate(30000); noModal(); assert(!document.querySelector('[data-order-id="story:acknowledge"]'));
+  assert.equal(save().episodes[0].status, 'complete');
+  assert(document.querySelector('.story-idle.is-running'), 'the cursor keeps breathing between events');
+  const idleClock = document.querySelector('.story-idle time').textContent;
+  animate(1500); assert.notEqual(document.querySelector('.story-idle time').textContent, idleClock, 'presentation clock keeps ticking without an acknowledgement');
   assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'sealed');
   env.finish();
   console.log(`PASS: ${cases} live Story choices match classic mechanics; inline checks/results, stable order, StrictMode/reload/ack, chains, rain, idle/pending clocks and incremental presentation.`);

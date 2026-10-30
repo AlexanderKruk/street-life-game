@@ -7,7 +7,7 @@ Object.defineProperty(global, 'navigator', { value: dom.window.navigator });
 global.IS_REACT_ACT_ENVIRONMENT = true;
 window.scrollTo = () => {};
 window.setInterval = () => 1; window.clearInterval = () => {};
-esbuild.buildSync({ entryPoints: ['src/loadGameSession.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'restoration-app.cjs' });
+esbuild.buildSync({legacyEventDialogs:true, entryPoints: ['src/loadGameSession.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: 'restoration-app.cjs' });
 const { loadGameSession } = require('./restoration-app.cjs');
 const gameKey = 'street-life-save-v3';
 const game = { day: 3, minutes: 600, money: 73.6, hunger: 75, thirst: 80, energy: 60, health: 82, hygiene: 80, mood: 25, intoxication: 0, locationId: 'street', rainSystemStarted: true, rainScheduleDay: 3, nextRainAt: 999999 };
@@ -82,7 +82,7 @@ assert.equal(restore({ 'street-life-mobile-renewed-day': '-1' }).mobileRenewedDa
 assert.equal(restore({ 'street-life-situation-v1': '{"housing":"Apartment"}' }).life.housing, 'Apartment');
 // Broken JSON and wrong top-level shapes must not leave a blocking activity or
 // crash the first render. Valid neighbouring keys still retain their progress.
-esbuild.buildSync({ entryPoints: ['src/App.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile: 'restoration-ui-app.cjs', external: ['react', 'react-dom', 'react/jsx-runtime'] });
+esbuild.buildSync({legacyEventDialogs:true, entryPoints: ['src/App.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile: 'restoration-ui-app.cjs', external: ['react', 'react-dom', 'react/jsx-runtime'] });
 const React = require('react');
 const { render, screen, cleanup, fireEvent } = require('@testing-library/react');
 const App = require('./restoration-ui-app.cjs').default;

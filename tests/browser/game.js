@@ -103,6 +103,21 @@ export async function assertLocked(page) {
   expect(await dialog.evaluate(node => node.contains(document.activeElement)), 'Focus stays inside modal').toBe(true)
 }
 
+// Advance only presentation: the live decision/result already pauses gameplay.
+export async function presentStoryChoices(page) {
+  for (let guard = 0; guard < 240 && await page.locator('.story-event-overlay').count() && (!await page.locator('.story-live-controls button').count() || await page.locator('.story-live-controls button[hidden]').count()); guard++) await advance(page, 250)
+  if (await page.locator('.story-event-overlay').count()) await advance(page, 750)
+}
+
+export async function storyVisible(page, locator) {
+  for (let guard = 0; guard < 240 && !await locator.isVisible(); guard++) await advance(page, 250)
+  await expect(locator).toBeVisible()
+}
+
 export async function acknowledge(page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Got it', exact: true }).click()
+  if (await page.locator('.story-event-overlay').count()) {
+    for (let guard = 0; guard < 320 && !await page.locator('.story-event-close').count(); guard++) await advance(page, 250)
+    await page.locator('.story-event-close').click()
+    await expect(page.locator('.story-event-overlay')).toHaveCount(0)
+  } else await page.getByRole('dialog').getByRole('button', { name: 'Got it', exact: true }).click()
 }

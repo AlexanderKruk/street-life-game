@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const { buildSync } = require('./tests/helpers/build.cjs');
 function bundled(path) {
-  const code = buildSync({entryPoints:[path],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;
+  const code = buildSync({legacyEventDialogs:true,entryPoints:[path],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;
   const module={exports:{}};new Function('require','module','exports',code)(require,module,module.exports);return module.exports;
 }
 const {initialState,advanceTime,applySleepTime,weatherExposure}=bundled('src/game.ts');

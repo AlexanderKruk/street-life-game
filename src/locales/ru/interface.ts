@@ -1,6 +1,7 @@
 import type { Catalog } from '../../i18n'
 
 export const interfaceMessages = {
+  "common.close": "Закрыть",
   "story.chosen": "Твой выбор: {choice}",
   "story.roll": "D20: {roll} · модификатор {modifier} · сложность {target}",
   "story.pending": "Событие ещё продолжается.",

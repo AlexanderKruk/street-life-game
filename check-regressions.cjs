@@ -10,7 +10,7 @@ const temporary = mkdtempSync(join(tmpdir(), 'street-regressions-'));
 try {
   // Resolve installed dependencies via NODE_PATH; keep bundles in an isolated temporary directory.
   const app = join(temporary, 'app.cjs');
-  esbuild.buildSync({ entryPoints: ['src/App.tsx'], bundle: true,
+  esbuild.buildSync({legacyEventDialogs:true, entryPoints: ['src/App.tsx'], bundle: true,
     define: { 'import.meta.env': '{"VITE_CLOTHING_WETNESS_ENABLED":"true"}' },
     platform: 'node', format: 'cjs', outfile: app,
     external: ['react', 'react-dom', 'react/jsx-runtime'] });

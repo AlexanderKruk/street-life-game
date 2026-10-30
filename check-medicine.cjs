@@ -8,7 +8,7 @@ window.scrollTo=()=>{};let now=1800000000000,nextId=0;
 Date.now=()=>now;Math.random=()=>.99;
 const timers=new Map();window.setInterval=(fn,delay)=>{const id=++nextId;timers.set(id,{fn,delay});return id};window.clearInterval=id=>timers.delete(id);
 const React=require('react');const {render,screen,fireEvent,act,cleanup}=require('@testing-library/react');
-const code=buildSync({entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;
+const code=buildSync({legacyEventDialogs:true,entryPoints:['src/App.tsx'],bundle:true,platform:'node',format:'cjs',write:false,external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;
 const appModule={exports:{}};new Function('require','module','exports',code)(require,appModule,appModule.exports);const App=appModule.exports.default;
 const key='street-life-save-v3',effectsKey='street-life-effects-v1',inventoryKey='street-life-inventory-v1';
 const read=k=>JSON.parse(localStorage.getItem(k));

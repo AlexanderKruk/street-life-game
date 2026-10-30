@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');const {buildSync}=require('./tests/helpers/build.cjs');
-function bundle(path){const code=buildSync({entryPoints:[path],bundle:true,platform:'node',format:'cjs',write:false,define:{'import.meta.env':'{}'},external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const m={exports:{}};new Function('require','module','exports',code)(require,m,m.exports);return m.exports}
+function bundle(path){const code=buildSync({legacyEventDialogs:true,entryPoints:[path],bundle:true,platform:'node',format:'cjs',write:false,define:{'import.meta.env':'{}'},external:['react','react-dom','react/jsx-runtime']}).outputFiles[0].text;const m={exports:{}};new Function('require','module','exports',code)(require,m,m.exports);return m.exports}
 const {diceOutcome,eventCheckModifier}=bundle('src/eventChecks.ts');
 const {advanceTrip}=bundle('src/useTravelController.ts');
 const {createEventController}=bundle('src/eventController.ts');

@@ -6,6 +6,7 @@ export type StoryLiveAction = { id: string; label: string; detail?: string; disa
 export type StoryInteraction = {
   episodeId: number; key: string; minute: number; actions: StoryLiveAction[]
   seed: number; decision: string; fixed?: boolean; content?: ReactNode
+  waitingForDecision?: boolean; onPresented?: () => void
 }
 
 /** UI only: commands and eligibility still belong to the existing controllers. */

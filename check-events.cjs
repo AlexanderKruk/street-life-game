@@ -10,7 +10,7 @@ Date.now=()=>now;
 const callbacks=new Map();
 window.setInterval=(fn,delay)=>{const id=nextId++;callbacks.set(id,{fn,delay,nextAt:now+delay});return id};
 window.clearInterval=id=>callbacks.delete(id);
-require('./tests/helpers/build.cjs').buildSync({entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"false"}'},platform:'node',format:'cjs',outfile:'events-app.cjs',external:['react','react-dom','react/jsx-runtime']});
+require('./tests/helpers/build.cjs').buildSync({legacyEventDialogs:true,entryPoints:['src/App.tsx'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"false"}'},platform:'node',format:'cjs',outfile:'events-app.cjs',external:['react','react-dom','react/jsx-runtime']});
 const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup,configure}=require('@testing-library/react');
 configure({getElementError:message=>new Error(message)});
@@ -56,7 +56,7 @@ function advanceTravelMinutes(minutes) {
 const encountersKey='street-life-encounters-v1';
 const complete={seen:['night-patrol','park-company','borrow-phone','borrow-phone-slip','street-patrol-wake','station-patrol-wake','city-waking','night-rustle','station-cleaning','platform-question','phone-drop','rain-phone','found-coins','free-snack','ticket-check','station-food','rough-crowd','quiet-night','night-theft','spare-change','dropped-glove'],lastAt:null,pendingId:null};
 // Spawn selection cannot depend on Math.random. Consequences still can.
-const esbuild=require('./tests/helpers/build.cjs');const eventCode=esbuild.buildSync({entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
+const esbuild=require('./tests/helpers/build.cjs');const eventCode=esbuild.buildSync({legacyEventDialogs:true,entryPoints:['src/events.ts'],bundle:true,platform:'node',format:'cjs',write:false}).outputFiles[0].text;
 const eventModule={exports:{}};new Function('module','exports',eventCode)(eventModule,eventModule.exports);
 const {nextStreetEvent,STREET_EVENTS}=eventModule.exports;
 const context={locationId:'street',day:2,weather:'Clear',housing:'Street',documents:true,minutes:600,nearHome:true};

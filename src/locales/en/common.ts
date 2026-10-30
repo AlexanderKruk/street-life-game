@@ -1,4 +1,5 @@
 export const common = {
+  'common.close': 'Close',
   'common.cancel': 'Cancel',
   'common.gotIt': 'Got it',
   'choice.unavailable': 'Unavailable now',
