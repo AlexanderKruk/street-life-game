@@ -1,3 +1,28 @@
+# Compact result indicators — 30 October 2026
+
+Source commit: `8b57ed2de13b1093bc293b75e590aca4023de6c4`.
+Verified source tree: `6bc9a83f7d0c1ca9356b5aadb10c49f26ea4d540`.
+API snapshot: `66253ba3add0fb1c1f20fd6148a7beb87e3a725f` on
+`backup/compact-results-2026-10-30-8b57ed2`.
+
+The verified git bundle `compact-results-2026-10-30.bundle` retains the original
+local commit. It requires base `fd6ef4ebb078f0c6acd87075e116108fdc661510`.
+To recover, use `git bundle verify .backup/compact-results-2026-10-30.bundle`,
+then `git fetch .backup/compact-results-2026-10-30.bundle HEAD:refs/heads/recovered/compact-results`.
+The API source tree was checked against the local committed tree before adding backups.
+
+Changes: shared compact Status icon/delta groups in Story and ResultCard, 260ms
+between whole indicators, no duration badges, settled old archives and isolated replay.
+No game calculations, costs, saves, archive schema, workflow or release version changed.
+Targeted results/Story/recording/events/localisation/UI/medicine, four affected
+regression groups, design-system, module-boundaries, production build and diff passed.
+Managed browser preview remains unavailable (`vite: not found`); no browser/iPhone
+appearance or CSS animation parity is claimed. TESTING.md records the exact scope.
+
+Source save only with `[skip ci]`; published game remains v349. No deployment.
+
+---
+
 # Story result presentation checkpoint — 29 October 2026
 
 Source-only save; published game remains v348. No game publication.

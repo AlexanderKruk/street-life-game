@@ -38,7 +38,7 @@ for(const [draw,art,kept] of [[0,'can',2],[.5,'plastic',4],[.99,'plastic-crushed
  assert.equal(read(invKey).bottles,kept);
  click('Finish searching');
  assert(document.querySelector('.bottle-search-reward').textContent.includes(kept?`+${kept}`:'Nothing useful'));
- assert.equal(document.querySelectorAll('.result-change-list .positive').length,0,'no duplicate container gain');
+ assert.equal(document.querySelectorAll('.result-indicator[data-resource-id="bottles"].positive').length,0,'no duplicate container gain');
 }
 // Cans use the more generous eligibility rate; a controlled pile can contain
 // three sound cans and one damaged can without additional cans in the clutter.
@@ -171,9 +171,9 @@ setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop'],[i
 setup({minutes:1320,mood:28});const musicBattery=read(invKey).phoneBattery;click(/Put on something familiar and walk for a while. Clear my head./);assert.equal(read(stateKey).minutes,1350);assert.equal(read(stateKey).mood,31);assert(read(invKey).phoneBattery<musicBattery);
 const musicResult=screen.getByRole('dialog',{name:'Walk with music'});
 assert(musicResult.querySelector('.result-illustration').src.includes('event-music-walk'));
-assert.equal(musicResult.querySelector('[data-stat="Mood"] .result-stat-delta').textContent,'+3');
-assert(musicResult.querySelector('.result-cost-line').textContent.includes('30 min'));
-assert(musicResult.querySelector('.result-cost-line .battery-icon'));
+assert.equal(musicResult.querySelector('[data-stat="Mood"] strong').textContent,'+3');
+assert(!musicResult.querySelector('[data-resource-id="time"]'),'result omits the separate duration expense');
+assert(musicResult.querySelector('.result-indicators .battery-icon'));
 assert(musicResult.textContent.includes('favourite songs'));
 assert(!musicResult.textContent.includes('redundancy notice'));
 assert(musicResult.querySelector('.result-description').textContent.length<110,'music result remains brief');
@@ -186,7 +186,7 @@ setup({minutes:1320,mood:28},{'street-life-journal-history-v1':[{day:1,minute:13
 assert.equal(read('street-life-music-walk-used-v1'),true,'older completed music walks migrate from history');
 assert(!document.querySelector('[data-choice="music-walk"]'));
 click('Reset save');assert.equal(read('street-life-music-walk-used-v1'),false);assert(document.querySelector('[data-choice="music-walk"]'),'new runs restore the one-time choice');
-setup({minutes:1320,mood:49},{'street-life-opening-calls-v1':0});click(/Put on something familiar and walk for a while. Clear my head./);assert.equal(read(stateKey).mood,50);assert.equal(screen.getByRole('dialog').querySelector('[data-stat="Mood"] .result-stat-delta').textContent,'+1');ok();
+setup({minutes:1320,mood:49},{'street-life-opening-calls-v1':0});click(/Put on something familiar and walk for a while. Clear my head./);assert.equal(read(stateKey).mood,50);assert.equal(screen.getByRole('dialog').querySelector('[data-stat="Mood"] strong').textContent,'+1');ok();
 setup({minutes:1320},{[invKey]:{phoneBattery:0}});assert(screen.getByRole('button',{name:/Put on something familiar and walk for a while. Clear my head./}).disabled);assert(!document.querySelector('[data-choice="walk"]'));assertStoryChoices(['phone-help','music-walk','station-route']);
 setup({minutes:1320,mood:28},{'street-life-discovered-v1':['street','station','shop']});const questionBattery=read(invKey).phoneBattery;click('Where can I get help in the morning?');assert.equal(read(stateKey).minutes,1335);assert(Math.abs(read(stateKey).mood-31)<1e-8);assert(Math.abs(read(invKey).phoneBattery-(questionBattery-4.5*(1+(100-72)*.007)))<1e-8);assert(read('street-life-discovered-v1').includes('support'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(screen.getByRole('dialog').textContent.includes('08:00'));ok();const rereadState=read(stateKey),rereadInventory=read(invKey);click(/Inventory$/);click('Phone');click('Find Help');click('Help & hygiene');assert.equal(read(stateKey).minutes,rereadState.minutes+15);assert(read(invKey).phoneBattery<rereadInventory.phoneBattery);ok();click('Street');discoverHelp();cleanup();render(React.createElement(App));assert(read('street-life-answers-v1').includes('morning'));click('How can I get a shelter bed?');assert(screen.getByRole('dialog').textContent.includes('Try to arrive before 18:00'));assert(!screen.getByRole('dialog').textContent.includes('0–3'),'shelter discovery omits vacancy details');assert.equal(read('street-life-goal-v1').minute,1080);ok();click('Reset save');assert.deepEqual(read('street-life-answers-v1'),[]);
 // P1: referral opens map, including migration of a v53 save.

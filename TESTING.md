@@ -73,6 +73,27 @@ Chromium layout and physical iPhone appearance are not verified for this change.
 
 # Тестирование Street Life
 
+## Компактные последствия — 30 октября 2026, исходники без публикации
+
+ResultCard и Story используют одну строку ResultIndicators: иконка/дельта появляются
+вместе, 260 мс между группами; подпись длительности убрана, реальные затраты сохранены.
+Адаптированы прежние DOM-ожидания полосок, строк затрат и кнопки подтверждения;
+проверки игровых чисел, reload, once-only результатов и архивов сохранены.
+check-results проверяет равенство полей/значений между Story и модалкой, явные
+малые последствия, фильтрацию пассивного расхода, округление звонков/поиска,
+готовность картинки при load/error, название по нажатию и settled/replay архивов.
+Прежние проверки Stat для before/after, лимитов, потерь, reduced motion и отмены
+RAF сохранены отдельно от нового представления результатов.
+
+Прошли целевые check-results, check-story-recording (61 ответ каталога), check-story,
+check-events, check-localization, check-ui, check-medicine, четыре группы регрессий
+(street-trash, map-travel, shop-inventory, phone-clock), design-system,
+module-boundaries, production build и diff check. Это отдельные целевые прогоны,
+не полный Node-набор и не выпускной CI. Версия публикации остаётся v349.
+Managed preview снова не стартовал (`vite: not found`); status: stopped.
+CSS-анимация, мобильная/десктопная геометрия, скриншоты и iPhone/WebKit в браузере
+не проверены. Прежние визуальные эталоны не обновлялись.
+
 ## Публикация v346 подтверждена — 29 октября 2026
 
 [GitHub Pages run 40858288240](https://github.com/AlexanderKruk/street-life-game/actions/runs/40858288240)

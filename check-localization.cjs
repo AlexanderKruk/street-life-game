@@ -1013,12 +1013,12 @@ try {
   assert(isMajorChange(row('mood', -0.1)));
   const result = { title: '⟦Result⟧', text: '⟦Text⟧', presentation: { compact: true, heading: '⟦Place⟧', label: '', lead: '' }, costs: [row('phoneBattery', -0.2, { before: 50, after: 49.8 })], changes: [row('mood', 1, { before: 20, after: 21 })] };
   render(React.createElement(ResultCard, { result, onClose: () => {} }));
-  assert(document.querySelector('.compact-info-mood'), 'compact summary recognises relabelled Mood');
-  assert(document.querySelector('.result-stat'), 'compact result retains its relabelled battery meter');
+  assert(document.querySelector('[data-resource-id="mood"] svg'), 'compact summary recognises relabelled Mood');
+  assert(document.querySelector('[data-resource-id="phoneBattery"] svg'), 'compact result retains its relabelled battery icon');
   cleanup();
   render(React.createElement(ResultCard, { result: { ...result, presentation: undefined, costs: [], changes: [row('hygiene', 6, { before: 40, after: 46, cap: 60 })] }, onClose: () => {} }));
-  assert(document.querySelector('.bar-blocked'), 'translated Hygiene retains its cap hatching');
-  assert(document.querySelector('[role="meter"]').getAttribute('aria-label').includes('maximum 60%'));
+  assert(document.querySelector('[data-resource-id="hygiene"] svg'), 'translated Hygiene retains its semantic icon');
+  assert(document.querySelector('[data-resource-id="hygiene"]').getAttribute('aria-label').includes('⟦hygiene translated⟧'));assert(!document.querySelector('[role="meter"]'));
   cleanup();
   const { default: ChoiceButton, approximateDuration, formatChoiceEstimate } = bundled('src/ChoiceButton.tsx');
   const explicit = label => React.createElement(ChoiceButton, { icon: 'hand', label });
@@ -1303,7 +1303,7 @@ try {
       const game={...comfortableStatus,day:2,minutes:660,energy:70,mood:40,locationId:'street',rain:undefined,rainResults:[rain],rainSystemStarted:true,rainScheduleDay:2,nextRainAt:999999};
       for(const[key,value]of Object.entries({'street-life-save-v3':game,'street-life-situation-v1':{housing:'Street'},'street-life-inventory-v1':INITIAL_INVENTORY,'street-life-effects-v1':activeCold?[{id:'cold',expiresAt:10000}]:[]}))localStorage.setItem(key,JSON.stringify(value));localStorage.setItem('street-life-mobile-auto-renew','false');
       const mount=()=>render(React.createElement(React.StrictMode,null,React.createElement(view.App))),read=key=>JSON.parse(localStorage.getItem(key)),snapshot=()=>({game:read('street-life-save-v3'),effects:read('street-life-effects-v1'),history:read('street-life-journal-history-v1'),inventory:read('street-life-inventory-v1')});
-      mount();const first=snapshot();assert.equal(first.history.length,1);assert(document.querySelector('.result-modal'));cleanup();mount();assert.deepEqual(snapshot(),first,'pending rain result survives restore without replay');assert(document.querySelector('.result-modal'));act(()=>document.querySelector('.result-modal button').click());assert.deepEqual(snapshot().game.rainResults,[],'acknowledgement removes pending result by rain ID despite blank title');const acknowledged=snapshot();cleanup();mount();assert.deepEqual(snapshot(),acknowledged);assert.equal(document.querySelector('.result-modal'),null,'consumed rain result cannot return');cleanup();return acknowledged;
+      mount();const first=snapshot();assert.equal(first.history.length,1);assert(document.querySelector('.result-modal'));cleanup();mount();assert.deepEqual(snapshot(),first,'pending rain result survives restore without replay');assert(document.querySelector('.result-modal'));act(()=>document.querySelector('.result-modal .result-confirm').click());assert.deepEqual(snapshot().game.rainResults,[],'acknowledgement removes pending result by rain ID despite blank title');const acknowledged=snapshot();cleanup();mount();assert.deepEqual(snapshot(),acknowledged);assert.equal(document.querySelector('.result-modal'),null,'consumed rain result cannot return');cleanup();return acknowledged;
     }
     const mechanics=state=>({...state,history:state.history.map(({actionTitle,title,text,...entry})=>entry)});let rainRestores=0;
     for(const level of ['drizzle','rain','downpour'])for(const choice of ['nearby','proper','continue','stoppedSearch'])for(const cold of [false,true]){
