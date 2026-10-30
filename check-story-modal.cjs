@@ -44,7 +44,7 @@ try {
     const expected = facts(); expected.story.episodes[0].status = 'complete';
     setup(event.id);
     assert(modal(), `${event.id} opens Story over the current screen`); noClassic(); assert(!document.querySelector('.story-event-close'));
-    assert(!modal().querySelector('.story-toolbar'), 'modal has only the current episode');
+    assert(!modal().querySelector('.story-toolbar'), 'modal omits archive toolbar');
     assert(document.querySelector('.game-background[inert]') && document.querySelector('.bottom-nav[inert]'));
     assert.equal(document.body.style.position, 'fixed');
     const before = facts();
@@ -66,6 +66,17 @@ try {
   setup('spare-change'); clickId('event:spare-change:give');
   env.fireEvent.click(env.screen.getByRole('button', { name: 'Map', exact: true })); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
   setup('spare-change', 'story'); assert(!modal()); clickId('event:spare-change:give'); assert.equal(save().episodes[0].status, 'complete');
+  const priorStory = save();
+  setup('city-waking', 'map', { [key]: priorStory });
+  const ids = () => [...modal().querySelectorAll('.story-episode')].map(node => Number(node.dataset.storyId));
+  assert.deepEqual(ids(), [priorStory.episodes[0].id, priorStory.nextId], 'next event appends below the existing timeline');
+  assert(!modal().querySelector('.story-episode-heading'), 'old episodes do not add replay controls between events');
+  assert.equal(modal().querySelectorAll('.story-head').length, 1, 'one live cursor continues the chronology');
+  assert.deepEqual(save().episodes[0], priorStory.episodes[0], 'previous saved facts remain immutable');
+  remount(); assert.equal(ids().length, 2, 'reload and StrictMode retain both events without duplication');
+  clickId(`event:city-waking:${STREET_EVENTS.find(event => event.id === 'city-waking').choices[0].id}`); finishCheck(); dismiss();
+  assert.equal(save().episodes.length, 2); assert(save().episodes.every(episode => episode.status === 'complete'));
+  assert.deepEqual(save().episodes[0], priorStory.episodes[0]);
   setup('spare-change'); const opening = facts(); remount(); assert.deepEqual(facts(), opening); assert(modal());
   const checked = STREET_EVENTS.find(event => !['borrow-phone-slip', 'park-company'].includes(event.id) && event.choices.some(choice => choice.check));
   const choice = checked.choices.find(choice => choice.check);
@@ -95,12 +106,59 @@ try {
   window.requestAnimationFrame = callback => { frames.set(++frameId, callback); return frameId; };
   window.cancelAnimationFrame = id => frames.delete(id);
   const animate = duration => { const end = clock + duration; while (clock < end) { clock += 32; env.act(() => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(clock)); }); } };
-  setup('spare-change', 'inventory'); assert(!document.querySelector('.story-live-controls'));
+  const resizeObservers = new Set();
+  global.ResizeObserver = class {
+    constructor(callback) { this.callback = callback; resizeObservers.add(this); }
+    observe() {}
+    disconnect() { resizeObservers.delete(this); }
+  };
+  setup('spare-change', 'inventory', { [key]: priorStory }); assert(!document.querySelector('.story-live-controls'));
+  const archived = modal().querySelector('.story-episode');
+  assert(!archived.querySelector('.story-letter, .is-replaying, [data-story-stamp="pending"]'), 'old event opens settled while the new one animates');
+  const scroller = modal().querySelector('.story-event-content');
+  const bottomButton = () => modal()?.querySelector('.story-event-bottom');
+  assert(!bottomButton(), 'no jump button at the live end or without overflow');
+  let height = 1200;
+  let scrollRequest;
+  scroller.scrollTo = options => {
+    scrollRequest = options;
+    if (options.behavior === 'instant') scroller.scrollTop = height - 500;
+  };
+  const resize = () => env.act(() => resizeObservers.forEach(observer => observer.callback()));
+  Object.defineProperties(scroller, { scrollHeight: { get: () => height }, clientHeight: { value: 500 } });
+  scroller.scrollTop = 700; env.fireEvent.scroll(scroller);
+  height = 1300; resize();
+  assert.equal(scroller.scrollTop, 1300, 'timeline follows newly revealed content at the bottom');
+  scroller.scrollTop = 100; env.fireEvent.scroll(scroller);
+  assert(bottomButton(), 'jump button appears while reading earlier content');
+  assert(document.querySelector('.bottom-nav[inert]') && !document.querySelector('.story-event-close'), 'jumping does not unlock an unfinished event');
+  const beforeJump = facts();
+  env.fireEvent.click(bottomButton());
+  assert.deepEqual(scrollRequest, { top: 1300, behavior: 'smooth' }, 'jump requests smooth scrolling to the current end');
+  assert(bottomButton(), 'button stays until the smooth scroll arrives');
+  assert.deepEqual(facts(), beforeJump, 'jumping changes no saved/gameplay facts');
+  env.act(() => bottomButton().focus());
+  reduced = true; env.fireEvent.click(bottomButton()); reduced = false;
+  assert.deepEqual(scrollRequest, { top: 1300, behavior: 'instant' }, 'reduced motion jumps immediately');
+  assert(!bottomButton()); assert.equal(document.activeElement, modal().querySelector('.story-event-panel'), 'focus stays in the modal after the jump button disappears');
+  scroller.scrollTop = 100; env.fireEvent.scroll(scroller);
+  height = 1400; resize();
+  assert.equal(scroller.scrollTop, 100, 'reading previous events is not interrupted by the reveal');
+  assert(bottomButton(), 'new content leaves the jump available while reading history');
+  scroller.scrollTop = 835; env.fireEvent.scroll(scroller); assert(bottomButton(), '65px from the bottom still offers the jump');
+  scroller.scrollTop = 836; env.fireEvent.scroll(scroller); assert(!bottomButton(), 'button disappears within 64px of the end');
+  scroller.scrollTop = 900; env.fireEvent.scroll(scroller);
+  height = 1500; resize();
+  assert.equal(scroller.scrollTop, 1500, 'returning to the bottom resumes following');
   env.fireEvent.click(document.querySelector('.story-reveal')); animate(6000); clickId('event:spare-change:give');
-  assert(modal()); assert.equal(save().episodes[0].status, 'awaiting-ack'); const result = facts();
+  assert.equal(modal().querySelector('.story-episode'), archived, 'appending the result keeps the previous DOM intact');
+  assert(modal()); assert.equal(save().episodes.at(-1).status, 'awaiting-ack'); const result = facts();
   remount(); assert.deepEqual(facts(), result); assert(modal()); animate(40000); assert(modal()); dismiss();
-  assert.equal(save().episodes[0].status, 'complete'); assert.deepEqual(facts().game, result.game);
+  assert.equal(save().episodes.at(-1).status, 'complete'); assert.deepEqual(facts().game, result.game);
+  assert.deepEqual(save().episodes[0], priorStory.episodes[0]);
   const completed = facts(); remount(); assert(!modal()); assert.deepEqual(facts(), completed);
+  assert.equal(resizeObservers.size, 0, 'timeline observers are removed on close/unmount');
+  delete global.ResizeObserver;
   env.finish();
   console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain and standalone transport.`);
 } finally { rmSync(temporary, { recursive: true, force: true }); }

@@ -1,3 +1,62 @@
+Release v355 — 30 October 2026, publication requested: includes the full-height
+edge-scrolling Story frame and breathing gutters, continuous modal chronology,
+approved compact translucent Close/bottom jump and full Story day labels in
+EN/RU/PL while keeping header abbreviations. Targeted checks/builds passed during
+implementation; the existing GitHub Pages CI owns the full release suites and
+production build. Do not duplicate a successful unchanged CI locally. Deployment
+is pending until the run succeeds. Browser/iPhone/WebKit remains unverified.
+
+Full Story day labels — 30 October 2026, source only: stamps in live/archive
+Story, the event modal and the retained animation example use story.day:
+Day {day} / День {day} / Dzień {day}. Header retains the existing hud.day
+abbreviations D{day} / Д{day}. displayDay numbering and saved timestamps are
+unchanged. The longer label uses the existing per-character stamp timing.
+Story/example, results, language/localisation and production build passed;
+language checks cover full Story versus compact header labels at 0, 1 and 12.
+Saved locally without publication or release/build ID change.
+
+Approved compact Story controls — 30 October 2026, source only: ModalAction's
+explicit floating/iconOnly variant owns a 32px translucent surface (42% modal
+colour, 1.5px backdrop blur), 18px/2.5-stroke glyph and unchanged 44px hit area.
+Close remains top-right and only appears after presentation. The same control
+with arrow-down-to-line floats bottom-centre while more than 64px from the end;
+click scrolls smoothly, or instantly for reduced motion. Arrival hides the arrow,
+restores modal focus if needed and resumes existing content following. Reading
+older content still pauses following. Controls reserve no narrative space and
+have EN/RU/PL accessible labels. Existing transport controls retain their style.
+All 61 Story-modal routes, jump visibility/threshold/motion/focus and unchanged
+game/save facts, localisation/language, design-system and production build passed.
+Browser/iPhone/WebKit appearance remains unverified because managed preview is
+unavailable. Sources committed locally; no publication/build ID change.
+
+Story edge scrolling / floating close — 30 October 2026, source only: the event
+panel has zero outer padding; its full-width internal scroller owns the usual
+content gutters, keeping the scrollbar at the frame edge and paint space around
+the breathing point. Close reuses transport's ModalAction outline/iconOnly and
+the shared close icon, with common.close semantics. It is absolutely positioned
+over the content, reserving no header row; it still appears only after the full
+result and uses the unchanged acknowledgement handler. Design-system, all 61
+Story-modal routes and production build passed; browser/iPhone appearance remains
+unverified. No publication; source changes are committed locally.
+
+Continuous event-modal history — 30 October 2026, source only: the modal
+now receives the same saved chronology as the Story tab, rather than a singleton
+current episode. New events append below settled prior events; only the current
+episode animates and owns choices/the single live cursor. Event presentation omits
+archive replay controls and connects the thread across episode boundaries. The
+existing 30-episode batches and Earlier control remain available. Opening resumes
+at the live end; ResizeObserver follows growing content until the player scrolls
+up, resuming when they return to the bottom. Closing/reloading never rewrites
+archive facts. Full-height frame, breathing gutters, focus/body lock, decisions,
+result dismissal and gameplay/save ownership are preserved.
+Targeted check-story-modal (61 routes plus multiple-event chronology, settled
+history, StrictMode/reload, DOM identity and scroll-follow/observer cleanup),
+check-story-live (61 choices), design-system and production build passed.
+Browser/iPhone/WebKit appearance remains unverified: managed preview is stopped
+after the previously documented infrastructure failure. No publication or build ID
+change; save sources to main with [skip ci]. This supersedes the earlier rule that
+the event modal shows only the current episode.
+
 Story modal initial size — 30 October 2026, source only: open the shared
 Story event frame at its full 88svh preferred height from the first character,
 capped by the overlay's available height and safe-area gutters. The existing

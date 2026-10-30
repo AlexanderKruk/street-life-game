@@ -11,6 +11,8 @@ export const interfaceMessages = {
   "story.empty": "Nowe zdarzenia pojawią się tutaj w trakcie gry.",
   "story.earlier": "Wcześniejsze zdarzenia",
   "story.nav": "Story",
+  "story.day": "Dzień {day}",
+  "story.latest": "Przewiń na dół",
   "story.place": "Przy dworcu",
   "story.intro": "Pod daszkiem przy bocznym wejściu jest sucho. Możesz tu przeczekać deszcz.",
   "story.wait": "Przeczekać deszcz",

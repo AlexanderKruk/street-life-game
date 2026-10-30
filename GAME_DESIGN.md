@@ -1,3 +1,42 @@
+Full Story day labels — 30 October 2026, source only: stamps in live/archive
+Story, the event modal and the retained animation example use story.day:
+Day {day} / День {day} / Dzień {day}. Header retains the existing hud.day
+abbreviations D{day} / Д{day}. displayDay numbering and saved timestamps are
+unchanged. The longer label uses the existing per-character stamp timing.
+Story/example, results, language/localisation and production build passed;
+language checks cover full Story versus compact header labels at 0, 1 and 12.
+Saved locally without publication or release/build ID change.
+
+Story floating controls — 30 October 2026, source only: Close and the centred
+bottom jump share the approved 32px translucent/soft-blur surface, bold 18px
+icons and 44px touch targets. The bottom arrow appears when reading more than
+64px above the end, scrolls to the latest content and disappears on arrival;
+reduced motion jumps instantly. It does not acknowledge or advance the event.
+Close still waits until presentation is complete. No publication.
+
+Story modal layout — 30 October 2026, source only: the scrollbar runs at the
+frame edge; content retains its inner gutters. The completed result shows the
+same ochre outline/X control as transport, floating at the top-right with no
+reserved header row. Decisions still hide Close and block dismissal. No release.
+
+Continuous event-modal history — 30 October 2026, source only: the modal
+now receives the same saved chronology as the Story tab, rather than a singleton
+current episode. New events append below settled prior events; only the current
+episode animates and owns choices/the single live cursor. Event presentation omits
+archive replay controls and connects the thread across episode boundaries. The
+existing 30-episode batches and Earlier control remain available. Opening resumes
+at the live end; ResizeObserver follows growing content until the player scrolls
+up, resuming when they return to the bottom. Closing/reloading never rewrites
+archive facts. Full-height frame, breathing gutters, focus/body lock, decisions,
+result dismissal and gameplay/save ownership are preserved.
+Targeted check-story-modal (61 routes plus multiple-event chronology, settled
+history, StrictMode/reload, DOM identity and scroll-follow/observer cleanup),
+check-story-live (61 choices), design-system and production build passed.
+Browser/iPhone/WebKit appearance remains unverified: managed preview is stopped
+after the previously documented infrastructure failure. No publication or build ID
+change; save sources to main with [skip ci]. This supersedes the earlier rule that
+the event modal shows only the current episode.
+
 Story modal initial size — 30 October 2026, source only: open the shared
 Story event frame at its full 88svh preferred height from the first character,
 capped by the overlay's available height and safe-area gutters. The existing
