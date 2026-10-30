@@ -1,3 +1,5 @@
+Reference-motion synchronisation — 30 October 2026, source only: per the user's explicit instruction, src/storyPreview.html is the motion reference. Native Replay now uses the same 12px ring/filled points and centre-aligned line, cubic image expansion (1150ms, including the growing 12px gap), smooth cursor settling above selected narrative, 650ms whole-answer entrance, and 400ms imprint fade. The cursor no longer snaps to each new paragraph or to a different position/time on completion. Its ephemeral replay clock starts at the saved opening minute and ticks one displayed minute per second during presentation; clock and 1600ms breathing pause on selected-answer stages and at completion. This explicitly supersedes the earlier Replay-only saved-clock display restriction; fixed start/result stamps remain real saved facts, and no game time, RNG, costs, saves or archive data are changed. Old archives and reduced motion remain settled, classic result rows remain static, and the 500ms consequence delay/full final-indicator boundary are retained. Results tests cover deterministic image geometry, no paragraph/final cursor jump, clock ticking/pausing/final retention, atomic selected text and reduced motion; Story/example, recording (61 routes), results, design-system, module-boundaries, build and diff checks passed. Browser/iPhone pixel parity remains unverified because managed preview is unavailable. Live v350 is unchanged; no publication.
+
 # Story: постепенный перенос всех игровых действий
 
 Обновлено: 30 октября 2026. Исходная игровая версия: **v347**.
@@ -70,10 +72,11 @@ Story доступна двумя способами:
    награды и потери. Story отображает факты и передаёт команды существующим владельцам.
 2. Один владелец игрового времени — App и его текущие процессы. Продление линии,
    печать и загрузка картинки сами по себе не вызывают `applyAction`.
-3. В макете часы идут при печати. В игре события и результаты сейчас останавливают
-   мир. На первом рабочем этапе сохраняем существующие правила паузы и показываем
-   реальное игровое время, без фиктивных тикающих минут. Режим времени при печати
-   проверяем и решаем отдельным пунктом: не менять расход нужд скоростью чтения скрыто.
+3. По явному указанию пользователя от 30 октября Replay повторяет часы эталона:
+   отдельные визуальные минуты идут при подаче и замирают на этапе выбранного
+   ответа и в конце. Это только повтор архива; фиксированные штампы сохраняют
+   настоящие времена начала/результата. Игровой мир остаётся на паузе, чтение
+   не меняет время, нужды или сохранённые факты. Живой Story-режим ещё не включён.
 4. Случайный исход, D20, цена и длительность выбираются один раз. Перечитывание,
    смена вкладки, remount и reload не повторяют последствия.
 5. Стабильные ID связывают действие, этапы, выбранный ответ и результат.

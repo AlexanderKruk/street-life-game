@@ -263,6 +263,75 @@ try {
     assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
     cleanup();
   }
+  // A deterministic layout catches cursor jumps and clock resets, beyond settled DOM checks.
+  const geometry = Object.getOwnPropertyDescriptors(window.HTMLElement.prototype);
+  Object.defineProperty(window.HTMLElement.prototype, 'offsetTop', { configurable: true, get() {
+    if (this.classList.contains('story-choice')) return 380;
+    if (this.classList.contains('story-result-start')) return 500;
+    if (this.classList.contains('story-stats')) return 680;
+    if (this.classList.contains('story-image')) return 140;
+    return 0;
+  } });
+  Object.defineProperty(window.HTMLElement.prototype, 'offsetHeight', { configurable: true, get() {
+    if (this.classList.contains('story-image')) return 28 + 200 * parseFloat(this.querySelector('.story-media').style.gridTemplateRows || 0);
+    return this.classList.contains('story-choice') ? 60 : 140;
+  } });
+  try {
+    const episode = { id: 99, source: 'encounter', sourceId: 'motion', status: 'complete', scenes: [{ eventId: 'motion', title: 'Scene', text: 'You listen to the city. '.repeat(10), illustration: 'street.webp', at,
+      choice: { id: 'wait', label: 'Wait here', at: { ...at, minute: 601 } } }], result: fixtures[0], endedAt: { ...at, minute: 620 } };
+    const saved = JSON.stringify(episode);
+    render(React.createElement(StoryScreen, { episodes: [episode] }));
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    const track = document.querySelector('.story-track'), live = () => document.querySelector('.story-head time').textContent;
+    const y = () => parseFloat(track.style.getPropertyValue('--story-y'));
+    let clock = 0;
+    const step = () => { clock += 16; frame(clock); };
+    while (clock < 1200) step();
+    assert.equal(live(), '10:01', 'replay clock ticks during text instead of jumping between archived stamps');
+    assert.equal(y(), 0, 'the cursor holds above typed text');
+    fireEvent.click(document.querySelector('.story-text button'));
+    while (document.querySelector('.story-image').hidden && clock < 3000) step();
+    const imageAt = clock;
+    while (clock - imageAt < 575) step();
+    const fraction = parseFloat(document.querySelector('.story-media').style.gridTemplateRows);
+    assert(fraction > .8 && fraction < 1, 'picture geometry uses the reference cubic reveal, not a linear half-height');
+    assert(y() > 0 && y() < 400, 'line follows the growing image');
+    while (document.querySelector('.story-choice').hidden && clock < 5000) step();
+    assert(!track.classList.contains('is-running'), 'clock and breathing freeze on the selected-answer stage');
+    const pausedClock = live();
+    assert.equal(document.querySelector('.story-choice').textContent, 'Your choice: Wait here', 'selected narrative enters whole');
+    assert(document.querySelector('.story-choice-enter'));
+    for (let i = 0; i < 25; i++) step();
+    assert.equal(live(), pausedClock);
+    while (document.querySelector('.story-result-start').hidden && clock < 6000) step();
+    const textY = y(); step();
+    assert.equal(y(), textY, 'starting the next paragraph does not snap the clock to its offset');
+    assert(track.classList.contains('is-running'), 'clock/breathing resume for the result');
+    while (track.classList.contains('is-replaying') && clock < 20000) step();
+    assert(!track.classList.contains('is-replaying'));
+    const stoppedY = y(), stoppedClock = live();
+    step(); step();
+    assert.equal(y(), stoppedY, 'finishing keeps the cursor at the end of its path');
+    assert.equal(live(), stoppedClock, 'finishing never resets the cosmetic clock to a different archived time');
+    assert(!track.classList.contains('is-running'));
+    assert.equal(frames.size, 0, 'completed replay has no perpetual animation loop');
+    assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · D1');
+    assert.equal(document.querySelector('.story-result-stamp').textContent, '10:20 · Station · D1');
+    assert.equal(JSON.stringify(episode), saved);
+    cleanup();
+    reduced = true;
+    render(React.createElement(StoryScreen, { episodes: [episode] }));
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    assert(!document.querySelector('.has-replay'), 'reduced motion remains a settled archive with factual time');
+    assert.equal(live(), '10:20');
+    assert.equal(frames.size, 0);
+    cleanup(); reduced = false;
+  } finally {
+    for (const key of ['offsetTop', 'offsetHeight']) {
+      if (geometry[key]) Object.defineProperty(window.HTMLElement.prototype, key, geometry[key]);
+      else delete window.HTMLElement.prototype[key];
+    }
+  }
   console.log('PASS: Story matches classic visible icon deltas/costs/consequences, hides passive drain, adds an unframed result point, settles old records and replays icon groups without archive mutation.');
   console.log('PASS: shared Status bars and compact result deltas, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
   console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without duplicate details, names, bars or arrival imagery; other full answers, saved answers and no-new-information still work.');

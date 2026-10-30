@@ -47,59 +47,79 @@ function Episode({ episode }: { episode: StoryEpisode }) {
   const track = useRef<HTMLDivElement>(null)
   const nodes = useRef<(HTMLDivElement | null)[]>([])
   const [replay, setReplay] = useState(0)
-  const [animation, setAnimation] = useState<{ index: number; shown: number; progress: number; y: number } | null>(null)
+  const [animation, setAnimation] = useState<{ index: number; shown: number; progress: number; y: number; minute: number; running: boolean } | null>(null)
+  const [restingCursor, setRestingCursor] = useState<{ y: number; minute: number } | null>(null)
   useEffect(() => {
     if (!replay) return
+    setRestingCursor(null)
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setAnimation(null); return }
-    let frame = 0, last: number | null = null, elapsed = 0, index = 0, phase: 'typing' | 'pause' | 'move' = 'typing', y = 0, from = 0
+    let frame = 0, last: number | null = null, elapsed = 0, clockElapsed = 0, index = 0, phase: 'typing' | 'pause' | 'move' = 'typing', y = 0, from = 0
+    const startMinute = episode.scenes[0].at.minute
+    const minute = () => startMinute + Math.floor(clockElapsed / 1000)
     let skipped = false
     const revealText = () => { skipped = true }
     const element = track.current
     element?.addEventListener('click', revealText)
     const tick = (now: number) => {
-      elapsed += last === null ? 0 : Math.min(80, now - last); last = now
+      const delta = last === null ? 0 : Math.min(80, now - last); last = now; elapsed += delta
       const piece = pieces[index]
-      if (!piece) { setAnimation(null); return }
+      if (!piece) {
+        // Keep the final clock/line where they stopped instead of jumping to the archive layout.
+        setRestingCursor({ y, minute: minute() }); setAnimation(null); return
+      }
+      // Like the reference, the replay clock breathes/ticks during presentation, not choices.
+      // This is an ephemeral visual clock: fixed stamps always use the saved StoryStamp.
+      if (piece.kind !== 'choice') clockElapsed += delta
       const length = Array.from(piece.text).length
-      let shown = piece.kind === 'image' ? length : Math.min(length, Math.floor(elapsed / 28))
+      let shown = piece.kind === 'image' || piece.kind === 'choice' ? length : Math.min(length, Math.floor(elapsed / 28))
       let progress = 0
-      if (phase === 'typing') {
-        if ((piece.kind === 'image' || piece.kind === 'stats')) { phase = 'move'; elapsed = 0; from = y }
-        else {
-          // The moving clock occupies the reserved stamp row, never the typed text.
-          y = Math.max(y, nodes.current[index]?.offsetTop ?? y)
-          if (skipped || shown >= length) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
-        }
+      if (piece.kind === 'choice') {
+        // Reference choices enter whole, with the cursor settling gently above the selected text.
+        const node = nodes.current[index]
+        const anchor = node ? node.offsetTop - 28 : y
+        y += (anchor - y) * Math.min(1, delta / 100)
+        if (elapsed >= 650) { index++; phase = 'typing'; elapsed = 0; skipped = false }
+      } else if (phase === 'typing') {
+        if (piece.kind === 'image' || piece.kind === 'stats') { phase = 'move'; elapsed = 0; from = y }
+        else if (skipped || shown >= length) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
       } else if (phase === 'pause') {
         shown = length
         if (elapsed >= 250) {
           elapsed = 0
-          if (pieces[index + 1]?.kind === 'image') { index++; phase = 'move'; from = y }
-          else { phase = 'move'; from = y }
+          if (pieces[index + 1]?.kind === 'image') index++
+          phase = 'move'; from = y
         }
       } else {
         shown = length
         const current = pieces[index]
         progress = Math.min(1, elapsed / (current.kind === 'image' ? 1150 : current.kind === 'stats' ? Math.max(450, resultIndicatorDuration(resultDisplay(episode.result!).indicators.length)) : 750))
+        const ease = 1 - Math.pow(1 - progress, 3)
         const node = nodes.current[index]
-        const end = node && track.current ? node.offsetTop + node.offsetHeight : from
-        y = from + (end - from) * (1 - Math.pow(1 - progress, 3))
+        if (current.kind === 'image') {
+          // Update image geometry before measuring the line endpoint, just as reveal/layout do
+          // in the reference. React commits the same values below on this frame.
+          const media = node?.querySelector<HTMLElement>('.story-media')
+          if (media) { media.style.gridTemplateRows = `${ease}fr`; media.style.marginTop = `${12 * ease}px` }
+        }
+        const end = node ? Math.max(from, node.offsetTop + node.offsetHeight - (current.kind === 'image' ? 16 : 0)) : from
+        y = from + (end - from) * ease
         if (progress === 1) { index++; phase = 'typing'; elapsed = 0; progress = 0; skipped = false }
       }
-      setAnimation({ index, shown: phase === 'typing' ? (pieces[index]?.kind === 'image' ? 0 : Math.min(Array.from(pieces[index]?.text ?? '').length, Math.floor(elapsed / 28))) : shown, progress, y })
+      const current = pieces[index]
+      setAnimation({ index, shown: phase === 'typing' ? (current?.kind === 'image' ? 0 : current?.kind === 'choice' ? Array.from(current.text).length : Math.min(Array.from(current?.text ?? '').length, Math.floor(elapsed / 28))) : shown, progress, y, minute: minute(), running: !!current && current.kind !== 'choice' })
       frame = window.requestAnimationFrame(tick)
     }
-    setAnimation({ index: 0, shown: 0, progress: 0, y: 0 })
+    setAnimation({ index: 0, shown: 0, progress: 0, y: 0, minute: startMinute, running: pieces[0]?.kind !== 'choice' })
     frame = window.requestAnimationFrame(tick)
     return () => { window.cancelAnimationFrame(frame); element?.removeEventListener('click', revealText) }
-  }, [replay, pieces])
+  }, [replay, pieces, episode])
   const first = episode.scenes[0]
   const last = episode.endedAt ?? first.at
-  const cursorAt = animation ? pieces[animation.index]?.at ?? last : last
+  const cursor = animation ?? restingCursor
   return <article className="story-episode" data-story-id={episode.id}>
     <div className="story-episode-heading">
       <ModalAction variant="secondary" onClick={() => setReplay(value => value + 1)}>{t('story.replay')}</ModalAction></div>
-    <div className={`story-track${animation ? ' is-replaying' : ''}`} ref={track} style={{ '--story-y': `${animation?.y ?? 0}px` } as CSSProperties}>
+    <div className={`story-track${cursor ? ' has-replay' : ''}${animation ? ' is-replaying' : ''}${animation?.running ? ' is-running' : ''}`} ref={track} style={{ '--story-y': `${cursor?.y ?? 0}px` } as CSSProperties}>
       <div className="story-thread" aria-hidden="true" />
       <div className="story-pieces" aria-label={animation ? t('story.skip') : undefined}>
         {pieces.map((piece, index) => {
@@ -109,14 +129,14 @@ function Episode({ episode }: { episode: StoryEpisode }) {
           const visibleText = current ? Array.from(piece.text).slice(0, animation.shown).join('') : piece.text
           const startsPart = piece.sealAfter !== undefined
           const sealed = !animation || animation.index > piece.sealAfter!
-          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}`} hidden={future}>
+          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}${pieces[index + 1]?.kind === 'image' ? ' story-before-image' : ''}${current && piece.kind === 'choice' ? ' story-choice-enter' : ''}`} hidden={future}>
             {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{stampLabel(piece.at)}</time></>}
-            {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${imageProgress}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
+            {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr`, marginTop: `${12 * (1 - Math.pow(1 - imageProgress, 3))}px` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{visibleText}</button> : <p>{visibleText}</p>}
           </div>
         })}
       </div>
-      <div className="story-head" aria-hidden="true"><span /><time>{formatTime(cursorAt.minute)}</time></div>
+      <div className="story-head" aria-hidden="true"><span /><time>{formatTime(cursor?.minute ?? last.minute)}</time></div>
     </div>
     {!animation && <div className="story-episode-end">
       {episode.status === 'active' && <p className="story-note">{t('story.pending')}</p>}

@@ -1,3 +1,11 @@
+# Story reference-motion checkpoint — 30 October 2026
+
+Verified local commit: `a30eabb8769a94bc266b071486d17d126ecde6a1`.
+Remote parent: `de7f917b2037749e8d3dde9080b8a2d6eeb1d884`.
+Recovery bundle: `.backup/story-reference-motion-2026-10-30.bundle`; prerequisite `fd6ef4ebb078f0c6acd87075e116108fdc661510`. Bundle verification passed. Import it with `git fetch <bundle> HEAD` and inspect the local commit; it contains the original source history. The API save copies only the three verified changed code/test files over current main and updates current remote documentation, preserving the published App/version and unrelated remote changes.
+
+Source only, no publication: live version remains v350. Native Replay motion now follows the retained example; stamps remain factual and the replay clock is purely visual. Targeted results/Story/recording, design-system, module-boundaries and production build passed. No browser pixel parity claim.
+
 # Story result timing — 30 October 2026
 
 Original local commit: `e5a430556fe23224f86c8fb3d2a65026935a7a9e`.
