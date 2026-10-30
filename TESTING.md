@@ -1,3 +1,17 @@
+Manual Story modal dismissal — 30 October 2026, source only: supersedes the
+v357 automatic inventory-result dismissal and the menu-above-blur proposal.
+All Story event/consumption modals remain open after full presentation until
+Close, backdrop or Escape acknowledges them. Keep the entire background and
+navigation inert under the full backdrop, including after the close appears;
+aria-modal and the focus trap remain active until unmount. Remove dismissal
+timers/fade state, completion-specific menu stacking and menu-clearance measuring.
+The ordinary 88svh frame and shared safe-area padding stay the same throughout.
+Consumption costs, immutable Story records, pending-result reload and inline
+Story's existing acknowledgement are preserved. Updated the 61-route modal suite,
+long-reading/reload/consumption cases and browser geometry/screen-return checks.
+CJS/JS syntax passed. UI suites/build/browser were not run: local esbuild/tsc and
+browser dependencies remain absent. Save with [skip ci]; v357 remains published.
+
 Stable Story modal / navigation geometry — 30 October 2026, source only:
 remove the completion-only 112px overlay bottom inset. The overlay covers the
 whole viewport in both phases; a layout-time measurement of the actual bottom

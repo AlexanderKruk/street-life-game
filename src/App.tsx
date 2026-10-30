@@ -834,7 +834,7 @@ export default function App() {
   }
   const storyModalComplete = modalStoryEvent && liveEpisode?.id === presentedStoryId && liveEpisode?.status === 'awaiting-ack' && !!infoModal && !pendingResult
   const backgroundBlocked = eventInteractionBlocked && !inlineStoryEvent
-  return <main className={`shell${storyModalComplete ? ' story-modal-complete' : ''}${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
+  return <main className={`shell${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {streetExitPending && <InventoryDialog icon="exit" label={t('location.leaveLabel')} title={t('location.leaveTitle', { place: locationName(current.id) })} onCancel={cancelStreetExit}>
       <div className="sleep-choice-buttons"><ModalAction variant="secondary" type="button" onClick={cancelStreetExit}>{t('common.cancel')}</ModalAction><ModalAction type="button" className="confirm-action" onClick={confirmStreetExit}>{t('location.goToStreet')}</ModalAction></div>
     </InventoryDialog>}
@@ -850,7 +850,7 @@ export default function App() {
     />}
     {goalCompletionVisible && <GoalCompletedDialog key={completedGoalId} title={goals.find(goal => goal.id === completedGoalId)!.title} onClose={acknowledgeGoalCompletion} />}
     {infoModal && !pendingResult && !storyEventVisible && <ResultCard result={infoModal} onClose={closeResult} />}
-    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} autoClose={liveEpisode?.source === 'inventory'} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
+    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: t('location.closedTitle', { place: locationName(closingNotice) }),
       label: t('location.closingLabel'),
@@ -961,6 +961,6 @@ export default function App() {
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={eventModalRef}
     />}
 
-    <BottomNavigation screen={screen} blocked={eventInteractionBlocked && !storyModalComplete} phoneBusy={!!phoneActivity} travelling={travelling} current={current} mood={game.mood} onNavigate={target => { if (storyModalComplete) closeResult(); setScreen(target) }} />
+    <BottomNavigation screen={screen} blocked={eventInteractionBlocked} phoneBusy={!!phoneActivity} travelling={travelling} current={current} mood={game.mood} onNavigate={setScreen} />
   </main>
 }

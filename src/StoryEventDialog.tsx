@@ -7,8 +7,8 @@ import type { StoryEpisode } from './story'
 import type { StoryInteraction } from './StoryLiveControls'
 
 /** The same chronology as the Story tab, opened at its live end. */
-export default function StoryEventDialog({ episodes, interaction, minute, label, canClose, autoClose = false, onClose }: {
-  episodes: StoryEpisode[]; interaction?: StoryInteraction; minute: number; label: string; canClose: boolean; autoClose?: boolean; onClose: () => void
+export default function StoryEventDialog({ episodes, interaction, minute, label, canClose, onClose }: {
+  episodes: StoryEpisode[]; interaction?: StoryInteraction; minute: number; label: string; canClose: boolean; onClose: () => void
 }) {
   const current = useRef({ canClose, onClose })
   current.current = { canClose, onClose }
@@ -17,49 +17,6 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   const bottomControl = useRef<HTMLButtonElement>(null)
   const following = useRef(true)
   const [awayFromBottom, setAwayFromBottom] = useState(false)
-  const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
-  const [closing, setClosing] = useState(false)
-  useLayoutEffect(() => {
-    const overlay = panel.current?.parentElement
-    const navigation = document.querySelector<HTMLElement>('.bottom-nav')
-    if (!overlay || !navigation) return
-    const home = navigation.querySelector<HTMLElement>('.nav-item.home')
-    const measure = () => {
-      const top = Math.min(navigation.getBoundingClientRect().top, home?.getBoundingClientRect().top ?? Infinity)
-      const clearance = Math.max(0, overlay.getBoundingClientRect().bottom - top)
-      overlay.style.setProperty('--story-nav-clearance', `${clearance}px`)
-    }
-    // Reserve the actual menu, including its raised location button, before
-    // first paint. Completion changes stacking only, never modal geometry.
-    measure()
-    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure)
-    observer?.observe(navigation)
-    if (home) observer?.observe(home)
-    window.addEventListener('resize', measure)
-    window.visualViewport?.addEventListener('resize', measure)
-    return () => {
-      observer?.disconnect()
-      window.removeEventListener('resize', measure)
-      window.visualViewport?.removeEventListener('resize', measure)
-    }
-  }, [])
-  useEffect(() => {
-    const visibility = () => setVisible(document.visibilityState !== 'hidden')
-    document.addEventListener('visibilitychange', visibility)
-    return () => document.removeEventListener('visibilitychange', visibility)
-  }, [])
-  useEffect(() => {
-    setClosing(false)
-    // Reading old entries or hiding the page restarts the reading pause.
-    if (!autoClose || !canClose || awayFromBottom || !visible) return
-    let finish = 0
-    const hold = window.setTimeout(() => {
-      setClosing(true)
-      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-      finish = window.setTimeout(() => { if (current.current.canClose) current.current.onClose() }, reduced ? 0 : 320)
-    }, 1800)
-    return () => { window.clearTimeout(hold); window.clearTimeout(finish) }
-  }, [autoClose, canClose, interaction?.episodeId, awayFromBottom, visible])
   const updateScrollPosition = useCallback(() => {
     const scroller = content.current
     if (!scroller) return
@@ -106,7 +63,7 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
       if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); if (current.current.canClose) current.current.onClose(); return }
       if (event.key !== 'Tab') return
       event.preventDefault(); event.stopImmediatePropagation()
-      const controls = [...Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]') ?? []), ...(current.current.canClose ? Array.from(document.querySelectorAll<HTMLElement>('.bottom-nav button:not(:disabled)')) : [])].filter(node => !node.closest('[hidden], [inert]'))
+      const controls = Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]') ?? []).filter(node => !node.closest('[hidden], [inert]'))
       if (!controls.length) { panel.current?.focus({ preventScroll: true }); return }
       const index = controls.indexOf(document.activeElement as HTMLElement)
       controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus({ preventScroll: true })
@@ -120,7 +77,7 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
       if (previous?.isConnected) previous.focus({ preventScroll: true })
     }
   }, [])
-  return <ModalOverlay className={`story-event-overlay${closing ? ' is-auto-closing' : ''}`} role="dialog" aria-modal={!canClose || undefined} aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
+  return <ModalOverlay className="story-event-overlay" role="dialog" aria-modal="true" aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
     <ModalPanel ref={panel} tabIndex={-1} className="story-event-panel">
       {canClose && <ModalAction variant="outline" iconOnly floating className="story-event-close" aria-label={t('common.close')} onClick={onClose}><Icon name="close" className="icon" /></ModalAction>}
       <div ref={content} className="story-event-content" onScroll={updateScrollPosition}><StoryScreen episodes={episodes} interaction={interaction} currentMinute={minute} presentation="event" /></div>

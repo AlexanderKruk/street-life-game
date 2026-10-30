@@ -32,9 +32,12 @@ try {
   const noClassic = () => assert(!document.querySelector('.event-overlay, .dice-overlay, .result-overlay, .activity-overlay'), 'event presentation has no classic overlay');
   const dismiss = () => {
     assert(document.querySelector('.story-event-close'), 'close appears only after full presentation');
-    assert(!document.querySelector('.bottom-nav[inert]'), 'navigation unlocks when presentation finishes');
+    assert(document.querySelector('.bottom-nav[inert]'), 'navigation stays locked until the modal closes');
+    assert.equal(modal().getAttribute('aria-modal'), 'true');
+    env.fireEvent.keyDown(document, { key: 'Tab' }); assert(modal().contains(document.activeElement));
     env.fireEvent.click(modal());
     assert(!modal(), 'completed event closes on the backdrop');
+    assert(!document.querySelector('.bottom-nav[inert]'), 'closing releases navigation');
   };
   const finishCheck = () => { if (env.screen.queryByRole('button', { name: 'Try', exact: true })) { env.click('Try'); env.click('Continue'); } };
   let cases = 0;
@@ -64,7 +67,9 @@ try {
     assert(!modal());
   }
   setup('spare-change'); clickId('event:spare-change:give');
-  env.fireEvent.click(env.screen.getByRole('button', { name: 'Map', exact: true })); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
+  env.fireEvent.click(document.querySelector('.bottom-nav button')); assert(modal(), 'blocked navigation cannot dismiss the result');
+  env.fireEvent.keyDown(document, { key: 'Escape' }); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
+  env.click('Map'); save(); assert.equal(localStorage.getItem('street-life-screen'), 'map');
   setup('spare-change', 'story'); assert(!modal()); clickId('event:spare-change:give'); assert.equal(save().episodes[0].status, 'complete');
   const priorStory = save();
   setup('city-waking', 'map', { [key]: priorStory });
@@ -101,7 +106,7 @@ try {
   env.setup({ day: 2, minutes: 720 }, { 'street-life-trip-v1': { destinationId: 'station', mode: 'fare-dodge', total: 20, remaining: 8, inspection: { at: 12, status: 'rolling', roll: 5, modifier: 0 } } });
   assert(!modal()); assert(document.querySelector('.dice-overlay')); env.click('Continue'); assert(document.querySelector('.result-overlay')); assert(!modal()); env.ok();
   // Consuming an item commits once, presents the real result, then returns to
-  // the same backpack. The reading pause starts only after presentation.
+  // the same backpack only when the player dismisses it.
   const realTimeout = window.setTimeout, realClearTimeout = window.clearTimeout;
   const timeouts = new Map(); let timeoutId = 0, timeoutNow = 0;
   window.setTimeout = (callback, delay) => { const id = ++timeoutId; timeouts.set(id, { callback, at: timeoutNow + delay }); return id; };
@@ -115,10 +120,6 @@ try {
     }
     timeoutNow = end;
   };
-  let visibility = 'visible';
-  const visibilityDescriptor = Object.getOwnPropertyDescriptor(document, 'visibilityState');
-  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
-  const setVisibility = value => { visibility = value; env.fireEvent(document, new window.Event('visibilitychange')); };
   env.setup({ day: 2, minutes: 720, thirst: 20 }, { 'street-life-screen': 'inventory', [env.invKey]: { water: 3 } });
   env.click(/Water.*tap to drink/);
   assert(modal()); noClassic();
@@ -129,16 +130,11 @@ try {
   assert.equal(consumed.inventory.water, 2); assert.equal(consumed.story.episodes.length, 1);
   assert.equal(consumed.story.episodes[0].source, 'inventory'); assert.equal(consumed.story.episodes[0].status, 'awaiting-ack');
   remount(); assert(modal()); assert.deepEqual(facts(), consumed, 'StrictMode/reload restores the result without consuming again');
-  assert.equal(timeouts.size, 1, 'StrictMode cleans up the first reading timer');
-  advanceTimeouts(1799); assert(modal(), 'the complete result remains readable for 1.8 seconds');
-  setVisibility('hidden'); advanceTimeouts(5000); assert(modal(), 'a hidden tab cannot auto-dismiss an unread result');
-  setVisibility('visible');
-  const inventoryScroller = modal().querySelector('.story-event-content');
-  Object.defineProperties(inventoryScroller, { scrollHeight: { value: 1200 }, clientHeight: { value: 500 } });
-  inventoryScroller.scrollTop = 0; env.fireEvent.scroll(inventoryScroller);
-  advanceTimeouts(5000); assert(modal(), 'reading older chronology suspends auto-close');
-  inventoryScroller.scrollTop = 700; env.fireEvent.scroll(inventoryScroller);
-  advanceTimeouts(1800); assert(!modal());
+  assert.equal(timeouts.size, 0, 'a completed result has no dismissal timer');
+  advanceTimeouts(60000); env.advance(60000); assert(modal(), 'the player can read for as long as needed');
+  assert.deepEqual(facts(), consumed, 'reading does not acknowledge or change game facts');
+  assert(document.querySelector('.bottom-nav[inert]')); assert.equal(modal().getAttribute('aria-modal'), 'true');
+  env.fireEvent.keyDown(document, { key: 'Escape' }); assert(!modal());
   assert.equal(localStorage.getItem('street-life-screen'), 'inventory');
   assert(!document.querySelector('.game-background[inert]')); assert.equal(document.body.style.position, '');
   const completedConsumption = facts();
@@ -147,14 +143,12 @@ try {
   assert.deepEqual(completedConsumption.history, consumed.history, 'closing only acknowledges, without new History or rewards');
   env.click(/Water.*tap to drink/); assert(modal());
   env.fireEvent.click(document.querySelector('.story-event-close'));
-  assert.equal(timeouts.size, 0, 'manual dismissal cancels the auto-close timer');
+  assert.equal(timeouts.size, 0, 'manual dismissal leaves no timer');
   advanceTimeouts(5000); assert(!modal());
   assert.equal(save().episodes.length, 2, 'a second drink is a separate record');
   assert.equal(env.read(env.invKey).water, 1);
   setup('spare-change'); clickId('event:spare-change:give'); advanceTimeouts(5000);
   assert(modal(), 'authored events still require acknowledgement'); dismiss();
-  if (visibilityDescriptor) Object.defineProperty(document, 'visibilityState', visibilityDescriptor);
-  else delete document.visibilityState;
   window.setTimeout = realTimeout; window.clearTimeout = realClearTimeout;
   // An unfinished animated result restores, then acknowledges exactly once.
   reduced = false;
@@ -220,18 +214,18 @@ try {
   env.setup({ day: 2, minutes: 720, thirst: 20 }, { 'street-life-screen': 'inventory', [env.invKey]: { water: 2 } });
   env.click(/Water.*tap to drink/);
   assert(modal()); assert(!document.querySelector('.story-event-close'));
-  assert.equal(timeouts.size, 0, 'auto-close cannot start while the text or consequences are still appearing');
+  assert.equal(timeouts.size, 0, 'presentation has no dismissal timer');
   advanceTimeouts(5000); assert(modal());
   animate(30000); assert(document.querySelector('.story-event-close'));
   const animatedConsumption = facts();
-  advanceTimeouts(1799); assert(!modal().classList.contains('is-auto-closing'));
-  advanceTimeouts(1); assert(modal().classList.contains('is-auto-closing'), 'the complete result fades after its reading pause');
-  advanceTimeouts(319); assert(modal(), 'the fade finishes before acknowledgement');
-  advanceTimeouts(1); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
+  advanceTimeouts(60000); env.advance(60000); assert(modal(), 'animated consumption also waits for acknowledgement');
+  assert(document.querySelector('.bottom-nav[inert]')); assert.equal(timeouts.size, 0);
+  assert.equal(save().episodes[0].status, 'awaiting-ack');
+  env.fireEvent.click(document.querySelector('.story-event-close')); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
   assert.deepEqual(facts().inventory, animatedConsumption.inventory);
   assert.deepEqual(facts().game, animatedConsumption.game);
-  assert.equal(timeouts.size, 0, 'completed auto-close leaves no dismissal timer');
+  assert.equal(timeouts.size, 0, 'closing leaves no dismissal timer');
   window.setTimeout = realTimeout; window.clearTimeout = realClearTimeout;
   env.finish();
-  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain, standalone transport and consumption auto-close.`);
+  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain, standalone transport and manual consumption acknowledgement.`);
 } finally { rmSync(temporary, { recursive: true, force: true }); }
