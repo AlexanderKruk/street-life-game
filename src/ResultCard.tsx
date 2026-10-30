@@ -12,7 +12,7 @@ import { formatMoney, formatResultDelta } from './i18n/formatters'
 
 export type ResultPlace = { id: string; name: string; hours: string; detail: string }
 export type ResultPresentation = { heading: string; label: string; lead: string; places?: ResultPlace[]; notice?: string; illustration?: string; compact?: boolean; mapStatus?: string }
-export type ResultCardData = { title: string; text: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; visibleStats?: ResultResourceId[]; rainResultId?: string; bottleSearch?: { found: number } } & Partial<ResultSummary>
+export type ResultCardData = { title: string; text: string; closingText?: string; label?: string; reflection?: string; illustration?: string; illustrationAlt?: string; presentation?: ResultPresentation; batteryInSummary?: boolean; visibleStats?: ResultResourceId[]; rainResultId?: string; bottleSearch?: { found: number } } & Partial<ResultSummary>
 
 export function resultLabel(label: string) {
   return plainResultLabel(label)
@@ -143,6 +143,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
         </> : <p className="result-description result-narrative modal-narrative">{result.text}</p>}
+        {result.closingText && <p className="result-description result-narrative modal-narrative">{result.closingText}</p>}
         <ResultIndicators changes={indicators} animate={false} animationReady={animationReady} />
         {presentation && !compactInfo && <details className="result-details">
           <summary>{t('result.fullAnswer')}</summary>

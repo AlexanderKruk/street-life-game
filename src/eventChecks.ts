@@ -1,6 +1,13 @@
 import type { GameState } from './game'
 import type { StreetEventChoice } from './events'
-import type { Inventory, EventDiceState } from './stateTypes'
+import type { Inventory, EventDiceState, FirstNightEvents } from './stateTypes'
+
+export function clearPendingEventCheck(encounters: FirstNightEvents): FirstNightEvents {
+  const next = { ...encounters, pendingRoll: null }
+  delete next.pendingChoiceId
+  delete next.pendingModifier
+  return next
+}
 
 export function eventCheckModifier(game: GameState, choice: StreetEventChoice) {
   if (choice.check?.stat === 'persuasion') {

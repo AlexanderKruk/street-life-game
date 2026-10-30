@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n'
-import { createStoryTyping } from './storyTyping'
+import { createStoryTyping, STORY_PIECE_PAUSE_MS } from './storyTyping'
 import template from './storyPreview.html?raw'
 
 /** Isolated animation comparison, deliberately independent of the classic run. */
@@ -15,7 +15,7 @@ export default function StoryComparison() {
       return [text, createStoryTyping(text)]
     }))
     // A translated apostrophe or closing script tag must remain data.
-    const json = JSON.stringify({ ...copy, timings }).replace(/</g, '\\u003c')
+    const json = JSON.stringify({ ...copy, timings, piecePause: STORY_PIECE_PAUSE_MS }).replace(/</g, '\\u003c')
     return template.replace('__STORY_COPY__', json).replace('__STORY_ART__', new URL('assets/event-rain-rain-proper-480.webp', window.document.baseURI).href)
   }, [])
   useEffect(() => {

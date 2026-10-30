@@ -37,7 +37,7 @@ function validScene(value: unknown): value is StoryScene {
 }
 function validResult(value: unknown): value is ResultCardData {
   if (!record(value) || !text(value.title) || !text(value.text) || !image(value.illustration)) return false
-  for (const key of ['label', 'reflection', 'illustrationAlt', 'rainResultId']) if (value[key] !== undefined && !text(value[key])) return false
+  for (const key of ['label', 'reflection', 'illustrationAlt', 'rainResultId', 'closingText']) if (value[key] !== undefined && !text(value[key])) return false
   if (value.batteryInSummary !== undefined && typeof value.batteryInSummary !== 'boolean') return false
   if (value.visibleStats !== undefined && (!Array.isArray(value.visibleStats) || !value.visibleStats.every(text))) return false
   if (value.bottleSearch !== undefined && (!record(value.bottleSearch) || !Number.isFinite(value.bottleSearch.found))) return false

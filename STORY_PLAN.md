@@ -1,3 +1,23 @@
+## Живая вкладка Story — 30 октября 2026, исходники без публикации
+
+По прямой команде пользователя включено прохождение событий внутри вкладки.
+Все 25 сцен / 61 ответа, продолжения, D20 и дождь используют существующие
+контроллеры: в Story вместо соответствующих модалок показываются варианты,
+проверка и итог. Кнопки входят по очереди, как в эталоне; уже прочитанное
+начало не печатается заново при добавлении результата. На других вкладках
+классические окна сохранены. До решения/подтверждения навигация блокируется.
+
+Вкладка сохраняется; обычное ожидание больше не замораживает мир. Решения,
+Replay и пример ставят общий мир на паузу; поиск укрытия использует общий
+процессный таймер. Любая незавершённая авторская D20 восстанавливает выбор,
+модификатор и уже выпавшее число, без повторной награды или броска.
+
+Все 61 варианта сверены с классикой; проверены новая встреча при ожидании,
+отказы, reload/StrictMode, цепочки, дождь и анимация добавления. Chromium:
+два сценария 390/1280px прошли, скриншоты просмотрены; iPhone/WebKit не проверены.
+Остальные игровые действия и Story-модалка поверх других экранов пока не перенесены.
+Исторические заметки ниже описывают предыдущие этапы; актуален этот статус.
+
 Release v352 is published — 30 October 2026. GitHub Pages run 41029108684 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41029108684) completed successfully for source a184a8cc466f91b4a54a3bb98293c58fc8d8d7e4: 32/32 Node suites passed in 90.39s, production build and deploy succeeded. This releases 50ms narrative typing with 100ms soft letter reveal and punctuation pauses, one stamp above the selected-answer/result block sealed after all consequences, running replay clock until that block completes, and unified 12px Story spacing with compact consequence rows and retained touch areas. The retained example follows the same decisions. Gameplay clocks/costs/RNG/saves/archive facts and classic result behaviour are preserved. Full successful CI was not duplicated locally. Browser/mobile/WebKit appearance remains unverified because managed preview is unavailable; no pixel-parity approval is claimed. Earlier source-only notes below are historical checkpoints now included in this release.
 
 Unified Story spacing — 30 October 2026, source only: per the user's screenshot review, recorded Story now uses one inherited --story-gap:12px for content pieces, stamp-to-copy, consequence subcontent, replay-heading spacing and spacing between episodes. Removed the stacked 28px piece paddings, 8px consequence margin and separate 12/14/22/32px margins; the fixed stamp is the visual part divider. Consequence buttons retain their 44px minimum hit areas: symmetric vertical padding and matching negative block margins remove empty button space from narrative flow, with 24px wrapped-row gaps to prevent hit areas colliding. Classic result rows keep their existing spacing. Cursor endpoints now read the shared gap and end one gap below content, matching the terminal clock slot; cubic image reveal no longer adds a second animated margin. The retained example follows the same 12px rhythm, with its dedicated clock/stamp row preserved above active choices and its excess 72px terminal reservation removed. Text/letter/indicator timing, grouped choice/result stamps, archives and all gameplay/save facts are unchanged. Results, example branches, recording (61 routes), design-system, module-boundaries, production build and diff checks passed. The existing geometry fixture was updated to remove obsolete image padding; no new CSS-source mirror tests were added. Managed preview remains stopped/unavailable from the earlier infrastructure failure; no unchanged retry or browser/iPhone pixel-parity claim. Source saved only, no publication; live v351 is unchanged.
@@ -54,6 +74,13 @@ Story доступна двумя способами:
 подтверждение результата переносится постепенно, вместе с соответствующим потоком.
 
 ## Утверждённая подача
+
+Первый пример структуры результата — встреча с собакой (30 октября 2026):
+действие → иллюстрация этого момента → короткое завершение → изменения статусов.
+Завершение хранится отдельным необязательным `closingText`; в обычной модалке
+картинка остаётся сверху, завершение — последним абзацем. Три исхода обновлены
+на EN/RU/PL. Старые записи не переписываются; штамп выбора/результата ждёт
+всего завершения и последствий. Остальные события автоматически не переделываем.
 
 - Пустая пульсирующая точка несёт текущие часы на конце линии.
 - Полные точки и фиксированные штампы — оставленные ею «слепки». У мигающей точки
@@ -219,14 +246,14 @@ Story получает факты от тех же владельцев и по�
 ## Этап 7. Живая подача по выбору и объединение истории
 
 - [ ] Сверить таблицу: каждое игровое действие и каждый случайный ивент покрыты.
-- [ ] После проверки записи и дизайна отдельно подключить живой режим Story:
+- [x] После проверки записи и дизайна отдельно подключить живой режим Story:
   внутри вкладки или через модалку с общим состоянием.
-- [ ] Сохранить возможность пользоваться классической подачей. Выбор интерфейса
+- [x] Сохранить возможность пользоваться классической подачей. Выбор интерфейса
   не создаёт второй прогон события; смена режима во время незавершённой сцены
   должна быть либо корректно продолжена из общего состояния, либо отложена до конца.
-- [ ] Не удалять классические EventDialog/DiceDialog/ResultCard в рамках записи Story.
+- [x] Не удалять классические EventDialog/DiceDialog/ResultCard в рамках записи Story.
   Окончательное удаление или смена режима по умолчанию требует отдельного решения.
-- [ ] Убрать временное глобальное замораживание мира при открытии Story из макета v347:
+- [x] Убрать временное глобальное замораживание мира при открытии Story из макета v347:
   у настоящей ленты пауза определяется активной сценой, а не именем вкладки.
 - [ ] Добавить дни, сворачивание завершённых блоков и подгрузку старых записей.
 - [ ] Не прокручивать насильно вниз, когда игрок перечитывает прошлое; дать переход
@@ -261,8 +288,7 @@ Story получает факты от тех же владельцев и по�
 
 ## Следующий шаг
 
-**Ручная проверка настоящих записанных ивентов в Story и сравнение анимации с эталоном.** Затем расширять общий сбор на другие источники действий (этап 4), сохраняя классические окна. Живую Story-модалку подключать отдельно, после проверки записи.
-Живая Story-модалка и остальные действия — следующие отдельные пакеты.
+**Ручная проверка прохождения событий во вкладке Story на устройстве.** Следом — общий сбор остальных действий (этап 4), переход к текущей сцене при чтении архива и отдельный перенос Story-подачи в модалку поверх других экранов.
 
 ## Прогресс
 
@@ -274,7 +300,8 @@ Story получает факты от тех же владельцев и по�
 - [x] Публикация v348: run 40947063001, 32/32 Node-наборов, сборка и deploy.
 - [x] v349: время · место · день, результат отдельной точкой, анимированные показатели без рамки; тот же отбор полей, что в модалке. CI run 40956345997: 32/32, сборка и deploy.
 - [ ] Ручная визуальная проверка на устройстве; пользователь отложил решение по дизайну до завтра.
-- [ ] Остальные действия и живая Story-подача — следующие пакеты.
+- [x] Прохождение событий внутри вкладки Story; исходники проверены, без выпуска.
+- [ ] Остальные действия и Story-модалка поверх других экранов — следующие пакеты.
 
 ## Публикация v350 подтверждена — 30 октября 2026
 

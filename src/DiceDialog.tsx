@@ -15,10 +15,9 @@ type Props = {
   onAccept: () => void
   onCancel: () => void
 }
-export default function DiceDialog({ diceCheck, onRoll, onAccept, onCancel }: Props) {
+export function DiceContents({ diceCheck, onRoll, onAccept, onCancel }: Props) {
   if (!diceCheck.choice.check) return null
-  return <ModalOverlay className="dice-overlay" role="dialog" aria-modal="true" aria-labelledby="dice-action-title">
-      <ModalPanel size="compact" className="dice-card">
+  return <>
         <h2 id="dice-action-title">{diceCheck.stealItemId ? t(stealTitleKeys[diceCheck.stealItemId]) : diceCheck.choice.label}</h2>
         <p className="eyebrow">{checkHeading(diceCheck.choice.check.stat)}</p>
         <div className={diceCheck.roll === null ? 'd20 rolling-ready' : diceCheck.roll === 20 ? 'd20 critical' : diceCheck.roll === 1 ? 'd20 critical-fail' : 'd20'} aria-label={diceCheck.roll === null ? 'D20' : t('dice.rolled', { roll: diceCheck.roll })}><Icon name="dice" />{diceCheck.roll !== null && <span>{diceCheck.roll}</span>}</div>
@@ -26,6 +25,10 @@ export default function DiceDialog({ diceCheck, onRoll, onAccept, onCancel }: Pr
         {diceCheck.roll === null
           ? <div className="dice-actions"><ModalAction className="dice-attempt" onClick={onRoll}>{t('dice.attempt')}</ModalAction>{!diceCheck.fareDodgeInTransit && <ModalAction variant="secondary" className="dice-cancel" onClick={onCancel}>{t('common.cancel')}</ModalAction>}</div>
           : <><strong className="dice-result">{diceCheck.roll === 20 ? t('dice.result.criticalSuccess') : diceCheck.roll === 1 ? t('dice.result.criticalFailure') : diceCheck.roll + diceCheck.modifier >= diceCheck.choice.check.dc ? t('dice.result.success') : t('dice.result.failure')}</strong><ModalAction onClick={onAccept}>{t('dice.continue')}</ModalAction></>}
-      </ModalPanel>
-    </ModalOverlay>
+    </>
+}
+export default function DiceDialog(props: Props) {
+  return <ModalOverlay className="dice-overlay" role="dialog" aria-modal="true" aria-labelledby="dice-action-title">
+    <ModalPanel size="compact" className="dice-card"><DiceContents {...props} /></ModalPanel>
+  </ModalOverlay>
 }

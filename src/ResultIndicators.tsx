@@ -7,9 +7,8 @@ import type { ResultChange } from './results'
 import { t } from './i18n'
 
 export const RESULT_INDICATOR_STEP = 260
-const REVEAL_DELAY = 500
 const REVEAL_DURATION = 260
-export const resultIndicatorDuration = (count: number) => REVEAL_DELAY + Math.max(0, count - 1) * RESULT_INDICATOR_STEP + REVEAL_DURATION
+export const resultIndicatorDuration = (count: number) => Math.max(0, count - 1) * RESULT_INDICATOR_STEP + REVEAL_DURATION
 
 const icons: Partial<Record<ResultResourceId, IconName>> = {
   money: 'banknote', hunger: 'food', thirst: 'water', energy: 'energy', health: 'heart',
@@ -34,7 +33,7 @@ export default function ResultIndicators({ changes, animate = false, animationRe
       const label = id === 'thirst' ? t('stat.thirst') : plainResultLabel(change.label)
       const namedValue = !Number.isFinite(resultChangeAmount(change)) && !change.meter
       return <button type="button" key={`${id ?? label}-${index}`} className={`result-indicator ${change.kind}`} data-resource-id={id} data-stat={label}
-        style={{ '--result-indicator-delay': `${REVEAL_DELAY + index * RESULT_INDICATOR_STEP}ms` } as CSSProperties}
+        style={{ '--result-indicator-delay': `${index * RESULT_INDICATOR_STEP}ms` } as CSSProperties}
         title={label} aria-label={`${label} ${change.value}`} aria-describedby={expanded === index ? tooltipId : undefined}
         onClick={() => setExpanded(value => value === index ? null : index)} onBlur={() => setExpanded(null)}>
         {id === 'mood' ? <MoodIcon value={change.meter?.after ?? 50} /> : id === 'phoneBattery' ? <BatteryIcon charge={change.meter?.after ?? 0} /> : <Icon name={id && icons[id] || 'info'} />}

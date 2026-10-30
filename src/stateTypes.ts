@@ -22,7 +22,7 @@ export type StoredItems = { documents: boolean; medicines: number; cigarettes: n
 export type Screen = 'story' | 'location' | 'map' | 'inventory' | 'status' | 'phone' | 'travel'
 
 export type DeferredEncounter = { token: number; locationId: string; trigger: 'location' | 'bench'; elapsedMinutes: number; delayMs: number; remainingMs: number }
-export type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null; deferred?: DeferredEncounter }
+export type FirstNightEvents = { seen: string[]; lastAt: number | null; pendingId: string | null; pendingRoll?: number | null; pendingChoiceId?: string; pendingModifier?: number; deferred?: DeferredEncounter }
 export type PhoneActivity = { questionId: string; total: number; remaining: number; before: ResultSnapshot; pausedMinutes?: number }
 export type JournalGoalId = 'shelter' | 'charge' | 'work' | 'cold'
 export type JournalGoals = {
