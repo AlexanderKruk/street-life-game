@@ -248,7 +248,7 @@ function measure(App) {
   fireEvent.click(screen.getByRole('button', { name: 'Got it', exact: true })); assert(!document.querySelector('.result-modal'));
   setup(App, 'location', { minutes: 1380, energy: 20 });
   fireEvent.click(screen.getByRole('button', { name: /Try to sleep/ })); pauseAudit('sleep planning', '.sleep-choice-modal');
-  setup(App, 'location', { locationId: 'street', day: 3, rainSystemStarted: true, nextRainAt: 999999, rain: { id: 'rain:3380', level: 'rain', start: 3380, end: 3440, choice: null, searchRemaining: 0, protection: .5, shelter: 'tree', exposure: 0, energyLoss: 0, moodLoss: 0, waited: 0, coldRoll: .99 } }); pauseAudit('rain choice', '.event-overlay');
+  setup(App, 'location', { locationId: 'street', day: 3, rainSystemStarted: true, nextRainAt: 999999, rain: { id: 'rain:3380', level: 'rain', start: 3380, end: 3440, choice: null, searchRemaining: 0, protection: .5, shelter: 'tree', exposure: 0, energyLoss: 0, moodLoss: 0, waited: 0, coldRoll: .99 } }); pauseAudit('rain choice', '.story-event-overlay');
   setup(App, 'status', { health: 0 }); pauseAudit('game over', '.game-over-overlay');
   setup(App, 'map', {}, { 'street-life-inventory-v1': { transitCard: false } });
   fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
@@ -269,7 +269,7 @@ function measure(App) {
   modalAudit.push({ name: 'phone panel (time continues)', renders: counts() });
   setup(App, 'location');
   act(() => global.__auditSetters.setActiveEvent({ id: 'audit', title: 'Audit event', icon: '!', text: 'A paused event.', choices: [{ id: 'continue', icon: 'person', label: 'Continue', outcome: { message: 'Done' } }] }));
-  pauseAudit('street event', '.event-card');
+  pauseAudit('street event', '.story-event-panel');
   setup(App, 'location', { locationId: 'shelter', minutes: 1140 });
   act(() => global.__auditSetters.setShelterInterview({ step: 'reason' }));
   pauseAudit('shelter interview', '.shop');
