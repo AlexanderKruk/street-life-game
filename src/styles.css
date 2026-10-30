@@ -1388,10 +1388,10 @@ body { min-width:0; }
 /* Recorded Story uses the same reading pace as the retained comparison. */
 .story-screen { --story-gap:12px; min-width:0; display:flex; flex-direction:column; gap:var(--story-gap); }
 .modal-overlay.story-event-overlay { z-index:100; }
-.modal-panel.story-event-panel { max-height:88svh; overflow:hidden; display:flex; flex-direction:column; }
+.modal-panel.story-event-panel { height:88svh; max-height:100%; overflow:hidden; display:flex; flex-direction:column; }
 /* Put the frame's inset inside the scroller so the breathing point and its wave
    can expand into the gutter without shifting the timeline or its content. */
-.story-event-content { min-height:0; margin:calc(-1 * var(--modal-padding-y)) calc(-1 * var(--modal-padding-x)); padding:var(--modal-padding-y) var(--modal-padding-x); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+.story-event-content { flex:1; min-height:0; margin:calc(-1 * var(--modal-padding-y)) calc(-1 * var(--modal-padding-x)); padding:var(--modal-padding-y) var(--modal-padding-x); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
 .story-event-panel:focus { outline:none; }
 .story-toolbar, .story-episode-heading { display:flex; align-items:start; justify-content:space-between; gap:var(--story-gap); flex-wrap:wrap; margin-bottom:0; }
 .story-toolbar h1 { font-size:var(--font-title); font-weight:var(--weight-semibold); }
@@ -1479,4 +1479,3 @@ body { min-width:0; }
 .story-modal-complete .bottom-nav { z-index:101; }
 .story-event-close { position:relative; right:auto; top:auto; width:44px; height:44px; align-self:flex-end; flex-shrink:0; margin-bottom:12px; }
 .story-modal-complete .story-event-overlay { bottom:calc(112px + env(safe-area-inset-bottom,0px)); }
-.story-modal-complete .story-event-panel { max-height:100%; }

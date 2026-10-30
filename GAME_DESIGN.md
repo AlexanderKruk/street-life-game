@@ -1,3 +1,12 @@
+Story modal initial size — 30 October 2026, source only: open the shared
+Story event frame at its full 88svh preferred height from the first character,
+capped by the overlay's available height and safe-area gutters. The existing
+regular maximum width is retained. The inner scroller fills unused height and
+handles longer content; the completed frame still fits above unlocked navigation.
+The breathing-point paint gutter remains intact. Design-system and production
+build passed. Browser QA remains unavailable after the documented preview startup
+failure; no fresh browser/iPhone/WebKit verification. No publication.
+
 Story point clipping — 30 October 2026, source only: the Story event
 scroller now extends through the ModalPanel inset and restores that same inset
 as its own padding. This reserves paint space for the 12px breathing ring and
