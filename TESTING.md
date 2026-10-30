@@ -1,3 +1,12 @@
+Story choice motion — 30 October 2026, source only: check-story-live adds
+controlled geometry/WAAPI/ResizeObserver cases for preserving the pre-click height,
+monotonic growth, movement to the saved-answer slot, immediate once-only archive,
+inert snapshots without live IDs, arrival cleanup, retained height through ack,
+Replay reset and reload mid-flight without repeated costs/History. Reduced motion
+creates no flight. All 61 inline and 61 modal routes, results, design-system,
+module boundaries and production build passed. No full suites or publication;
+mocked geometry does not establish real browser/iPhone/WebKit visual parity.
+
 Release v355 is published — 30 October 2026. GitHub Pages run 41077931905
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41077931905)
 succeeded for source 8a66c89a3c20a890b0547678b705da85780f145a: all 34 Node

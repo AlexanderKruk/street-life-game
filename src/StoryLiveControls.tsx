@@ -10,7 +10,7 @@ export type StoryInteraction = {
 }
 
 /** UI only: commands and eligibility still belong to the existing controllers. */
-export default function StoryLiveControls({ interaction }: { interaction: StoryInteraction }) {
+export default function StoryLiveControls({ interaction, onSelect }: { interaction: StoryInteraction; onSelect?: (button: HTMLButtonElement) => void }) {
   const reduced = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const [elapsed, setElapsed] = useState(0)
   const claimed = useRef<string | null>(null)
@@ -49,7 +49,7 @@ export default function StoryLiveControls({ interaction }: { interaction: StoryI
     <div className="story-live-actions">{choices.map(({ action, at }) => <button key={`${interaction.key}:${action.id}`} type="button"
       className={`story-live-choice${action.primary ? ' is-primary' : ''}`} data-order-id={action.id} hidden={!reduced && elapsed < at}
       disabled={action.disabled || (!reduced && elapsed < at + 650)}
-      onClick={() => { if (claimed.current === interaction.key || action.disabled) return; claimed.current = interaction.key; action.onChoose() }}>
+      onClick={event => { if (claimed.current === interaction.key || action.disabled) return; claimed.current = interaction.key; onSelect?.(event.currentTarget); action.onChoose() }}>
       <span>{action.label}</span>{action.detail && <small>{action.detail}</small>}
     </button>)}</div>
   </div>
