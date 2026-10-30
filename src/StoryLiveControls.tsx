@@ -7,6 +7,8 @@ export type StoryInteraction = {
   episodeId: number; key: string; minute: number; actions: StoryLiveAction[]
   seed: number; decision: string; fixed?: boolean; content?: ReactNode
   waitingForDecision?: boolean; onPresented?: () => void
+  /** Display every actual process tick, independently of presentation frames. */
+  gameClock?: boolean
 }
 
 /** UI only: commands and eligibility still belong to the existing controllers. */

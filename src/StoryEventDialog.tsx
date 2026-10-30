@@ -5,10 +5,11 @@ import { ModalAction, ModalOverlay, ModalPanel } from './Modal'
 import StoryScreen from './StoryScreen'
 import type { StoryEpisode } from './story'
 import type { StoryInteraction } from './StoryLiveControls'
+import { scheduleStoryClose } from './storyAutoClose'
 
 /** The same chronology as the Story tab, opened at its live end. */
-export default function StoryEventDialog({ episodes, interaction, minute, label, canClose, onClose }: {
-  episodes: StoryEpisode[]; interaction?: StoryInteraction; minute: number; label: string; canClose: boolean; onClose: () => void
+export default function StoryEventDialog({ episodes, interaction, minute, label, canClose, autoClose = false, onClose }: {
+  episodes: StoryEpisode[]; interaction?: StoryInteraction; minute: number; label: string; canClose: boolean; autoClose?: boolean; onClose: () => void
 }) {
   const current = useRef({ canClose, onClose })
   current.current = { canClose, onClose }
@@ -17,6 +18,19 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   const bottomControl = useRef<HTMLButtonElement>(null)
   const following = useRef(true)
   const [awayFromBottom, setAwayFromBottom] = useState(false)
+  const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
+  const [closing, setClosing] = useState(false)
+  useEffect(() => {
+    const update = () => setVisible(document.visibilityState !== 'hidden')
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+  useEffect(() => {
+    setClosing(false)
+    if (!autoClose || !canClose || awayFromBottom || !visible) return
+    return scheduleStoryClose(window, () => setClosing(true), () => { if (current.current.canClose) current.current.onClose() },
+      !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+  }, [autoClose, canClose, awayFromBottom, visible, interaction?.episodeId])
   const updateScrollPosition = useCallback(() => {
     const scroller = content.current
     if (!scroller) return
@@ -77,7 +91,7 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
       if (previous?.isConnected) previous.focus({ preventScroll: true })
     }
   }, [])
-  return <ModalOverlay className="story-event-overlay" role="dialog" aria-modal="true" aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
+  return <ModalOverlay className={`story-event-overlay${closing ? ' is-auto-closing' : ''}`} role="dialog" aria-modal="true" aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
     <ModalPanel ref={panel} tabIndex={-1} className="story-event-panel">
       {canClose && <ModalAction variant="outline" iconOnly floating className="story-event-close" aria-label={t('common.close')} onClick={onClose}><Icon name="close" className="icon" /></ModalAction>}
       <div ref={content} className="story-event-content" onScroll={updateScrollPosition}><StoryScreen episodes={episodes} interaction={interaction} currentMinute={minute} presentation="event" /></div>

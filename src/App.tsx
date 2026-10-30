@@ -24,6 +24,8 @@ import ActivityDialog, { ActivityCancel } from './ActivityDialog'
 import BottomNavigation from './BottomNavigation'
 import StoryScreen from './StoryScreen'
 import StoryEventDialog from './StoryEventDialog'
+import StoryTravelProgress from './StoryTravelProgress'
+import { travelStoryKey, travelStoryPhase } from './travelStory'
 import type { StoryInteraction } from './StoryLiveControls'
 import { choiceCheckDetail } from './choiceCheckPresentation'
 import ChoiceButton from './ChoiceButton'
@@ -134,8 +136,10 @@ export default function App() {
   const [eventResultOpen, setEventResultOpen] = useState(!!restoredStoryResult)
   const closeResult = useCallback(() => {
     if (infoModal?.rainResultId) commitGame(previous => ({ ...previous, rainResults: previous.rainResults?.filter(rain => rain.id !== infoModal.rainResultId) }))
+    const arrived = story.current().episodes.some(entry => entry.source === 'travel' && entry.status === 'awaiting-ack' && entry.resultIdentity?.actionId === 'arrival')
     story.acknowledge()
     setInfoModal(null); setEventResultOpen(false); setPresentedStoryId(null)
+    if (arrived) { setTrip(null); setScreen('location') }
   }, [infoModal?.rainResultId])
   const buyShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) buyItem(item) })
   const stealShopItem = useLatestAction((id: string) => { const item = SHOP_ITEMS.find(item => item.id === id); if (item) stealItem(item) })
@@ -216,7 +220,7 @@ export default function App() {
   }, [travelChoiceOpen])
   const phoneSearchModalRef = useRef<HTMLElement>(null)
   const travelling = screen === 'travel' && !!trip
-  const activityOverlay = travelling || !!phoneActivity
+  const activityOverlay = LEGACY_EVENT_DIALOGS && travelling || !!phoneActivity
   useEffect(() => {
     if (!activityOverlay) return
     const overflow = document.body.style.overflow
@@ -233,6 +237,20 @@ export default function App() {
   const { firstNightEvents, leftHome, encounters, openingSearchObservation,
     ambientEventClock, activeEvent, setActiveEvent, diceCheck, setDiceCheck, cancelDiceCheck, resetEventSession } = eventSession
   function storyStamp(): StoryStamp { return { day: game.day, minute: game.minutes, locationId: game.locationId, locationName: locationName(game.locationId) } }
+  function recordTravelStart(journey: Trip) {
+    const key = travelStoryKey(journey)
+    const existing = story.current().episodes.find(entry => entry.source === 'travel' && entry.sourceId === key && entry.status === 'active')
+    if (existing) return existing.id
+    const start = journey.before?.game ?? game
+    const at = { day: start.day, minute: start.minutes, locationId: start.locationId, locationName: locationName(start.locationId) }
+    return story.begin('travel', key, { eventId: key, title: t('activity.travel'),
+      text: t('travel.story.route', { from: at.locationName, to: locationName(journey.destinationId) }), at })
+  }
+  useEffect(() => {
+    if (LEGACY_EVENT_DIALOGS || !trip || trip.remaining <= 0) return
+    const id = recordTravelStart(trip)
+    if (trip.storyEpisodeId !== id) setTrip(previous => previous === trip ? { ...trip, storyEpisodeId: id } : previous)
+  }, [trip])
   function recordStoryChoice(choice: StreetEventChoice, dice?: EventDiceState | null) {
     if (activeEvent) return story.choose(activeEvent, choice, storyStamp(), dice ?? undefined)
     const sourceId = dice?.stealItemId ? `steal:${dice.stealItemId}` : `fare:${dice?.fareDodgeDestinationId ?? game.locationId}`
@@ -250,10 +268,11 @@ export default function App() {
       if (entry.status !== 'active') continue
       const stillActive = entry.source === 'encounter' ? entry.scenes.at(-1)?.eventId === activeEvent?.id
         : entry.source === 'check' ? !!diceCheck
+        : entry.source === 'travel' ? !!trip && entry.sourceId === travelStoryKey(trip)
         : game.rain?.id === entry.sourceId || game.rainResults?.some(rain => rain.id === entry.sourceId)
       if (!stillActive && !pendingResult) story.interrupt(entry.id)
     }
-  }, [activeEvent, diceCheck, game.rain, game.rainResults, pendingResult])
+  }, [activeEvent, diceCheck, game.rain, game.rainResults, pendingResult, trip])
   const [inventory, setInventory] = useState<Inventory>(() => initial.inventory)
   const [storage, setStorage] = useState<StoredItems>(() => initial.storage)
   const [life, setLife] = useState<LifeSituation>(() => initial.life)
@@ -314,9 +333,10 @@ export default function App() {
   }, [activeGoal, game.day, game.minutes, current.id, trip, life.shelterUntilDay, life.housing])
   const usedBackpackSlots = backpackSlots(inventory)
   const gameOver = game.health <= 0
-  const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver)
+  const travelVisible = travelling && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver || closingNotice)
+  const storyTravelRunning = !LEGACY_EVENT_DIALOGS && travelVisible
   useEffect(() => {
-    if (!travelVisible) return
+    if (!travelVisible || !LEGACY_EVENT_DIALOGS) return
     const panel = travelModalRef.current
     panel?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true })
     const trap = (event: KeyboardEvent) => {
@@ -331,7 +351,7 @@ export default function App() {
   const inlineStoryEvent = screen === 'story' && !gameOver && !sleeping && !closingNotice && !!(activeEvent || diceCheck ||
     rainChoice || rainWaiting || game.rain && story.store.episodes.some(entry => entry.source === 'rain' && entry.sourceId === game.rain?.id && entry.status === 'active') ||
     pendingResult?.storyEpisodeId !== undefined || infoModal && story.store.episodes.some(entry => entry.status === 'awaiting-ack'))
-  const modalStoryEvent = !LEGACY_EVENT_DIALOGS && screen !== 'story' && !gameOver && !sleeping && !closingNotice && !!(activeEvent || rainChoice || rainWaiting ||
+  const modalStoryEvent = !LEGACY_EVENT_DIALOGS && screen !== 'story' && !gameOver && !sleeping && !closingNotice && !!(storyTravelRunning || activeEvent || rainChoice || rainWaiting ||
     pendingResult?.storyEpisodeId !== undefined && story.store.episodes.some(entry => entry.id === pendingResult.storyEpisodeId && entry.source !== 'check') ||
     infoModal && story.store.episodes.some(entry => entry.status === 'awaiting-ack' && entry.source !== 'check'))
   const storyEventVisible = inlineStoryEvent || modalStoryEvent
@@ -627,8 +647,16 @@ export default function App() {
   }, {
     setGame, setTrip, setSelectedDestination, setStreetExitPending, setStreetBenchFound, setShelterArrival, setLife, setScreen,
     setMessage, openPage, recordShelterDeparture, resultSnapshot, runWithResult, applyAction,
+    recordTravelStart: LEGACY_EVENT_DIALOGS ? undefined : recordTravelStart,
+    recordTravelCancel: LEGACY_EVENT_DIALOGS ? undefined : journey => {
+      const id = recordTravelStart(journey), after = resultSnapshot()
+      const at = { ...storyStamp(), locationId: 'street', locationName: locationName('street') }
+      story.finish(id, { title: t('travel.story.cancelled'), text: t('travel.story.cancelled'),
+        ...summarizeResult(journey.before ?? after, after) }, at, { actionId: 'journey-stopped' }, true)
+    },
   })
 
+  const cancelStoryTravel = useLatestAction(cancelTravel)
   useEncounterObservers(encounterQueue, eventSession, { game, currentId: current.id, firstNight,
     blocked: !!(eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver || phoneOpen || travelChoiceOpen),
   })
@@ -797,12 +825,15 @@ export default function App() {
   }
 
   const liveEpisode = storyEventVisible ? story.store.episodes.find(entry => entry.status === 'awaiting-ack') ??
-    [...story.store.episodes].reverse().find(entry => entry.status === 'active' && (activeEvent ? entry.scenes.at(-1)?.eventId === activeEvent.id
-      : diceCheck ? entry.source === 'check' : entry.source === 'rain' ? entry.sourceId === game.rain?.id : entry.id === pendingResult?.storyEpisodeId)) : undefined
+    [...story.store.episodes].reverse().find(entry => entry.status === 'active' && (activeEvent ? entry.source === 'encounter' && entry.scenes.at(-1)?.eventId === activeEvent.id
+      : diceCheck ? entry.source === 'check' : rainChoice || rainWaiting ? entry.source === 'rain' && entry.sourceId === game.rain?.id
+      : pendingResult?.storyEpisodeId !== undefined ? entry.id === pendingResult.storyEpisodeId
+      : storyTravelRunning && trip ? entry.source === 'travel' && entry.sourceId === travelStoryKey(trip) : false)) : undefined
   let storyInteraction: StoryInteraction | undefined
   if (liveEpisode) {
     const scene = liveEpisode.scenes.at(-1)!
     storyInteraction = { episodeId: liveEpisode.id, key: `${liveEpisode.id}:${scene.eventId}:${liveEpisode.status}`, minute: absoluteMinutes(game), actions: [], seed: choiceSeed, decision: choiceDecisionKey, fixed: true }
+    if (liveEpisode.source === 'travel') storyInteraction.gameClock = true
     if (liveEpisode.status === 'awaiting-ack' && infoModal && !pendingResult) {
       storyInteraction.onPresented = modalStoryEvent ? () => setPresentedStoryId(liveEpisode.id) : closeResult
     } else if (diceCheck && !infoModal && !pendingResult) {
@@ -819,6 +850,9 @@ export default function App() {
         return { id: `event:${activeEvent.id}:${choice.id}`, label: choice.label, disabled: unavailable !== null,
           detail: unavailable ?? (choice.check ? choiceCheckDetail(choice.check) : undefined), onChoose: () => resolveStreetEvent(choice) }
       })
+    } else if (liveEpisode.source === 'travel' && trip && storyTravelRunning) {
+      const phase = travelStoryPhase(trip, underRainCover)
+      storyInteraction.content = <StoryTravelProgress phaseId={phase.id} text={phase.text} onCancel={cancelStoryTravel} />
     } else if (game.rain && !infoModal && !pendingResult) {
       if (rainWaiting) {
         storyInteraction.key += ':waiting'
@@ -833,8 +867,8 @@ export default function App() {
     }
   }
   const storyModalComplete = modalStoryEvent && liveEpisode?.id === presentedStoryId && liveEpisode?.status === 'awaiting-ack' && !!infoModal && !pendingResult
-  const backgroundBlocked = eventInteractionBlocked && !inlineStoryEvent
-  return <main className={`shell${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
+  const backgroundBlocked = (eventInteractionBlocked || storyTravelRunning) && !inlineStoryEvent
+  return <main className={`shell${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || screen === 'travel' ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {streetExitPending && <InventoryDialog icon="exit" label={t('location.leaveLabel')} title={t('location.leaveTitle', { place: locationName(current.id) })} onCancel={cancelStreetExit}>
       <div className="sleep-choice-buttons"><ModalAction variant="secondary" type="button" onClick={cancelStreetExit}>{t('common.cancel')}</ModalAction><ModalAction type="button" className="confirm-action" onClick={confirmStreetExit}>{t('location.goToStreet')}</ModalAction></div>
     </InventoryDialog>}
@@ -850,7 +884,7 @@ export default function App() {
     />}
     {goalCompletionVisible && <GoalCompletedDialog key={completedGoalId} title={goals.find(goal => goal.id === completedGoalId)!.title} onClose={acknowledgeGoalCompletion} />}
     {infoModal && !pendingResult && !storyEventVisible && <ResultCard result={infoModal} onClose={closeResult} />}
-    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
+    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} autoClose={liveEpisode?.source === 'inventory' || liveEpisode?.source === 'travel' && liveEpisode.resultIdentity?.actionId === 'arrival'} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: t('location.closedTitle', { place: locationName(closingNotice) }),
       label: t('location.closingLabel'),
@@ -897,12 +931,12 @@ export default function App() {
       phase={activeCall ? activeCall.id === 'call-university' || phoneActivity.remaining === phoneActivity.total ? t('phone.ui.phase.ringing') : t('phone.ui.phase.talking') : phoneActivity.remaining > phoneActivity.total * 2 / 3 ? t('phone.ui.phase.searching') : phoneActivity.remaining > phoneActivity.total / 3 ? t('phone.ui.phase.reading') : t('phone.ui.phase.saving')}
     />}
 
-    {(screen === 'map' || travelling) && <div className="map-surface" inert={travelling} aria-hidden={travelling || undefined}><CityMap
+    {(screen === 'map' || screen === 'travel') && <div className="map-surface" inert={travelling || storyEventVisible} aria-hidden={travelling || storyEventVisible || undefined}><CityMap
       places={mapPlaces}
       currentId={game.locationId} initialFocusId={mapInitialFocus} minutes={game.minutes} reservedBed={shelterBooked} routeId={travelling ? trip!.destinationId : selectedDestination} onRoute={chooseDestination}
     /></div>}
 
-    {screen === 'travel' && trip && (() => {
+    {LEGACY_EVENT_DIALOGS && screen === 'travel' && trip && (() => {
       const destination = locations.find((x) => x.id === trip.destinationId)
       const elapsed = Math.max(0, trip.total - trip.remaining)
       const phase = getTravelDisplayPhase(trip)
@@ -961,6 +995,6 @@ export default function App() {
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={eventModalRef}
     />}
 
-    <BottomNavigation screen={screen} blocked={eventInteractionBlocked} phoneBusy={!!phoneActivity} travelling={travelling} current={current} mood={game.mood} onNavigate={setScreen} />
+    <BottomNavigation screen={screen} blocked={eventInteractionBlocked || storyTravelRunning} phoneBusy={!!phoneActivity} travelling={travelling} current={current} mood={game.mood} onNavigate={setScreen} />
   </main>
 }

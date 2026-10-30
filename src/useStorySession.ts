@@ -45,11 +45,11 @@ export function useStorySession(initial: StoryStore) {
     commit(previous => ({ ...previous, episodes: previous.episodes.map(entry => entry.id === id ? { ...entry, scenes: entry.scenes.map((scene, index) => index === entry.scenes.length - 1 ? chooseStoryScene(scene, choice, at, dice) : scene) } : entry) }))
     return id
   }
-  function finish(id: number, result: ResultCardData, at: StoryStamp, resultIdentity?: StoryEpisode['resultIdentity']) {
+  function finish(id: number, result: ResultCardData, at: StoryStamp, resultIdentity?: StoryEpisode['resultIdentity'], completed = false) {
     commit(previous => {
       const entry = previous.episodes.find(entry => entry.id === id)
       if (!entry || entry.status !== 'active') return previous
-      return { ...previous, episodes: previous.episodes.map(entry => entry.id === id ? { ...entry, status: 'awaiting-ack', result, endedAt: at, ...(resultIdentity ? { resultIdentity } : {}) } : entry) }
+      return { ...previous, episodes: previous.episodes.map(entry => entry.id === id ? { ...entry, status: completed ? 'complete' : 'awaiting-ack', result, endedAt: at, ...(resultIdentity ? { resultIdentity } : {}) } : entry) }
     })
   }
   function acknowledge() {

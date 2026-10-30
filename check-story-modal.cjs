@@ -122,7 +122,7 @@ try {
     dismiss(); assert.deepEqual(facts(), expected, `${item.id} preserves exact price, stock, time, History and Story facts`);
   }
   // Consuming an item commits once, presents the real result, then returns to
-  // the same backpack only when the player dismisses it.
+  // the same backpack after the complete result and short reading pause.
   const realTimeout = window.setTimeout, realClearTimeout = window.clearTimeout;
   const timeouts = new Map(); let timeoutId = 0, timeoutNow = 0;
   window.setTimeout = (callback, delay) => { const id = ++timeoutId; timeouts.set(id, { callback, at: timeoutNow + delay }); return id; };
@@ -146,11 +146,11 @@ try {
   assert.equal(consumed.inventory.water, 2); assert.equal(consumed.story.episodes.length, 1);
   assert.equal(consumed.story.episodes[0].source, 'inventory'); assert.equal(consumed.story.episodes[0].status, 'awaiting-ack');
   remount(); assert(modal()); assert.deepEqual(facts(), consumed, 'StrictMode/reload restores the result without consuming again');
-  assert.equal(timeouts.size, 0, 'a completed result has no dismissal timer');
-  advanceTimeouts(60000); env.advance(60000); assert(modal(), 'the player can read for as long as needed');
-  assert.deepEqual(facts(), consumed, 'reading does not acknowledge or change game facts');
+  assert.equal(timeouts.size, 1, 'a complete quick result starts one presentation timer');
+  advanceTimeouts(999); env.advance(1000); assert(modal(), 'the complete result remains visible for its reading pause');
+  assert.deepEqual(facts(), consumed, 'reading does not change game facts');
   assert(document.querySelector('.bottom-nav[inert]')); assert.equal(modal().getAttribute('aria-modal'), 'true');
-  env.fireEvent.keyDown(document, { key: 'Escape' }); assert(!modal());
+  advanceTimeouts(1); assert(!modal(), 'quick results close automatically after full presentation');
   assert.equal(localStorage.getItem('street-life-screen'), 'inventory');
   assert(!document.querySelector('.game-background[inert]')); assert.equal(document.body.style.position, '');
   const completedConsumption = facts();
@@ -230,18 +230,19 @@ try {
   env.setup({ day: 2, minutes: 720, thirst: 20 }, { 'street-life-screen': 'inventory', [env.invKey]: { water: 2 } });
   env.click(/Water.*tap to drink/);
   assert(modal()); assert(!document.querySelector('.story-event-close'));
-  assert.equal(timeouts.size, 0, 'presentation has no dismissal timer');
+  assert.equal(timeouts.size, 0, 'the quick-result timer waits for the entire presentation');
   advanceTimeouts(5000); assert(modal());
   animate(30000); assert(document.querySelector('.story-event-close'));
   const animatedConsumption = facts();
-  advanceTimeouts(60000); env.advance(60000); assert(modal(), 'animated consumption also waits for acknowledgement');
-  assert(document.querySelector('.bottom-nav[inert]')); assert.equal(timeouts.size, 0);
+  advanceTimeouts(999); env.advance(1000); assert(modal());
+  assert(document.querySelector('.bottom-nav[inert]')); assert.equal(timeouts.size, 1);
   assert.equal(save().episodes[0].status, 'awaiting-ack');
-  env.fireEvent.click(document.querySelector('.story-event-close')); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
+  advanceTimeouts(1); assert(modal().classList.contains('is-auto-closing'));
+  advanceTimeouts(199); assert(modal()); advanceTimeouts(1); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
   assert.deepEqual(facts().inventory, animatedConsumption.inventory);
   assert.deepEqual(facts().game, animatedConsumption.game);
   assert.equal(timeouts.size, 0, 'closing leaves no dismissal timer');
   window.setTimeout = realTimeout; window.clearTimeout = realClearTimeout;
   env.finish();
-  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain, standalone transport and manual consumption acknowledgement.`);
+  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain, standalone transport and quick-result auto-close.`);
 } finally { rmSync(temporary, { recursive: true, force: true }); }

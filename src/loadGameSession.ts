@@ -114,9 +114,9 @@ export function loadTrip(storage: SaveReader): Trip | null {
       ['walk', 'transit', 'fare-dodge'].includes(saved.mode) &&
       Number.isFinite(saved.total) && saved.total > 0 && Number.isFinite(saved.remaining) &&
       saved.remaining >= 0 && saved.remaining <= saved.total && (saved.before === undefined || validSnapshot(saved.before)) ? (() => {
-        const { inspection: rawInspection, ...trip } = saved
+        const { inspection: rawInspection, storyEpisodeId, ...trip } = saved
         const inspection = loadTripInspection(rawInspection, trip as Trip)
-        return { ...trip, ...(inspection ? { inspection } : {}) } as Trip
+        return { ...trip, ...(inspection ? { inspection } : {}), ...(Number.isSafeInteger(storyEpisodeId) && storyEpisodeId! > 0 ? { storyEpisodeId } : {}) } as Trip
       })() : null
   } catch { return null }
 }

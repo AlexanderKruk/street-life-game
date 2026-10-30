@@ -48,7 +48,7 @@ async function loadApp(disableMemo) {
   const result = await build({
     entryPoints: ['src/App.tsx'], bundle: true, define: {'import.meta.env': '{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'}, write: false, platform: 'node', format: 'cjs', external: ['react', 'react-dom', 'react/jsx-runtime'],
     plugins: [{ name: 'count-render-invocations', setup(builder) {
-      builder.onLoad({ filter: /(?:App|JournalSections|LifeSituation|CityMap|ItemArt|LocationPresentation|ShopCard|ResultCard|Icon)\.tsx$/ }, async ({ path }) => {
+      builder.onLoad({ filter: /(?:App|JournalSections|LifeSituation|CityMap|ItemArt|LocationPresentation|ShopCard|ResultCard|Icon|StoryTravelProgress)\.tsx$/ }, async ({ path }) => {
         let source = fs.readFileSync(path, 'utf8').replace(/memo\(function (\w+)\(([\s\S]*?)\) \{/g,
           (match, name) => `${match} globalThis.__uiRenders['${name}'] = (globalThis.__uiRenders['${name}'] ?? 0) + 1;`);
         source = source.replace('export default function App() {', "export default function App() { globalThis.__uiRenders.App = (globalThis.__uiRenders.App ?? 0) + 1;");
@@ -75,19 +75,20 @@ function measure(App) {
   setup(App, 'location', { locationId: 'street' }); advance(10); output.street = counts();
   setup(App, 'location', { locationId: 'shop' }); advance(10); output.shop = counts();
   setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 } });
-  assert(screen.getByRole('dialog', { name: 'Time on the way' }).contains(document.querySelector('.travel-walker')));
+  assert(screen.getByRole('dialog', { name: 'Time on the way' }).contains(document.querySelector('.story-travel-progress')));
   assert(document.querySelector('.map-surface[inert] .district-map'), 'walking keeps the map underneath');
   assert(!screen.queryByRole('region', { name: 'City map' }), 'background map is hidden from assistive technology');
   assert([...document.querySelectorAll('.bottom-nav button')].every(button => button.disabled));
   assert.equal(document.body.style.overflow, 'hidden');
-  const initialElapsed = document.querySelector('.travel-elapsed').textContent;
+  const initialClock = document.querySelector('.story-head time').textContent;
   advance(12); output.travel = counts();
-  assert.notEqual(document.querySelector('.travel-elapsed').textContent, initialElapsed);
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '48m');
+  assert.notEqual(document.querySelector('.story-head time').textContent, initialClock);
+  assert.equal(document.querySelector('.story-head time').textContent, '09:08', 'Story clock follows the same 48 game minutes at ×4');
   assert(!document.querySelector('.travel-progress'));
-  for (const [elapsed, expected] of [[60, '1h 00m'], [61, '1h 01m'], [75, '1h 15m']]) {
+  for (const elapsed of [60, 61, 75]) {
     setup(App, 'travel', {}, { 'street-life-trip-v1': { destinationId: 'shop', mode: 'walk', total: 240, remaining: 240 - elapsed } });
-    assert.equal(document.querySelector('.travel-elapsed').textContent, expected);
+    assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 240 - elapsed, 'presentation preserves the restored distance');
+    assert(document.querySelector('.story-process-dots'));
   }
   setup(App, 'location', { locationId: 'street', minutes: 1320 });
   fireEvent.click(phoneSearchButton('Help & hygiene'));
@@ -109,7 +110,7 @@ function measure(App) {
     assert(before[section][name] > 0, `${name}: baseline must render during ticks`);
     assert.equal(after[section][name] ?? 0, 0, `${name}: unchanged data must skip rendering`);
   }
-  assert(after.travel.TravelHeading > 0 && after.travel.TravelHeading < before.travel.TravelHeading, 'travel headings update for changing walking phases, skipping unchanged ticks');
+  assert(after.travel.StoryTravelProgress > 0 && after.travel.StoryTravelProgress < before.travel.StoryTravelProgress, 'travel copy updates for phase changes, skipping unchanged ticks');
   // Relevant changes must still render: opening hours, selected map pin, discovered goal, journal day.
   setup(App, 'map', { minutes: 1319 }); advance(1);
   assert.equal(count('DistrictScene'), 1);
@@ -267,7 +268,7 @@ function measure(App) {
   assert(document.querySelector('.travel-sheet')); clearCounts(); advance(3);
   modalAudit.push({ name: 'travel choices (time continues)', renders: counts() });
   fireEvent.click(screen.getByRole('button', { name: /Ride without ticket/ }));
-  assert(document.querySelector('.travel-screen'), 'fare evasion now begins a trip, without an immediate roll');
+  assert(document.querySelector('.story-travel-progress'), 'fare evasion begins a trip, without an immediate roll');
   assert(!document.querySelector('.dice-overlay'), 'inspection is triggered while riding');
   // Restore a trip already at its scheduled on-board inspection, keeping the
   // rendering/pause audit deterministic and independent of random trip length.
@@ -375,13 +376,13 @@ function measure(App) {
   advance(3, false); fireEvent(window, new window.Event('pagehide'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 228);
   cleanup(); render(React.createElement(App));
-  assert(document.querySelector('.travel-screen'));
+  assert(document.querySelector('.story-travel-progress'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 228, 'travel resumes from lifecycle save');
-  assert.equal(document.querySelector('.travel-elapsed').textContent, '12m', 'elapsed time survives reload');
+  assert.equal(document.querySelector('.story-head time').textContent, '08:32', 'the restored Story clock matches actual elapsed travel time');
   assert(document.querySelector('.map-surface[inert] .district-map'), 'reload restores the map behind the travel dialog');
   advance(1, false); fireEvent(window, new window.Event('beforeunload'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 224);
-  fireEvent.click(screen.getByRole('button', { name: 'Reset save' }));
+  fireEvent.click(document.querySelector('.reset'));
   advance(10, false); fireEvent(window, new window.Event('pagehide'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).locationId, 'street');
   assert(!localStorage.getItem('street-life-trip-v1'), 'pending old travel never returns after reset');

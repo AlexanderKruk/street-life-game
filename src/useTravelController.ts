@@ -5,6 +5,7 @@ import { locations, destinationTravelTimeRange, randomTravelMinutes, type GameSt
 import type { EventOutcome } from './events'
 import { fareInspectionDice, scheduleTripInspection } from './travelInspection'
 import { getTravelPhase } from './travelPhases'
+import { arrivalStoryText } from './travelStory'
 import type { EncounterQueue } from './encounterQueue'
 import type { EventSession } from './eventSession'
 import type { LifeSituation, Screen, ShelterArrival, TravelMode, Trip } from './stateTypes'
@@ -38,6 +39,8 @@ type Host = {
   resultSnapshot: () => ResultSnapshot
   runWithResult: RunWithResult
   applyAction: (state: GameState, action: ActionResult) => GameState
+  recordTravelStart?: (trip: Trip) => number
+  recordTravelCancel?: (trip: Trip) => void
 }
 export function advanceTrip(previous: Trip | null, minutes: number): Trip | null {
   return previous ? { ...previous, remaining: Math.max(0, previous.remaining - minutes) } : null
@@ -67,10 +70,11 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
   }, [trip, blocked, inspectionBlocked, session.activeEvent, session.diceCheck])
 
   useEffect(() => {
-    if (!trip || trip.remaining > 0 || lastFinishedTrip.current === trip) return
+    if (!trip || trip.remaining > 0 || lastFinishedTrip.current === trip || inspectionBlocked || session.activeEvent || session.diceCheck) return
     const destination = locations.find(location => location.id === trip.destinationId)
     if (!destination) { setTrip(null); return }
-    runWithResult({ id: 'arrival', title: t('travel.arrivalTitle'), actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : locationName(destination.id) } }, () => {
+    const storyEpisodeId = host.recordTravelStart?.(trip)
+    runWithResult({ id: 'arrival', title: t('travel.arrivalTitle'), ...(storyEpisodeId !== undefined ? { storyEpisodeId } : {}), actionHistory: { kind: 'action', destinationId: destination.id, destinationName: destination.id === 'shelter' && shelterBooked && !(game.minutes >= 1080 && game.minutes <= 1320 && game.intoxication <= 10) ? undefined : locationName(destination.id) } }, () => {
       if (lastFinishedTrip.current === trip) return
       lastFinishedTrip.current = trip
       setGame(previous => ({ ...previous, locationId: destination.id }))
@@ -79,17 +83,19 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
       if (shelterArrival) setLife(status => ({ ...status, shelterEntry: { night: shelterNightDay, admitted }, ...(admitted ? { shelterLastStayDay: shelterNightDay, housing: 'Night shelter' as const } : {}) }))
       setMessage(shelterArrival && !admitted
         ? t('location.arrival.outsideShelter')
+        : host.recordTravelStart ? arrivalStoryText(destination.id, locationName(destination.id))
         : t(trip.mode === 'walk' ? 'location.arrival.walk' : 'location.arrival.transit', { place: locationName(destination.id) }))
-      setScreen('location')
+      if (!host.recordTravelStart) setScreen('location')
       setTrip(null)
       const arrived = { ...game, locationId: destination.id }
       if (!observeFirstNight('location', arrived)) observeOrdinaryEvent('location', arrived, undefined, { observation: 'arrival' })
     }, trip.before ?? resultSnapshot(), true, true)
-  }, [trip])
+  }, [trip, inspectionBlocked, session.activeEvent, session.diceCheck])
 
   function cancelTravel() {
     if (!trip || trip.remaining <= 0 || blocked || session.activeEvent || session.diceCheck || lastFinishedTrip.current === trip) return
     lastFinishedTrip.current = trip
+    host.recordTravelCancel?.(trip)
     setTrip(null)
     setSelectedDestination(null)
     setStreetExitPending(false)
@@ -151,7 +157,9 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     if (shelterPhoneCharging) setMessage(t('travel.collectedPhone'))
     if (mode === 'transit') setGame((prev) => ({ ...prev, money: Math.max(0, prev.money - fare) }))
     setStreetBenchFound(false)
-    setTrip({ destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot(), ...(mode !== 'walk' ? { inspection: scheduleTripInspection(total, mode) } : {}) })
+    const next: Trip = { destinationId: destination.id, mode, total, remaining: total, before: resultSnapshot(), ...(mode !== 'walk' ? { inspection: scheduleTripInspection(total, mode) } : {}) }
+    const storyEpisodeId = host.recordTravelStart?.(next)
+    setTrip({ ...next, ...(storyEpisodeId !== undefined ? { storyEpisodeId } : {}) })
     setSelectedDestination(null)
     setScreen('travel')
     if (mode === 'walk') observeOrdinaryEvent('travel', game, mode)
@@ -170,7 +178,9 @@ export function useTravelController(session: EventSession, queue: EncounterQueue
     setLeftHome(true)
     recordShelterDeparture(destination.id)
     setStreetBenchFound(false)
-    setTrip({ destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } })
+    const next: Trip = { destinationId: destination.id, mode: 'fare-dodge', total, remaining: total, before: { ...resultSnapshot(), game: applyAction(game, { ...outcome, minutes: outcome.minutes ?? 0 }) } }
+    const storyEpisodeId = host.recordTravelStart?.(next)
+    setTrip({ ...next, ...(storyEpisodeId !== undefined ? { storyEpisodeId } : {}) })
     setSelectedDestination(null)
     setScreen('travel')
   }

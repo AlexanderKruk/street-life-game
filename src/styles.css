@@ -1388,6 +1388,19 @@ body { min-width:0; }
 /* Recorded Story uses the same reading pace as the retained comparison. */
 .story-screen { --story-gap:12px; min-width:0; display:flex; flex-direction:column; gap:var(--story-gap); }
 .modal-overlay.story-event-overlay { z-index:100; }
+.modal-overlay.story-event-overlay.is-auto-closing { opacity:0; transition:opacity 200ms ease; }
+.story-travel-progress { display:flex; align-items:center; gap:var(--story-gap); }
+.story-travel-progress > p { flex:1; min-width:0; margin:0; font-size:var(--font-body); }
+.story-travel-phase { animation:story-letter-appear 200ms ease-out both; }
+.story-process-dots { display:inline-flex; width:1.25em; white-space:nowrap; }
+.story-process-dots > span { animation:story-process-dot 1200ms ease-in-out infinite; }
+.story-process-dots > span:nth-child(2) { animation-delay:180ms; }
+.story-process-dots > span:nth-child(3) { animation-delay:360ms; }
+@keyframes story-process-dot { 0%,80%,100% { opacity:.2; } 35% { opacity:1; } }
+@media (prefers-reduced-motion:reduce) {
+  .modal-overlay.story-event-overlay.is-auto-closing { transition:none; }
+  .story-travel-phase,.story-process-dots > span { animation:none; }
+}
 .modal-panel.story-event-panel { height:88svh; max-height:100%; padding:0; overflow:hidden; display:flex; flex-direction:column; }
 /* The scroller reaches the frame edge; only its content owns the inset, leaving
    paint space for the breathing point and its wave without inset scrollbars. */

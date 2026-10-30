@@ -118,14 +118,14 @@ test('pending travel pauses for an event and result, then resumes without a seco
   await advance(page, 2000)
   expect(await read(page, keys.trip)).toEqual(trip)
   await acknowledge(page)
-  await expect(page.locator('.travel-screen')).toBeVisible()
+  await expect(page.locator('.story-travel-progress')).toBeVisible()
   await advance(page, 1000)
   const progressed = await read(page, keys.trip)
   expect(progressed.remaining).toBeLessThan(trip.remaining)
   await page.reload()
   expect(await read(page, keys.trip)).toEqual(progressed)
-  await advance(page, 30_000)
-  await expect(page.locator('.result-modal')).toContainText('Arrival')
+  await advance(page, progressed.remaining * 250)
+  await storyVisible(page, page.locator('.story-result-start').filter({ hasText: 'Arrived at the station.' }))
   expect((await read(page, keys.game)).locationId).toBe('station')
   expect((await read(page, keys.game)).money).toBe(before.money)
   expect(await read(page, keys.trip)).toBeNull()
@@ -175,9 +175,17 @@ for (const fixture of saves.cases) {
     const seed = entries(fixture.id)
     const expected = JSON.parse(seed[fixture.processKey])
     await openGame(page, seed)
+    let travelStoryId
     for (let mount = 0; mount < 3; mount++) {
       await expect(page.getByRole('dialog')).toBeVisible()
-      expect(await read(page, fixture.processKey)).toEqual(expected)
+      const restored = await read(page, fixture.processKey)
+      if (fixture.processKey === keys.trip) {
+        const { storyEpisodeId, ...progress } = restored
+        expect(progress).toEqual(expected)
+        expect(storyEpisodeId).toBeGreaterThan(0)
+        if (travelStoryId === undefined) travelStoryId = storyEpisodeId
+        expect(storyEpisodeId).toBe(travelStoryId)
+      } else expect(restored).toEqual(expected)
       const game = await read(page, keys.game)
       expect(game.money).toBe(JSON.parse(seed[keys.game]).money)
       expect(game.minutes).toBe(JSON.parse(seed[keys.game]).minutes)
@@ -253,9 +261,9 @@ for (const mode of ['walk', 'transit', 'fare-dodge']) {
     const game = JSON.parse(seed[keys.game])
     await openGame(page, { ...seed, [keys.trip]: JSON.stringify({ ...trip, mode }),
       [keys.game]: JSON.stringify({ ...game, day: 3, minutes: 1439, locationId: 'shop' }) })
-    await expect(page.locator('.activity-cancel')).toBeFocused()
+    await expect(page.locator('.story-event-panel')).toBeFocused()
     await page.keyboard.press('Tab')
-    await expect(page.locator('.activity-cancel')).toBeFocused()
+    expect(await page.locator('.story-event-panel').evaluate(node => node.contains(document.activeElement))).toBe(true)
     for (const button of await page.locator('.bottom-nav button').all()) await expect(button).toBeDisabled()
     await advance(page, 1000)
     const before = await read(page, keys.game)
@@ -333,11 +341,11 @@ for (const [name, seed] of [['travel', entries('trip')]]) {
       await openGame(page, seed)
       for (const width of [320, 390, 1280]) {
         await page.setViewportSize({ width, height: 844 })
-        const panel = page.locator('.activity-with-actions')
+        const panel = page.locator('.story-travel-progress')
         const metrics = await panel.evaluate(node => {
           const box = node.getBoundingClientRect()
           const button = node.querySelector('.activity-cancel').getBoundingClientRect()
-          const text = node.querySelector('.activity-status').getBoundingClientRect()
+          const text = node.querySelector('p').getBoundingClientRect()
           const style = getComputedStyle(node.querySelector('.activity-cancel'))
           return { overflow: node.scrollWidth > node.clientWidth, panelHeight: box.height, right: box.right,
             buttonRight: button.right, buttonLeft: button.left, textRight: text.right,
@@ -347,7 +355,7 @@ for (const [name, seed] of [['travel', entries('trip')]]) {
         expect(metrics.panelHeight).toBeLessThanOrEqual(width === 320 ? 180 : 150)
         expect(metrics.width).toBe(44)
         expect(metrics.height).toBe(44)
-        expect(metrics.buttonRight).toBeLessThan(metrics.right)
+        expect(metrics.buttonRight).toBeLessThanOrEqual(metrics.right)
         expect(metrics.buttonLeft).toBeGreaterThanOrEqual(metrics.textRight)
         expect(metrics.colour).toBe('rgb(175, 152, 104)')
         expect(metrics.border).toBe(metrics.colour)
@@ -510,7 +518,7 @@ for (const mode of ['transit', 'fare-dodge']) {
     expect(money).toBe(mode === 'transit' ? paidMoney : Math.max(0, paidMoney - 35))
     await acknowledge(page)
     await advance(page, during.remaining * 250)
-    await expect(page.locator('.result-modal')).toContainText('Arrival')
+    await storyVisible(page, page.locator('.story-result-start').filter({ hasText: 'Arrived: Small Shop.' }))
     expect((await read(page, keys.game)).locationId).toBe('shop')
     expect((await read(page, keys.game)).money).toBe(money)
     expect(await read(page, keys.trip)).toBeNull()

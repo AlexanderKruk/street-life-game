@@ -1,3 +1,24 @@
+Travel in Story / quick-result dismissal — 30 October 2026, source only:
+modern travel uses the shared Story modal and archive, preserving the existing
+250ms/game-minute clock, phases, costs, RNG, inspection and cancellation owner.
+The visible process clock shows every actual minute at 250ms, including while
+text animates; it does not use the separate one-second presentation clock.
+The transient phase changes as a whole with a soft entrance and three animated
+dots of reserved width. The real arrival sentence types through the existing
+Story presenter; actual effects and the completion stamp finish before a 1000ms
+pause and 200ms fade open the destination screen. Reduced motion omits the fade.
+Purchases and item use share this automatic dismissal; authored events remain
+manual. Hidden pages or reading earlier entries restart the pause; manual close
+and unmount cancel timers. Navigation stays inert below the full blur throughout.
+Travel episodes and an optional validated Trip.storyEpisodeId survive reload;
+arrival is committed once, cancellation preserves elapsed time/paid costs and
+records a completed stopped journey without adding a new History completion.
+This supersedes the earlier manual-only quick-result notes below. No release or
+build-ID change. Pure travel/save/timer and inventory-command assertions plus
+full EN/RU/PL catalogue validation passed using Node TS stripping. Added the
+35th Node suite and updated modal/rendering/browser routes; UI/build/browser
+remain unrun because esbuild/tsc dependencies are absent. Save with [skip ci].
+
 Purchases in Story — 30 October 2026, source only: successful purchases of all
 nine shop goods append a result-only inventory episode to the shared Story modal.
 Detect success through increased carried quantity; rejected purchases do not
@@ -365,7 +386,9 @@ Story получает факты от тех же владельцев и по�
 | Проверки общего контроллера | Обычные D20, кражи в магазине, проверка проезда | Реализовано; fare reload/resume проверен |
 | Дождь | Открытие/укрытие/Cancel/фон/результат | Реализовано |
 | Вступление и телефон | Стартовые звонки и поиск | Ещё не подключены |
-| Покупки, предметы, услуги, сон, дорога, системные сообщения | Остальные действия | Ещё не подключены |
+| Покупки и использование предметов | Все девять покупок; успешное потребление предметов | Подключены; короткий результат закрывается автоматически |
+| Дорога | Фазы, отмена, прибытие, reload и проверка проезда | Подключена; UI-проверки ещё не запущены |
+| Услуги, сон, системные сообщения | Остальные действия | Ещё не подключены |
 
 Автоматическая проверка перечисляет сам каталог, а не вручную заданный список:
 добавленная туда обычная сцена использует общий механизм записи. Случайности,
@@ -409,7 +432,7 @@ Story получает факты от тех же владельцев и по�
 ## Этап 6. Длительные процессы
 
 - [ ] Сон и отдых: реально прошедшее время, досрочное ограничение, пробуждение, болезнь.
-- [ ] Дорога: фазы, отмена с сохранением прошедшего времени, прибытие.
+- [x] Дорога: фазы, отмена с сохранением прошедшего времени, прибытие. Исходники сохранены; UI/build/browser ещё не проверены.
 - [ ] Телефон: звонки, поиск, зарядка, оплата и прерывания.
 - [ ] Ночлежка: очередь, регистрация, уход/напоминания и параллельная зарядка.
 - [x] Дождь: поиск укрытия, ожидание, отмена, фоновый дождь — пассивная запись подключена; живой интерфейс сохранён.

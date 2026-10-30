@@ -209,7 +209,7 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
         })}
         {isLive && (!animation || !live.waitingForDecision && live.content) && (live.actions.length > 0 || live.content) && <StoryLiveControls interaction={live} onSelect={button => choiceMotion.choose(button, pieces.length)} />}
       </div>
-      {(isLive || animation || !continuous) && <div className="story-head" aria-hidden="true"><span /><time>{formatTime(cursor?.minute ?? last.minute)}</time></div>}
+      {(isLive || animation || !continuous) && <div className="story-head" aria-hidden="true"><span /><time>{formatTime(live?.gameClock ? live.minute : cursor?.minute ?? last.minute)}</time></div>}
     </div>
     {archiveControls && !animation && !isLive && <div className="story-episode-end">
       {episode.status === 'active' && <p className="story-note">{t('story.pending')}</p>}
@@ -225,7 +225,7 @@ export default function StoryScreen({ episodes, interaction, currentMinute, onPa
   const playback = (id: number, active: boolean) => setPlaying(previous => { if (previous.has(id) === active) return previous; const next = new Set(previous); if (active) next.add(id); else next.delete(id); return next })
   const paused = comparison || playing.size > 0
   const [livePlaying, setLivePlaying] = useState(false)
-  const running = !paused && (!interaction?.waitingForDecision || livePlaying)
+  const running = !paused && !interaction?.gameClock && (!interaction?.waitingForDecision || livePlaying)
   const clockMinute = useStoryClock(currentMinute, running)
   useEffect(() => { onPauseChange?.(paused); return () => onPauseChange?.(false) }, [paused, onPauseChange])
   const start = Math.max(0, episodes.length - visible)
@@ -234,7 +234,7 @@ export default function StoryScreen({ episodes, interaction, currentMinute, onPa
     {comparison ? <StoryComparison /> : <>
       {!episodes.length && presentation === 'archive' && <p className="story-note">{t('story.empty')}</p>}
       {start > 0 && <ModalAction variant="secondary" onClick={() => setVisible(value => value + 30)}>{t('story.earlier')}</ModalAction>}
-      {episodes.slice(start).map(episode => <Episode episode={episode} key={episode.id} live={interaction?.episodeId === episode.id ? { ...interaction, minute: clockMinute ?? interaction.minute } : undefined} disabled={!!interaction} continuous={currentMinute !== undefined} archiveControls={presentation === 'archive'} onPlayback={playback} onLivePlayback={setLivePlaying} />)}
+      {episodes.slice(start).map(episode => <Episode episode={episode} key={episode.id} live={interaction?.episodeId === episode.id ? { ...interaction, minute: interaction.gameClock ? currentMinute ?? interaction.minute : clockMinute ?? interaction.minute } : undefined} disabled={!!interaction} continuous={currentMinute !== undefined} archiveControls={presentation === 'archive'} onPlayback={playback} onLivePlayback={setLivePlaying} />)}
       {!interaction && !paused && currentMinute !== undefined && <div className="story-idle story-track is-running"><div className="story-head" aria-hidden="true"><span /><time>{formatTime(clockMinute ?? currentMinute)}</time></div></div>}
     </>}
   </section>

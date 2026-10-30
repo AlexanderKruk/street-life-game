@@ -10,7 +10,7 @@ export type StoryScene = {
   roll?: { value: number; modifier: number; target: number; stat: string }
 }
 export type StoryEpisode = {
-  id: number; source: 'encounter' | 'rain' | 'check' | 'inventory'; sourceId: string
+  id: number; source: 'encounter' | 'rain' | 'check' | 'inventory' | 'travel'; sourceId: string
   status: 'active' | 'awaiting-ack' | 'complete' | 'interrupted'
   scenes: StoryScene[]; result?: ResultCardData; endedAt?: StoryStamp
   resultIdentity?: { actionId: string; outcomeId?: string }
@@ -58,7 +58,7 @@ export function loadStory(value: unknown): StoryStore {
   if (!record(value) || value.version !== 1 || !Array.isArray(value.episodes)) return emptyStory()
   const ids = new Set<number>()
   const episodes = value.episodes.filter((entry: unknown): entry is StoryEpisode => {
-    if (!record(entry) || !Number.isSafeInteger(entry.id) || entry.id < 1 || ids.has(entry.id) || !['encounter', 'rain', 'check', 'inventory'].includes(entry.source) || !text(entry.sourceId) || !['active', 'awaiting-ack', 'complete', 'interrupted'].includes(entry.status) || !Array.isArray(entry.scenes) || !entry.scenes.length || entry.scenes.length > 32 || !entry.scenes.every(validScene) || (entry.result !== undefined && !validResult(entry.result)) || (entry.endedAt !== undefined && !stamp(entry.endedAt)) || (entry.resultIdentity !== undefined && (!record(entry.resultIdentity) || !text(entry.resultIdentity.actionId) || (entry.resultIdentity.outcomeId !== undefined && !text(entry.resultIdentity.outcomeId)))) || (['awaiting-ack', 'complete'].includes(entry.status) && (!entry.result || !entry.endedAt))) return false
+    if (!record(entry) || !Number.isSafeInteger(entry.id) || entry.id < 1 || ids.has(entry.id) || !['encounter', 'rain', 'check', 'inventory', 'travel'].includes(entry.source) || !text(entry.sourceId) || !['active', 'awaiting-ack', 'complete', 'interrupted'].includes(entry.status) || !Array.isArray(entry.scenes) || !entry.scenes.length || entry.scenes.length > 32 || !entry.scenes.every(validScene) || (entry.result !== undefined && !validResult(entry.result)) || (entry.endedAt !== undefined && !stamp(entry.endedAt)) || (entry.resultIdentity !== undefined && (!record(entry.resultIdentity) || !text(entry.resultIdentity.actionId) || (entry.resultIdentity.outcomeId !== undefined && !text(entry.resultIdentity.outcomeId)))) || (['awaiting-ack', 'complete'].includes(entry.status) && (!entry.result || !entry.endedAt))) return false
     ids.add(entry.id); return true
   }).slice(-500)
   return { version: 1, nextId: Math.max(1, Number.isSafeInteger(value.nextId) ? value.nextId : 1, ...episodes.map(entry => entry.id + 1)), episodes }

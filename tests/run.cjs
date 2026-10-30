@@ -35,7 +35,8 @@ const suites = [
   "check-story.cjs",
   "check-story-recording.cjs",
   "check-story-live.cjs",
-  "check-story-modal.cjs"
+  "check-story-modal.cjs",
+  "check-story-travel.cjs"
 ];
 const start = performance.now();
 let passed = 0;

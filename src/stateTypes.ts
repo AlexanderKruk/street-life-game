@@ -34,7 +34,7 @@ export type JournalGoals = {
 }
 export type TravelMode = 'walk' | 'transit' | 'fare-dodge'
 export type TripInspection = { at: number; status: 'scheduled' | 'rolling' | 'done'; roll?: number | null; modifier?: number }
-export type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot; inspection?: TripInspection }
+export type Trip = { destinationId: string; mode: TravelMode; total: number; remaining: number; before?: ResultSnapshot; inspection?: TripInspection; storyEpisodeId?: number }
 export type ShelterDeparture = { day: number; startAbsolute: number; before: ResultSnapshot }
 export type ShelterArrival = { day: number; minute: number }
 export type ShelterQueue = { day: number; remaining: number; total?: number; arrivalMinute?: number; joinedAt: number; vacancies: number; peopleAhead: number; before: ResultSnapshot }

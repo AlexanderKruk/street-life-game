@@ -347,7 +347,7 @@ try {
     assert.equal(createStoryTyping('23:12').duration, 250, 'clock colon does not pause');
     assert.equal(createStoryTyping('2–4').duration, 150, 'numeric range does not pause');
     assert.equal(createStoryTyping('из-за').duration, 250, 'hyphen inside a word does not pause');
-    assertequal(createStoryTyping('A').settledAt, 150, 'the shared block pause starts after the last 100ms letter fade');
+    assert.equal(createStoryTyping('A').settledAt, 150, 'the shared block pause starts after the last 100ms letter fade');
     assert.equal(createStoryTyping('A.').settledAt, createStoryTyping('A.').duration, 'final punctuation already covers the letter fade without another delay');
   }
   // Every mini-block owns one reading pause, including before the effects.
