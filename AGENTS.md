@@ -1,3 +1,18 @@
+Release v357 is published — 30 October 2026. GitHub Pages run 41118328115
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41118328115)
+succeeded for source d8d121bec68c23ec888c86ef6775064c53dbf0f8: all 34 Node
+suites passed in 169.26s, production build and deployment succeeded. Includes
+result-only Story records for consumed backpack items, 1800ms reading pause and
+320ms automatic modal dismissal, restored pending results without repeated
+consumption, and removal of the selected-choice prefix in every language.
+The first CI attempt stopped on the old Got it selector in the History rendering
+case; it now closes the completed consumption Story result, preserving the
+history/pagination assertions. Consumption recording, reload/StrictMode, hidden/
+scrolled reading and timed dismissal checks passed in the full CI. The complete
+build/deploy logs were reviewed; successful CI was not duplicated locally.
+Browser/iPhone/WebKit appearance remains unverified. Earlier source-only and
+pending-publication notes below are historical for this release.
+
 Inventory consumption in Story — 30 October 2026, source only: settled food,
 water, wipes, medicine and cigarette commands append one result-only inventory
 episode when the actual carried quantity decreases. Reuse the existing result
