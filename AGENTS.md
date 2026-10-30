@@ -1,3 +1,12 @@
+Story point clipping — 30 October 2026, source only: the Story event
+scroller now extends through the ModalPanel inset and restores that same inset
+as its own padding. This reserves paint space for the 12px breathing ring and
+its outgoing wave without moving the timeline, text or artwork. Vertical scroll
+and the clipped outer frame remain intact; inline Story is unchanged.
+Design-system, 61-route Story modal regression and production build passed.
+Managed preview failed before startup with `vite: not found`; browser/WebKit/iPhone appearance is unverified.
+No release/build ID change or publication.
+
 Release v354 is published — 30 October 2026. GitHub Pages run 41068418109
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41068418109)
 succeeded for source c060d1994d28ea2e7b61c2694e65e204e0de2563: all 34 Node

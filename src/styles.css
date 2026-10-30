@@ -1389,7 +1389,9 @@ body { min-width:0; }
 .story-screen { --story-gap:12px; min-width:0; display:flex; flex-direction:column; gap:var(--story-gap); }
 .modal-overlay.story-event-overlay { z-index:100; }
 .modal-panel.story-event-panel { max-height:88svh; overflow:hidden; display:flex; flex-direction:column; }
-.story-event-content { min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+/* Put the frame's inset inside the scroller so the breathing point and its wave
+   can expand into the gutter without shifting the timeline or its content. */
+.story-event-content { min-height:0; margin:calc(-1 * var(--modal-padding-y)) calc(-1 * var(--modal-padding-x)); padding:var(--modal-padding-y) var(--modal-padding-x); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
 .story-event-panel:focus { outline:none; }
 .story-toolbar, .story-episode-heading { display:flex; align-items:start; justify-content:space-between; gap:var(--story-gap); flex-wrap:wrap; margin-bottom:0; }
 .story-toolbar h1 { font-size:var(--font-title); font-weight:var(--weight-semibold); }
