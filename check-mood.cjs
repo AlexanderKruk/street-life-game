@@ -84,14 +84,14 @@ try {
     fireEvent.click(screen.getByRole('button', { name: 'Inventory', exact: true }));
     fireEvent.click(screen.getByRole('button', { name: /Cigarettes.*tap to smoke/ }));
     assert.equal(saved().mood, cap, 'direct item handlers cannot bypass the ceiling');
-    const resultMood = document.querySelector('.result-stat-panel [data-stat="Mood"]');
-    assert.equal(resultMood.querySelector('.result-stat-delta').textContent, '+2', 'show the actual gain rather than the nominal +5');
+    const resultMood = document.querySelector('.result-indicators [data-stat="Mood"]');
+    assert.equal(resultMood.querySelector('strong').textContent, '+2', 'show the actual gain rather than the nominal +5');
     assert.equal(resultMood.querySelector('svg').innerHTML, document.querySelector('.header-condition svg').innerHTML);
-    assert.equal(!!resultMood.querySelector('.bar-blocked'), cap < 100);
+    assert(!resultMood.querySelector('[role="meter"]'), 'the result reports the capped delta without repeating the Status meter');
     fireEvent.click(screen.getByRole('button', { name: 'Got it', exact: true }));
     fireEvent.click(screen.getByRole('button', { name: /Cigarettes.*tap to smoke/ }));
     assert.equal(saved().mood, cap);
-    assert(!document.querySelector('.result-stat-panel [data-stat="Mood"]'), 'zero Mood gain remains hidden');
+    assert(!document.querySelector('.result-indicators [data-stat="Mood"]'), 'zero Mood gain remains hidden');
     cleanup(); render(React.createElement(App)); assert.equal(saved().mood, cap, 'reload preserves the capped value');
   }
   setup('Night shelter', 45, { energy: 20 });
@@ -118,7 +118,11 @@ try {
   fireEvent.click(document.querySelector('.nav-item.home'));
   fireEvent.click(screen.getByRole('button', { name: /^Settle into your place/ }));
   assert.equal(saved().mood, 57, 'moving into Schronisko applies its reward under the new ceiling');
-  assert.equal(document.querySelector('.result-stat-panel [data-stat="Mood"] .bar-cap-marker').style.left, '70%');
+  assert.equal(document.querySelector('.result-indicators [data-stat="Mood"] strong').textContent, '+8');
+  fireEvent.click(screen.getByRole('button', { name: 'Got it', exact: true }));
+  if (document.querySelector('.goal-completed-modal')) fireEvent.click(screen.getByRole('button', { name: 'Got it', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Status', exact: true }));
+  assert.equal(document.querySelector('.status-screen [data-stat="Mood"] .bar-cap-marker').style.left, '70%');
   setup('Apartment', 90, { thirst: 10 });
   assert.equal(saved().mood, 40);
   assert(document.querySelector('[data-stat="Mood"] .bar').getAttribute('aria-label').includes('Thirst'));

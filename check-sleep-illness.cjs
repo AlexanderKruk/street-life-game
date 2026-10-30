@@ -46,7 +46,7 @@ try{
  assert(document.querySelector('.result-illustration').src.endsWith('event-sleep-cold-ground-480.webp'));
  assert(document.querySelector('.result-illustration').srcset.includes('event-sleep-cold-ground-1024.webp'));
  assert.equal(document.querySelector('.result-card-label').textContent,'WAKE-UP EVENT');assert.equal(read(effectsKey).filter(e=>e.id==='cold').length,1);
- assert(document.querySelector('.result-consequences').textContent.includes('Cold'));
+ assert(document.querySelector('.result-indicator[data-resource-id="cold"]').getAttribute('aria-label').includes('Cold'));
  assert.equal(read(SAVE_KEY).sleepIllnessDose,undefined);assert.equal(read(SAVE_KEY).sleepIllnessMinutes,undefined);assert.equal(read(sleepKey),null);
  const stopped=read(SAVE_KEY);step(5000);assert.deepEqual(read(SAVE_KEY),stopped,'wake illness event pauses time');
  fireEvent.click(screen.getByRole('button',{name:'Got it',exact:true}));assert(!screen.queryByRole('dialog'),'illness replaces competing wake events');

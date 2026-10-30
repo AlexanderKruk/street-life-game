@@ -15,7 +15,7 @@ setup({locationId:'shelter',minutes:1080},{[lifeKey]:vacancyKey(2)});
 assert.equal(document.querySelectorAll('.actions .action').length,1);assert(!screen.queryByRole('button',{name:/shower/i}));assert(!document.querySelector('.storage-panel'));assert(!screen.queryByLabelText('Sleep duration'));
 click(/Join registration queue/);assert(screen.getByRole('dialog',{name:'Shelter registration queue'}));assert(!read(lifeKey).shelterUntilDay);
 advance(19000);assert.equal(read(stateKey).minutes,1099);assert(!read(lifeKey).shelterUntilDay);assert.equal(read('street-life-shelter-queue-v1').remaining,1);
-advance(1000);assert.equal(read(stateKey).minutes,1100);assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterLastStayDay,1);assert(!localStorage.getItem('street-life-shelter-queue-v1'));assert(screen.getByRole('dialog').textContent.includes('20 min'));ok();assert(screen.getByRole('button',{name:/Ask for a shower/}));assert(document.querySelector('.storage-panel'));assert(screen.getByRole('button',{name:/Use your reserved bed/}));
+advance(1000);assert.equal(read(stateKey).minutes,1100);assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterLastStayDay,1);assert(!localStorage.getItem('street-life-shelter-queue-v1'));assert(!screen.getByRole('dialog').querySelector('[data-resource-id="time"]'),'queue duration is already reflected in the game clock');ok();assert(screen.getByRole('button',{name:/Ask for a shower/}));assert(document.querySelector('.storage-panel'));assert(screen.getByRole('button',{name:/Use your reserved bed/}));
 
 assert.equal(read(stateKey).mood,53,'registration applies its +3 under the new housing ceiling');
 click(/^Status$/);assert.equal(document.querySelector('[data-stat="Mood"] .bar-cap-marker').style.left,'60%');
@@ -129,7 +129,7 @@ Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidde
 Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});advance(4500);assert.equal(read(stateKey).minutes,479);assert.equal(read(stateKey).locationId,'shelter');
 advance(250);assert.equal(read(stateKey).minutes,480);assert.equal(read(stateKey).locationId,'street');
 assert.equal(read(lifeKey).housing,'Street');assert.equal(read(lifeKey).shelterUntilDay,7);assert.equal(read(lifeKey).shelterStrikes,0);assert.equal(read(lifeKey).shelterCheckoutDay,2);
-assert.equal(read('street-life-storage-v1').medicines,2);assert(!localStorage.getItem(departureKey));assert(screen.getByRole('dialog').textContent.includes('30 min'));assert(read(stateKey).thirst<reminderState.thirst);ok();
+assert.equal(read('street-life-storage-v1').medicines,2);assert(!localStorage.getItem(departureKey));assert(!screen.getByRole('dialog').querySelector('[data-resource-id="time"]'),'checkout keeps the actual 30-minute cost without a duration badge');assert(read(stateKey).thirst<reminderState.thirst);ok();
 assert(!screen.queryByRole('dialog',{name:'Leave the night shelter'}));
 assert(![...callbacks.values()].some(timer=>timer.delay===250),'the x4 clock stops after checkout');
 assert([...callbacks.values()].some(timer=>timer.delay===1000),'the ordinary x1 clock is restored');
