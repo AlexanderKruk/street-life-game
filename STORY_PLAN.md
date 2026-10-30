@@ -1,3 +1,12 @@
+Release v358 — 30 October 2026, publication requested: includes Story travel
+with real 250ms/minute clock and whole-phase text/dots, typed arrival followed by
+short automatic dismissal and destination opening, concise purchases and item-use
+quick results, and navigation kept inert below the full blur. The existing Pages
+workflow owns all 35 Node suites, production build and deployment. Publication
+is pending until that workflow succeeds; local UI/build dependencies are absent.
+Browser/iPhone/WebKit appearance remains unverified. Earlier source-only notes
+below describe included changes and do not establish successful publication.
+
 Travel in Story / quick-result dismissal — 30 October 2026, source only:
 modern travel uses the shared Story modal and archive, preserving the existing
 250ms/game-minute clock, phases, costs, RNG, inspection and cancellation owner.
