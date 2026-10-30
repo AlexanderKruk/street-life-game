@@ -1,3 +1,21 @@
+# Story result timing — 30 October 2026
+
+Original local commit: `e5a430556fe23224f86c8fb3d2a65026935a7a9e`.
+Verified bundle: `.backup/story-result-timing-2026-10-30.bundle`, requires
+`fd6ef4ebb078f0c6acd87075e116108fdc661510`.
+Restore with `git bundle verify .backup/story-result-timing-2026-10-30.bundle`
+and `git fetch .backup/story-result-timing-2026-10-30.bundle HEAD:refs/heads/recovered/story-result-timing`.
+Only the four verified changed source/test files are applied over current remote
+main; existing v350, previous Story-only animation and stamp spacing are retained.
+
+Event-start timestamps stay fixed; the example captures them before typing and
+adds a separate completed-result stamp. Story rows wait 500ms, then reveal whole
+groups 260ms apart; the result stamp waits until the last appearance finishes.
+Story/example/recording, results, design-system, boundaries, build and diff passed.
+No fresh browser/full-suite run or deployment. Live version remains v350.
+
+---
+
 # Story stamp/cursor alignment — 30 October 2026
 
 Local commit: `f15b390539906736e2b32a24ed546e74fa92963e`.

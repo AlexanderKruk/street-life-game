@@ -7,7 +7,7 @@ import type { ResultChange } from './results'
 import { t } from './i18n'
 
 export const RESULT_INDICATOR_STEP = 260
-const REVEAL_DELAY = 250
+const REVEAL_DELAY = 500
 const REVEAL_DURATION = 260
 export const resultIndicatorDuration = (count: number) => REVEAL_DELAY + Math.max(0, count - 1) * RESULT_INDICATOR_STEP + REVEAL_DURATION
 

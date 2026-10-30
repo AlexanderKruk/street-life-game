@@ -944,7 +944,7 @@ The top toolbar has Street and Small Shop, with no Map/City map title. Both shor
 
 The travel-method chooser uses a full-viewport dimmed, blurred backdrop (including the map, header and bottom menu), matching result-modal backdrop values: 5px blur and rgba(4,7,10,.62). The route sheet remains sharp and is centered horizontally and vertically like other dialogs, with a maximum width of 480px, safe-area padding and internal scrolling on short screens. Background pointer interaction and scrolling are covered; keyboard focus stays in the chooser. Close or Escape returns to the map to select another point. Choosing transport starts the journey as before; the game clock continues while choosing.
 
-All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped changes in a compact row of Status icons and signed deltas. Classic result dialogs show the full row immediately. Only Story Replay animates the groups: 250ms after preceding content, a whole icon/value appears over 260ms; following groups start 260ms apart, including a visible reveal when there is only one indicator. Bars, current percentages, cap reasons, duration badges and zero/consumed-item noise are omitted; existing visibility and rounding rules remain. Tap an icon to identify the indicator. The Status screen retains full meters and limits. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
+All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped changes in a compact row of Status icons and signed deltas. Classic result dialogs show the full row immediately. Only Story Replay animates the groups: 500ms after preceding content, a whole icon/value appears over 260ms; following groups start 260ms apart, including a visible reveal when there is only one indicator. Bars, current percentages, cap reasons, duration badges and zero/consumed-item noise are omitted; existing visibility and rounding rules remain. Tap an icon to identify the indicator. The Status screen retains full meters and limits. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
 
 The Small Shop / Food & water discovery uses one description paragraph in the shared Small role and secondary color: “A small shop selling affordable food and water. Registered Night Shelter guests can also get free meals.” It omits the price list, backpack reminder and shelter meal schedules; shop hours remain in the heading.
 
@@ -1359,7 +1359,7 @@ RNG, clock, action cost, pause, save schema or release-version change.
 Story-only indicator animation — 30 October 2026, source correction after v350:
 The compact row remains shared, but animation is opted into only by Story Replay.
 Classic modals are static and do not wait for the image to reveal their deltas.
-Story Replay gives the first/lone group a 250ms pause and 260ms appearance; groups
+Story Replay gives the first/lone group a 500ms pause and 260ms appearance; groups
 remain atomic and 260ms apart. Old archives and reduced motion remain settled.
 No gameplay, saves or publication-version change; live v350 is unchanged.
 
@@ -1374,3 +1374,11 @@ continuation scenes retain their own timestamps. The comparison uses the same
 clock-only/pending/sealed rule and does not show place as an early heading.
 Historic records/reduced motion are fully sealed on opening. Archives, real clocks,
 RNG, action costs, modals and publication version do not change. Live v350 remains.
+
+
+Story timing verification — 30 October 2026: first stamps retain the original event
+start time; the example captures it before typing. Completed-result stamps wait
+until the final icon/delta has appeared completely. The indicator row starts 500ms
+after preceding image/content, with 260ms group intervals and 260ms appearance.
+The replay duration includes that initial pause and final group. Classic modals
+stay immediate; no gameplay, save, archive or release-version change.

@@ -49,6 +49,7 @@ try {
     advance(8000);
     assert(doc.querySelector('.pv-done'));
     assert(doc.querySelector('.pv-stamp').textContent.includes(' · By the station · D0'), 'the completed part gains place and day together');
+    assert(doc.querySelector('.pv-stamp').textContent.startsWith('22:43 · '), 'opening stamp records the event start, not when the presentation finishes');
     assert.equal(doc.querySelectorAll('.pv-choice-group button:not([hidden])').length, 3);
     const clock = doc.querySelector('.pv-live').textContent;
     advance(2000);
@@ -59,6 +60,9 @@ try {
     assert.equal(doc.querySelectorAll('.pv-picture').length, 1, 'outcome has no extra image');
     assert(doc.querySelector('.pv-selected').textContent.startsWith('You '));
     assert(doc.querySelector('.pv-outcome .pv-text').textContent.length > 20);
+    assert(doc.querySelector('.pv-outcome.pv-done'), 'the fully presented result has its own fixed stamp');
+    assert(doc.querySelector('.pv-outcome .pv-stamp').textContent.includes(' · By the station · D0'));
+    assert.equal(doc.querySelectorAll('.pv-done > .pv-stamp').length, 2, 'event start and completed result are both stamped within one block');
     assert.equal(doc.querySelector('.pv-stamp').textContent, stamp, 'past stamp remains fixed');
     assert(doc.querySelector('.pv-next'));
     assert.deepEqual(errors, []);

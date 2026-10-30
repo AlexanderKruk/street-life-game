@@ -10,7 +10,7 @@
     #sl-story-choice .pv-mark,#sl-story-choice .pv-ring {position:absolute;left:0;top:5px;width:12px;height:12px;border-radius:50%;}
     #sl-story-choice .pv-mark {background:var(--pv-gold);visibility:hidden;}
     #sl-story-choice .pv-stamp {display:block;min-height:24px;font-size:14px;font-variant-numeric:tabular-nums;color:var(--pv-muted);visibility:hidden;}
-    #sl-story-choice .pv-done .pv-mark,#sl-story-choice .pv-done .pv-stamp {visibility:visible;animation:pv-story-imprint 400ms ease-out both;}
+    #sl-story-choice .pv-done > .pv-mark,#sl-story-choice .pv-done > .pv-stamp {visibility:visible;animation:pv-story-imprint 400ms ease-out both;}
     #sl-story-choice .pv-text {display:block;width:100%;margin:7px 0 0;padding:0;border:0;background:transparent;color:var(--pv-text);font:inherit;text-align:left;white-space:pre-line;}
     #sl-story-choice .pv-media {position:relative;width:100%;height:0;overflow:hidden;border-radius:7px;}
     #sl-story-choice .pv-picture {position:absolute;left:0;top:0;display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;opacity:0;}
@@ -36,7 +36,8 @@
     #sl-story-choice .pv-choice-enter {animation:pv-story-answer-enter 650ms ease-out both;}
     #sl-story-choice .pv-choice-group {margin-top:40px;}
     #sl-story-choice .pv-selected {margin:40px 0 0;color:var(--pv-text);font-size:16px;}
-    #sl-story-choice .pv-outcome {margin-top:14px;}
+    #sl-story-choice .pv-outcome {position:relative;margin-top:14px;}
+    #sl-story-choice .pv-outcome .pv-mark {left:-28px;}
     #sl-story-choice .pv-outcome .pv-text {margin-top:0;}
     @keyframes pv-story-answer-enter {from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
     @media(prefers-reduced-motion:reduce){#sl-story-choice .pv-choice-enter {animation:none;}}
@@ -74,6 +75,7 @@
       function label(){const m=22*60+43+Math.floor(gameElapsed/1000);return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
       function layout(){cursor.style.transform='translateY('+y+'px)';line.style.height=y+'px';timeline.style.height=Math.ceil(Math.max(records.offsetHeight,y+72))+'px';}
       function makeRecord(withImage){
+        const startedAt=label();
         const row=document.createElement('div');row.className='pv-record';
         const mark=document.createElement('span');mark.className='pv-mark';mark.setAttribute('aria-hidden','true');
         const stamp=document.createElement('time');stamp.className='pv-stamp';
@@ -84,7 +86,7 @@
         if(withImage){media=document.createElement('div');media.className='pv-media';picture=document.createElement('img');picture.className='pv-picture';picture.src=source;picture.alt=copy.art;media.append(picture);body.append(media);}
         records.append(row);
         text.addEventListener('click',()=>{if(phase==='typing' && current && current.row===row && writing)phaseTime=writing.characters.length*28;});
-        return {row,stamp,body,text,media,picture};
+        return {row,stamp,body,text,media,picture,startedAt,outcome:null};
       }
       function beginText(message,withImage){
         fromY=y;isOutcome=false;current=makeRecord(withImage);writing={characters:Array.from(message),message,shown:-1};
@@ -93,12 +95,17 @@
       function beginOutcome(message){
         fromY=y;isOutcome=true;
         const container=document.createElement('div');container.className='pv-outcome';
+        const endedAt=label();
+        const mark=document.createElement('span');mark.className='pv-mark';mark.setAttribute('aria-hidden','true');
+        const stamp=document.createElement('time');stamp.className='pv-stamp';
+        container.append(mark,stamp);current.outcome={container,stamp,endedAt};
         const text=document.createElement('button');text.type='button';text.className='pv-text cursor-interaction';text.setAttribute('aria-label',copy.skip);container.append(text);current.body.append(container);
         current.text=text;writing={characters:Array.from(message),message,shown:-1};
         text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)phaseTime=writing.characters.length*28;});
         temporary.textContent='';phase='typing';phaseTime=0;
       }
-      function seal(){current.row.classList.add('pv-done');current.stamp.textContent=label()+' · '+copy.place+' · '+copy.day;status.textContent=current.stamp.textContent+'. '+writing.message;}
+      function seal(){current.row.classList.add('pv-done');current.stamp.textContent=current.startedAt+' · '+copy.place+' · '+copy.day;status.textContent=current.stamp.textContent+'. '+writing.message;}
+      function sealOutcome(){const outcome=current.outcome;outcome.container.classList.add('pv-done');outcome.stamp.textContent=outcome.endedAt+' · '+copy.place+' · '+copy.day;status.textContent=outcome.stamp.textContent+'. '+writing.message;}
       function reveal(progress){
         if(!current || !current.media)return;
         const ease=1-Math.pow(1-progress,3);
@@ -165,7 +172,7 @@
         }else if(phase==='textmove'){
           const progress=reduced?1:Math.min(1,phaseTime/750);
           y=fromY+(records.offsetHeight-fromY)*(1-Math.pow(1-progress,3));
-          if(progress===1){if(!isOutcome)seal();y=records.offsetHeight;showFinish();}
+          if(progress===1){if(isOutcome)sealOutcome();else seal();y=records.offsetHeight;showFinish();}
         }else if(phase==='result' || phase==='free'){
           y=reduced?records.offsetHeight:y+(records.offsetHeight-y)*Math.min(1,delta/100);
         }
