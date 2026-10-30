@@ -1,3 +1,14 @@
+Release v355 is published — 30 October 2026. GitHub Pages run 41077931905
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41077931905)
+succeeded for source 8a66c89a3c20a890b0547678b705da85780f145a: all 34 Node
+suites passed in 179.74s, production build and deployment succeeded. Includes
+the full-height edge-scrolling Story modal with breathing gutters, continuous
+history, approved 32px translucent Close/bottom jump with 44px hit targets,
+and full Story day labels in EN/RU/PL while retaining HUD abbreviations.
+The successful full CI was not duplicated locally. Browser/iPhone/WebKit remains
+unverified. Earlier source-only/pending-publication notes below are now historical
+for this release. Original local history is preserved in the verified v355 bundle.
+
 Release v355 — 30 October 2026, publication requested: includes the full-height
 edge-scrolling Story frame and breathing gutters, continuous modal chronology,
 approved compact translucent Close/bottom jump and full Story day labels in
