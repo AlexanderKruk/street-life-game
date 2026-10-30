@@ -100,6 +100,62 @@ try {
   // Standalone transport inspections retain the classic check and result.
   env.setup({ day: 2, minutes: 720 }, { 'street-life-trip-v1': { destinationId: 'station', mode: 'fare-dodge', total: 20, remaining: 8, inspection: { at: 12, status: 'rolling', roll: 5, modifier: 0 } } });
   assert(!modal()); assert(document.querySelector('.dice-overlay')); env.click('Continue'); assert(document.querySelector('.result-overlay')); assert(!modal()); env.ok();
+  // Consuming an item commits once, presents the real result, then returns to
+  // the same backpack. The reading pause starts only after presentation.
+  const realTimeout = window.setTimeout, realClearTimeout = window.clearTimeout;
+  const timeouts = new Map(); let timeoutId = 0, timeoutNow = 0;
+  window.setTimeout = (callback, delay) => { const id = ++timeoutId; timeouts.set(id, { callback, at: timeoutNow + delay }); return id; };
+  window.clearTimeout = id => timeouts.delete(id);
+  const advanceTimeouts = duration => {
+    const end = timeoutNow + duration;
+    while (true) {
+      const due = [...timeouts].filter(([, timer]) => timer.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+      if (!due) break;
+      timeoutNow = due[1].at; timeouts.delete(due[0]); env.act(() => due[1].callback());
+    }
+    timeoutNow = end;
+  };
+  let visibility = 'visible';
+  const visibilityDescriptor = Object.getOwnPropertyDescriptor(document, 'visibilityState');
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
+  const setVisibility = value => { visibility = value; env.fireEvent(document, new window.Event('visibilitychange')); };
+  env.setup({ day: 2, minutes: 720, thirst: 20 }, { 'street-life-screen': 'inventory', [env.invKey]: { water: 3 } });
+  env.click(/Water.*tap to drink/);
+  assert(modal()); noClassic();
+  assert(modal().textContent.includes('You drink some water.'));
+  assert(!modal().querySelector('.story-live-controls'), 'an already-used item has no repeated decision');
+  assert(document.querySelector('.story-event-close'), 'reduced-motion result finishes immediately');
+  const consumed = facts();
+  assert.equal(consumed.inventory.water, 2); assert.equal(consumed.story.episodes.length, 1);
+  assert.equal(consumed.story.episodes[0].source, 'inventory'); assert.equal(consumed.story.episodes[0].status, 'awaiting-ack');
+  remount(); assert(modal()); assert.deepEqual(facts(), consumed, 'StrictMode/reload restores the result without consuming again');
+  assert.equal(timeouts.size, 1, 'StrictMode cleans up the first reading timer');
+  advanceTimeouts(1799); assert(modal(), 'the complete result remains readable for 1.8 seconds');
+  setVisibility('hidden'); advanceTimeouts(5000); assert(modal(), 'a hidden tab cannot auto-dismiss an unread result');
+  setVisibility('visible');
+  const inventoryScroller = modal().querySelector('.story-event-content');
+  Object.defineProperties(inventoryScroller, { scrollHeight: { value: 1200 }, clientHeight: { value: 500 } });
+  inventoryScroller.scrollTop = 0; env.fireEvent.scroll(inventoryScroller);
+  advanceTimeouts(5000); assert(modal(), 'reading older chronology suspends auto-close');
+  inventoryScroller.scrollTop = 700; env.fireEvent.scroll(inventoryScroller);
+  advanceTimeouts(1800); assert(!modal());
+  assert.equal(localStorage.getItem('street-life-screen'), 'inventory');
+  assert(!document.querySelector('.game-background[inert]')); assert.equal(document.body.style.position, '');
+  const completedConsumption = facts();
+  assert.equal(completedConsumption.story.episodes[0].status, 'complete');
+  assert.deepEqual(completedConsumption.inventory, consumed.inventory); assert.deepEqual(completedConsumption.game, consumed.game);
+  assert.deepEqual(completedConsumption.history, consumed.history, 'closing only acknowledges, without new History or rewards');
+  env.click(/Water.*tap to drink/); assert(modal());
+  env.fireEvent.click(document.querySelector('.story-event-close'));
+  assert.equal(timeouts.size, 0, 'manual dismissal cancels the auto-close timer');
+  advanceTimeouts(5000); assert(!modal());
+  assert.equal(save().episodes.length, 2, 'a second drink is a separate record');
+  assert.equal(env.read(env.invKey).water, 1);
+  setup('spare-change'); clickId('event:spare-change:give'); advanceTimeouts(5000);
+  assert(modal(), 'authored events still require acknowledgement'); dismiss();
+  if (visibilityDescriptor) Object.defineProperty(document, 'visibilityState', visibilityDescriptor);
+  else delete document.visibilityState;
+  window.setTimeout = realTimeout; window.clearTimeout = realClearTimeout;
   // An unfinished animated result restores, then acknowledges exactly once.
   reduced = false;
   const frames = new Map(); let frameId = 0, clock = 0;
@@ -159,6 +215,23 @@ try {
   const completed = facts(); remount(); assert(!modal()); assert.deepEqual(facts(), completed);
   assert.equal(resizeObservers.size, 0, 'timeline observers are removed on close/unmount');
   delete global.ResizeObserver;
+  window.setTimeout = (callback, delay) => { const id = ++timeoutId; timeouts.set(id, { callback, at: timeoutNow + delay }); return id; };
+  window.clearTimeout = id => timeouts.delete(id);
+  env.setup({ day: 2, minutes: 720, thirst: 20 }, { 'street-life-screen': 'inventory', [env.invKey]: { water: 2 } });
+  env.click(/Water.*tap to drink/);
+  assert(modal()); assert(!document.querySelector('.story-event-close'));
+  assert.equal(timeouts.size, 0, 'auto-close cannot start while the text or consequences are still appearing');
+  advanceTimeouts(5000); assert(modal());
+  animate(30000); assert(document.querySelector('.story-event-close'));
+  const animatedConsumption = facts();
+  advanceTimeouts(1799); assert(!modal().classList.contains('is-auto-closing'));
+  advanceTimeouts(1); assert(modal().classList.contains('is-auto-closing'), 'the complete result fades after its reading pause');
+  advanceTimeouts(319); assert(modal(), 'the fade finishes before acknowledgement');
+  advanceTimeouts(1); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
+  assert.deepEqual(facts().inventory, animatedConsumption.inventory);
+  assert.deepEqual(facts().game, animatedConsumption.game);
+  assert.equal(timeouts.size, 0, 'completed auto-close leaves no dismissal timer');
+  window.setTimeout = realTimeout; window.clearTimeout = realClearTimeout;
   env.finish();
-  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain and standalone transport.`);
+  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain, standalone transport and consumption auto-close.`);
 } finally { rmSync(temporary, { recursive: true, force: true }); }

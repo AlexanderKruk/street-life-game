@@ -7,8 +7,8 @@ import type { StoryEpisode } from './story'
 import type { StoryInteraction } from './StoryLiveControls'
 
 /** The same chronology as the Story tab, opened at its live end. */
-export default function StoryEventDialog({ episodes, interaction, minute, label, canClose, onClose }: {
-  episodes: StoryEpisode[]; interaction?: StoryInteraction; minute: number; label: string; canClose: boolean; onClose: () => void
+export default function StoryEventDialog({ episodes, interaction, minute, label, canClose, autoClose = false, onClose }: {
+  episodes: StoryEpisode[]; interaction?: StoryInteraction; minute: number; label: string; canClose: boolean; autoClose?: boolean; onClose: () => void
 }) {
   const current = useRef({ canClose, onClose })
   current.current = { canClose, onClose }
@@ -17,6 +17,25 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   const bottomControl = useRef<HTMLButtonElement>(null)
   const following = useRef(true)
   const [awayFromBottom, setAwayFromBottom] = useState(false)
+  const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
+  const [closing, setClosing] = useState(false)
+  useEffect(() => {
+    const visibility = () => setVisible(document.visibilityState !== 'hidden')
+    document.addEventListener('visibilitychange', visibility)
+    return () => document.removeEventListener('visibilitychange', visibility)
+  }, [])
+  useEffect(() => {
+    setClosing(false)
+    // Reading old entries or hiding the page restarts the reading pause.
+    if (!autoClose || !canClose || awayFromBottom || !visible) return
+    let finish = 0
+    const hold = window.setTimeout(() => {
+      setClosing(true)
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      finish = window.setTimeout(() => { if (current.current.canClose) current.current.onClose() }, reduced ? 0 : 320)
+    }, 1800)
+    return () => { window.clearTimeout(hold); window.clearTimeout(finish) }
+  }, [autoClose, canClose, interaction?.episodeId, awayFromBottom, visible])
   const updateScrollPosition = useCallback(() => {
     const scroller = content.current
     if (!scroller) return
@@ -77,7 +96,7 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
       if (previous?.isConnected) previous.focus({ preventScroll: true })
     }
   }, [])
-  return <ModalOverlay className="story-event-overlay" role="dialog" aria-modal={!canClose || undefined} aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
+  return <ModalOverlay className={`story-event-overlay${closing ? ' is-auto-closing' : ''}`} role="dialog" aria-modal={!canClose || undefined} aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
     <ModalPanel ref={panel} tabIndex={-1} className="story-event-panel">
       {canClose && <ModalAction variant="outline" iconOnly floating className="story-event-close" aria-label={t('common.close')} onClick={onClose}><Icon name="close" className="icon" /></ModalAction>}
       <div ref={content} className="story-event-content" onScroll={updateScrollPosition}><StoryScreen episodes={episodes} interaction={interaction} currentMinute={minute} presentation="event" /></div>

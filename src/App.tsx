@@ -529,7 +529,8 @@ export default function App() {
     if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit || game.mood > moodCeiling.cap) return
     setPendingResult(null)
     if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
-    const summary = summarizeResult(pendingResult.before, resultSnapshot(), pendingResult.includeTime, pendingResult.consumedItems)
+    const after = resultSnapshot()
+    const summary = summarizeResult(pendingResult.before, after, pendingResult.includeTime, pendingResult.consumedItems)
     if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
     const memories = [
       { id: 'office-routine', actions: ['city-walk'], text: t('journal.ui.memory.office-routine') },
@@ -539,7 +540,8 @@ export default function App() {
     const memory = memories.find(fragment => fragment.actions.includes(pendingResult.id) && !seenMemories.includes(fragment.id))
     const resultText = memory ? t('journal.ui.resultWithMemory', { result: infoModal?.text ?? message, memory: memory.text }) : infoModal?.text ?? message
     if (memory) setSeenMemories(previous => [...new Set([...previous, memory.id])])
-    if (lastRecordedResult.current !== pendingResult) {
+    const firstReport = lastRecordedResult.current !== pendingResult
+    if (firstReport) {
       lastRecordedResult.current = pendingResult
       const actionTitle = pendingResult.title
       const reflection = journalPresentation(pendingResult, summary, memory?.id)
@@ -548,6 +550,8 @@ export default function App() {
     }
     const result = { ...infoModal, title: infoModal?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }
     if (pendingResult.storyEpisodeId !== undefined) story.finish(pendingResult.storyEpisodeId, result, storyStamp(), { actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}) })
+    else if (firstReport) story.recordInventoryResult(pendingResult, result, pendingResult.before.inventory, after.inventory,
+      { day: pendingResult.before.game.day, minute: pendingResult.before.game.minutes, locationId: pendingResult.before.game.locationId, locationName: locationName(pendingResult.before.game.locationId) }, storyStamp())
     setInfoModal(result)
   }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
 
@@ -845,8 +849,8 @@ export default function App() {
       onConfirm={() => runWithResult({ id: 'sleep-start', title: t('sleep.start.title') }, () => sleep(sleepHours, sleepChoice))}
     />}
     {goalCompletionVisible && <GoalCompletedDialog key={completedGoalId} title={goals.find(goal => goal.id === completedGoalId)!.title} onClose={acknowledgeGoalCompletion} />}
-    {infoModal && !storyEventVisible && <ResultCard result={infoModal} onClose={closeResult} />}
-    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
+    {infoModal && !pendingResult && !storyEventVisible && <ResultCard result={infoModal} onClose={closeResult} />}
+    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} autoClose={liveEpisode?.source === 'inventory'} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: t('location.closedTitle', { place: locationName(closingNotice) }),
       label: t('location.closingLabel'),

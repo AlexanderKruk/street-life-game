@@ -1,3 +1,19 @@
+Inventory consumption in Story — 30 October 2026, source only: settled food,
+water, wipes, medicine and cigarette commands append one result-only inventory
+episode when the actual carried quantity decreases. Reuse the existing result
+text, artwork and consequence selector; do not rerun commands, RNG or rewards.
+Rejected medicine/wipes and purchases/storage keep their existing UI. The shared
+Story modal preserves the current tab/scroll and closes after full presentation,
+a 1800ms reading pause and 320ms fade (no fade for reduced motion). Hidden pages
+or reading older entries restart the pause; manual dismissal/unmount cancels it.
+Authored events retain manual acknowledgement. Inventory episodes restore through
+the existing v1 Story save and pending result without consuming again.
+Verification: the inventory-command suite and new eight-item recording/persistence
+cases passed using Node's built-in TS stripping in place of unavailable esbuild;
+changed CJS syntax checks passed. Standard UI suites/build could not start because
+esbuild/tsc are absent. Browser/iPhone/WebKit unverified. No full suite, build-ID
+change or publication; save sources with [skip ci].
+
 Release v356 is published — 30 October 2026. GitHub Pages run 41086431569
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41086431569)
 succeeded for source 1d722be1c56434b2c4a56b21f3fc8acc71f12648: all 34 Node

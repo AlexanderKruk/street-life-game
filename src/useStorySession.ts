@@ -2,6 +2,9 @@ import { useRef, useState } from 'react'
 import type { StreetEvent, StreetEventChoice } from './events'
 import type { EventDiceState } from './stateTypes'
 import type { ResultCardData } from './ResultCard'
+import type { ResultAction } from './resultActions'
+import type { ResultInventory } from './results'
+import { appendInventoryStory } from './inventoryStory'
 import { chooseStoryScene, emptyStory, sceneFromEvent, type StoryEpisode, type StoryScene, type StoryStamp, type StoryStore } from './story'
 
 /** Passive archive commands; no RNG, game commands, storage or gameplay clock. */
@@ -52,10 +55,13 @@ export function useStorySession(initial: StoryStore) {
   function acknowledge() {
     commit(previous => previous.episodes.some(entry => entry.status === 'awaiting-ack') ? { ...previous, episodes: previous.episodes.map(entry => entry.status === 'awaiting-ack' ? { ...entry, status: 'complete' } : entry) } : previous)
   }
+  function recordInventoryResult(identity: ResultAction, result: ResultCardData, before: ResultInventory, after: ResultInventory, startedAt: StoryStamp, endedAt: StoryStamp) {
+    commit(previous => appendInventoryStory(previous, identity, result, before, after, startedAt, endedAt))
+  }
   function interrupt(id: number) {
     commit(previous => ({ ...previous, episodes: previous.episodes.map(entry => entry.id === id && entry.status === 'active' ? { ...entry, status: 'interrupted' } : entry) }))
   }
   function reset() { commit(() => emptyStory()) }
-  return { store, current: () => latest.current, begin, openEvent, choose, chooseScene, finish, acknowledge, interrupt, reset }
+  return { store, current: () => latest.current, begin, openEvent, choose, chooseScene, finish, recordInventoryResult, acknowledge, interrupt, reset }
 }
 export type StorySession = ReturnType<typeof useStorySession>
