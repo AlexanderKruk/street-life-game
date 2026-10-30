@@ -52,7 +52,7 @@ async function loadApp(disableMemo) {
         let source = fs.readFileSync(path, 'utf8').replace(/memo\(function (\w+)\(([\s\S]*?)\) \{/g,
           (match, name) => `${match} globalThis.__uiRenders['${name}'] = (globalThis.__uiRenders['${name}'] ?? 0) + 1;`);
         source = source.replace('export default function App() {', "export default function App() { globalThis.__uiRenders.App = (globalThis.__uiRenders.App ?? 0) + 1;");
-        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview: shelterSession.setShelterInterview, setGame, setInventory, searchStreetBottles, setTrashGame: trashSession.setTrashGame };\n  return <main className=');
+        source = source.replace('  return <main className=', '  globalThis.__auditSetters = { setActiveEvent, setShelterInterview: shelterSession.setShelterInterview, setGame, setInventory, searchStreetBottles, setTrashGame: trashSession.setTrashGame, reset };\n  return <main className=');
         if (disableMemo) source = source.replace(/memo\(function /g, '((component) => component)(function ');
         return { contents: source, loader: 'tsx' };
       });
@@ -382,7 +382,11 @@ function measure(App) {
   assert(document.querySelector('.map-surface[inert] .district-map'), 'reload restores the map behind the travel dialog');
   advance(1, false); fireEvent(window, new window.Event('beforeunload'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-trip-v1')).remaining, 224);
+  const lockedGame = localStorage.getItem('street-life-save-v3');
   fireEvent.click(document.querySelector('.reset'));
+  assert.equal(localStorage.getItem('street-life-save-v3'), lockedGame, 'the Story backdrop blocks background Reset');
+  // Exercise the real reset owner directly; its UI is now correctly inert.
+  act(() => global.__auditSetters.reset());
   advance(10, false); fireEvent(window, new window.Event('pagehide'));
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).locationId, 'street');
   assert(!localStorage.getItem('street-life-trip-v1'), 'pending old travel never returns after reset');
