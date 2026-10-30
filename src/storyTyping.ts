@@ -6,14 +6,17 @@ export function createStoryTyping(text: string): StoryTyping {
   const at: number[] = []
   let duration = 0, pause = 0
   for (let index = 0; index < characters.length; index++) {
-    const character = characters[index], next = characters[index + 1] ?? ''
+    const character = characters[index], previous = characters[index - 1] ?? '', next = characters[index + 1] ?? ''
     duration += 50
     at.push(duration)
-    const decimal = /\d/u.test(characters[index - 1] ?? '') && /\d/u.test(next)
-    if (!decimal && character === ',') pause = Math.max(pause, 120)
-    if (!decimal && /[.!?…]/u.test(character)) pause = 300
+    const betweenDigits = /\d/u.test(previous) && /\d/u.test(next)
+    const dash = /[—–]/u.test(character) || character === '-' && /\s/u.test(previous) && /\s/u.test(next)
+    if (character === ';' || character === ':' && !betweenDigits) pause = Math.max(pause, 180)
+    if (!betweenDigits && dash) pause = Math.max(pause, 200)
+    if (!betweenDigits && character === ',') pause = Math.max(pause, 120)
+    if (/[.!?…]/u.test(character) && (character !== '.' || !betweenDigits)) pause = 300
     // Keep punctuation clusters and closing quotes together before pausing.
-    if (!/[,.!?…»”"’')\]]/u.test(next)) { duration += pause; pause = 0 }
+    if (!/[,:;.!?…—–»”"’')\]]/u.test(next)) { duration += pause; pause = 0 }
   }
   return { at, duration }
 }

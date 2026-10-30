@@ -12,6 +12,9 @@
     #sl-story-choice .pv-stamp {display:block;min-height:24px;font-size:14px;font-variant-numeric:tabular-nums;color:var(--pv-muted);visibility:hidden;}
     #sl-story-choice .pv-done > .pv-mark,#sl-story-choice .pv-done > .pv-stamp {visibility:visible;animation:pv-story-imprint 400ms ease-out both;}
     #sl-story-choice .pv-text {display:block;width:100%;margin:7px 0 0;padding:0;border:0;background:transparent;color:var(--pv-text);font:inherit;text-align:left;white-space:pre-line;}
+    #sl-story-choice .pv-letter {animation:pv-letter-appear 100ms linear both;}
+    @keyframes pv-letter-appear {from{opacity:0;}to{opacity:1;}}
+    @media(prefers-reduced-motion:reduce){#sl-story-choice .pv-letter {animation:none;}}
     #sl-story-choice .pv-media {position:relative;width:100%;height:0;overflow:hidden;border-radius:7px;}
     #sl-story-choice .pv-picture {position:absolute;left:0;top:0;display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;opacity:0;}
     #sl-story-choice .pv-cursor {position:absolute;left:0;top:0;width:100%;padding-left:28px;}
@@ -85,11 +88,12 @@
         let media=null,picture=null;
         if(withImage){media=document.createElement('div');media.className='pv-media';picture=document.createElement('img');picture.className='pv-picture';picture.src=source;picture.alt=copy.art;media.append(picture);body.append(media);}
         records.append(row);
-        text.addEventListener('click',()=>{if(phase==='typing' && current && current.row===row && writing)phaseTime=writing.timing.duration;});
+        text.addEventListener('click',()=>{if(phase==='typing' && current && current.row===row && writing)skipWriting();});
         return {row,stamp,body,text,media,picture,startedAt,outcome:null};
       }
+      function skipWriting(){writing.instant=true;current.text.textContent=writing.message;writing.shown=writing.characters.length;phaseTime=writing.timing.duration;}
       function beginText(message,withImage){
-        fromY=y;isOutcome=false;current=makeRecord(withImage);writing={characters:Array.from(message),timing:copy.timings[message],message,shown:-1};
+        fromY=y;isOutcome=false;current=makeRecord(withImage);writing={characters:Array.from(message),timing:copy.timings[message],message,shown:0,instant:false};
         temporary.textContent='';phase='typing';phaseTime=0;
       }
       function beginOutcome(message){
@@ -100,8 +104,8 @@
         const stamp=document.createElement('time');stamp.className='pv-stamp';
         container.append(mark,stamp);current.outcome={container,stamp,endedAt};
         const text=document.createElement('button');text.type='button';text.className='pv-text cursor-interaction';text.setAttribute('aria-label',copy.skip);container.append(text);current.body.append(container);
-        current.text=text;writing={characters:Array.from(message),timing:copy.timings[message],message,shown:-1};
-        text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)phaseTime=writing.timing.duration;});
+        current.text=text;writing={characters:Array.from(message),timing:copy.timings[message],message,shown:0,instant:false};
+        text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)skipWriting();});
         temporary.textContent='';phase='typing';phaseTime=0;
       }
       function seal(){current.row.classList.add('pv-done');current.stamp.textContent=current.startedAt+' · '+copy.place+' · '+copy.day;status.textContent=current.stamp.textContent+'. '+writing.message;}
@@ -144,7 +148,10 @@
         if(phase==='typing'){
           let n=0;
           while(n<writing.characters.length && (reduced || writing.timing.at[n]<=phaseTime))n++;
-          if(n!==writing.shown){current.text.textContent=writing.characters.slice(0,n).join('');writing.shown=n;}
+          if(n!==writing.shown){
+            if(reduced || writing.instant){current.text.textContent=writing.characters.slice(0,n).join('');writing.shown=n;}
+            else while(writing.shown<n){const letter=document.createElement('span');letter.className='pv-letter';letter.textContent=writing.characters[writing.shown++];current.text.append(letter);}
+          }
           if(reduced || phaseTime>=writing.timing.duration){
             current.text.setAttribute('aria-label',writing.message);
             if(isOutcome){status.textContent=writing.message;phase='textmove';phaseTime=0;fromY=y;}

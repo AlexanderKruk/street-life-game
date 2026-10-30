@@ -1,3 +1,11 @@
+# Story soft-letter reveal and punctuation — 30 October 2026
+
+Verified local checkpoint: `bc856295a1462eeea0e288c9afb8d1ab77ff553b` (includes soft-reveal commit `063fe9f660e8bb580c009be2acb5a7cc7d4aee37`).
+Remote parent: `dacff926a8fe9fb6d6199acd420a7af38f469f9d`.
+Verified recovery bundle: `.backup/story-letter-fade-2026-10-30.bundle`, prerequisite `fd6ef4ebb078f0c6acd87075e116108fdc661510`. Import with `git fetch <bundle> HEAD` to recover the original local history. The API save copies only six tested changed source/test files over current main and updates current remote docs, preserving published App/version and unrelated remote changes.
+
+Approved letter reveal and fuller punctuation rhythm — 30 October 2026, source only: user chose the soft-reveal comparison. Each new narrative character in native Story Replay and Animation example now fades from opacity 0 to 1 over 100ms, linearly, without transforms or geometry changes; existing character nodes remain stable so earlier fades never restart. The established 50ms cadence and reading pauses remain: comma 120ms, sentence ending/ellipsis 300ms, now colon/semicolon 180ms and prose dash 200ms. Clock colons, decimal punctuation, numeric ranges and in-word hyphens do not add a prose pause. Shared schedules still drive both presentations. Tapping removes all pending character fades and reveals the paragraph immediately. Historic records, reduced motion and classic result dialogs remain settled; selected answers and consequence icon/value groups retain their whole-element animation. The 500ms consequence wait, complete-result stamp boundary, saved facts and game clock/RNG/cost/save isolation are unchanged. Targeted results (stable character nodes, skip, reduced motion and all new punctuation exceptions), example branches, 61 recorded event routes, design-system, module-boundaries, production build and diff checks passed. Full CI is reserved for publication; no release/build ID change. Live v351 is unchanged. Browser/iPhone pixel appearance remains unverified.
+
 # Story typing rhythm — 30 October 2026
 
 Verified local commit: `252af7969214a012f418874b0fed73471a34929b`.

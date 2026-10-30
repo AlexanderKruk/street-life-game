@@ -1406,6 +1406,9 @@ body { min-width:0; }
 .story-before-image { padding-bottom:0; }
 .story-reveal { display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
 .story-piece p, .story-reveal { white-space:pre-line; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); }
+.story-letter { animation:story-letter-appear 100ms linear both; }
+@keyframes story-letter-appear { from { opacity:0; } to { opacity:1; } }
+@media (prefers-reduced-motion:reduce) { .story-letter { animation:none; } }
 .story-choice { margin-top:12px; padding-bottom:0; color:var(--color-warning); }
 .story-media { display:grid; }
 .story-media > div { overflow:hidden; min-height:0; border-radius:7px; }

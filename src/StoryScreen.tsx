@@ -49,7 +49,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
   const track = useRef<HTMLDivElement>(null)
   const nodes = useRef<(HTMLDivElement | null)[]>([])
   const [replay, setReplay] = useState(0)
-  const [animation, setAnimation] = useState<{ index: number; shown: number; progress: number; y: number; minute: number; running: boolean } | null>(null)
+  const [animation, setAnimation] = useState<{ index: number; shown: number; progress: number; y: number; minute: number; running: boolean; instant: boolean } | null>(null)
   const [restingCursor, setRestingCursor] = useState<{ y: number; minute: number } | null>(null)
   useEffect(() => {
     if (!replay) return
@@ -58,7 +58,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
     let frame = 0, last: number | null = null, elapsed = 0, clockElapsed = 0, index = 0, phase: 'typing' | 'pause' | 'move' = 'typing', y = 0, from = 0
     const startMinute = episode.scenes[0].at.minute
     const minute = () => startMinute + Math.floor(clockElapsed / 1000)
-    let skipped = false
+    let skipped = false, instant = false
     const revealText = () => { skipped = true }
     const element = track.current
     element?.addEventListener('click', revealText)
@@ -80,10 +80,10 @@ function Episode({ episode }: { episode: StoryEpisode }) {
         const node = nodes.current[index]
         const anchor = node ? node.offsetTop - 28 : y
         y += (anchor - y) * Math.min(1, delta / 100)
-        if (elapsed >= 650) { index++; phase = 'typing'; elapsed = 0; skipped = false }
+        if (elapsed >= 650) { index++; phase = 'typing'; elapsed = 0; skipped = false; instant = false }
       } else if (phase === 'typing') {
         if (piece.kind === 'image' || piece.kind === 'stats') { phase = 'move'; elapsed = 0; from = y }
-        else if (skipped || elapsed >= typing[index].duration) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
+        else if (skipped || elapsed >= typing[index].duration) { instant = skipped; shown = length; phase = 'pause'; elapsed = 0; skipped = false }
       } else if (phase === 'pause') {
         shown = length
         if (elapsed >= 250) {
@@ -105,14 +105,14 @@ function Episode({ episode }: { episode: StoryEpisode }) {
         }
         const end = node ? Math.max(from, node.offsetTop + node.offsetHeight - (current.kind === 'image' ? 16 : 0)) : from
         y = from + (end - from) * ease
-        if (progress === 1) { index++; phase = 'typing'; elapsed = 0; progress = 0; skipped = false }
+        if (progress === 1) { index++; phase = 'typing'; elapsed = 0; progress = 0; skipped = false; instant = false }
       }
       const current = pieces[index]
       const currentShown = !current || current.kind === 'image' ? 0 : current.kind === 'choice' ? Array.from(current.text).length : storyCharactersShown(typing[index], elapsed)
-      setAnimation({ index, shown: phase === 'typing' ? currentShown : shown, progress, y, minute: minute(), running: !!current && current.kind !== 'choice' })
+      setAnimation({ index, shown: phase === 'typing' ? currentShown : shown, progress, y, minute: minute(), running: !!current && current.kind !== 'choice', instant })
       frame = window.requestAnimationFrame(tick)
     }
-    setAnimation({ index: 0, shown: 0, progress: 0, y: 0, minute: startMinute, running: pieces[0]?.kind !== 'choice' })
+    setAnimation({ index: 0, shown: 0, progress: 0, y: 0, minute: startMinute, running: pieces[0]?.kind !== 'choice', instant: false })
     frame = window.requestAnimationFrame(tick)
     return () => { window.cancelAnimationFrame(frame); element?.removeEventListener('click', revealText) }
   }, [replay, pieces, typing, episode])
@@ -135,7 +135,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
           return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}${pieces[index + 1]?.kind === 'image' ? ' story-before-image' : ''}${current && piece.kind === 'choice' ? ' story-choice-enter' : ''}`} hidden={future}>
             {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{stampLabel(piece.at)}</time></>}
             {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr`, marginTop: `${12 * (1 - Math.pow(1 - imageProgress, 3))}px` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
-              : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{visibleText}</button> : <p>{visibleText}</p>}
+              : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{piece.kind === 'text' && !animation.instant ? Array.from(visibleText).map((character, letter) => <span className="story-letter" key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}</button> : <p>{visibleText}</p>}
           </div>
         })}
       </div>

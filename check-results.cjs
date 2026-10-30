@@ -267,20 +267,27 @@ try {
   {
     const episode = { id: 98, source: 'encounter', sourceId: 'typing', status: 'complete', scenes: [{ eventId: 'typing', title: 'Scene', text: 'А, Б. В', at }] };
     render(React.createElement(StoryScreen, { episodes: [episode] }));
+    assert(!document.querySelector('.story-letter'), 'historic text opens fully visible');
     fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
     let now = 0; frame(0);
     const to = target => { while (now < target) { now = Math.min(target, now + 10); frame(now); } };
     const text = () => document.querySelector('.story-text button').textContent;
     to(49); assert.equal(text(), '', 'first character waits 50ms');
     to(50); assert.equal(text(), 'А');
+    const firstLetter = document.querySelector('.story-letter');
+    assert(firstLetter, 'new characters receive the approved soft reveal');
     to(100); assert.equal(text(), 'А,');
+    assert.equal(document.querySelector('.story-letter'), firstLetter, 'adding a character preserves earlier DOM nodes and their running fade');
+    assert.equal(document.querySelectorAll('.story-letter').length, 2);
     to(269); assert.equal(text(), 'А,', 'comma holds another 120ms before the next character interval');
+    assert.equal(document.querySelector('.story-letter'), firstLetter, 'punctuation pause does not restart the fade');
     to(270); assert.equal(text(), 'А, ');
     to(370); assert.equal(text(), 'А, Б.');
     to(719); assert.equal(text(), 'А, Б.', 'sentence ending adds a 300ms reading pause');
     to(720); assert.equal(text(), 'А, Б. ');
     fireEvent.click(document.querySelector('.story-text button'));
     to(730); assert.equal(text(), 'А, Б. В', 'tap bypasses the remaining typing schedule');
+    assert(!document.querySelector('.story-letter'), 'tap removes pending opacity effects so every letter is immediately visible');
     cleanup();
     const { createStoryTyping, storyCharactersShown } = bundled('src/storyTyping.ts');
     const emoji = createStoryTyping('🙂А');
@@ -292,6 +299,13 @@ try {
     assert.equal(storyCharactersShown(quoted, 250), 5, 'closing quote appears before the sentence pause');
     assert.equal(quoted.duration, 550, 'final sentence pause is retained before the following media step');
     assert.equal(createStoryTyping('Да...').duration, 550, 'ellipsis adds one sentence pause');
+    assert.equal(createStoryTyping('А: Б').duration, 380, 'colon adds a 180ms pause');
+    assert.equal(createStoryTyping('А; Б').duration, 380, 'semicolon adds a 180ms pause');
+    assert.equal(createStoryTyping('1;2').duration, 330, 'semicolon between list numbers still pauses');
+    for (const dash of ['—', '–', '-']) assert.equal(createStoryTyping(`А ${dash} Б`).duration, 450, 'standalone dash adds 200ms');
+    assert.equal(createStoryTyping('23:12').duration, 250, 'clock colon does not pause');
+    assert.equal(createStoryTyping('2–4').duration, 150, 'numeric range does not pause');
+    assert.equal(createStoryTyping('из-за').duration, 250, 'hyphen inside a word does not pause');
   }
   // A deterministic layout catches cursor jumps and clock resets, beyond settled DOM checks.
   const geometry = Object.getOwnPropertyDescriptors(window.HTMLElement.prototype);
@@ -354,6 +368,7 @@ try {
     fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
     assert(!document.querySelector('.has-replay'), 'reduced motion remains a settled archive with factual time');
     assert.equal(live(), '10:20');
+    assert(!document.querySelector('.story-letter'), 'reduced motion does not create per-character opacity effects');
     assert.equal(frames.size, 0);
     cleanup(); reduced = false;
   } finally {
