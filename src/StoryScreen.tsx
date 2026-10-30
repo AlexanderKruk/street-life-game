@@ -11,15 +11,25 @@ import StoryComparison from './StoryComparison'
 import { createStoryTyping, storyCharactersShown } from './storyTyping'
 import type { StoryEpisode, StoryStamp } from './story'
 
-type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number }
+type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number; stamp?: StoryStamp; partBody?: boolean }
 const stampLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${at.locationName} · ${t('hud.day', { day: formatNumber(displayDay(at.day)) })}`
 function episodePieces(episode: StoryEpisode): Piece[] {
   const pieces: Piece[] = []
+  const sealPart = (contentStart: number, at: StoryStamp, result = false) => {
+    if (pieces.length === contentStart) return
+    let start = contentStart
+    // The saved answer belongs to the part it produces, including continuation scenes.
+    while (start > 0 && pieces[start - 1].kind === 'choice') start--
+    pieces[start].sealAfter = pieces.length - 1
+    pieces[start].stamp = at
+    pieces[start].resultStart = result
+    if (start < contentStart) pieces[contentStart].partBody = true
+  }
   for (const scene of episode.scenes) {
     const start = pieces.length
     if (scene.text) pieces.push({ kind: 'text', text: scene.text, at: scene.at })
     if (scene.illustration) pieces.push({ kind: 'image', text: scene.text || scene.title, image: scene.illustration, at: scene.at })
-    if (pieces[start]) pieces[start].sealAfter = pieces.length - 1
+    sealPart(start, scene.at)
     for (const choice of [...(scene.earlierChoices ?? []), ...(scene.choice ? [scene.choice] : [])]) pieces.push({ kind: 'choice', text: t('story.chosen', { choice: choice.label }), at: choice.at })
   }
   if (episode.result) {
@@ -30,7 +40,7 @@ function episodePieces(episode: StoryEpisode): Piece[] {
     const art = result.illustration ?? result.presentation?.illustration
     if (art) pieces.push({ kind: 'image', text: result.illustrationAlt ?? result.text, image: art, at })
     if (resultDisplay(result).indicators.length || result.presentation?.places?.length || result.presentation?.notice || episode.scenes.some(scene => scene.roll)) pieces.push({ kind: 'stats', text: '', at })
-    if (pieces[start]) { pieces[start].resultStart = true; pieces[start].sealAfter = pieces.length - 1 }
+    sealPart(start, at, true)
   }
   return pieces
 }
@@ -69,16 +79,16 @@ function Episode({ episode }: { episode: StoryEpisode }) {
         // Keep the final clock/line where they stopped instead of jumping to the archive layout.
         setRestingCursor({ y, minute: minute() }); setAnimation(null); return
       }
-      // Like the reference, the replay clock breathes/ticks during presentation, not choices.
+      // A selected answer and its outcome are one running presentation, not an open choice menu.
       // This is an ephemeral visual clock: fixed stamps always use the saved StoryStamp.
-      if (piece.kind !== 'choice') clockElapsed += delta
+      clockElapsed += delta
       const length = Array.from(piece.text).length
       let shown = piece.kind === 'image' || piece.kind === 'choice' ? length : storyCharactersShown(typing[index], elapsed)
       let progress = 0
       if (piece.kind === 'choice') {
         // Reference choices enter whole, with the cursor settling gently above the selected text.
         const node = nodes.current[index]
-        const anchor = node ? node.offsetTop - 28 : y
+        const anchor = node ? node.offsetTop - (piece.sealAfter === undefined ? 28 : 0) : y
         y += (anchor - y) * Math.min(1, delta / 100)
         if (elapsed >= 650) { index++; phase = 'typing'; elapsed = 0; skipped = false; instant = false }
       } else if (phase === 'typing') {
@@ -109,10 +119,10 @@ function Episode({ episode }: { episode: StoryEpisode }) {
       }
       const current = pieces[index]
       const currentShown = !current || current.kind === 'image' ? 0 : current.kind === 'choice' ? Array.from(current.text).length : storyCharactersShown(typing[index], elapsed)
-      setAnimation({ index, shown: phase === 'typing' ? currentShown : shown, progress, y, minute: minute(), running: !!current && current.kind !== 'choice', instant })
+      setAnimation({ index, shown: phase === 'typing' ? currentShown : shown, progress, y, minute: minute(), running: !!current, instant })
       frame = window.requestAnimationFrame(tick)
     }
-    setAnimation({ index: 0, shown: 0, progress: 0, y: 0, minute: startMinute, running: pieces[0]?.kind !== 'choice', instant: false })
+    setAnimation({ index: 0, shown: 0, progress: 0, y: 0, minute: startMinute, running: !!pieces[0], instant: false })
     frame = window.requestAnimationFrame(tick)
     return () => { window.cancelAnimationFrame(frame); element?.removeEventListener('click', revealText) }
   }, [replay, pieces, typing, episode])
@@ -132,8 +142,8 @@ function Episode({ episode }: { episode: StoryEpisode }) {
           const visibleText = current ? Array.from(piece.text).slice(0, animation.shown).join('') : piece.text
           const startsPart = piece.sealAfter !== undefined
           const sealed = !animation || animation.index > piece.sealAfter!
-          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}${pieces[index + 1]?.kind === 'image' ? ' story-before-image' : ''}${current && piece.kind === 'choice' ? ' story-choice-enter' : ''}`} hidden={future}>
-            {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{stampLabel(piece.at)}</time></>}
+          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}${piece.partBody ? ' story-part-body' : ''}${pieces[index + 1]?.kind === 'image' ? ' story-before-image' : ''}${current && piece.kind === 'choice' ? ' story-choice-enter' : ''}`} hidden={future}>
+            {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{stampLabel(piece.stamp ?? piece.at)}</time></>}
             {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr`, marginTop: `${12 * (1 - Math.pow(1 - imageProgress, 3))}px` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{piece.kind === 'text' && !animation.instant ? Array.from(visibleText).map((character, letter) => <span className="story-letter" key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}</button> : <p>{visibleText}</p>}
           </div>

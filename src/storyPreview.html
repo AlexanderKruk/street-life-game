@@ -40,7 +40,9 @@
     #sl-story-choice .pv-choice-group {margin-top:40px;}
     #sl-story-choice .pv-selected {margin:40px 0 0;color:var(--pv-text);font-size:16px;}
     #sl-story-choice .pv-outcome {position:relative;margin-top:14px;}
-    #sl-story-choice .pv-outcome .pv-mark {left:-28px;}
+    #sl-story-choice .pv-decision {position:relative;margin-top:40px;}
+    #sl-story-choice .pv-decision > .pv-mark {left:-28px;}
+    #sl-story-choice .pv-decision > .pv-selected {margin:7px 0 0;}
     #sl-story-choice .pv-outcome .pv-text {margin-top:0;}
     @keyframes pv-story-answer-enter {from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
     @media(prefers-reduced-motion:reduce){#sl-story-choice .pv-choice-enter {animation:none;}}
@@ -99,11 +101,8 @@
       function beginOutcome(message){
         fromY=y;isOutcome=true;
         const container=document.createElement('div');container.className='pv-outcome';
-        const endedAt=label();
-        const mark=document.createElement('span');mark.className='pv-mark';mark.setAttribute('aria-hidden','true');
-        const stamp=document.createElement('time');stamp.className='pv-stamp';
-        container.append(mark,stamp);current.outcome={container,stamp,endedAt};
-        const text=document.createElement('button');text.type='button';text.className='pv-text cursor-interaction';text.setAttribute('aria-label',copy.skip);container.append(text);current.body.append(container);
+        current.outcome.endedAt=label();
+        const text=document.createElement('button');text.type='button';text.className='pv-text cursor-interaction';text.setAttribute('aria-label',copy.skip);container.append(text);current.outcome.container.append(container);
         current.text=text;writing={characters:Array.from(message),timing:copy.timings[message],message,shown:0,instant:false};
         text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)skipWriting();});
         temporary.textContent='';phase='typing';phaseTime=0;
@@ -127,7 +126,12 @@
           button.addEventListener('click',()=>{
             if(phase!=='choices')return;
             choices.forEach(item=>{item.button.disabled=true;});
-            const selectedText=document.createElement('p');selectedText.className='pv-selected';selectedText.textContent=option.selected;group.replaceWith(selectedText);
+            const decision=document.createElement('div');decision.className='pv-decision';
+            const mark=document.createElement('span');mark.className='pv-mark';mark.setAttribute('aria-hidden','true');
+            const stamp=document.createElement('time');stamp.className='pv-stamp';
+            const selectedText=document.createElement('p');selectedText.className='pv-selected';selectedText.textContent=option.selected;
+            decision.append(mark,stamp,selectedText);group.replaceWith(decision);
+            current.outcome={container:decision,stamp,endedAt:null};
             selected=option;temporary.textContent='';waitingFor=(option.wait+Math.floor(Math.random()*3))*1000;phase='waiting';phaseTime=0;
           });
         });
@@ -176,6 +180,8 @@
           }
           y=reduced?choiceAnchor:y+(choiceAnchor-y)*Math.min(1,delta/100);
         }else if(phase==='waiting'){
+          const anchor=current.outcome.container.getBoundingClientRect().top-timeline.getBoundingClientRect().top;
+          y=reduced?anchor:y+(anchor-y)*Math.min(1,delta/100);
           if(phaseTime>=waitingFor)beginOutcome(selected.text);
         }else if(phase==='textmove'){
           const progress=reduced?1:Math.min(1,phaseTime/750);

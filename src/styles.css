@@ -1421,7 +1421,7 @@ body { min-width:0; }
 @media (prefers-reduced-motion:reduce) { .story-track.is-running .story-head > span { animation:none; } }
 
 /* A result is an unframed point of the same Story episode. */
-.story-result-start { margin-top:14px; }
+.story-result-start, .story-part-body { margin-top:14px; }
 .story-part-imprint { position:absolute; left:-28px; top:5px; width:12px; height:12px; border-radius:50%; background:var(--color-warning); }
 .story-part-stamp { display:block; min-height:var(--story-stamp-height); margin-bottom:var(--story-stamp-gap); }
 .story-part-stamp[data-story-stamp="pending"] { visibility:hidden; }
