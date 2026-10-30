@@ -6,12 +6,13 @@ const { buildSync } = require('./tests/helpers/build.cjs');
 const temporary = mkdtempSync(join(tmpdir(), 'street-story-modal-'));
 process.env.NODE_PATH = resolve('node_modules'); require('node:module').Module._initPaths();
 try {
-  const app = join(temporary, 'app.cjs'), classic = join(temporary, 'classic.cjs'), events = join(temporary, 'events.cjs');
-  for (const [entry, outfile, legacyEventDialogs] of [['src/App.tsx', app, false], ['src/App.tsx', classic, true], ['src/events.ts', events, false]])
+  const app = join(temporary, 'app.cjs'), classic = join(temporary, 'classic.cjs'), events = join(temporary, 'events.cjs'), inventoryModule = join(temporary, 'inventory.cjs');
+  for (const [entry, outfile, legacyEventDialogs] of [['src/App.tsx', app, false], ['src/App.tsx', classic, true], ['src/events.ts', events, false], ['src/inventory.ts', inventoryModule, false]])
     buildSync({ entryPoints: [entry], outfile, legacyEventDialogs, bundle: true, platform: 'node', format: 'cjs', external: ['react', 'react-dom', 'react/jsx-runtime'] });
   process.env.STREET_REGRESSION_APP = app;
   const env = require('./tests/helpers/regression-env.cjs');
   const ClassicApp = require(classic).default, { STREET_EVENTS } = require(events);
+  const { SHOP_ITEMS } = require(inventoryModule);
   let reduced = true;
   window.matchMedia = () => ({ matches: reduced });
   const key = 'street-life-story-v1', encounterKey = 'street-life-encounters-v1', firstKey = 'street-life-first-night-events-v1';
@@ -105,6 +106,21 @@ try {
   // Standalone transport inspections retain the classic check and result.
   env.setup({ day: 2, minutes: 720 }, { 'street-life-trip-v1': { destinationId: 'station', mode: 'fare-dodge', total: 20, remaining: 8, inspection: { at: 12, status: 'rolling', roll: 5, modifier: 0 } } });
   assert(!modal()); assert(document.querySelector('.dice-overlay')); env.click('Continue'); assert(document.querySelector('.result-overlay')); assert(!modal()); env.ok();
+  for (const item of SHOP_ITEMS) {
+    const startShop = () => env.setup({ day: 2, minutes: 720, locationId: 'shop', money: 100 }, {
+      'street-life-screen': 'location', [env.invKey]: { water: 0, food: 0, bread: 0, cannedFood: 0, readyMeal: 0, wipes: 0, showerGel: 0, cigarettes: 0, medicines: 0 },
+    });
+    startShop(); remount(ClassicApp);
+    env.fireEvent.click(document.querySelectorAll('.shop-buy')[SHOP_ITEMS.indexOf(item)]);
+    const expected = facts(); expected.story.episodes[0].status = 'complete';
+    startShop(); env.fireEvent.click(document.querySelectorAll('.shop-buy')[SHOP_ITEMS.indexOf(item)]);
+    assert(modal(), `${item.id} uses the shared Story modal`); noClassic();
+    assert(!modal().textContent.includes('put them in your backpack'));
+    assert(modal().querySelector(`[data-resource-id="${item.id}"]`), 'received stock uses its own resource identity');
+    assert(modal().querySelector('[data-resource-id="money"]'));
+    const purchased = facts(); remount(); assert.deepEqual(facts(), purchased, 'a pending purchase reloads without a second charge');
+    dismiss(); assert.deepEqual(facts(), expected, `${item.id} preserves exact price, stock, time, History and Story facts`);
+  }
   // Consuming an item commits once, presents the real result, then returns to
   // the same backpack only when the player dismisses it.
   const realTimeout = window.setTimeout, realClearTimeout = window.clearTimeout;

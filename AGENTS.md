@@ -1,3 +1,21 @@
+Purchases in Story — 30 October 2026, source only: successful purchases of all
+nine shop goods append a result-only inventory episode to the shared Story modal.
+Detect success through increased carried quantity; rejected purchases do not
+claim success. Keep command prices, three-minute action, capacity, RNG and History
+unchanged. Save a short item-specific sentence once: Bought water. / Купил воды. /
+Kupiłem wodę., with whole messages for every item in EN/RU/PL. Omit repeated
+payment/backpack prose in Story; classic fallback copy remains compatible.
+The shared ResultIndicators reuses banknote from the header and water from Status
+for carried water as well as Thirst; remaining stock/stat IDs retain existing
+project icons. Consequences show actual purchased stock and money, without
+inventing nutrition or treatment effects. Manual dismissal/background locking
+and pending-result reload apply to purchases too. TEXT_STYLE.md records the
+explicit purchase-only short-voice exception. Inventory command/persistence tests
+and complete EN/RU/PL catalogue validation passed with Node's TS loader; changed
+CJS/JS syntax passed. Added nine real App purchase/reload routes, icon parity,
+rendering pause/memo and browser purchase cases; UI/build/browser remain unrun
+because esbuild/tsc dependencies are absent. No full suite or publication; [skip ci].
+
 Manual Story modal dismissal — 30 October 2026, source only: supersedes the
 v357 automatic inventory-result dismissal and the menu-above-blur proposal.
 All Story event/consumption modals remain open after full presentation until

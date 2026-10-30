@@ -33,6 +33,7 @@ needs, observations, conversations and phone searches.
 | Narrative choice | First-person thought or direct speech; a short action without pronouns is also valid | Usually one short sentence. Add a second only for useful hesitation or motivation. Use “my”, not “your”, when the label is the hero's thought. |
 | Service/action control | A short verb phrase | “Charge phone”, “Take a shower”, “Store”. These functional labels do not need an invented inner monologue. |
 | Result | Second person; normally present tense | Usually 1–3 short sentences about the actual outcome. Past tense is natural for completed duration: “You slept for four hours.” Do not switch into a receipt fragment such as “Bought …”. |
+| Routine purchase in Story | Approved short completed-action phrase | “Bought water.” / “Купил воды.” / “Kupiłem wodę.” Name the item; omit repeated backpack/payment prose. Actual stock and money appear in the shared consequences. This is a purchase-only exception to the ordinary result voice. |
 | Place description | Neutral, reusable description | Usually 1–2 short sentences: what the place offers and the essential access condition. Must work on repeat visits and at different times. |
 | Discovery | Practical, concise | What is available and one useful next step. Hours and map status belong in their existing fields. Put detailed rules in Notes or at the relevant action. |
 | Hint / unavailable action | Direct interface language | State the condition or reason, then a useful next step if needed. Use exact thresholds when needed to make a decision. |

@@ -22,6 +22,8 @@ const { render, screen, fireEvent, act, cleanup } = require('@testing-library/re
 const { default: ResultCard, isMajorChange, ResultStat } = bundled('src/ResultCard.tsx');
 const { summarizeResult } = bundled('src/results.ts');
 const { questionPresentation, locationPresentation } = bundled('src/resultPresentation.ts');
+const { Icon } = bundled('src/Icon.tsx');
+const { default: ResultIndicators } = bundled('src/ResultIndicators.tsx');
 const before = {
   game: { day: 2, minutes: 600, locationId: 'shelter', money: 57, hunger: 73, thirst: 50, energy: 34, health: 90, hygiene: 50, mood: 60.2, intoxication: 0 },
   inventory: { clothingCleanliness: 50, phoneBattery: 43, phoneCondition: 72, jacket: 78, water: 2, food: 2, medicines: 2, documents: true, cigarettes: 0, bottles: 0, transitCard: false },
@@ -31,6 +33,13 @@ const after = { game: { ...before.game, minutes: 620, money: 52.6, hunger: 72.8,
 function frame(now) { act(() => { const callbacks = [...frames]; frames.clear(); callbacks.forEach(([, fn]) => fn(now)); }); }
 function row(label) { return document.querySelector(`[data-stat="${label}"]`); }
 try {
+  for (const [id, icon] of [['money', 'banknote'], ['water', 'water'], ['thirst', 'water'], ['food', 'food'], ['medicines', 'pill']]) {
+    render(React.createElement(Icon, { name: icon }));
+    const expected = document.querySelector('svg').innerHTML; cleanup();
+    render(React.createElement(ResultIndicators, { changes: [{ id, label: id, value: '+1', amount: 1, kind: 'positive' }] }));
+    assert.equal(document.querySelector(`[data-resource-id="${id}"] svg`).innerHTML, expected, `${id} reuses the existing project icon`);
+    cleanup();
+  }
   const summary = summarizeResult(before, after);
   assert.equal(summary.changes.find(change => change.label.includes('Energy')).meter.before, 34);
   assert.equal(summary.changes.find(change => change.label.includes('Hygiene')).meter.cap, 80);
@@ -62,7 +71,7 @@ try {
   for (const [key,label] of [['water','Water portions'],['food','Food portions'],['bread','Bread rolls'],['cannedFood','Canned food'],['readyMeal','Ready meals'],['wipes','Wet wipes'],['showerGel','3-in-1 gel uses'],['cigarettes','Cigarettes'],['medicines','Medicine']]) {
     const starting = { ...before, inventory: { ...before.inventory, [key]: 2 } };
     const consumed = { ...starting, inventory: { ...starting.inventory, [key]: 1 } };
-    const usedRow = summarizeResult(starting, consumed, true, [key]).changes.find(change => change.label.includes(label));
+   const usedRow = summarizeResult(starting, consumed, true, [key]).changes.find(change => change.label.includes(label));
     assert(usedRow.consumed); assert(!isMajorChange(usedRow));
     assert(isMajorChange(summarizeResult(starting, consumed).changes.find(change => change.label.includes(label))), 'other item losses remain visible');
     const received = { ...starting, inventory: { ...starting.inventory, [key]: 3 } };
@@ -338,7 +347,7 @@ try {
     assert.equal(createStoryTyping('23:12').duration, 250, 'clock colon does not pause');
     assert.equal(createStoryTyping('2–4').duration, 150, 'numeric range does not pause');
     assert.equal(createStoryTyping('из-за').duration, 250, 'hyphen inside a word does not pause');
-    assert.equal(createStoryTyping('A').settledAt, 150, 'the shared block pause starts after the last 100ms letter fade');
+    assertequal(createStoryTyping('A').settledAt, 150, 'the shared block pause starts after the last 100ms letter fade');
     assert.equal(createStoryTyping('A.').settledAt, createStoryTyping('A.').duration, 'final punctuation already covers the letter fade without another delay');
   }
   // Every mini-block owns one reading pause, including before the effects.

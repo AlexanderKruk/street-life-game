@@ -233,6 +233,8 @@ function measure(App) {
   assert.equal(count('ShopCard'), 9, 'all shop cards update when the shop closes');
   setup(App, 'location', { locationId: 'shop', money: 100 }, { 'street-life-mobile-auto-renew': false }); advance(1);
   act(() => global.__auditSetters.setGame(previous => ({ ...previous, money: 4 })));
+  const purchaseMatchMedia = window.matchMedia;
+  window.matchMedia = () => ({ matches: true });
   fireEvent.click(screen.getByRole('button', { name: /Buy Water for/ }));
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).money, 1);
   assert.equal(JSON.parse(localStorage.getItem('street-life-inventory-v1')).water, 5);
@@ -246,6 +248,12 @@ function measure(App) {
     assert.equal(count('App'), 0, `${name} has no periodic background renders`);
     modalAudit.push({ name, periodicRenders: count('App') });
   };
+  pauseAudit('purchase result', '.story-event-panel');
+  fireEvent.click(screen.getByRole('button', { name: 'Close', exact: true }));
+  window.matchMedia = purchaseMatchMedia;
+  // Keep the memoized classic-result audit on the unchanged container-return flow.
+  setup(App, 'location', { locationId: 'shop', money: 100 }, { 'street-life-inventory-v1': { bottles: 2 } });
+  fireEvent.click(document.querySelector('.shop-return'));
   pauseAudit('action result', '.result-modal');
   clearCounts(); act(() => global.__auditSetters.setGame(previous => ({ ...previous, money: previous.money + 1 })));
   assert.equal(count('ResultCard'), 0, 'unchanged result ignores unrelated parent changes');

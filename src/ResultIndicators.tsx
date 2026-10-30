@@ -14,7 +14,7 @@ const icons: Partial<Record<ResultResourceId, IconName>> = {
   money: 'banknote', hunger: 'food', thirst: 'water', energy: 'energy', health: 'heart',
   hygiene: 'shower', mood: 'face-fair', intoxication: 'cup', wetness: 'water',
   phoneCondition: 'phone', clothingCleanliness: 'shower', jacket: 'person',
-  water: 'bottle', food: 'food', bottles: 'bottle', bread: 'food', cannedFood: 'can',
+  water: 'water', food: 'food', bottles: 'bottle', bread: 'food', cannedFood: 'can',
   readyMeal: 'food', wipes: 'shower', showerGel: 'shower', cigarettes: 'cigarette',
   medicines: 'pill', documents: 'documents', cold: 'thermometer', 'free-transit': 'ticket',
   'well-fed': 'food', coldRecovery: 'pill',

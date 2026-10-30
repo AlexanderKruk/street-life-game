@@ -748,12 +748,17 @@ for (const width of [390, 1280]) test(`Story event modal preserves the previous 
   expect(await read(page, keys.game)).toEqual(after)
 })
 
-test('shop purchases and theft keep their existing dialogs', async ({ page }) => {
+test('shop purchases use Story while theft retains its check', async ({ page }) => {
   const seed = entries(), game = JSON.parse(seed[keys.game])
   await openGame(page, { ...seed, [keys.game]: JSON.stringify({ ...game, locationId: 'shop', money: 100 }) })
   await page.locator('.shop-buy:not(:disabled)').first().click()
-  await expect(page.locator('.result-modal')).toBeVisible()
-  await expect(page.locator('.story-event-overlay')).toHaveCount(0)
+  await expect(page.locator('.story-event-overlay')).toBeVisible()
+  await expect(page.locator('.result-modal')).toHaveCount(0)
+  await storyVisible(page, page.getByText('Bought water.', { exact: true }))
+  const purchasedGame = await read(page, keys.game), purchasedInventory = await read(page, keys.inventory)
+  await page.reload()
+  expect(await read(page, keys.game)).toEqual(purchasedGame)
+  expect(await read(page, keys.inventory)).toEqual(purchasedInventory)
   await acknowledge(page)
   await page.locator('.supply-steal:not(:disabled)').first().click()
   await expect(page.locator('.dice-overlay')).toBeVisible()

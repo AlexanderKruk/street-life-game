@@ -29,6 +29,25 @@ module.exports = function checkInventoryStory({ appendInventoryStory: append, em
     const store = emptyStory();
     assert.equal(append(store, { id, title: 'Unrelated' }, result, { water: 2, food: 2 }, { water: 1, food: 1 }, at, end), store);
   }
+  const purchases = [['water', 3, 'Bought water.'], ['food', 1, 'Bought a sandwich.'], ['bread', 1, 'Bought a bread roll.'],
+    ['cannedFood', 1, 'Bought canned food.'], ['readyMeal', 1, 'Bought a ready meal.'], ['wipes', 5, 'Bought wet wipes.'],
+    ['showerGel', 20, 'Bought shower gel.'], ['cigarettes', 5, 'Bought cigarettes.'], ['medicines', 1, 'Bought medicine.']];
+  for (const [item, quantity, text] of purchases) {
+    const store = emptyStory(), before = { [item]: 2 }, after = { [item]: 2 + quantity };
+    const purchase = { ...result, costs: [{ id: 'money', label: 'Money', value: '−3 zł', amount: -3, kind: 'negative' }],
+      changes: [{ id: item, label: item, value: `+${quantity}`, amount: quantity, kind: 'positive' }] };
+    const identity = { id: `buy:${item}`, title: `Buy ${item}` };
+    const original = JSON.stringify({ store, before, after, purchase });
+    const next = append(store, identity, purchase, before, after, at, end);
+    assert.equal(JSON.stringify({ store, before, after, purchase }), original, 'recording a purchase cannot change stock or charge again');
+    assert.equal(next.episodes[0].result.text, text);
+    assert.deepEqual(next.episodes[0].result.costs, purchase.costs); assert.deepEqual(next.episodes[0].result.changes, purchase.changes);
+    assert.deepEqual(loadStory(JSON.parse(JSON.stringify(next))), next, 'a pending purchase restores without rebuying');
+    assert.equal(append(store, identity, purchase, before, before, at, end), store, 'money/capacity refusals never claim a successful purchase');
+    const repeated = append(next, identity, purchase, after, { [item]: 2 + quantity * 2 }, end, end);
+    assert.deepEqual(repeated.episodes.map(entry => entry.id), [1, 2]);
+    assert.equal(repeated.episodes[0], next.episodes[0]);
+  }
   for (const text of ['You drink some water.', 'Ты пьёшь воду.', 'Pijesz wodę.']) {
     const copy = { ...result, text };
     const next = append(emptyStory(), { id: 'use:water', title: text }, copy, { water: 1 }, { water: 0 }, at, end);

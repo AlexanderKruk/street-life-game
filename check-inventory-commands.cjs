@@ -117,4 +117,4 @@ assert.equal(inventoryCommandResult(discard), null, 'discard confirmation has no
 assert.deepEqual(foodPortions(run(shelf, discard).next.inventory, 'food'), [25, 60, 80, 100]);
 assert.deepEqual(foodPortions(run(shelf, { ...discard, spoiledOnly: false }).next.inventory, 'food'), [100]);
 require('./tests/helpers/inventory-story.cjs')({ ...bundled('src/inventoryStory.ts'), ...bundled('src/story.ts') });
-console.log('PASS: inventory command boundaries, capacity, costs, storage conservation, immutable/replayable updates, one-time unsafe-food resolution and consumption Story persistence.');
+console.log('PASS: inventory command boundaries, capacity, costs, storage conservation, immutable/replayable updates, one-time unsafe-food resolution and consumption/purchase Story persistence.');
