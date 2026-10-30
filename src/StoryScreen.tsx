@@ -40,7 +40,7 @@ function episodePieces(episode: StoryEpisode): Piece[] {
     addText(scene.text, scene.at)
     if (scene.illustration) pieces.push({ kind: 'image', text: scene.text || scene.title, image: scene.illustration, at: scene.at })
     sealPart(start, scene.at)
-    for (const choice of [...(scene.earlierChoices ?? []), ...(scene.choice ? [scene.choice] : [])]) pieces.push({ kind: 'choice', text: t('story.chosen', { choice: choice.label }), at: choice.at })
+    for (const choice of [...(scene.earlierChoices ?? []), ...(scene.choice ? [scene.choice] : [])]) pieces.push({ kind: 'choice', text: choice.label, at: choice.at })
   }
   if (episode.result) {
     const result = episode.result

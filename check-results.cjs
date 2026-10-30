@@ -287,7 +287,7 @@ try {
     const parts = [...document.querySelectorAll('.story-part-start')];
     assert.equal(parts.length, 3, 'opening, continuation and final result each have one stamp');
     assert(parts[1].classList.contains('story-choice'), 'continuation stamp belongs above the choices that produced it');
-    assert(parts[1].textContent.includes('Your choice: Ask'));
+    assert.equal(parts[1].querySelector('p').textContent, 'Ask');
     assert.equal(parts[1].querySelector('time').textContent, '10:05 · Station · Day 1');
     assert(parts[2].classList.contains('story-choice'), 'final result stamp is above its selected answer');
     assert.equal(parts[2].querySelector('time').textContent, '10:20 · Station · Day 1');
@@ -401,7 +401,7 @@ try {
     const saved = JSON.stringify(episode);
     render(React.createElement(StoryScreen, { episodes: [episode] }));
     const pieces = [...document.querySelectorAll('.story-piece')];
-    assert.deepEqual(pieces.map(node => node.classList.contains('story-image') ? 'image' : node.classList.contains('story-stats') ? 'stats' : node.querySelector('p').textContent), ['You see a familiar dog.', `Your choice: ${greet.label}`, result.text, 'image', result.closingText, 'stats']);
+    assert.deepEqual(pieces.map(node => node.classList.contains('story-image') ? 'image' : node.classList.contains('story-stats') ? 'stats' : node.querySelector('p').textContent), ['You see a familiar dog.', greet.label, result.text, 'image', result.closingText, 'stats']);
     assert.equal(document.querySelectorAll('.story-result-stamp').length, 1, 'the closing paragraph does not create a new stamped block');
     fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
     let clock = 0;
@@ -462,7 +462,7 @@ try {
     const resultStamp = document.querySelector('.story-choice .story-result-stamp');
     assert(resultStamp, 'the joint block stamp is above the choice');
     assert.equal(resultStamp.dataset.storyStamp, 'pending');
-    assert.equal(document.querySelector('.story-choice .story-reveal').textContent, 'Your choice: Wait here', 'selected narrative enters whole');
+    assert.equal(document.querySelector('.story-choice .story-reveal').textContent, 'Wait here', 'selected narrative enters whole');
     assert(document.querySelector('.story-choice-enter'));
     for (let i = 0; i < 65; i++) step();
     assert.notEqual(live(), choiceClock, 'clock continues ticking during selected-answer appearance and its reading pause');

@@ -1,3 +1,10 @@
+Story selected-answer copy — 30 October 2026, source only: render the saved
+choice label directly, without the localised “Your choice:” prefix, in live
+Story, archive/replay and the shared event modal. Existing saved choices and
+motion are preserved. Updated the three existing result assertions; Node syntax
+check passed, but check-results could not start because jsdom is absent in the
+current environment. No full suite/build/browser check or publication.
+
 Release v356 is published — 30 October 2026. GitHub Pages run 41086431569
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41086431569)
 succeeded for source 1d722be1c56434b2c4a56b21f3fc8acc71f12648: all 34 Node
