@@ -1,8 +1,9 @@
 import { ModalOverlay, ModalPanel, ModalAction } from './Modal'
 import { memo, useEffect, useRef, useState } from 'react'
 import { responsiveImageProps } from './responsiveImages'
-import { BatteryIcon, Icon, type IconName } from './Icon'
+import { Icon, type IconName } from './Icon'
 import Stat from './Stat'
+import ResultIndicators from './ResultIndicators'
 import type { ResultChange, ResultSummary } from './results'
 import { plainResultLabel, resultChangeAmount, resultChangeId } from './legacyResultCompatibility'
 import type { ResultResourceId } from './resultResources'
@@ -41,10 +42,6 @@ export function ResultStat({ change, animationReady, animate = true }: { change:
   return <Stat id={id} label={id === 'thirst' ? t('stat.thirst') : label} value={meter.after} icon={<Icon name={icon} />} cap={meter.cap} capReason={meter.capReason} change={{ from: meter.before, value: change.value, kind: change.kind }} animationReady={animationReady} animate={animate} />
 }
 
-function ChangeRows({ changes }: { changes: ResultChange[] }) {
-  return <div className="result-change-list">{changes.map(change => <div key={change.label} className={`result-change ${change.kind}`}><span>{resultLabel(change.label)}</span><strong>{change.value}</strong></div>)}</div>
-}
-
 export function resultDisplay(result: ResultCardData) {
   const presentation = result.presentation
   const compactInfo = !!presentation?.compact
@@ -61,7 +58,10 @@ export function resultDisplay(result: ResultCardData) {
   const consequenceRows = consequences.filter(change => !change.meter)
   const costRows = costs.filter(change => !change.meter || change === summaryBattery)
 
-  return { presentation, compactInfo, compactPlace, statMeters, gainRows, consequenceRows, costRows, summaryMood }
+  const indicators = [...statMeters, ...gainRows, ...consequenceRows, ...costRows, ...(summaryMood ? [summaryMood] : [])]
+    .filter(change => resultChangeId(change) !== 'time')
+    .map(change => change === summaryMood || change === summaryBattery ? { ...change, value: wholeStatDelta(change) } : change)
+  return { presentation, compactInfo, compactPlace, statMeters, gainRows, consequenceRows, costRows, summaryMood, indicators }
 }
 
 export default memo(function ResultCard({ result, onClose }: { result: ResultCardData; onClose: () => void }) {
@@ -110,7 +110,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
     }
   }, [])
 
-  const { presentation, compactInfo, compactPlace, statMeters, gainRows, consequenceRows, costRows, summaryMood } = resultDisplay(result)
+  const { presentation, compactInfo, compactPlace, indicators } = resultDisplay(result)
 
   return <ModalOverlay className="phone-overlay result-overlay">
     <ModalPanel className={`phone-modal result-modal${result.illustration ? ' illustrated-result' : ''}${compactInfo ? ' compact-info-result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="result-title" ref={dialog}>
@@ -143,13 +143,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
         </> : <p className="result-description result-narrative modal-narrative">{result.text}</p>}
-        {statMeters.length > 0 && <div className="status-needs result-stat-panel">{statMeters.map(change => <ResultStat key={change.label} change={change} animationReady={animationReady} />)}</div>}
-        {gainRows.length > 0 && <div className="result-gains"><ChangeRows changes={gainRows} /></div>}
-        {consequenceRows.length > 0 && <div className="result-consequences"><ChangeRows changes={consequenceRows} /></div>}
-        {(costRows.length > 0 || summaryMood) && <div className={`result-cost-line${compactInfo ? ' compact-info-summary' : ''}`} aria-label={t(compactInfo || result.batteryInSummary ? 'result.actionSummary' : 'result.spent')}>
-          {costRows.map(cost => <span key={cost.label} title={resultLabel(cost.label)}>{resultChangeId(cost) === 'phoneBattery' ? <BatteryIcon charge={cost.meter?.after ?? 0} /> : <Icon name={resultChangeId(cost) === 'time' ? 'clock' : 'coins'} />}<span className="sr-only">{resultLabel(cost.label)} </span>{resultChangeId(cost) === 'phoneBattery' ? wholeStatDelta(cost) : cost.value}</span>)}
-          {summaryMood && <span className={`compact-info-mood ${summaryMood.kind}`}><Icon name="face-fair" />{t('result.moodDelta', { delta: wholeStatDelta(summaryMood) })}</span>}
-        </div>}
+        <ResultIndicators changes={indicators} animationReady={animationReady} />
         {presentation && !compactInfo && <details className="result-details">
           <summary>{t('result.fullAnswer')}</summary>
           <p className="result-description">{result.text}</p>

@@ -4,8 +4,8 @@ import { formatTime } from './game'
 import { formatNumber } from './i18n/formatters'
 import { displayDay } from './gameDate'
 import { responsiveImageProps } from './responsiveImages'
-import { ResultStat, resultDisplay, wholeStatDelta, resultLabel, type ResultCardData } from './ResultCard'
-import { resultChangeId } from './legacyResultCompatibility'
+import { resultDisplay } from './ResultCard'
+import ResultIndicators, { resultIndicatorDuration } from './ResultIndicators'
 import { ModalAction } from './Modal'
 import StoryComparison from './StoryComparison'
 import type { StoryEpisode, StoryStamp } from './story'
@@ -26,25 +26,18 @@ function episodePieces(episode: StoryEpisode): Piece[] {
     if (result.text) pieces.push({ kind: 'text', text: result.text, at })
     const art = result.illustration ?? result.presentation?.illustration
     if (art) pieces.push({ kind: 'image', text: result.illustrationAlt ?? result.text, image: art, at })
-    const effects = storyEffects(result)
-    if (effects.meters.length || effects.rows.length || result.presentation?.places?.length || result.presentation?.notice || episode.scenes.some(scene => scene.roll)) pieces.push({ kind: 'stats', text: '', at })
+    if (resultDisplay(result).indicators.length || result.presentation?.places?.length || result.presentation?.notice || episode.scenes.some(scene => scene.roll)) pieces.push({ kind: 'stats', text: '', at })
     if (pieces[start]) pieces[start].resultStart = true
   }
   return pieces
 }
-function storyEffects(result: ResultCardData) {
-  const { statMeters, gainRows, consequenceRows, costRows, summaryMood } = resultDisplay(result)
-  return { meters: statMeters, summaryMood, rows: [...gainRows, ...consequenceRows, ...costRows, ...(summaryMood ? [summaryMood] : [])] }
-}
 function StoryResult({ episode, animate }: { episode: StoryEpisode; animate: boolean }) {
   const result = episode.result!
-  const { meters, rows, summaryMood } = storyEffects(result)
   return <div className="story-result-effects">
     {episode.scenes.filter(scene => scene.roll).map((scene, index) => <p key={index} className="story-roll">{t('story.roll', { roll: scene.roll!.value, modifier: scene.roll!.modifier, target: scene.roll!.target })}</p>)}
     {result.presentation?.places?.map(place => <div className="story-place" key={place.id}><strong>{place.name}</strong><span>{place.hours}</span><p>{place.detail}</p></div>)}
     {result.presentation?.notice && <p>{result.presentation.notice}</p>}
-    {!!meters.length && <div className="result-stat-panel story-stat-panel">{meters.map((change, index) => <ResultStat key={index} change={change} animationReady animate={animate} />)}</div>}
-    {!!rows.length && <ul className="story-summary">{rows.map((change, index) => <li className={change.kind} key={index}><span>{resultLabel(change.label)}</span><strong>{resultChangeId(change) === 'phoneBattery' || change === summaryMood ? wholeStatDelta(change) : change.value}</strong></li>)}</ul>}
+    <ResultIndicators changes={resultDisplay(result).indicators} animate={animate} />
   </div>
 }
 function Episode({ episode }: { episode: StoryEpisode }) {
@@ -81,7 +74,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
       } else {
         shown = length
         const current = pieces[index]
-        progress = Math.min(1, elapsed / (current.kind === 'image' ? 1150 : current.kind === 'stats' ? 2200 : 750))
+        progress = Math.min(1, elapsed / (current.kind === 'image' ? 1150 : current.kind === 'stats' ? Math.max(450, resultIndicatorDuration(resultDisplay(episode.result!).indicators.length)) : 750))
         const node = nodes.current[index]
         const end = node && track.current ? node.offsetTop + node.offsetHeight : from
         y = from + (end - from) * (1 - Math.pow(1 - progress, 3))

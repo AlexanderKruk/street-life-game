@@ -90,13 +90,13 @@ assert(!localStorage.getItem('street-life-phone-activity-v1'));
 assert(read('street-life-discovered-v1').includes('support'));assert.equal(read('street-life-journal-history-v1').length,1);
 assert(document.querySelector('.result-overlay'));assert(!document.querySelector('.result-inline'));
 assert(document.querySelector('.game-background[inert]'));assertResultLocked();
-assert(document.querySelector('.result-consequences').textContent.includes('Clothing wetness'));
+assert(document.querySelector('[data-resource-id="wetness"]').getAttribute('aria-label').includes('Clothing wetness'));
 assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert.equal(document.querySelectorAll('.result-place').length,0);assert(!read('street-life-discovered-v1').includes('free-clinic'));assert(!read('street-life-discovered-v1').includes('daycenter'));assert(!document.querySelector('.result-details'));
 assert(document.querySelector('.phone-screen, .street-art img'));
-assert(screen.getByRole('dialog').textContent.includes('10 min'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
+assert(!screen.getByRole('dialog').querySelector('[data-resource-id="time"]'));const completed=read(stateKey);advance(10000);assert.deepEqual(read(stateKey),completed);
 ok();assert(document.querySelector('.street-art img'));assert(!document.querySelector('.phone-activity-overlay'));assert.equal(document.body.style.overflow,'');
 click(/Inventory$/);click('Phone');click('Find Help');click('Help & hygiene');assert(!document.querySelector('.phone-activity'));assert.equal(read(stateKey).minutes,completed.minutes+15);assert(read('street-life-discovered-v1').includes('daycenter'));
-assert.equal(document.querySelectorAll('.result-cost-line').length,1);ok();discoverHelp();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert(!document.querySelector('.result-place'));assert(!document.querySelector('.result-details'));ok();
+assert.equal(document.querySelectorAll('.result-indicators').length,1);ok();discoverHelp();click('How can I get a shelter bed?');assert.equal(document.querySelectorAll('.compact-info-heading').length,1);assert(!document.querySelector('.result-place'));assert(!document.querySelector('.result-details'));ok();
 // Each repeat finds exactly one new place, and reload cannot reveal the next one early.
 setup({minutes:1320},{'street-life-discovered-v1':['street','station','shop']});
 for(const [index,id] of ['support','daycenter','free-clinic'].entries()){
@@ -136,7 +136,7 @@ for(const [draw,duration] of [[0,10],[.999,25]]) {
  assert.equal(read('street-life-phone-activity-v1').total,duration);assert.equal(read('street-life-phone-activity-v1').remaining,duration-3);
  advance((duration-3)*250);assert.equal(read(stateKey).minutes,1320+duration);assert.equal(read(stateKey).mood,31,'search gain totals three points across short and long searches');
  assert(Math.abs(read(invKey).phoneBattery-(initialBattery-duration*.3*(1+(100-72)*.007)))<1e-8);
- assert(screen.getByRole('dialog').textContent.includes(duration+' min'));
+ assert(!screen.getByRole('dialog').querySelector('[data-resource-id="time"]'),'search duration remains a real cost without a badge');
 }
 // Screen brightness changes browsing drain by light level, including a
 // single search crossing sunset. All use the same worn starting phone.

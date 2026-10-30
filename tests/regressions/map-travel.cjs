@@ -125,8 +125,8 @@ for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,
  const denomination=grosz<100?`${grosz} gr`:`${grosz/100} zł`;assert(screen.getByRole('dialog').textContent.includes(`${denomination} coin`));
  assert(document.querySelector('.result-modal.illustrated-result .result-illustration').src.includes('event-coin-take'));
  assert(!document.querySelector('.coin-emblem'));
- assert.equal(document.querySelector('.result-gains').textContent,`Money+${grosz/100} zł`);
- assert.equal(document.querySelectorAll('.result-gains .result-change').length,1,'money is shown once in the shared gains list');
+ assert.equal(document.querySelector('[data-resource-id="money"]').getAttribute('aria-label'),`Money +${grosz/100} zł`);
+ assert.equal(document.querySelectorAll('.result-indicators [data-resource-id="money"]').length,1,'money is shown once in the shared gains list');
  assert(!document.querySelector('.result-details'),'the short result has no duplicate description');
  advance(1000);assert.equal(awardDraws,1);assert.deepEqual(read(stateKey),awarded);
  ok();cleanup();render(React.createElement(App));assert.equal(awardDraws,1);assert.equal(read(stateKey).money,awarded.money);assert(!document.querySelector('.event-overlay'));
@@ -134,7 +134,7 @@ for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,
 setup({mood:28}, {'street-life-encounters-v1':{seen:['phone-drop'],lastAt:null,pendingId:null}});click('Map');click(/^.*Station/);click('Go →');const leaveCoinDraws=[.2,0,0];Math.random=()=>leaveCoinDraws.shift()??.99;click(/Walk/);
 const leaveCoinBefore=read(stateKey);Math.random=()=>{throw new Error('Leaving a coin must not roll a reward')};click('Leave it');assert.equal(read(stateKey).money,leaveCoinBefore.money);assert.equal(read(stateKey).mood,leaveCoinBefore.mood+1);
 assert(screen.getByRole('dialog').textContent.includes('You leave it for someone'));
-assert(!document.querySelector('.result-gains'));assert(document.querySelector('.result-modal .result-stat-panel').textContent.includes('Mood'));
+assert(!document.querySelector('[data-resource-id="money"]'));assert(document.querySelector('.result-modal [data-resource-id="mood"]'));
 assert(document.querySelector('.result-illustration').src.includes('event-coin-leave'));ok();
 
 // All travel modes display every minute at their cadence, preserve partial progress,

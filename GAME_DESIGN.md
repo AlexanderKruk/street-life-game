@@ -944,7 +944,7 @@ The top toolbar has Street and Small Shop, with no Map/City map title. Both shor
 
 The travel-method chooser uses a full-viewport dimmed, blurred backdrop (including the map, header and bottom menu), matching result-modal backdrop values: 5px blur and rgba(4,7,10,.62). The route sheet remains sharp and is centered horizontally and vertically like other dialogs, with a maximum width of 480px, safe-area padding and internal scrolling on short screens. Background pointer interaction and scrolling are covered; keyboard focus stays in the chooser. Close or Escape returns to the map to select another point. Choosing transport starts the journey as before; the game clock continues while choosing.
 
-All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped stat bars and consequences, animate gains/losses, and omit zero/consumed-item noise. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
+All Got it windows share centered blocking presentation, blur, control locks, focus handling, scroll lock and paused time. Single-place discoveries use one compact centered heading row: place name, hours and On map. Results show actual capped changes in a compact row of Status icons and signed deltas. Each icon/value appears together, 260ms between groups, after the artwork is ready. Bars, current percentages, cap reasons, duration badges and zero/consumed-item noise are omitted; existing visibility and rounding rules remain. Tap an icon to identify the indicator. The Status screen retains full meters and limits. The outer travel/search dialog suppresses Safari's blue container focus ring while keeping focus semantics.
 
 The Small Shop / Food & water discovery uses one description paragraph in the shared Small role and secondary color: “A small shop selling affordable food and water. Registered Night Shelter guests can also get free meals.” It omits the price list, backpack reminder and shelter meal schedules; shop hours remain in the heading.
 
@@ -1111,7 +1111,7 @@ Each 512px WebP master has 160/320/480px density variants for mobile/desktop, lo
 
 ### Illustrated music-walk result — v307 (2026-10-23)
 
-Walk with music uses the same blocking illustrated ResultCard as calls, including the shared animated Mood stat card and signed gain. The body reads: “You listen to your favourite songs as you walk. You feel a little better.” The office-routine backstory is omitted from this result. The authored reward is +3 Mood, capped by current limits (for example 49 → 50 displays +1); ordinary walking bonuses and passive music gains are not added to this action. Existing time (30 minutes), needs, battery cost, event observations and pause behavior remain. Existing illness/weather penalties still apply to actual net results. Time and rounded battery expense share the summary row.
+Walk with music uses the same blocking illustrated ResultCard as calls, including the shared Mood icon and signed gain. The body reads: “You listen to your favourite songs as you walk. You feel a little better.” The office-routine backstory is omitted from this result. The authored reward is +3 Mood, capped by current limits (for example 49 → 50 displays +1); ordinary walking bonuses and passive music gains are not added to this action. Existing time (30 minutes), needs, battery cost, event observations and pause behavior remain. Existing illness/weather penalties still apply to actual net results. Rounded battery expense joins the consequence icons; elapsed time is omitted from the result row, without changing its real cost.
 
 `event-music-walk.webp` shows the authoritative hero in full-size over-ear headphones in the first-night residential neighbourhood. Its 480/768/1024px variants load on demand. [Generation prompt and references](docs/art/music-walk-generation.json) record the identity sheet, established rendering and Street setting references.
 
@@ -1343,3 +1343,14 @@ visibility selector, including explicit visibleStats, compact Mood and call
 battery summaries; small hidden passive losses are not added to the feed. Saved
 records open at final values, and Replay animates before→after after the narrative.
 The original archive and classic result presentation remain intact.
+
+
+Result presentation — 30 October 2026 (source update, supersedes v349 meters):
+Story and ResultCard share ResultIndicators and the existing resultDisplay selection.
+Text precedes artwork in Story; the result modal keeps its established artwork,
+heading and narrative order. Consequence icons follow the narrative/art and appear
+one complete icon/value group at a time, 260ms apart, without a frame or duration.
+Money, received/lost items, effects, explicit small consequences and previous
+call/compact rounding remain. Old Story records open settled; replay starts the
+row only at its effects step and lasts long enough for every group. No archive,
+RNG, clock, action cost, pause, save schema or release-version change.

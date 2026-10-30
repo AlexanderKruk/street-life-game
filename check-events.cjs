@@ -165,7 +165,7 @@ for(const id of ambientIds){
     const stat=screen.getByRole('dialog').querySelector('[data-stat="Mood"]');
     assert(stat,'cat reward uses the same animated stat card as neighbour results');
     assert(stat.textContent.includes('+2'));
-    assert.equal(stat.querySelector('[role="meter"]').getAttribute('aria-valuenow'),String(paused.mood),'gain holds its starting value until the image loads');
+    assert(!document.querySelector('.result-indicators.is-ready'),'gain appearance waits until the image loads');assert(stat.querySelector('strong'),'the actual capped gain remains visible in the markup');
    }
    if(choice.label==='Walk away'){
     assert.equal(read(stateKey).energy,paused.energy-1);
@@ -351,7 +351,7 @@ for(const [hygiene,mood,roll,success]of [[55,30,9,false],[55,30,10,true],[80,30,
  assert.equal(read(stateKey).minutes,before.minutes+10);assert.equal(read(stateKey).mood,before.mood+(success?3:-2));
  assert.equal(read(stateKey).intoxication,before.intoxication,'hero never drinks automatically');
  const meter=screen.getByRole('dialog').querySelector('[data-stat="Mood"]');assert(meter);
- assert.equal(meter.querySelector('[role="meter"]').getAttribute('aria-valuenow'),String(before.mood),'shared animation waits for the result image');
+ assert(!document.querySelector('.result-indicators.is-ready'),'shared appearance waits for the result image');assert(meter.querySelector('strong').textContent.includes(success?'+3':'−2'));
  assert.equal(read(encountersKey).pendingId,null);assert.equal(read(encountersKey).pendingRoll,null);
  const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after);ok();
  cleanup();render(React.createElement(App));assert.deepEqual(read(stateKey),after,'reload cannot apply conversation twice');
@@ -393,7 +393,7 @@ function checkBorrowResult(stem,before,battery,mood,damage=0){
  if(damage){
   const meter=dialog.querySelector('[data-stat="Phone condition"]');
   assert(meter?.textContent.includes('−5'),'damage has the shared animated condition meter');
-  assert.equal(meter.querySelector('[role="meter"]').getAttribute('aria-valuenow'),'72','loss holds its starting value before animation');
+  assert(meter.querySelector('svg'),'condition damage keeps its shared icon');assert(!meter.querySelector('[role="meter"]'),'the result shows the damage delta without a current-value meter');
  }
  assert.equal(read(encountersKey).pendingId,null);
  assert.equal(read(encountersKey).pendingRoll,null);

@@ -4,6 +4,16 @@ Release v348 is published (29 October 2026): passive Story recording for all aut
 
 Release v347 is published (29 October 2026): Story comparison is the sixth tab. GitHub Pages run 40935688299 passed all 31 Node suites, production build and deployment for 6536720c84de8427900fde546629fe75b67f152f. The location-art navigation assertion now explicitly checks six tabs and Story. Browser layout comparison remains unverified because managed preview could not start; do not claim Chromium/iPhone screenshot parity.
 
+Source update — 30 October 2026: the approved result design uses compact icon/delta
+groups in both ResultCard and Story. Reuse ResultIndicators and resultDisplay;
+each icon/value appears together, 260ms between groups, after result art is ready.
+Omit duration badges, bars, current percentages and cap reasons from these results.
+Keep actual costs, filtering, explicit visibleStats, item/effect changes and archive
+snapshots. Historic Story opens settled; Replay starts group appearance at the
+effects step. Status retains Stat meters. Tap an icon for its label. This is a
+source save, not a release; v349 remains published. Managed browser preview is
+unavailable (`vite: not found`), so device/layout parity is not claimed.
+
 # Street Life: implementation and visual rules
 
 Read this file before changing the project. For mechanics, schedules and current
@@ -168,6 +178,7 @@ events keep their outer frame clipped and their existing inner content scroller.
 | Sleep duration planning | `SleepPlanningDialog`; four compact hour buttons in one row |
 | Event answer / action / transport / search option | `ChoiceButton`, grouped with `ChoiceOptions` |
 | Finished action / discovery / illustrated outcome | `ResultCard` |
+| Compact result icon/delta groups in dialogs and Story | `ResultIndicators`; visibility stays in `resultDisplay` |
 | Inventory choice or confirmation | `InventoryDialog`, `FoodChoiceDialog`, `DiscardDialog` |
 | Phone app and header | `PhoneScreen` |
 | Inventory / Status / current location page | `InventoryScreen`, `StatusScreen`, `LocationScreen` |

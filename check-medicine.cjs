@@ -31,7 +31,7 @@ try {
  assert(!screen.getByRole('dialog').textContent.includes('Ended'));
  assert(screen.getByRole('dialog').textContent.includes('Cold recovery'));
  assert(screen.getByRole('dialog',{name:'Recovery accelerated'}).textContent.includes('the symptoms will take time to pass'));
- assert(document.querySelector('.result-consequences').textContent.includes('Medicine−1'));
+ assert(document.querySelector('[data-resource-id="medicines"]').getAttribute('aria-label') === 'Medicine −1');
  close();cleanup();render(React.createElement(App));
  assert.deepEqual(read(effectsKey).find(e=>e.id==='cold'),treated,'treatment survives reload');
  take();assert.equal(read(inventoryKey).medicines,doses-1);assert.deepEqual(read(effectsKey).find(e=>e.id==='cold'),treated,'repeat doses do not stack or extend illness');

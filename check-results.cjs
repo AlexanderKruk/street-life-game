@@ -19,7 +19,7 @@ function bundled(path) {
 }
 const React = require('react');
 const { render, screen, fireEvent, act, cleanup } = require('@testing-library/react');
-const { default: ResultCard, isMajorChange } = bundled('src/ResultCard.tsx');
+const { default: ResultCard, isMajorChange, ResultStat } = bundled('src/ResultCard.tsx');
 const { summarizeResult } = bundled('src/results.ts');
 const { questionPresentation, locationPresentation } = bundled('src/resultPresentation.ts');
 const before = {
@@ -52,7 +52,7 @@ try {
     const batteryValue = expense.costs.find(cost => cost.label.includes('Battery')).value;
     render(React.createElement(ResultCard, { result: { title: 'Call', text: 'Call ended.', batteryInSummary: true, ...expense }, onClose: () => {} }));
     assert.equal(document.querySelector('[title="Battery"]').textContent, `Battery −${display}%`);
-    assert(row('Mood')?.querySelector('.bar-loss-trail'), 'call Mood retains the shared event result meter, even for small losses');
+    assert(row('Mood')?.querySelector('svg'), 'call Mood keeps its icon and even small losses');
     assert(!document.querySelector('.compact-info-mood'), 'call Mood is not repeated in the cost summary');
     assert.equal(document.querySelector('[title="Money"]').textContent, 'Money −0.5 zł', 'money keeps its currency precision');
     assert.equal(expense.costs.find(cost => cost.label.includes('Battery')).value, batteryValue, 'rendering does not round the underlying expense');
@@ -71,6 +71,21 @@ try {
   let closed = 0;
   const result = { title: 'Result', text: 'You rested.', ...summary, presentation: { heading: 'You rested', label: 'REST', lead: 'A short break.', places: [] } };
   render(React.createElement(ResultCard, { result, onClose: () => { closed++; } }));
+  assert.equal(row('Energy').querySelector('strong').textContent, '+13');
+  assert.equal(row('Health').querySelector('strong').textContent, '−6');
+  assert.equal(document.querySelectorAll('[data-resource-id="time"]').length, 0, 'elapsed time stays in the chronology, not the consequence row');
+  assert(!document.querySelector('[role="meter"]'), 'results show deltas without current percentages or bars');
+  assert(screen.getByRole('dialog').textContent.includes('Medicine'));
+  assert(screen.getByRole('dialog').textContent.includes('Cold'));
+  assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
+  fireEvent.click(row('Energy'));
+  assert.equal(screen.getByRole('tooltip').textContent, 'Energy', 'an unfamiliar icon can be identified by tapping');
+  fireEvent.blur(row('Energy'));
+  assert(!screen.queryByRole('tooltip'));
+  fireEvent.click(screen.getByRole('button', { name: 'Got it' })); assert.equal(closed, 1);
+  cleanup();
+  // Keep the shared Stat gain/loss/cap contract covered independently of result presentation.
+  render(React.createElement(React.Fragment, null, ...summary.changes.filter(change => change.meter && isMajorChange(change)).sort((a,b) => (a.kind === 'positive' ? 0 : 1) - (b.kind === 'positive' ? 0 : 1)).map(change => React.createElement(ResultStat, {key: change.label, change, animationReady: true}))));
   assert.deepEqual([...document.querySelectorAll('[data-stat]')].map(node => node.dataset.stat), ['Energy', 'Hygiene', 'Mood', 'Health']);
   assert.equal(row('Energy').querySelector('.bar i').style.width, '34%');
   assert.equal(row('Energy').querySelector('.result-stat-delta').textContent, '+13');
@@ -80,11 +95,6 @@ try {
   assert(row('Hygiene').querySelector('.bar-blocked'));
   assert.equal(row('Hygiene').querySelector('.bar-cap-marker').style.left, '80%');
   assert(!row('Hygiene').textContent.includes('Max'));
-  assert(screen.getByRole('dialog').textContent.includes('Medicine'));
-  assert(screen.getByRole('dialog').textContent.includes('Cold'));
-  assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
-  fireEvent.click(screen.getByText('Full answer & details'));
-  for (const hidden of ['−0.2', '−0.1', '−3%', 'Food', 'Battery']) assert(!screen.getByRole('dialog').textContent.includes(hidden));
   frame(0); frame(600);
   const midpoint = parseFloat(row('Energy').querySelector('.bar i').style.width);
   assert(midpoint > 34 && midpoint < 47);
@@ -98,16 +108,15 @@ try {
   assert.equal(row('Health').querySelector('.status-stat-value > span').textContent, '84%');
   assert(row('Health').querySelector('.bar-loss-trail'), 'loss trace remains after the animation');
   assert.equal(frames.size, 0);
-  fireEvent.click(screen.getByRole('button', { name: 'Got it' })); assert.equal(closed, 1);
   cleanup();
   reduced = true;
-  render(React.createElement(ResultCard, { result, onClose: () => {} }));
+  render(React.createElement(React.Fragment, null, ...summary.changes.filter(change => change.meter && isMajorChange(change)).map(change => React.createElement(ResultStat, {key: change.label, change, animationReady: true}))));
   assert.equal(row('Energy').querySelector('.bar i').style.width, '47%'); assert.equal(frames.size, 0);
   assert.equal(row('Health').querySelector('.status-stat-value > span').textContent, '84%');
   assert(row('Health').querySelector('.bar-loss-trail'), 'reduced motion retains the static loss trace');
   cleanup(); reduced = false;
   const batteryLoss = summarizeResult(before, { ...before, inventory: { ...before.inventory, phoneBattery: 37 } });
-  render(React.createElement(ResultCard, { result: { title: 'Phone use', text: 'Phone use.', ...batteryLoss }, onClose: () => {} }));
+  render(React.createElement(ResultStat, {change: batteryLoss.costs.find(change => change.id === 'phoneBattery'), animationReady: true}));
   assert.equal(row('Battery').querySelector('.result-stat-delta.negative').textContent, '−6%');
   assert.equal(row('Battery').querySelector('.status-stat-value > span').textContent, '43%');
   frame(0);frame(300);
@@ -124,28 +133,20 @@ try {
   const musicAfter = { ...musicBefore, game: { ...musicBefore.game, mood: 31, minutes: musicBefore.game.minutes + 30 } };
   const illustratedMusic = { title: 'Walk with music', text: 'You feel a little better.', illustration: '/street-life-game/assets/event-music-walk.webp', ...summarizeResult(musicBefore, musicAfter) };
   render(React.createElement(ResultCard, { result: illustratedMusic, onClose: () => {} }));
-  assert.equal(row('Mood').querySelector('.bar i').style.width, '28%');
-  assert.equal(frames.size, 0, 'animation waits for the illustration to load');
-  frame(5000);
-  assert.equal(row('Mood').querySelector('.status-stat-value > span').textContent, '28%', 'a slow image cannot consume the animation');
+  assert.equal(row('Mood').querySelector('strong').textContent, '+3');
+  assert(!document.querySelector('.result-indicators.is-ready'), 'appearance waits for the illustration');
+  assert.equal(frames.size, 0, 'the consequence row has no independent gameplay or frame clock');
   fireEvent.load(document.querySelector('.result-illustration'));
-  frame(6000);frame(6300);
-  assert.equal(row('Mood').querySelector('.bar i').style.width, '28%', 'gains hold their starting value for the same 300ms as losses');
-  frame(6900);
-  assert(parseFloat(row('Mood').querySelector('.bar i').style.width)>28 && parseFloat(row('Mood').querySelector('.bar i').style.width)<31);
-  frame(7500);
-  assert.equal(row('Mood').querySelector('.bar i').style.width, '31%');
-  assert.equal(row('Mood').querySelector('.status-stat-value > span').textContent, '31%');
-  assert.equal(row('Mood').querySelector('.result-stat-delta').textContent, '+3');
+  assert(document.querySelector('.result-indicators.is-ready'));
   cleanup();
   render(React.createElement(ResultCard, { result: illustratedMusic, onClose: () => {} }));
   fireEvent.error(document.querySelector('.result-illustration'));
-  assert(frames.size>0, 'a failed illustration also releases the animation');
+  assert(document.querySelector('.result-indicators.is-ready'), 'a failed illustration also releases the animation');
   cleanup();
   reduced=true;
   render(React.createElement(ResultCard, { result: illustratedMusic, onClose: () => {} }));
-  assert.equal(row('Mood').querySelector('.status-stat-value > span').textContent,'31%');
-  assert.equal(frames.size,0,'reduced motion still shows the final value directly');
+  assert.equal(row('Mood').querySelector('strong').textContent,'+3');
+  assert.equal(frames.size,0,'reduced motion needs no animation frames');
   cleanup();reduced=false;
   const searchAfter = { ...before, inventory: { ...before.inventory, phoneBattery: 38.9 }, game: { ...before.game, minutes: 619, mood: 63.2 } };
   const searchSummary = summarizeResult(before, searchAfter);
@@ -156,23 +157,22 @@ try {
     const dialog = screen.getByRole('dialog', { name });
     assert.equal(dialog.querySelectorAll('h2').length, 1);
     assert(!dialog.querySelector('.result-place'), 'location is not repeated');
-    assert(!row('Mood'), 'search gain uses compact text instead of a stat bar');
-    assert(row('Battery').querySelector('.bar-loss-trail'), 'search costs below 5% retain the animated battery meter and its loss trace');
-    assert.equal(row('Battery').querySelector('.result-stat-delta.negative').textContent, '−4.1%');
+    assert.equal(row('Mood').querySelector('strong').textContent, '+3');
+    assert(row('Battery').querySelector('svg'), 'search costs below 5% keep their battery icon');
+    assert.equal(row('Battery').querySelector('strong').textContent, '−4.1%');
     assert(!dialog.querySelector('.result-card-label'));
     assert(dialog.querySelector('.compact-info-heading svg'), 'title has an information icon');
     assert(dialog.querySelector('.compact-info-hours').textContent);
     assert(dialog.querySelector('.compact-info-heading .compact-info-saved'), 'map status shares the name and hours heading');
     assert(!dialog.querySelector('.result-card-content .compact-info-saved'), 'single-place result does not repeat map status below');
     assert.equal(dialog.querySelector('.compact-info-saved').textContent, 'On map');
-    const line = dialog.querySelector('.compact-info-summary').textContent;
-    assert(line.includes('19 min') && line.includes('Mood +3'));
+    assert(!dialog.querySelector('[data-resource-id="time"]'));
     assert(!dialog.querySelector('details'), 'compact discoveries do not repeat the same information in a disclosure');
     cleanup();
   }
   render(React.createElement(ResultCard, { result: { title: 'Saved', text: 'Saved answer.', presentation: questionPresentation('morning', ['support'], true), costs: [], changes: [] }, onClose: () => {} }));
   assert.equal(document.querySelector('.compact-info-saved').textContent, 'On map');
-  assert(!document.querySelector('.compact-info-summary'), 'no costs or gains are invented for a saved answer');cleanup();
+  assert(!document.querySelector('.result-indicators'), 'no costs or gains are invented for a saved answer');cleanup();
   render(React.createElement(ResultCard, { result: { title: 'Nothing new', text: 'No new places.', presentation: questionPresentation('morning', []), costs: [], changes: [] }, onClose: () => {} }));
   assert(screen.getByRole('dialog', { name: 'No new information' }));
   assert(!document.querySelector('.compact-info-saved'));cleanup();
@@ -187,7 +187,7 @@ try {
     assert(dialog.classList.contains('compact-info-result'));
     assert(!dialog.querySelector('.result-card-label'));
     assert(!dialog.querySelector('details'));
-    assert(!row('Mood'));
+    assert.equal(!!row('Mood'), !saved);
     for (const text of important) assert(dialog.textContent.includes(text), `${id} keeps ${text}`);
     if (id === 'bed') {
       assert.equal(dialog.querySelectorAll('.result-description').length, 1, 'shelter discovery keeps one short practical paragraph');
@@ -199,19 +199,18 @@ try {
       assert(!dialog.querySelector('.result-narrative,.result-notice'), 'food discovery omits differently styled backpack hints and meal schedules');
     }
     assert.equal(!!dialog.querySelector('.compact-info-saved'), places.length > 0);
-    if (saved) assert(!dialog.querySelector('.compact-info-summary'));
+    if (saved) assert(!dialog.querySelector('.result-indicators'));
     cleanup();
   }
   for (const places of [['work'], ['support'], ['shelter'], ['support', 'daycenter']]) {
     render(React.createElement(ResultCard, { result: { title: 'Search', text: 'Search result.', presentation: locationPresentation(places), ...searchSummary }, onClose: () => {} }));
     assert(document.querySelector('.compact-info-result'));
     assert(!document.querySelector('details'));
-    assert(!row('Mood'));
+    assert(row('Mood'));
     assert.equal(document.querySelectorAll('.result-place').length, places.length === 1 ? 0 : places.length);
     cleanup();
   }
-  // Story must display the same result fields, with historical values settled
-  // and the original meter animation confined to presentation-only replay.
+  // Both surfaces share exact deltas; old records stay settled and replay is presentation-only.
   const StoryScreen = bundled('src/StoryScreen.tsx').default;
   const at = { day: 2, minute: 600, locationId: 'station', locationName: 'Station' };
   const fixtures = [
@@ -222,38 +221,35 @@ try {
   ];
   for (const [index, result] of fixtures.entries()) {
     render(React.createElement(ResultCard, { result, onClose: () => {} }));
-    const classicMeters = [...document.querySelectorAll('.result-stat-panel [data-resource-id]')].map(node => node.dataset.resourceId);
-    const classicRows = [...document.querySelectorAll('.result-change-list > .result-change')].map(node => node.textContent);
-    const classicCosts = [...document.querySelectorAll('.result-cost-line > span')].map(node => node.textContent);
+    const classic = [...document.querySelectorAll('.result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]);
     cleanup();
     const episode = { id: 1, source: 'encounter', sourceId: 'fixture', status: 'complete', scenes: [{ eventId: 'fixture', title: 'Scene', text: 'You stop here.', at }], result, endedAt: { ...at, minute: 620 } };
     const saved = JSON.stringify(episode);
     render(React.createElement(StoryScreen, { episodes: [episode] }));
-    assert.deepEqual([...document.querySelectorAll('.story-stat-panel [data-resource-id]')].map(node => node.dataset.resourceId), classicMeters, 'Story uses precisely the classic meter set');
-    const storyRows = [...document.querySelectorAll('.story-summary li')].map(node => node.textContent);
-    assert.equal(storyRows.length, classicRows.length + classicCosts.length, 'no extra Story summary rows');
-    for (const classicRow of [...classicRows, ...classicCosts]) assert(storyRows.map(value => value.replace(/\s/g, '')).includes(classicRow.replace(/\s/g, '')), 'Story keeps the classic expense/consequence: ' + classicRow);
+    assert.deepEqual([...document.querySelectorAll('.story-result-effects .result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]), classic, 'Story and modal show the same filtered changes and currency precision');
+    assert(!document.querySelector('.story-result-effects [data-resource-id="time"]'));
     assert(!document.querySelector('.story-result-effects [data-resource-id="hunger"]'), 'minor passive food drain remains hidden');
     assert(!document.querySelector('.story-result-effects [data-resource-id="thirst"]'), 'minor passive water drain remains hidden');
-    assert(!document.querySelector('.story-stat-panel.status-needs'), 'Story omits the framed status panel');
+    assert(!document.querySelector('.story-result-effects .status-needs, .story-result-effects [role="meter"]'), 'Story omits the framed status panel');
     assert(document.querySelector('.story-result-start .story-result-imprint'), 'result has its own timeline point');
     assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · D1');
     if (index === 0) {
-      const energy = () => document.querySelector('.story-stat-panel [data-resource-id="energy"] [role="meter"]');
-      assert.equal(Number(energy().getAttribute('aria-valuenow')), 47, 'old records open at the real final value');
-      assert.equal(frames.size, 0, 'reading old records does not run meter animation');
+      const energy = () => document.querySelector('.story-result-effects [data-resource-id="energy"]');
+      assert.equal(energy().querySelector('strong').textContent, '+13');
+      assert(!document.querySelector('.story-result-effects .is-animated'), 'old records open fully revealed');
+      assert.equal(frames.size, 0, 'reading old records does not schedule animation');
       fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
       let clock = 0;
       while (!energy() && clock < 40000) { clock += 32; frame(clock); }
       assert(energy(), 'replay reaches the effects after narrative text');
-      assert.equal(Number(energy().getAttribute('aria-valuenow')), 34, 'replay starts the original meter at before');
+      assert(document.querySelector('.story-result-effects .is-animated.is-ready'), 'replay starts sequential appearance only at the effects step');
       for (let n = 0; n < 80; n++) { clock += 32; frame(clock); }
-      assert.equal(Number(energy().getAttribute('aria-valuenow')), 47, 'replay reaches the real after value');
+      assert.equal(energy().querySelector('strong').textContent, '+13', 'replay retains the actual delta');
     }
     assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
     cleanup();
   }
-  console.log('PASS: Story matches classic visible meters/costs/consequences, hides passive drain, adds an unframed result point, settles old records and replays meter values without archive mutation.');
-  console.log('PASS: shared Status result bars, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
+  console.log('PASS: Story matches classic visible icon deltas/costs/consequences, hides passive drain, adds an unframed result point, settles old records and replays icon groups without archive mutation.');
+  console.log('PASS: shared Status bars and compact result deltas, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
   console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without duplicate details, names, bars or arrival imagery; other full answers, saved answers and no-new-information still work.');
 } finally { cleanup(); dom.window.close(); }
