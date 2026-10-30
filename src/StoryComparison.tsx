@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n'
+import { createStoryTyping } from './storyTyping'
 import template from './storyPreview.html?raw'
 
 /** Isolated animation comparison, deliberately independent of the classic run. */
@@ -9,8 +10,12 @@ export default function StoryComparison() {
   const document = useMemo(() => {
     const keys = ['nav', 'place', 'intro', 'wait', 'waitSelected', 'waitPending', 'waitResult', 'phone', 'phoneSelected', 'phonePending', 'phoneResult', 'leave', 'leaveSelected', 'leavePending', 'leaveResult', 'search', 'skip', 'choices', 'next', 'walking', 'start', 'replay', 'art'] as const
     const copy = { ...Object.fromEntries(keys.map(key => [key, t(`story.${key}`)])), day: t('hud.day', { day: 0 }) }
+    const timings = Object.fromEntries((['intro', 'waitResult', 'phoneResult', 'leaveResult'] as const).map(key => {
+      const text = t(`story.${key}`)
+      return [text, createStoryTyping(text)]
+    }))
     // A translated apostrophe or closing script tag must remain data.
-    const json = JSON.stringify(copy).replace(/</g, '\\u003c')
+    const json = JSON.stringify({ ...copy, timings }).replace(/</g, '\\u003c')
     return template.replace('__STORY_COPY__', json).replace('__STORY_ART__', new URL('assets/event-rain-rain-proper-480.webp', window.document.baseURI).href)
   }, [])
   useEffect(() => {

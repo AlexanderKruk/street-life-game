@@ -41,9 +41,19 @@ try {
     const doc = scene.window.document;
     const advance = duration => { const end = now + duration; while (now < end) { now += 16; const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(now)); } };
     doc.querySelector('.pv-play').click(); advance(500);
+    assert(doc.querySelector('.pv-text').textContent.length > 0 && doc.querySelector('.pv-text').textContent.length <= 10, 'example uses the same slower 50ms character rhythm');
     assert.match(doc.querySelector('.pv-live').textContent, /^\d{2}:\d{2}$/, 'the moving cursor carries only the clock');
     assert(!doc.querySelector('.pv-title'), 'place is not shown separately before the stamp is sealed');
     assert(!doc.querySelector('.pv-done'), 'typing does not seal the part early');
+    if (choice === 0) {
+      for (let guard = 0; guard < 100 && !doc.querySelector('.pv-text').textContent.endsWith('.'); guard++) advance(50);
+      const sentence = doc.querySelector('.pv-text').textContent;
+      assert(sentence.endsWith('.'), 'example reaches its first sentence');
+      advance(250);
+      assert.equal(doc.querySelector('.pv-text').textContent, sentence, 'example holds after sentence punctuation');
+      advance(150);
+      assert(doc.querySelector('.pv-text').textContent.length > sentence.length, 'example resumes after the shared sentence pause');
+    }
     doc.querySelector('.pv-text').click(); advance(300);
     assert(!doc.querySelector('.pv-done'), 'the full stamp waits through image appearance too');
     advance(8000);

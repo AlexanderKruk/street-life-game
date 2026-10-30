@@ -263,6 +263,36 @@ try {
     assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
     cleanup();
   }
+  // Check the visible reading rhythm, including punctuation pauses and click-to-reveal.
+  {
+    const episode = { id: 98, source: 'encounter', sourceId: 'typing', status: 'complete', scenes: [{ eventId: 'typing', title: 'Scene', text: 'А, Б. В', at }] };
+    render(React.createElement(StoryScreen, { episodes: [episode] }));
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    let now = 0; frame(0);
+    const to = target => { while (now < target) { now = Math.min(target, now + 10); frame(now); } };
+    const text = () => document.querySelector('.story-text button').textContent;
+    to(49); assert.equal(text(), '', 'first character waits 50ms');
+    to(50); assert.equal(text(), 'А');
+    to(100); assert.equal(text(), 'А,');
+    to(269); assert.equal(text(), 'А,', 'comma holds another 120ms before the next character interval');
+    to(270); assert.equal(text(), 'А, ');
+    to(370); assert.equal(text(), 'А, Б.');
+    to(719); assert.equal(text(), 'А, Б.', 'sentence ending adds a 300ms reading pause');
+    to(720); assert.equal(text(), 'А, Б. ');
+    fireEvent.click(document.querySelector('.story-text button'));
+    to(730); assert.equal(text(), 'А, Б. В', 'tap bypasses the remaining typing schedule');
+    cleanup();
+    const { createStoryTyping, storyCharactersShown } = bundled('src/storyTyping.ts');
+    const emoji = createStoryTyping('🙂А');
+    assert.equal(storyCharactersShown(emoji, 50), 1, 'Unicode character is never split into surrogate halves');
+    assert.equal(storyCharactersShown(emoji, 100), 2);
+    assert.equal(createStoryTyping('35,6').duration, 200, 'decimal comma adds no prose pause');
+    assert.equal(createStoryTyping('3.14').duration, 200, 'decimal point adds no prose pause');
+    const quoted = createStoryTyping('«Да…»');
+    assert.equal(storyCharactersShown(quoted, 250), 5, 'closing quote appears before the sentence pause');
+    assert.equal(quoted.duration, 550, 'final sentence pause is retained before the following media step');
+    assert.equal(createStoryTyping('Да...').duration, 550, 'ellipsis adds one sentence pause');
+  }
   // A deterministic layout catches cursor jumps and clock resets, beyond settled DOM checks.
   const geometry = Object.getOwnPropertyDescriptors(window.HTMLElement.prototype);
   Object.defineProperty(window.HTMLElement.prototype, 'offsetTop', { configurable: true, get() {

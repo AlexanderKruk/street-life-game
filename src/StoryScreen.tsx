@@ -8,6 +8,7 @@ import { resultDisplay } from './ResultCard'
 import ResultIndicators, { resultIndicatorDuration } from './ResultIndicators'
 import { ModalAction } from './Modal'
 import StoryComparison from './StoryComparison'
+import { createStoryTyping, storyCharactersShown } from './storyTyping'
 import type { StoryEpisode, StoryStamp } from './story'
 
 type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number }
@@ -44,6 +45,7 @@ function StoryResult({ episode, animate }: { episode: StoryEpisode; animate: boo
 }
 function Episode({ episode }: { episode: StoryEpisode }) {
   const pieces = useMemo(() => episodePieces(episode), [episode])
+  const typing = useMemo(() => pieces.map(piece => createStoryTyping(piece.text)), [pieces])
   const track = useRef<HTMLDivElement>(null)
   const nodes = useRef<(HTMLDivElement | null)[]>([])
   const [replay, setReplay] = useState(0)
@@ -71,7 +73,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
       // This is an ephemeral visual clock: fixed stamps always use the saved StoryStamp.
       if (piece.kind !== 'choice') clockElapsed += delta
       const length = Array.from(piece.text).length
-      let shown = piece.kind === 'image' || piece.kind === 'choice' ? length : Math.min(length, Math.floor(elapsed / 28))
+      let shown = piece.kind === 'image' || piece.kind === 'choice' ? length : storyCharactersShown(typing[index], elapsed)
       let progress = 0
       if (piece.kind === 'choice') {
         // Reference choices enter whole, with the cursor settling gently above the selected text.
@@ -81,7 +83,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
         if (elapsed >= 650) { index++; phase = 'typing'; elapsed = 0; skipped = false }
       } else if (phase === 'typing') {
         if (piece.kind === 'image' || piece.kind === 'stats') { phase = 'move'; elapsed = 0; from = y }
-        else if (skipped || shown >= length) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
+        else if (skipped || elapsed >= typing[index].duration) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
       } else if (phase === 'pause') {
         shown = length
         if (elapsed >= 250) {
@@ -106,13 +108,14 @@ function Episode({ episode }: { episode: StoryEpisode }) {
         if (progress === 1) { index++; phase = 'typing'; elapsed = 0; progress = 0; skipped = false }
       }
       const current = pieces[index]
-      setAnimation({ index, shown: phase === 'typing' ? (current?.kind === 'image' ? 0 : current?.kind === 'choice' ? Array.from(current.text).length : Math.min(Array.from(current?.text ?? '').length, Math.floor(elapsed / 28))) : shown, progress, y, minute: minute(), running: !!current && current.kind !== 'choice' })
+      const currentShown = !current || current.kind === 'image' ? 0 : current.kind === 'choice' ? Array.from(current.text).length : storyCharactersShown(typing[index], elapsed)
+      setAnimation({ index, shown: phase === 'typing' ? currentShown : shown, progress, y, minute: minute(), running: !!current && current.kind !== 'choice' })
       frame = window.requestAnimationFrame(tick)
     }
     setAnimation({ index: 0, shown: 0, progress: 0, y: 0, minute: startMinute, running: pieces[0]?.kind !== 'choice' })
     frame = window.requestAnimationFrame(tick)
     return () => { window.cancelAnimationFrame(frame); element?.removeEventListener('click', revealText) }
-  }, [replay, pieces, episode])
+  }, [replay, pieces, typing, episode])
   const first = episode.scenes[0]
   const last = episode.endedAt ?? first.at
   const cursor = animation ?? restingCursor

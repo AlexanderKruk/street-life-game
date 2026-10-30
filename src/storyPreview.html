@@ -85,11 +85,11 @@
         let media=null,picture=null;
         if(withImage){media=document.createElement('div');media.className='pv-media';picture=document.createElement('img');picture.className='pv-picture';picture.src=source;picture.alt=copy.art;media.append(picture);body.append(media);}
         records.append(row);
-        text.addEventListener('click',()=>{if(phase==='typing' && current && current.row===row && writing)phaseTime=writing.characters.length*28;});
+        text.addEventListener('click',()=>{if(phase==='typing' && current && current.row===row && writing)phaseTime=writing.timing.duration;});
         return {row,stamp,body,text,media,picture,startedAt,outcome:null};
       }
       function beginText(message,withImage){
-        fromY=y;isOutcome=false;current=makeRecord(withImage);writing={characters:Array.from(message),message,shown:-1};
+        fromY=y;isOutcome=false;current=makeRecord(withImage);writing={characters:Array.from(message),timing:copy.timings[message],message,shown:-1};
         temporary.textContent='';phase='typing';phaseTime=0;
       }
       function beginOutcome(message){
@@ -100,8 +100,8 @@
         const stamp=document.createElement('time');stamp.className='pv-stamp';
         container.append(mark,stamp);current.outcome={container,stamp,endedAt};
         const text=document.createElement('button');text.type='button';text.className='pv-text cursor-interaction';text.setAttribute('aria-label',copy.skip);container.append(text);current.body.append(container);
-        current.text=text;writing={characters:Array.from(message),message,shown:-1};
-        text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)phaseTime=writing.characters.length*28;});
+        current.text=text;writing={characters:Array.from(message),timing:copy.timings[message],message,shown:-1};
+        text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)phaseTime=writing.timing.duration;});
         temporary.textContent='';phase='typing';phaseTime=0;
       }
       function seal(){current.row.classList.add('pv-done');current.stamp.textContent=current.startedAt+' · '+copy.place+' · '+copy.day;status.textContent=current.stamp.textContent+'. '+writing.message;}
@@ -142,9 +142,10 @@
         const timeRuns=!['idle','choices','result'].includes(phase);
         screen.classList.toggle('pv-running',timeRuns);if(timeRuns)gameElapsed+=delta;live.textContent=label();
         if(phase==='typing'){
-          const n=reduced?writing.characters.length:Math.min(writing.characters.length,Math.floor(phaseTime/28));
+          let n=0;
+          while(n<writing.characters.length && (reduced || writing.timing.at[n]<=phaseTime))n++;
           if(n!==writing.shown){current.text.textContent=writing.characters.slice(0,n).join('');writing.shown=n;}
-          if(n===writing.characters.length){
+          if(reduced || phaseTime>=writing.timing.duration){
             current.text.setAttribute('aria-label',writing.message);
             if(isOutcome){status.textContent=writing.message;phase='textmove';phaseTime=0;fromY=y;}
             else {phase='pause';phaseTime=0;}
