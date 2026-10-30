@@ -68,14 +68,14 @@ try {
     assert(!doc.querySelector('.pv-choice-group'), 'example holds the complete image before presenting choices');
     assert(doc.querySelector('.pv-screen.pv-settling'), 'metadata prints concurrently with cursor departure');
     assert(doc.querySelector('.pv-stamp').textContent.startsWith('22:43'), 'saved time is fixed before the cursor departs');
-    assert(!doc.querySelector('.pv-stamp').textContent.endsWith('D0'), 'metadata is still being revealed character by character');
+    assert(!doc.querySelector('.pv-stamp').textContent.endsWith('Day 0'), 'metadata is still being revealed character by character');
     const stampLetter = doc.querySelector('.pv-stamp .pv-letter');
     advance(50); assert.equal(doc.querySelector('.pv-stamp .pv-letter'), stampLetter, 'stamp letters retain their existing fade nodes');
-    advance(720);
-    assert(doc.querySelector('.pv-choice-group'), 'choices follow the complete 1200ms stamp/departure transition');
+    advance(870);
+    assert(doc.querySelector('.pv-choice-group'), 'choices follow the complete stamp/departure transition for the full day label');
     advance(8000);
     assert(doc.querySelector('.pv-done'));
-    assert(doc.querySelector('.pv-stamp').textContent.includes(' · By the station · D0'), 'the completed part gains place and day together');
+    assert(doc.querySelector('.pv-stamp').textContent.includes(' · By the station · Day 0'), 'the completed part gains place and day together');
     assert(doc.querySelector('.pv-stamp').textContent.startsWith('22:43 · '), 'opening stamp records the event start, not when the presentation finishes');
     assert.equal(doc.querySelectorAll('.pv-choice-group button:not([hidden])').length, 3);
     const clock = doc.querySelector('.pv-live').textContent;
@@ -99,7 +99,7 @@ try {
     assert(doc.querySelector('.pv-decision.pv-done'), 'the shared answer/result block seals only after the full outcome');
     assert(decision.contains(doc.querySelector('.pv-outcome')), 'selected answer and outcome stay in the same block');
     assert.equal(decision.querySelectorAll('.pv-stamp').length, 1, 'no duplicate stamp appears between choice and result');
-    assert(doc.querySelector('.pv-decision > .pv-stamp').textContent.includes(' · By the station · D0'));
+    assert(doc.querySelector('.pv-decision > .pv-stamp').textContent.includes(' · By the station · Day 0'));
     assert.equal(doc.querySelectorAll('.pv-done > .pv-stamp').length, 2, 'event start and completed result are both stamped within one block');
     assert.equal(doc.querySelector('.pv-stamp').textContent, stamp, 'past stamp remains fixed');
     assert(doc.querySelector('.pv-next'));

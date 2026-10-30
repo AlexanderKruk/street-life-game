@@ -1,6 +1,6 @@
 import { memo, useId, type ReactNode } from 'react'
 
-export type IconName = 'party-popper' | 'settings' | 'exit' | 'dice' | 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'building' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
+export type IconName = 'party-popper' | 'settings' | 'exit' | 'dice' | 'thought' | 'hand' | 'chat' | 'laundry' | 'target-arrow' | 'notepad' | 'search' | 'history' | 'info' | 'map' | 'backpack' | 'person' | 'journal' | 'phone' | 'globe' | 'cloud' | 'rain' | 'sun' | 'moon' | 'bench' | 'bottle' | 'walk' | 'bed' | 'station' | 'bus' | 'headphones' | 'work' | 'help' | 'building' | 'hospital' | 'shop' | 'pause' | 'clock' | 'coins' | 'banknote' | 'thief' | 'face-ok' | 'face-fair' | 'face-bad' | 'face-very-bad' | 'face-very-good' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'arrow-down-to-line' | 'check' | 'food' | 'water' | 'energy' | 'heart' | 'shower' | 'house' | 'documents' | 'thermometer' | 'ticket' | 'signal' | 'renew' | 'navigation' | 'music' | 'video' | 'ambulance' | 'close' | 'umbrella' | 'heart-broken' | 'pill' | 'cigarette' | 'plug' | 'target' | 'newspaper' | 'cup' | 'box' | 'can' | 'bag' | 'trash'
 
 const WalkingGlyph = memo(function WalkingGlyph() {
   const maskId = useId()
@@ -51,6 +51,7 @@ const paths: Record<IconName, ReactNode> = {
   thermometer: <><path d="M9 15V5a3 3 0 0 1 6 0v10a5 5 0 1 1-6 0Z" /><path d="M12 8v10" /><circle cx="12" cy="18" r="1" /></>,
   ticket: <><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7Z" /><path d="M15 5v2m0 3v1m0 3v1m0 2v2" /></>,
   'chevron-down': <path d="m5 9 7 7 7-7" />,
+  'arrow-down-to-line': <path d="M12 3v12m-5-5 5 5 5-5M5 21h14" />,
   check: <path d="m5 12 4 4L19 6" />,
   'chevron-left': <path d="m15 5-7 7 7 7" />,
   'chevron-right': <path d="m9 5 7 7-7 7" />,

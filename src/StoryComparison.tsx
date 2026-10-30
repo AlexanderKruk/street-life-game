@@ -9,7 +9,7 @@ export default function StoryComparison() {
   const [height, setHeight] = useState(240)
   const document = useMemo(() => {
     const keys = ['nav', 'place', 'intro', 'wait', 'waitSelected', 'waitPending', 'waitResult', 'phone', 'phoneSelected', 'phonePending', 'phoneResult', 'leave', 'leaveSelected', 'leavePending', 'leaveResult', 'search', 'skip', 'choices', 'next', 'walking', 'start', 'replay', 'art'] as const
-    const copy = { ...Object.fromEntries(keys.map(key => [key, t(`story.${key}`)])), day: t('hud.day', { day: 0 }) }
+    const copy = { ...Object.fromEntries(keys.map(key => [key, t(`story.${key}`)])), day: t('story.day', { day: 0 }) }
     const timings = Object.fromEntries((['intro', 'waitResult', 'phoneResult', 'leaveResult'] as const).map(key => {
       const text = t(`story.${key}`)
       return [text, createStoryTyping(text)]

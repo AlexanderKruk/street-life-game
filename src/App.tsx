@@ -96,7 +96,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.30-354'
+const BUILD_VERSION = 'v2026.10.30-355'
 // Explicit opt-in for frozen classic-UI regression comparisons during migration.
 const LEGACY_EVENT_DIALOGS = import.meta.env.VITE_LEGACY_EVENT_DIALOGS === 'true'
 const ACTIVITY_TICK_MS = 250
@@ -846,7 +846,7 @@ export default function App() {
     />}
     {goalCompletionVisible && <GoalCompletedDialog key={completedGoalId} title={goals.find(goal => goal.id === completedGoalId)!.title} onClose={acknowledgeGoalCompletion} />}
     {infoModal && !storyEventVisible && <ResultCard result={infoModal} onClose={closeResult} />}
-    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} onClose={closeResult} episode={liveEpisode} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
+    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: t('location.closedTitle', { place: locationName(closingNotice) }),
       label: t('location.closingLabel'),

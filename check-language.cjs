@@ -28,6 +28,10 @@ for(const [id,settings,plural] of [['en','Settings','21 active goals'],['pl','Us
  values.set(preference.LANGUAGE_KEY,id);const actual=bundled('src/i18n/index.ts',true);
  assert.equal(actual.t('phone.ui.app.settings'),settings);
  assert.equal(actual.t('phone.ui.activeGoals',{count:21}),plural);
+ for(const day of [0,1,12]) {
+  assert.equal(actual.t('story.day',{day}),`${id==='ru'?'День':id==='pl'?'Dzień':'Day'} ${day}`,'Story uses a full day label in every language');
+  assert.equal(actual.t('hud.day',{day}),`${id==='ru'?'Д':'D'}${day}`,'the header retains its compact day label');
+ }
  if(id!=='en') {
   assert.deepEqual(Object.keys(translations[id]).sort(),Object.keys(actual.en).sort(),`${id}: every current English key has a translation`);
   for(const [key,message]of Object.entries(actual.en))if(typeof message==='string') {

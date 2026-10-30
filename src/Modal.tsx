@@ -10,6 +10,6 @@ export function ModalPanel({ className = '', size = 'regular', ...props }: Compo
   return <section {...props} className={`modal-panel modal-panel--${size} ${className}`} />
 }
 
-export function ModalAction({ className = '', variant = 'primary', type = 'button', iconOnly = false, ...props }: ComponentProps<'button'> & { variant?: 'primary' | 'secondary' | 'danger' | 'outline'; iconOnly?: boolean }) {
-  return <button {...props} type={type} className={`modal-action modal-action--${variant}${iconOnly ? ' modal-action--icon-only' : ''} ${className}`} />
+export function ModalAction({ className = '', variant = 'primary', type = 'button', iconOnly = false, floating = false, ...props }: ComponentProps<'button'> & { variant?: 'primary' | 'secondary' | 'danger' | 'outline'; iconOnly?: boolean; floating?: boolean }) {
+  return <button {...props} type={type} className={`modal-action modal-action--${variant}${iconOnly ? ' modal-action--icon-only' : ''}${floating ? ' modal-action--floating' : ''} ${className}`} />
 }

@@ -14,7 +14,7 @@ import StoryLiveControls, { type StoryInteraction } from './StoryLiveControls'
 import { useStoryClock } from './useStoryClock'
 
 type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number; stamp?: StoryStamp; partBody?: boolean; pendingPart?: boolean }
-const stampLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${at.locationName} · ${t('hud.day', { day: formatNumber(displayDay(at.day)) })}`
+const stampLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${at.locationName} · ${t('story.day', { day: formatNumber(displayDay(at.day)) })}`
 function episodePieces(episode: StoryEpisode): Piece[] {
   const pieces: Piece[] = []
   const addText = (text: string, at: StoryStamp) => {
@@ -69,7 +69,7 @@ function StoryResult({ episode, animate }: { episode: StoryEpisode; animate: boo
     <ResultIndicators changes={resultDisplay(result).indicators} animate={animate} />
   </div>
 }
-function Episode({ episode, live, disabled, continuous, onPlayback, onLivePlayback }: { episode: StoryEpisode; live?: StoryInteraction; disabled?: boolean; continuous?: boolean; onPlayback?: (id: number, playing: boolean) => void; onLivePlayback?: (playing: boolean) => void }) {
+function Episode({ episode, live, disabled, continuous, archiveControls = true, onPlayback, onLivePlayback }: { episode: StoryEpisode; live?: StoryInteraction; disabled?: boolean; continuous?: boolean; archiveControls?: boolean; onPlayback?: (id: number, playing: boolean) => void; onLivePlayback?: (playing: boolean) => void }) {
   const pieces = useMemo(() => episodePieces(episode), [episode])
   const typing = useMemo(() => pieces.map(piece => createStoryTyping(piece.text)), [pieces])
   const track = useRef<HTMLDivElement>(null)
@@ -184,7 +184,7 @@ function Episode({ episode, live, disabled, continuous, onPlayback, onLivePlayba
   const last = episode.endedAt ?? first.at
   const cursor = animation ?? (isLive ? { y: position.current.y, minute: live.minute } : restingCursor)
   return <article className="story-episode" data-story-id={episode.id}>
-    {!isLive && <div className="story-episode-heading">
+    {archiveControls && !isLive && <div className="story-episode-heading">
       <ModalAction variant="secondary" disabled={disabled} onClick={() => setReplay(value => value + 1)}>{t('story.replay')}</ModalAction></div>}
     <div className={`story-track${cursor ? ' has-replay' : ''}${animation?.sealStart !== undefined ? ' is-settling' : ''}${continuous && !isLive && !animation ? ' is-archived' : ''}${animation ? ' is-replaying' : ''}${animation?.running || isLive && !live.waitingForDecision ? ' is-running' : ''}`} ref={track} style={{ '--story-y': `${cursor?.y ?? 0}px` } as CSSProperties}>
       <div className="story-thread" aria-hidden="true" />
@@ -208,7 +208,7 @@ function Episode({ episode, live, disabled, continuous, onPlayback, onLivePlayba
       </div>
       {(isLive || animation || !continuous) && <div className="story-head" aria-hidden="true"><span /><time>{formatTime(cursor?.minute ?? last.minute)}</time></div>}
     </div>
-    {!animation && !isLive && <div className="story-episode-end">
+    {archiveControls && !animation && !isLive && <div className="story-episode-end">
       {episode.status === 'active' && <p className="story-note">{t('story.pending')}</p>}
       {episode.status === 'interrupted' && <p className="story-note">{t('story.unfinished')}</p>}
     </div>}
@@ -226,12 +226,12 @@ export default function StoryScreen({ episodes, interaction, currentMinute, onPa
   const clockMinute = useStoryClock(currentMinute, running)
   useEffect(() => { onPauseChange?.(paused); return () => onPauseChange?.(false) }, [paused, onPauseChange])
   const start = Math.max(0, episodes.length - visible)
-  return <section className="story-screen">
+  return <section className={`story-screen${presentation === 'event' ? ' story-screen-event' : ''}`}>
     {presentation === 'archive' && <div className="story-toolbar"><h1>{t('story.nav')}</h1><ModalAction variant="secondary" disabled={!!interaction} onClick={() => setComparison(value => !value)}>{t(comparison ? 'story.recordings' : 'story.comparison')}</ModalAction></div>}
     {comparison ? <StoryComparison /> : <>
       {!episodes.length && presentation === 'archive' && <p className="story-note">{t('story.empty')}</p>}
       {start > 0 && <ModalAction variant="secondary" onClick={() => setVisible(value => value + 30)}>{t('story.earlier')}</ModalAction>}
-      {episodes.slice(start).map(episode => <Episode episode={episode} key={episode.id} live={interaction?.episodeId === episode.id ? { ...interaction, minute: clockMinute ?? interaction.minute } : undefined} disabled={!!interaction} continuous={currentMinute !== undefined} onPlayback={playback} onLivePlayback={setLivePlaying} />)}
+      {episodes.slice(start).map(episode => <Episode episode={episode} key={episode.id} live={interaction?.episodeId === episode.id ? { ...interaction, minute: clockMinute ?? interaction.minute } : undefined} disabled={!!interaction} continuous={currentMinute !== undefined} archiveControls={presentation === 'archive'} onPlayback={playback} onLivePlayback={setLivePlaying} />)}
       {!interaction && !paused && currentMinute !== undefined && <div className="story-idle story-track is-running"><div className="story-head" aria-hidden="true"><span /><time>{formatTime(clockMinute ?? currentMinute)}</time></div></div>}
     </>}
   </section>

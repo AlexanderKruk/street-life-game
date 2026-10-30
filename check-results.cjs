@@ -233,7 +233,7 @@ try {
     assert(!document.querySelector('.story-result-effects [data-resource-id="thirst"]'), 'minor passive water drain remains hidden');
     assert(!document.querySelector('.story-result-effects .status-needs, .story-result-effects [role="meter"]'), 'Story omits the framed status panel');
     assert(document.querySelector('.story-result-start .story-result-imprint'), 'result has its own timeline point');
-    assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · Station · D1');
+    assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · Station · Day 1');
     if (index === 0 || index === 3) {
       const choice = document.querySelector('.story-choice.story-result-start');
       assert(choice, 'answer starts the joint result part');
@@ -241,7 +241,7 @@ try {
       assert(!document.querySelector('.story-part-body .story-part-stamp'), 'there is no second stamp between answer and outcome');
       assert.equal(document.querySelectorAll('.story-result-stamp').length, 1);
     }
-    assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · D1', 'opening stamp keeps the saved event-start time');
+    assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1', 'opening stamp keeps the saved event-start time');
     if (index === 0 || index === 3) {
       const energy = () => document.querySelector('.story-result-effects [data-resource-id="energy"]');
       const delta = energy().querySelector('strong').textContent;
@@ -270,7 +270,7 @@ try {
       assert(document.querySelector('.story-result-start time').textContent.startsWith('10:20'), 'the fixed saved time is present from the start of departure');
       for (const end = clock + 1000; clock < end;) { clock += 32; frame(clock); }
       assert(!document.querySelector('.story-track.is-running'), 'clock stops only when the whole result block has finished');
-      assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · D1', 'replay duration cannot change the event-start timestamp');
+      assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1', 'replay duration cannot change the event-start timestamp');
     }
     assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
     cleanup();
@@ -288,9 +288,9 @@ try {
     assert.equal(parts.length, 3, 'opening, continuation and final result each have one stamp');
     assert(parts[1].classList.contains('story-choice'), 'continuation stamp belongs above the choices that produced it');
     assert(parts[1].textContent.includes('Your choice: Ask'));
-    assert.equal(parts[1].querySelector('time').textContent, '10:05 · Station · D1');
+    assert.equal(parts[1].querySelector('time').textContent, '10:05 · Station · Day 1');
     assert(parts[2].classList.contains('story-choice'), 'final result stamp is above its selected answer');
-    assert.equal(parts[2].querySelector('time').textContent, '10:20 · Station · D1');
+    assert.equal(parts[2].querySelector('time').textContent, '10:20 · Station · Day 1');
     assert.equal(document.querySelectorAll('.story-part-body .story-part-stamp').length, 0);
     assert.equal(JSON.stringify(episode), saved, 'grouping never rewrites choice or scene timestamps');
     cleanup();
@@ -365,7 +365,7 @@ try {
     waitFor(() => pieces[1].querySelector('button')?.textContent === 'B');
     pauseTo(pieces[2], 'opening image', 100);
     waitFor(() => pieces[2].querySelector('.story-media').style.gridTemplateRows === '1fr');
-    pauseTo(pieces[3], 'selected answer', 0, 850);
+    pauseTo(pieces[3], 'selected answer', 0, 1000);
     const selectedAt = clock;
     while (clock - selectedAt < 1120) { step(); assert(pieces[4].hidden, 'selected answer finishes its 650ms entrance and shared pause before outcome text'); }
     waitFor(() => !pieces[4].hidden);
@@ -479,8 +479,8 @@ try {
     assert.equal(live(), stoppedClock, 'finishing never resets the cosmetic clock to a different archived time');
     assert(!track.classList.contains('is-running'));
     assert.equal(frames.size, 0, 'completed replay has no perpetual animation loop');
-    assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · D1');
-    assert.equal(document.querySelector('.story-result-stamp').textContent, '10:20 · Station · D1');
+    assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1');
+    assert.equal(document.querySelector('.story-result-stamp').textContent, '10:20 · Station · Day 1');
     assert.equal(JSON.stringify(episode), saved);
     cleanup();
     reduced = true;

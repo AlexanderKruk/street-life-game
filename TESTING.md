@@ -1,3 +1,21 @@
+Compact Story controls — 30 October 2026, source only: check-story-modal now
+checks initial/no-overflow jump absence, appearance above the 64px threshold,
+smooth scrolling without premature hiding, immediate reduced-motion arrival,
+modal focus restoration, resumed following and no game/save changes or premature
+navigation unlock. All 61 routes, localisation/language, design-system and build
+passed. Browser/iPhone/WebKit appearance remains unverified; no full suite or
+publication. Control geometry is not claimed verified by jsdom.
+
+Continuous Story-modal chronology — 30 October 2026, source only:
+check-story-modal now restores a complete prior event before the next event,
+checks ordered chronology and one live cursor, settled prior copy/no replay
+controls, immutable old facts, StrictMode/reload and stable historical DOM while
+the result appends. A deterministic ResizeObserver fixture verifies following
+new content, stopping while reading history, resuming at the end and cleanup.
+These are behavior checks in jsdom, not browser geometry verification. All 61
+modal routes and 61 live choices, design-system and production build passed.
+No full suites, browser/WebKit/iPhone check, build ID change or publication.
+
 Release v354 is published — 30 October 2026. GitHub Pages run 41068418109
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41068418109)
 succeeded for source c060d1994d28ea2e7b61c2694e65e204e0de2563: all 34 Node

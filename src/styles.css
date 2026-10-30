@@ -1388,10 +1388,10 @@ body { min-width:0; }
 /* Recorded Story uses the same reading pace as the retained comparison. */
 .story-screen { --story-gap:12px; min-width:0; display:flex; flex-direction:column; gap:var(--story-gap); }
 .modal-overlay.story-event-overlay { z-index:100; }
-.modal-panel.story-event-panel { height:88svh; max-height:100%; overflow:hidden; display:flex; flex-direction:column; }
-/* Put the frame's inset inside the scroller so the breathing point and its wave
-   can expand into the gutter without shifting the timeline or its content. */
-.story-event-content { flex:1; min-height:0; margin:calc(-1 * var(--modal-padding-y)) calc(-1 * var(--modal-padding-x)); padding:var(--modal-padding-y) var(--modal-padding-x); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+.modal-panel.story-event-panel { height:88svh; max-height:100%; padding:0; overflow:hidden; display:flex; flex-direction:column; }
+/* The scroller reaches the frame edge; only its content owns the inset, leaving
+   paint space for the breathing point and its wave without inset scrollbars. */
+.story-event-content { flex:1; min-height:0; min-width:0; padding:var(--modal-padding-y) var(--modal-padding-x); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
 .story-event-panel:focus { outline:none; }
 .story-toolbar, .story-episode-heading { display:flex; align-items:start; justify-content:space-between; gap:var(--story-gap); flex-wrap:wrap; margin-bottom:0; }
 .story-toolbar h1 { font-size:var(--font-title); font-weight:var(--weight-semibold); }
@@ -1402,6 +1402,7 @@ body { min-width:0; }
 .story-track.is-archived { padding-bottom:0; }
 .story-idle.story-track { min-height:24px; padding-bottom:0; }
 .story-thread { position:absolute; left:5.5px; top:12px; bottom:13px; width:1px; background:#424a4c; }
+.story-screen-event .story-track.is-archived .story-thread { bottom:calc(-1 * (var(--story-gap) + 12px)); }
 .story-head > span { position:absolute; left:0; top:0; width:12px; height:12px; border-radius:50%; background:var(--color-warning); }
 .story-head { position:absolute; left:0; bottom:0; display:flex; align-items:center; width:100%; padding-left:28px; min-height:24px; }
 .story-head > span { background:#171b1d; border:1.5px solid var(--color-warning); top:6px; }
@@ -1477,5 +1478,6 @@ body { min-width:0; }
 }
 
 .story-modal-complete .bottom-nav { z-index:101; }
-.story-event-close { position:relative; right:auto; top:auto; width:44px; height:44px; align-self:flex-end; flex-shrink:0; margin-bottom:12px; }
+.story-event-close { right:var(--modal-padding-x); top:var(--modal-padding-y); }
+.story-event-bottom { left:50%; bottom:var(--modal-padding-y); transform:translateX(-50%); }
 .story-modal-complete .story-event-overlay { bottom:calc(112px + env(safe-area-inset-bottom,0px)); }
