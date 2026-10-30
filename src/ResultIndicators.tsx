@@ -7,8 +7,8 @@ import type { ResultChange } from './results'
 import { t } from './i18n'
 
 export const RESULT_INDICATOR_STEP = 260
-const REVEAL_DELAY = 100
-const REVEAL_DURATION = 180
+const REVEAL_DELAY = 250
+const REVEAL_DURATION = 260
 export const resultIndicatorDuration = (count: number) => REVEAL_DELAY + Math.max(0, count - 1) * RESULT_INDICATOR_STEP + REVEAL_DURATION
 
 const icons: Partial<Record<ResultResourceId, IconName>> = {
@@ -22,13 +22,13 @@ const icons: Partial<Record<ResultResourceId, IconName>> = {
 }
 
 // Presentation only: the caller supplies the shared, already-filtered consequences.
-export default function ResultIndicators({ changes, animate = true, animationReady = true }: {
+export default function ResultIndicators({ changes, animate = false, animationReady = true }: {
   changes: ResultChange[]; animate?: boolean; animationReady?: boolean
 }) {
   const tooltipId = useId()
   const [expanded, setExpanded] = useState<number | null>(null)
   if (!changes.length) return null
-  return <div className={`result-indicators${animate ? ' is-animated' : ''}${animationReady ? ' is-ready' : ''}`} role="group" aria-label={t('result.actionSummary')}>
+  return <div className={`result-indicators${animate ? ' is-animated' : ''}${animationReady ? ' is-ready' : ''}`} role="group" aria-label={t('result.actionSummary')} style={{ '--result-indicator-duration': `${REVEAL_DURATION}ms` } as CSSProperties}>
     {changes.map((change, index) => {
       const id = resultChangeId(change)
       const label = id === 'thirst' ? t('stat.thirst') : plainResultLabel(change.label)

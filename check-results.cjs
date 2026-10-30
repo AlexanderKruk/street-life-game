@@ -75,6 +75,7 @@ try {
   assert.equal(row('Health').querySelector('strong').textContent, '−6');
   assert.equal(document.querySelectorAll('[data-resource-id="time"]').length, 0, 'elapsed time stays in the chronology, not the consequence row');
   assert(!document.querySelector('[role="meter"]'), 'results show deltas without current percentages or bars');
+  assert(!document.querySelector('.result-modal .result-indicators.is-animated'), 'classic dialogs show all consequence groups immediately');
   assert(screen.getByRole('dialog').textContent.includes('Medicine'));
   assert(screen.getByRole('dialog').textContent.includes('Cold'));
   assert(screen.getByRole('dialog').textContent.includes('−4.4 zł'));
@@ -134,14 +135,14 @@ try {
   const illustratedMusic = { title: 'Walk with music', text: 'You feel a little better.', illustration: '/street-life-game/assets/event-music-walk.webp', ...summarizeResult(musicBefore, musicAfter) };
   render(React.createElement(ResultCard, { result: illustratedMusic, onClose: () => {} }));
   assert.equal(row('Mood').querySelector('strong').textContent, '+3');
-  assert(!document.querySelector('.result-indicators.is-ready'), 'appearance waits for the illustration');
+  assert(!document.querySelector('.result-indicators.is-animated'), 'classic result indicators are static even before the image loads');
   assert.equal(frames.size, 0, 'the consequence row has no independent gameplay or frame clock');
   fireEvent.load(document.querySelector('.result-illustration'));
-  assert(document.querySelector('.result-indicators.is-ready'));
+  assert(!document.querySelector('.result-indicators.is-animated'), 'loading an image cannot start a classic result animation');
   cleanup();
   render(React.createElement(ResultCard, { result: illustratedMusic, onClose: () => {} }));
   fireEvent.error(document.querySelector('.result-illustration'));
-  assert(document.querySelector('.result-indicators.is-ready'), 'a failed illustration also releases the animation');
+  assert(!document.querySelector('.result-indicators.is-animated'), 'a failed image cannot start a classic result animation');
   cleanup();
   reduced=true;
   render(React.createElement(ResultCard, { result: illustratedMusic, onClose: () => {} }));
@@ -233,9 +234,11 @@ try {
     assert(!document.querySelector('.story-result-effects .status-needs, .story-result-effects [role="meter"]'), 'Story omits the framed status panel');
     assert(document.querySelector('.story-result-start .story-result-imprint'), 'result has its own timeline point');
     assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · D1');
-    if (index === 0) {
+    if (index === 0 || index === 3) {
       const energy = () => document.querySelector('.story-result-effects [data-resource-id="energy"]');
-      assert.equal(energy().querySelector('strong').textContent, '+13');
+      const delta = energy().querySelector('strong').textContent;
+      if (index === 0) assert.equal(delta, '+13');
+      else assert.equal(document.querySelectorAll('.story-result-effects .result-indicator').length, 1, 'single-indicator replay is covered too');
       assert(!document.querySelector('.story-result-effects .is-animated'), 'old records open fully revealed');
       assert.equal(frames.size, 0, 'reading old records does not schedule animation');
       fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
@@ -243,8 +246,10 @@ try {
       while (!energy() && clock < 40000) { clock += 32; frame(clock); }
       assert(energy(), 'replay reaches the effects after narrative text');
       assert(document.querySelector('.story-result-effects .is-animated.is-ready'), 'replay starts sequential appearance only at the effects step');
+      assert.equal(energy().style.getPropertyValue('--result-indicator-delay'), '250ms', 'even one group has a reading pause after the image/narrative');
+      assert.equal(document.querySelector('.story-result-effects .result-indicators').style.getPropertyValue('--result-indicator-duration'), '260ms');
       for (let n = 0; n < 80; n++) { clock += 32; frame(clock); }
-      assert.equal(energy().querySelector('strong').textContent, '+13', 'replay retains the actual delta');
+      assert.equal(energy().querySelector('strong').textContent, delta, 'replay retains the actual delta');
     }
     assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
     cleanup();

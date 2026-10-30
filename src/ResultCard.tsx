@@ -143,7 +143,7 @@ export default memo(function ResultCard({ result, onClose }: { result: ResultCar
           </div>)}</div>}
           {presentation.notice && <p className="result-notice">{presentation.notice}</p>}
         </> : <p className="result-description result-narrative modal-narrative">{result.text}</p>}
-        <ResultIndicators changes={indicators} animationReady={animationReady} />
+        <ResultIndicators changes={indicators} animate={false} animationReady={animationReady} />
         {presentation && !compactInfo && <details className="result-details">
           <summary>{t('result.fullAnswer')}</summary>
           <p className="result-description">{result.text}</p>

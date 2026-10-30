@@ -1,3 +1,21 @@
+# Story-only result animation — 30 October 2026
+
+Local checkpoint: `fe94ee04eb54c463e767276f7904cd7d593d59bc`.
+Verified bundle: `story-only-animation-2026-10-30.bundle`; requires base
+`fd6ef4ebb078f0c6acd87075e116108fdc661510`.
+Recovery: `git bundle verify .backup/story-only-animation-2026-10-30.bundle`, then
+`git fetch .backup/story-only-animation-2026-10-30.bundle HEAD:refs/heads/recovered/story-only-animation`.
+The bundle preserves the original local commits; only the four verified changed
+presentation/test files are applied over current remote main, preserving its
+v350 version, release records and other sources.
+
+Classic dialogs show icon deltas immediately. Story Replay alone opts into
+animation, including a 250ms pause and 260ms appearance for a lone group.
+Results, design-system, module-boundaries and production build passed.
+Source save only; no deployment, full-suite or fresh browser verification.
+
+---
+
 # Compact result indicators — 30 October 2026
 
 Source commit: `8b57ed2de13b1093bc293b75e590aca4023de6c4`.
