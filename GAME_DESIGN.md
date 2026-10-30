@@ -1,3 +1,13 @@
+Release v356 is published — 30 October 2026. GitHub Pages run 41086431569
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41086431569)
+succeeded for source 1d722be1c56434b2c4a56b21f3fc8acc71f12648: all 34 Node
+suites passed in 182.93s, production build and deployment succeeded. Releases
+the approved 650ms live choice movement, immediate command/save commitment and
+retained Story layout height so selected-answer/result content fills the old
+controls area. The successful full CI was not duplicated locally. Browser/iPhone/
+WebKit appearance remains unverified. Earlier source-only/pending-publication
+notes below are historical for this release.
+
 Approved live Story choice transition — 30 October 2026, source only:
 useStoryChoiceMotion retains each live track's measured maximum height at the
 current width, reserving it synchronously before decision/check clicks. New copy
