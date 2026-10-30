@@ -162,8 +162,12 @@ function measure(App) {
   assert.equal(historyTitles().length, 30); assert.equal(historyTitles()[0], 'History 2-249');
   fireEvent.click(screen.getByRole('button', { name: 'Show older entries' }));
   fireEvent.click(screen.getByRole('button', { name: 'Inventory', exact: true }));
+  const previousMatchMedia = window.matchMedia;
+  window.matchMedia = () => ({ matches: true });
   fireEvent.click(screen.getByRole('button', { name: /^Water ×/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+  assert(document.querySelector('.story-event-overlay'), 'consumption now presents its saved Story result');
+  fireEvent.click(screen.getByRole('button', { name: 'Close', exact: true }));
+  window.matchMedia = previousMatchMedia;
   fireEvent.click(screen.getByRole('button', { name: 'Phone', exact: true }));
   fireEvent.click(screen.getByRole('button', { name: 'History', exact: true }));
   assert.equal(historyTitles().length, 30, 'reopening starts with recent entries');
