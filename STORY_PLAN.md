@@ -1,3 +1,20 @@
+Release v354 is published — 30 October 2026. GitHub Pages run 41068418109
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41068418109)
+succeeded for source c060d1994d28ea2e7b61c2694e65e204e0de2563: all 34 Node
+suites passed in 169.45s, production build and deployment succeeded. This release
+includes the approved breathing point, joint-block stamp/cursor motion, continuous
+inline Story and the shared event modal on other tabs. While an event/result is
+being presented, navigation stays blocked under the blur and no close control is
+shown. On full presentation, the cross/backdrop/navigation become available; the
+modal stays open until dismissed. Inline Story still acknowledges automatically.
+Purchases, standalone theft/transport checks and other action dialogs retain their
+UI. The first CI attempt stopped at obsolete rain/event selectors in the rendering
+pause audit; both selectors now target Story, retaining the zero-background-render
+and unchanged-clock assertions. The corrected full CI passed. Targeted Chromium
+390/1280 and short-screen checks were performed before release; physical iPhone/
+WebKit were not verified. Successful CI was not duplicated locally. Earlier
+source-only and pending-publication notes below are historical for this release.
+
 Story modal dismissal — 30 October 2026, source only: supersedes the
 previous automatic modal-dismissal rule. During the entire event/result reveal,
 navigation stays inert under the blurred backdrop, with no close control and no
