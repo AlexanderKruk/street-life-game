@@ -1,4 +1,5 @@
-export type StoryTyping = { at: number[]; duration: number }
+export type StoryTyping = { at: number[]; duration: number; settledAt: number }
+export const STORY_PIECE_PAUSE_MS = 500
 
 /** Presentation only. Build once per paragraph, using Unicode characters. */
 export function createStoryTyping(text: string): StoryTyping {
@@ -18,7 +19,8 @@ export function createStoryTyping(text: string): StoryTyping {
     // Keep punctuation clusters and closing quotes together before pausing.
     if (!/[,:;.!?…—–»”"’')\]]/u.test(next)) { duration += pause; pause = 0 }
   }
-  return { at, duration }
+  // A final unpunctuated character still needs its existing 100ms soft reveal.
+  return { at, duration, settledAt: Math.max(duration, (at.at(-1) ?? -100) + 100) }
 }
 
 export function storyCharactersShown(typing: StoryTyping, elapsed: number): number {

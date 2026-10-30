@@ -9,7 +9,7 @@ import { SHOP_ITEMS, addShopItem, canAddToBackpack, fitEventSupplies } from './i
 import { rejectedSupplyLabel as supplyLabel } from './itemPresentation'
 import { locationPresentation } from './resultPresentation'
 import { SHELTER_ENTRY_OPEN } from './shelterRules'
-import { eventCheckModifier, eventChoiceBlock, diceOutcome } from './eventChecks'
+import { eventCheckModifier, eventChoiceBlock, diceOutcome, clearPendingEventCheck } from './eventChecks'
 import type { EventSession } from './eventSession'
 import type { Inventory, LifeSituation, Screen, StoredItems } from './stateTypes'
 import type { ResultCardData } from './ResultCard'
@@ -82,12 +82,12 @@ export function createEventController(session: EventSession, context: Context, h
       : outcome.message
     if (activeEvent?.illustration || outcome.illustration) {
       const place = locations.find(location => location.id === outcome.discoverLocation)
-      setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? t('event.controller.afterChoice'), text: outcomeText, illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
+      setInfoModal(previous => ({ ...previous, title: activeEvent?.title ?? t('event.controller.afterChoice'), text: outcomeText, ...(outcome.closingText && !rejected.length ? { closingText: outcome.closingText } : {}), illustration: rejected.length ? activeEvent?.illustration : outcome.illustration ?? activeEvent?.illustration, illustrationAlt: outcomeText,
         visibleStats: ['night-rustle', 'park-company'].includes(activeEvent?.id ?? '') && outcome.energy ? ['energy'] : activeEvent?.id === 'borrow-phone-slip' && outcome.phoneCondition ? ['phoneCondition'] : undefined,
         batteryInSummary: !!outcome.phoneBattery,
         ...(place ? { presentation: { ...locationPresentation([place.id]), lead: place.id === 'shelter' ? '' : outcomeText } } : {}) }))
     }
-    setEncounters(previous => ({ ...previous, pendingId: null, pendingRoll: null }))
+    setEncounters(previous => ({ ...clearPendingEventCheck(previous), pendingId: null }))
     if (firstNightEvents.pendingId === activeEvent?.id) setFirstNightEvents(previous => ({ ...previous, pendingId: null }))
     const foundPlace = locations.find(place => place.id === outcome.discoverLocation)
     if (foundPlace) {
@@ -120,7 +120,7 @@ export function createEventController(session: EventSession, context: Context, h
       jacket: Math.max(0, Math.min(100, prev.jacket + (outcome.jacketCondition ?? 0))),
       documents: outcome.loseDocuments ? false : prev.documents,
     }))
-    setMessage(outcomeText)
+    setMessage(outcome.closingText && !rejected.length ? `${outcomeText} ${outcome.closingText}` : outcomeText)
   }
 
   function resolveStreetEvent(choice: StreetEventChoice) {
@@ -129,7 +129,7 @@ export function createEventController(session: EventSession, context: Context, h
     if (choice.followUp && Math.random() < choice.followUp.chance) {
       const event = STREET_EVENTS.find(event => event.id === choice.followUp!.eventId && event.continuationOnly)
       if (event) {
-        setEncounters(previous => ({ ...previous, seen: [...new Set([...previous.seen, event.id])], pendingId: event.id, pendingRoll: null }))
+        setEncounters(previous => ({ ...clearPendingEventCheck(previous), seen: [...new Set([...previous.seen, event.id])], pendingId: event.id }))
         setActiveEvent(prepareStreetEvent(event, { locationId: game.locationId, housing: life.housing }))
         return
       }
@@ -138,6 +138,7 @@ export function createEventController(session: EventSession, context: Context, h
       const unavailable = eventChoiceBlock(choice, game, inventory, discoveredLocations, phoneUnavailable)
       if (unavailable !== null) return
       setDiceCheck({ choice, roll: null, modifier: checkModifier(choice), resolved: false })
+      if (activeEvent) setEncounters(previous => ({ ...previous, pendingChoiceId: choice.id, pendingModifier: checkModifier(choice), pendingRoll: null }))
       return
     }
     if (choice.outcome) applyEventOutcome(choice.outcome, undefined, undefined, storyEpisodeId)
@@ -149,7 +150,7 @@ export function createEventController(session: EventSession, context: Context, h
     const roll = Math.floor(Math.random() * 20) + 1
     if (diceCheck.fareDodgeInTransit) host.recordFareInspectionRoll?.(roll)
     setDiceCheck({ ...diceCheck, roll, resolved: false })
-    if (['borrow-phone-slip', 'park-company'].includes(activeEvent?.id ?? '')) setEncounters(previous => ({ ...previous, pendingRoll: roll }))
+    if (activeEvent) setEncounters(previous => ({ ...previous, pendingRoll: roll }))
   }
 
   function acceptDiceResult() {

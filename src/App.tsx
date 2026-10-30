@@ -23,9 +23,11 @@ import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
 import ActivityDialog, { ActivityCancel } from './ActivityDialog'
 import BottomNavigation from './BottomNavigation'
 import StoryScreen from './StoryScreen'
+import type { StoryInteraction } from './StoryLiveControls'
+import { choiceCheckDetail } from './choiceCheckPresentation'
 import ChoiceButton from './ChoiceButton'
 import CityMap from './CityMap'
-import DiceDialog from './DiceDialog'
+import DiceDialog, { DiceContents } from './DiceDialog'
 import TravelPlanningDialog from './TravelPlanningDialog'
 import DiscardDialog from './DiscardDialog'
 import EventDialog from './EventDialog'
@@ -93,7 +95,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.30-352'
+const BUILD_VERSION = 'v2026.10.30-353'
 const ACTIVITY_TICK_MS = 250
 
 type TrashArt = 'cup' | 'paper' | 'tray' | 'wrapper' | 'can-crushed' | 'plastic' | 'plastic-crushed' | 'can'
@@ -144,6 +146,7 @@ export default function App() {
   }, [])
   const [activeGoal, setActiveGoal] = useState<{ type: 'night-shelter'; day: number; minute: number } | null>(() => initial.activeGoal)
   const [screen, setScreen] = useState<Screen>(() => languageResumed ? 'phone' : initial.screen)
+  const [storyPlaybackPaused, setStoryPlaybackPaused] = useState(false)
   const [phoneApp, setPhoneApp] = useState<PhoneApp>(() => languageResumed ? 'language' : 'home')
   const contentRef = useRef<HTMLDivElement>(null)
   const [scrollResetRequest, setScrollResetRequest] = useState(0)
@@ -224,7 +227,7 @@ export default function App() {
   const eventModalRef = useRef<HTMLElement>(null)
   const eventSession = useEventSession(initial, game)
   const { firstNightEvents, leftHome, encounters, openingSearchObservation,
-    ambientEventClock, activeEvent, setActiveEvent, diceCheck, setDiceCheck, resetEventSession } = eventSession
+    ambientEventClock, activeEvent, setActiveEvent, diceCheck, setDiceCheck, cancelDiceCheck, resetEventSession } = eventSession
   function storyStamp(): StoryStamp { return { day: game.day, minute: game.minutes, locationId: game.locationId, locationName: locationName(game.locationId) } }
   function recordStoryChoice(choice: StreetEventChoice, dice?: EventDiceState | null) {
     if (activeEvent) return story.choose(activeEvent, choice, storyStamp(), dice ?? undefined)
@@ -321,7 +324,10 @@ export default function App() {
     return () => document.removeEventListener('keydown', trap)
   }, [travelVisible])
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver || closingNotice)
-  const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver
+  const inlineStoryEvent = screen === 'story' && !gameOver && !sleeping && !closingNotice && !!(activeEvent || diceCheck ||
+    rainChoice || rainWaiting || game.rain && story.store.episodes.some(entry => entry.source === 'rain' && entry.sourceId === game.rain?.id && entry.status === 'active') ||
+    pendingResult?.storyEpisodeId !== undefined || infoModal && story.store.episodes.some(entry => entry.status === 'awaiting-ack'))
+  const streetEventVisible = !!activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && !gameOver && !inlineStoryEvent
   const visibleEventChoices = activeEvent?.choices.filter(choice => !choice.undiscoveredLocationRequired || !discoveredLocations.includes(choice.undiscoveredLocationRequired)) ?? []
   const { respondToRain, continueInRain } = useRainScheduling({ game, gameOver, currentExposure, sleeping: !!sleeping, currentId: current.id }, setGame, setRainChoice)
   function rainStoryId(rain: RainEpisode) {
@@ -339,7 +345,7 @@ export default function App() {
     if (rainChoice && game.rain && !activeEvent && !diceCheck && !infoModal && !pendingResult && !sleeping && !gameOver) rainStoryId(game.rain)
   }, [rainChoice, game.rain?.id, activeEvent, diceCheck, infoModal, pendingResult, sleeping, gameOver])
   useEffect(() => {
-    if ((!rainChoice && !rainWaiting) || infoModal || pendingResult || activeEvent || diceCheck) return
+    if (inlineStoryEvent || (!rainChoice && !rainWaiting) || infoModal || pendingResult || activeEvent || diceCheck) return
     const previous = document.activeElement as HTMLElement | null
     const overflow = document.body.style.overflow
     const ownsScrollLock = !activityOverlay
@@ -355,7 +361,7 @@ export default function App() {
     }
     document.addEventListener('keydown', trap)
     return () => { if (ownsScrollLock) document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus({ preventScroll: true }) }
-  }, [rainChoice, rainWaiting, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay])
+  }, [rainChoice, rainWaiting, infoModal, pendingResult, activeEvent, diceCheck, activityOverlay, inlineStoryEvent])
   const completedGoalId = journalGoals.pendingCompletions?.[0]
   const goalCompletionVisible = !!completedGoalId && !(gameOver || activeEvent || diceCheck || pendingResult || infoModal || eventResultOpen ||
     closingNotice || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture ||
@@ -476,7 +482,7 @@ export default function App() {
     game, inventory, storage, life, discoveredLocations, phoneUnavailable, shelterBooked, currentId: current.id, open,
   }, {
     setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal,
-    openPage, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),
+    openPage: target => { if (screen !== 'story') openPage(target) }, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),
     recordStoryChoice,
     recordFareInspectionRoll: roll => setTrip(previous => previous?.mode === 'fare-dodge' && previous.inspection?.status === 'rolling'
       ? { ...previous, inspection: { ...previous.inspection, roll } } : previous),
@@ -568,7 +574,7 @@ export default function App() {
   useForcedSleep(sleepSession, game, !!(goalCompletionVisible || locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult), sleepController)
 
   const tickGameClock = useLatestAction(() => {
-    if (screen === 'story') return
+    if (screen === 'story' && storyPlaybackPaused) return
     if (goalCompletionVisible) return
     if (closingNotice) return
     if (rainChoice || (game.rain && !game.rain.choice && currentExposure === 'outside' && !sleeping)) return
@@ -737,7 +743,7 @@ export default function App() {
     [ENCOUNTERS_KEY]: encounters,
     [SAVE_KEYS.rainChoice]: rainChoice,
     [RAIN_RESPONSE_KEY]: null,
-    [SAVE_KEYS.screen]: screen === 'travel' || screen === 'story' ? undefined : screen,
+    [SAVE_KEYS.screen]: screen === 'travel' ? undefined : screen,
     [SAVE_KEYS.mobileServiceUntil]: mobileServiceUntil,
     [SAVE_KEYS.mobileAutoRenew]: mobileAutoRenew,
     [SAVE_KEYS.mobileRenewedDay]: mobileRenewedDay,
@@ -778,6 +784,40 @@ export default function App() {
     setDiscardItem(null)
   }
 
+  const liveEpisode = inlineStoryEvent ? story.store.episodes.find(entry => entry.status === 'awaiting-ack') ??
+    [...story.store.episodes].reverse().find(entry => entry.status === 'active' && (activeEvent ? entry.scenes.at(-1)?.eventId === activeEvent.id
+      : diceCheck ? entry.source === 'check' : entry.source === 'rain' ? entry.sourceId === game.rain?.id : entry.id === pendingResult?.storyEpisodeId)) : undefined
+  let storyInteraction: StoryInteraction | undefined
+  if (liveEpisode) {
+    const scene = liveEpisode.scenes.at(-1)!
+    storyInteraction = { episodeId: liveEpisode.id, key: `${liveEpisode.id}:${scene.eventId}:${liveEpisode.status}`, minute: game.minutes, actions: [], seed: choiceSeed, decision: choiceDecisionKey, fixed: true }
+    if (liveEpisode.status === 'awaiting-ack' && infoModal && !pendingResult) {
+      storyInteraction.actions = [{ id: 'story:acknowledge', label: t('common.gotIt'), primary: true, onChoose: closeResult }]
+    } else if (diceCheck && !infoModal && !pendingResult) {
+      storyInteraction.key += `:dice:${diceCheck.roll ?? 'ready'}`
+      storyInteraction.content = <div className="story-live-check"><DiceContents diceCheck={diceCheck} onRoll={rollDice} onAccept={acceptDiceResult} onCancel={cancelDiceCheck} /></div>
+    } else if (activeEvent && !infoModal && !pendingResult) {
+      storyInteraction.key += `:choices:${scene.choice?.id ?? 'new'}`
+      storyInteraction.fixed = activeEvent.choiceOrder === 'fixed'
+      storyInteraction.decision = `${choiceDecisionKey}|event:${activeEvent.id}`
+      storyInteraction.actions = visibleEventChoices.map(choice => {
+        const unavailable = checkUnavailableReason(choice)
+        return { id: `event:${activeEvent.id}:${choice.id}`, label: choice.label, disabled: unavailable !== null,
+          detail: unavailable ?? (choice.check ? choiceCheckDetail(choice.check) : undefined), onChoose: () => resolveStreetEvent(choice) }
+      })
+    } else if (game.rain && !infoModal && !pendingResult) {
+      if (rainWaiting) {
+        storyInteraction.key += ':waiting'
+        storyInteraction.content = <p role="status">{t(game.rain.searchRemaining > 0 ? 'rain.wait.searchingPhase' : 'rain.wait.waitingPhase')} · {t('format.minutes', { minutes: Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start)) })}</p>
+        storyInteraction.actions = [{ id: 'rain:cancel', label: t('common.cancel'), onChoose: () => { recordRainChoice('continue'); continueInRain() } }]
+      } else if (rainChoice) {
+        storyInteraction.fixed = false
+        storyInteraction.decision = `${choiceDecisionKey}|rain:${game.rain.id}`
+        storyInteraction.actions = (['nearby', 'proper', 'continue'] as const).map(choice => ({ id: `rain:${choice}`, label: t(`rain.choice.${choice}`), detail: t(choice === 'nearby' ? 'rain.choice.nearbyDetail' : choice === 'proper' ? 'rain.choice.properDetail' : 'rain.choice.continueDetail'), onChoose: () => { recordRainChoice(choice); respondToRain(choice) } }))
+      }
+    }
+  }
+  const backgroundBlocked = eventInteractionBlocked && !inlineStoryEvent
   return <main className={`shell${screen === 'location' ? ' location-screen' : ''}${screen === 'phone' ? ' phone-shell' : ''}${screen === 'map' || travelling ? ' map-screen' : ''}${screen === 'location' && current.id === 'street' ? ' street-screen' : screen === 'location' && current.id === 'shop' ? ' shop-screen' : ''}`}>
     {streetExitPending && <InventoryDialog icon="exit" label={t('location.leaveLabel')} title={t('location.leaveTitle', { place: locationName(current.id) })} onCancel={cancelStreetExit}>
       <div className="sleep-choice-buttons"><ModalAction variant="secondary" type="button" onClick={cancelStreetExit}>{t('common.cancel')}</ModalAction><ModalAction type="button" className="confirm-action" onClick={confirmStreetExit}>{t('location.goToStreet')}</ModalAction></div>
@@ -793,7 +833,7 @@ export default function App() {
       onConfirm={() => runWithResult({ id: 'sleep-start', title: t('sleep.start.title') }, () => sleep(sleepHours, sleepChoice))}
     />}
     {goalCompletionVisible && <GoalCompletedDialog key={completedGoalId} title={goals.find(goal => goal.id === completedGoalId)!.title} onClose={acknowledgeGoalCompletion} />}
-    {infoModal && <ResultCard result={infoModal} onClose={closeResult} />}
+    {infoModal && !inlineStoryEvent && <ResultCard result={infoModal} onClose={closeResult} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: t('location.closedTitle', { place: locationName(closingNotice) }),
       label: t('location.closingLabel'),
@@ -811,11 +851,11 @@ export default function App() {
       blocked={eventInteractionBlocked || !!sleeping || !!sleepChoice || !!gameOver}
     />}
 
-    <div className={`game-background${eventInteractionBlocked ? ' event-background-blocked' : ''}`} inert={eventInteractionBlocked} aria-hidden={eventInteractionBlocked || undefined} onClickCapture={event => { if (eventInteractionBlocked) { event.preventDefault(); event.stopPropagation() } }}>
+    <div className={`game-background${backgroundBlocked ? ' event-background-blocked' : ''}`} inert={backgroundBlocked} aria-hidden={backgroundBlocked || undefined} onClickCapture={event => { if (backgroundBlocked) { event.preventDefault(); event.stopPropagation() } }}>
     <GameHeader game={game} weatherId={weather.id} temperature={temperature} battery={inventory.phoneBattery} />
     <div className="game-content" ref={contentRef}>
 
-    {screen === 'story' && <StoryScreen episodes={story.store.episodes} />}
+    {screen === 'story' && <StoryScreen episodes={story.store.episodes} interaction={storyInteraction} onPauseChange={setStoryPlaybackPaused} />}
     {screen !== 'story' && <>
     {screen === 'location' && <LocationScreen state={{
       current, open, firstNight, game, message, currentActions, shelterInterview, choiceSeed, choiceDecisionKey,
@@ -882,13 +922,13 @@ export default function App() {
 
     {gameOver && <GameOverDialog day={game.day} onReset={reset} />}
 
-    {!gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <RainEventDialog
+    {!inlineStoryEvent && !gameOver && !closingNotice && (rainChoice || rainWaiting) && game.rain && !sleeping && !infoModal && !pendingResult && !activeEvent && !diceCheck && <RainEventDialog
       rain={game.rain} waiting={rainWaiting} elapsed={Math.floor(absoluteMinutes(game) - (game.rain.choiceAt ?? game.rain.start))}
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={rainModalRef} onChoose={choice => { recordRainChoice(choice); respondToRain(choice) }}
       onContinue={() => { recordRainChoice('continue'); continueInRain() }}
     />}
-    {!gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck}
-      onRoll={rollDice} onAccept={acceptDiceResult} onCancel={() => setDiceCheck(null)} />}
+    {!inlineStoryEvent && !gameOver && diceCheck?.choice.check && <DiceDialog diceCheck={diceCheck}
+      onRoll={rollDice} onAccept={acceptDiceResult} onCancel={cancelDiceCheck} />}
 
     {!gameOver && shelterQueue && <ShelterQueueDialog shelterQueue={shelterQueue} minute={game.minutes} />}
 
@@ -899,7 +939,7 @@ export default function App() {
 
     {sleeping && <SleepProgressDialog sleeping={sleeping} minute={game.minutes} onWake={() => finishSleep(sleeping)} />}
 
-    {!gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <EventDialog
+    {!inlineStoryEvent && !gameOver && activeEvent && !diceCheck && !sleeping && !infoModal && !pendingResult && <EventDialog
       event={activeEvent} choices={visibleEventChoices} onChoose={resolveStreetEvent} unavailableReason={checkUnavailableReason}
       orderSeed={choiceSeed} decisionKey={choiceDecisionKey} panelRef={eventModalRef}
     />}

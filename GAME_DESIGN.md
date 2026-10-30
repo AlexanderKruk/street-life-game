@@ -1,3 +1,33 @@
+Live Story tab — 30 October 2026, source only: events starting while Story is
+open use the timeline itself. Opening paragraphs and illustration reveal first;
+reference-style choices enter sequentially, then the selected answer, outcome,
+art, ending and consequences append to the same episode. D20 checks, rain
+search/cancellation and result confirmation are inline too. Controls reuse the
+existing eligibility, deterministic order and commands. Navigation stays blocked
+until the event/result is resolved; other tabs keep classic event dialogs.
+Idle Story runs world time; event decisions and explicit archive replay/example
+pause it. Rain search advances the existing shared process clock. Story restores
+as a normal saved screen; pending checks retain their choice, modifier and roll.
+Archive facts, balance, time costs, once-only rewards and History remain shared.
+This enables events/rain only; purchases, phone, sleep and other action sources
+are still separate migration work. No publication.
+
+Story paragraph boundary — 30 October 2026, source only: one narrative
+mini-block means one paragraph, separated by an authored blank line. Opening,
+result and ending paragraphs each finish before the common 500ms pause starts.
+Sentences and visual line wraps do not create extra mini-blocks or stamps.
+Archived text remains unchanged; this is Story presentation only.
+
+Shared Story reading pause — 30 October 2026, source only: a fully revealed
+mini-block (narrative, illustration, selected answer or consequences) is followed
+by one 500ms pause before the next. Cursor settling shares the text pause;
+unpunctuated text first completes its existing 100ms letter reveal. Indicators
+have no additional leading delay and retain 260ms per group. The final result
+stamp seals after the last group is fully visible, with no trailing wait when
+there is no next piece. The animation example uses the same pause. Classic
+dialogs, settled archives, reduced motion and gameplay remain unchanged.
+This supersedes earlier separate 250ms reading / 500ms indicator-delay notes.
+
 Release v352 is published — 30 October 2026. GitHub Pages run 41029108684 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41029108684) completed successfully for source a184a8cc466f91b4a54a3bb98293c58fc8d8d7e4: 32/32 Node suites passed in 90.39s, production build and deploy succeeded. This releases 50ms narrative typing with 100ms soft letter reveal and punctuation pauses, one stamp above the selected-answer/result block sealed after all consequences, running replay clock until that block completes, and unified 12px Story spacing with compact consequence rows and retained touch areas. The retained example follows the same decisions. Gameplay clocks/costs/RNG/saves/archive facts and classic result behaviour are preserved. Full successful CI was not duplicated locally. Browser/mobile/WebKit appearance remains unverified because managed preview is unavailable; no pixel-parity approval is claimed. Earlier source-only notes below are historical checkpoints now included in this release.
 
 Unified Story spacing — 30 October 2026, source only: per the user's screenshot review, recorded Story now uses one inherited --story-gap:12px for content pieces, stamp-to-copy, consequence subcontent, replay-heading spacing and spacing between episodes. Removed the stacked 28px piece paddings, 8px consequence margin and separate 12/14/22/32px margins; the fixed stamp is the visual part divider. Consequence buttons retain their 44px minimum hit areas: symmetric vertical padding and matching negative block margins remove empty button space from narrative flow, with 24px wrapped-row gaps to prevent hit areas colliding. Classic result rows keep their existing spacing. Cursor endpoints now read the shared gap and end one gap below content, matching the terminal clock slot; cubic image reveal no longer adds a second animated margin. The retained example follows the same 12px rhythm, with its dedicated clock/stamp row preserved above active choices and its excess 72px terminal reservation removed. Text/letter/indicator timing, grouped choice/result stamps, archives and all gameplay/save facts are unchanged. Results, example branches, recording (61 routes), design-system, module-boundaries, production build and diff checks passed. The existing geometry fixture was updated to remove obsolete image padding; no new CSS-source mirror tests were added. Managed preview remains stopped/unavailable from the earlier infrastructure failure; no unchanged retry or browser/iPhone pixel-parity claim. Source saved only, no publication; live v351 is unchanged.
@@ -1164,6 +1194,16 @@ Mood uses current caps, supplies use existing backpack capacity, and the shared 
 This uses the same ordinary walk/15-idle-minute/due-after-search observations as the neighbour with groceries, with the shared 45-game-minute encounter cooldown. Catalog order places it after that scene; neither is forced immediately on starting or finishing a call. As of v311, it can first appear only on displayed D0 (stored day 1) from 22:00 until midnight (exclusive), on Street before the first actual trip starts; the neighbour with groceries stops appearing at 23:00. Selecting a destination is allowed; starting any travel mode permanently closes both home encounters, including after cancellation, return or reload. A saved pending dog encounter restores at home and is discarded if departure is already established. Reset restores eligibility. Mood respects the existing cap and shared delayed result animation; History has distinct reflections for all three choices.
 
 Four approved illustrations retain the same protagonist, grey-haired neighbour, shaggy beige-grey dog and muted residential-night palette. `event-neighbour-dog-meeting`, `event-neighbour-dog-avoid`, `event-neighbour-dog-pass` and `event-neighbour-dog-greet` have on-demand 480/768/1024px variants, kept outside startup warmup. [Artwork records](docs/art/neighbour-dog-generation.json) retain selected sources and reference roles.
+
+Narrative update — 30 October 2026: all three dog outcomes carry an optional
+`closingText`, saved with their result. Story shows the action, its illustration,
+then the ending and actual Mood delta. Greeting uses the approved short crouch/lick
+moment followed by saying goodbye and feeling lighter. Classic ResultCard keeps
+its top image, followed by action text, the ending and the same consequences.
+Replay types the ending after the picture and seals the shared answer/result
+stamp only after the final consequence. EN/RU/PL are updated together; previous
+Story snapshots and History remain unchanged. Choice IDs, eligibility, artwork,
+durations and Mood changes are preserved.
 
 Displayed D1 (stored day 2) begins at midnight, two game hours after the D0 22:00 start. Neither home encounter can first appear on D1; the broader first-night period through 06:00 still applies to other opening observations. Already displayed pending choices retain their normal paused-time reload behavior.
 

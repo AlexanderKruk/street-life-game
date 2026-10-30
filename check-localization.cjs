@@ -99,6 +99,12 @@ const { eventHistoryDefinitions } = bundled('src/eventHistoryDefinitions.ts');
 const walkEditorialChanges = {"You receive a pass for 3 days of free public transport.": "You receive a free transport pass. It expires 3 days after you started the application.", "You pass lit windows and closed shops. At the next crossing, the signal changes for an empty road. Half an hour has passed. You are still outside.": "You pass familiar streets and shopfronts. Half an hour has passed. You are still outside.", "I keep looking at the lit windows. I miss having somewhere to return to.": "I keep looking at the buildings around me. I miss having somewhere to return to."};
 const walkEdited = value => typeof value === 'string' ? walkEditorialChanges[value] ?? value : Array.isArray(value) ? value.map(walkEdited) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key,item])=>[key,walkEdited(item)])) : value;
 const { journalReflection: oldReflection } = bundled('src/journal.ts');
+// Frozen legacy recognition must use the original saved prose, not newly edited copy.
+const historicalEventMessages = {
+  'first-night-dog:avoid:complete': 'You take a different path. You don’t feel up to small talk tonight, especially if he asks how you’re doing. You glance back at the dog, wondering if you’ll ever see him again.',
+  'first-night-dog:pass:complete': 'You give your neighbour a quick nod. The dog spots you and starts wagging, tugging at the lead to reach you. You carry on before he gets close.',
+  'first-night-dog:greet:complete': 'You crouch down, and the dog comes straight over. A quick sniff, then a wet tongue across your cheek. You laugh and give his ears a good scratch. “He’s missed you,” your neighbour says. You stay for a few minutes. When you get up to leave, you feel a little lighter.',
+};
 const ids = new Set();
 for (const event of STREET_EVENTS) for (const choice of event.choices) {
   assert(choice.id, 'authored choices have stable IDs');
@@ -110,7 +116,7 @@ for (const event of STREET_EVENTS) for (const choice of event.choices) {
       const summary = { costs: [], changes: capped ? [] : ['money','mood','health','phoneCondition'].filter(id => outcome[id]).map(id => ({ id, label: '⟦resource⟧', value: '⟦value⟧', amount: outcome[id], kind: outcome[id] > 0 ? 'positive' : 'negative' })) };
       const facts = { outcomeId: authored.historyId, documents, suppliesRejected: false };
       if (!(authored.randomCoin && capped)) {
-        const expected = oldReflection(event.title, outcome.message, summary);
+        const expected = oldReflection(event.title, historicalEventMessages[authored.historyId] ?? outcome.message, summary);
         if (authored.historyId === 'borrow-phone:decline:complete') expected.text = 'He needed a quick call, but I said no and carried on.';
         if (authored.historyId === 'borrow-phone-slip:catch:failure') expected.text = 'I helped him, but my phone hit the pavement. I need to be more careful with it.';
         if (authored.historyId === 'night-theft:check-bag:complete' && documents !== 'carried' && capped) expected.title = 'Checked my belongings';
@@ -884,8 +890,16 @@ const authoredPseudo=Object.fromEntries(Object.entries(authoredCatalog).map(([ke
 assert.deepEqual(validateCatalog(authoredCatalog,authoredPseudo),[]);
 const authoredView=bundled({source:authoredSource,catalogs:{events:authoredPseudo}});
 const authoredData=events=>JSON.parse(JSON.stringify(events));
-const authoredMechanics=events=>JSON.parse(JSON.stringify(events,(key,value)=>['title','text','label','message','phoneBreakMessage'].includes(key)?undefined:value));
+const authoredMechanics=events=>JSON.parse(JSON.stringify(events,(key,value)=>['title','text','label','message','closingText','phoneBreakMessage'].includes(key)?undefined:value));
 const authoredExpected=authoredData(authoredOld.STREET_EVENTS);
+const dogEndings = {
+  avoid: ['You take a different path. You don’t feel up to small talk tonight, especially if he asks how you’re doing.', 'You glance back at the dog, wondering if you’ll ever see him again.'],
+  pass: ['You give your neighbour a quick nod. The dog spots you and starts wagging, tugging at the lead to reach you.', 'You carry on before he gets close.'],
+  greet: ['You crouch down, and the dog rushes over. You laugh as he licks your cheek.', 'You say goodbye. You feel a little lighter.'],
+};
+for (const choice of authoredExpected.find(event => event.id === 'first-night-dog').choices) {
+  [choice.outcome.message, choice.outcome.closingText] = dogEndings[choice.id];
+}
 authoredExpected.find(event=>event.id==='quiet-night').choices[0].outcome.message='You get up after a peaceful rest.';
 authoredExpected.find(event=>event.id==='spare-change').choices.find(choice=>choice.id==='decline').outcome.message='You say you cannot help. They nod and turn to ask someone else.';
 const revisedPatrols = {

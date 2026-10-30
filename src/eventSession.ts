@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { STREET_EVENTS, prepareStreetEvent, type StreetEvent } from './events'
-import { eventCheckModifier } from './eventChecks'
+import { eventCheckModifier, clearPendingEventCheck } from './eventChecks'
 import { fareInspectionDice } from './travelInspection'
 import type { GameState } from './game'
 import type { EventDiceState, FirstNightEvents, SleepState, Trip } from './stateTypes'
@@ -20,14 +20,20 @@ export function useEventSession(initial: InitialEvents, game: GameState) {
   const [diceCheck, setDiceCheck] = useState<EventDiceState | null>(() => {
     if (initial.trip?.inspection?.status === 'rolling') return fareInspectionDice(initial.trip, game)
     const roll = initial.encounters.pendingRoll
-    const choice = activeEvent && ['borrow-phone-slip', 'park-company'].includes(activeEvent.id) ? activeEvent.choices[0] : undefined
-    return choice?.check && roll ? { choice, roll, modifier: eventCheckModifier(game, choice), resolved: false } : null
+    const choice = activeEvent?.choices.find(choice => choice.id === initial.encounters.pendingChoiceId && choice.check)
+      ?? (activeEvent && ['borrow-phone-slip', 'park-company'].includes(activeEvent.id) && roll ? activeEvent.choices[0] : undefined)
+    return choice?.check ? { choice, roll: roll ?? null, modifier: initial.encounters.pendingModifier ?? eventCheckModifier(game, choice), resolved: false } : null
   })
   const acceptedDice = useRef<EventDiceState | null>(null)
   function claimDice(dice: EventDiceState) {
     if (acceptedDice.current === dice) return false
     acceptedDice.current = dice
     return true
+  }
+  function cancelDiceCheck() {
+    if (diceCheck?.fareDodgeInTransit) return
+    setDiceCheck(null)
+    setEncounters(clearPendingEventCheck)
   }
   function resetEventSession() {
     setFirstNightEvents({ seen: [], lastAt: null, pendingId: null })
@@ -39,6 +45,6 @@ export function useEventSession(initial: InitialEvents, game: GameState) {
     acceptedDice.current = null
   }
   return { firstNightEvents, setFirstNightEvents, encounters, setEncounters, leftHome, setLeftHome,
-    activeEvent, setActiveEvent, diceCheck, setDiceCheck, openingSearchObservation, ambientEventClock, deferredClock, claimDice, resetEventSession }
+    activeEvent, setActiveEvent, diceCheck, setDiceCheck, cancelDiceCheck, openingSearchObservation, ambientEventClock, deferredClock, claimDice, resetEventSession }
 }
 export type EventSession = ReturnType<typeof useEventSession>

@@ -37,6 +37,8 @@ export type EventContext = {
 export type EventOutcome = {
   historyId?: EventHistoryOutcomeId
   message: string
+  /** Scene ending: after the illustration in Story, last paragraph in classic results. */
+  closingText?: string
   /** Complete alternate copy when this outcome reduces the phone to zero. */
   phoneBreakMessage?: string
   identityCheck?: boolean
@@ -234,9 +236,9 @@ export const STREET_EVENTS: StreetEvent[] = [
     { id:'explain', icon:'chat', label:t('event.first-night-door.choice.explain'), outcome:{ historyId:'first-night-door:explain:complete', illustration:'/street-life-game/assets/event-neighbour-supplies.webp', minutes:5, mood:3, food:1, water:1, message:t('event.outcome.first-night-door.explain.complete') } },
   ]},
   { id:'first-night-dog', illustration:'/street-life-game/assets/event-neighbour-dog-meeting.webp', trigger:'walk', icon:'🐕', title:t('event.first-night-dog.title'), text:t('event.first-night-dog.text'), weight:1, eligible:c=>!!c.firstNight && !!c.nearHome && c.locationId==='street' && c.minutes!==undefined && c.minutes>=1320 && c.minutes<1440, choices:[
-    { id:'avoid', icon:'walk', label:t('event.first-night-dog.choice.avoid'), outcome:{ historyId:'first-night-dog:avoid:complete', illustration:'/street-life-game/assets/event-neighbour-dog-avoid.webp', mood:-2, message:t('event.outcome.first-night-dog.avoid.complete') } },
-    { id:'pass', icon:'walk', label:t('event.first-night-dog.choice.pass'), outcome:{ historyId:'first-night-dog:pass:complete', illustration:'/street-life-game/assets/event-neighbour-dog-pass.webp', mood:-1, message:t('event.outcome.first-night-dog.pass.complete') } },
-    { id:'greet', icon:'chat', label:t('event.first-night-dog.choice.greet'), outcome:{ historyId:'first-night-dog:greet:complete', illustration:'/street-life-game/assets/event-neighbour-dog-greet.webp', minutes:5, mood:3, message:t('event.outcome.first-night-dog.greet.complete') } },
+    { id:'avoid', icon:'walk', label:t('event.first-night-dog.choice.avoid'), outcome:{ historyId:'first-night-dog:avoid:complete', illustration:'/street-life-game/assets/event-neighbour-dog-avoid.webp', mood:-2, message:t('event.outcome.first-night-dog.avoid.complete'), closingText:t('event.outcome.first-night-dog.avoid.closing') } },
+    { id:'pass', icon:'walk', label:t('event.first-night-dog.choice.pass'), outcome:{ historyId:'first-night-dog:pass:complete', illustration:'/street-life-game/assets/event-neighbour-dog-pass.webp', mood:-1, message:t('event.outcome.first-night-dog.pass.complete'), closingText:t('event.outcome.first-night-dog.pass.closing') } },
+    { id:'greet', icon:'chat', label:t('event.first-night-dog.choice.greet'), outcome:{ historyId:'first-night-dog:greet:complete', illustration:'/street-life-game/assets/event-neighbour-dog-greet.webp', minutes:5, mood:3, message:t('event.outcome.first-night-dog.greet.complete'), closingText:t('event.outcome.first-night-dog.greet.closing') } },
   ]},
   { id:'first-night-bench', illustration:'/street-life-game/assets/event-first-night-bench.webp', trigger:'bench', icon:'🪑', title:t('event.first-night-bench.title'), text:t('event.first-night-bench.text'), weight:1, eligible:c=>!!c.firstNight && c.locationId==='street', choices:[
     { id:'ask', icon:'chat', label:t('event.first-night-bench.choice.ask'), undiscoveredLocationRequired:'shelter', outcome:{ historyId:'first-night-bench:ask:complete', illustration:'/street-life-game/assets/event-bench-conversation.webp', minutes:10, mood:1, discoverLocation:'shelter', message:t('event.outcome.first-night-bench.ask.complete') } },

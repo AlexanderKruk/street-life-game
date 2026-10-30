@@ -62,6 +62,12 @@ try {
     assert(!doc.querySelector('.pv-text .pv-letter'), 'skip reveals the whole paragraph without waiting for opacity');
     advance(300);
     assert(!doc.querySelector('.pv-done'), 'the full stamp waits through image appearance too');
+    for (let guard = 0; guard < 120 && doc.querySelector('.pv-picture').style.opacity !== '1'; guard++) advance(16);
+    assert.equal(doc.querySelector('.pv-picture').style.opacity, '1', 'example fully reveals its image');
+    advance(480);
+    assert(!doc.querySelector('.pv-choice-group'), 'example holds the complete image before presenting choices');
+    advance(32);
+    assert(doc.querySelector('.pv-choice-group'), 'example uses the same single 500ms mini-block pause');
     advance(8000);
     assert(doc.querySelector('.pv-done'));
     assert(doc.querySelector('.pv-stamp').textContent.includes(' · By the station · D0'), 'the completed part gains place and day together');

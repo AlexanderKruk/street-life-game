@@ -45,6 +45,15 @@ try {
     assert(episode.result.text.length > 0);
     assert.equal(episode.endedAt.minute, env.read(env.stateKey).minutes);
     assert.deepEqual(loadStory(store), store, 'current archive round trips');
+    if (event.id === 'first-night-dog') {
+      assert.equal(episode.result.closingText, choice.outcome.closingText, 'the authored ending is saved independently of the image moment');
+      assert.deepEqual([...document.querySelectorAll('.result-card-content .result-narrative')].map(node => node.textContent), [episode.result.text, episode.result.closingText], 'classic result keeps both paragraphs below its top image');
+      const beforeReload = env.read(env.stateKey);
+      env.cleanup(); env.render(env.React.createElement(env.React.StrictMode, null, env.React.createElement(env.App)));
+      assert.deepEqual(save(), store, 'the split result survives reload without rewriting its saved language');
+      assert(document.querySelector('.result-modal').textContent.includes(episode.result.closingText));
+      assert.deepEqual(env.read(env.stateKey), beforeReload, 'restoring the ending cannot apply the reward again');
+    }
     if (choice.check) assert.equal(episode.scenes[0].roll.value, 20);
     env.ok();
     assert.equal(save().episodes[0].status, 'complete');
@@ -88,16 +97,21 @@ try {
     assert.match(episode.querySelector('.story-media img').style.filter, /brightness\(0\./, 'image begins in darkness');
     assert.equal(openingStamp.dataset.storyStamp, 'pending', 'part metadata waits until the image is fully shown');
     animate(1400);
+    assert.equal(episode.querySelector('.story-media').style.gridTemplateRows, '1fr', 'image is complete before the following mini-block');
+    assert(episode.querySelector('.story-choice').hidden, 'the shared image reading pause still holds back the choice');
+    animate(500);
     assert.equal(openingStamp.dataset.storyStamp, 'sealed');
     assert.equal(openingStamp.getAttribute('aria-hidden'), 'false');
     assert(openingStamp.textContent.includes(archived.episodes[0].scenes[0].at.locationName));
+    env.advance(5000);
+    assert.deepEqual(env.read(env.stateKey), gameBeforeReplay, 'replay does not apply time/costs');
     animate(60000);
     assert(!episode.querySelector('.is-replaying'), 'native replay finishes');
     assert.equal(episode.querySelectorAll('[data-story-stamp="pending"]').length, 0, 'completed parts retain their full immutable stamps');
     window.requestAnimationFrame = oldRAF; window.cancelAnimationFrame = oldCancel;
     env.advance(5000);
     assert.deepEqual(save(), archived, 'replay does not modify archive');
-    assert.deepEqual(env.read(env.stateKey), gameBeforeReplay, 'replay does not apply time/costs');
+    assert(env.read(env.stateKey).minutes > gameBeforeReplay.minutes, 'the live Story tab resumes ordinary world time after replay');
   }
   // A follow-up and restored authored D20 stay inside the original block.
   setup('borrow-phone');

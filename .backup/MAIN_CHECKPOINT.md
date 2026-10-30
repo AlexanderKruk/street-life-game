@@ -1,3 +1,25 @@
+# Release v353 recovery — 30 October 2026
+
+Publication authorised; full GitHub Actions and Pages deployment are pending.
+Verified local release source: `3ba632fe0d6f4b6f2f2009a06c273d6279e0228f`.
+Verified source tree: `0c4766f5ed941338be59a12c6507ba4ed36640f5`.
+API source snapshot: `2fa2528e8132ace945026f098c72177198728e56` on
+`backup/story-v353-2026-10-30`.
+The API source tree exactly matches the local committed tree before backups.
+
+Recovery bundle: `.backup/story-v353-2026-10-30.bundle`.
+Prerequisite remote base: `b9f8bbd6cbab6a2c072ae851c79c193da694e331`.
+After fetching that base, restore the original local history with:
+
+    git bundle verify .backup/story-v353-2026-10-30.bundle
+    git fetch .backup/story-v353-2026-10-30.bundle HEAD:refs/heads/recovered/story-v353
+
+This retains dog narrative endings, shared 500ms mini-block/paragraph pacing,
+playable Story events and their original local commits. Release metadata and
+source are unchanged by adding these recovery files.
+
+---
+
 Release v352 is published — 30 October 2026. GitHub Pages run 41029108684 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41029108684) completed successfully for source a184a8cc466f91b4a54a3bb98293c58fc8d8d7e4: 32/32 Node suites passed in 90.39s, production build and deploy succeeded. This releases 50ms narrative typing with 100ms soft letter reveal and punctuation pauses, one stamp above the selected-answer/result block sealed after all consequences, running replay clock until that block completes, and unified 12px Story spacing with compact consequence rows and retained touch areas. The retained example follows the same decisions. Gameplay clocks/costs/RNG/saves/archive facts and classic result behaviour are preserved. Full successful CI was not duplicated locally. Browser/mobile/WebKit appearance remains unverified because managed preview is unavailable; no pixel-parity approval is claimed. Earlier source-only notes below are historical checkpoints now included in this release.
 
 # Unified Story spacing — 30 October 2026

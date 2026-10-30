@@ -82,9 +82,11 @@ export function loadFirstNightEvents(storage: SaveReader, key = FIRST_NIGHT_EVEN
     const pendingId = typeof saved?.pendingId === 'string' && ids.has(saved.pendingId)
       && morningPendingValid && !(['first-night-door', 'first-night-dog'].includes(saved.pendingId) && loadLeftHome(storage)) ? saved.pendingId : null
     const seen = Array.isArray(saved?.seen) ? saved.seen.filter((id: unknown): id is string => typeof id === 'string' && ids.has(id)) : []
-    const pendingRoll = ['borrow-phone-slip', 'park-company'].includes(pendingId ?? '') && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
+    const pendingChoice = STREET_EVENTS.find(event => event.id === pendingId)?.choices.find(choice => choice.id === saved?.pendingChoiceId && choice.check)
+    const pendingModifier = pendingChoice && Number.isFinite(saved?.pendingModifier) && Math.abs(saved.pendingModifier) <= 100 ? saved.pendingModifier : undefined
+    const pendingRoll = (pendingChoice || ['borrow-phone-slip', 'park-company'].includes(pendingId ?? '')) && Number.isInteger(saved?.pendingRoll) && saved.pendingRoll >= 1 && saved.pendingRoll <= 20 ? saved.pendingRoll : null
     const deferred = key === ENCOUNTERS_KEY && !pendingId && state ? loadDeferredEncounter(saved?.deferred, state.locationId) : undefined
-    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingRoll ? { pendingRoll } : {}), ...(deferred ? { deferred } : {}) }
+    return { seen: [...new Set<string>([...seen, ...(pendingId ? [pendingId] : [])])], lastAt: Number.isFinite(saved?.lastAt) && saved.lastAt >= 0 ? saved.lastAt : null, pendingId, ...(pendingChoice ? { pendingChoiceId: pendingChoice.id, ...(pendingModifier !== undefined ? { pendingModifier } : {}) } : {}), ...(pendingRoll ? { pendingRoll } : {}), ...(deferred ? { deferred } : {}) }
   } catch { return { seen: [], lastAt: null, pendingId: null } }
 }
 
@@ -188,7 +190,7 @@ export function loadGameSession(source: SaveReader) {
     if (trip) return 'travel'
     const saved = reader.getItem(SAVE_KEYS.screen)
     if (saved === 'journal') return 'phone'
-    return saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'phone' ? saved : 'location'
+    return saved === 'story' || saved === 'map' || saved === 'inventory' || saved === 'location' || saved === 'status' || saved === 'phone' ? saved : 'location'
   })()
   const answeredQuestions = (() => {
     try { const saved = JSON.parse(reader.getItem(SAVE_KEYS.answers) ?? '[]'); return Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : [] } catch { return [] }

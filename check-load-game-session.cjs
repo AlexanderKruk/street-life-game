@@ -72,6 +72,11 @@ assert.equal(damaged.inventory.water, 2); assert.equal(damaged.inventory.phoneBa
 assert.deepEqual(damaged.inventory.foodPortions, inventory.foodPortions);
 assert.deepEqual(damaged.effects, [{ id: 'cold', expiresAt: 99999 }]); assert.equal(damaged.sleeping, null);
 assert.equal(restore({ 'street-life-screen': 'journal' }).screen, 'phone');
+assert.equal(restore({ 'street-life-screen': 'story' }).screen, 'story', 'live Story restores as a real game screen');
+const pendingCheck = restore({ 'street-life-encounters-v1': JSON.stringify({ pendingId: 'park-company', pendingChoiceId: 'chat', pendingModifier: 2, pendingRoll: 12 }) }).encounters;
+assert.equal(pendingCheck.pendingRoll, 12);
+assert.equal(pendingCheck.pendingChoiceId, 'chat'); assert.equal(pendingCheck.pendingModifier, 2);
+assert.equal(restore({ 'street-life-encounters-v1': JSON.stringify({ pendingId: 'park-company', pendingChoiceId: 'missing', pendingModifier: 'bad' }) }).encounters.pendingChoiceId, undefined);
 assert.equal(restore({ 'street-life-mobile-service-until': 'NaN' }).mobileServiceUntil, 0);
 assert.equal(restore({ 'street-life-mobile-renewed-day': '-1' }).mobileRenewedDay, 0);
 assert.equal(restore({ 'street-life-situation-v1': '{"housing":"Apartment"}' }).life.housing, 'Apartment');

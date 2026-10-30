@@ -58,6 +58,10 @@ An opening call can carry more context than a routine service button.
   summary show actual money, battery and stat changes. Keep numbers in the prose
   only when they explain a rule or a consequence absent from the summary
   (for example, a booking extension or treatment duration).
+- In illustrated Story results, keep the text before the picture in that pictured
+  moment. An optional `closingText` follows the image to finish the scene before
+  its consequences. Classic results keep the image above both text paragraphs.
+  The dog encounter is the first authored example; do not pad other scenes.
 - Schedules use 24-hour time and an en dash: `18:00–08:00`. Preserve the existing
   context-specific duration formatting and shared formatters; this writing pass
   does not change timers, rounding, currency calculations or stat names.

@@ -546,6 +546,39 @@ for (const [choice, asset, cost] of [['Give 1 zł', 'give', 1], ['Sorry, I can�
   })
 }
 
+for (const width of [390, 1280]) {
+  test(`live Story encounter, inline result and reload at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
+    const seed = entries()
+    const game = { ...JSON.parse(seed[keys.game]), locationId: 'street', day: 3, minutes: 600 }
+    const encounters = { ...JSON.parse(seed[keys.encounters]), pendingId: 'spare-change' }
+    await openGame(page, { ...seed, 'street-life-screen': 'story', [keys.game]: JSON.stringify(game), [keys.encounters]: JSON.stringify(encounters) })
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await advance(page, 20000)
+    await expect(page.locator('.game-background')).not.toHaveAttribute('inert')
+    await expect(page.locator('.bottom-nav')).toHaveAttribute('inert', '')
+    await expect(page.locator('[data-order-id="event:spare-change:give"]')).toBeEnabled()
+    expect(await page.locator('.game-content').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(false)
+    await page.screenshot({ path: `test-results/story-live-${width}-choices.png` })
+    await page.locator('[data-order-id="event:spare-change:give"]').click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await advance(page, 30000)
+    await expect(page.locator('[data-order-id="story:acknowledge"]')).toBeEnabled()
+    const result = await read(page, keys.game)
+    expect(result.money).toBe(game.money - 2)
+    await page.reload()
+    await advance(page, 30000)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(await read(page, keys.game)).toEqual(result)
+    await page.locator('[data-order-id="story:acknowledge"]').scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `test-results/story-live-${width}-result.png` })
+    expect(await page.locator('.game-content').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(false)
+    await page.locator('[data-order-id="story:acknowledge"]').click()
+    await expect(page.locator('.bottom-nav')).not.toHaveAttribute('inert')
+    expect((await read(page, 'street-life-story-v1')).episodes.at(-1).status).toBe('complete')
+  })
+}
+
 for (const [choice, asset, cost] of [['Give 2 zł', 'give', 2], ['Sorry, I can’t', 'decline', 0], ['Keep my distance', 'avoid', 0]]) {
   test(`street spare-change artwork and restored cost for ${asset}`, async ({ page }) => {
     const seed = entries()

@@ -1,3 +1,44 @@
+Live Story tab — 30 October 2026, source only: check-story-live.cjs is added
+as the 33rd Node release suite. All 61 authored choices compare exact game,
+inventory, History, archive and visible consequence fields with classic results.
+It covers a new event actually starting on idle Story, disabled explanations,
+world pause/resume, deterministic ordering, all-check restoration before/after
+roll, cancellation, StrictMode/result acknowledgement, continuations, rain and
+incremental non-reduced animation without repeating the opening. Updated the
+archive replay check to pause during replay and resume world time afterward.
+Targeted live/recording/example/results, event-travel controllers, restoration,
+autosave, localisation, language, design-system/module boundaries and build pass.
+Two focused Chromium tests in smoke.spec.js cover choice → result → reload →
+acknowledgement at 390/1280px, with no modal or horizontal overflow. Screenshots
+were inspected; no baselines were updated. The complete Node/browser suites,
+WebKit and physical iPhone were not run. No publication.
+
+Story paragraphs — 30 October 2026, source only: the existing mini-block
+timing case now uses two paragraphs in each opening, result and closing field.
+It verifies LF/CRLF/space-only blank lines, one 500ms pause per paragraph,
+unchanged opening/result stamp count and immutable original text. Results,
+recording (61 routes), production build and diff checks passed. No browser or
+full-suite run, no publication.
+
+Shared Story reading pause — 30 October 2026, source only: check-results now
+times text → image → selected answer → outcome → image → ending → effects.
+Every boundary waits one 500ms pause after complete appearance, including the
+last-letter fade when there is no final punctuation. It verifies zero leading
+indicator delay, the full final 260ms reveal before stamping, the running replay
+clock and no unused pause after terminal effects. Existing classic/reduced-motion
+and archive assertions remain. check-story verifies the same image-to-choice
+pause in all three embedded branches; recording expectations include the new
+opening-image hold. Results, Story, recording (61 routes), production build and
+diff checks passed. No fresh browser/mobile/full-suite run or publication.
+
+Dog result structure — 30 October 2026: check-results covers action → image →
+closing paragraph → Mood, progressive ending reveal, the delayed single result
+stamp and archive immutability. check-story-recording covers the three real dog
+branches, both classic paragraphs, persistence and StrictMode/reload without
+repeating rewards. Localisation/language, events, results, recording and production
+build passed. Browser preview failed (`vite: not found`); no fresh browser/iPhone
+or full-suite run is claimed. No publication.
+
 Release v352 is published — 30 October 2026. GitHub Pages run 41029108684 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41029108684) completed successfully for source a184a8cc466f91b4a54a3bb98293c58fc8d8d7e4: 32/32 Node suites passed in 90.39s, production build and deploy succeeded. This releases 50ms narrative typing with 100ms soft letter reveal and punctuation pauses, one stamp above the selected-answer/result block sealed after all consequences, running replay clock until that block completes, and unified 12px Story spacing with compact consequence rows and retained touch areas. The retained example follows the same decisions. Gameplay clocks/costs/RNG/saves/archive facts and classic result behaviour are preserved. Full successful CI was not duplicated locally. Browser/mobile/WebKit appearance remains unverified because managed preview is unavailable; no pixel-parity approval is claimed. Earlier source-only notes below are historical checkpoints now included in this release.
 
 Unified Story spacing — 30 October 2026, source only: per the user's screenshot review, recorded Story now uses one inherited --story-gap:12px for content pieces, stamp-to-copy, consequence subcontent, replay-heading spacing and spacing between episodes. Removed the stacked 28px piece paddings, 8px consequence margin and separate 12/14/22/32px margins; the fixed stamp is the visual part divider. Consequence buttons retain their 44px minimum hit areas: symmetric vertical padding and matching negative block margins remove empty button space from narrative flow, with 24px wrapped-row gaps to prevent hit areas colliding. Classic result rows keep their existing spacing. Cursor endpoints now read the shared gap and end one gap below content, matching the terminal clock slot; cubic image reveal no longer adds a second animated margin. The retained example follows the same 12px rhythm, with its dedicated clock/stamp row preserved above active choices and its excess 72px terminal reservation removed. Text/letter/indicator timing, grouped choice/result stamps, archives and all gameplay/save facts are unchanged. Results, example branches, recording (61 routes), design-system, module-boundaries, production build and diff checks passed. The existing geometry fixture was updated to remove obsolete image padding; no new CSS-source mirror tests were added. Managed preview remains stopped/unavailable from the earlier infrastructure failure; no unchanged retry or browser/iPhone pixel-parity claim. Source saved only, no publication; live v351 is unchanged.

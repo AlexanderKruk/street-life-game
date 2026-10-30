@@ -256,11 +256,11 @@ try {
       assert(document.querySelector('.story-result-effects .is-animated.is-ready'), 'replay starts sequential appearance only at the effects step');
       assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'pending', 'a result stamp waits for the consequences to finish');
       assert(document.querySelector('.story-track.is-running'), 'clock and breathing continue while consequences appear');
-      assert.equal(energy().style.getPropertyValue('--result-indicator-delay'), '500ms', 'the first group waits half a second after the preceding image/narrative');
+      assert.equal(energy().style.getPropertyValue('--result-indicator-delay'), '0ms', 'the shared preceding piece pause replaces the indicator-only delay');
       assert.equal(document.querySelector('.story-result-effects .result-indicators').style.getPropertyValue('--result-indicator-duration'), '260ms');
       const entered = clock;
       const count = document.querySelectorAll('.story-result-effects .result-indicator').length;
-      const fullyVisibleAt = 500 + (count - 1) * 260 + 260;
+      const fullyVisibleAt = (count - 1) * 260 + 260;
       while (clock - entered < fullyVisibleAt - 64) { clock += 32; frame(clock); }
       assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'pending', 'stamp cannot precede the last group becoming fully visible');
       while (clock - entered < fullyVisibleAt + 128) { clock += 32; frame(clock); }
@@ -335,6 +335,90 @@ try {
     assert.equal(createStoryTyping('23:12').duration, 250, 'clock colon does not pause');
     assert.equal(createStoryTyping('2–4').duration, 150, 'numeric range does not pause');
     assert.equal(createStoryTyping('из-за').duration, 250, 'hyphen inside a word does not pause');
+    assert.equal(createStoryTyping('A').settledAt, 150, 'the shared block pause starts after the last 100ms letter fade');
+    assert.equal(createStoryTyping('A.').settledAt, createStoryTyping('A.').duration, 'final punctuation already covers the letter fade without another delay');
+  }
+  // Every mini-block owns one reading pause, including before the effects.
+  {
+    const episode = { id: 96, source: 'encounter', sourceId: 'rhythm', status: 'complete', scenes: [{ eventId: 'rhythm', title: 'Scene', text: 'A\n\nB', illustration: 'scene.webp', at,
+      choice: { id: 'choose', label: 'Choose', at } }], result: { ...fixtures[3], title: 'Result', text: 'C\r\n \r\nD', illustration: 'result.webp', closingText: 'E\n\n\nF' }, endedAt: at };
+    const saved = JSON.stringify(episode);
+    render(React.createElement(StoryScreen, { episodes: [episode] }));
+    assert.deepEqual([...document.querySelectorAll('.story-text p')].map(node => node.textContent), ['A', 'B', 'C', 'D', 'E', 'F'], 'each authored paragraph is one mini-block in the opening, outcome and ending');
+    assert.equal(document.querySelectorAll('.story-part-stamp').length, 2, 'extra paragraphs keep the original opening/result stamps');
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    let clock = 0;
+    const step = () => { clock += 16; frame(clock); };
+    const pieces = [...document.querySelectorAll('.story-piece')];
+    const waitFor = predicate => { const deadline = clock + 5000; while (!predicate() && clock < deadline) step(); assert(predicate(), 'replay advances to the next mini-block'); };
+    const pauseTo = (piece, label, letterFade = 0) => {
+      const completed = clock;
+      while (clock - completed < letterFade + 480) { step(); assert(piece.hidden, `${label} waits after the preceding mini-block`); }
+      waitFor(() => !piece.hidden);
+      assert(clock - completed >= letterFade + 500 && clock - completed <= letterFade + 532, `${label} follows exactly one 500ms pause after full visibility (within frame rounding)`);
+    };
+    waitFor(() => pieces[0].querySelector('button')?.textContent === 'A');
+    pauseTo(pieces[1], 'second opening paragraph', 100);
+    waitFor(() => pieces[1].querySelector('button')?.textContent === 'B');
+    pauseTo(pieces[2], 'opening image', 100);
+    waitFor(() => pieces[2].querySelector('.story-media').style.gridTemplateRows === '1fr');
+    pauseTo(pieces[3], 'selected answer');
+    const selectedAt = clock;
+    while (clock - selectedAt < 1120) { step(); assert(pieces[4].hidden, 'selected answer finishes its 650ms entrance and shared pause before outcome text'); }
+    waitFor(() => !pieces[4].hidden);
+    assert(clock - selectedAt >= 1150 && clock - selectedAt <= 1184);
+    waitFor(() => pieces[4].querySelector('button')?.textContent === 'C');
+    pauseTo(pieces[5], 'second result paragraph', 100);
+    waitFor(() => pieces[5].querySelector('button')?.textContent === 'D');
+    pauseTo(pieces[6], 'result image', 100);
+    waitFor(() => pieces[6].querySelector('.story-media').style.gridTemplateRows === '1fr');
+    pauseTo(pieces[7], 'closing text');
+    waitFor(() => pieces[7].querySelector('button')?.textContent === 'E');
+    pauseTo(pieces[8], 'second closing paragraph', 100);
+    waitFor(() => pieces[8].querySelector('button')?.textContent === 'F');
+    pauseTo(pieces[9], 'consequences', 100);
+    assert.equal(pieces[9].querySelector('.result-indicator').style.getPropertyValue('--result-indicator-delay'), '0ms', 'no second 500ms delay is added to effects');
+    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending');
+    const effectsAt = clock;
+    while (clock - effectsAt < 240) step();
+    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending', 'stamp waits for the full 260ms appearance');
+    waitFor(() => document.querySelector('.story-result-stamp').dataset.storyStamp === 'sealed');
+    assert(clock - effectsAt < 340, 'a terminal effects block adds no unnecessary trailing reading pause');
+    assert.equal(JSON.stringify(episode), saved, 'paragraph rendering preserves archived text and stamps');
+    cleanup();
+  }
+  // A split scene finishes after its image, closing paragraph and final consequence.
+  {
+    const dog = bundled('src/events.ts').STREET_EVENTS.find(event => event.id === 'first-night-dog');
+    const greet = dog.choices.find(choice => choice.id === 'greet');
+    const result = { title: dog.title, text: greet.outcome.message, closingText: greet.outcome.closingText, illustration: greet.outcome.illustration,
+      ...summarizeResult(before, { ...before, game: { ...before.game, mood: before.game.mood + 3 } }) };
+    const episode = { id: 98, source: 'encounter', sourceId: dog.id, status: 'complete', scenes: [{ eventId: dog.id, title: dog.title, text: 'You see a familiar dog.', at,
+      choice: { id: greet.id, label: greet.label, at } }], result, endedAt: { ...at, minute: 605 } };
+    const saved = JSON.stringify(episode);
+    render(React.createElement(StoryScreen, { episodes: [episode] }));
+    const pieces = [...document.querySelectorAll('.story-piece')];
+    assert.deepEqual(pieces.map(node => node.classList.contains('story-image') ? 'image' : node.classList.contains('story-stats') ? 'stats' : node.querySelector('p').textContent), ['You see a familiar dog.', `Your choice: ${greet.label}`, result.text, 'image', result.closingText, 'stats']);
+    assert.equal(document.querySelectorAll('.story-result-stamp').length, 1, 'the closing paragraph does not create a new stamped block');
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    let clock = 0;
+    const step = () => { clock += 32; frame(clock); };
+    const closing = () => document.querySelectorAll('.story-text')[2];
+    while ((!closing() || closing().hidden) && clock < 30000) step();
+    assert(closing() && !closing().hidden, 'replay reaches the closing paragraph after revealing the image');
+    assert.equal(document.querySelector('.story-media').style.gridTemplateRows, '1fr');
+    step();
+    assert(closing().textContent.length < result.closingText.length, 'the ending uses the normal progressive text reveal');
+    assert(!document.querySelector('.story-result-effects'), 'Mood waits for the ending');
+    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending');
+    while (!document.querySelector('.story-result-effects') && clock < 40000) step();
+    assert(document.querySelector('.story-result-effects'), 'consequences follow the fully shown ending');
+    assert.equal(closing().textContent, result.closingText);
+    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending', 'stamp still waits for the consequence animation');
+    for (let end = clock + 1400; clock < end;) step();
+    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'sealed');
+    assert.equal(JSON.stringify(episode), saved, 'replaying split prose preserves old archive facts');
+    cleanup();
   }
   // A deterministic layout catches cursor jumps and clock resets, beyond settled DOM checks.
   const geometry = Object.getOwnPropertyDescriptors(window.HTMLElement.prototype);
@@ -377,8 +461,8 @@ try {
     assert.equal(resultStamp.dataset.storyStamp, 'pending');
     assert.equal(document.querySelector('.story-choice .story-reveal').textContent, 'Your choice: Wait here', 'selected narrative enters whole');
     assert(document.querySelector('.story-choice-enter'));
-    for (let i = 0; i < 25; i++) step();
-    assert.notEqual(live(), choiceClock, 'clock continues ticking during selected-answer appearance');
+    for (let i = 0; i < 65; i++) step();
+    assert.notEqual(live(), choiceClock, 'clock continues ticking during selected-answer appearance and its reading pause');
     assert.equal(resultStamp.dataset.storyStamp, 'pending', 'answer alone cannot seal the result');
     while (document.querySelector('.story-part-body').hidden && clock < 6000) step();
     const textY = y(); step();
