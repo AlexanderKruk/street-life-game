@@ -1,3 +1,11 @@
+# Unified Story spacing — 30 October 2026
+
+Verified local checkpoint: `dea6e0ddef7372795e228a7415059c976928c47a`.
+Remote parent: `20b05dd4a55b9464cffa8466ab815970dd19348b`.
+Verified recovery bundle: `.backup/story-spacing-2026-10-30.bundle`, prerequisite `fd6ef4ebb078f0c6acd87075e116108fdc661510`. Import with `git fetch <bundle> HEAD` to restore the original local source history. The API save copies only four tested changed source/test files over current main and updates current remote docs, preserving the published App/version and unrelated remote work.
+
+Unified Story spacing — 30 October 2026, source only: per the user's screenshot review, recorded Story now uses one inherited --story-gap:12px for content pieces, stamp-to-copy, consequence subcontent, replay-heading spacing and spacing between episodes. Removed the stacked 28px piece paddings, 8px consequence margin and separate 12/14/22/32px margins; the fixed stamp is the visual part divider. Consequence buttons retain their 44px minimum hit areas: symmetric vertical padding and matching negative block margins remove empty button space from narrative flow, with 24px wrapped-row gaps to prevent hit areas colliding. Classic result rows keep their existing spacing. Cursor endpoints now read the shared gap and end one gap below content, matching the terminal clock slot; cubic image reveal no longer adds a second animated margin. The retained example follows the same 12px rhythm, with its dedicated clock/stamp row preserved above active choices and its excess 72px terminal reservation removed. Text/letter/indicator timing, grouped choice/result stamps, archives and all gameplay/save facts are unchanged. Results, example branches, recording (61 routes), design-system, module-boundaries, production build and diff checks passed. The existing geometry fixture was updated to remove obsolete image padding; no new CSS-source mirror tests were added. Managed preview remains stopped/unavailable from the earlier infrastructure failure; no unchanged retry or browser/iPhone pixel-parity claim. Source saved only, no publication; live v351 is unchanged.
+
 # Joint selected-answer/result stamp — 30 October 2026
 
 Verified local checkpoint: `35427e39934c4a0fad5a7dc11849e9655d3f59dd`.

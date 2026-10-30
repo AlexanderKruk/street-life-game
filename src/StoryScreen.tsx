@@ -71,6 +71,7 @@ function Episode({ episode }: { episode: StoryEpisode }) {
     let skipped = false, instant = false
     const revealText = () => { skipped = true }
     const element = track.current
+    const gap = element ? parseFloat(window.getComputedStyle(element).getPropertyValue('--story-gap')) || 12 : 12
     element?.addEventListener('click', revealText)
     const tick = (now: number) => {
       const delta = last === null ? 0 : Math.min(80, now - last); last = now; elapsed += delta
@@ -111,9 +112,9 @@ function Episode({ episode }: { episode: StoryEpisode }) {
           // Update image geometry before measuring the line endpoint, just as reveal/layout do
           // in the reference. React commits the same values below on this frame.
           const media = node?.querySelector<HTMLElement>('.story-media')
-          if (media) { media.style.gridTemplateRows = `${ease}fr`; media.style.marginTop = `${12 * ease}px` }
+          if (media) { media.style.gridTemplateRows = `${ease}fr` }
         }
-        const end = node ? Math.max(from, node.offsetTop + node.offsetHeight - (current.kind === 'image' ? 16 : 0)) : from
+        const end = node ? Math.max(from, node.offsetTop + node.offsetHeight + gap) : from
         y = from + (end - from) * ease
         if (progress === 1) { index++; phase = 'typing'; elapsed = 0; progress = 0; skipped = false; instant = false }
       }
@@ -142,9 +143,9 @@ function Episode({ episode }: { episode: StoryEpisode }) {
           const visibleText = current ? Array.from(piece.text).slice(0, animation.shown).join('') : piece.text
           const startsPart = piece.sealAfter !== undefined
           const sealed = !animation || animation.index > piece.sealAfter!
-          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}${piece.partBody ? ' story-part-body' : ''}${pieces[index + 1]?.kind === 'image' ? ' story-before-image' : ''}${current && piece.kind === 'choice' ? ' story-choice-enter' : ''}`} hidden={future}>
+          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}${piece.partBody ? ' story-part-body' : ''}${current && piece.kind === 'choice' ? ' story-choice-enter' : ''}`} hidden={future}>
             {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{stampLabel(piece.stamp ?? piece.at)}</time></>}
-            {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr`, marginTop: `${12 * (1 - Math.pow(1 - imageProgress, 3))}px` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
+            {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{piece.kind === 'text' && !animation.instant ? Array.from(visibleText).map((character, letter) => <span className="story-letter" key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}</button> : <p>{visibleText}</p>}
           </div>
         })}

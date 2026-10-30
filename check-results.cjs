@@ -346,7 +346,7 @@ try {
     return 0;
   } });
   Object.defineProperty(window.HTMLElement.prototype, 'offsetHeight', { configurable: true, get() {
-    if (this.classList.contains('story-image')) return 28 + 200 * parseFloat(this.querySelector('.story-media').style.gridTemplateRows || 0);
+    if (this.classList.contains('story-image')) return 200 * parseFloat(this.querySelector('.story-media').style.gridTemplateRows || 0);
     return this.classList.contains('story-choice') ? 60 : 140;
   } });
   try {
