@@ -8,7 +8,7 @@ export default function StoryComparison() {
   const [height, setHeight] = useState(240)
   const document = useMemo(() => {
     const keys = ['nav', 'place', 'intro', 'wait', 'waitSelected', 'waitPending', 'waitResult', 'phone', 'phoneSelected', 'phonePending', 'phoneResult', 'leave', 'leaveSelected', 'leavePending', 'leaveResult', 'search', 'skip', 'choices', 'next', 'walking', 'start', 'replay', 'art'] as const
-    const copy = Object.fromEntries(keys.map(key => [key, t(`story.${key}`)]))
+    const copy = { ...Object.fromEntries(keys.map(key => [key, t(`story.${key}`)])), day: t('hud.day', { day: 0 }) }
     // A translated apostrophe or closing script tag must remain data.
     const json = JSON.stringify(copy).replace(/</g, '\\u003c')
     return template.replace('__STORY_COPY__', json).replace('__STORY_ART__', new URL('assets/event-rain-rain-proper-480.webp', window.document.baseURI).href)

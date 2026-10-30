@@ -1,3 +1,24 @@
+# Story stamp/cursor alignment — 30 October 2026
+
+Local commit: `f15b390539906736e2b32a24ed546e74fa92963e`.
+Bundle: `.backup/story-stamps-2026-10-30.bundle`; required base:
+`fd6ef4ebb078f0c6acd87075e116108fdc661510`.
+Verify with `git bundle verify .backup/story-stamps-2026-10-30.bundle`, restore with
+`git fetch .backup/story-stamps-2026-10-30.bundle HEAD:refs/heads/recovered/story-stamps`.
+Seven verified changed presentation/test files are applied over current remote
+main, preserving v350 and the previous Story-only indicator fix. Documentation
+is updated from that remote checkpoint, not overwritten from older local copies.
+
+Changes: reserve clock space above typed narrative; moving cursor HH:MM only;
+full place/day stamps and filled points after complete parts; matching example
+and native Replay; continuation and result stamps remain immutable saved facts.
+Checks: Story/example, 61 catalogue answers/replay isolation, results including
+single indicator, localisation, design-system, module-boundaries, build and diff.
+Browser geometry/iPhone unverified; managed preview remains unavailable.
+Source save only with skip-ci. No new release or gameplay/save change.
+
+---
+
 # Story-only result animation — 30 October 2026
 
 Local checkpoint: `fe94ee04eb54c463e767276f7904cd7d593d59bc`.

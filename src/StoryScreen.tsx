@@ -10,13 +10,15 @@ import { ModalAction } from './Modal'
 import StoryComparison from './StoryComparison'
 import type { StoryEpisode, StoryStamp } from './story'
 
-type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean }
-const timeLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${t('hud.day', { day: formatNumber(displayDay(at.day)) })}`
+type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number }
+const stampLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${at.locationName} · ${t('hud.day', { day: formatNumber(displayDay(at.day)) })}`
 function episodePieces(episode: StoryEpisode): Piece[] {
   const pieces: Piece[] = []
   for (const scene of episode.scenes) {
+    const start = pieces.length
     if (scene.text) pieces.push({ kind: 'text', text: scene.text, at: scene.at })
     if (scene.illustration) pieces.push({ kind: 'image', text: scene.text || scene.title, image: scene.illustration, at: scene.at })
+    if (pieces[start]) pieces[start].sealAfter = pieces.length - 1
     for (const choice of [...(scene.earlierChoices ?? []), ...(scene.choice ? [scene.choice] : [])]) pieces.push({ kind: 'choice', text: t('story.chosen', { choice: choice.label }), at: choice.at })
   }
   if (episode.result) {
@@ -27,7 +29,7 @@ function episodePieces(episode: StoryEpisode): Piece[] {
     const art = result.illustration ?? result.presentation?.illustration
     if (art) pieces.push({ kind: 'image', text: result.illustrationAlt ?? result.text, image: art, at })
     if (resultDisplay(result).indicators.length || result.presentation?.places?.length || result.presentation?.notice || episode.scenes.some(scene => scene.roll)) pieces.push({ kind: 'stats', text: '', at })
-    if (pieces[start]) pieces[start].resultStart = true
+    if (pieces[start]) { pieces[start].resultStart = true; pieces[start].sealAfter = pieces.length - 1 }
   }
   return pieces
 }
@@ -63,7 +65,11 @@ function Episode({ episode }: { episode: StoryEpisode }) {
       let progress = 0
       if (phase === 'typing') {
         if ((piece.kind === 'image' || piece.kind === 'stats')) { phase = 'move'; elapsed = 0; from = y }
-        else if (skipped || shown >= length) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
+        else {
+          // The moving clock occupies the reserved stamp row, never the typed text.
+          y = Math.max(y, nodes.current[index]?.offsetTop ?? y)
+          if (skipped || shown >= length) { shown = length; phase = 'pause'; elapsed = 0; skipped = false }
+        }
       } else if (phase === 'pause') {
         shown = length
         if (elapsed >= 250) {
@@ -91,25 +97,26 @@ function Episode({ episode }: { episode: StoryEpisode }) {
   const last = episode.endedAt ?? first.at
   const cursorAt = animation ? pieces[animation.index]?.at ?? last : last
   return <article className="story-episode" data-story-id={episode.id}>
-    <div className="story-episode-heading"><div className="story-stamp"><time>{formatTime(first.at.minute)}</time><span> · {first.at.locationName} · {t('hud.day', { day: formatNumber(displayDay(first.at.day)) })}</span></div>
+    <div className="story-episode-heading">
       <ModalAction variant="secondary" onClick={() => setReplay(value => value + 1)}>{t('story.replay')}</ModalAction></div>
     <div className={`story-track${animation ? ' is-replaying' : ''}`} ref={track} style={{ '--story-y': `${animation?.y ?? 0}px` } as CSSProperties}>
       <div className="story-thread" aria-hidden="true" />
-      <span className="story-imprint" aria-hidden="true" />
       <div className="story-pieces" aria-label={animation ? t('story.skip') : undefined}>
         {pieces.map((piece, index) => {
           const future = !!animation && index > animation.index
           const current = !!animation && index === animation.index
           const imageProgress = !animation || index < animation.index ? 1 : current ? animation.progress : 0
           const visibleText = current ? Array.from(piece.text).slice(0, animation.shown).join('') : piece.text
-          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${piece.resultStart ? ' story-result-start' : ''}`} hidden={future}>
-            {piece.resultStart && <><span className="story-result-imprint" hidden={!!animation && animation.index === index} aria-hidden="true" /><time className="story-result-stamp">{timeLabel(piece.at)}</time></>}
+          const startsPart = piece.sealAfter !== undefined
+          const sealed = !animation || animation.index > piece.sealAfter!
+          return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}`} hidden={future}>
+            {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{stampLabel(piece.at)}</time></>}
             {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${imageProgress}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{visibleText}</button> : <p>{visibleText}</p>}
           </div>
         })}
       </div>
-      <div className="story-head" aria-hidden="true"><span /><time>{timeLabel(cursorAt)}</time></div>
+      <div className="story-head" aria-hidden="true"><span /><time>{formatTime(cursorAt.minute)}</time></div>
     </div>
     {!animation && <div className="story-episode-end">
       {episode.status === 'active' && <p className="story-note">{t('story.pending')}</p>}

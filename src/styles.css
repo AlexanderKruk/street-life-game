@@ -1390,12 +1390,11 @@ body { min-width:0; }
 .story-toolbar, .story-episode-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
 .story-toolbar h1 { font-size:var(--font-title); font-weight:var(--weight-semibold); }
 .story-episode { min-width:0; margin:22px 0 32px; overflow-wrap:anywhere; }
-.story-episode-heading { padding-left:28px; align-items:center; }
-.story-stamp { min-width:0; flex:1; }
-.story-episode-heading time, .story-episode-heading span, .story-head time { font-size:var(--font-small); color:var(--text-muted); font-variant-numeric:tabular-nums; }
-.story-track { position:relative; padding:0 0 38px 28px; min-height:56px; }
+.story-episode-heading { padding-left:28px; align-items:center; justify-content:flex-end; margin-bottom:12px; }
+.story-part-stamp, .story-head time { font-size:var(--font-small); color:var(--text-muted); font-variant-numeric:tabular-nums; }
+.story-track { --story-stamp-height:24px; --story-stamp-gap:7px; position:relative; padding:0 0 38px 28px; min-height:56px; }
 .story-thread { position:absolute; left:5px; top:6px; bottom:0; width:1px; background:#424a4c; }
-.story-imprint, .story-head > span { position:absolute; left:0; top:0; width:11px; height:11px; border-radius:50%; background:var(--color-warning); }
+.story-head > span { position:absolute; left:0; top:0; width:11px; height:11px; border-radius:50%; background:var(--color-warning); }
 .story-head { position:absolute; left:0; bottom:0; width:100%; padding-left:28px; min-height:24px; }
 .story-head > span { background:#171b1d; border:1.5px solid var(--color-warning); top:5px; }
 .story-head time { color:var(--color-warning); }
@@ -1406,7 +1405,7 @@ body { min-width:0; }
 .story-piece { position:relative; padding-bottom:14px; }
 .story-reveal { display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
 .story-piece p, .story-reveal { white-space:pre-line; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); }
-.story-choice { margin-top:12px; color:var(--color-warning); }
+.story-choice { margin-top:12px; padding-top:calc(var(--story-stamp-height) + var(--story-stamp-gap)); color:var(--color-warning); }
 .story-media { display:grid; }
 .story-media > div { overflow:hidden; min-height:0; border-radius:7px; }
 .story-media img { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; }
@@ -1419,8 +1418,9 @@ body { min-width:0; }
 
 /* A result is an unframed point of the same Story episode. */
 .story-result-start { margin-top:14px; }
-.story-result-imprint { position:absolute; left:-28px; top:5px; width:11px; height:11px; border-radius:50%; background:var(--color-warning); }
-.story-result-stamp { display:block; margin-bottom:7px; font-size:var(--font-small); color:var(--text-muted); font-variant-numeric:tabular-nums; }
+.story-part-imprint { position:absolute; left:-28px; top:5px; width:11px; height:11px; border-radius:50%; background:var(--color-warning); }
+.story-part-stamp { display:block; min-height:var(--story-stamp-height); margin-bottom:var(--story-stamp-gap); }
+.story-part-stamp[data-story-stamp="pending"] { visibility:hidden; }
 .story-result-effects { min-width:0; }
 
 /* A result reads as a scene followed by its consequences, one icon/value at a time. */

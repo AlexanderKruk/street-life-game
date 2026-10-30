@@ -43,7 +43,6 @@
   </style>
   <div class="pv-stage">
     <section class="pv-screen">
-      <p class="pv-title"></p>
       <div class="pv-timeline">
         <div class="pv-line" aria-hidden="true"></div>
         <div class="pv-records"></div>
@@ -58,7 +57,6 @@
     (()=>{
       const copy=__STORY_COPY__;
       const root=document.getElementById('sl-story-choice');
-      root.querySelector('.pv-title').textContent=copy.place;
       root.querySelector('.pv-play').textContent=copy.start;
       root.querySelector('.pv-temporary').textContent=copy.search;
       const screen=root.querySelector('.pv-screen'),timeline=root.querySelector('.pv-timeline'),records=root.querySelector('.pv-records');
@@ -100,7 +98,7 @@
         text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)phaseTime=writing.characters.length*28;});
         temporary.textContent='';phase='typing';phaseTime=0;
       }
-      function seal(){current.row.classList.add('pv-done');current.stamp.textContent=label();status.textContent=current.stamp.textContent+'. '+writing.message;}
+      function seal(){current.row.classList.add('pv-done');current.stamp.textContent=label()+' · '+copy.place+' · '+copy.day;status.textContent=current.stamp.textContent+'. '+writing.message;}
       function reveal(progress){
         if(!current || !current.media)return;
         const ease=1-Math.pow(1-progress,3);
@@ -145,12 +143,12 @@
             else {phase='pause';phaseTime=0;}
           }
         }else if(phase==='pause' && (reduced || phaseTime>=250)){
-          seal();phase=current.media?'picture':'textmove';phaseTime=0;
+          phase=current.media?'picture':'textmove';phaseTime=0;
         }else if(phase==='picture'){
           const progress=reduced?1:Math.min(1,phaseTime/1150);reveal(progress);
           const end=Math.max(fromY,records.offsetHeight-16);
           y=fromY+(end-fromY)*(1-Math.pow(1-progress,3));
-          if(progress===1){y=end;presentChoices();}
+          if(progress===1){seal();y=end;presentChoices();}
         }else if(phase==='choices'){
           choices.forEach(item=>{
             if(phaseTime>=item.at && item.button.hidden){item.button.hidden=false;item.button.classList.add('pv-choice-enter');}
@@ -167,7 +165,7 @@
         }else if(phase==='textmove'){
           const progress=reduced?1:Math.min(1,phaseTime/750);
           y=fromY+(records.offsetHeight-fromY)*(1-Math.pow(1-progress,3));
-          if(progress===1){y=records.offsetHeight;showFinish();}
+          if(progress===1){if(!isOutcome)seal();y=records.offsetHeight;showFinish();}
         }else if(phase==='result' || phase==='free'){
           y=reduced?records.offsetHeight:y+(records.offsetHeight-y)*Math.min(1,delta/100);
         }

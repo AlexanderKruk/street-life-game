@@ -40,7 +40,15 @@ try {
     } });
     const doc = scene.window.document;
     const advance = duration => { const end = now + duration; while (now < end) { now += 16; const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(now)); } };
-    doc.querySelector('.pv-play').click(); advance(8000);
+    doc.querySelector('.pv-play').click(); advance(500);
+    assert.match(doc.querySelector('.pv-live').textContent, /^\d{2}:\d{2}$/, 'the moving cursor carries only the clock');
+    assert(!doc.querySelector('.pv-title'), 'place is not shown separately before the stamp is sealed');
+    assert(!doc.querySelector('.pv-done'), 'typing does not seal the part early');
+    doc.querySelector('.pv-text').click(); advance(300);
+    assert(!doc.querySelector('.pv-done'), 'the full stamp waits through image appearance too');
+    advance(8000);
+    assert(doc.querySelector('.pv-done'));
+    assert(doc.querySelector('.pv-stamp').textContent.includes(' · By the station · D0'), 'the completed part gains place and day together');
     assert.equal(doc.querySelectorAll('.pv-choice-group button:not([hidden])').length, 3);
     const clock = doc.querySelector('.pv-live').textContent;
     advance(2000);

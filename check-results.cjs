@@ -233,7 +233,7 @@ try {
     assert(!document.querySelector('.story-result-effects [data-resource-id="thirst"]'), 'minor passive water drain remains hidden');
     assert(!document.querySelector('.story-result-effects .status-needs, .story-result-effects [role="meter"]'), 'Story omits the framed status panel');
     assert(document.querySelector('.story-result-start .story-result-imprint'), 'result has its own timeline point');
-    assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · D1');
+    assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · Station · D1');
     if (index === 0 || index === 3) {
       const energy = () => document.querySelector('.story-result-effects [data-resource-id="energy"]');
       const delta = energy().querySelector('strong').textContent;
@@ -246,10 +246,12 @@ try {
       while (!energy() && clock < 40000) { clock += 32; frame(clock); }
       assert(energy(), 'replay reaches the effects after narrative text');
       assert(document.querySelector('.story-result-effects .is-animated.is-ready'), 'replay starts sequential appearance only at the effects step');
+      assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'pending', 'a result stamp waits for the consequences to finish');
       assert.equal(energy().style.getPropertyValue('--result-indicator-delay'), '250ms', 'even one group has a reading pause after the image/narrative');
       assert.equal(document.querySelector('.story-result-effects .result-indicators').style.getPropertyValue('--result-indicator-duration'), '260ms');
       for (let n = 0; n < 80; n++) { clock += 32; frame(clock); }
       assert.equal(energy().querySelector('strong').textContent, delta, 'replay retains the actual delta');
+      assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'sealed', 'the result becomes a fixed stamp only when fully revealed');
     }
     assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
     cleanup();

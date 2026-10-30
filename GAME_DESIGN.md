@@ -1362,3 +1362,15 @@ Classic modals are static and do not wait for the image to reveal their deltas.
 Story Replay gives the first/lone group a 250ms pause and 260ms appearance; groups
 remain atomic and 260ms apart. Old archives and reduced motion remain settled.
 No gameplay, saves or publication-version change; live v350 is unchanged.
+
+
+Story stamps and cursor — 30 October 2026, source correction:
+The moving/blinking marker carries only HH:MM. Each complete scene/result part
+gets a full fixed HH:MM · saved place · Dn stamp and filled marker after its text,
+artwork and result consequences finish appearing. The stamp row is reserved above
+narrative while pending (24px minimum plus 7px gap), preventing typed copy from
+starting on the clock line; choice narrative also has clock clearance. Native
+continuation scenes retain their own timestamps. The comparison uses the same
+clock-only/pending/sealed rule and does not show place as an early heading.
+Historic records/reduced motion are fully sealed on opening. Archives, real clocks,
+RNG, action costs, modals and publication version do not change. Live v350 remains.
