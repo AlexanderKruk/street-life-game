@@ -1,3 +1,9 @@
+Release v356 — 30 October 2026, publication requested: releases the approved
+live Story choice movement and retained layout height. The existing Pages CI
+owns the full release suites, build and deployment; do not duplicate a successful
+unchanged run locally. Publication remains pending until CI/deployment succeeds.
+Browser/iPhone/WebKit appearance remains unverified.
+
 Approved live Story choice transition — 30 October 2026, source only:
 useStoryChoiceMotion retains each live track's measured maximum height at the
 current width, reserving it synchronously before decision/check clicks. New copy
