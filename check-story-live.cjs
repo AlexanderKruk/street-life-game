@@ -97,6 +97,27 @@ try {
   window.requestAnimationFrame = callback => { frames.set(++frameId, callback); return frameId; };
   window.cancelAnimationFrame = id => frames.delete(id);
   const animate = duration => { const end = clock + duration; while (clock < end) { clock += 32; env.act(() => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(clock)); }); } };
+  const observers = new Set(), paint = [];
+  global.ResizeObserver = class {
+    constructor(callback) { this.callback = callback; observers.add(this); }
+    observe() {}
+    disconnect() { observers.delete(this); }
+  };
+  const originalRect = HTMLElement.prototype.getBoundingClientRect;
+  const originalAnimate = HTMLElement.prototype.animate;
+  let naturalHeight = 620, trackWidth = 340;
+  HTMLElement.prototype.getBoundingClientRect = function () {
+    const track = this.classList.contains('story-track');
+    const height = track ? Math.max(naturalHeight, parseFloat(this.style.minHeight) || 0) : 48;
+    const top = track ? 100 : this.dataset.orderId ? 620 : 480;
+    const left = track ? 16 : 44, width = track ? trackWidth : 312;
+    return { x: left, y: top, left, top, width, height, right: left + width, bottom: top + height };
+  };
+  HTMLElement.prototype.animate = function (keyframes, options) {
+    const animation = { element: this, keyframes, options, onfinish: null, cancelled: false, cancel() { this.cancelled = true; } };
+    paint.push(animation); return animation;
+  };
+  const resize = () => env.act(() => observers.forEach(observer => observer.callback()));
   setup('spare-change');
   assert(!document.querySelector('.story-live-controls'), 'choices wait for the opening animation');
   env.fireEvent.click(document.querySelector('.story-reveal')); animate(6000);
@@ -104,6 +125,20 @@ try {
   const choiceClock = document.querySelector('.story-head time').textContent;
   animate(1500); assert.equal(document.querySelector('.story-head time').textContent, choiceClock, 'the clock pauses for a decision');
   clickId('event:spare-change:give');
+  const track = document.querySelector('.story-track');
+  assert.equal(track.style.minHeight, '620px', 'choice capture reserves the visible height before commands remove the buttons');
+  assert.equal(save().episodes[0].status, 'awaiting-ack', 'the real choice/result is saved immediately, before the visual flight completes');
+  assert(document.querySelector('.story-choice-motion[inert]'), 'paint snapshots cannot receive input or focus');
+  assert(!document.querySelector('.story-choice-motion [data-order-id]'), 'snapshots do not duplicate live command identities');
+  const flight = paint.find(animation => animation.options.easing === 'cubic-bezier(.22,.61,.36,1)');
+  assert(flight && flight.options.duration === 650, 'the selected card moves during the existing 650ms answer entrance');
+  assert.equal(flight.keyframes[1].transform, 'translate(0px, -140px)', 'movement targets the actual saved answer position');
+  assert(document.querySelector('.story-choice[data-story-choice-motion] .story-reveal').textContent, 'the full selected text reserves its destination immediately');
+  naturalHeight = 220; resize(); assert.equal(track.getBoundingClientRect().height, 620, 'removing choices cannot collapse the timeline');
+  naturalHeight = 900; resize(); assert.equal(track.style.minHeight, '900px', 'new content can extend the timeline');
+  naturalHeight = 500; resize(); assert.equal(track.style.minHeight, '900px', 'later transitions cannot retract an already shown block');
+  env.act(() => flight.onfinish());
+  assert(!document.querySelector('.story-choice-motion').children.length, 'arrival removes the inert paint copies');
   assert.equal(document.querySelector('.story-text p'), firstText, 'the already-read opening keeps its DOM and does not replay');
   assert(!document.querySelector('[data-order-id="story:acknowledge"]'), 'result acknowledgement waits for its own presentation');
   const movingClock = document.querySelector('.story-head time').textContent;
@@ -114,6 +149,22 @@ try {
   const idleClock = document.querySelector('.story-idle time').textContent;
   animate(1500); assert.notEqual(document.querySelector('.story-idle time').textContent, idleClock, 'presentation clock keeps ticking without an acknowledgement');
   assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'sealed');
-  env.finish();
+  assert.equal(track.style.minHeight, '900px', 'automatic acknowledgement retains the current reading layout');
+  env.click('Replay'); assert.equal(track.style.minHeight, '', 'explicit replay starts a fresh presentation layout');
+  setup('spare-change'); env.fireEvent.click(document.querySelector('.story-reveal')); animate(8000);
+  clickId('event:spare-change:give');
+  const inFlight = facts();
+  assert(document.querySelector('.story-choice-motion').children.length, 'flight is still visible before reload');
+  reduced = true; remount();
+  assert.deepEqual(facts().game, inFlight.game, 'reloading mid-flight does not repeat the action cost');
+  assert.deepEqual(facts().inventory, inFlight.inventory); assert.deepEqual(facts().history, inFlight.history);
+  assert(!document.querySelector('.story-choice-motion').children.length, 'a restored result has no stale paint snapshot');
+  assert.equal(save().episodes[0].status, 'complete');
+  setup('spare-change'); const animationsBefore = paint.length; clickId('event:spare-change:give');
+  assert.equal(paint.length, animationsBefore, 'reduced motion commits immediately without creating a flight');
+  env.finish(); assert.equal(observers.size, 0, 'all layout observers are disconnected on unmount');
+  HTMLElement.prototype.getBoundingClientRect = originalRect;
+  if (originalAnimate) HTMLElement.prototype.animate = originalAnimate; else delete HTMLElement.prototype.animate;
+  delete global.ResizeObserver;
   console.log(`PASS: ${cases} live Story choices match classic mechanics; inline checks/results, stable order, StrictMode/reload/ack, chains, rain, idle/pending clocks and incremental presentation.`);
 } finally { rmSync(temporary, { recursive: true, force: true }); }

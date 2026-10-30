@@ -1,3 +1,22 @@
+Approved live Story choice transition — 30 October 2026, source only:
+useStoryChoiceMotion retains each live track's measured maximum height at the
+current width, reserving it synchronously before decision/check clicks. New copy
+fills the former controls area; later growth is retained through acknowledgement.
+A viewport-width change or explicit Replay starts a fresh layout. One inert paint
+snapshot fades the other answers over 180ms and moves the selected card into the
+actual saved answer over the existing 650ms entrance, dissolving its frame and
+crossfading to the unchanged selected-answer copy. Snapshot identities are stripped.
+The real command, costs, RNG and archive commit immediately, independent of paint;
+there are no deferred gameplay commands or new saves/timers. Reduced motion and
+missing WAAPI retain an immediate presentation with reserved space. Chains/D20/rain
+reuse the same owners. Snapshots/animations/observers clean up on arrival/unmount.
+Targeted 61 live and 61 modal routes, results, design-system, module boundaries
+and production build passed. Deterministic geometry/WAAPI fixtures cover shrink
+prevention, growth, target motion, immediate saves, reload mid-flight, reduced
+motion, Replay and cleanup; these are not browser pixel/scroll verification.
+Managed preview remains unavailable; iPhone/WebKit appearance is unverified.
+Source save uses [skip ci]; v355 remains published until a separate release.
+
 Release v355 is published — 30 October 2026. GitHub Pages run 41077931905
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41077931905)
 succeeded for source 8a66c89a3c20a890b0547678b705da85780f145a: all 34 Node

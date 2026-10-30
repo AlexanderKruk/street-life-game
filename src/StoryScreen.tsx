@@ -12,6 +12,7 @@ import { createStoryTyping, storyCharactersShown, STORY_PIECE_PAUSE_MS, STORY_ST
 import type { StoryEpisode, StoryStamp } from './story'
 import StoryLiveControls, { type StoryInteraction } from './StoryLiveControls'
 import { useStoryClock } from './useStoryClock'
+import { useStoryChoiceMotion } from './useStoryChoiceMotion'
 
 type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number; stamp?: StoryStamp; partBody?: boolean; pendingPart?: boolean }
 const stampLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${at.locationName} · ${t('story.day', { day: formatNumber(displayDay(at.day)) })}`
@@ -82,6 +83,7 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
   const liveMinute = useRef(live?.minute)
   liveMinute.current = live?.minute
   const isLive = !!live
+  const choiceMotion = useStoryChoiceMotion(track, nodes, isLive, replay)
   const acknowledged = useRef(false)
   useEffect(() => {
     if (!isLive) return
@@ -176,7 +178,7 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
         ...(start >= 0 ? { sealStart: start, stampShown: Math.floor(elapsed / STORY_STAMP_STEP_MS) } : {}) })
       frame = window.requestAnimationFrame(tick)
     }
-    setAnimation({ index, shown: 0, progress: 0, y, minute: minute(), running: !!pieces[index], instant: false })
+    setAnimation({ index, shown: pieces[index]?.kind === 'choice' ? Array.from(pieces[index].text).length : 0, progress: 0, y, minute: minute(), running: !!pieces[index], instant: false })
     frame = window.requestAnimationFrame(tick)
     return () => { window.cancelAnimationFrame(frame); element?.removeEventListener('click', revealText); if (!isLive) onPlayback?.(episode.id, false) }
   }, [replay, pieces, typing, episode, isLive])
@@ -186,8 +188,9 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
   return <article className="story-episode" data-story-id={episode.id}>
     {archiveControls && !isLive && <div className="story-episode-heading">
       <ModalAction variant="secondary" disabled={disabled} onClick={() => setReplay(value => value + 1)}>{t('story.replay')}</ModalAction></div>}
-    <div className={`story-track${cursor ? ' has-replay' : ''}${animation?.sealStart !== undefined ? ' is-settling' : ''}${continuous && !isLive && !animation ? ' is-archived' : ''}${animation ? ' is-replaying' : ''}${animation?.running || isLive && !live.waitingForDecision ? ' is-running' : ''}`} ref={track} style={{ '--story-y': `${cursor?.y ?? 0}px` } as CSSProperties}>
+    <div className={`story-track${cursor ? ' has-replay' : ''}${animation?.sealStart !== undefined ? ' is-settling' : ''}${continuous && !isLive && !animation ? ' is-archived' : ''}${animation ? ' is-replaying' : ''}${animation?.running || isLive && !live.waitingForDecision ? ' is-running' : ''}`} ref={track} style={{ '--story-y': `${cursor?.y ?? 0}px` } as CSSProperties} onClickCapture={event => { if (isLive && (event.target as HTMLElement).closest('.story-live-controls button')) choiceMotion.reserve() }}>
       <div className="story-thread" aria-hidden="true" />
+      <div className="story-choice-motion" ref={choiceMotion.layer} aria-hidden="true" inert />
       <div className="story-pieces" aria-label={animation ? t('story.skip') : undefined}>
         {pieces.map((piece, index) => {
           const future = !!animation && index > animation.index
@@ -204,7 +207,7 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
               : current ? <button type="button" className="story-reveal" aria-label={t('story.skip')}>{piece.kind === 'text' && !animation.instant ? Array.from(visibleText).map((character, letter) => <span className="story-letter" key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}</button> : <p>{visibleText}</p>}
           </div>
         })}
-        {isLive && (!animation || !live.waitingForDecision && live.content) && (live.actions.length > 0 || live.content) && <StoryLiveControls interaction={live} />}
+        {isLive && (!animation || !live.waitingForDecision && live.content) && (live.actions.length > 0 || live.content) && <StoryLiveControls interaction={live} onSelect={button => choiceMotion.choose(button, pieces.length)} />}
       </div>
       {(isLive || animation || !continuous) && <div className="story-head" aria-hidden="true"><span /><time>{formatTime(cursor?.minute ?? last.minute)}</time></div>}
     </div>

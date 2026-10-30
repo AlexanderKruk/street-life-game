@@ -1448,6 +1448,8 @@ body { min-width:0; }
 .story-part-stamp { display:block; min-height:var(--story-stamp-height); margin-bottom:var(--story-stamp-gap); }
 .story-part-stamp[data-story-stamp="pending"] { visibility:hidden; }
 .story-choice-enter { animation:story-answer-enter 650ms ease-out both; }
+.story-choice[data-story-choice-motion] { animation:none; }
+.story-choice-motion { position:absolute; inset:0; pointer-events:none; z-index:1; }
 @keyframes story-imprint { 0%,30% { opacity:0; } 100% { opacity:1; } }
 @keyframes story-answer-enter { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 @media (prefers-reduced-motion:reduce) {
