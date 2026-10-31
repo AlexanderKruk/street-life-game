@@ -1,3 +1,12 @@
+v365 first CI attempt — 31 October 2026: run 41215636519 passed
+29/35 suites before stopping on tests/regressions/shop-inventory.cjs,
+which still read literal 'Food+++' from a ready-meal chip's visible text.
+The approved icon-only chip now exposes the exact same Food+++ via title
+and aria-label while displaying the fork icon +++. Update that one
+regression assertion to verify the stable effect ID and the preserved
+accessible title. No gameplay or visual changes. Retry the single full
+CI/deployment workflow; previous v364 remains deployed until success.
+
 Release v365 — 31 October 2026, publication requested:
 only backpack/shop item effect text badges change to compact neutral-gray
 icon + tightly spaced strength values with transparent backgrounds, using
