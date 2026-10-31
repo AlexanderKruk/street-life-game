@@ -1,3 +1,15 @@
+Release v360 is published — 31 October 2026. GitHub Pages run 41201202452
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41201202452)
+succeeded for aea0dce8df584bce801a65a8ff32a34c8e4ea4ac: all 35 Node suites
+passed in 204.09s, TypeScript/Vite build and deployment succeeded (12:32 UTC).
+Includes the fixed Story footer, manual purchase dismissal, full-height Story
+modal with equal gutters, retained character layout and bounded call icon.
+The first attempt stopped at obsolete Close selectors in check-rendering; the
+updated Actions selectors retain the same pause/zero-background-render checks.
+Build/test/deploy logs reviewed; successful CI was not duplicated locally.
+Physical iPhone/WebKit appearance remains unverified. Earlier source-only notes
+below describe changes now included in this release.
+
 Release v359 is published — 31 October 2026. GitHub Pages run 41192631345
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41192631345)
 succeeded for f90fc7ca24fc7ec670aa7d285c4edeaeebd4fabd: 35/35 Node suites
