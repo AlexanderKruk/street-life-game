@@ -121,7 +121,7 @@ for(const [draw,grosz] of [[.05,1],[.15,2],[.3,5],[.5,10],[.7,20],[.85,50],[.94,
  assert(!document.querySelector('.coin-emblem'));
  const beforeCoin=read(stateKey),beforeCoinTrip=read('street-life-trip-v1');advance(2000);assert.deepEqual(read(stateKey),beforeCoin);
  let awardDraws=0;Math.random=()=>{awardDraws++;return draw};click('Pick it up');assert.equal(awardDraws,1);
- const awarded=read(stateKey);assert.equal(awarded.money,beforeCoin.money+grosz/100);assert.equal(awarded.minutes,beforeCoin.minutes);assert.deepEqual(read('street-life-trip-v1'),beforeCoinTrip);
+ const awarded=read(stateKey);assert.equal(awarded.money,beforeCoin.money+grosz/100);assert(awarded.minutes>=beforeCoin.minutes+1&&awarded.minutes<=beforeCoin.minutes+3,'coin encounter charges its bounded duration exactly once');assert.deepEqual(read('street-life-trip-v1'),beforeCoinTrip);
  const denomination=grosz<100?`${grosz} gr`:`${grosz/100} zł`;assert(screen.getByRole('dialog').textContent.includes(`${denomination} coin`));
  assert(document.querySelector('.result-modal.illustrated-result .result-illustration').src.includes('event-coin-take'));
  assert(!document.querySelector('.coin-emblem'));
