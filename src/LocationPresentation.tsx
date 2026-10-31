@@ -2,6 +2,7 @@ import { sleepKindLabel } from './sleepText'
 import { t } from './i18n'
 import { memo } from 'react'
 import { formatTime } from './game'
+import { formatOpeningTime } from './locationText'
 import { responsiveImageProps } from './responsiveImages'
 import { Icon, locationIcon } from './Icon'
 
@@ -38,7 +39,7 @@ export const LocationSummary = memo(function LocationSummary({ id, name, descrip
 
 type ShopHeroProps = { name: string; open: boolean; opensAt: number; closesAt: number }
 export const ShopHero = memo(function ShopHero({ name, open, opensAt, closesAt }: ShopHeroProps) {
-  return <section className="shop-hero" aria-label={t('location.shopAccessible')}><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{name}</h2><p>{t(open ? 'location.shop.openHours' : 'location.shop.closedHours', { open: formatTime(opensAt), close: formatTime(closesAt) })}</p></section>
+  return <section className="shop-hero" aria-label={t('location.shopAccessible')}><img {...responsiveImageProps('/street-life-game/assets/shop-interior.webp')} className="shop-hero-image" alt="" aria-hidden="true" /><h2>{name}</h2><p>{t(open ? 'location.shop.openHours' : 'location.shop.closedHours', { open: formatOpeningTime(opensAt), close: formatOpeningTime(closesAt) })}</p></section>
 })
 
 type TravelHeadingProps = { from: string; to?: string; walking: boolean; moving?: boolean }

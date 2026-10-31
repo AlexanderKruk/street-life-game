@@ -114,17 +114,17 @@ function measure(App) {
   // Relevant changes must still render: opening hours, selected map pin, discovered goal, journal day.
   setup(App, 'map', { minutes: 1319 }); advance(1);
   assert.equal(count('DistrictScene'), 1);
-  assert(screen.getByRole('button', { name: 'Small Shop' }).disabled);
-  fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
+  assert(screen.getByRole('button', { name: 'Shop' }).disabled);
+  fireEvent.click(screen.getByRole('button', { name: 'Shop' }));
   assert(!document.querySelector('.travel-sheet'));
   setup(App, 'map', { minutes: 419 });
-  assert(screen.getByRole('button', { name: 'Small Shop' }).disabled);
+  assert(screen.getByRole('button', { name: 'Shop' }).disabled);
   advance(1);
-  assert(!screen.getByRole('button', { name: 'Small Shop' }).disabled);
-  clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
+  assert(!screen.getByRole('button', { name: 'Shop' }).disabled);
+  clearCounts(); fireEvent.click(screen.getByRole('button', { name: 'Shop' }));
   assert.equal(count('DistrictScene'), 1);
   assert(!document.querySelector('.district-card'));
-  assert(document.querySelector('.travel-sheet').textContent.includes('Small Shop'));
+  assert(document.querySelector('.travel-sheet').textContent.includes('Shop'));
   // The current Goals list is event-driven, not a clock-based morning checklist.
   // Crossing the low-battery threshold adds a real pending goal and must repaint.
   setup(App, 'goals', { day: 2, minutes: 719 }, { 'street-life-inventory-v1': { phoneBattery: 30 } });
@@ -229,7 +229,7 @@ function measure(App) {
   act(() => global.__auditSetters.setGame(previous => ({ ...previous, health: 10, energy: 10, mood: 0 })));
   assert.notEqual(document.querySelector('.header-condition svg').innerHTML, oldFace, 'memoized icons update when condition changes');
   setup(App, 'location', { locationId: 'shop', minutes: 1319 }); advance(1);
-  assert(screen.getByRole('dialog', { name: 'Small Shop has closed' }));
+  assert(screen.getByRole('dialog', { name: 'Shop has closed' }));
   assert.equal(JSON.parse(localStorage.getItem('street-life-save-v3')).locationId, 'street');
   assert.equal(count('ShopCard'), 9, 'all shop cards update when the shop closes');
   setup(App, 'location', { locationId: 'shop', money: 100 }, { 'street-life-mobile-auto-renew': false }); advance(1);
@@ -274,7 +274,7 @@ function measure(App) {
   setup(App, 'location', { locationId: 'street', day: 3, rainSystemStarted: true, nextRainAt: 999999, rain: { id: 'rain:3380', level: 'rain', start: 3380, end: 3440, choice: null, searchRemaining: 0, protection: .5, shelter: 'tree', exposure: 0, energyLoss: 0, moodLoss: 0, waited: 0, coldRoll: .99 } }); pauseAudit('rain choice', '.story-event-overlay');
   setup(App, 'status', { health: 0 }); pauseAudit('game over', '.game-over-overlay');
   setup(App, 'map', {}, { 'street-life-inventory-v1': { transitCard: false } });
-  fireEvent.click(screen.getByRole('button', { name: 'Small Shop' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Shop' }));
   assert(document.querySelector('.travel-sheet')); clearCounts(); advance(3);
   modalAudit.push({ name: 'travel choices (time continues)', renders: counts() });
   fireEvent.click(screen.getByRole('button', { name: /Ride without ticket/ }));

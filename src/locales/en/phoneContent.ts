@@ -36,7 +36,7 @@ export const phoneContent = {
   "phone.question.no-place.text": "Try registration earlier the next evening. During the day, ask Help Center about accommodation and a Schronisko referral.\n\nStation benches and outdoor cover are temporary options.",
   "phone.question.supplies.title": "Where can I get food and water?",
   "phone.question.supplies.noteTitle": "Food and meals",
-  "phone.question.supplies.text": "Buy supplies at Small Shop or use food and water in your backpack.\n\nRegistered Night Shelter guests get dinner 19:00–20:30 and breakfast 06:30–07:00. You need a reserved bed and access to the shelter; knowing the address is not enough.",
+  "phone.question.supplies.text": "Buy supplies at Shop or use food and water in your backpack.\n\nRegistered Night Shelter guests get dinner 19:00–20:30 and breakfast 06:30–07:00. You need a reserved bed and access to the shelter; knowing the address is not enough.",
   "phone.question.work.title": "Where can I find paid work?",
   "phone.question.work.noteTitle": "Taking a shift",
   "phone.question.work.text": "Arrive during opening hours with enough Energy for three hours of physical work. You collect your pay when the shift ends.",

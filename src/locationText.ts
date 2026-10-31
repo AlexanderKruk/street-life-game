@@ -15,11 +15,15 @@ export function locationService(id: LocationId) {
     ? t(`location.service.${id}`) : locationDescription(id)
 }
 
+export function formatOpeningTime(minutes: number) {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}${minutes % 60 ? `:${String(minutes % 60).padStart(2, '0')}` : ''}`
+}
+
 // Keep the map's compact hours distinct from the full discovery/Notes format.
 export function locationHours(place: Pick<Location, 'open' | 'close'>, context: 'map' | 'result' = 'result') {
   if (place.open === 0 && place.close === 1440) return t(context === 'map' ? 'location.hours.allDayMap' : 'location.hours.allDayResult')
   const time = (minutes: number) => context === 'map'
-    ? `${String(Math.floor(minutes / 60)).padStart(2, '0')}${minutes % 60 ? `:${String(minutes % 60).padStart(2, '0')}` : ''}`
+    ? formatOpeningTime(minutes)
     : formatTime(minutes)
   return t(context === 'map' ? 'location.hours.mapRange' : 'location.hours.range', { open: time(place.open), close: time(place.close) })
 }

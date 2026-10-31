@@ -15,15 +15,22 @@ const React=require('react');
 const {render,screen,fireEvent,within,act,cleanup,configure}=require('@testing-library/react');
 configure({getElementError:message=>new Error(message)});
 const phoneSearchButton=require('./test-fixtures/phone-search.cjs')({screen,fireEvent});
-process.on('uncaughtException',error=>{console.error(error.message.split('Here are')[0]);console.error(error.stack.split('\n').filter(line=>line.includes('check-regressions')).join('\n'));cleanup();dom.window.close();process.exit(1)});
+process.on('uncaughtException',error=>{console.error(error.message.split('Here are')[0]);console.error(error.stack.split('\n').filter(line=>line.includes('check-events')).join('\n'));cleanup();dom.window.close();process.exit(1)});
 const assert=require('node:assert/strict');
 const App=require('./events-app.cjs').default;
 const stateKey='street-life-save-v3',invKey='street-life-inventory-v1',lifeKey='street-life-situation-v1';
 const read=k=>JSON.parse(localStorage.getItem(k));
+const absolute=state=>(state.day-1)*1440+state.minutes;
+function assertEventMinutes(before,base) {
+ const spent=absolute(read(stateKey))-absolute(before),nominal=base>0?base:2;
+ assert(Number.isInteger(spent)&&spent>=Math.max(1,nominal-1)&&spent<=nominal+1,`event time ${spent} stays within one minute of ${nominal}`);
+ return spent;
+}
 function setup(s={},extra={}){
  cleanup();localStorage.clear();
  localStorage.setItem(stateKey,JSON.stringify({day:1,minutes:480,money:100,hunger:72,thirst:66,energy:68,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',...s}));
  localStorage.setItem('street-life-effects-v1','[]');
+ localStorage.setItem('street-life-choice-seed-v1','12345');
  localStorage.setItem('street-life-discovered-v1','["street","station","shop","support","shelter","work"]');
  localStorage.setItem('street-life-mobile-auto-renew','false');
  localStorage.setItem('street-life-mobile-renewed-day',String(s.day??1));
@@ -154,7 +161,7 @@ for(const id of ambientIds){
   const result=screen.getByRole('dialog').textContent;assert(result.includes(choice.outcome.discoverLocation === 'shelter' ? 'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.' : choice.outcome.message));
   const answerArt=newEventArt[id][event.choices.indexOf(choice)+1];
   assertEventImage('.result-illustration',answerArt);
-  assert.equal(read(stateKey).minutes,paused.minutes+(choice.outcome.minutes??0));
+  assertEventMinutes(paused,choice.outcome.minutes);
   if(id==='night-rustle'){
    const revealed=choice.label==='Call out and step closer';
    assert.equal(/\bcat\b/i.test(result),revealed);
@@ -168,7 +175,7 @@ for(const id of ambientIds){
     assert(!document.querySelector('.result-indicators.is-ready'),'gain appearance waits until the image loads');assert(stat.querySelector('strong'),'the actual capped gain remains visible in the markup');
    }
    if(choice.label==='Walk away'){
-    assert.equal(read(stateKey).energy,paused.energy-1);
+    assert(read(stateKey).energy<paused.energy-1&&read(stateKey).energy>paused.energy-1.2,'authored loss includes ordinary elapsed-time drain');
     const energy=screen.getByRole('dialog').querySelector('[data-stat="Energy"]');
     assert(energy?.textContent.includes('−1'),'authored detour loss remains visible despite the passive-drain filter');
     assert(journal.text.includes('longer way around'));
@@ -178,7 +185,7 @@ for(const id of ambientIds){
   assert(!screen.queryByRole('dialog'));assert.equal(read(encountersKey).pendingId,null);
  }
 }
-// First-morning choices reflect discoveries without spending resources, adding
+// First-morning choices spend a short duration, without consuming supplies, adding
 // addresses, routing to another screen, or replaying the retired dawn version.
 const morning=STREET_EVENTS.find(event=>event.id==='city-waking');
 assert.equal(STREET_EVENTS.filter(event=>event.id==='city-waking').length,1);
@@ -210,8 +217,10 @@ for(const places of [
    assert(!text.includes('You already know about:'));
   }
  } else assert(!text.includes('You already know about:'));
- assert.deepEqual(read(stateKey),before,'reflection does not change game stats or time');
- assert.deepEqual(read(invKey),inventoryBefore,'no phone use or inventory cost');
+ assertEventMinutes(before,0);
+ for(const key of ['money','mood','health','intoxication','locationId'])assert.equal(read(stateKey)[key],before[key],'reflection changes only elapsed-time needs');
+ for(const key of ['food','water','medicines','documents','phoneBattery','phoneCondition','jacket','cigarettes','bottles'])assert.equal(read(invKey)[key],inventoryBefore[key],'reflection never consumes supplies or phone battery');
+ assert(read(invKey).foodFreshness<=inventoryBefore.foodFreshness,'food still ages during the event');
  assert.deepEqual(read(lifeKey),lifeBefore);
  assert.deepEqual(read(discoveryKey),placesBefore,'known places are not discoveries');
  assert.equal(document.querySelector('[aria-current="page"]').textContent,screenBefore,'choice does not navigate');
@@ -292,7 +301,7 @@ for(const known of [false,true])for(const documents of [false,true])for(const in
  assertEventImage('.result-illustration',`event-night-patrol-${['reassured','directions','declined'][index]}`);
  assert(screen.getByRole('dialog').classList.contains('illustrated-result'));
  assert(screen.getByRole('dialog').textContent.includes(choice.outcome.discoverLocation === 'shelter' ? 'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.' : choice.outcome.message));
- assert.equal(read(stateKey).minutes,before.minutes+(choice.outcome.minutes??0));
+ assertEventMinutes(before,choice.outcome.minutes);
  assert.equal(read(stateKey).mood,before.mood+(choice.outcome.mood??0));
  assert.equal(read(invKey).documents,documents,'no ID check or document changes');
  assert.equal(read(stateKey).locationId,'street','directions do not grant admission or move the hero');
@@ -348,7 +357,7 @@ for(const [hygiene,mood,roll,success]of [[55,30,9,false],[55,30,10,true],[80,30,
  assertEventImage('.result-illustration',`event-park-company-${success?'talk':'argument'}`);
  assert(screen.getByRole('dialog').classList.contains('illustrated-result'));
  assert(screen.getByRole('dialog').textContent.includes(company.choices[0].check[success?'success':'failure'].message));
- assert.equal(read(stateKey).minutes,before.minutes+10);assert.equal(read(stateKey).mood,before.mood+(success?3:-2));
+ assertEventMinutes(before,10);assert.equal(read(stateKey).mood,before.mood+(success?3:-2));
  assert.equal(read(stateKey).intoxication,before.intoxication,'hero never drinks automatically');
  const meter=screen.getByRole('dialog').querySelector('[data-stat="Mood"]');assert(meter);
  assert(!document.querySelector('.result-indicators.is-ready'),'shared appearance waits for the result image');assert(meter.querySelector('strong').textContent.includes(success?'+3':'−2'));
@@ -359,9 +368,9 @@ for(const [hygiene,mood,roll,success]of [[55,30,9,false],[55,30,10,true],[80,30,
 for(const [index,stem,minutes]of [[1,'decline',0],[2,'detour',5]]){
  setup(companyState,companyPending);const before=read(stateKey);click(company.choices[index].label);
  assertEventImage('.result-illustration',`event-park-company-${stem}`);
- assert.equal(read(stateKey).minutes,before.minutes+minutes);assert.equal(read(stateKey).mood,before.mood);
+ assertEventMinutes(before,minutes);assert.equal(read(stateKey).mood,before.mood);
  if(index===2){assert(read(stateKey).energy<before.energy-1 && read(stateKey).energy>before.energy-1.5,'detour costs one Energy plus ordinary five-minute drain');assert(screen.getByRole('dialog').querySelector('[data-stat="Energy"]').textContent.includes('−1'));}
- else assert.equal(read(stateKey).energy,before.energy);
+ else assert(read(stateKey).energy<before.energy&&read(stateKey).energy>before.energy-.2,'only passive encounter-time drain applies');
  const after=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),after);ok();
  cleanup();render(React.createElement(App));advance(60000);assert(!screen.queryByRole('dialog'),'company appears once per run');
 }
@@ -384,7 +393,7 @@ const borrowPending=(pendingId='borrow-phone',pendingRoll)=>({[encountersKey]:{.
 const borrowedState={day:3,minutes:60,mood:30,energy:68};
 function checkBorrowResult(stem,before,battery,mood,damage=0){
  assertEventImage('.result-illustration',stem);
- assert.equal(read(stateKey).minutes,before.minutes+(battery?5:0));
+ assertEventMinutes(before,battery?5:0);
  assert.equal(read(stateKey).mood,before.mood+mood);
  assert.equal(read(invKey).phoneBattery,62-battery);
  assert.equal(read(invKey).phoneCondition,72-damage);
@@ -500,7 +509,7 @@ for(const id of ['first-night-station','first-night-bench','street-patrol-wake']
  if(known) {
   const remaining=event.choices.find(choice=>choice!==ask);
   click(remaining.label);
-  assert.equal(read(stateKey).minutes,before.minutes+(remaining.outcome.minutes??0));
+  assertEventMinutes(before,remaining.outcome.minutes);
   assert(document.querySelector('.result-illustration').getAttribute('src').includes((remaining.outcome.illustration??newEventArt[id][event.choices.indexOf(remaining)+1]).split('/').pop().replace('.webp','')),'filtering does not shift the remaining answer artwork');
  }
 }
@@ -524,7 +533,7 @@ for(const locationId of ['street','station'])for(const [documents,storedDocument
    assert.equal(screen.getByRole('dialog').querySelectorAll('.result-description').length,1,'police shelter discovery uses the same short paragraph; ID-check costs remain below');
   } else assert(result.includes(documents?'The officer checks your documents':storedDocuments?'Your documents are stored at the shelter':'Your documents are missing'));
   assert.equal(/train ticket/i.test(result),locationId==='station');
-  assert.equal(read(stateKey).minutes,before.minutes+choice.outcome.minutes+(documents?0:10));
+  assertEventMinutes(before,choice.outcome.minutes+(documents?0:10));
   assert.equal(read(invKey).documents,documents,'identity check neither loses nor restores ID');
   assert.equal(read('street-life-storage-v1').documents,storedDocuments,'stored ID is not silently fetched');
   assert.equal(read(stateKey).locationId,choice.outcome.moveToStreet?'street':locationId);
@@ -573,7 +582,7 @@ for(const locationId of ['street','station']){
   const before=read(stateKey);advance(2000);assert.deepEqual(read(stateKey),before);
   click(choice.label);assertEventImage('.result-illustration',`${prefix}-${suffix}`);
   assert(screen.getByRole('dialog').textContent.includes(choice.outcome.discoverLocation === 'shelter' ? 'Night Shelter offers a bed, meals and a shower. Try to arrive before 18:00, as places are limited.' : choice.outcome.message));
-  assert.equal(read(stateKey).minutes,before.minutes+choice.outcome.minutes);
+  assertEventMinutes(before,choice.outcome.minutes);
   assert.equal(read(stateKey).locationId,locationId,'moving to another seat stays at the same place');
   ok();assert.equal(read('street-life-first-night-events-v1').pendingId,null);
  }
@@ -627,7 +636,7 @@ for(const [index,asset] of ['decline','help','supplies'].entries()) {
  const before=read(stateKey),supplies=read(invKey);
  click(neighbour.choices[index].label);
  assert.equal(read(stateKey).mood,30+[-2,2,3][index]);
- assert.equal(read(stateKey).minutes,before.minutes+[0,5,5][index]);
+ assertEventMinutes(before,[0,5,5][index]);
  assertEventImage('.result-illustration',`event-neighbour-${asset}`);
  assert.equal(read(invKey).food,supplies.food+(index===2?1:0));
  assert.equal(read(invKey).water,supplies.water+(index===2?1:0));
@@ -683,7 +692,7 @@ for(const [index,asset] of ['avoid','pass','greet'].entries()) {
  const before=read(stateKey),supplies=read(invKey);
  click(dog.choices[index].label);
  assert.equal(read(stateKey).mood,before.mood+[-2,-1,3][index]);
- assert.equal(read(stateKey).minutes,before.minutes+[0,0,5][index]);
+ assertEventMinutes(before,[0,0,5][index]);
  assertEventImage('.result-illustration',`event-neighbour-dog-${asset}`);
  assert.equal(read(invKey).food,supplies.food);assert.equal(read(invKey).water,supplies.water);
  const journal=read('street-life-journal-history-v1').find(entry=>entry.actionTitle===dog.title);
@@ -694,7 +703,7 @@ for(const [index,asset] of ['avoid','pass','greet'].entries()) {
 // Both home scenes can occur in one run, with the shared 45-minute cooldown.
 setup({minutes:1320,mood:30});advance(15000);
 click(neighbour.choices[0].label);ok();
-advance(44000);assert(!screen.queryByRole('dialog'),'home scenes respect the shared cooldown');
+advance(44000);assert(!screen.queryByRole('dialog'),'home scenes respect the shared cooldown and idle observation cadence');
 advance(1000);assert(screen.getByRole('dialog').textContent.includes('An old friend'));
 click(dog.choices[2].label);ok();
 assert(read('street-life-first-night-events-v1').seen.includes(dog.id));
@@ -757,8 +766,8 @@ for(const [origin,destination] of [['station','street'],['street','station']]) {
  assert(!screen.queryByRole('dialog'),'opposite location cannot replay the request');
 }
 setup({day:3,minutes:600},{[encountersKey]:{...complete,seen:complete.seen.filter(id=>id!=='dropped-glove')}});advance(30000);
-assert(screen.getByRole('dialog').textContent.includes('Someone dropped a glove'));const t=read(stateKey).minutes;
-click(/Call after them/);assert.equal(read(stateKey).minutes,t+2);ok();
+assert(screen.getByRole('dialog').textContent.includes('Someone dropped a glove'));const t=read(stateKey);
+click(/Call after them/);assertEventMinutes(t,2);ok();
 // Reset permits a new run's opening; it also removes the ordinary seen queue.
 click('Reset save');assert.deepEqual(read(encountersKey).seen,[]);
 advance(15000);assert(screen.getByRole('dialog').textContent.includes('A familiar face'));

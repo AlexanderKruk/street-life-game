@@ -40,14 +40,7 @@ export default function StoryLiveControls({ interaction, onSelect }: { interacti
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
   }, [interaction.key, signature, reduced])
-  const panel = useRef<HTMLDivElement>(null)
-  const focused = useRef<string | null>(null)
-  useEffect(() => {
-    if (focused.current === interaction.key) return
-    const first = panel.current?.querySelector<HTMLButtonElement>('button:not(:disabled):not([hidden])')
-    if (first) { first.focus({ preventScroll: true }); focused.current = interaction.key }
-  }, [interaction.key, elapsed])
-  return <div className="story-live-controls" ref={panel} aria-label={t('story.choices')}>
+  return <div className="story-live-controls" aria-label={t('story.choices')}>
     {interaction.content}
     <div className="story-live-actions">{choices.map(({ action, at }) => <button key={`${interaction.key}:${action.id}`} type="button"
       className={`story-live-choice${action.primary ? ' is-primary' : ''}`} data-order-id={action.id} hidden={!reduced && elapsed < at}

@@ -84,7 +84,7 @@ try {
   }
  }
  Math.random=()=>0;
- setup({food:3,foodFreshness:0},{locationId:'shop'});click('Small Shop');click('Buy Cheap food for 5.00 zł');ok();click(/^Inventory$/);const bought=read(invKey).foodPortions;assert.deepEqual(bought.slice(0,3),[0,0,0]);assert(bought[3]>99&&bought[3]<=100);assert(document.querySelector('.inventory-slot').textContent.includes('Spoiled ×3'));
+ setup({food:3,foodFreshness:0},{locationId:'shop'});click('Shop');click('Buy Cheap food for 5.00 zł');ok();click(/^Inventory$/);const bought=read(invKey).foodPortions;assert.deepEqual(bought.slice(0,3),[0,0,0]);assert(bought[3]>99&&bought[3]<=100);assert(document.querySelector('.inventory-slot').textContent.includes('Spoiled ×3'));
  setup({food:6,foodPortions:[0,5,40,80,90,100]},{locationId:'residential-shelter'},{'street-life-situation-v1':{housing:'Schronisko',schroniskoReferral:true}});click('Schronisko');fireEvent.click(within(screen.getByText(/^Food ×\d+\/4$/).closest('div')).getByRole('button',{name:'Store'}));ok();assert.deepEqual(read(invKey).foodPortions,[90,100]);assert.deepEqual(read('street-life-storage-v1').foodPortions,[0,5,40,80]);fireEvent.click(within(screen.getByText(/^Food ×\d+\/4$/).closest('div')).getByRole('button',{name:'Take'}));ok();assert.deepEqual(read(invKey).foodPortions,[90,100,0,5,40,80]);assert.equal(read('street-life-storage-v1').food,0);
  console.log('PASS: UI slot labels, spoiled/all removal, compaction, pause/reload, freshness choices, fresh-only bypass, actual gains and storage transfers.');
 } finally {Math.random=originalRandom;cleanup();dom.window.close()}

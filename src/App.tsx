@@ -99,7 +99,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.31-369'
+const BUILD_VERSION = 'v2026.10.31-370'
 // Explicit opt-in for frozen classic-UI regression comparisons during migration.
 const LEGACY_EVENT_DIALOGS = import.meta.env.VITE_LEGACY_EVENT_DIALOGS === 'true'
 const ACTIVITY_TICK_MS = 250
@@ -523,7 +523,7 @@ export default function App() {
   const { requestSleep, sleep, finishSleep, tickSleep, finishRestAction } = sleepController
 
   const { checkUnavailableReason, resolveStreetEvent, rollDice, acceptDiceResult, stealItem } = createEventController(eventSession, {
-    game, inventory, storage, life, discoveredLocations, phoneUnavailable, shelterBooked, currentId: current.id, open,
+    game, inventory, storage, life, discoveredLocations, phoneUnavailable, shelterBooked, currentId: current.id, open, encounterTimingSeed: choiceSeed,
   }, {
     setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal,
     openPage: target => { if (!storyEventVisible) openPage(target) }, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),

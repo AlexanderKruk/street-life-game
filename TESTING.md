@@ -1,3 +1,35 @@
+Release v370 — publication requested on 31 October 2026:
+release the single-block Story episodes, stable encounter durations, removal of
+automatic answer focus and compact Shop names/hours. Existing GitHub Pages CI
+owns the full 35 Node suites, production build and deployment. Do not report
+publication until the workflow succeeds. Targeted checks already passed; do not
+duplicate successful unchanged CI locally. Browser/device QA remains unverified
+because managed preview exits with vite: not found. Earlier local-only holds
+below are superseded by this explicit publication request.
+
+Single-block Story episodes — 31 October 2026, local source checkpoint, commit requested by the user:
+every episode, including continuations, uses one immediately visible immutable
+start header (time/place/full day). Choice, outcome, image, closing text and
+consequences add no timestamps or filled points. The pulsing cursor and line
+follow growing content/controls; choices still pause game time. The lower time
+is hidden during presentation/decisions/processes and shows the shared real
+clock once the whole result has finished. Replay uses saved finish time, never
+inventing minutes from animation frames. Existing text/image/choice/stat pace,
+choice flight, layout retention, manual reading and saved facts are retained.
+Authored encounters use 1–3 minutes for formerly untimed outcomes and ±1 minute
+around existing positive durations (minimum one). Sample deterministically from
+the persisted run seed plus stable event/outcome/time identities, independently
+of dice/reward RNG; apply once through the existing result/action owner. All
+real clocks, passive needs, aging, History and saved end stamps share that cost.
+Completed archives are not rewritten; decision/result reload never charges twice.
+Results, 61 live/61 modal routes, recording/replay, travel, event controllers,
+event rules, localisation, rendering, design/module checks and production build
+passed. New cases cover duration range, reload stability, actual saved clock
+parity and midnight. Test fixtures use a fixed persisted seed for paired runs.
+Browser smoke expectations now cover one immediate header and growing cursor;
+browser/device checks remain unrun: managed preview exits with vite: not found.
+User requested a local commit. No push, release-ID change or publication.
+
 Presentation rebuild — 31 October 2026, source only: check-results now covers
 started-word-only reservation, unrevealed text exclusion, stable glyph nodes,
 Unicode/newline/NBSP preservation and settlement. check-story-modal verifies real

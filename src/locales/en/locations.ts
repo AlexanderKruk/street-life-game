@@ -3,7 +3,7 @@ export const locations = {
   "location.description.street": "Chance encounters, small opportunities and unexpected trouble.",
   "location.name.station": "Station",
   "location.description.station": "Crowds, benches and small chances to earn.",
-  "location.name.shop": "Small Shop",
+  "location.name.shop": "Shop",
   "location.description.shop": "Affordable food, water and everyday supplies.",
   "location.name.shelter": "Night Shelter",
   "location.description.shelter": "Overnight accommodation. Open from 18:00 until 08:00; places are limited.",

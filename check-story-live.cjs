@@ -151,10 +151,12 @@ try {
   animate(30000); noModal(); assert(!document.querySelector('[data-order-id="story:acknowledge"]'));
   assert.equal(save().episodes[0].status, 'complete');
   assert(document.querySelector('.story-idle.is-running'), 'the cursor keeps breathing between events');
+  assert(document.querySelector('.story-track.is-archived:not(.has-replay)'), 'completed episodes reconnect their full line to the following event');
   const idleClock = document.querySelector('.story-idle time').textContent;
   animate(1500); assert.equal(document.querySelector('.story-idle time').textContent, idleClock, 'idle animation cannot advance a second clock');
   env.advance(2000); assert.notEqual(document.querySelector('.story-idle time').textContent, idleClock, 'idle follows actual game ticks');
-  assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'sealed');
+  assert.equal(document.querySelectorAll('.story-part-stamp').length, 1);
+  assert.equal(document.querySelector('.story-part-stamp').dataset.storyStamp, 'sealed');
   assert.equal(track.style.minHeight, '900px', 'automatic acknowledgement retains the current reading layout');
   env.click('Replay'); assert.equal(track.style.minHeight, '', 'explicit replay starts a fresh presentation layout');
   setup('spare-change'); env.fireEvent.click(document.querySelector('.story-reveal')); animate(8000);

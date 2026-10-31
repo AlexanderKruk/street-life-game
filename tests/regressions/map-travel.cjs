@@ -19,20 +19,20 @@ assert(!streetShortcut.disabled);
 fireEvent.click(streetShortcut);assert.deepEqual(read(stateKey),mapBefore);
 assert(!document.querySelector('.district-map'));assert(!document.querySelector('.travel-sheet'));
 click(/Map$/);
-click('Small Shop');assert(document.querySelector('.travel-sheet'));
+click('Shop');assert(document.querySelector('.travel-sheet'));
 assert(!document.querySelector('.district-card'));
-assert(document.querySelector('.travel-sheet').textContent.includes('Small Shop'));
+assert(document.querySelector('.travel-sheet').textContent.includes('Shop'));
 assert.equal(read(stateKey).locationId,'street');
 fireEvent.click(document.querySelector('.sheet-close'));
 setup({locationId:'shop',minutes:600});click(/Map$/);
-assert(!within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Small Shop',exact:true}).disabled);
+assert(!within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Shop',exact:true}).disabled);
 const beforeExit=read(stateKey);
-fireEvent.click(within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Small Shop',exact:true}));
+fireEvent.click(within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Shop',exact:true}));
 assert(!document.querySelector('.travel-sheet'));assert.deepEqual(read(stateKey),beforeExit);
 assert(!document.querySelector('.district-map'));assert(document.querySelector('.shop-hero'));
 click(/Map$/);
 click('Street');assert(!document.querySelector('.travel-sheet'));
-assert(screen.getByRole('dialog',{name:'Leave Small Shop?'}));
+assert(screen.getByRole('dialog',{name:'Leave Shop?'}));
 assert(screen.getByText('TIME PAUSED'));assert(!screen.queryByText('You’ll step outside onto the street.'));
 advance(3000);assert.deepEqual(read(stateKey),beforeExit);
 click('Cancel');assert.deepEqual(read(stateKey),beforeExit);assert(!screen.queryByRole('dialog'));
@@ -51,7 +51,7 @@ for(const origin of ['station','hospital','free-clinic','daycenter','support','j
 }
 setup({locationId:'station',minutes:600});click(/Map$/);
 assert(!screen.getByRole('button',{name:'Street',exact:true}).disabled);
-assert(!within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Small Shop',exact:true}).disabled);
+assert(!within(document.querySelector('.district-shortcuts')).getByRole('button',{name:'Shop',exact:true}).disabled);
 
 // Cancelled routes must never count as a departure; actual walking does, once.
 setup({locationId:'shelter',minutes:540},{[lifeKey]:{housing:'Night shelter',shelterRegisteredDay:1,shelterUntilDay:7,shelterLastStayDay:1,shelterAuditDay:1,shelterStrikes:0}});
@@ -161,7 +161,7 @@ for(const mode of ['walk','transit','fare-dodge']) {
 
 // The nearby shop takes the same 5–15 minutes in each mode, including bus waits.
 for(const mode of ['walk','transit','fare-dodge']) {
- setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click('Small Shop');
+ setup({minutes:600},{[invKey]:{transitCard:false}});click('Map');click('Shop');
  const options=document.querySelectorAll('.travel-option');assert.equal(options.length,3);for(const option of options)assert(option.textContent.includes('≈5–15m'));
  click(mode==='fare-dodge'?/Ride without ticket/:mode==='walk'?/^Walk/:/Public transport/);
  assert.equal(read('street-life-trip-v1').total,15);const original=read('street-life-trip-v1');cleanup();render(React.createElement(App));assert.deepEqual(read('street-life-trip-v1'),original);
