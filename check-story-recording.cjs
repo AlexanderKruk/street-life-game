@@ -84,14 +84,14 @@ try {
     window.cancelAnimationFrame = id => frames.delete(id);
     const animate = ms => { const end = clock + ms; while (clock < end) { clock += 32; const pending = [...frames.values()]; frames.clear(); env.act(() => pending.forEach(callback => callback(clock))); } };
     env.fireEvent.click(env.within(episode).getByRole('button', { name: 'Replay' }));
-    animate(128);
+    animate(320);
     const reveal = episode.querySelector('.story-text .story-reveal');
     const reserved = [...reveal.querySelectorAll('.story-word')];
     assert(reserved.length > 0, 'native Story reserves the current word during replay');
     assert(reserved.some(word => word.dataset.word.length > word.textContent.length), 'hidden letters reserve word width before typing');
     assert(reserved.every(word => word.querySelector('.story-word-visible .story-letter')), 'the original per-letter opacity animation is reused');
     assert(reveal.textContent.length < archived.episodes[0].scenes[0].text.length, 'full future words are absent from DOM text');
-    animate(384);
+    animate(192);
     assert(reveal.textContent.length < archived.episodes[0].scenes[0].text.length, 'native replay still types gradually');
     const openingStamp = episode.querySelector('.story-part-stamp');
     assert.equal(openingStamp.dataset.storyStamp, 'pending', 'metadata is not stamped during typing');
