@@ -1,3 +1,25 @@
+Reimplemented Story/product presentation — 31 October 2026, source only,
+explicitly authorised after the v362 rollback. This is a new implementation,
+not restoration of v363–v367 commits. StoryText reserves only a started word
+with empty, aria-hidden future glyph spans in normal flow; their pseudo-glyphs
+use the same boxes as revealed characters. No absolute text layer or duplicated
+word. Preserve Unicode code-point timing, punctuation, skip, newline/NBSP and
+stable character nodes through settlement; overlong words can wrap internally.
+Sealed stamps show complete metadata and use the existing 500ms piece pause;
+the isolated reference follows that stamp contract. Narrative line-height is 1.5,
+check metadata uses Small and place names use semibold tokens.
+During an actual growing photo only, ResizeObserver follows its eased height
+before paint; text retains smooth following and manual reading interrupts both.
+ItemEffects supplies transparent grey semantic icons/strengths in Backpack and
+Shop only, with a 4px gap. Keep freshness wording/counts explicit and localised;
+medicine uses the pill icon. Prices, quantities, costs and game/save rules stay.
+Results, recording, modal (61 routes plus photo interruption/immutability),
+example, localisation, food/inventory, shop/inventory, design/module checks and
+production build passed. Actual Chromium components at 320/390/1280px preserved
+all first 67 glyph coordinates between partial/full mixed RU/PL/EN text, with
+emoji/NBSP and an overlong word; zero horizontal overflow; item gap measured 4px.
+No full suite, physical iPhone/WebKit test or publication/build-ID change.
+
 Rollback to v362 completed — 31 October 2026, explicitly requested by the user.
 Main commit 53ee66f1c8fd19ce63c7ec8385ccf7dac8c8f4da restores the exact published
 v362 tree 72acf338d2d3645c99bb45afbea4f4a1f55e197f from a4db38eda7952cfa27547d81286ddf8a183d0880.

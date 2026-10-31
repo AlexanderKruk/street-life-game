@@ -33,6 +33,20 @@ const after = { game: { ...before.game, minutes: 620, money: 52.6, hunger: 72.8,
 function frame(now) { act(() => { const callbacks = [...frames]; frames.clear(); callbacks.forEach(([, fn]) => fn(now)); }); }
 function row(label) { return document.querySelector(`[data-stat="${label}"]`); }
 try {
+  {
+    const StoryText = bundled('src/StoryText.tsx').default;
+    const text = 'Длинное слово\nZażółć 🙂 5\u00a0зл';
+    const view = render(React.createElement(StoryText, { text, shown: 1, animate: true, characterKey: 'word' }));
+    const first = document.querySelector('.story-character');
+    assert.equal(document.body.textContent, 'Д', 'reserved glyphs cannot leak unrevealed text into copying or accessible text');
+    assert.equal(document.querySelectorAll('.story-word').length, 1, 'future words do not reserve paragraph height');
+    assert.equal(document.querySelectorAll('.story-reserved-character').length, 6);
+    view.rerender(React.createElement(StoryText, { text, shown: Array.from(text).length, animate: false, characterKey: 'word' }));
+    assert.equal(document.body.textContent, text, 'newlines, Polish letters, emoji and nonbreaking spaces survive reveal');
+    assert.equal(document.querySelector('.story-character'), first, 'settlement retains glyph nodes');
+    assert(!document.querySelector('.story-reserved-character, .story-letter'));
+    cleanup();
+  }
   for (const [id, icon] of [['money', 'banknote'], ['water', 'water'], ['thirst', 'water'], ['food', 'food'], ['medicines', 'pill']]) {
     render(React.createElement(Icon, { name: icon }));
     const expected = document.querySelector('svg').innerHTML; cleanup();
@@ -445,7 +459,7 @@ try {
     waitFor(() => pieces[1].querySelector('.story-reveal')?.textContent === 'B');
     pauseTo(pieces[2], 'opening image', 100);
     waitFor(() => pieces[2].querySelector('.story-media').style.gridTemplateRows === '1fr');
-    pauseTo(pieces[3], 'selected answer', 0, 1000);
+    pauseTo(pieces[3], 'selected answer', 0, 500);
     const selectedAt = clock;
     while (clock - selectedAt < 1120) { step(); assert(pieces[4].hidden, 'selected answer finishes its 650ms entrance and shared pause before outcome text'); }
     waitFor(() => !pieces[4].hidden);

@@ -82,7 +82,7 @@
         {label:copy.leave,selected:copy.leaveSelected,pending:copy.leavePending,text:copy.leaveResult,wait:2}
       ];
       let phase='idle',phaseTime=0,gameElapsed=0,last=null,frame=null,y=0,fromY=0,current=null,writing=null,choices=[],waitingFor=0,selected=null;
-      let choiceGroup=null,choiceAnchor=0,isOutcome=false,stampMotion=null;
+      let choiceGroup=null,choiceAnchor=0,isOutcome=false;
       function label(){const m=22*60+43+Math.floor(gameElapsed/1000);return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
       function layout(){screen.classList.toggle('pv-settling',phase==='picture-hold'||phase==='textmove');cursor.style.transform='translateY('+y+'px)';line.style.height=y+'px';timeline.style.height=Math.ceil(Math.max(records.offsetHeight,y+24))+'px';}
       function makeRecord(withImage){
@@ -113,15 +113,7 @@
         text.addEventListener('click',()=>{if(phase==='typing' && isOutcome)skipWriting();});
         temporary.textContent='';phase='typing';phaseTime=0;
       }
-      function sealStamp(node,at){
-        const characters=Array.from(' · '+copy.place+' · '+copy.day);
-        node.textContent=at;stampMotion={node,characters,shown:0,duration:Math.max(copy.piecePause,characters.length*copy.stampStep+copy.stampFade)};
-      }
-      function typeStamp(){
-        if(!stampMotion)return;
-        const count=reduced?stampMotion.characters.length:Math.min(stampMotion.characters.length,Math.floor(phaseTime/copy.stampStep));
-        while(stampMotion.shown<count){const letter=document.createElement('span');letter.className='pv-letter';letter.textContent=stampMotion.characters[stampMotion.shown++];stampMotion.node.append(letter);}
-      }
+      function sealStamp(node,at){node.textContent=at+' · '+copy.place+' · '+copy.day;}
       function seal(){current.row.classList.add('pv-done');sealStamp(current.stamp,current.startedAt);status.textContent=current.startedAt+' · '+copy.place+' · '+copy.day+'. '+writing.message;}
       function sealOutcome(){const outcome=current.outcome;outcome.container.classList.add('pv-done');sealStamp(outcome.stamp,outcome.endedAt);status.textContent=outcome.endedAt+' · '+copy.place+' · '+copy.day+'. '+writing.message;}
       function reveal(progress){
@@ -132,7 +124,7 @@
         current.picture.style.filter='brightness('+(.08+.92*Math.pow(progress,1.5))+') saturate('+(.6+.4*progress)+')';
       }
       function presentChoices(){
-        phase='choices';phaseTime=0;choices=[];stampMotion=null;
+        phase='choices';phaseTime=0;choices=[];
         const group=document.createElement('div');group.className='pv-actions pv-choice-group';group.setAttribute('aria-label',copy.choices);choiceGroup=group;
         let delay=0;
         options.forEach(option=>{
@@ -154,7 +146,7 @@
         choiceAnchor=y;
       }
       function showFinish(){
-        phase='result';phaseTime=0;stampMotion=null;
+        phase='result';phaseTime=0;
         const group=document.createElement('div');group.className='pv-actions';
         const button=document.createElement('button');button.type='button';button.className='pv-choice pv-next cursor-interaction';button.textContent=copy.next;group.append(button);current.body.append(group);
         button.addEventListener('click',()=>{button.disabled=true;button.textContent=copy.walking;phase='free';phaseTime=0;});
@@ -183,8 +175,7 @@
           const progress=reduced?1:Math.min(1,phaseTime/1150);reveal(progress);
           if(progress===1){seal();phase='picture-hold';phaseTime=0;fromY=y;}
         }else if(phase==='picture-hold'){
-          typeStamp();
-          const progress=reduced?1:Math.min(1,phaseTime/stampMotion.duration);
+          const progress=reduced?1:Math.min(1,phaseTime/copy.piecePause);
           y=fromY+(records.offsetHeight-fromY)*(1-Math.pow(1-progress,3));
           if(progress===1)presentChoices();
         }else if(phase==='choices'){
@@ -209,8 +200,7 @@
           y=reduced?anchor:y+(anchor-y)*Math.min(1,delta/100);
           if(phaseTime>=waitingFor)beginOutcome(selected.text);
         }else if(phase==='textmove'){
-          typeStamp();
-          const progress=reduced?1:Math.min(1,phaseTime/stampMotion.duration);
+          const progress=reduced?1:Math.min(1,phaseTime/copy.piecePause);
           y=fromY+(records.offsetHeight-fromY)*(1-Math.pow(1-progress,3));
           if(progress===1){y=records.offsetHeight;showFinish();}
         }else if(phase==='result' || phase==='free'){
@@ -219,7 +209,7 @@
         layout();frame=requestAnimationFrame(tick);
       }
       play.addEventListener('click',()=>{
-        cancelAnimationFrame(frame);records.replaceChildren();phase='idle';phaseTime=0;gameElapsed=0;last=null;y=0;fromY=0;current=null;writing=null;choices=[];selected=null;choiceGroup=null;choiceAnchor=0;isOutcome=false;stampMotion=null;
+        cancelAnimationFrame(frame);records.replaceChildren();phase='idle';phaseTime=0;gameElapsed=0;last=null;y=0;fromY=0;current=null;writing=null;choices=[];selected=null;choiceGroup=null;choiceAnchor=0;isOutcome=false;
         live.textContent='22:43';status.textContent='';play.textContent=copy.replay;
         beginText(copy.intro,true);layout();frame=requestAnimationFrame(tick);
       });

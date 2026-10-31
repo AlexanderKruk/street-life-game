@@ -1433,7 +1433,9 @@ body { min-width:0; }
 .story-pieces { min-width:0; display:flex; flex-direction:column; gap:var(--story-gap); }
 .story-piece { position:relative; padding:0; }
 .story-reveal { display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
-.story-piece p, .story-reveal { white-space:pre-line; text-wrap:wrap; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); }
+.story-piece p, .story-reveal { white-space:pre-line; text-wrap:wrap; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); line-height:1.5; }
+.story-word { display:inline-block; max-width:100%; white-space:normal; overflow-wrap:anywhere; vertical-align:baseline; }
+.story-reserved-character::before { content:attr(data-character); visibility:hidden; }
 .story-letter { animation:story-letter-appear 100ms linear both; }
 @keyframes story-letter-appear { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .story-letter { animation:none; } }
@@ -1454,7 +1456,8 @@ body { min-width:0; }
 .story-live-check h2 { font-size:var(--font-title); font-weight:var(--weight-semibold); }
 .story-live-controls > p { margin:0 0 var(--story-gap); color:var(--text-secondary); }
 @media (prefers-reduced-motion:reduce) { .story-live-choice { animation:none; } }
-.story-roll { font-size:var(--font-small); }
+.story-result-effects .story-roll { font-size:var(--font-small); }
+.story-place strong { font-weight:var(--weight-semibold); }
 .story-place span { display:block; color:var(--text-secondary); font-size:var(--font-small); }
 @keyframes story-breathe { 0%,100% { transform:scale(1); opacity:.8; } 50% { transform:scale(1.333333); opacity:1; } }
 @keyframes story-breathe-wave { 0% { box-shadow:0 0 0 0 var(--color-warning); opacity:0; } 18% { opacity:.22; } 75%,100% { box-shadow:0 0 0 8px var(--color-warning); opacity:0; } }
@@ -1480,6 +1483,9 @@ body { min-width:0; }
 .story-result-effects .result-indicator { padding-block:var(--story-gap); margin-block:calc(-1 * var(--story-gap)); }
 
 /* A result reads as a scene followed by its consequences, one icon/value at a time. */
+.item-effects { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.item-effects > em:is(.positive,.negative,.warning) { display:inline-flex; align-items:center; gap:4px; padding:0; border:0; border-radius:0; background:transparent; color:var(--text-secondary); font-size:var(--font-small); font-weight:var(--weight-regular); line-height:1.3; white-space:nowrap; }
+.item-effects > em > svg { width:16px; height:16px; flex-shrink:0; }
 .result-indicators { display:flex; align-items:center; flex-wrap:wrap; gap:4px 20px; margin-top:8px; min-width:0; }
 .result-indicator { position:relative; display:inline-flex; align-items:center; gap:6px; max-width:100%; min-height:44px; padding:0; border:0; border-radius:0; background:transparent; color:var(--text-secondary); font:inherit; font-size:var(--font-small); line-height:1.4; text-align:left; cursor:pointer; }
 .result-indicator > svg { width:20px; height:20px; flex-shrink:0; }

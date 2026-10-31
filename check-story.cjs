@@ -68,7 +68,7 @@ try {
     assert(!doc.querySelector('.pv-choice-group'), 'example holds the complete image before presenting choices');
     assert(doc.querySelector('.pv-screen.pv-settling'), 'metadata prints concurrently with cursor departure');
     assert(doc.querySelector('.pv-stamp').textContent.startsWith('22:43'), 'saved time is fixed before the cursor departs');
-    assert(!doc.querySelector('.pv-stamp').textContent.endsWith('Day 0'), 'metadata is still being revealed character by character');
+    assert.equal(doc.querySelector('.pv-stamp').textContent, '22:43 · By the station · Day 0', 'the sealed stamp appears complete during departure');
     const stampLetter = doc.querySelector('.pv-stamp .pv-letter');
     advance(50); assert.equal(doc.querySelector('.pv-stamp .pv-letter'), stampLetter, 'stamp letters retain their existing fade nodes');
     advance(870);

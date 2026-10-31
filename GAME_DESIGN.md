@@ -1,3 +1,17 @@
+New presentation implementation after v362 rollback — 31 October 2026, source
+only. User authorised redoing the five reverted interface changes from v362.
+Story words reserve their future glyph boxes in normal flow only when started;
+stable glyph nodes and native wrapping prevent word jumps without absolute text
+layers. Existing typing/punctuation speed and result-level animation are retained.
+Complete stamps appear at sealing, with a 500ms departure. Narrative line-height
+is 1.5; metadata/title weights use existing tokens. Photo growth is followed before
+paint, while text stays smooth and manual reading still interrupts following.
+Backpack/Shop product effects use grey transparent icons plus strengths, 4px apart;
+explicit freshness text/counts stay visible. Medicine uses a pill. Costs, game
+clocks and saves are unchanged. Targeted tests/build passed; Chromium component
+checks at 320/390/1280 verified glyph stability and no horizontal overflow.
+No publication, full release suite or physical iPhone/WebKit validation yet.
+
 Rollback to v362 completed — 31 October 2026, explicitly requested by the user.
 Main commit 53ee66f1c8fd19ce63c7ec8385ccf7dac8c8f4da restores the exact published
 v362 tree 72acf338d2d3645c99bb45afbea4f4a1f55e197f from a4db38eda7952cfa27547d81286ddf8a183d0880.
