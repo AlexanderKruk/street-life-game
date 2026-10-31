@@ -61,7 +61,7 @@ function episodePieces(episode: StoryEpisode): Piece[] {
     while (start > 0 && pieces[start - 1].kind === 'choice') start--
     Object.assign(pieces[start], { sealAfter: Infinity, stamp: pieces[start].at, resultStart: true, pendingPart: true })
   }
-  if (episode.source === 'phone' && pieces.length) {
+  if ((episode.source === 'phone' || episode.source === 'action') && pieces.length) {
     for (const piece of pieces) {
       delete piece.sealAfter; delete piece.stamp; delete piece.resultStart; delete piece.partBody; delete piece.pendingPart
     }
@@ -122,8 +122,8 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
     let frame = 0, last: number | null = null, elapsed = 0, clockElapsed = 0, index = isLive ? completedPieces.current : 0, phase: 'typing' | 'hold' | 'move' = 'typing', y = isLive ? position.current.y : 0, from = y
     if (index >= pieces.length) { setAnimation(null); return }
     if (!isLive) onPlayback?.(episode.id, true)
-    const startMinute = episode.scenes[0].at.minute
-    const minute = () => isLive ? liveMinute.current ?? startMinute : startMinute + Math.floor(clockElapsed / 1000)
+    const startMinute = episode.source === 'action' ? episode.endedAt?.minute ?? episode.scenes[0].at.minute : episode.scenes[0].at.minute
+    const minute = () => episode.source === 'action' ? startMinute : isLive ? liveMinute.current ?? startMinute : startMinute + Math.floor(clockElapsed / 1000)
     let skipped = false, instant = false
     const revealText = (event: Event) => { if (!(event.target as HTMLElement).closest('.story-live-controls')) skipped = true }
     const element = track.current
@@ -244,13 +244,15 @@ export default function StoryScreen({ episodes, interaction, currentMinute, onPa
   const running = !paused && !interaction?.gameClock && (!interaction?.waitingForDecision || livePlaying)
   const clockMinute = useStoryClock(currentMinute, running)
   useEffect(() => { onPauseChange?.(paused); return () => onPauseChange?.(false) }, [paused, onPauseChange])
-  const start = Math.max(0, episodes.length - visible)
+  const liveIndex = interaction ? episodes.findIndex(episode => episode.id === interaction.episodeId) : -1
+  const end = liveIndex >= 0 ? liveIndex + 1 : episodes.length
+  const start = Math.max(0, end - visible)
   return <section ref={scrollRoot} className={`story-screen${presentation === 'event' ? ' story-screen-event' : ''}`}>
     {presentation === 'archive' && <div className="story-toolbar"><h1>{t('story.nav')}</h1><ModalAction variant="secondary" disabled={!!interaction} onClick={() => setComparison(value => !value)}>{t(comparison ? 'story.recordings' : 'story.comparison')}</ModalAction></div>}
     {comparison ? <StoryComparison /> : <>
       {!episodes.length && presentation === 'archive' && <p className="story-note">{t('story.empty')}</p>}
       {start > 0 && <ModalAction variant="secondary" onClick={() => setVisible(value => value + 30)}>{t('story.earlier')}</ModalAction>}
-      {episodes.slice(start).map(episode => <Episode episode={episode} key={episode.id} live={interaction?.episodeId === episode.id ? { ...interaction, minute: interaction.gameClock ? currentMinute ?? interaction.minute : clockMinute ?? interaction.minute } : undefined} disabled={!!interaction} continuous={currentMinute !== undefined} archiveControls={presentation === 'archive'} onPlayback={playback} onLivePlayback={setLivePlaying} />)}
+      {episodes.slice(start, end).map(episode => <Episode episode={episode} key={episode.id} live={interaction?.episodeId === episode.id ? { ...interaction, minute: interaction.gameClock ? currentMinute ?? interaction.minute : clockMinute ?? interaction.minute } : undefined} disabled={!!interaction} continuous={currentMinute !== undefined} archiveControls={presentation === 'archive'} onPlayback={playback} onLivePlayback={setLivePlaying} />)}
       {!interaction && !paused && currentMinute !== undefined && <div className="story-idle story-track is-running"><div className="story-head" aria-hidden="true"><span /><time>{formatTime(clockMinute ?? currentMinute)}</time></div></div>}
     </>}
   </section>

@@ -1,3 +1,18 @@
+Music in one Story block — 31 October 2026, source only: the settled
+music-walk command records one action episode with the existing selected thought,
+result, artwork and actual consequences. It retains real start/end snapshots but
+presents the final minute immediately and throughout live/replay, without a
+process or extra gameplay ticks. No changes to the existing two 15-minute action
+steps, one +3 reward, eligibility, battery/clothing costs or encounter selection.
+Insert the result before any encounter selected at the action end; the presenter
+shows chronology only through its current live episode, so that encounter appears
+after acknowledgement rather than leaking ahead of the result. Music result stays
+manual. New action source uses the existing v1 Story save and validates as before.
+Native helper/loader and real piece-selector checks passed (including midnight,
+queued-encounter order and unchanged result references); results/modal test syntax
+passed. Added real App music/reload/pause and replay fixed-clock cases, unrun due
+to absent UI/build dependencies. No browser/iPhone/WebKit claim or publication.
+
 Opening calls in Story — 31 October 2026, source only: all three opening
 contacts share the Story tab/modal and a validated phone episode with optional
 immutable scene.thought. The phone controller invokes an optional start port only

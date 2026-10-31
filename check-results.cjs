@@ -306,6 +306,21 @@ try {
   }
   // Check the visible reading rhythm, including punctuation pauses and click-to-reveal.
   {
+    const episode = { id: 95, source: 'action', sourceId: 'music-walk', status: 'complete',
+      scenes: [{ eventId: 'music-walk', title: 'Walk with music', text: '', thought: 'Clear my head.', at }],
+      result: fixtures[0], endedAt: { ...at, minute: 620 } };
+    const saved = JSON.stringify(episode);
+    render(React.createElement(StoryScreen, { episodes: [episode] }));
+    assert.equal(document.querySelectorAll('.story-part-stamp').length, 1, 'instant action has one thought/result stamp');
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    for (let time = 0; time <= 6000; time += 32) {
+      frame(time);
+      assert.equal(document.querySelector('.story-head time').textContent, '10:20', 'instant-action replay keeps its final saved time throughout');
+    }
+    assert.equal(JSON.stringify(episode), saved);
+    cleanup();
+  }
+  {
     const episode = { id: 98, source: 'encounter', sourceId: 'typing', status: 'complete', scenes: [{ eventId: 'typing', title: 'Scene', text: 'А, Б. В', at }] };
     render(React.createElement(StoryScreen, { episodes: [episode] }));
     assert(!document.querySelector('.story-letter'), 'historic text opens fully visible');

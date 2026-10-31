@@ -1,3 +1,11 @@
+31 October 2026 — Music walk now uses one immediate Story result block.
+The existing command still spends thirty minutes at once; the presentation starts
+at its final time, shows the saved thought/result/art/actual consequences, and
+keeps that clock fixed in live presentation and replay. Follow-on encounters are
+shown after the music result. Source-only; native archive/selector checks and
+test syntax passed. App/replay cases added but UI/build/browser remain unrun
+because local dependencies are absent. No publication.
+
 31 October 2026 — Opening calls implemented in source through the shared Story
 presenter: selected thought, dial text, live ringing/talking dots, actual response,
 existing artwork, actual consequences and one completion stamp. Three contacts,

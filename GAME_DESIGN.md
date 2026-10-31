@@ -1,3 +1,11 @@
+Immediate music result in Story — 31 October 2026: music spends its existing
+thirty minutes immediately. One block contains the selected thought, actual
+result text, existing picture and real status changes. Its moving clock and
+completion stamp show the final time throughout; there is no waiting phase or
+additional time spent reading. The archive retains the real starting snapshot.
+Any encounter selected by the walk follows the completed music block. Closing
+acknowledges the result once and does not repeat the action.
+
 Opening-call Story presentation — 31 October 2026: selecting an opening
 contact records the thought, then types the dial action. Intro presentation pauses
 the call process; afterwards its existing ×1 clock drives ringing/talking. The

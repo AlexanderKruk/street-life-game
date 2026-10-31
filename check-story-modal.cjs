@@ -73,6 +73,26 @@ try {
     const settled = facts(); remount(); assert.deepEqual(facts(), settled, 'pending result reload does not repeat consequences');
     dismiss(); assert.equal(save().episodes.find(entry => entry.source === 'phone').status, 'complete');
   }
+  // Music is an immediate thirty-minute command with one final-time result.
+  env.setup({ day: 1, minutes: 1320, locationId: 'street', mood: 30, health: 100, energy: 100 }, {
+    [firstKey]: { seen, lastAt: null, pendingId: null }, [encounterKey]: { seen, lastAt: null, pendingId: null },
+    'street-life-left-home-v1': false, 'street-life-opening-calls-v1': 0,
+    'street-life-music-walk-used-v1': false,
+  });
+  env.fireEvent.click(document.querySelector('[data-choice="music-walk"]'));
+  assert(modal()); noClassic();
+  assert.equal(env.read(env.stateKey).minutes, 1350, 'music spends thirty minutes immediately');
+  assert.equal(env.read(env.stateKey).mood, 33, 'the existing single +3 reward is retained');
+  const music = save().episodes.find(entry => entry.source === 'action');
+  assert.equal(music.scenes[0].at.minute, 1320); assert.equal(music.endedAt.minute, 1350);
+  assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1, 'thought and result share one stamp');
+  assert(modal().querySelector('.story-part-stamp').textContent.startsWith('22:30'));
+  assert(modal().querySelector('.story-media img').src.includes('event-music-walk'));
+  assert(!modal().querySelector('.story-live-controls'), 'music has no waiting phase');
+  const musicFacts = facts(); env.advance(5000);
+  assert.deepEqual(facts(), musicFacts, 'reading the music result advances no game time or consequences');
+  remount(); assert.deepEqual(facts(), musicFacts, 'restoring music does not repeat the command');
+  dismiss(); assert.equal(save().episodes.find(entry => entry.source === 'action').status, 'complete');
   let cases = 0;
   for (const event of STREET_EVENTS) for (const choice of event.choices) {
     setup(event.id); remount(ClassicApp);

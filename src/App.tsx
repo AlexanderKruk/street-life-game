@@ -364,10 +364,11 @@ export default function App() {
   }, [travelVisible])
   const phoneSearchVisible = !!phoneActivity && !(activeEvent || diceCheck || pendingResult || infoModal || rainChoice || rainWaiting || gameOver || closingNotice)
   const storyCallRunning = !LEGACY_EVENT_DIALOGS && !!activeCall && phoneSearchVisible
-  const inlineStoryEvent = screen === 'story' && !gameOver && !sleeping && !closingNotice && !!(storyCallRunning || activeEvent || diceCheck ||
+  const musicResultSettling = !LEGACY_EVENT_DIALOGS && pendingResult?.id === 'music-walk'
+  const inlineStoryEvent = screen === 'story' && !musicResultSettling && !gameOver && !sleeping && !closingNotice && !!(storyCallRunning || activeEvent || diceCheck ||
     rainChoice || rainWaiting || game.rain && story.store.episodes.some(entry => entry.source === 'rain' && entry.sourceId === game.rain?.id && entry.status === 'active') ||
     pendingResult?.storyEpisodeId !== undefined || infoModal && story.store.episodes.some(entry => entry.status === 'awaiting-ack'))
-  const modalStoryEvent = !LEGACY_EVENT_DIALOGS && screen !== 'story' && !gameOver && !sleeping && !closingNotice && !!(storyCallRunning || storyTravelRunning || activeEvent || rainChoice || rainWaiting ||
+  const modalStoryEvent = !LEGACY_EVENT_DIALOGS && screen !== 'story' && !musicResultSettling && !gameOver && !sleeping && !closingNotice && !!(storyCallRunning || storyTravelRunning || activeEvent || rainChoice || rainWaiting ||
     pendingResult?.storyEpisodeId !== undefined && story.store.episodes.some(entry => entry.id === pendingResult.storyEpisodeId && entry.source !== 'check') ||
     infoModal && story.store.episodes.some(entry => entry.status === 'awaiting-ack' && entry.source !== 'check'))
   const storyEventVisible = inlineStoryEvent || modalStoryEvent
@@ -589,6 +590,8 @@ export default function App() {
     }
     const result = { ...infoModal, title: infoModal?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }
     if (pendingResult.storyEpisodeId !== undefined) story.finish(pendingResult.storyEpisodeId, result, storyStamp(), { actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}) })
+    else if (firstReport && !LEGACY_EVENT_DIALOGS && pendingResult.id === 'music-walk') story.recordMusicResult(pendingResult, result,
+      { day: pendingResult.before.game.day, minute: pendingResult.before.game.minutes, locationId: pendingResult.before.game.locationId, locationName: locationName(pendingResult.before.game.locationId) }, storyStamp(), t('action.street.music'))
     else if (firstReport) story.recordInventoryResult(pendingResult, result, pendingResult.before.inventory, after.inventory,
       { day: pendingResult.before.game.day, minute: pendingResult.before.game.minutes, locationId: pendingResult.before.game.locationId, locationName: locationName(pendingResult.before.game.locationId) }, storyStamp())
     setInfoModal(result)
@@ -855,7 +858,7 @@ export default function App() {
   if (liveEpisode) {
     const scene = liveEpisode.scenes.at(-1)!
     storyInteraction = { episodeId: liveEpisode.id, key: `${liveEpisode.id}:${scene.eventId}:${liveEpisode.status}`, minute: absoluteMinutes(game), actions: [], seed: choiceSeed, decision: choiceDecisionKey, fixed: true }
-    if (liveEpisode.source === 'travel' || liveEpisode.source === 'phone') storyInteraction.gameClock = true
+    if (liveEpisode.source === 'travel' || liveEpisode.source === 'phone' || liveEpisode.source === 'action') storyInteraction.gameClock = true
     if (liveEpisode.source === 'phone') { storyInteraction.onPlayback = setCallStoryPlaying; storyInteraction.contentAfterIntro = true }
     if (liveEpisode.status === 'awaiting-ack' && infoModal && !pendingResult) {
       storyInteraction.onPresented = modalStoryEvent ? () => setPresentedStoryId(liveEpisode.id) : closeResult
