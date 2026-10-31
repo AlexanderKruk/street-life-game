@@ -1,3 +1,13 @@
+Release v363 CI adjustment — 31 October 2026: the first Pages run
+41207833758 passed 31 of 35 Node suites before stopping at check-results'
+selected-answer transition assertion. The test still expected a 1000ms stamp
+pause even though the intentionally simplified complete-stamp animation
+uses the established 500ms pause. Updated that one timing expectation to
+500ms; the selected-answer 650ms entrance and following 500ms hold remain
+unchanged. Source/runtime, typography, clocks and all gameplay facts are
+unchanged. Retry through the single Pages CI workflow; do not duplicate
+the full test run locally. Success is not yet established.
+
 Release v363 — 31 October 2026, publication requested: includes Story
 typography alignment (16px/400 narrative at 1.5 line-height, compact 14px
 dice-roll metadata and 600-weight discovered-place names) plus complete

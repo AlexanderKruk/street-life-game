@@ -446,7 +446,7 @@ try {
     waitFor(() => pieces[1].querySelector('.story-reveal')?.textContent === 'B');
     pauseTo(pieces[2], 'opening image', 100);
     waitFor(() => pieces[2].querySelector('.story-media').style.gridTemplateRows === '1fr');
-    pauseTo(pieces[3], 'selected answer', 0, 1000);
+    pauseTo(pieces[3], 'selected answer', 0, 500);
     const selectedAt = clock;
     while (clock - selectedAt < 1120) { step(); assert(pieces[4].hidden, 'selected answer finishes its 650ms entrance and shared pause before outcome text'); }
     waitFor(() => !pieces[4].hidden);
