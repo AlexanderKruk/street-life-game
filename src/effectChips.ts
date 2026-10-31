@@ -20,7 +20,7 @@ export const EFFECT_CHIPS = {
   'deposit-value': { resourceId: 'money', kind: 'positive', message: 'effectChip.deposit' },
 } as const
 export type ImpactId = keyof typeof EFFECT_CHIPS
-export type EffectChip = { id: ImpactId | `freshness:${FoodCondition}`; kind: 'positive' | 'negative' | 'warning'; label: string; resourceId?: ResultResourceId; count?: number }
+export type EffectChip = { id: ImpactId | `freshness:${FoodCondition}`; kind: 'positive' | 'negative' | 'warning'; label: string; resourceId?: ResultResourceId }
 
 export function impactChip(id: ImpactId, translate: typeof t = t): EffectChip {
   const definition = EFFECT_CHIPS[id]
@@ -29,7 +29,7 @@ export function impactChip(id: ImpactId, translate: typeof t = t): EffectChip {
 const conditionKinds = { fresh: 'positive', stale: 'warning', spoiled: 'negative' } as const
 export function foodConditionLabel(condition: FoodCondition, translate: typeof t = t) { return translate(`freshness.${condition}`) }
 export function freshnessChip(condition: FoodCondition, count?: number, translate: typeof t = t): EffectChip {
-  return { id: `freshness:${condition}`, kind: conditionKinds[condition], label: count === undefined ? foodConditionLabel(condition, translate) : translate(`freshness.${condition}.count`, { count }), ...(count === undefined ? {} : { count }) }
+  return { id: `freshness:${condition}`, kind: conditionKinds[condition], label: count === undefined ? foodConditionLabel(condition, translate) : translate(`freshness.${condition}.count`, { count }) }
 }
 export function foodFreshnessLabel(value: number) { return foodConditionLabel(foodCondition(value)) }
 

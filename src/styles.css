@@ -1433,14 +1433,7 @@ body { min-width:0; }
 .story-pieces { min-width:0; display:flex; flex-direction:column; gap:var(--story-gap); }
 .story-piece { position:relative; padding:0; }
 .story-reveal { display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
-.story-piece p, .story-reveal { white-space:pre-line; text-wrap:wrap; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); line-height:1.5; }
-
-/* Reserve the currently typed word without measuring the text or reserving
-   future words. The browser wraps complete words at the available width.
-   Overlong individual words alone can break internally. */
-.story-word { position:relative; display:inline-block; width:max-content; max-width:100%; vertical-align:baseline; white-space:normal; overflow-wrap:anywhere; }
-.story-word::before { content:attr(data-word); display:block; visibility:hidden; white-space:normal; overflow-wrap:anywhere; }
-.story-word-visible { position:absolute; inset:0; display:block; white-space:normal; overflow-wrap:anywhere; }
+.story-piece p, .story-reveal { white-space:pre-line; text-wrap:wrap; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); }
 .story-letter { animation:story-letter-appear 100ms linear both; }
 @keyframes story-letter-appear { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .story-letter { animation:none; } }
@@ -1461,8 +1454,7 @@ body { min-width:0; }
 .story-live-check h2 { font-size:var(--font-title); font-weight:var(--weight-semibold); }
 .story-live-controls > p { margin:0 0 var(--story-gap); color:var(--text-secondary); }
 @media (prefers-reduced-motion:reduce) { .story-live-choice { animation:none; } }
-.story-result-effects .story-roll { font-size:var(--font-small); }
-.story-place strong { font-weight:var(--weight-semibold); }
+.story-roll { font-size:var(--font-small); }
 .story-place span { display:block; color:var(--text-secondary); font-size:var(--font-small); }
 @keyframes story-breathe { 0%,100% { transform:scale(1); opacity:.8; } 50% { transform:scale(1.333333); opacity:1; } }
 @keyframes story-breathe-wave { 0% { box-shadow:0 0 0 0 var(--color-warning); opacity:0; } 18% { opacity:.22; } 75%,100% { box-shadow:0 0 0 8px var(--color-warning); opacity:0; } }
@@ -1514,15 +1506,3 @@ body { min-width:0; }
 .story-event-actions { flex:none; display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:12px; padding:12px var(--modal-padding-x) var(--modal-padding-y); }
 .modal-panel .story-event-actions .modal-action { min-width:0; min-height:44px; font-weight:var(--weight-regular); }
 .modal-panel .story-event-actions .modal-action:disabled { opacity:1; color:var(--text-muted); border-color:#424a4c; background:transparent; }
-
-/* Item previews in the backpack and shop: neutral stat glyphs + tight strength
-   marks, with no coloured pill surfaces. Unchanged elsewhere (incl. essentials). */
-.item-effect-chips { display:flex; flex-flow:row wrap; align-items:center; justify-content:flex-start; column-gap:7px; row-gap:2px; }
-.item-effect-chips em,.item-effect-chips em.positive,.item-effect-chips em.negative,.item-effect-chips em.warning {
-  display:inline-flex; flex:0 0 auto; align-items:center; gap:4px; max-width:none;
-  padding:0; margin:0; border:0; border-radius:0; background:none;
-  color:var(--text-secondary); font-size:var(--font-small); font-weight:var(--weight-regular);
-  line-height:1.3; font-style:normal; letter-spacing:normal; white-space:nowrap; overflow-wrap:normal;
-}
-.item-effect-chips em svg { width:16px; height:16px; flex:none; }
-.item-effect-chips em span { white-space:nowrap; letter-spacing:-.06em; }

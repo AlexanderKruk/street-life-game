@@ -66,12 +66,13 @@ try {
     assert.equal(doc.querySelector('.pv-picture').style.opacity, '1', 'example fully reveals its image');
     advance(480);
     assert(!doc.querySelector('.pv-choice-group'), 'example holds the complete image before presenting choices');
-    assert(doc.querySelector('.pv-screen.pv-settling'), 'the cursor departs as the full stamp is sealed');
-    assert.equal(doc.querySelector('.pv-stamp').textContent, '22:43 · By the station · Day 0', 'time, place and day appear together at the stamp, without typing');
-    assert(!doc.querySelector('.pv-stamp .pv-letter'), 'metadata has no per-character reveal');
-    advance(50); assert.equal(doc.querySelector('.pv-stamp').textContent, '22:43 · By the station · Day 0', 'the complete stamp stays fixed during cursor motion');
+    assert(doc.querySelector('.pv-screen.pv-settling'), 'metadata prints concurrently with cursor departure');
+    assert(doc.querySelector('.pv-stamp').textContent.startsWith('22:43'), 'saved time is fixed before the cursor departs');
+    assert(!doc.querySelector('.pv-stamp').textContent.endsWith('Day 0'), 'metadata is still being revealed character by character');
+    const stampLetter = doc.querySelector('.pv-stamp .pv-letter');
+    advance(50); assert.equal(doc.querySelector('.pv-stamp .pv-letter'), stampLetter, 'stamp letters retain their existing fade nodes');
     advance(870);
-    assert(doc.querySelector('.pv-choice-group'), 'choices follow the smooth 500ms stamp/departure transition');
+    assert(doc.querySelector('.pv-choice-group'), 'choices follow the complete stamp/departure transition for the full day label');
     advance(8000);
     assert(doc.querySelector('.pv-done'));
     assert(doc.querySelector('.pv-stamp').textContent.includes(' · By the station · Day 0'), 'the completed part gains place and day together');

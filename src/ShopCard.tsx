@@ -4,7 +4,6 @@ import { shopItemCaption } from './itemPresentation'
 import { impactChip } from './effectChips'
 import type { ShopItem } from './stateTypes'
 import { Icon } from './Icon'
-import ItemEffectIcons from './ItemEffectIcons'
 import ItemArt, { type ItemArtId } from './ItemArt'
 import { memo } from 'react'
 
@@ -26,7 +25,7 @@ export default memo(function ShopCard({ item, open, fits, affordable, onBuy, onS
     </div>
     <div className="supply-copy">
       <strong>{item.name}</strong><small title={item.description || undefined}>{shopItemCaption(item.id, item.quantity)}</small>
-      <ItemEffectIcons className="shop-impact supply-effects" label={t('shop.effects')} effects={item.impacts.map(id => impactChip(id))} />
+      <div className="shop-impact supply-effects" aria-label={t('shop.effects')}>{item.impacts.map(id => impactChip(id)).map(chip => <em className={chip.kind} key={chip.id}>{chip.label}</em>)}</div>
     </div>
     <div className="supply-actions">
       <button className="supply-steal" onClick={() => onSteal(item.id)} disabled={!open || !fits} aria-label={t('shop.stealAccessible')} title={t('shop.stealTitle', { name: item.name })}><Icon name="thief" /></button>

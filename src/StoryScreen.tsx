@@ -8,12 +8,11 @@ import { resultDisplay } from './ResultCard'
 import ResultIndicators, { resultIndicatorDuration } from './ResultIndicators'
 import { ModalAction } from './Modal'
 import StoryComparison from './StoryComparison'
-import { createStoryTyping, storyCharactersShown, STORY_PIECE_PAUSE_MS } from './storyTyping'
+import { createStoryTyping, storyCharactersShown, STORY_PIECE_PAUSE_MS, STORY_STAMP_STEP_MS, storyStampDuration } from './storyTyping'
 import type { StoryEpisode, StoryStamp } from './story'
 import StoryLiveControls, { type StoryInteraction } from './StoryLiveControls'
 import { useStoryScroll } from './useStoryScroll'
 import { useStoryChoiceMotion } from './useStoryChoiceMotion'
-import StoryWordReveal from './StoryWordReveal'
 
 type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number; stamp?: StoryStamp; partBody?: boolean; pendingPart?: boolean }
 const stampLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${at.locationName} · ${t('story.day', { day: formatNumber(displayDay(at.day)) })}`
@@ -86,7 +85,7 @@ function Episode({ episode, live, currentMinute, disabled, continuous, archiveCo
   const track = useRef<HTMLDivElement>(null)
   const nodes = useRef<(HTMLDivElement | null)[]>([])
   const [replay, setReplay] = useState(0)
-  const [animation, setAnimation] = useState<{ index: number; shown: number; progress: number; y: number; minute: number; running: boolean; instant: boolean; sealStart?: number } | null>(null)
+  const [animation, setAnimation] = useState<{ index: number; shown: number; progress: number; y: number; minute: number; running: boolean; instant: boolean; sealStart?: number; stampShown?: number } | null>(null)
   const [restingCursor, setRestingCursor] = useState<{ y: number; minute: number } | null>(null)
   const completedPieces = useRef(0)
   const position = useRef({ y: 0 })
@@ -150,7 +149,8 @@ function Episode({ episode, live, currentMinute, disabled, continuous, archiveCo
         progress = 1
         // Paragraph/media pauses do not release the part's cursor. Only its
         // final piece (including all consequences) lets it settle below the block.
-        const duration = STORY_PIECE_PAUSE_MS
+        const start = partStart(index)
+        const duration = start >= 0 ? storyStampDuration(stampLabel(pieces[start].stamp ?? pieces[start].at).slice(5)) : STORY_PIECE_PAUSE_MS
         if (partEnds.has(index)) {
           const node = nodes.current[index]
           const end = node ? Math.max(from, node.offsetTop + node.offsetHeight + gap) : from
@@ -185,7 +185,7 @@ function Episode({ episode, live, currentMinute, disabled, continuous, archiveCo
       const currentShown = !current || current.kind === 'image' ? 0 : current.kind === 'choice' ? Array.from(current.text).length : storyCharactersShown(typing[index], elapsed)
       const start = phase === 'hold' ? partStart(index) : -1
       setAnimation({ index, shown: phase === 'typing' ? currentShown : shown, progress, y, minute: minute(), running: !!current, instant,
-        ...(start >= 0 ? { sealStart: start } : {}) })
+        ...(start >= 0 ? { sealStart: start, stampShown: Math.floor(elapsed / STORY_STAMP_STEP_MS) } : {}) })
       frame = window.requestAnimationFrame(tick)
     }
     setAnimation({ index, shown: pieces[index]?.kind === 'choice' ? Array.from(pieces[index].text).length : 0, progress: 0, y, minute: minute(), running: !!pieces[index], instant: false })
@@ -212,11 +212,11 @@ function Episode({ episode, live, currentMinute, disabled, continuous, archiveCo
           const sealed = !piece.pendingPart && (!animation || animation.index > piece.sealAfter! || stamping)
           const label = stampLabel(piece.stamp ?? piece.at)
           return <div ref={node => { nodes.current[index] = node }} key={index} className={`story-piece story-${piece.kind}${startsPart ? ' story-part-start' : ''}${piece.resultStart ? ' story-result-start' : ''}${piece.partBody ? ' story-part-body' : ''}${current && piece.kind === 'choice' ? ' story-choice-enter' : ''}`} hidden={future}>
-            {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{label}</time></>}
-            {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" data-story-photo-revealing={current && imageProgress < 1 ? '' : undefined} style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
+            {startsPart && <><span className={`story-part-imprint${piece.resultStart ? ' story-result-imprint' : ''}`} hidden={!sealed} aria-hidden="true" /><time className={`story-part-stamp${piece.resultStart ? ' story-result-stamp' : ''}`} data-story-stamp={sealed ? 'sealed' : 'pending'} aria-hidden={!sealed}>{stamping ? <>{label.slice(0, 5)}{Array.from(label.slice(5)).slice(0, animation.stampShown).map((character, letter) => <span className="story-letter" key={`${replay}-${index}-stamp-${letter}`}>{character}</span>)}</> : label}</time></>}
+            {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : <p className={current ? 'story-reveal' : undefined} role={current ? 'button' : undefined} tabIndex={current ? 0 : undefined} aria-label={current ? t('story.skip') : undefined}
                 onKeyDown={current ? event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } } : undefined}>
-                {piece.kind === 'text' ? <StoryWordReveal text={piece.text} shown={current ? animation.shown : Array.from(piece.text).length} animate={current && !animation.instant} letterKey={`${replay}-${index}`} /> : visibleText}
+                {piece.kind === 'text' ? Array.from(visibleText).map((character, letter) => <span className={current && !animation.instant ? 'story-character story-letter' : 'story-character'} key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}
               </p>}
           </div>
         })}

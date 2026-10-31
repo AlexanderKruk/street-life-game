@@ -35,12 +35,7 @@ export function useStoryScroll(root: RefObject<HTMLElement | null>, enabled = tr
     const follow = () => {
       if (!following) { update(); return }
       if (reduced()) { write(bottom()); update() }
-      else if (element.querySelector('.story-media[data-story-photo-revealing]')) {
-        // Photo height already eases on every frame. Follow that exact height
-        // before paint instead of lagging another 100ms behind it. Whole-pixel
-        // offsets keep the preceding text from shimmering during the reveal.
-        cancel(); write(Math.round(bottom())); update()
-      } else if (!frame) frame = window.requestAnimationFrame(tick)
+      else if (!frame) frame = window.requestAnimationFrame(tick)
     }
     const scroll = () => {
       if (Math.abs(scroller.scrollTop - expected) < 1) return

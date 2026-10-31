@@ -84,15 +84,8 @@ try {
     window.cancelAnimationFrame = id => frames.delete(id);
     const animate = ms => { const end = clock + ms; while (clock < end) { clock += 32; const pending = [...frames.values()]; frames.clear(); env.act(() => pending.forEach(callback => callback(clock))); } };
     env.fireEvent.click(env.within(episode).getByRole('button', { name: 'Replay' }));
-    animate(320);
-    const reveal = episode.querySelector('.story-text .story-reveal');
-    const reserved = [...reveal.querySelectorAll('.story-word')];
-    assert(reserved.length > 0, 'native Story reserves the current word during replay');
-    assert(reserved.some(word => word.dataset.word.length > word.textContent.length), 'hidden letters reserve word width before typing');
-    assert(reserved.every(word => word.querySelector('.story-word-visible .story-letter')), 'the original per-letter opacity animation is reused');
-    assert(reveal.textContent.length < archived.episodes[0].scenes[0].text.length, 'full future words are absent from DOM text');
-    animate(192);
-    assert(reveal.textContent.length < archived.episodes[0].scenes[0].text.length, 'native replay still types gradually');
+    animate(500);
+    assert(episode.querySelector('.story-text .story-reveal').textContent.length < archived.episodes[0].scenes[0].text.length, 'native replay types gradually');
     const openingStamp = episode.querySelector('.story-part-stamp');
     assert.equal(openingStamp.dataset.storyStamp, 'pending', 'metadata is not stamped during typing');
     assert.equal(openingStamp.getAttribute('aria-hidden'), 'true');
@@ -101,17 +94,10 @@ try {
     assert.equal(episode.querySelector('.story-text').firstElementChild.className, 'story-part-imprint', 'stamp and imprint precede the narrative in its own part');
     env.fireEvent.click(episode.querySelector('.story-text .story-reveal'));
     animate(500);
-    assert.equal(reveal.textContent, archived.episodes[0].scenes[0].text, 'skip reveals complete text without extra hidden letters');
-    assert(!reveal.querySelector('.story-letter'), 'skip bypasses existing opacity animation');
     assert.match(episode.querySelector('.story-media img').style.filter, /brightness\(0\./, 'image begins in darkness');
-    // The previous paragraph still owns the frame at the end of its 500ms pause;
-    // the next animation frame activates the photo before any height is revealed.
-    animate(32);
-    assert(episode.querySelector('.story-media[data-story-photo-revealing]'), 'the image enables synchronized scroll when its own frame begins');
     assert.equal(openingStamp.dataset.storyStamp, 'pending', 'part metadata waits until the image is fully shown');
     animate(1400);
     assert.equal(episode.querySelector('.story-media').style.gridTemplateRows, '1fr', 'image is complete before the following mini-block');
-    assert(!episode.querySelector('.story-media[data-story-photo-revealing]'), 'synchronized scrolling ends when the photo is fully revealed');
     assert(episode.querySelector('.story-choice').hidden, 'the shared image reading pause still holds back the choice');
     animate(500);
     assert.equal(openingStamp.dataset.storyStamp, 'sealed');
