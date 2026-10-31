@@ -1,3 +1,16 @@
+Release v359 is published — 31 October 2026. GitHub Pages run 41192631345
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41192631345)
+succeeded for f90fc7ca24fc7ec670aa7d285c4edeaeebd4fabd: 35/35 Node suites
+passed in 138.16s, TypeScript/Vite build and deployment succeeded (10:27 UTC).
+Includes sequential choices, stable Story paragraphs, smooth following, all three
+opening calls with art, instant single-block music and single-block travel.
+The release gate found uncatalogued-keyboard false positives and obsolete native
+button selectors; narrowly classified identifiers and updated narrative selectors
+preserve existing assertions. Jump-control focus now restores before the control
+unmounts. Complete test/build/deploy logs reviewed; successful CI not duplicated
+locally. Fresh browser/iPhone/WebKit appearance remains unverified. Earlier pending
+and source-only notes describe included work and are historical for this release.
+
 Release v358 — 30 October 2026, publication requested: includes Story travel
 with real 250ms/minute clock and whole-phase text/dots, typed arrival followed by
 short automatic dismissal and destination opening, concise purchases and item-use
