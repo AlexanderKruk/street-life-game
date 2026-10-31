@@ -1,3 +1,15 @@
+Release v367 successfully published — 31 October 2026 17:27:56 UTC
+(18:27 Warsaw). GitHub Actions run 41224329592:
+https://github.com/AlexanderKruk/street-life-game/actions/runs/41224329592
+deployed commit 464c4f4948445af1fa6f14d9cffa8036962f38bb
+to https://alexanderkruk.github.io/street-life-game/.
+35/35 suites passed in 203.42s; TypeScript/Vite built successfully,
+Pages upload completed, deploy job explicitly reported success.
+Only icon-to-strength spacing in item effect chips was adjusted to 4px
+and old -2px shift removed; 7px between distinct effects preserved.
+No changes to personal essentials, Story or game mechanics.
+Physical iPhone Safari visual verification remains unperformed.
+
 Release v367 — 31 October 2026, initiated at user request.
 Backpack and shop effect badges: restore a straightforward 4px icon-to-
 strength flex gap and remove the prior -2px negative offset. The 7px
