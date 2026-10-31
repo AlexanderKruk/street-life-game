@@ -29,6 +29,7 @@ type PhoneHost = {
   applyAction: (game: GameState, action: ActionResult) => GameState
   moodCap: (game: GameState) => number; resultSnapshot: () => ResultSnapshot
   runWithResult: RunWithResult
+  onOpeningCallStart?: (id: string, before: ResultSnapshot) => void
   onOpeningSearch: () => void
 }
 
@@ -100,7 +101,9 @@ export function usePhoneController(phone: PhoneSession, context: PhoneContext, h
     if (!nextOpeningCall || currentId !== 'street' || phoneUnavailable !== null || phoneActivity || eventInteractionBlocked || sleeping || trip || gameOver) return
     const cost = nextOpeningCall.minutes * CALL_BATTERY_PER_MINUTE * phoneDrainMultiplier(inventory.phoneCondition)
     if (inventory.phoneBattery < cost) return
-    setPhoneActivity({ questionId: nextOpeningCall.id, total: nextOpeningCall.minutes, remaining: nextOpeningCall.minutes, before: resultSnapshot() })
+    const before = resultSnapshot()
+    host.onOpeningCallStart?.(nextOpeningCall.id, before)
+    setPhoneActivity({ questionId: nextOpeningCall.id, total: nextOpeningCall.minutes, remaining: nextOpeningCall.minutes, before })
   }
 
   function finishOpeningCall(id: string, before: ResultSnapshot) {

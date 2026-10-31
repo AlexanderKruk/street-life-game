@@ -1,3 +1,11 @@
+31 October 2026 — Opening calls implemented in source through the shared Story
+presenter: selected thought, dial text, live ringing/talking dots, actual response,
+existing artwork, actual consequences and one completion stamp. Three contacts,
+EN/RU/PL, active/result reload and classic fallback are covered in added App
+routes (unrun locally because UI/build dependencies are absent). Native loader,
+translation, piece-selector and syntax checks passed. No publication. Music walk
+and practical phone searches retain their current presentation.
+
 Release v358 — 30 October 2026, publication requested: includes Story travel
 with real 250ms/minute clock and whole-phase text/dots, typed arrival followed by
 short automatic dismissal and destination opening, concise purchases and item-use

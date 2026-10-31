@@ -1,3 +1,11 @@
+Opening-call Story presentation — 31 October 2026: selecting an opening
+contact records the thought, then types the dial action. Intro presentation pauses
+the call process; afterwards its existing ×1 clock drives ringing/talking. The
+actual response, existing contact-specific artwork and real consequences follow
+in that order, with a single completion stamp. All three contacts retain their
+existing durations, eligibility, mood/battery costs, progression and interruption
+rules. Restored calls reuse the same archive entry and do not repeat costs.
+
 Smooth Story scrolling — 31 October 2026: new blocks ease the existing
 chronology upwards in both the Story tab and event modal. Reading older text
 suspends automatic following; returning to the end resumes it. Opening starts

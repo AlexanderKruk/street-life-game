@@ -1,4 +1,12 @@
 export const phoneContent = {
+  "phone.story.waiting": "Waiting for an answer",
+  "phone.story.call-university.thought": "Maybe he could put me up. We used to be close.",
+  "phone.story.call-university.action": "You call your friend from university.",
+  "phone.story.call-colleague.thought": "We worked together for years. Maybe he could put me up for a couple of nights.",
+  "phone.story.call-colleague.action": "You call your old colleague.",
+  "phone.story.call-friend.thought": "One more friend to try. I helped him move here last year.",
+  "phone.story.call-friend.action": "You call the friend you helped move here.",
+
   'phone.notes.label': 'Saved information',
   'phone.search.label': 'What do you need to find?',
   'phone.search.saved': 'Notes',

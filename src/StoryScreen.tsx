@@ -38,6 +38,7 @@ function episodePieces(episode: StoryEpisode): Piece[] {
   }
   for (const scene of episode.scenes) {
     const start = pieces.length
+    if (scene.thought) pieces.push({ kind: 'choice', text: scene.thought, at: scene.at })
     addText(scene.text, scene.at)
     if (scene.illustration) pieces.push({ kind: 'image', text: scene.text || scene.title, image: scene.illustration, at: scene.at })
     sealPart(start, scene.at)
@@ -59,6 +60,14 @@ function episodePieces(episode: StoryEpisode): Piece[] {
     let start = pieces.length - 1
     while (start > 0 && pieces[start - 1].kind === 'choice') start--
     Object.assign(pieces[start], { sealAfter: Infinity, stamp: pieces[start].at, resultStart: true, pendingPart: true })
+  }
+  if (episode.source === 'phone' && pieces.length) {
+    for (const piece of pieces) {
+      delete piece.sealAfter; delete piece.stamp; delete piece.resultStart; delete piece.partBody; delete piece.pendingPart
+    }
+    Object.assign(pieces[0], { sealAfter: episode.result ? pieces.length - 1 : Infinity,
+      stamp: episode.endedAt ?? episode.scenes[0].at, pendingPart: !episode.result })
+    if (pieces[1]) pieces[1].partBody = true
   }
   return pieces
 }
@@ -89,8 +98,9 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
   useEffect(() => {
     if (!isLive) return
     onLivePlayback?.(!!animation)
-    return () => onLivePlayback?.(false)
-  }, [isLive, !!animation, onLivePlayback])
+    live.onPlayback?.(!!animation)
+    return () => { onLivePlayback?.(false); live.onPlayback?.(false) }
+  }, [isLive, !!animation, onLivePlayback, live?.onPlayback])
   useEffect(() => {
     if (isLive && !animation && completedPieces.current >= pieces.length && live.onPresented && !acknowledged.current) {
       acknowledged.current = true
@@ -211,7 +221,7 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
               </p>}
           </div>
         })}
-        {isLive && (!animation || !live.waitingForDecision && live.content) && (live.actions.length > 0 || live.content) && <StoryLiveControls interaction={live} onSelect={button => choiceMotion.choose(button, pieces.length)} />}
+        {isLive && (!animation || !live.contentAfterIntro && !live.waitingForDecision && live.content) && (live.actions.length > 0 || live.content) && <StoryLiveControls interaction={live} onSelect={button => choiceMotion.choose(button, pieces.length)} />}
       </div>
       {(isLive || animation || !continuous) && <div className="story-head" aria-hidden="true"><span /><time>{formatTime(live?.gameClock ? live.minute : cursor?.minute ?? last.minute)}</time></div>}
     </div>

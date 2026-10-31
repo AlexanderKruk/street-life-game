@@ -41,6 +41,38 @@ try {
     assert(!document.querySelector('.bottom-nav[inert]'), 'closing releases navigation');
   };
   const finishCheck = () => { if (env.screen.queryByRole('button', { name: 'Try', exact: true })) { env.click('Try'); env.click('Continue'); } };
+  // All three opening contacts use the shared Story owner and real call clock.
+  for (const [index, id, minutes, loss, art] of [
+    [0, 'call-university', 2, 2, 'event-call-no-answer'],
+    [1, 'call-colleague', 5, 5, 'event-call-family'],
+    [2, 'call-friend', 5, 5, 'event-call-small-room'],
+  ]) {
+    env.setup({ day: 1, minutes: 1320, locationId: 'street', mood: 30, health: 100, energy: 100 }, {
+      [firstKey]: { seen, lastAt: null, pendingId: null }, [encounterKey]: { seen, lastAt: null, pendingId: null },
+      'street-life-left-home-v1': false, 'street-life-opening-calls-v1': index,
+      'street-life-music-walk-used-v1': true,
+    });
+    env.fireEvent.click(document.querySelector('[data-choice="phone-call"]'));
+    assert(modal(), `${id} opens the shared Story modal`); noClassic();
+    assert(document.querySelector('.story-choice').textContent, 'selected thought is preserved');
+    assert(document.querySelector('.story-travel-progress [role="status"]'), 'ringing appears after the intro');
+    const start = env.read(env.stateKey).minutes;
+    env.advance(999); assert.equal(env.read(env.stateKey).minutes, start, 'call retains its one-second minute');
+    env.advance(1);
+    assert.equal(env.read('street-life-phone-activity-v1').remaining, minutes - 1);
+    remount(); noClassic(); assert(modal());
+    assert.equal(save().episodes.filter(entry => entry.source === 'phone').length, 1, 'reload does not duplicate the call');
+    env.advance((minutes - 1) * 1000);
+    const episode = save().episodes.find(entry => entry.source === 'phone');
+    assert.equal(episode.sourceId, id); assert.equal(episode.status, 'awaiting-ack');
+    assert.equal(env.read(env.stateKey).mood, 30 - loss, 'actual contact-specific mood loss is unchanged');
+    assert.equal(env.read('street-life-opening-calls-v1'), index + 1, 'progression advances exactly once');
+    assert(episode.result.illustration.includes(art));
+    assert(modal().querySelector(`.story-media img[src*="${art}"]`), 'actual result artwork is shown');
+    assert(modal().querySelector('.story-result-effects'), 'actual consequences follow artwork');
+    const settled = facts(); remount(); assert.deepEqual(facts(), settled, 'pending result reload does not repeat consequences');
+    dismiss(); assert.equal(save().episodes.find(entry => entry.source === 'phone').status, 'complete');
+  }
   let cases = 0;
   for (const event of STREET_EVENTS) for (const choice of event.choices) {
     setup(event.id); remount(ClassicApp);

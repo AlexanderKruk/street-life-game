@@ -4,13 +4,13 @@ import type { ResultCardData } from './ResultCard'
 
 export type StoryStamp = { day: number; minute: number; locationId: string; locationName: string }
 export type StoryScene = {
-  eventId: string; title: string; text: string; illustration?: string; at: StoryStamp
+  eventId: string; title: string; text: string; thought?: string; illustration?: string; at: StoryStamp
   choice?: { id: string; label: string; at: StoryStamp }
   earlierChoices?: { id: string; label: string; at: StoryStamp }[]
   roll?: { value: number; modifier: number; target: number; stat: string }
 }
 export type StoryEpisode = {
-  id: number; source: 'encounter' | 'rain' | 'check' | 'inventory' | 'travel'; sourceId: string
+  id: number; source: 'encounter' | 'rain' | 'check' | 'inventory' | 'travel' | 'phone'; sourceId: string
   status: 'active' | 'awaiting-ack' | 'complete' | 'interrupted'
   scenes: StoryScene[]; result?: ResultCardData; endedAt?: StoryStamp
   resultIdentity?: { actionId: string; outcomeId?: string }
@@ -30,7 +30,7 @@ const text = (value: unknown): value is string => typeof value === 'string' && v
 const image = (value: unknown) => value === undefined || typeof value === 'string' && /^\/street-life-game\/assets\/[\w-]+\.webp$/.test(value)
 const stamp = (value: unknown): value is StoryStamp => record(value) && Number.isInteger(value.day) && value.day >= 1 && Number.isFinite(value.minute) && value.minute >= 0 && value.minute < 1440 && text(value.locationId) && text(value.locationName)
 function validScene(value: unknown): value is StoryScene {
-  return record(value) && text(value.eventId) && text(value.title) && text(value.text) && image(value.illustration) && stamp(value.at)
+  return record(value) && text(value.eventId) && text(value.title) && text(value.text) && (value.thought === undefined || text(value.thought)) && image(value.illustration) && stamp(value.at)
     && (value.choice === undefined || record(value.choice) && text(value.choice.id) && text(value.choice.label) && stamp(value.choice.at))
     && (value.earlierChoices === undefined || Array.isArray(value.earlierChoices) && value.earlierChoices.length <= 32 && value.earlierChoices.every((choice: unknown) => record(choice) && text(choice.id) && text(choice.label) && stamp(choice.at)))
     && (value.roll === undefined || record(value.roll) && Number.isInteger(value.roll.value) && value.roll.value >= 1 && value.roll.value <= 20 && Number.isFinite(value.roll.modifier) && Number.isFinite(value.roll.target) && text(value.roll.stat))
@@ -58,7 +58,7 @@ export function loadStory(value: unknown): StoryStore {
   if (!record(value) || value.version !== 1 || !Array.isArray(value.episodes)) return emptyStory()
   const ids = new Set<number>()
   const episodes = value.episodes.filter((entry: unknown): entry is StoryEpisode => {
-    if (!record(entry) || !Number.isSafeInteger(entry.id) || entry.id < 1 || ids.has(entry.id) || !['encounter', 'rain', 'check', 'inventory', 'travel'].includes(entry.source) || !text(entry.sourceId) || !['active', 'awaiting-ack', 'complete', 'interrupted'].includes(entry.status) || !Array.isArray(entry.scenes) || !entry.scenes.length || entry.scenes.length > 32 || !entry.scenes.every(validScene) || (entry.result !== undefined && !validResult(entry.result)) || (entry.endedAt !== undefined && !stamp(entry.endedAt)) || (entry.resultIdentity !== undefined && (!record(entry.resultIdentity) || !text(entry.resultIdentity.actionId) || (entry.resultIdentity.outcomeId !== undefined && !text(entry.resultIdentity.outcomeId)))) || (['awaiting-ack', 'complete'].includes(entry.status) && (!entry.result || !entry.endedAt))) return false
+    if (!record(entry) || !Number.isSafeInteger(entry.id) || entry.id < 1 || ids.has(entry.id) || !['encounter', 'rain', 'check', 'inventory', 'travel', 'phone'].includes(entry.source) || !text(entry.sourceId) || !['active', 'awaiting-ack', 'complete', 'interrupted'].includes(entry.status) || !Array.isArray(entry.scenes) || !entry.scenes.length || entry.scenes.length > 32 || !entry.scenes.every(validScene) || (entry.result !== undefined && !validResult(entry.result)) || (entry.endedAt !== undefined && !stamp(entry.endedAt)) || (entry.resultIdentity !== undefined && (!record(entry.resultIdentity) || !text(entry.resultIdentity.actionId) || (entry.resultIdentity.outcomeId !== undefined && !text(entry.resultIdentity.outcomeId)))) || (['awaiting-ack', 'complete'].includes(entry.status) && (!entry.result || !entry.endedAt))) return false
     ids.add(entry.id); return true
   }).slice(-500)
   return { version: 1, nextId: Math.max(1, Number.isSafeInteger(value.nextId) ? value.nextId : 1, ...episodes.map(entry => entry.id + 1)), episodes }

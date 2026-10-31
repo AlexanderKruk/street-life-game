@@ -1,3 +1,19 @@
+Opening calls in Story — 31 October 2026, source only: all three opening
+contacts share the Story tab/modal and a validated phone episode with optional
+immutable scene.thought. The phone controller invokes an optional start port only
+after existing guards; App records the selected thought and dial narrative once,
+including restored activities. No new phone save field/key. Story reads the real
+call clock (1000ms/minute); App pauses ticks while intro text is presented. Ringing
+then talking are transient whole-phase text with existing dots. Actual call result,
+art and settled summary attach through the existing pending-result owner. Thought,
+action, result, artwork and consequences share one final stamp. Calls retain manual
+acknowledgement; legacy dialogs/searches remain compatible. EN/RU/PL copy added.
+Node-native loader/catalogue tests (3 contacts × 3 locales), actual piece-selector
+ordering/stamp checks and modal-test syntax passed. Added real App start/reload/
+completion routes for all three calls. UI suites/build remain unrun: dependencies
+absent. No corrected browser/iPhone/WebKit claim or release; save with [skip ci].
+Music-walk migration is separate and unchanged by this call-only implementation.
+
 Smooth Story following — 31 October 2026, source only: useStoryScroll owns
 presentation-only following for both the Story tab and modal. One RAF loop
 eases towards the current scroll limit (100ms time constant), with a minimum

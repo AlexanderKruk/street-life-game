@@ -8,6 +8,8 @@ export type StoryInteraction = {
   seed: number; decision: string; fixed?: boolean; content?: ReactNode
   waitingForDecision?: boolean; onPresented?: () => void
   /** Display every actual process tick, independently of presentation frames. */
+  contentAfterIntro?: boolean
+  onPlayback?: (playing: boolean) => void
   gameClock?: boolean
 }
 

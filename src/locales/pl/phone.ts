@@ -1,6 +1,14 @@
 import type { Catalog } from '../../i18n'
 
 export const phoneMessages = {
+  "phone.story.waiting": "Czekasz na odpowiedź",
+  "phone.story.call-university.thought": "Może pozwoli mi przenocować? Kiedyś byliśmy blisko.",
+  "phone.story.call-university.action": "Dzwonisz do kolegi ze studiów.",
+  "phone.story.call-colleague.thought": "Tyle lat razem pracowaliśmy. Może przyjmie mnie na kilka nocy.",
+  "phone.story.call-colleague.action": "Dzwonisz do dawnego kolegi z pracy.",
+  "phone.story.call-friend.thought": "Spróbuję jeszcze u jednego znajomego. W zeszłym roku pomogłem mu się tu przeprowadzić.",
+  "phone.story.call-friend.action": "Dzwonisz do znajomego, któremu pomagałeś przy przeprowadzce.",
+
   "phone.ui.language.en": "English",
   "phone.ui.language.pl": "Polski",
   "phone.ui.language.ru": "Русский",
