@@ -1431,7 +1431,7 @@ body { min-width:0; }
 .story-pieces { min-width:0; display:flex; flex-direction:column; gap:var(--story-gap); }
 .story-piece { position:relative; padding:0; }
 .story-reveal { display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
-.story-piece p, .story-reveal { white-space:pre-line; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); }
+.story-piece p, .story-reveal { white-space:pre-line; text-wrap:wrap; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); }
 .story-letter { animation:story-letter-appear 100ms linear both; }
 @keyframes story-letter-appear { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .story-letter { animation:none; } }

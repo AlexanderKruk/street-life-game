@@ -1,3 +1,12 @@
+Stable Story paragraphs — 31 October 2026, source only: retain a single p node
+through typing and settlement instead of replacing a native button with p. While
+current, it exposes role=button, tabindex=0 and Enter/Space click parity for the
+existing skip owner; remove those semantics after settlement. Explicit text-wrap:
+wrap applies in both phases. Keep letter timing, media, stamps and game facts.
+Updated result selectors and added paragraph-identity/settled-semantics coverage.
+Node syntax check only; UI/build dependencies remain absent. iPhone/WebKit and
+the corrected layout remain unverified. Save with [skip ci], no publication.
+
 Story choice entrance — 31 October 2026, source only: the retained
 src/storyPreview.html remains the animation reference. Scope its explicit
 [hidden] display:none !important contract to .story-screen so future choice

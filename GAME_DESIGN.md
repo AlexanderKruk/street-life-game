@@ -1,3 +1,9 @@
+Stable Story text — 31 October 2026: typed and completed narrative share the
+same paragraph element and ordinary wrapping. During presentation it supports
+tap, Enter and Space to reveal text; completion removes that temporary control
+semantics. Switching to media/results must not replace the paragraph container
+or change its line-wrapping rules.
+
 Story choice visibility — 31 October 2026: Animation example is the motion
 reference. Within Story, elements carrying hidden are fully excluded from layout
 and animation until revealed. This applies to the same shared presenter in the

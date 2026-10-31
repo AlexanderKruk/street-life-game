@@ -312,7 +312,8 @@ try {
     fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
     let now = 0; frame(0);
     const to = target => { while (now < target) { now = Math.min(target, now + 10); frame(now); } };
-    const text = () => document.querySelector('.story-text button').textContent;
+    const paragraph = document.querySelector('.story-text p');
+    const text = () => document.querySelector('.story-text .story-reveal').textContent;
     to(49); assert.equal(text(), '', 'first character waits 50ms');
     to(50); assert.equal(text(), 'А');
     const firstLetter = document.querySelector('.story-letter');
@@ -326,8 +327,11 @@ try {
     to(370); assert.equal(text(), 'А, Б.');
     to(719); assert.equal(text(), 'А, Б.', 'sentence ending adds a 300ms reading pause');
     to(720); assert.equal(text(), 'А, Б. ');
-    fireEvent.click(document.querySelector('.story-text button'));
+    fireEvent.click(document.querySelector('.story-text .story-reveal'));
     to(730); assert.equal(text(), 'А, Б. В', 'tap bypasses the remaining typing schedule');
+    to(3000);
+    assert.equal(document.querySelector('.story-text p'), paragraph, 'the same paragraph survives typing completion without replacing its formatting context');
+    assert(!paragraph.hasAttribute('role') && !paragraph.hasAttribute('tabindex'), 'settled narrative no longer advertises a skip control');
     assert(!document.querySelector('.story-letter'), 'tap removes pending opacity effects so every letter is immediately visible');
     cleanup();
     const { createStoryTyping, storyCharactersShown } = bundled('src/storyTyping.ts');
@@ -369,9 +373,9 @@ try {
       waitFor(() => !piece.hidden);
       assert(clock - completed >= letterFade + duration && clock - completed <= letterFade + duration + 32, `${label} follows its reading/part transition after full visibility (within frame rounding)`);
     };
-    waitFor(() => pieces[0].querySelector('button')?.textContent === 'A');
+    waitFor(() => pieces[0].querySelector('.story-reveal')?.textContent === 'A');
     pauseTo(pieces[1], 'second opening paragraph', 100);
-    waitFor(() => pieces[1].querySelector('button')?.textContent === 'B');
+    waitFor(() => pieces[1].querySelector('.story-reveal')?.textContent === 'B');
     pauseTo(pieces[2], 'opening image', 100);
     waitFor(() => pieces[2].querySelector('.story-media').style.gridTemplateRows === '1fr');
     pauseTo(pieces[3], 'selected answer', 0, 1000);
@@ -379,15 +383,15 @@ try {
     while (clock - selectedAt < 1120) { step(); assert(pieces[4].hidden, 'selected answer finishes its 650ms entrance and shared pause before outcome text'); }
     waitFor(() => !pieces[4].hidden);
     assert(clock - selectedAt >= 1150 && clock - selectedAt <= 1184);
-    waitFor(() => pieces[4].querySelector('button')?.textContent === 'C');
+    waitFor(() => pieces[4].querySelector('.story-reveal')?.textContent === 'C');
     pauseTo(pieces[5], 'second result paragraph', 100);
-    waitFor(() => pieces[5].querySelector('button')?.textContent === 'D');
+    waitFor(() => pieces[5].querySelector('.story-reveal')?.textContent === 'D');
     pauseTo(pieces[6], 'result image', 100);
     waitFor(() => pieces[6].querySelector('.story-media').style.gridTemplateRows === '1fr');
     pauseTo(pieces[7], 'closing text');
-    waitFor(() => pieces[7].querySelector('button')?.textContent === 'E');
+    waitFor(() => pieces[7].querySelector('.story-reveal')?.textContent === 'E');
     pauseTo(pieces[8], 'second closing paragraph', 100);
-    waitFor(() => pieces[8].querySelector('button')?.textContent === 'F');
+    waitFor(() => pieces[8].querySelector('.story-reveal')?.textContent === 'F');
     pauseTo(pieces[9], 'consequences', 100);
     assert.equal(pieces[9].querySelector('.result-indicator').style.getPropertyValue('--result-indicator-delay'), '0ms', 'no second 500ms delay is added to effects');
     assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending');
@@ -458,7 +462,7 @@ try {
     while (clock < 1200) step();
     assert.equal(live(), '10:01', 'replay clock ticks during text instead of jumping between archived stamps');
     assert.equal(y(), 0, 'the cursor holds above typed text');
-    fireEvent.click(document.querySelector('.story-text button'));
+    fireEvent.click(document.querySelector('.story-text .story-reveal'));
     while (document.querySelector('.story-image').hidden && clock < 3000) step();
     const imageAt = clock;
     while (clock - imageAt < 575) step();
