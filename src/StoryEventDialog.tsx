@@ -17,7 +17,9 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   const panel = useRef<HTMLElement>(null)
   const content = useRef<HTMLDivElement>(null)
   const bottomControl = useRef<HTMLButtonElement>(null)
-  const { awayFromBottom, scrollToBottom } = useStoryScroll(content)
+  const { awayFromBottom, scrollToBottom } = useStoryScroll(content, true, () => {
+    if (bottomControl.current && document.activeElement === bottomControl.current) panel.current?.focus({ preventScroll: true })
+  })
   const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
   const [closing, setClosing] = useState(false)
   useEffect(() => {
@@ -31,9 +33,6 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
     return scheduleStoryClose(window, () => setClosing(true), () => { if (current.current.canClose) current.current.onClose() },
       !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
   }, [autoClose, canClose, awayFromBottom, visible, interaction?.episodeId])
-  useEffect(() => {
-    if (!awayFromBottom && document.activeElement === bottomControl.current) panel.current?.focus({ preventScroll: true })
-  }, [awayFromBottom])
   // Capture before the same commit makes the previous screen inert/disabled.
   const previousFocus = useRef(document.activeElement as HTMLElement | null)
   useEffect(() => {

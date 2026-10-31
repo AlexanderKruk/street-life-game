@@ -85,14 +85,14 @@ try {
     const animate = ms => { const end = clock + ms; while (clock < end) { clock += 32; const pending = [...frames.values()]; frames.clear(); env.act(() => pending.forEach(callback => callback(clock))); } };
     env.fireEvent.click(env.within(episode).getByRole('button', { name: 'Replay' }));
     animate(500);
-    assert(episode.querySelector('.story-text button').textContent.length < archived.episodes[0].scenes[0].text.length, 'native replay types gradually');
+    assert(episode.querySelector('.story-text .story-reveal').textContent.length < archived.episodes[0].scenes[0].text.length, 'native replay types gradually');
     const openingStamp = episode.querySelector('.story-part-stamp');
     assert.equal(openingStamp.dataset.storyStamp, 'pending', 'metadata is not stamped during typing');
     assert.equal(openingStamp.getAttribute('aria-hidden'), 'true');
     assert(episode.querySelector('.story-part-imprint').hidden, 'the filled point is not left before the part finishes');
     assert.match(episode.querySelector('.story-head time').textContent, /^\d{2}:\d{2}$/, 'blinking cursor omits place and day');
     assert.equal(episode.querySelector('.story-text').firstElementChild.className, 'story-part-imprint', 'stamp and imprint precede the narrative in its own part');
-    env.fireEvent.click(episode.querySelector('.story-text button'));
+    env.fireEvent.click(episode.querySelector('.story-text .story-reveal'));
     animate(500);
     assert.match(episode.querySelector('.story-media img').style.filter, /brightness\(0\./, 'image begins in darkness');
     assert.equal(openingStamp.dataset.storyStamp, 'pending', 'part metadata waits until the image is fully shown');

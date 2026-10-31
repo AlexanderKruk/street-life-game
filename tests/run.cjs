@@ -1,10 +1,13 @@
 const { spawnSync } = require('node:child_process');
 const { resolve } = require('node:path');
-// Fail fast on Story travel; output bundles still prohibit parallel runs.
+// Fail fast on shared Story presentation; output bundles still prohibit parallel runs.
 const suites = [
   "check-design-system.cjs",
   "check-module-boundaries.cjs",
   "check-story-travel.cjs",
+  "check-story-recording.cjs",
+  "check-story-live.cjs",
+  "check-story-modal.cjs",
   "check-action-controllers.cjs",
   "check-rain.cjs",
   "check-events.cjs",
@@ -34,9 +37,6 @@ const suites = [
   "check-localization.cjs",
   "check-language.cjs",
   "check-story.cjs",
-  "check-story-recording.cjs",
-  "check-story-live.cjs",
-  "check-story-modal.cjs",
 ];
 const start = performance.now();
 let passed = 0;

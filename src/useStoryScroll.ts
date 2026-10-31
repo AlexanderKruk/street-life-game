@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 
 /** Presentation only: one moving target, never a queue of smooth-scroll requests. */
-export function useStoryScroll(root: RefObject<HTMLElement | null>, enabled = true) {
+export function useStoryScroll(root: RefObject<HTMLElement | null>, enabled = true, onAtBottom?: () => void) {
   const [awayFromBottom, setAway] = useState(false)
+  const bottomCallback = useRef(onAtBottom)
+  bottomCallback.current = onAtBottom
   const jump = useRef<() => void>(() => {})
   useEffect(() => {
     const element = root.current
@@ -13,7 +15,11 @@ export function useStoryScroll(root: RefObject<HTMLElement | null>, enabled = tr
     const bottom = () => Math.max(0, scroller.scrollHeight - scroller.clientHeight)
     const reduced = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     const cancel = () => { window.cancelAnimationFrame(frame); frame = 0; last = null }
-    const update = () => setAway(bottom() - scroller.scrollTop > 64)
+    const update = () => {
+      const away = bottom() - scroller.scrollTop > 64
+      if (!away) bottomCallback.current?.()
+      setAway(away)
+    }
     const write = (value: number) => { scroller.scrollTop = value; expected = scroller.scrollTop }
     const tick = (now: number) => {
       const delta = last === null ? 16 : Math.min(64, now - last); last = now
@@ -38,8 +44,8 @@ export function useStoryScroll(root: RefObject<HTMLElement | null>, enabled = tr
       update()
     }
     const interrupt = (event: Event) => {
-      if (event instanceof KeyboardEvent && !['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) return
-      if (event instanceof KeyboardEvent && (event.target as HTMLElement)?.closest('button, [role="button"], input, textarea')) return
+      if (event instanceof window.KeyboardEvent && !['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) return
+      if (event instanceof window.KeyboardEvent && (event.target as HTMLElement)?.closest('button, [role="button"], input, textarea')) return
       following = false; expected = -1; cancel()
     }
     // Initial opening starts at the live end; subsequent growth glides there.
