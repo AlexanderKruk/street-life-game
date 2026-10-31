@@ -116,8 +116,8 @@ export async function storyVisible(page, locator) {
 
 export async function acknowledge(page) {
   if (await page.locator('.story-event-overlay').count()) {
-    for (let guard = 0; guard < 320 && !await page.locator('.story-event-close').count(); guard++) await advance(page, 250)
-    await page.locator('.story-event-close').click()
+    for (let guard = 0; guard < 320 && !await page.locator('.story-event-action:not(:disabled)').count(); guard++) await advance(page, 250)
+    await page.locator('.story-event-action:not(:disabled)').click()
     await expect(page.locator('.story-event-overlay')).toHaveCount(0)
   } else await page.getByRole('dialog').getByRole('button', { name: 'Got it', exact: true }).click()
 }

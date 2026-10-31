@@ -1393,6 +1393,7 @@ body { min-width:0; }
 .modal-overlay.story-event-overlay { z-index:100; }
 .modal-overlay.story-event-overlay.is-auto-closing { opacity:0; transition:opacity 200ms ease; }
 .story-travel-progress { display:flex; align-items:center; gap:var(--story-gap); }
+.story-travel-progress > .icon { width:20px; height:20px; flex:none; color:var(--text-secondary); }
 .story-travel-progress > p { flex:1; min-width:0; margin:0; font-size:var(--font-body); }
 .story-travel-phase { animation:story-letter-appear 200ms ease-out both; }
 .story-process-dots { display:inline-flex; width:1.25em; white-space:nowrap; }
@@ -1495,5 +1496,6 @@ body { min-width:0; }
   .result-indicators.is-animated .result-indicator { opacity:1 !important; animation:none !important; }
 }
 
-.story-event-close { right:var(--modal-padding-x); top:var(--modal-padding-y); }
-.story-event-bottom { left:50%; bottom:var(--modal-padding-y); transform:translateX(-50%); }
+.story-event-actions { flex:none; display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:12px; padding:12px var(--modal-padding-x) var(--modal-padding-y); }
+.modal-panel .story-event-actions .modal-action { min-width:0; min-height:44px; font-weight:var(--weight-regular); }
+.modal-panel .story-event-actions .modal-action:disabled { opacity:1; color:var(--text-muted); border-color:#424a4c; background:transparent; }

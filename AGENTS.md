@@ -1,3 +1,36 @@
+Story modal footer — 31 October 2026, source only: replace the floating cross
+and conditional jump with one persistent footer outside the scroller. The main
+outline button says Event… while presenting, Choose an answer at a settled
+decision, and Actions only after full completion; Actions calls the existing
+close owner without navigating. The existing down-to-line jump always occupies
+its 44px slot, grey icon AND border while disabled at the bottom, ochre when
+scrolling back is available. No changing widths, fill or translated-label motion.
+EN/RU/PL copy lives in the existing catalogues. Purchases (buy: source IDs) no
+longer auto-dismiss, including restored results; consumption and arrival retain
+their previous timers. Story modal/travel, design-system, language checks and
+production build passed. Chromium component checks at 320/390/1280px verified
+stable footer geometry, neutral/ochre borders, transparent fill and close callback.
+No full suite, WebKit/iPhone validation, source push or publication.
+
+Stable Story character layout — 31 October 2026, source only: retaining the
+paragraph alone did not preserve its inline formatting. Narrative characters now
+keep the same spans through natural completion and skip instead of switching to
+a plain text node; settled/archive characters have no reveal animation. The
+existing 28px thread inset, timing and game facts are unchanged. check-results
+now verifies character-node identity after both paths; results, design-system
+and production build passed. Focused Chromium geometry checks with the supplied
+Russian paragraph passed at 320/390/1280px, preserving every character's position
+and paragraph width/height. No full suites, WebKit/iPhone verification or release.
+
+Story call icon sizing — 31 October 2026, source only: constrain the shared
+progress row's direct icon to 20×20px with no flex shrinking and secondary colour.
+StoryCallProgress previously supplied an SVG with no size rule; Chromium reproduced
+a 354×354px phone at a 390px viewport. The real call component with production CSS
+now stays 20×20px during ringing/talking at 320/390/1280px, without row overflow;
+the existing phase text and three animated dots are unchanged. Screenshot inspected.
+check-story-modal, check-design-system and production build passed. No full suites,
+WebKit/iPhone validation or publication; save sources with [skip ci].
+
 Release v359 is published — 31 October 2026. GitHub Pages run 41192631345
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41192631345)
 succeeded for f90fc7ca24fc7ec670aa7d285c4edeaeebd4fabd: 35/35 Node suites

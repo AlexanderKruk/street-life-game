@@ -346,8 +346,15 @@ try {
     to(730); assert.equal(text(), 'А, Б. В', 'tap bypasses the remaining typing schedule');
     to(3000);
     assert.equal(document.querySelector('.story-text p'), paragraph, 'the same paragraph survives typing completion without replacing its formatting context');
+    assert.equal(paragraph.querySelector('.story-character'), firstLetter, 'skip and settlement preserve the character nodes and their inline layout');
     assert(!paragraph.hasAttribute('role') && !paragraph.hasAttribute('tabindex'), 'settled narrative no longer advertises a skip control');
     assert(!document.querySelector('.story-letter'), 'tap removes pending opacity effects so every letter is immediately visible');
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    now = 0; frame(0); to(50);
+    const naturalFirstLetter = paragraph.querySelector('.story-character');
+    to(3000);
+    assert.equal(paragraph.querySelector('.story-character'), naturalFirstLetter, 'natural completion also retains the same character layout');
+    assert.equal(paragraph.textContent, 'А, Б. В');
     cleanup();
     const { createStoryTyping, storyCharactersShown } = bundled('src/storyTyping.ts');
     const emoji = createStoryTyping('🙂А');

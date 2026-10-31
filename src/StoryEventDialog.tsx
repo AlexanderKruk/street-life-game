@@ -17,6 +17,7 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   const panel = useRef<HTMLElement>(null)
   const content = useRef<HTMLDivElement>(null)
   const bottomControl = useRef<HTMLButtonElement>(null)
+  const [playing, setPlaying] = useState(true)
   const { awayFromBottom, scrollToBottom } = useStoryScroll(content, true, () => {
     if (bottomControl.current && document.activeElement === bottomControl.current) panel.current?.focus({ preventScroll: true })
   })
@@ -62,9 +63,11 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   }, [])
   return <ModalOverlay className={`story-event-overlay${closing ? ' is-auto-closing' : ''}`} role="dialog" aria-modal="true" aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
     <ModalPanel ref={panel} tabIndex={-1} className="story-event-panel">
-      {canClose && <ModalAction variant="outline" iconOnly floating className="story-event-close" aria-label={t('common.close')} onClick={onClose}><Icon name="close" className="icon" /></ModalAction>}
-      <div ref={content} className="story-event-content"><StoryScreen episodes={episodes} interaction={interaction} currentMinute={minute} presentation="event" /></div>
-      {awayFromBottom && <ModalAction ref={bottomControl} variant="outline" iconOnly floating className="story-event-bottom" aria-label={t('story.latest')} onClick={scrollToBottom}><Icon name="arrow-down-to-line" className="icon" /></ModalAction>}
+      <div ref={content} className="story-event-content"><StoryScreen episodes={episodes} interaction={interaction} currentMinute={minute} presentation="event" onLivePlaybackChange={setPlaying} /></div>
+      <div className="story-event-actions">
+        <ModalAction variant="outline" className="story-event-action" disabled={!canClose} onClick={onClose} aria-live="polite">{t(canClose ? 'story.actions' : !playing && interaction?.waitingForDecision ? 'story.chooseAnswer' : 'story.inProgress')}</ModalAction>
+        <ModalAction ref={bottomControl} variant="outline" iconOnly className="story-event-bottom" disabled={!awayFromBottom} aria-label={t('story.latest')} onClick={scrollToBottom}><Icon name="arrow-down-to-line" className="icon" /></ModalAction>
+      </div>
     </ModalPanel>
   </ModalOverlay>
 }

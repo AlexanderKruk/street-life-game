@@ -87,12 +87,12 @@ try {
   env.advance(1); assert.equal(document.querySelector('.story-head time').textContent, '10:01');
   env.advance(250); assert.equal(document.querySelector('.story-head time').textContent, '10:02', 'the 250ms clock updates even before any text animation frame');
   env.click('Cancel');
-  setup('walk', 0); assert(modal()); assert(!document.querySelector('.story-event-close')); assert.equal(timers.size, 0);
+  setup('walk', 0); assert(modal()); assert(!document.querySelector('.story-event-action:not(:disabled)')); assert.equal(timers.size, 0);
   for (let i = 0; i < 200 && !document.querySelector('.story-text:not(.story-part-start) .story-reveal .story-letter'); i++) animate(64);
   const typingArrival = document.querySelector('.story-text:not(.story-part-start) .story-reveal');
   assert(typingArrival && typingArrival.textContent.length > 0 && typingArrival.textContent.length < 'Arrived at the station.'.length, 'arrival is revealed character by character');
-  assert(!document.querySelector('.story-event-close')); assert.equal(timers.size, 0);
-  const frozen = facts(); animate(30000); assert(document.querySelector('.story-event-close')); assert.deepEqual(facts(), frozen);
+  assert(!document.querySelector('.story-event-action:not(:disabled)')); assert.equal(timers.size, 0);
+  const frozen = facts(); animate(30000); assert(document.querySelector('.story-event-action:not(:disabled)')); assert.deepEqual(facts(), frozen);
   timeout(1000); assert(modal().classList.contains('is-auto-closing')); timeout(200); assert(!modal());
   assert(document.querySelector('.location-surface')); assert.equal(timers.size, 0);
   env.finish();

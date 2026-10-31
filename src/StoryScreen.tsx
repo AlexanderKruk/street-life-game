@@ -217,7 +217,7 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
             {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : <p className={current ? 'story-reveal' : undefined} role={current ? 'button' : undefined} tabIndex={current ? 0 : undefined} aria-label={current ? t('story.skip') : undefined}
                 onKeyDown={current ? event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } } : undefined}>
-                {current && piece.kind === 'text' && !animation.instant ? Array.from(visibleText).map((character, letter) => <span className="story-letter" key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}
+                {piece.kind === 'text' ? Array.from(visibleText).map((character, letter) => <span className={current && !animation.instant ? 'story-character story-letter' : 'story-character'} key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}
               </p>}
           </div>
         })}
@@ -232,7 +232,7 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
   </article>
 }
 
-export default function StoryScreen({ episodes, interaction, currentMinute, onPauseChange, presentation = 'archive' }: { episodes: StoryEpisode[]; interaction?: StoryInteraction; currentMinute?: number; onPauseChange?: (paused: boolean) => void; presentation?: 'archive' | 'event' }) {
+export default function StoryScreen({ episodes, interaction, currentMinute, onPauseChange, onLivePlaybackChange, presentation = 'archive' }: { episodes: StoryEpisode[]; interaction?: StoryInteraction; currentMinute?: number; onPauseChange?: (paused: boolean) => void; onLivePlaybackChange?: (playing: boolean) => void; presentation?: 'archive' | 'event' }) {
   const scrollRoot = useRef<HTMLElement>(null)
   useStoryScroll(scrollRoot, presentation === 'archive')
   const [comparison, setComparison] = useState(false)
@@ -241,6 +241,7 @@ export default function StoryScreen({ episodes, interaction, currentMinute, onPa
   const playback = (id: number, active: boolean) => setPlaying(previous => { if (previous.has(id) === active) return previous; const next = new Set(previous); if (active) next.add(id); else next.delete(id); return next })
   const paused = comparison || playing.size > 0
   const [livePlaying, setLivePlaying] = useState(false)
+  useEffect(() => { onLivePlaybackChange?.(livePlaying) }, [livePlaying, onLivePlaybackChange])
   const running = !paused && !interaction?.gameClock && (!interaction?.waitingForDecision || livePlaying)
   const clockMinute = useStoryClock(currentMinute, running)
   useEffect(() => { onPauseChange?.(paused); return () => onPauseChange?.(false) }, [paused, onPauseChange])

@@ -20,6 +20,16 @@ in that order, with a single completion stamp. All three contacts retain their
 existing durations, eligibility, mood/battery costs, progression and interruption
 rules. Restored calls reuse the same archive entry and do not repeat costs.
 
+Story modal footer — 31 October 2026: a persistent bottom row replaces the
+floating close cross. The main button keeps its width and position through
+Event… / Choose an answer / Actions (localised). Only Actions is enabled after
+the entire outcome is visible; it closes the modal over the same screen.
+The down-to-line button stays beside it, with grey icon and border at the end
+and ochre icon and border when earlier content is being read. Both use outlines,
+without fill or label movement. Reserve this footer from the initial frame.
+Shop purchase results wait for manual dismissal, including on reload; existing
+consumption/arrival auto-dismissal remains unchanged.
+
 Smooth Story scrolling — 31 October 2026: new blocks ease the existing
 chronology upwards in both the Story tab and event modal. Reading older text
 suspends automatic following; returning to the end resumes it. Opening starts
@@ -30,7 +40,9 @@ Stable Story text — 31 October 2026: typed and completed narrative share the
 same paragraph element and ordinary wrapping. During presentation it supports
 tap, Enter and Space to reveal text; completion removes that temporary control
 semantics. Switching to media/results must not replace the paragraph container
-or change its line-wrapping rules.
+or change its line-wrapping rules. Keep each narrative character's inline span
+through natural completion, skip and archive display; finishing the reveal only
+removes the fade class, never replaces the characters with a plain text node.
 
 Story choice visibility — 31 October 2026: Animation example is the motion
 reference. Within Story, elements carrying hidden are fully excluded from layout
