@@ -249,13 +249,23 @@ function measure(App) {
     assert.equal(count('App'), 0, `${name} has no periodic background renders`);
     modalAudit.push({ name, periodicRenders: count('App') });
   };
-  pauseAudit('purchase result', '.story-event-panel');
+  const timedResultAudit = (name, selector) => {
+    assert(document.querySelector(selector), name);
+    const before = JSON.parse(localStorage.getItem('street-life-save-v3')); clearCounts(); advance(3);
+    const after = JSON.parse(localStorage.getItem('street-life-save-v3'));
+    assert.equal(after.minutes, before.minutes + 3, `${name} continues real time`);
+    assert(after.hunger < before.hunger && after.energy < before.energy);
+    assert.equal(after.money, before.money, 'the action payment is not repeated');
+    assert.equal(count('ResultCard'), 0, 'a settled result does not rerender on ordinary ticks');
+    modalAudit.push({ name, periodicRenders: count('App') });
+  };
+  timedResultAudit('purchase result', '.story-event-panel');
   fireEvent.click(screen.getByRole('button', { name: 'Actions', exact: true }));
   window.matchMedia = purchaseMatchMedia;
   // Keep the memoized classic-result audit on the unchanged container-return flow.
   setup(App, 'location', { locationId: 'shop', money: 100 }, { 'street-life-inventory-v1': { bottles: 2 } });
   fireEvent.click(document.querySelector('.shop-return'));
-  pauseAudit('action result', '.result-modal');
+  timedResultAudit('action result', '.result-modal');
   clearCounts(); act(() => global.__auditSetters.setGame(previous => ({ ...previous, money: previous.money + 1 })));
   assert.equal(count('ResultCard'), 0, 'unchanged result ignores unrelated parent changes');
   fireEvent.click(screen.getByRole('button', { name: 'Got it', exact: true })); assert(!document.querySelector('.result-modal'));

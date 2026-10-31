@@ -133,7 +133,6 @@ export default function App() {
   const [infoModal, setInfoModal] = useState<ResultCardData | null>(() => restoredStoryResult ?? null)
   const [closingNotice, setClosingNotice] = useState<string | null>(() => initial.closingNotice)
   const [pendingResult, setPendingResult] = useState<(ResultAction & { before: ResultSnapshot; includeTime: boolean; always: boolean; consumedItems: ConsumedItem[] }) | null>(null)
-  const [callStoryPlaying, setCallStoryPlaying] = useState(false)
   const [presentedStoryId, setPresentedStoryId] = useState<number | null>(null)
   const [eventResultOpen, setEventResultOpen] = useState(!!restoredStoryResult)
   const closeResult = useCallback(() => {
@@ -627,10 +626,17 @@ export default function App() {
 
   useForcedSleep(sleepSession, game, !!(goalCompletionVisible || locationIsClosing || closingNotice || inventoryDialogOpen || phoneActivity || rainChoice || gameOver || activeEvent || diceCheck || shelterInterview || shelterQueue || shelterCheckoutDue || shelterDeparture || trip || infoModal || pendingResult), sleepController)
 
+  // Settle costs once before resuming ordinary time. Reading a timed outcome
+  // must not pause needs, battery, effects or opening hours, or rerun its command.
+  const resultTimeRunning = !LEGACY_EVENT_DIALOGS && !pendingResult && !!infoModal?.costs?.some(cost => cost.id === 'time' && (cost.amount ?? 0) > 0)
   const tickGameClock = useLatestAction(() => {
     if (screen === 'story' && storyPlaybackPaused) return
     if (goalCompletionVisible) return
     if (closingNotice) return
+    if (resultTimeRunning) {
+      if (!gameOver && document.visibilityState === 'visible') setGame(previous => applyAction(previous, { minutes: 1 }))
+      return
+    }
     if (rainChoice || (game.rain && !game.rain.choice && currentExposure === 'outside' && !sleeping)) return
     // Waiting/searching pauses the interrupted trip or phone activity, but time
     // and ordinary needs continue at the shared action speed.
@@ -643,7 +649,6 @@ export default function App() {
     }
     if (phoneActivity) {
       if (phoneActivity.remaining <= 0 || gameOver || activeEvent || diceCheck || infoModal || pendingResult || inventoryDialogOpen || document.visibilityState !== 'visible') return
-      if (storyCallRunning && callStoryPlaying) return
       tickPhoneActivity()
       return
     }
@@ -657,7 +662,7 @@ export default function App() {
     if (!underRainCover) setTrip(active => advanceTrip(active, tickMinutes))
     if (!observationReleased && !trip && !shelterQueue && !shelterDeparture) observeIdle(tickMinutes, () => applyAction(game, { minutes: tickMinutes }))
   })
-  const gameClockInterval = activeCall ? 1000 : trip || shelterDeparture || phoneActivity || rainWaiting ? ACTIVITY_TICK_MS : 1000
+  const gameClockInterval = resultTimeRunning || activeCall ? 1000 : trip || shelterDeparture || phoneActivity || rainWaiting ? ACTIVITY_TICK_MS : 1000
   useEffect(() => {
     const timer = window.setInterval(tickGameClock, gameClockInterval)
     return () => window.clearInterval(timer)
@@ -725,7 +730,6 @@ export default function App() {
     setJournalGoals(initialJournalGoals(INITIAL_INVENTORY.phoneBattery))
     setJournalEntries([])
     story.reset()
-    setCallStoryPlaying(false)
     localStorage.removeItem(STORY_KEY)
     setMusicWalkUsed(false)
     localStorage.removeItem(MUSIC_WALK_USED_KEY)
@@ -858,8 +862,7 @@ export default function App() {
   if (liveEpisode) {
     const scene = liveEpisode.scenes.at(-1)!
     storyInteraction = { episodeId: liveEpisode.id, key: `${liveEpisode.id}:${scene.eventId}:${liveEpisode.status}`, minute: absoluteMinutes(game), actions: [], seed: choiceSeed, decision: choiceDecisionKey, fixed: true }
-    if (liveEpisode.source === 'travel' || liveEpisode.source === 'phone' || liveEpisode.source === 'action') storyInteraction.gameClock = true
-    if (liveEpisode.source === 'phone') { storyInteraction.onPlayback = setCallStoryPlaying; storyInteraction.contentAfterIntro = true }
+    if (liveEpisode.source === 'phone') storyInteraction.contentAfterIntro = true
     if (liveEpisode.status === 'awaiting-ack' && infoModal && !pendingResult) {
       storyInteraction.onPresented = modalStoryEvent ? () => setPresentedStoryId(liveEpisode.id) : closeResult
     } else if (diceCheck && !infoModal && !pendingResult) {

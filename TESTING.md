@@ -1,3 +1,25 @@
+Unified real Story time — 31 October 2026, source only, by user instruction:
+live lower clocks and the HUD now read the same absolute game minute directly.
+Removed useStoryClock and the per-source gameClock switch. Production archive
+replay also displays actual time; its existing explicit world pause is retained.
+The standalone animation reference remains isolated from game state.
+After a settled result with a positive numeric time cost, the existing App clock
+continues at 1000ms/minute through presentation/reading, including restored results.
+Action jumps and accelerated processes retain their once-only costs; needs,
+aging/battery, effects and location schedules follow subsequent real ticks.
+The stored result, History, rewards and completion stamp do not change while
+reading. New ordinary encounter selection waits until the result is dismissed.
+Phone intro animation no longer blocks real call progress. Decision, hidden-page,
+game-over, explicit replay and zero-duration-result pause rules remain unchanged;
+classic compatibility builds retain their frozen behavior.
+Targeted modal/live/travel/results/opening-call/rendering, shop-inventory and
+phone-clock regression groups, restoration/localisation/language, design-system,
+module-boundary checks and production build passed. Added real-cost + ordinary
+time, five live sources, restore, midnight, shop closing, intro and no-duplicate
+reward checks. Chromium actual-App checks at 320/390/1280 verified 22:30 -> 22:35
+in both HUD and Story, saved minutes 1355, and unchanged 22:30 completion stamp.
+No full suites, physical iPhone/WebKit check or publication for this source save.
+
 Release v360 is published — 31 October 2026. GitHub Pages run 41201202452
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41201202452)
 succeeded for aea0dce8df584bce801a65a8ff32a34c8e4ea4ac: all 35 Node suites

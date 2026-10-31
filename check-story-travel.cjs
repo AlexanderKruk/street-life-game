@@ -54,10 +54,14 @@ try {
     assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1, 'arrival does not introduce a separate timestamp block');
     assert(modal().querySelector('.story-part-stamp').textContent.startsWith('10:08'), 'the one journey stamp records actual completion');
     assert.equal(save().episodes[0].status, 'awaiting-ack'); assert.deepEqual(facts(), expected, `${mode} retains classic arrival costs, time and History`);
-    const arrived = facts(), pendingArrival = save();
+    let arrived = facts(); const pendingArrival = save();
     assert.deepEqual(loadStory(pendingArrival), pendingArrival, 'actual arrival consequences retain valid finite values through persistence');
     remount(); assert.deepEqual(facts(), arrived, 'pending arrival does not run again');
     assert(modal(), `pending ${mode} arrival restores its modal: ${JSON.stringify({ screen: localStorage.getItem('street-life-screen'), story: save(), timers: [...timers.values()].map(timer => timer.at - now) })}`);
+    env.advance(999); assert.equal(env.read(env.stateKey).minutes, arrived.game.minutes);
+    env.advance(1); assert.equal(env.read(env.stateKey).minutes, arrived.game.minutes + 1, 'arrival returns from accelerated travel to ordinary time');
+    assert.equal(modal().querySelector('.story-head time').textContent, '10:09');
+    assert.deepEqual(save(), pendingArrival); arrived = facts();
     timeout(999); assert(modal()); assert(document.querySelector('.map-surface'));
     timeout(1); assert(!modal()); assert(document.querySelector('.location-surface'));
     assert.equal(save().episodes[0].status, 'complete'); assert.equal(save().episodes.length, 1); assert.deepEqual(facts(), arrived);

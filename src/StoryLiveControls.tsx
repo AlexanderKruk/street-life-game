@@ -10,7 +10,6 @@ export type StoryInteraction = {
   /** Display every actual process tick, independently of presentation frames. */
   contentAfterIntro?: boolean
   onPlayback?: (playing: boolean) => void
-  gameClock?: boolean
 }
 
 /** UI only: commands and eligibility still belong to the existing controllers. */

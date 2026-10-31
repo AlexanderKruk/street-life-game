@@ -142,12 +142,13 @@ try {
   assert.equal(document.querySelector('.story-text p'), firstText, 'the already-read opening keeps its DOM and does not replay');
   assert(!document.querySelector('[data-order-id="story:acknowledge"]'), 'result acknowledgement waits for its own presentation');
   const movingClock = document.querySelector('.story-head time').textContent;
-  animate(1500); assert.notEqual(document.querySelector('.story-head time').textContent, movingClock, 'clock resumes during the result');
+  animate(1500); assert.equal(document.querySelector('.story-head time').textContent, movingClock, 'animation frames cannot invent live game minutes');
   animate(30000); noModal(); assert(!document.querySelector('[data-order-id="story:acknowledge"]'));
   assert.equal(save().episodes[0].status, 'complete');
   assert(document.querySelector('.story-idle.is-running'), 'the cursor keeps breathing between events');
   const idleClock = document.querySelector('.story-idle time').textContent;
-  animate(1500); assert.notEqual(document.querySelector('.story-idle time').textContent, idleClock, 'presentation clock keeps ticking without an acknowledgement');
+  animate(1500); assert.equal(document.querySelector('.story-idle time').textContent, idleClock, 'idle animation cannot advance a second clock');
+  env.advance(2000); assert.notEqual(document.querySelector('.story-idle time').textContent, idleClock, 'idle follows actual game ticks');
   assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'sealed');
   assert.equal(track.style.minHeight, '900px', 'automatic acknowledgement retains the current reading layout');
   env.click('Replay'); assert.equal(track.style.minHeight, '', 'explicit replay starts a fresh presentation layout');

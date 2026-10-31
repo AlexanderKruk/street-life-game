@@ -229,6 +229,20 @@ try {
     { title: 'Discovery', text: 'You find an address.', presentation: questionPresentation('morning', ['support']), ...searchSummary },
     { title: 'Small effort', text: 'You take a detour.', illustration: 'outcome.webp', visibleStats: ['energy'], ...summarizeResult(before, { ...before, game: { ...before.game, energy: before.game.energy - 1, thirst: before.game.thirst - .2 } }) },
   ];
+  for (const source of ['encounter', 'action', 'phone', 'travel', 'inventory']) {
+    const episode = { id: 92, source, sourceId: 'clock', status: 'awaiting-ack', scenes: [{ eventId: 'clock', title: 'Clock', text: 'Finished.', at }], result: fixtures[0], endedAt: { ...at, minute: 620 } };
+    const saved = JSON.stringify(episode);
+    const interaction = { episodeId: 92, key: 'clock', minute: 600, seed: 1, decision: 'clock', actions: [] };
+    const view = render(React.createElement(StoryScreen, { episodes: [episode], interaction, currentMinute: 3500 }));
+    const clock = () => document.querySelector('.story-head time').textContent;
+    assert.equal(clock(), '10:20', `${source}: actual time overrides stale interaction time immediately`);
+    for (let now = 0; now < 3000; now += 32) frame(now);
+    assert.equal(clock(), '10:20', `${source}: animation cannot create live minutes`);
+    view.rerender(React.createElement(StoryScreen, { episodes: [episode], interaction, currentMinute: 3501 }));
+    assert.equal(clock(), '10:21', `${source}: actual ticks are displayed without waiting for a frame`);
+    assert.equal(JSON.stringify(episode), saved, 'live time never rewrites the saved action');
+    cleanup();
+  }
   for (const [index, result] of fixtures.entries()) {
     render(React.createElement(ResultCard, { result, onClose: () => {} }));
     const classic = [...document.querySelectorAll('.result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]);
