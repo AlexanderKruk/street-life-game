@@ -1,3 +1,13 @@
+Rollback to v362 completed — 31 October 2026, explicitly requested by the user.
+Main commit 53ee66f1c8fd19ce63c7ec8385ccf7dac8c8f4da restores the exact published
+v362 tree 72acf338d2d3645c99bb45afbea4f4a1f55e197f from a4db38eda7952cfa27547d81286ddf8a183d0880.
+Later v363–v367 work remains in Git history through parent 5f47405289a000ce36272e0791f68d5c56030d4d;
+do not reapply it without a new request. Reverted Story typography/stamp changes,
+photo-follow scrolling, current-word wrappers and backpack/shop icon-only effects.
+Pages run 41225817658 passed 35/35 suites in 143.75s, built and deployed at
+17:45 UTC (18:45 Warsaw). Live browser shows v2026.10.31-362. CI build/deploy logs
+reviewed; no duplicate local full run or fresh physical iPhone/WebKit verification.
+
 Release v362 — 31 October 2026, publication requested: releases sequential Story
 levels with white starting values, 650ms counting/colour transitions and retained
 600ms holds/220ms pauses, without separate meter deltas. Full Node checks,
