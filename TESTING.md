@@ -1,3 +1,13 @@
+Release v361 is published — 31 October 2026. GitHub Pages run 41203183823
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41203183823)
+succeeded for 184af97ef0b6e1714b40d79418d928fc52aeb7f3: all 35 Node suites
+passed in 191.63s, TypeScript/Vite build and deployment succeeded (12:58 UTC).
+Includes unified actual HUD/Story time, ordinary real ticks after timed results,
+call progress independent of intro animation, and manual inventory-result closing.
+Live HTML/JavaScript serves v2026.10.31-361. Build/test/deploy logs reviewed;
+successful CI was not duplicated locally. Physical iPhone/WebKit appearance
+remains unverified. Earlier source-only notes below are included in this release.
+
 Manual inventory-result dismissal — 31 October 2026, source only: all
 inventory Story results now wait for Actions/backdrop/Escape after the complete
 presentation, including consumption and restored pending results. No inventory
