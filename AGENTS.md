@@ -1,3 +1,10 @@
+Release v362 — 31 October 2026, publication requested: releases sequential Story
+levels with white starting values, 650ms counting/colour transitions and retained
+600ms holds/220ms pauses, without separate meter deltas. Full Node checks,
+production build and deployment belong to the existing GitHub Pages workflow;
+do not duplicate a successful unchanged CI locally. Publication is pending until
+that workflow succeeds. Physical iPhone/WebKit appearance remains unverified.
+
 Sequential Story levels — 31 October 2026, source only: ResultIndicators' explicit
 showLevels variant presents saved meter.after percentages without signed deltas.
 Live/Replay reveals each icon/value, holds its white meter.before number for 600ms,
