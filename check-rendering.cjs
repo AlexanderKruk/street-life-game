@@ -167,7 +167,7 @@ function measure(App) {
   window.matchMedia = () => ({ matches: true });
   fireEvent.click(screen.getByRole('button', { name: /^Water ×/ }));
   assert(document.querySelector('.story-event-overlay'), 'consumption now presents its saved Story result');
-  fireEvent.click(screen.getByRole('button', { name: 'Close', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Actions', exact: true }));
   window.matchMedia = previousMatchMedia;
   fireEvent.click(screen.getByRole('button', { name: 'Phone', exact: true }));
   fireEvent.click(screen.getByRole('button', { name: 'History', exact: true }));
@@ -250,7 +250,7 @@ function measure(App) {
     modalAudit.push({ name, periodicRenders: count('App') });
   };
   pauseAudit('purchase result', '.story-event-panel');
-  fireEvent.click(screen.getByRole('button', { name: 'Close', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Actions', exact: true }));
   window.matchMedia = purchaseMatchMedia;
   // Keep the memoized classic-result audit on the unchanged container-return flow.
   setup(App, 'location', { locationId: 'shop', money: 100 }, { 'street-life-inventory-v1': { bottles: 2 } });
