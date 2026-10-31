@@ -296,6 +296,25 @@ try {
   assert(scroller.scrollTop > 700 && scroller.scrollTop < 800, 'the first frame moves only partway towards the new end');
   animate(1500);
   assert.equal(scroller.scrollTop, 800, 'smooth following settles at the actual scroll limit');
+  // The photograph owns its existing 1150ms reveal; its scroll offset must
+  // follow each height change immediately, while ordinary text stays eased.
+  const photoMarker = document.createElement('div');
+  photoMarker.className = 'story-media';
+  photoMarker.dataset.storyPhotoRevealing = '';
+  scroller.querySelector('.story-screen').appendChild(photoMarker);
+  height = 1341; resize();
+  assert.equal(scroller.scrollTop, 841, 'photo growth follows its new bottom in the same resize callback, without lag');
+  height = 1389; resize();
+  assert.equal(scroller.scrollTop, 889, 'further photo frames follow directly with whole-pixel scroll offsets');
+  photoMarker.remove();
+  height = 1421; resize();
+  assert.equal(scroller.scrollTop, 889, 'normal text growth does not snap after the photo finishes');
+  animate(32);
+  assert(scroller.scrollTop > 889 && scroller.scrollTop < 921, 'ordinary text resumes its smooth delayed following');
+  animate(1500);
+  assert.equal(scroller.scrollTop, 921, 'ordinary smooth following reaches its new end');
+  height = 1300; resize(); animate(1500);
+  assert.equal(scroller.scrollTop, 800, 'the scroller returns to the original test baseline');
   scroller.scrollTop = 100; env.fireEvent.scroll(scroller);
   assert(!bottomButton().disabled, 'jump button becomes active while reading earlier content');
   assert(document.querySelector('.bottom-nav[inert]') && !document.querySelector('.story-event-action:not(:disabled)'), 'jumping does not unlock an unfinished event');

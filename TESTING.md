@@ -1,3 +1,16 @@
+Story image scroll synchronisation — 31 October 2026, source only: preserve
+the approved 1150ms cubic-ease image-height reveal, dark-to-light appearance,
+normal 50ms/character narrative typing and existing 100ms eased following for
+text and other layout changes. While a native Story image is actively revealing,
+useStoryScroll observes the growing Story via ResizeObserver, cancels any
+trailing eased-follow frame and writes the rounded current scroll bottom
+in that same resize callback. This avoids extra lag and fractional-pixel
+text shimmer above the image. Explicit user wheel/touch/key interruption
+continues to disable auto-follow; history/reduced-motion behavior is retained.
+No image timings, Story stamps, game clock, saves or gameplay changed.
+Targeted regression assertions added, not executed; no full CI, browser/iPhone/
+WebKit visual check, or deployment. Source commit [skip ci].
+
 Release v363 is published — 31 October 2026. GitHub Pages run 41208149844
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41208149844)
 succeeded for 81d04cd58190ac472162ceb5f638e363252577e0: all 35 Node

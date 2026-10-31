@@ -95,9 +95,11 @@ try {
     env.fireEvent.click(episode.querySelector('.story-text .story-reveal'));
     animate(500);
     assert.match(episode.querySelector('.story-media img').style.filter, /brightness\(0\./, 'image begins in darkness');
+    assert(episode.querySelector('.story-media[data-story-photo-revealing]'), 'the image enables synchronized scroll only while opening');
     assert.equal(openingStamp.dataset.storyStamp, 'pending', 'part metadata waits until the image is fully shown');
     animate(1400);
     assert.equal(episode.querySelector('.story-media').style.gridTemplateRows, '1fr', 'image is complete before the following mini-block');
+    assert(!episode.querySelector('.story-media[data-story-photo-revealing]'), 'synchronized scrolling ends when the photo is fully revealed');
     assert(episode.querySelector('.story-choice').hidden, 'the shared image reading pause still holds back the choice');
     animate(500);
     assert.equal(openingStamp.dataset.storyStamp, 'sealed');
