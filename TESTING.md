@@ -1,3 +1,12 @@
+v364 CI assertion correction — 31 October 2026: first Pages run
+41211566249 failed in check-story-recording at the very start of image
+presentation. At exactly 500ms after skipping the preceding narrative,
+the previous part's hold can still own the rendered frame; the next 32ms
+animation frame activates the image/reveal attribute. Update the assertion
+to observe the first actual image frame before testing its active marker.
+The unchanged 1150ms photo curve, scroll implementation and saved behavior
+remain identical. Retry full Pages CI once; no successful publication yet.
+
 Release v364 — 31 October 2026, publication requested: Story's
 image reveal keeps its original 1150ms cubic easing and dark-to-light
 animation while the modal/archive scrollbar follows its expanding height
