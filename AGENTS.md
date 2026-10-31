@@ -1,6 +1,9 @@
 Release v369 — publication explicitly requested by the user.
 Includes all accumulated UI polish below. Pages CI owns full tests and build;
-publication remains pending until that workflow succeeds.
+publication remains pending until that workflow succeeds. The first v369 CI
+attempt stopped at obsolete visible-word expectations in check-mood; the
+updated checks retain full accessible names, visible caps/strengths, negative
+semantics and equality with the actual Status icons. Gameplay is unchanged.
 Settings uses a symmetric eight-tooth outline gear, preserving shared stroke/size.
 Product icon/value gaps are 2px. Medicine recovery previews use the shared
 health heart icon beside ×3 instead of a pill. Map shortcuts omit icons, use content-driven
