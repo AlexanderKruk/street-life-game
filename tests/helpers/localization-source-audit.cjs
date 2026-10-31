@@ -18,6 +18,9 @@ const machineValues = new Set([
   'Escape', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
 ]);
 const internalLiterals = new Map([
+  // KeyboardEvent.key identifiers in these handlers, never player-facing copy.
+  ['StoryScreen.tsx', new Set(['Enter'])],
+  ['useStoryScroll.ts', new Set(['PageUp', 'PageDown', 'Home', 'End'])],
   ['foodInventory.ts', new Set(['Freshness', 'Portions'])],
   ['DiceDialog.tsx', new Set(['D20'])],
   ['ChoiceOptions.tsx', new Set(['Shuffled choices require a stable ordering ID'])],
