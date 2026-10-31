@@ -1,3 +1,12 @@
+Release v366 — 31 October 2026, publishing initiated by user.
+Includes Story's current-word width reservation before the original
+per-character reveal, with its existing typing rhythm/punctuation delays,
+and a -2px move of values toward existing backpack/shop effect icons
+(gap 0 instead of 3px). Unchanged: Story timing, stamps and game clock;
+shop pricing, inventory rules and personal essentials. Trigger standard
+single GitHub Actions CI (35 suites, TypeScript/Vite build, Pages deploy).
+Do not treat it as deployed until the workflow and Pages report success.
+
 Story whole-word pre-wrap — 31 October 2026 (source only):
 StoryWordReveal retains the existing StoryScreen 50ms Unicode-character
 timeline, punctuation pauses, 100ms fade, skip and image/stamp timings.
