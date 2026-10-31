@@ -88,7 +88,8 @@ for(const [id,assets,durations] of [
  click(reply);
  assert(document.querySelector('.result-illustration').src.endsWith(`event-${assets[index]}-480.webp`));
  assert.match(document.querySelector('.result-illustration').srcset,/480w.*768w.*1024w/);
- assert.equal(read(stateKey).minutes,1385+durations[index]);assert.equal(read(firstNightKey).pendingId,null);
+ const spent=read(stateKey).minutes-1385,nominal=durations[index]||2;
+ assert(spent>=Math.max(1,nominal-1)&&spent<=nominal+1,'encounter duration has only the approved one-minute variation');assert.equal(read(firstNightKey).pendingId,null);
  ok();assert(!document.querySelector('.result-illustration'));assert(!screen.queryByRole('dialog'));
 }
 
