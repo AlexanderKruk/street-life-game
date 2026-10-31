@@ -20,7 +20,9 @@ export function useStoryScroll(root: RefObject<HTMLElement | null>, enabled = tr
       if (!away) bottomCallback.current?.()
       setAway(away)
     }
-    const write = (value: number) => { scroller.scrollTop = value; expected = scroller.scrollTop }
+    // Quantise automatic following in CSS pixels, including the eased text
+    // frames. Retain the browser's actual value for own-scroll detection.
+    const write = (value: number) => { scroller.scrollTop = Math.round(value); expected = scroller.scrollTop }
     const tick = (now: number) => {
       const delta = last === null ? 16 : Math.min(64, now - last); last = now
       const distance = bottom() - scroller.scrollTop

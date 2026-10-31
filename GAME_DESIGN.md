@@ -1,3 +1,9 @@
+Whole-pixel automatic Story following — 31 October 2026, source only:
+round automatic text/photo scroll positions to whole CSS pixels, retaining the
+browser readback for own-scroll detection. User scrolling and native smooth jump
+are unchanged. This addresses fractional positioning; physical iPhone text
+sharpness is not yet verified. No release/build-ID change or publication.
+
 New presentation implementation after v362 rollback — 31 October 2026, source
 only. User authorised redoing the five reverted interface changes from v362.
 Story words reserve their future glyph boxes in normal flow only when started;
