@@ -1,3 +1,14 @@
+Release v364 — 31 October 2026, publication requested: Story's
+image reveal keeps its original 1150ms cubic easing and dark-to-light
+animation while the modal/archive scrollbar follows its expanding height
+directly at rounded pixel offsets; normal text remains smoothed with the
+existing ~100ms follower. User scroll interruption, Story timing, save
+facts, events and game clock are unchanged. Focused tests cover photo-only
+snap following, resumed text easing and reveal-only attribute lifetime.
+The existing Pages CI runs all 35 Node suites, TypeScript/Vite build and
+deployment; no duplicate local full run. Publication and mobile WebKit
+appearance are not yet verified.
+
 Story image scroll synchronisation — 31 October 2026, source only: preserve
 the approved 1150ms cubic-ease image-height reveal, dark-to-light appearance,
 normal 50ms/character narrative typing and existing 100ms eased following for

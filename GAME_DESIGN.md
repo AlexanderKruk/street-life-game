@@ -1,3 +1,14 @@
+Release v364 — 31 October 2026, publication requested: Story's
+image reveal keeps its original 1150ms cubic easing and dark-to-light
+animation while the modal/archive scrollbar follows its expanding height
+directly at rounded pixel offsets; normal text remains smoothed with the
+existing ~100ms follower. User scroll interruption, Story timing, save
+facts, events and game clock are unchanged. Focused tests cover photo-only
+snap following, resumed text easing and reveal-only attribute lifetime.
+The existing Pages CI runs all 35 Node suites, TypeScript/Vite build and
+deployment; no duplicate local full run. Publication and mobile WebKit
+appearance are not yet verified.
+
 Release v363 is published — 31 October 2026. GitHub Pages run 41208149844
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41208149844)
 succeeded for 81d04cd58190ac472162ceb5f638e363252577e0: all 35 Node
