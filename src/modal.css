@@ -49,6 +49,7 @@ html:has(.modal-overlay:not([inert]):not([aria-hidden="true"])) { overflow:hidde
   -webkit-backdrop-filter:blur(var(--modal-blur));
   overscroll-behavior:none;
 }
+.modal-overlay.story-event-overlay { --modal-inset:var(--modal-gutter); }
 .modal-panel {
   position:relative;
   width:min(var(--modal-width),100%);

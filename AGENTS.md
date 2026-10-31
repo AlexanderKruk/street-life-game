@@ -1,3 +1,11 @@
+Story modal height — 31 October 2026, source only: fill the overlay's available
+height instead of 88svh. Only Story overrides --modal-inset to --modal-gutter,
+giving 12px top/bottom gaps plus existing safe-area insets. Mobile side gaps
+stay 12px; desktop retains the regular width cap. The internal scroller and
+fixed footer remain inside the same frame. Build/design-system checks passed;
+Chromium at 320/390/1280px measured 12px top/bottom gaps, equal side gaps on
+mobile, and stable footer geometry across states. Physical iPhone/WebKit unrun.
+
 Story modal footer — 31 October 2026, source only: replace the floating cross
 and conditional jump with one persistent footer outside the scroller. The main
 outline button says Event… while presenting, Choose an answer at a settled

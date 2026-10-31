@@ -1405,7 +1405,7 @@ body { min-width:0; }
   .modal-overlay.story-event-overlay.is-auto-closing { transition:none; }
   .story-travel-phase,.story-process-dots > span { animation:none; }
 }
-.modal-panel.story-event-panel { height:88svh; max-height:100%; padding:0; overflow:hidden; display:flex; flex-direction:column; }
+.modal-panel.story-event-panel { height:100%; max-height:100%; padding:0; overflow:hidden; display:flex; flex-direction:column; }
 /* The scroller reaches the frame edge; only its content owns the inset, leaving
    paint space for the breathing point and its wave without inset scrollbars. */
 .story-event-content { flex:1; min-height:0; min-width:0; padding:var(--modal-padding-y) var(--modal-padding-x); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }

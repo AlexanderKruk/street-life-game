@@ -20,6 +20,11 @@ in that order, with a single completion stamp. All three contacts retain their
 existing durations, eligibility, mood/battery costs, progression and interruption
 rules. Restored calls reuse the same archive entry and do not repeat costs.
 
+Story modal height — 31 October 2026: use the full available overlay height,
+leaving the same 12px gutter above and below as on the sides, with additional
+safe-area protection where the device requires it. Keep the regular desktop
+width limit, internal Story scrolling and persistent bottom controls.
+
 Story modal footer — 31 October 2026: a persistent bottom row replaces the
 floating close cross. The main button keeps its width and position through
 Event… / Choose an answer / Actions (localised). Only Actions is enabled after
