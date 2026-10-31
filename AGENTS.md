@@ -1,3 +1,9 @@
+Release v359 — 31 October 2026, publication requested. Includes sequential
+Story choices, stable paragraphs, smooth following, opening calls with artwork,
+immediate single-block music and unified travel. Full Node checks, TypeScript/
+Vite build and deployment belong to Pages CI; publication is pending until it
+succeeds. iPhone/WebKit and fresh browser appearance remain unverified.
+
 Single-block Story travel — 31 October 2026, source only: travel now uses
 the existing grouped Story part contract. Route, transient phases, arrival text
 and actual consequences share one pending stamp that seals only after the full

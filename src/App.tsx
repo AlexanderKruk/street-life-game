@@ -99,7 +99,7 @@ import { createInventoryController } from './inventoryController'
 import { clothingHygieneCap } from './hygieneRules'
 import { useLatestAction } from './useLatestAction'
 
-const BUILD_VERSION = 'v2026.10.30-358'
+const BUILD_VERSION = 'v2026.10.31-359'
 // Explicit opt-in for frozen classic-UI regression comparisons during migration.
 const LEGACY_EVENT_DIALOGS = import.meta.env.VITE_LEGACY_EVENT_DIALOGS === 'true'
 const ACTIVITY_TICK_MS = 250
