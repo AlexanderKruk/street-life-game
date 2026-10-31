@@ -1,3 +1,14 @@
+Release v365 — 31 October 2026, publication requested:
+only backpack/shop item effect text badges change to compact neutral-gray
+icon + tightly spaced strength values with transparent backgrounds, using
+the existing status glyphs. Consumable freshwater, food, hygiene,
+recovery and warning strengths remain available with accessible localized
+labels. Personal essentials, item/card layout, action buttons and costs,
+Story and game time are unchanged. One standard GitHub Pages CI run owns
+all 35 Node suites, TypeScript/Vite build and deployment (no duplicated
+local suite). Publication pending CI/deployment; real iPhone/WebKit look
+not yet verified.
+
 Release v364 published — 31 October 2026. GitHub Pages run 41211666351
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41211666351)
 succeeded at 14:50 UTC for f49e2fe1767bf145ba33b4b02df043cafbfc5013:
