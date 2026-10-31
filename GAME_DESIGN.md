@@ -1,3 +1,11 @@
+Release v367 — 31 October 2026, initiated at user request.
+Backpack and shop effect badges: restore a straightforward 4px icon-to-
+strength flex gap and remove the prior -2px negative offset. The 7px
+inter-effect spacing stays unchanged. Personal essentials, Story, game
+clock, and gameplay mechanics remain untouched. Trigger a single full
+GitHub Actions workflow with 35 suites, build, artifact, and Pages
+deployment; publication must be confirmed by its deploy job.
+
 Release v366 successfully published — 31 October 2026, 16:19:55 UTC
 (17:19 Warsaw). GitHub Actions run 41218831154:
 https://github.com/AlexanderKruk/street-life-game/actions/runs/41218831154
