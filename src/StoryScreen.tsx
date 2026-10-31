@@ -13,6 +13,7 @@ import type { StoryEpisode, StoryStamp } from './story'
 import StoryLiveControls, { type StoryInteraction } from './StoryLiveControls'
 import { useStoryScroll } from './useStoryScroll'
 import { useStoryChoiceMotion } from './useStoryChoiceMotion'
+import StoryWordReveal from './StoryWordReveal'
 
 type Piece = { kind: 'text' | 'image' | 'choice' | 'stats'; text: string; at: StoryStamp; image?: string; resultStart?: boolean; sealAfter?: number; stamp?: StoryStamp; partBody?: boolean; pendingPart?: boolean }
 const stampLabel = (at: StoryStamp) => `${formatTime(at.minute)} · ${at.locationName} · ${t('story.day', { day: formatNumber(displayDay(at.day)) })}`
@@ -215,7 +216,7 @@ function Episode({ episode, live, currentMinute, disabled, continuous, archiveCo
             {piece.kind === 'stats' ? !future && <StoryResult episode={episode} animate={!!animation} /> : piece.kind === 'image' ? <div className="story-media" data-story-photo-revealing={current && imageProgress < 1 ? '' : undefined} style={{ gridTemplateRows: `${1 - Math.pow(1 - imageProgress, 3)}fr` }}><div><img {...responsiveImageProps(piece.image!)} alt={piece.text} style={{ opacity: .25 + imageProgress * .75, filter: `brightness(${.08 + .92 * Math.pow(imageProgress, 1.5)}) saturate(${.6 + .4 * imageProgress})` }} /></div></div>
               : <p className={current ? 'story-reveal' : undefined} role={current ? 'button' : undefined} tabIndex={current ? 0 : undefined} aria-label={current ? t('story.skip') : undefined}
                 onKeyDown={current ? event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } } : undefined}>
-                {piece.kind === 'text' ? Array.from(visibleText).map((character, letter) => <span className={current && !animation.instant ? 'story-character story-letter' : 'story-character'} key={`${replay}-${index}-${letter}`}>{character}</span>) : visibleText}
+                {piece.kind === 'text' ? <StoryWordReveal text={piece.text} shown={current ? animation.shown : Array.from(piece.text).length} animate={current && !animation.instant} letterKey={`${replay}-${index}`} /> : visibleText}
               </p>}
           </div>
         })}

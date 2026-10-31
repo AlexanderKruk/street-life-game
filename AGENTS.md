@@ -1,3 +1,15 @@
+Story whole-word pre-wrap — 31 October 2026 (source only):
+StoryWordReveal retains the existing StoryScreen 50ms Unicode-character
+timeline, punctuation pauses, 100ms fade, skip and image/stamp timings.
+As soon as a word begins, its full width is reserved via an invisible
+CSS ::before, while the already-keyed visible letters fade in unchanged.
+No future words or paragraphs are preallocated. CSS max-content plus
+max-width:100% delegates layout to the browser and only permits very long
+words to wrap internally; it adapts to screen width and RU/PL/EN.
+The invisible reservation stays out of DOM text and screen readers.
+Only Story text presentation/CSS and recording assertions changed;
+other UI, game clock and rules are untouched. No publish/CI yet.
+
 Release v365 successfully published — 31 October 2026, 15:42:57 UTC
 (16:42 Warsaw). GitHub Actions run 41215857989
 https://github.com/AlexanderKruk/street-life-game/actions/runs/41215857989

@@ -1434,6 +1434,13 @@ body { min-width:0; }
 .story-piece { position:relative; padding:0; }
 .story-reveal { display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
 .story-piece p, .story-reveal { white-space:pre-line; text-wrap:wrap; margin:0; font-size:var(--font-body); font-weight:var(--weight-regular); line-height:1.5; }
+
+/* Reserve the currently typed word without measuring the text or reserving
+   future words. The browser wraps complete words at the available width.
+   Overlong individual words alone can break internally. */
+.story-word { position:relative; display:inline-block; width:max-content; max-width:100%; vertical-align:baseline; white-space:normal; overflow-wrap:anywhere; }
+.story-word::before { content:attr(data-word); display:block; visibility:hidden; white-space:normal; overflow-wrap:anywhere; }
+.story-word-visible { position:absolute; inset:0; display:block; white-space:normal; overflow-wrap:anywhere; }
 .story-letter { animation:story-letter-appear 100ms linear both; }
 @keyframes story-letter-appear { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion:reduce) { .story-letter { animation:none; } }
