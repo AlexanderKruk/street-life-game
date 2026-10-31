@@ -1,3 +1,15 @@
+Release v366 successfully published — 31 October 2026, 16:19:55 UTC
+(17:19 Warsaw). GitHub Actions run 41218831154:
+https://github.com/AlexanderKruk/street-life-game/actions/runs/41218831154
+deployed source commit a7f41b8298d46ae33d1a3a72166e8c4ec3e6389c
+to https://alexanderkruk.github.io/street-life-game/.
+All 35/35 test suites passed in 199.85s; TypeScript/Vite build and
+Pages artifact upload succeeded; deploy job reported success.
+Changes: current-word reservation to avoid typewriter word jumps in
+Story (original timing unchanged), and tighter visual spacing of
+existing backpack/shop stat strengths. No change to personal essentials.
+Physical iPhone Safari visual regression remains unverified.
+
 Release v366 — 31 October 2026, publishing initiated by user.
 Includes Story's current-word width reservation before the original
 per-character reveal, with its existing typing rhythm/punctuation delays,
