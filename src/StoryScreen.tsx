@@ -76,7 +76,7 @@ function StoryResult({ episode, animate }: { episode: StoryEpisode; animate: boo
     {episode.scenes.filter(scene => scene.roll).map((scene, index) => <p key={index} className="story-roll">{t('story.roll', { roll: scene.roll!.value, modifier: scene.roll!.modifier, target: scene.roll!.target })}</p>)}
     {result.presentation?.places?.map(place => <div className="story-place" key={place.id}><strong>{place.name}</strong><span>{place.hours}</span><p>{place.detail}</p></div>)}
     {result.presentation?.notice && <p>{result.presentation.notice}</p>}
-    <ResultIndicators changes={resultDisplay(result).indicators} animate={animate} />
+    <ResultIndicators changes={resultDisplay(result).indicators} animate={animate} showLevels />
   </div>
 }
 function Episode({ episode, live, currentMinute, disabled, continuous, archiveControls = true, onPlayback, onLivePlayback }: { episode: StoryEpisode; live?: StoryInteraction; currentMinute?: number; disabled?: boolean; continuous?: boolean; archiveControls?: boolean; onPlayback?: (id: number, playing: boolean) => void; onLivePlayback?: (playing: boolean) => void }) {
@@ -166,8 +166,8 @@ function Episode({ episode, live, currentMinute, disabled, continuous, archiveCo
       } else {
         shown = length
         const current = pieces[index]
-        const indicatorCount = current.kind === 'stats' ? resultDisplay(episode.result!).indicators.length : 0
-        progress = Math.min(1, elapsed / (current.kind === 'image' ? 1150 : indicatorCount ? resultIndicatorDuration(indicatorCount) : 450))
+        const indicators = current.kind === 'stats' ? resultDisplay(episode.result!).indicators : []
+        progress = Math.min(1, elapsed / (current.kind === 'image' ? 1150 : indicators.length ? resultIndicatorDuration(indicators) : 450))
         const ease = 1 - Math.pow(1 - progress, 3)
         const node = nodes.current[index]
         if (current.kind === 'image') {

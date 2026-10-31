@@ -19,11 +19,11 @@ function bundled(path) {
 }
 const React = require('react');
 const { render, screen, fireEvent, act, cleanup } = require('@testing-library/react');
-const { default: ResultCard, isMajorChange, ResultStat } = bundled('src/ResultCard.tsx');
+const { default: ResultCard, isMajorChange, ResultStat, resultDisplay } = bundled('src/ResultCard.tsx');
 const { summarizeResult } = bundled('src/results.ts');
 const { questionPresentation, locationPresentation } = bundled('src/resultPresentation.ts');
 const { Icon } = bundled('src/Icon.tsx');
-const { default: ResultIndicators } = bundled('src/ResultIndicators.tsx');
+const { default: ResultIndicators, resultIndicatorDuration } = bundled('src/ResultIndicators.tsx');
 const before = {
   game: { day: 2, minutes: 600, locationId: 'shelter', money: 57, hunger: 73, thirst: 50, energy: 34, health: 90, hygiene: 50, mood: 60.2, intoxication: 0 },
   inventory: { clothingCleanliness: 50, phoneBattery: 43, phoneCondition: 72, jacket: 78, water: 2, food: 2, medicines: 2, documents: true, cigarettes: 0, bottles: 0, transitCard: false },
@@ -38,6 +38,36 @@ try {
     const expected = document.querySelector('svg').innerHTML; cleanup();
     render(React.createElement(ResultIndicators, { changes: [{ id, label: id, value: '+1', amount: 1, kind: 'positive' }] }));
     assert.equal(document.querySelector(`[data-resource-id="${id}"] svg`).innerHTML, expected, `${id} reuses the existing project icon`);
+    cleanup();
+  }
+  // The second saved level waits until the first transition and inter-item pause finish.
+  {
+    const changes = [
+      { id: 'mood', label: 'Mood', value: '+2', amount: 2, kind: 'positive', meter: { before: 30, after: 32 } },
+      { id: 'energy', label: 'Energy', value: '−3', amount: -3, kind: 'negative', meter: { before: 64, after: 61 } },
+      { id: 'money', label: 'Money', value: '−0.5 zł', amount: -.5, kind: 'negative' },
+    ];
+    const saved = JSON.stringify(changes);
+    const view = render(React.createElement(React.StrictMode, null, React.createElement(ResultIndicators, { changes, animate: true, showLevels: true })));
+    const value = id => document.querySelector(`[data-resource-id="${id}"] strong`).textContent;
+    frame(0); frame(600);
+    assert.equal(value('mood'), '30%', 'the original level is held before counting');
+    frame(925); assert.equal(value('mood'), '31%'); assert.equal(value('energy'), '64%');
+    view.rerender(React.createElement(React.StrictMode, null, React.createElement(ResultIndicators, { changes: changes.map(change => ({ ...change })), animate: true, showLevels: true })));
+    frame(1250); assert.equal(value('mood'), '32%', 'parent rerenders do not restart counting');
+    frame(1470); frame(2070); assert.equal(value('energy'), '64%', 'the next level has its own original-value hold');
+    frame(2395); assert.equal(value('energy'), '63%');
+    frame(2720); assert.equal(value('energy'), '61%');
+    assert.equal(value('money'), '−0.5 zł', 'resources without saved levels retain their actual delta');
+    assert(![...document.querySelectorAll('.is-level strong')].some(node => /[+−]/.test(node.textContent)), 'meter deltas are absent');
+    assert.equal(JSON.stringify(changes), saved, 'animation cannot mutate recorded levels');
+    cleanup(); assert.equal(frames.size, 0, 'unmount cancels all number frames');
+    reduced = true;
+    render(React.createElement(ResultIndicators, { changes, animate: true, showLevels: true }));
+    assert.equal(value('mood'), '32%'); assert.equal(value('energy'), '61%'); assert.equal(frames.size, 0);
+    cleanup(); reduced = false;
+    render(React.createElement(ResultIndicators, { changes, animate: true, animationReady: false, showLevels: true }));
+    assert.equal(value('mood'), '30%'); assert.equal(frames.size, 0, 'not-ready results wait without scheduling counts');
     cleanup();
   }
   const summary = summarizeResult(before, after);
@@ -220,7 +250,7 @@ try {
     assert.equal(document.querySelectorAll('.result-place').length, places.length === 1 ? 0 : places.length);
     cleanup();
   }
-  // Both surfaces share exact deltas; old records stay settled and replay is presentation-only.
+  // Both surfaces retain the same facts/filtering; Story meters show saved levels.
   const StoryScreen = bundled('src/StoryScreen.tsx').default;
   const at = { day: 2, minute: 600, locationId: 'station', locationName: 'Station' };
   const fixtures = [
@@ -250,7 +280,9 @@ try {
     const episode = { id: 1, source: 'encounter', sourceId: 'fixture', status: 'complete', scenes: [{ eventId: 'fixture', title: 'Scene', text: 'You stop here.', at, ...((index === 0 || index === 3) ? { choice: { id: 'wait', label: 'Wait here', at: { ...at, minute: 601 } } } : {}) }], result, endedAt: { ...at, minute: 620 } };
     const saved = JSON.stringify(episode);
     render(React.createElement(StoryScreen, { episodes: [episode] }));
-    assert.deepEqual([...document.querySelectorAll('.story-result-effects .result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]), classic, 'Story and modal show the same filtered changes and currency precision');
+    const indicators = resultDisplay(result).indicators;
+    const expectedStory = classic.map(([id, label], index) => [id, indicators[index].meter ? `${document.querySelectorAll('.story-result-effects .result-indicator')[index].dataset.stat} ${Math.round(indicators[index].meter.after)}%` : label]);
+    assert.deepEqual([...document.querySelectorAll('.story-result-effects .result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]), expectedStory, 'Story retains filtered consequences and currency precision, and displays saved final levels');
     assert(!document.querySelector('.story-result-effects [data-resource-id="time"]'));
     assert(!document.querySelector('.story-result-effects [data-resource-id="hunger"]'), 'minor passive food drain remains hidden');
     assert(!document.querySelector('.story-result-effects [data-resource-id="thirst"]'), 'minor passive water drain remains hidden');
@@ -268,7 +300,7 @@ try {
     if (index === 0 || index === 3) {
       const energy = () => document.querySelector('.story-result-effects [data-resource-id="energy"]');
       const delta = energy().querySelector('strong').textContent;
-      if (index === 0) assert.equal(delta, '+13');
+      if (index === 0) assert.equal(delta, '47%');
       else assert.equal(document.querySelectorAll('.story-result-effects .result-indicator').length, 1, 'single-indicator replay is covered too');
       assert(!document.querySelector('.story-result-effects .is-animated'), 'old records open fully revealed');
       assert.equal(frames.size, 0, 'reading old records does not schedule animation');
@@ -282,12 +314,11 @@ try {
       assert.equal(energy().style.getPropertyValue('--result-indicator-delay'), '0ms', 'the shared preceding piece pause replaces the indicator-only delay');
       assert.equal(document.querySelector('.story-result-effects .result-indicators').style.getPropertyValue('--result-indicator-duration'), '260ms');
       const entered = clock;
-      const count = document.querySelectorAll('.story-result-effects .result-indicator').length;
-      const fullyVisibleAt = (count - 1) * 260 + 260;
+      const fullyVisibleAt = resultIndicatorDuration(indicators);
       while (clock - entered < fullyVisibleAt - 64) { clock += 32; frame(clock); }
       assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'pending', 'stamp cannot precede the last group becoming fully visible');
       while (clock - entered < fullyVisibleAt + 128) { clock += 32; frame(clock); }
-      assert.equal(energy().querySelector('strong').textContent, delta, 'replay retains the actual delta');
+      assert.equal(energy().querySelector('strong').textContent, delta, 'replay ends at the actual saved level');
       assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'sealed', 'the result becomes a fixed stamp only when fully revealed');
       assert(document.querySelector('.story-track.is-settling'), 'the stamp starts printing as the cursor departs');
       assert(document.querySelector('.story-result-start time').textContent.startsWith('10:20'), 'the fixed saved time is present from the start of departure');
@@ -432,10 +463,10 @@ try {
     assert.equal(pieces[9].querySelector('.result-indicator').style.getPropertyValue('--result-indicator-delay'), '0ms', 'no second 500ms delay is added to effects');
     assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending');
     const effectsAt = clock;
-    while (clock - effectsAt < 240) step();
-    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending', 'stamp waits for the full 260ms appearance');
+    while (clock - effectsAt < 1220) step();
+    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending', 'stamp waits for the complete number transition');
     waitFor(() => document.querySelector('.story-result-stamp').dataset.storyStamp === 'sealed');
-    assert(clock - effectsAt < 340, 'a terminal effects block adds no unnecessary trailing reading pause');
+    assert(clock - effectsAt < 1340, 'a terminal effects block adds no unnecessary trailing reading pause');
     assert.equal(JSON.stringify(episode), saved, 'paragraph rendering preserves archived text and stamps');
     cleanup();
   }
@@ -546,7 +577,7 @@ try {
       else delete window.HTMLElement.prototype[key];
     }
   }
-  console.log('PASS: Story matches classic visible icon deltas/costs/consequences, hides passive drain, adds an unframed result point, settles old records and replays icon groups without archive mutation.');
+  console.log('PASS: Story retains filtered costs/consequences, shows saved levels, animates numbers sequentially over 650ms with original holds, seals after the last transition, settles old/reduced-motion records and never mutates archives.');
   console.log('PASS: shared Status bars and compact result deltas, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
   console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without duplicate details, names, bars or arrival imagery; other full answers, saved answers and no-new-information still work.');
 } finally { cleanup(); dom.window.close(); }
