@@ -1109,10 +1109,10 @@ try {
   let used=0,discarded=0;
   cleanup();render(React.createElement(chipsView.InventorySlot,{art:'food',name:'⟦meal⟧',quantity:4,effects:pseudoChips,hint:'⟦hint⟧',onUse:()=>used++,onDiscard:()=>discarded++}));
   assert.deepEqual([...document.querySelectorAll('.inventory-effects em')].map(n=>n.className),['positive','negative','warning','negative']);
-  assert.deepEqual([...document.querySelectorAll('.inventory-effects em')].map(n=>n.textContent),pseudoChips.map(c=>c.label));
+  assert.deepEqual([...document.querySelectorAll('.inventory-effects em')].map(n=>n.getAttribute('aria-label')),pseudoChips.map(c=>c.label));
   document.querySelector('.inventory-slot-use').click();document.querySelector('.inventory-discard').click();assert.equal(used,1);assert.equal(discarded,1);
   cleanup();render(React.createElement(chipsView.ShopCard,{item:chipsView.SHOP_ITEMS.find(i=>i.id==='cigarettes'),open:true,fits:true,affordable:true,onBuy:()=>{},onSteal:()=>{}}));
-  assert.deepEqual([...document.querySelectorAll('.supply-effects em')].map(n=>[n.className,n.textContent]),pseudoChips.slice(0,2).map(c=>[c.kind,c.label]));
+  assert.deepEqual([...document.querySelectorAll('.supply-effects em')].map(n=>[n.className,n.getAttribute('aria-label')]),pseudoChips.slice(0,2).map(c=>[c.kind,c.label]));
   const coldLimits=[{reason:'Cold',name:'⟦illness⟧',icon:'thermometer',limits:[{stat:'energy',cap:77},{stat:'mood',cap:60}]}];
   const otherLimits=[{reason:'Health',name:'⟦health⟧',icon:'heart',limits:[{stat:'mood',cap:40},{stat:'energy',cap:60}]}];
   const showStatus=statLimits=>{cleanup();render(React.createElement(chipsView.StatusScreen,{game:chipsView.initialState,statusEffects:[{id:'cold',expiresAt:3000,treated:true}],statLimits,separateLimits:otherLimits,statusNeeds:[],focusedNeed:null,situation:{housing:'Street',employment:'Unemployed',income:'None',documents:'carried'}}));};

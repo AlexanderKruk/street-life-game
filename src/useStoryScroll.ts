@@ -34,7 +34,11 @@ export function useStoryScroll(root: RefObject<HTMLElement | null>, enabled = tr
     }
     const follow = () => {
       if (!following) { update(); return }
-      if (reduced()) { write(bottom()); update() }
+      if (reduced() || element.querySelector('[data-story-revealing="true"]')) {
+        // The photo already animates its height. ResizeObserver runs before paint;
+        // following that height here avoids applying a second easing to it.
+        cancel(); write(bottom()); update()
+      }
       else if (!frame) frame = window.requestAnimationFrame(tick)
     }
     const scroll = () => {

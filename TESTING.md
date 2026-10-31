@@ -1,3 +1,15 @@
+Presentation rebuild — 31 October 2026, source only: check-results now covers
+started-word-only reservation, unrevealed text exclusion, stable glyph nodes,
+Unicode/newline/NBSP preservation and settlement. check-story-modal verifies real
+photo-phase following, manual-reading interruption and immutable saved facts.
+Example/results timing assertions use complete stamps and 500ms departure.
+Item preview assertions read full accessible meanings while preserving prices,
+quantities, use/discard and freshness checks. Targeted results/recording/modal,
+example/localisation/food/shop groups, design/module checks and build passed.
+Chromium component fixtures at 320/390/1280 verified partial/full glyph positions,
+long-word wrapping, no horizontal overflow and transparent effects with 4px gaps.
+No full suites, physical iPhone/WebKit check or publication.
+
 Release v361 is published — 31 October 2026. GitHub Pages run 41203183823
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41203183823)
 succeeded for 184af97ef0b6e1714b40d79418d928fc52aeb7f3: all 35 Node suites

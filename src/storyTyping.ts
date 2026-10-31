@@ -1,8 +1,5 @@
 export type StoryTyping = { at: number[]; duration: number; settledAt: number }
 export const STORY_PIECE_PAUSE_MS = 500
-export const STORY_STAMP_STEP_MS = 50
-export const STORY_STAMP_FADE_MS = 100
-export const storyStampDuration = (suffix: string) => Math.max(STORY_PIECE_PAUSE_MS, Array.from(suffix).length * STORY_STAMP_STEP_MS + STORY_STAMP_FADE_MS)
 
 /** Presentation only. Build once per paragraph, using Unicode characters. */
 export function createStoryTyping(text: string): StoryTyping {
