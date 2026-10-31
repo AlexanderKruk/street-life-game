@@ -1,3 +1,15 @@
+Release v364 published — 31 October 2026. GitHub Pages run 41211666351
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41211666351)
+succeeded at 14:50 UTC for f49e2fe1767bf145ba33b4b02df043cafbfc5013:
+all 35 Node suites passed in 198.94s, TypeScript/Vite build and deployment
+succeeded. Live build ID v2026.10.31-364. Story photo scroll now follows
+the original 1150ms image reveal without extra lag, rounding to full pixels;
+the ordinary eased text scrolling remains. The initial run 41211566249
+failed only because an assertion checked the active-image flag one frame
+too early; that test timing was corrected before the successful rerun.
+Successful CI was not duplicated locally. Physical iPhone/WebKit remains
+unverified; subsequent release checks should inspect visual text clarity.
+
 v364 CI assertion correction — 31 October 2026: first Pages run
 41211566249 failed in check-story-recording at the very start of image
 presentation. At exactly 500ms after skipping the preceding narrative,
