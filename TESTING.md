@@ -1,3 +1,17 @@
+Backpack/shop effect previews — 31 October 2026, source only:
+replace only the text effect pills in InventorySlot and ShopCard with shared
+neutral-gray stat glyphs and tightly spaced +/− strengths (no colored
+background/padding), wrapping between distinct effects only if needed.
+Existing exact icon shapes come from the shared Icon component. Food mood
+and health use their corresponding symbols; recovery shows heart ×3,
+refund shows banknote plus the existing localized money amount. Food
+freshness warnings show clock/face-bad with counts, retaining the full
+localized text in title/aria-label. Unchanged: personal essentials, card
+geometry, item artwork, quantities, shop prices/buttons, location menu,
+inventory/food/gameplay logic and language dictionaries. Regression
+assertions updated for localized accessible labels and visual marks.
+Only source saved; full CI/publishing and physical iOS test not run.
+
 Release v364 published — 31 October 2026. GitHub Pages run 41211666351
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41211666351)
 succeeded at 14:50 UTC for f49e2fe1767bf145ba33b4b02df043cafbfc5013:
