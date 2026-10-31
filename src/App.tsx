@@ -915,7 +915,7 @@ export default function App() {
     />}
     {goalCompletionVisible && <GoalCompletedDialog key={completedGoalId} title={goals.find(goal => goal.id === completedGoalId)!.title} onClose={acknowledgeGoalCompletion} />}
     {infoModal && !pendingResult && !storyEventVisible && <ResultCard result={infoModal} onClose={closeResult} />}
-    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} autoClose={liveEpisode?.source === 'inventory' && !liveEpisode.sourceId.startsWith('buy:') || liveEpisode?.source === 'travel' && liveEpisode.resultIdentity?.actionId === 'arrival'} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
+    {modalStoryEvent && <StoryEventDialog canClose={storyModalComplete} autoClose={liveEpisode?.source === 'travel' && liveEpisode.resultIdentity?.actionId === 'arrival'} onClose={closeResult} episodes={story.store.episodes} interaction={storyInteraction} minute={absoluteMinutes(game)} label={activeEvent?.title ?? liveEpisode?.scenes.at(-1)?.title ?? t('story.nav')} />}
     {closingNotice && !infoModal && !pendingResult && !activeEvent && !diceCheck && !sleeping && !gameOver && <ResultCard result={{
       title: t('location.closedTitle', { place: locationName(closingNotice) }),
       label: t('location.closingLabel'),

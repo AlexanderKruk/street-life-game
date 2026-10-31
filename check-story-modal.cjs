@@ -200,8 +200,7 @@ try {
     const purchased = facts(); remount(); assert.deepEqual(facts(), purchased, 'a pending purchase reloads without a second charge');
     dismiss(); assert.deepEqual(facts(), expected, `${item.id} preserves exact price, stock, time, History and Story facts`);
   }
-  // Consuming an item commits once, presents the real result, then returns to
-  // the same backpack after the complete result and short reading pause.
+  // Consuming an item commits once and waits for manual acknowledgement.
   const realTimeout = window.setTimeout, realClearTimeout = window.clearTimeout;
   const timeouts = new Map(); let timeoutId = 0, timeoutNow = 0;
   window.setTimeout = (callback, delay) => { const id = ++timeoutId; timeouts.set(id, { callback, at: timeoutNow + delay }); return id; };
@@ -239,14 +238,15 @@ try {
   assert.equal(consumed.inventory.water, 2); assert.equal(consumed.story.episodes.length, 1);
   assert.equal(consumed.story.episodes[0].source, 'inventory'); assert.equal(consumed.story.episodes[0].status, 'awaiting-ack');
   remount(); assert(modal()); assert.deepEqual(facts(), consumed, 'StrictMode/reload restores the result without consuming again');
-  assert.equal(timeouts.size, 1, 'a complete quick result starts one presentation timer');
+  assert.equal(timeouts.size, 0, 'consumption never starts a dismissal timer, including after reload');
   advanceTimeouts(999); env.advance(1000); assert(modal(), 'the complete result remains visible for its reading pause');
   const readConsumption = facts();
   assert.deepEqual(readConsumption, consumed, 'zero-duration consumption retains its existing pause');
   assert.equal(readConsumption.inventory.water, consumed.inventory.water);
   assert.deepEqual(readConsumption.story, consumed.story); assert.deepEqual(readConsumption.history, consumed.history);
   assert(document.querySelector('.bottom-nav[inert]')); assert.equal(modal().getAttribute('aria-modal'), 'true');
-  advanceTimeouts(1); assert(!modal(), 'quick results close automatically after full presentation');
+  advanceTimeouts(30000); assert(modal(), 'consumption remains open until Actions is clicked');
+  env.fireEvent.click(document.querySelector('.story-event-action')); assert(!modal());
   assert.equal(localStorage.getItem('street-life-screen'), 'inventory');
   assert(!document.querySelector('.game-background[inert]')); assert.equal(document.body.style.position, '');
   const completedConsumption = facts();
@@ -341,10 +341,12 @@ try {
   advanceTimeouts(999); env.advance(1000); assert(modal());
   const readingAnimatedConsumption = facts();
   assert.equal(readingAnimatedConsumption.game.minutes, animatedConsumption.game.minutes, 'zero-duration consumption does not invent elapsed time');
-  assert(document.querySelector('.bottom-nav[inert]')); assert.equal(timeouts.size, 1);
+  assert(document.querySelector('.bottom-nav[inert]')); assert.equal(timeouts.size, 0);
   assert.equal(save().episodes[0].status, 'awaiting-ack');
-  advanceTimeouts(1); assert(modal().classList.contains('is-auto-closing'));
-  advanceTimeouts(199); assert(modal()); advanceTimeouts(1); assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
+  advanceTimeouts(30000); assert(modal());
+  assert(!modal().classList.contains('is-auto-closing'), 'animated consumption never fades out automatically');
+  env.fireEvent.click(document.querySelector('.story-event-action'));
+  assert(!modal()); assert.equal(save().episodes[0].status, 'complete');
   assert.deepEqual(facts().inventory, readingAnimatedConsumption.inventory);
   assert.deepEqual(facts().game, readingAnimatedConsumption.game);
   assert.equal(timeouts.size, 0, 'closing leaves no dismissal timer');
@@ -358,5 +360,5 @@ try {
   assert.equal(save().episodes.filter(entry => entry.source === 'phone').length, 1);
   dismiss();
   env.finish();
-  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain, standalone transport and quick-result auto-close.`);
+  console.log(`PASS: ${cases} default Story modal routes match classic mechanics; tab preservation, inline exception, focus/scroll lock, chains, reload/StrictMode, D20, rain, standalone transport and manual inventory dismissal.`);
 } finally { rmSync(temporary, { recursive: true, force: true }); }

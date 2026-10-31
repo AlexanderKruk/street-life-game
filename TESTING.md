@@ -1,3 +1,12 @@
+Manual inventory-result dismissal — 31 October 2026, source only: all
+inventory Story results now wait for Actions/backdrop/Escape after the complete
+presentation, including consumption and restored pending results. No inventory
+result schedules an automatic close or fade. Item costs/rewards, saved facts,
+real-time rules and existing travel-arrival auto-dismissal are unchanged.
+Updated reduced-motion, animated, 30-second reading, reload and once-only
+consumption checks passed in check-story-modal; check-story-travel and production
+build passed. No full suites, fresh browser/iPhone/WebKit run or publication.
+
 Unified real Story time — 31 October 2026, source only, by user instruction:
 live lower clocks and the HUD now read the same absolute game minute directly.
 Removed useStoryClock and the per-source gameClock switch. Production archive
