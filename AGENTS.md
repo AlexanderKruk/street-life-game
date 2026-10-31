@@ -1,3 +1,17 @@
+Release v365 successfully published — 31 October 2026, 15:42:57 UTC
+(16:42 Warsaw). GitHub Actions run 41215857989
+https://github.com/AlexanderKruk/street-life-game/actions/runs/41215857989
+deployed commit 909d032d874f65b9ea87272fccafd0c91c30edc1
+to https://alexanderkruk.github.io/street-life-game/.
+All 35 regression suites passed in 179.08s, TypeScript/Vite built
+successfully, Pages artifact uploaded, deployment reported success.
+The initial run 41215636519 failed on an obsolete textContent assertion
+expecting literal Food+++; updated the test to check the equivalent
+accessible description on the new stat icon without modifying UI/gameplay.
+Changes are restricted to neutral gray transparent icon/strength chips
+in backpack products and shop products. Personal essentials unchanged.
+Physical iPhone/WebKit layout verification remains unperformed.
+
 v365 first CI attempt — 31 October 2026: run 41215636519 passed
 29/35 suites before stopping on tests/regressions/shop-inventory.cjs,
 which still read literal 'Food+++' from a ready-meal chip's visible text.
