@@ -1,3 +1,16 @@
+Release v363 is published — 31 October 2026. GitHub Pages run 41208149844
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41208149844)
+succeeded for 81d04cd58190ac472162ceb5f638e363252577e0: all 35 Node
+suites passed in 200.77s, TypeScript/Vite build and Pages deployment succeeded
+(14:05 UTC). The deployed build ID is v2026.10.31-363. Includes Story narrative
+typography and complete, instantly visible time/place/day stamps on sealing;
+the cursor still moves smoothly over 500ms. The initial run 41207833758
+stopped at an obsolete 1000ms test expectation, corrected to the actual
+500ms approved pause before the successful full rerun. Full successful CI
+was not duplicated locally. Deployment logs confirm the Pages URL; physical
+iPhone/WebKit and independent live-browser rendering remain unverified.
+Earlier pending/source-only notes below are historical checkpoints.
+
 Release v363 — 31 October 2026, publication requested: Story stamp
 metadata now appears as one complete HH:MM · place · day line when the point
 seals, while the cursor continues its existing 500ms motion. The standalone
