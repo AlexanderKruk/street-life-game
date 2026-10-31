@@ -1,3 +1,9 @@
+Release v368 — 31 October 2026, publication requested: releases the new Story
+and product presentation implementation built from v362, including whole-pixel
+automatic following. The existing GitHub Pages workflow owns the full release
+checks, build and deployment. Do not report publication before deployment succeeds.
+Physical iPhone/WebKit sharpness remains unverified.
+
 Whole-pixel automatic Story following — 31 October 2026, source only:
 round automatic text/photo scroll positions to whole CSS pixels, retaining the
 browser readback for own-scroll detection. User scrolling and native smooth jump

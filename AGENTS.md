@@ -1,3 +1,12 @@
+Release v368 — 31 October 2026, publication requested: new presentation rebuild
+from the restored v362 base, not a restoration of the old v363–v367 code. Includes
+normal-flow word reservation, complete stamps, 500ms departure, corrected text
+roles, photo-height following, whole-pixel automatic scrolling and grey product
+effect icons with a 4px gap. Existing Pages CI owns the full 35 Node suites,
+TypeScript/Vite build and deployment. Publication remains pending until success;
+do not duplicate a successful unchanged CI locally. Physical iPhone/WebKit text
+sharpness remains unverified.
+
 Whole-pixel Story following — 31 October 2026, source only: the shared write
 port rounds automatic scroll positions to whole CSS pixels for eased text frames
 and immediate photo following. Keep the actual browser readback as expected to
