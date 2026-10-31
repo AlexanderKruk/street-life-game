@@ -1,3 +1,9 @@
+31 October 2026 — Travel unified into one Story part, including route,
+transient phases, typed arrival and effects. One pending-to-complete stamp; real
+travel time and controller/save ownership unchanged. Selector checks for active,
+arrival and cancellation plus test syntax passed; UI/browser/build unrun locally
+(dependencies absent). Source only, no publication.
+
 31 October 2026 — Music walk now uses one immediate Story result block.
 The existing command still spends thirty minutes at once; the presentation starts
 at its final time, shows the saved thought/result/art/actual consequences, and

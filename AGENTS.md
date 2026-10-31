@@ -1,3 +1,14 @@
+Single-block Story travel — 31 October 2026, source only: travel now uses
+the existing grouped Story part contract. Route, transient phases, arrival text
+and actual consequences share one pending stamp that seals only after the full
+result; no separate route/arrival timestamp blocks. Cancellation uses the same
+grouping. The actual 250ms/minute process clock, phases, inspection pause/resume,
+commands, saves and automatic destination opening are unchanged. Updated travel
+and browser arrival selectors to target the narrative rather than an obsolete
+separate-result part. Native actual-selector checks passed for active, arrived
+and cancelled journeys; travel/browser test syntax passed. Full UI/build/browser
+remain unrun because dependencies are absent. No publication; save [skip ci].
+
 Music in one Story block — 31 October 2026, source only: the settled
 music-walk command records one action episode with the existing selected thought,
 result, artwork and actual consequences. It retains real start/end snapshots but

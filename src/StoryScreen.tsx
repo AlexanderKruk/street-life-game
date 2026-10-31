@@ -61,7 +61,7 @@ function episodePieces(episode: StoryEpisode): Piece[] {
     while (start > 0 && pieces[start - 1].kind === 'choice') start--
     Object.assign(pieces[start], { sealAfter: Infinity, stamp: pieces[start].at, resultStart: true, pendingPart: true })
   }
-  if ((episode.source === 'phone' || episode.source === 'action') && pieces.length) {
+  if ((episode.source === 'phone' || episode.source === 'action' || episode.source === 'travel') && pieces.length) {
     for (const piece of pieces) {
       delete piece.sealAfter; delete piece.stamp; delete piece.resultStart; delete piece.partBody; delete piece.pendingPart
     }

@@ -1,3 +1,9 @@
+One travel block — 31 October 2026: the route, changing travel phases,
+arrival and consequences belong to one Story block. Its stamp remains pending
+during the journey and seals at the actual completion time after the result is
+fully shown. Travel still displays every actual minute at 250ms and retains
+inspection, cancellation and delayed destination opening.
+
 Immediate music result in Story — 31 October 2026: music spends its existing
 thirty minutes immediately. One block contains the selected thought, actual
 result text, existing picture and real status changes. Its moving clock and
