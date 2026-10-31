@@ -92,14 +92,14 @@ try {
   const music = save().episodes.find(entry => entry.source === 'action');
   assert.equal(music.scenes[0].at.minute, 1320); assert.equal(music.endedAt.minute, 1350);
   assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1, 'thought and result share one stamp');
-  assert(modal().querySelector('.story-part-stamp').textContent.startsWith('22:30'));
+  assert(modal().querySelector('.story-part-stamp').textContent.startsWith('22:00'));
   assert(modal().querySelector('.story-media img').src.includes('event-music-walk'));
   assert(!modal().querySelector('.story-live-controls'), 'music has no waiting phase');
   const musicFacts = facts(); env.advance(5000);
   const musicReading = facts();
   assert.equal(musicReading.game.minutes, 1355, 'the thirty-minute jump is followed by ordinary real minutes while reading');
   assert.equal(modal().querySelector('.story-head time').textContent, '22:35', 'lower clock equals actual saved time');
-  assert(modal().querySelector('.story-part-stamp').textContent.startsWith('22:30'), 'completion stamp stays fixed');
+  assert(modal().querySelector('.story-part-stamp').textContent.startsWith('22:00'), 'start header stays fixed');
   assert(musicReading.game.hunger < musicFacts.game.hunger && musicReading.game.energy < musicFacts.game.energy, 'ordinary needs follow the same clock');
   assert.equal(musicReading.game.mood, musicFacts.game.mood, 'reading never repeats the music reward');
   assert.deepEqual(musicReading.history, musicFacts.history); assert.deepEqual(musicReading.story, musicFacts.story);
@@ -130,17 +130,49 @@ try {
     assert(!modal().querySelector('.story-toolbar'), 'modal omits archive toolbar');
     assert(document.querySelector('.game-background[inert]') && document.querySelector('.bottom-nav[inert]'));
     assert.equal(document.body.style.position, 'fixed');
+    assert.equal(document.activeElement, modal().querySelector('.story-event-panel'), 'answers do not receive automatic focus');
+    assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1);
+    assert(modal().querySelector('.story-head time').hidden, 'decisions have no second time');
     const before = facts();
     env.fireEvent.keyDown(document, { key: 'Escape' }); env.fireEvent.click(modal());
     assert(modal(), 'Escape and backdrop cannot drop a decision'); assert.deepEqual(facts(), before);
-    env.fireEvent.keyDown(document, { key: 'Tab' }); assert(modal().contains(document.activeElement));
+    env.fireEvent.keyDown(document, { key: 'Tab' }); assert(document.activeElement.matches('.story-live-choice:not(:disabled)'), 'Tab can still focus an answer');
     env.fireEvent.keyDown(document, { key: 'Tab', shiftKey: true }); assert(modal().contains(document.activeElement));
     clickId(`event:${event.id}:${choice.id}`); finishCheck();
-    noClassic(); dismiss();
+    noClassic();
+    assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1);
+    assert(!modal().querySelector('.story-head time').hidden, 'completion reveals the actual lower clock');
+    dismiss();
     assert.deepEqual(facts(), expected, `${event.id}:${choice.id} preserves costs, RNG, History and archive`);
     assert.equal(document.body.style.position, ''); assert(!document.querySelector('.bottom-nav[inert]'));
     cases++;
   }
+  // Short encounters spend real time once, including when restored before/after selection.
+  const absolute = game => (game.day - 1) * 1440 + (game.minutes ?? game.minute);
+  for (const eventId of ['city-waking', 'spare-change']) {
+    const seed = { 'street-life-choice-seed-v1': 17 };
+    setup(eventId, 'map', seed);
+    const started = facts(), header = modal().querySelector('.story-part-stamp').textContent;
+    const button = modal().querySelector('.story-live-choice:not(:disabled)');
+    const answerId = button.dataset.orderId;
+    clickId(answerId);
+    const completed = facts(), spent = absolute(completed.game) - absolute(started.game);
+    assert(spent >= 1 && spent <= 3, 'a brief event has a one-to-three-minute duration');
+    const episode = completed.story.episodes.at(-1);
+    assert.equal(absolute(episode.endedAt) - absolute(episode.scenes[0].at), spent, 'saved ending records the actual time cost');
+    assert.equal(modal().querySelector('.story-part-stamp').textContent, header, 'completing an event keeps its start header');
+    assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1);
+    remount(); assert.deepEqual(facts(), completed, 'restoring a result never spends the duration twice');
+    setup(eventId, 'map', seed); remount(); clickId(answerId);
+    assert.equal(absolute(facts().game) - absolute(started.game), spent, 'restoring a decision never resamples its duration');
+  }
+  setup('night-rustle', 'map', { 'street-life-choice-seed-v1': 17, [env.stateKey]: { ...facts().game, day: 2, minutes: 1439, locationId: 'street' } });
+  const midnightStart = absolute(facts().game);
+  env.fireEvent.click(modal().querySelector('.story-live-choice:not(:disabled)'));
+  const midnightResult = facts();
+  assert.equal(midnightResult.game.day, 3, 'an encounter duration crosses midnight through the real clock');
+  assert.equal(absolute(midnightResult.story.episodes.at(-1).endedAt), absolute(midnightResult.game));
+  assert(absolute(midnightResult.game) > midnightStart);
   for (const screen of ['map', 'inventory', 'status', 'phone']) {
     setup('spare-change', screen); clickId('event:spare-change:give'); dismiss();
     assert.equal(localStorage.getItem('street-life-screen'), screen, `${screen} stays selected`);
@@ -159,6 +191,7 @@ try {
   assert.equal(modal().querySelectorAll('.story-head').length, 1, 'one live cursor continues the chronology');
   assert.deepEqual(save().episodes[0], priorStory.episodes[0], 'previous saved facts remain immutable');
   remount(); assert.equal(ids().length, 2, 'reload and StrictMode retain both events without duplication');
+  assert.equal(document.activeElement, modal().querySelector('.story-event-panel'), 'restored morning choices do not receive automatic focus');
   clickId(`event:city-waking:${STREET_EVENTS.find(event => event.id === 'city-waking').choices[0].id}`); finishCheck(); dismiss();
   assert.equal(save().episodes.length, 2); assert(save().episodes.every(episode => episode.status === 'complete'));
   assert.deepEqual(save().episodes[0], priorStory.episodes[0]);
@@ -333,7 +366,10 @@ try {
   assert.equal(scroller.scrollTop, 100, 'photo growth cannot interrupt reading an earlier entry');
   assert.deepEqual(facts(), beforePhotoResize, 'photo following changes no saved or gameplay facts');
   scroller.scrollTop = height - 500; env.fireEvent.scroll(scroller);
+  const focusBeforeChoices = document.activeElement;
   animate(6000);
+  assert(modal().querySelector('.story-live-choice:not(:disabled)'), 'animated answers are available');
+  assert.equal(document.activeElement, focusBeforeChoices, 'revealing animated answers does not move focus');
   assert.equal(document.querySelector('.story-event-action').textContent, 'Choose an answer');
   assert(document.querySelector('.story-event-action').disabled); clickId('event:spare-change:give');
   assert.equal(modal().querySelector('.story-episode'), archived, 'appending the result keeps the previous DOM intact');

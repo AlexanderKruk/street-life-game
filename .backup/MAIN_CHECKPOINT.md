@@ -1,3 +1,24 @@
+# v370 original local history — 31 October 2026
+
+Publication source commit: `6e94b07fdd914f5586d2f3c22a46368f269f51f2`.
+Verified source tree before recovery files: `d38eb34ee574058d2a4fa8cda902266a38f25e9e`.
+The API source tree matches the committed local tree exactly.
+
+`.backup/story-v370-2026-10-31.bundle` preserves the original local Story/UI
+checkpoint `2896fd822e41fb07ab46edbf882cfd15e9c11a37` and release history.
+Its prerequisite is published v368 `bad853d7ca8a92bb84bbdc62c7d4b24e3111966b`.
+Restore after fetching that base:
+
+    git bundle verify .backup/story-v370-2026-10-31.bundle
+    git fetch .backup/story-v370-2026-10-31.bundle HEAD:refs/heads/recovered-v370
+
+Publication was requested explicitly. The release runs the full Node suites,
+production build and Pages deployment in CI; success is not yet claimed here.
+Targeted verification and the unavailable browser/device check are recorded in
+AGENTS.md, GAME_DESIGN.md and TESTING.md.
+
+---
+
 Release v353 is published — 30 October 2026. GitHub Pages run 41046054282 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41046054282) completed successfully for source 0f8d51526b928d3579dc58a87ced8d1e7a8f3e44: 33/33 Node suites passed in 123.97s, production build and deploy succeeded. This releases dog encounter endings after their illustrations, one 500ms pause per mini-block/paragraph, and playable authored events/D20/rain inside the Story tab. Classic dialogs remain on other screens; the shared controllers preserve costs, RNG, History and once-only outcomes. Idle Story runs world time, while decisions and explicit replay/comparison pause it. Targeted Chromium flows at 390/1280 were checked before release; physical iPhone/WebKit were not checked. The successful full CI was not duplicated locally. Earlier source-only and pending-release notes below are historical and now included in v353.
 
 # Release v353 recovery — 30 October 2026

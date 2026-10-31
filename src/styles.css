@@ -1427,7 +1427,6 @@ body { min-width:0; }
 .story-head { position:absolute; left:0; bottom:0; display:flex; align-items:center; width:100%; padding-left:28px; min-height:24px; }
 .story-head > span { background:#171b1d; border:1.5px solid var(--color-warning); top:6px; }
 .story-head time { color:var(--color-warning); }
-.story-track.is-settling .story-head time { visibility:hidden; }
 .story-track.has-replay .story-thread { height:var(--story-y); bottom:auto; }
 .story-track.has-replay .story-head { top:0; bottom:auto; transform:translateY(var(--story-y)); }
 .story-head > span::after { content:""; position:absolute; inset:-1.5px; border-radius:50%; opacity:0; }
@@ -1448,7 +1447,7 @@ body { min-width:0; }
 .story-media img { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; }
 .story-episode-end { padding-left:28px; }
 .story-note, .story-roll { color:var(--text-secondary); }
-.story-live-controls { min-width:0; padding-top:calc(24px + var(--story-gap)); }
+.story-live-controls { min-width:0; }
 .story-live-actions { display:grid; gap:var(--story-gap); }
 .story-live-choice { display:block; width:100%; min-height:48px; padding:11px 13px; border:1px solid #424a4c; border-radius:8px; background:#252a2c; color:var(--text-primary); font:inherit; font-size:var(--font-body); text-align:left; cursor:pointer; animation:story-answer-enter 650ms ease-out both; }
 .story-live-choice small { display:block; color:var(--text-secondary); font-size:var(--font-small); }
@@ -1466,7 +1465,8 @@ body { min-width:0; }
 @keyframes story-breathe-wave { 0% { box-shadow:0 0 0 0 var(--color-warning); opacity:0; } 18% { opacity:.22; } 75%,100% { box-shadow:0 0 0 8px var(--color-warning); opacity:0; } }
 @media (prefers-reduced-motion:reduce) { .story-track.is-running .story-head > span,.story-track.is-running .story-head > span::after { animation:none; } }
 
-/* A result is an unframed point of the same Story episode. */
+/* One immutable opening header belongs to the complete episode. */
+.story-event-heading { position:relative; }
 .story-part-imprint { position:absolute; left:-28px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--color-warning); }
 .story-part-stamp { display:block; min-height:var(--story-stamp-height); margin-bottom:var(--story-stamp-gap); }
 .story-part-stamp[data-story-stamp="pending"] { visibility:hidden; }

@@ -4,7 +4,7 @@ export const results = {
   'result.noContainers': 'Nothing useful found',
   'result.containers': { plural: 'count', one: '+{count} container', other: '+{count} containers' },
   'result.returnableContainers': { plural: 'count', one: '+{count} returnable container', other: '+{count} returnable containers' },
-  'result.returnAtShop': 'Return at Small Shop · {amount}',
+  'result.returnAtShop': 'Return at Shop · {amount}',
   'result.actionSummary': 'Action summary',
   'result.spent': 'Spent',
   'result.moodDelta': 'Mood {delta}',

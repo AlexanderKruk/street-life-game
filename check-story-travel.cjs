@@ -38,7 +38,7 @@ try {
     setup(mode); remount(ClassicApp); env.advance(2000); const expected = facts(); env.ok();
     setup(mode); assert(modal() && progress()); assert(!document.querySelector('.travel-screen'));
     assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1, 'route and arrival reserve a single shared stamp');
-    assert.equal(modal().querySelector('.story-part-stamp').dataset.storyStamp, 'pending', 'the journey is not stamped as complete while travelling');
+    assert.equal(modal().querySelector('.story-part-stamp').dataset.storyStamp, 'sealed', 'the start header is fixed immediately while travelling');
     const id = save().episodes[0].id; assert.equal(env.read(tripKey).storyEpisodeId, id);
     env.advance(249); assert.equal(document.querySelector('.story-head time').textContent, '10:00');
     for (let minute = 1; minute <= 4; minute++) {
@@ -52,7 +52,7 @@ try {
     assert.equal(env.read(tripKey), null); assert(modal()); assert(!progress());
     assert(modal().textContent.includes('Arrived at the station.'));
     assert.equal(modal().querySelectorAll('.story-part-stamp').length, 1, 'arrival does not introduce a separate timestamp block');
-    assert(modal().querySelector('.story-part-stamp').textContent.startsWith('10:08'), 'the one journey stamp records actual completion');
+    assert(modal().querySelector('.story-part-stamp').textContent.startsWith('10:00'), 'the journey header retains its original departure time');
     assert.equal(save().episodes[0].status, 'awaiting-ack'); assert.deepEqual(facts(), expected, `${mode} retains classic arrival costs, time and History`);
     let arrived = facts(); const pendingArrival = save();
     assert.deepEqual(loadStory(pendingArrival), pendingArrival, 'actual arrival consequences retain valid finite values through persistence');
@@ -92,8 +92,8 @@ try {
   env.advance(250); assert.equal(document.querySelector('.story-head time').textContent, '10:02', 'the 250ms clock updates even before any text animation frame');
   env.click('Cancel');
   setup('walk', 0); assert(modal()); assert(!document.querySelector('.story-event-action:not(:disabled)')); assert.equal(timers.size, 0);
-  for (let i = 0; i < 200 && !document.querySelector('.story-text:not(.story-part-start) .story-reveal .story-letter'); i++) animate(64);
-  const typingArrival = document.querySelector('.story-text:not(.story-part-start) .story-reveal');
+  for (let i = 0; i < 200 && !document.querySelector('.story-text.story-part-body .story-reveal .story-letter'); i++) animate(64);
+  const typingArrival = document.querySelector('.story-text.story-part-body .story-reveal');
   assert(typingArrival && typingArrival.textContent.length > 0 && typingArrival.textContent.length < 'Arrived at the station.'.length, 'arrival is revealed character by character');
   assert(!document.querySelector('.story-event-action:not(:disabled)')); assert.equal(timers.size, 0);
   const frozen = facts(); animate(30000); assert(document.querySelector('.story-event-action:not(:disabled)')); assert.deepEqual(facts(), frozen);

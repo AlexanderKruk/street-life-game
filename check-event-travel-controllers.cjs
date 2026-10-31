@@ -4,6 +4,18 @@ const {diceOutcome,eventCheckModifier}=bundle('src/eventChecks.ts');
 const {advanceTrip}=bundle('src/useTravelController.ts');
 const {createEventController}=bundle('src/eventController.ts');
 const {createInitialState}=bundle('src/game.ts');
+const {encounterDuration}=bundle('src/encounterDuration.ts');
+for(const base of [undefined,0,1,5,10]) {
+ const values=new Set();
+ for(let seed=0;seed<60;seed++) {
+  const value=encounterDuration(base,seed,'city-waking',1920,'city-waking:help:complete');
+  const nominal=base&&base>0?base:2;
+  assert(Number.isInteger(value)&&value>=Math.max(1,nominal-1)&&value<=nominal+1);
+  assert.equal(encounterDuration(base,seed,'city-waking',1920,'city-waking:help:complete'),value,'a restored encounter keeps the same duration');
+  values.add(value);
+ }
+ assert(values.size>1,'different persisted run seeds give a small duration variation');
+}
 const {INITIAL_INVENTORY,INITIAL_STORAGE}=bundle('src/inventory.ts');
 const game={...createInitialState(),day:2,minutes:600,money:100,mood:28,health:82,energy:70,hygiene:55,locationId:'street'};
 const choice={label:'test',check:{stat:'reflex',dc:12,success:{message:'success'},failure:{message:'failure'},criticalSuccess:{message:'critical success'},criticalFailure:{message:'critical failure'}}};

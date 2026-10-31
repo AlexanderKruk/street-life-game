@@ -476,7 +476,7 @@ for (const mode of ['transit', 'fare-dodge']) {
     encounters.lastAt = null
     await openGame(page, entries(null, { [keys.encounters]: JSON.stringify(encounters) }))
     await page.getByRole('button', { name: 'Map', exact: true }).click()
-    await page.getByRole('button', { name: 'Small Shop', exact: true }).click()
+    await page.getByRole('button', { name: 'Shop', exact: true }).click()
     await page.getByRole('button', { name: mode === 'transit' ? /Public transport/ : /Ride without ticket/ }).click()
     const started = await read(page, keys.trip)
     expect(started.inspection.status).toBe('scheduled')
@@ -518,7 +518,7 @@ for (const mode of ['transit', 'fare-dodge']) {
     expect(money).toBe(mode === 'transit' ? paidMoney : Math.max(0, paidMoney - 35))
     await acknowledge(page)
     await advance(page, during.remaining * 250)
-    await storyVisible(page, page.locator('.story-text').filter({ hasText: 'Arrived: Small Shop.' }))
+    await storyVisible(page, page.locator('.story-text').filter({ hasText: 'Arrived: Shop.' }))
     expect((await read(page, keys.game)).locationId).toBe('shop')
     expect((await read(page, keys.game)).money).toBe(money)
     expect(await read(page, keys.trip)).toBeNull()
@@ -600,7 +600,7 @@ for (const [choice, asset, cost] of [['Give 1 zł', 'give', 1], ['Sorry, I can�
 }
 
 for (const width of [390, 1280]) {
-  test(`live Story stamp and cursor stay centered through the dog result at ${width}px`, async ({ page }) => {
+  test(`live Story keeps one header and follows the dog result at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
     const seed = entries()
     const game = { ...JSON.parse(seed[keys.game]), locationId: 'street', day: 1, minutes: 1350 }
@@ -608,59 +608,40 @@ for (const width of [390, 1280]) {
     await openGame(page, { ...seed, 'street-life-screen': 'story', 'street-life-left-home-v1': 'false',
       'street-life-first-night-events-v1': pending, [keys.encounters]: pending, [keys.game]: JSON.stringify(game) })
     await advance(page, 20000)
-    const alignment = () => page.evaluate(() => {
-      const head = document.querySelector('.story-head'), ring = head.querySelector('span'), time = head.querySelector('time')
-      const r = ring.getBoundingClientRect(), t = time.getBoundingClientRect()
-      const range = document.createRange(); range.selectNodeContents(time)
-      const glyph = range.getBoundingClientRect()
-      return { box: Math.abs(r.y + r.height / 2 - t.y - t.height / 2), glyph: Math.abs(r.y + r.height / 2 - glyph.y - glyph.height / 2) }
-    })
-    const choosing = await alignment()
-    expect(choosing.box).toBeLessThan(.1)
-    expect(choosing.glyph).toBeLessThanOrEqual(1)
+    const heading = page.locator('.story-event-heading time')
+    await expect(heading).toHaveCount(1)
+    const startHeading = await heading.textContent()
+    await expect(page.locator('.story-head time')).toBeHidden()
     await page.locator('[data-order-id="event:first-night-dog:greet"]').click()
-    const initialY = await page.locator('.story-track').evaluate(node => parseFloat(node.style.getPropertyValue('--story-y')))
-    let closingChecked = false, departureChecked = false
-    for (let guard = 0; guard < 450; guard++) {
+    let closingChecked = false, previousY = 0
+    for (let guard = 0; guard < 650; guard++) {
       await advance(page, 64)
       const state = await page.evaluate(() => {
-        const track = document.querySelector('.story-track'), stamp = document.querySelector('.story-result-stamp')
+        const track = document.querySelector('.story-track')
         const texts = [...document.querySelectorAll('.story-text')], closing = texts.at(-1)
-        const head = track.querySelector('.story-head'), time = head?.querySelector('time')
-        const button = closing?.querySelector('.story-reveal')
-        const style = stamp && getComputedStyle(stamp), clockStyle = time && getComputedStyle(time)
-        return { settling: track.classList.contains('is-settling'), y: parseFloat(track.style.getPropertyValue('--story-y')),
-          closing: texts.length === 3 && !!button && button.textContent.length > 0,
-          clockBottom: time?.getBoundingClientRect().bottom, closingTop: button?.getBoundingClientRect().top,
-          stamp: stamp?.textContent, clockHidden: clockStyle?.visibility === 'hidden', stampColor: style?.color, clockColor: clockStyle?.color,
-          stampFont: style?.font, clockFont: clockStyle?.font,
-          sealed: stamp?.dataset.storyStamp === 'sealed', finished: !!document.querySelector('.story-idle') }
+        return { y: parseFloat(track.style.getPropertyValue('--story-y')),
+          closing: texts.length === 3 && !!closing?.querySelector('.story-reveal')?.textContent,
+          headers: track.querySelectorAll('time.story-part-stamp').length,
+          header: track.querySelector('time.story-part-stamp').textContent,
+          clockHidden: track.querySelector('.story-head time')?.hidden,
+          finished: !!document.querySelector('.story-idle') }
       })
-      if (state.closing && !closingChecked) {
-        closingChecked = true
-        expect(state.y).toBeCloseTo(initialY, 1)
-        expect(state.clockBottom).toBeLessThan(state.closingTop)
-      }
-      if (state.settling && state.sealed && state.y > initialY && !departureChecked) {
-        departureChecked = true
-        expect(state.clockHidden).toBe(true)
-        expect(state.stamp.length).toBeLessThan('22:30 · Street · D0'.length)
-        expect(state.stampColor).toBe(state.clockColor)
-        expect(state.stampFont).toBe(state.clockFont)
-        const centered = await alignment()
-        expect(centered.box).toBeLessThan(.1)
-        expect(centered.glyph).toBeLessThanOrEqual(1)
-        await page.screenshot({ path: `test-results/story-stamp-${width}-departing.png` })
-      }
+      expect(state.headers).toBe(1)
+      expect(state.header).toBe(startHeading)
       if (state.finished) break
+      expect(state.y).toBeGreaterThanOrEqual(previousY - .5)
+      previousY = state.y
+      expect(state.clockHidden).toBe(true)
+      if (state.closing) closingChecked = true
     }
     expect(closingChecked).toBe(true)
-    expect(departureChecked).toBe(true)
     await expect(page.locator('.story-idle')).toBeVisible()
+    await expect(heading).toHaveText(startHeading)
     await expect(page.locator('.story-piece').last()).toHaveClass(/story-stats/)
-    const finalAlignment = await alignment()
-    expect(finalAlignment.box).toBeLessThan(.1)
-    expect(finalAlignment.glyph).toBeLessThanOrEqual(1)
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('street-life-story-v1')))
+    expect(saved.episodes.at(-1).endedAt.minute).toBeGreaterThan(game.minutes)
+    expect(saved.episodes.at(-1).endedAt.minute).toBeLessThanOrEqual(game.minutes + 6)
+    await page.screenshot({ path: `test-results/story-single-event-${width}.png`, animations: 'disabled' })
   })
   test(`live Story encounter, inline result and reload at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })

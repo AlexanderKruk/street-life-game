@@ -5,6 +5,7 @@ import { locationName } from './locationText'
 import { STREET_EVENTS, prepareStreetEvent, resolveEventOutcome, type EventOutcome, type StreetEventChoice } from './events'
 import { locations, type GameState, type ActionResult } from './game'
 import { absoluteMinutes } from './gameTime'
+import { encounterDuration } from './encounterDuration'
 import { SHOP_ITEMS, addShopItem, canAddToBackpack, fitEventSupplies } from './inventory'
 import { rejectedSupplyLabel as supplyLabel } from './itemPresentation'
 import { locationPresentation } from './resultPresentation'
@@ -27,6 +28,8 @@ type Context = {
   shelterBooked: boolean
   currentId: string
   open: boolean
+  /** Enable stable encounter timing with the persisted run seed. */
+  encounterTimingSeed?: number
 }
 type Host = {
   setGame: GameSetter
@@ -52,6 +55,9 @@ export function createEventController(session: EventSession, context: Context, h
   const checkUnavailableReason = (choice: StreetEventChoice) => eventChoiceUnavailable(choice, game, inventory, discoveredLocations, phoneUnavailable)
   function applyEventOutcome(outcome: EventOutcome, title?: string, actionId?: ResultActionId, storyEpisodeId?: number) {
     let resolved = resolveEventOutcome(outcome, Math.random, inventory.documents, storage.documents)
+    if (activeEvent && context.encounterTimingSeed !== undefined) {
+      resolved = { ...resolved, minutes: encounterDuration(resolved.minutes, context.encounterTimingSeed, activeEvent.id, absoluteMinutes(game), resolved.historyId ?? actionId ?? 'complete') }
+    }
     if (activeEvent?.id === 'borrow-phone-slip' && resolved.phoneBreakMessage !== undefined && (resolved.phoneCondition ?? 0) < 0 && inventory.phoneCondition + resolved.phoneCondition! <= 0) {
       resolved = { ...resolved, message: resolved.phoneBreakMessage! }
     }

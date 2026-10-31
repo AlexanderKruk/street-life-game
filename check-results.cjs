@@ -232,7 +232,7 @@ try {
   assert(!document.querySelector('.compact-info-saved'));cleanup();
   for (const [id, places, heading, important] of [
     ['bed', ['shelter'], 'Night Shelter', ['18:00–08:00', 'Night Shelter offers a bed, meals and a shower.', 'Try to arrive before 18:00', 'places are limited']],
-    ['supplies', ['shop'], 'Small Shop', ['07:00–22:00', 'A small shop selling affordable food and water.', 'Registered Night Shelter guests can get free meals at the shelter.']],
+    ['supplies', ['shop'], 'Shop', ['07:00–22:00', 'A small shop selling affordable food and water.', 'Registered Night Shelter guests can get free meals at the shelter.']],
     ['charging', ['station'], 'Station', ['24 hours', '+60%', 'one hour', 'No internet needed']],
     ['no-place', [], 'If there is no bed', ['Schronisko', 'Day Center', 'safe sleep']],
   ]) for (const saved of [false, true]) {
@@ -301,14 +301,15 @@ try {
     assert(!document.querySelector('.story-result-effects [data-resource-id="hunger"]'), 'minor passive food drain remains hidden');
     assert(!document.querySelector('.story-result-effects [data-resource-id="thirst"]'), 'minor passive water drain remains hidden');
     assert(!document.querySelector('.story-result-effects .status-needs, .story-result-effects [role="meter"]'), 'Story omits the framed status panel');
-    assert(document.querySelector('.story-result-start .story-result-imprint'), 'result has its own timeline point');
-    assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · Station · Day 1');
+    assert.equal(document.querySelectorAll('.story-part-imprint').length, 1, 'the entire event has one fixed point');
+    assert.equal(document.querySelectorAll('.story-part-stamp').length, 1, 'the complete event has one header');
+    assert(!document.querySelector('.story-result-start time'), 'the result adds no second header');
     if (index === 0 || index === 3) {
       const choice = document.querySelector('.story-choice.story-result-start');
       assert(choice, 'answer starts the joint result part');
-      assert(choice.querySelector('.story-result-stamp'), 'one result stamp is above the selected answer');
+      assert(!choice.querySelector('time'), 'the selected answer adds no stamp');
       assert(!document.querySelector('.story-part-body .story-part-stamp'), 'there is no second stamp between answer and outcome');
-      assert.equal(document.querySelectorAll('.story-result-stamp').length, 1);
+      assert.equal(document.querySelectorAll('.story-part-stamp').length, 1);
     }
     assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1', 'opening stamp keeps the saved event-start time');
     if (index === 0 || index === 3) {
@@ -323,21 +324,21 @@ try {
       while (!energy() && clock < 40000) { clock += 32; frame(clock); }
       assert(energy(), 'replay reaches the effects after narrative text');
       assert(document.querySelector('.story-result-effects .is-animated.is-ready'), 'replay starts sequential appearance only at the effects step');
-      assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'pending', 'a result stamp waits for the consequences to finish');
+      assert(document.querySelector('.story-head time').hidden, 'the bottom time waits for the consequences to finish');
       assert(document.querySelector('.story-track.is-running'), 'clock and breathing continue while consequences appear');
       assert.equal(energy().style.getPropertyValue('--result-indicator-delay'), '0ms', 'the shared preceding piece pause replaces the indicator-only delay');
       assert.equal(document.querySelector('.story-result-effects .result-indicators').style.getPropertyValue('--result-indicator-duration'), '260ms');
       const entered = clock;
       const fullyVisibleAt = resultIndicatorDuration(indicators);
       while (clock - entered < fullyVisibleAt - 64) { clock += 32; frame(clock); }
-      assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'pending', 'stamp cannot precede the last group becoming fully visible');
+      assert(document.querySelector('.story-head time').hidden, 'bottom time cannot precede the last group becoming fully visible');
       while (clock - entered < fullyVisibleAt + 128) { clock += 32; frame(clock); }
       assert.equal(energy().querySelector('strong').textContent, delta, 'replay ends at the actual saved level');
-      assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'sealed', 'the result becomes a fixed stamp only when fully revealed');
-      assert(document.querySelector('.story-track.is-settling'), 'the stamp starts printing as the cursor departs');
-      assert(document.querySelector('.story-result-start time').textContent.startsWith('10:20'), 'the fixed saved time is present from the start of departure');
+      assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1', 'effects cannot rewrite the start header');
       for (const end = clock + 1000; clock < end;) { clock += 32; frame(clock); }
-      assert(!document.querySelector('.story-track.is-running'), 'clock stops only when the whole result block has finished');
+      assert(!document.querySelector('.story-track.is-running'), 'replay stops only when the whole event has finished');
+      assert(!document.querySelector('.story-head time').hidden, 'completion reveals the saved finish time');
+      assert.equal(document.querySelector('.story-head time').textContent, '10:20');
       assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1', 'replay duration cannot change the event-start timestamp');
     }
     assert.equal(JSON.stringify(episode), saved, 'presentation never mutates archived facts');
@@ -353,13 +354,10 @@ try {
     const saved = JSON.stringify(episode);
     render(React.createElement(StoryScreen, { episodes: [episode] }));
     const parts = [...document.querySelectorAll('.story-part-start')];
-    assert.equal(parts.length, 3, 'opening, continuation and final result each have one stamp');
-    assert(parts[1].classList.contains('story-choice'), 'continuation stamp belongs above the choices that produced it');
-    assert.equal(parts[1].querySelector('p').textContent, 'Ask');
-    assert.equal(parts[1].querySelector('time').textContent, '10:05 · Station · Day 1');
-    assert(parts[2].classList.contains('story-choice'), 'final result stamp is above its selected answer');
-    assert.equal(parts[2].querySelector('time').textContent, '10:20 · Station · Day 1');
-    assert.equal(document.querySelectorAll('.story-part-body .story-part-stamp').length, 0);
+    assert.equal(parts.length, 1, 'opening, continuation and result share one header');
+    assert.equal(parts[0].querySelector('time').textContent, '10:00 · Station · Day 1');
+    assert.deepEqual([...document.querySelectorAll('.story-choice p')].map(node => node.textContent), ['Ask','Try again','Accept'], 'all continuation choices remain in order');
+    assert(!document.querySelector('.story-pieces time'), 'continuations do not introduce stamps');
     assert.equal(JSON.stringify(episode), saved, 'grouping never rewrites choice or scene timestamps');
     cleanup();
   }
@@ -442,7 +440,7 @@ try {
     const saved = JSON.stringify(episode);
     render(React.createElement(StoryScreen, { episodes: [episode] }));
     assert.deepEqual([...document.querySelectorAll('.story-text p')].map(node => node.textContent), ['A', 'B', 'C', 'D', 'E', 'F'], 'each authored paragraph is one mini-block in the opening, outcome and ending');
-    assert.equal(document.querySelectorAll('.story-part-stamp').length, 2, 'extra paragraphs keep the original opening/result stamps');
+    assert.equal(document.querySelectorAll('.story-part-stamp').length, 1, 'extra paragraphs remain inside the same event header');
     fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
     let clock = 0;
     const step = () => { clock += 16; frame(clock); };
@@ -475,12 +473,12 @@ try {
     waitFor(() => pieces[8].querySelector('.story-reveal')?.textContent === 'F');
     pauseTo(pieces[9], 'consequences', 100);
     assert.equal(pieces[9].querySelector('.result-indicator').style.getPropertyValue('--result-indicator-delay'), '0ms', 'no second 500ms delay is added to effects');
-    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending');
+    assert(document.querySelector('.story-head time').hidden);
     const effectsAt = clock;
     while (clock - effectsAt < 1220) step();
-    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending', 'stamp waits for the complete number transition');
-    waitFor(() => document.querySelector('.story-result-stamp').dataset.storyStamp === 'sealed');
-    assert(clock - effectsAt < 1340, 'a terminal effects block adds no unnecessary trailing reading pause');
+    assert(document.querySelector('.story-head time').hidden, 'bottom time waits for the complete number transition');
+    waitFor(() => !document.querySelector('.story-head time').hidden);
+    assert(clock - effectsAt < 1900, 'completion follows the final transition and existing 500ms pause');
     assert.equal(JSON.stringify(episode), saved, 'paragraph rendering preserves archived text and stamps');
     cleanup();
   }
@@ -496,7 +494,7 @@ try {
     render(React.createElement(StoryScreen, { episodes: [episode] }));
     const pieces = [...document.querySelectorAll('.story-piece')];
     assert.deepEqual(pieces.map(node => node.classList.contains('story-image') ? 'image' : node.classList.contains('story-stats') ? 'stats' : node.querySelector('p').textContent), ['You see a familiar dog.', greet.label, result.text, 'image', result.closingText, 'stats']);
-    assert.equal(document.querySelectorAll('.story-result-stamp').length, 1, 'the closing paragraph does not create a new stamped block');
+    assert.equal(document.querySelectorAll('.story-part-stamp').length, 1, 'the closing paragraph stays inside the event');
     fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
     let clock = 0;
     const step = () => { clock += 32; frame(clock); };
@@ -507,13 +505,13 @@ try {
     step();
     assert(closing().textContent.length < result.closingText.length, 'the ending uses the normal progressive text reveal');
     assert(!document.querySelector('.story-result-effects'), 'Mood waits for the ending');
-    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending');
+    assert(document.querySelector('.story-head time').hidden);
     while (!document.querySelector('.story-result-effects') && clock < 40000) step();
     assert(document.querySelector('.story-result-effects'), 'consequences follow the fully shown ending');
     assert.equal(closing().textContent, result.closingText);
-    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'pending', 'stamp still waits for the consequence animation');
-    for (let end = clock + 1400; clock < end;) step();
-    assert.equal(document.querySelector('.story-result-stamp').dataset.storyStamp, 'sealed');
+    assert(document.querySelector('.story-head time').hidden, 'bottom time still waits for the consequence animation');
+    for (let end = clock + 2000; clock < end;) step();
+    assert(!document.querySelector('.story-head time').hidden);
     assert.equal(JSON.stringify(episode), saved, 'replaying split prose preserves old archive facts');
     cleanup();
   }
@@ -541,29 +539,28 @@ try {
     let clock = 0;
     const step = () => { clock += 16; frame(clock); };
     while (clock < 1200) step();
-    assert.equal(live(), '10:01', 'replay clock ticks during text instead of jumping between archived stamps');
-    assert.equal(y(), 0, 'the cursor holds above typed text');
+    assert(document.querySelector('.story-head time').hidden, 'replay adds no stamp while the scene is typing');
+    assert(y() > 0, 'the cursor follows the revealed text');
     fireEvent.click(document.querySelector('.story-text .story-reveal'));
     while (document.querySelector('.story-image').hidden && clock < 3000) step();
     const imageAt = clock;
     while (clock - imageAt < 575) step();
     const fraction = parseFloat(document.querySelector('.story-media').style.gridTemplateRows);
     assert(fraction > .8 && fraction < 1, 'picture geometry uses the reference cubic reveal, not a linear half-height');
-    assert.equal(y(), 0, 'the cursor waits above the entire opening until its picture is fully shown');
+    assert(y() > 140, 'the line follows the growing image before it is fully shown');
     while (document.querySelector('.story-choice').hidden && clock < 5000) step();
     assert(track.classList.contains('is-running'), 'selected answer and outcome remain one running stage');
     const choiceClock = live();
-    const resultStamp = document.querySelector('.story-choice .story-result-stamp');
-    assert(resultStamp, 'the joint block stamp is above the choice');
-    assert.equal(resultStamp.dataset.storyStamp, 'pending');
+    assert(!document.querySelector('.story-choice time'), 'a selected answer stays within the same event');
+    assert(document.querySelector('.story-head time').hidden);
     assert.equal(document.querySelector('.story-choice .story-reveal').textContent, 'Wait here', 'selected narrative enters whole');
     assert(document.querySelector('.story-choice-enter'));
     for (let i = 0; i < 65; i++) step();
-    assert.notEqual(live(), choiceClock, 'clock continues ticking during selected-answer appearance and its reading pause');
-    assert.equal(resultStamp.dataset.storyStamp, 'pending', 'answer alone cannot seal the result');
+    assert.equal(live(), choiceClock, 'cosmetic animation cannot invent elapsed game time');
+    assert(document.querySelector('.story-head time').hidden, 'answer alone cannot finish the event');
     while (document.querySelector('.story-part-body').hidden && clock < 6000) step();
     const textY = y(); step();
-    assert.equal(y(), textY, 'starting the next paragraph does not snap the clock to its offset');
+    assert(y() >= textY && y() - textY < 100, 'the point advances smoothly when the outcome text is added');
     assert(track.classList.contains('is-running'), 'clock/breathing continue through the result');
     while (track.classList.contains('is-replaying') && clock < 20000) step();
     assert(!track.classList.contains('is-replaying'));
@@ -574,7 +571,8 @@ try {
     assert(!track.classList.contains('is-running'));
     assert.equal(frames.size, 0, 'completed replay has no perpetual animation loop');
     assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1');
-    assert.equal(document.querySelector('.story-result-stamp').textContent, '10:20 · Station · Day 1');
+    assert.equal(document.querySelectorAll('.story-part-stamp').length, 1);
+    assert.equal(live(), '10:20', 'the bottom time is the actual saved finish time');
     assert.equal(JSON.stringify(episode), saved);
     cleanup();
     reduced = true;
@@ -591,7 +589,7 @@ try {
       else delete window.HTMLElement.prototype[key];
     }
   }
-  console.log('PASS: Story retains filtered costs/consequences, shows saved levels, animates numbers sequentially over 650ms with original holds, seals after the last transition, settles old/reduced-motion records and never mutates archives.');
+  console.log('PASS: Story retains filtered costs/consequences, shows saved levels, animates numbers sequentially over 650ms with original holds, keeps one start header and reveals the finish clock after the last transition, settles old/reduced-motion records and never mutates archives.');
   console.log('PASS: shared Status bars and compact result deltas, actual capped values, gain/loss animation, hidden passive drain, retained expenses/consequences, reduced motion and cleanup.');
   console.log('PASS: compact discoveries preserve hours, services, map status, costs and Mood gain without duplicate details, names, bars or arrival imagery; other full answers, saved answers and no-new-information still work.');
 } finally { cleanup(); dom.window.close(); }

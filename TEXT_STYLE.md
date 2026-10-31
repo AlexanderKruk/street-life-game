@@ -74,7 +74,7 @@ An opening call can carry more context than a routine service button.
 | --- | --- |
 | Street location | Street |
 | Railway location | Station; “the station” in ordinary prose |
-| Shop | Small Shop; never Cheap Shop |
+| Shop | Shop |
 | Overnight shelter | Night Shelter; “the night shelter” in ordinary prose |
 | Social support location | Help Center |
 | Daytime facilities | Day Center |

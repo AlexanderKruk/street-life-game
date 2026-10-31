@@ -1,7 +1,6 @@
 import { mapPositions as positions, layoutMapLabels } from './mapLabelLayout'
 import { t } from './i18n'
-import { formatTime } from './game'
-import { locationName, locationDescription, locationHours, mapPinAccessible } from './locationText'
+import { formatOpeningTime, locationName, locationDescription, locationHours, mapPinAccessible } from './locationText'
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { isOpen, type Location } from './game'
 import { Icon, locationIcon } from './Icon'
@@ -70,7 +69,7 @@ export default function CityMap({ places, currentId, initialFocusId, minutes, re
   const hour = Math.floor(minutes / 60)
   const shopOpen = useMemo(() => !!shop && isOpen(shop, hour * 60), [shop, hour])
   if (!selected) return null
-  const shopHours = shop ? shopOpen ? t('location.map.shopOpen', { open: formatTime(shop.open), close: formatTime(shop.close) }) : t('location.opensAt', { time: formatTime(shop.open) }) : ''
+  const shopHours = shop ? shopOpen ? t('location.map.shopOpen', { open: formatOpeningTime(shop.open), close: formatOpeningTime(shop.close) }) : t('location.opensAt', { time: formatOpeningTime(shop.open) }) : ''
   const openFlags = places.map(place => (place.id === 'shop' ? shopOpen : isOpen(place, minutes)) ? '1' : '0').join('')
   return <section className="district-map" aria-label={t('location.mapAccessible')}>
     <div ref={backdropRef} className="district-backdrop"><img {...responsiveImageProps('/street-life-game/assets/city-map-dark.webp')} width="1024" height="1536" alt={t('location.mapAlt')} /></div>

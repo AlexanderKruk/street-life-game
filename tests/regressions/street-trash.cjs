@@ -198,7 +198,7 @@ for(const extra of [{}, {[invKey]:{phoneBattery:0}}, {'street-life-mobile-servic
 }
 setup({locationId:'support'});click(/Housing/);ok();click(/Map$/);
 for (const name of ['Night Shelter','Help Center','Day Work']) assert([...document.querySelectorAll('.district-scene strong')].some(node=>node.textContent===name));
-assert(![...document.querySelectorAll('.district-pin')].some(pin=>/Small Shop|Street/.test(pin.textContent)));
+assert(![...document.querySelectorAll('.district-pin')].some(pin=>/Shop|Street/.test(pin.textContent)));
 assert(read(lifeKey).schroniskoReferral);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
 setup({}, {[lifeKey]:{schroniskoReferral:true}});click(/Map$/);assert(document.querySelector('.district-scene').textContent.includes('Schronisko'));
 

@@ -26,6 +26,7 @@ function setup(s={},extra={}){
  cleanup();localStorage.clear();require('../../test-fixtures/finished-encounters.cjs')(localStorage,!openingEvents);
  localStorage.setItem(stateKey,JSON.stringify({day:1,minutes:480,money:100,hunger:72,thirst:66,energy:68,health:82,hygiene:55,mood:58,intoxication:0,locationId:'street',rainSystemStarted:true,nextRainAt:999999,...s}));
  localStorage.setItem('street-life-effects-v1','[]');
+ localStorage.setItem('street-life-choice-seed-v1','12345');
  localStorage.setItem('street-life-discovered-v1','["street","station","shop","support","shelter","work"]');
  localStorage.setItem('street-life-mobile-auto-renew','false');
  localStorage.setItem('street-life-mobile-renewed-day',String(s.day??1));
