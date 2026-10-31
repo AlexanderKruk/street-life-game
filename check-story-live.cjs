@@ -35,7 +35,12 @@ try {
     clickId(`event:${event.id}:${choice.id}`); finishCheck();
     const classic = facts();
     classic.story.episodes[0].status = 'complete'; // Story acknowledges presentation automatically.
-    const classicIndicators = [...document.querySelectorAll('.result-indicator')].map(node => [node.dataset.resourceId, node.getAttribute('aria-label')]);
+    const savedResult = classic.story.episodes[0].result;
+    const savedChanges = [...(savedResult.changes ?? []), ...(savedResult.costs ?? [])];
+    const classicIndicators = [...document.querySelectorAll('.result-indicator')].map(node => {
+      const meter = savedChanges.find(change => change.id === node.dataset.resourceId)?.meter;
+      return [node.dataset.resourceId, meter ? `${node.dataset.stat} ${Math.round(meter.after)}%` : node.getAttribute('aria-label')];
+    });
     setup(event.id);
     noModal();
     assert(document.querySelector('.game-background:not([inert])'), 'inline Story stays interactive');

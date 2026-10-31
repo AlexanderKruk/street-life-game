@@ -1486,11 +1486,18 @@ body { min-width:0; }
 .result-indicator > strong { font-weight:var(--weight-semibold); font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .result-indicator.positive > strong { color:var(--color-positive); }
 .result-indicator.negative > strong { color:var(--color-negative); }
+.result-indicator.is-level > strong { white-space:nowrap; min-width:4ch; }
 .result-indicator-name { overflow-wrap:anywhere; }
 .result-indicator-tooltip { position:absolute; left:0; bottom:100%; width:max-content; max-width:200px; padding:5px 8px; border-radius:6px; background:var(--surface-raised); color:var(--text-primary); font-size:var(--font-small); pointer-events:none; z-index:1; }
 .result-indicator:focus-visible { outline:2px solid var(--color-warning); outline-offset:3px; opacity:1 !important; animation:none !important; }
 .story-result-effects .result-indicators.is-animated:not(.is-ready) .result-indicator { opacity:0; }
 .story-result-effects .result-indicators.is-animated.is-ready .result-indicator { animation:result-indicator-appear var(--result-indicator-duration) ease-out both; animation-delay:var(--result-indicator-delay); }
+.story-result-effects .result-indicators.is-animated .result-indicator.is-level > strong { color:var(--text-primary); }
+.story-result-effects .result-indicators.is-animated.is-ready .result-indicator.is-level > strong { animation:result-indicator-value-color var(--result-indicator-value-duration) ease both; animation-delay:var(--result-indicator-value-delay); }
+.result-indicator.positive { --result-value-color:var(--color-positive); }
+.result-indicator.negative { --result-value-color:var(--color-negative); }
+.result-indicator.neutral { --result-value-color:var(--text-primary); }
+@keyframes result-indicator-value-color { from { color:var(--text-primary); } to { color:var(--result-value-color); } }
 @keyframes result-indicator-appear { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
 @media (prefers-reduced-motion:reduce) {
   .result-indicators.is-animated .result-indicator { opacity:1 !important; animation:none !important; }

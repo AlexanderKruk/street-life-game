@@ -1,3 +1,12 @@
+Sequential Story levels — 31 October 2026, source only: compact Story indicators
+show saved resulting percentages instead of meter deltas. Each icon and white
+starting number appears, waits 600ms, then counts and changes to the gain/loss
+colour over 650ms. After 220ms the next indicator starts. The existing preceding
+content pause and 260ms entrance are retained. The completion stamp waits for the
+last transition. Settled history and reduced motion show final saved levels
+immediately. Item/effect/money rows without a meter retain actual values; classic
+ResultCard keeps signed deltas. Filtering, snapshots and gameplay are unchanged.
+
 Release v361 is published — 31 October 2026. GitHub Pages run 41203183823
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41203183823)
 succeeded for 184af97ef0b6e1714b40d79418d928fc52aeb7f3: all 35 Node suites

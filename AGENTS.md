@@ -1,3 +1,19 @@
+Sequential Story levels — 31 October 2026, source only: ResultIndicators' explicit
+showLevels variant presents saved meter.after percentages without signed deltas.
+Live/Replay reveals each icon/value, holds its white meter.before number for 600ms,
+then counts and colours it over 650ms. Wait 220ms before the next group; keep the
+existing preceding piece pause and 260ms whole-group entrance. Groups without a
+saved meter retain their real item/effect/money values and existing filtering.
+The shared duration includes the last complete transition before the result stamp
+seals or presentation releases. Archives and reduced motion show saved final levels
+immediately. Classic ResultCard retains signed deltas. No gameplay/save changes.
+Results, 61 live routes, 61 modal routes, travel, localisation, design-system and
+production build passed. Chromium preview verified the actual completed music
+result (Mood 33%, Battery 60%, shared icon row and final colours). New controlled
+frame checks cover sequential holds/counting, parent rerenders, reduced motion,
+image-readiness gating, immutable facts and frame cleanup. No full suites or
+physical iPhone/WebKit check; source save only, no publication/build-ID change.
+
 Release v361 is published — 31 October 2026. GitHub Pages run 41203183823
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41203183823)
 succeeded for 184af97ef0b6e1714b40d79418d928fc52aeb7f3: all 35 Node suites
