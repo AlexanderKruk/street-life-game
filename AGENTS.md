@@ -1,3 +1,11 @@
+Whole-pixel Story following — 31 October 2026, source only: the shared write
+port rounds automatic scroll positions to whole CSS pixels for eased text frames
+and immediate photo following. Keep the actual browser readback as expected to
+avoid treating own scroll events as user interruption. Manual scrolling and the
+native smooth jump retain their existing behaviour. Modal checks cover integer
+eased frames, fractional photo targets, own-scroll continuity and manual reading.
+Physical iPhone font sharpness remains unverified; no publication/build-ID change.
+
 Reimplemented Story/product presentation — 31 October 2026, source only,
 explicitly authorised after the v362 rollback. This is a new implementation,
 not restoration of v363–v367 commits. StoryText reserves only a started word

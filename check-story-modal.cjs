@@ -294,6 +294,7 @@ try {
   assert.equal(scroller.scrollTop, 700, 'new content does not jump the scroller during resize');
   animate(32);
   assert(scroller.scrollTop > 700 && scroller.scrollTop < 800, 'the first frame moves only partway towards the new end');
+  assert(Number.isInteger(scroller.scrollTop), 'eased following writes whole CSS pixels');
   animate(1500);
   assert.equal(scroller.scrollTop, 800, 'smooth following settles at the actual scroll limit');
   scroller.scrollTop = 100; env.fireEvent.scroll(scroller);
@@ -322,8 +323,11 @@ try {
   for (let guard = 0; guard < 100 && !modal().querySelector('[data-story-revealing="true"]'); guard++) animate(32);
   assert(modal().querySelector('[data-story-revealing="true"]'), 'the actual image enters its growing phase');
   const beforePhotoResize = facts();
-  height += 80; resize();
-  assert.equal(scroller.scrollTop, height - 500, 'photo growth follows its own eased height before paint, without another scroll delay');
+  height += 80.25; resize();
+  assert.equal(scroller.scrollTop, Math.round(height - 500), 'photo growth follows before paint at a whole CSS pixel, without another scroll delay');
+  env.fireEvent.scroll(scroller);
+  height += 7.5; resize();
+  assert.equal(scroller.scrollTop, Math.round(height - 500), 'rounded own-scroll events do not interrupt photo following');
   scroller.scrollTop = 100; env.fireEvent.scroll(scroller);
   height += 80; resize();
   assert.equal(scroller.scrollTop, 100, 'photo growth cannot interrupt reading an earlier entry');
