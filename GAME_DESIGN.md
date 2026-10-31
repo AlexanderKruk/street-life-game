@@ -1,3 +1,11 @@
+Release v368 is published — 31 October 2026, 19:16 Warsaw (18:16 UTC).
+GitHub Pages run 41228224877 succeeded for bad853d7ca8a92bb84bbdc62c7d4b24e3111966b:
+35/35 Node suites passed in 205.92s; TypeScript/Vite build, upload and deployment
+succeeded. Live browser DOM reports v2026.10.31-368. Build/test/deploy logs reviewed;
+CI was not duplicated locally. Includes the newly rebuilt Story/product presentation
+and whole-pixel automatic following. Physical iPhone/WebKit sharpness remains
+unverified. Earlier source-only and pending-release notes below are historical.
+
 Release v368 — 31 October 2026, publication requested: releases the new Story
 and product presentation implementation built from v362, including whole-pixel
 automatic following. The existing GitHub Pages workflow owns the full release
