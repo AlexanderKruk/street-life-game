@@ -1,3 +1,10 @@
+Story atomic-stamp regression — 31 October 2026, source only: check-results
+asserts full native HH:MM/place/day at the first sealed frame and no per-letter
+stamp nodes; check-story verifies the same immediate content in the isolated
+example for three choice outcomes. The cursor still moves during a 500ms hold.
+Targeted suites updated but not run; no full CI, browser/iPhone/WebKit checks
+or publication; save source with [skip ci].
+
 Release v361 is published — 31 October 2026. GitHub Pages run 41203183823
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41203183823)
 succeeded for 184af97ef0b6e1714b40d79418d928fc52aeb7f3: all 35 Node suites

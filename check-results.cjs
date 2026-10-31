@@ -320,8 +320,9 @@ try {
       while (clock - entered < fullyVisibleAt + 128) { clock += 32; frame(clock); }
       assert.equal(energy().querySelector('strong').textContent, delta, 'replay ends at the actual saved level');
       assert.equal(document.querySelector('.story-result-start time').dataset.storyStamp, 'sealed', 'the result becomes a fixed stamp only when fully revealed');
-      assert(document.querySelector('.story-track.is-settling'), 'the stamp starts printing as the cursor departs');
-      assert(document.querySelector('.story-result-start time').textContent.startsWith('10:20'), 'the fixed saved time is present from the start of departure');
+      assert(document.querySelector('.story-track.is-settling'), 'the stamp and cursor departure start together');
+      assert.equal(document.querySelector('.story-result-start time').textContent, '10:20 · Station · Day 1', 'the full saved time, place and day appear immediately when sealed');
+      assert(!document.querySelector('.story-result-start time .story-letter'), 'stamp metadata has no per-character animation');
       for (const end = clock + 1000; clock < end;) { clock += 32; frame(clock); }
       assert(!document.querySelector('.story-track.is-running'), 'clock stops only when the whole result block has finished');
       assert.equal(document.querySelector('.story-part-stamp').textContent, '10:00 · Station · Day 1', 'replay duration cannot change the event-start timestamp');

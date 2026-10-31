@@ -1,3 +1,13 @@
+Story stamp metadata — 31 October 2026, source only: when a scene/result
+finishes, show its complete immutable HH:MM · place · Day n stamp at once as the
+point seals and the cursor departs. The location/day suffix no longer types one
+character at a time in native Story or the isolated comparison. The moving
+cursor/line retains the smooth 500ms piece pause, not a location-length-dependent
+delay. Unfinished stamps remain hidden; archived/reduced-motion stamps stay
+settled. Do not change narrative typing, effects timing, choices, saved time,
+actual game clock, costs or persistence. Focused test assertions updated, not
+executed; no full suite, browser/iPhone/WebKit check or publication. [skip ci].
+
 Release v362 is published — 31 October 2026. GitHub Pages run 41205740025
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41205740025)
 succeeded for a4db38eda7952cfa27547d81286ddf8a183d0880: all 35 Node suites
