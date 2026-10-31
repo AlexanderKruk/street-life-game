@@ -11,6 +11,7 @@ import StoryComparison from './StoryComparison'
 import { createStoryTyping, storyCharactersShown, STORY_PIECE_PAUSE_MS, STORY_STAMP_STEP_MS, storyStampDuration } from './storyTyping'
 import type { StoryEpisode, StoryStamp } from './story'
 import StoryLiveControls, { type StoryInteraction } from './StoryLiveControls'
+import { useStoryScroll } from './useStoryScroll'
 import { useStoryClock } from './useStoryClock'
 import { useStoryChoiceMotion } from './useStoryChoiceMotion'
 
@@ -222,6 +223,8 @@ function Episode({ episode, live, disabled, continuous, archiveControls = true, 
 }
 
 export default function StoryScreen({ episodes, interaction, currentMinute, onPauseChange, presentation = 'archive' }: { episodes: StoryEpisode[]; interaction?: StoryInteraction; currentMinute?: number; onPauseChange?: (paused: boolean) => void; presentation?: 'archive' | 'event' }) {
+  const scrollRoot = useRef<HTMLElement>(null)
+  useStoryScroll(scrollRoot, presentation === 'archive')
   const [comparison, setComparison] = useState(false)
   const [visible, setVisible] = useState(30)
   const [playing, setPlaying] = useState<Set<number>>(() => new Set())
@@ -232,7 +235,7 @@ export default function StoryScreen({ episodes, interaction, currentMinute, onPa
   const clockMinute = useStoryClock(currentMinute, running)
   useEffect(() => { onPauseChange?.(paused); return () => onPauseChange?.(false) }, [paused, onPauseChange])
   const start = Math.max(0, episodes.length - visible)
-  return <section className={`story-screen${presentation === 'event' ? ' story-screen-event' : ''}`}>
+  return <section ref={scrollRoot} className={`story-screen${presentation === 'event' ? ' story-screen-event' : ''}`}>
     {presentation === 'archive' && <div className="story-toolbar"><h1>{t('story.nav')}</h1><ModalAction variant="secondary" disabled={!!interaction} onClick={() => setComparison(value => !value)}>{t(comparison ? 'story.recordings' : 'story.comparison')}</ModalAction></div>}
     {comparison ? <StoryComparison /> : <>
       {!episodes.length && presentation === 'archive' && <p className="story-note">{t('story.empty')}</p>}

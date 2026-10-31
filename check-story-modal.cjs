@@ -194,7 +194,11 @@ try {
   Object.defineProperties(scroller, { scrollHeight: { get: () => height }, clientHeight: { value: 500 } });
   scroller.scrollTop = 700; env.fireEvent.scroll(scroller);
   height = 1300; resize();
-  assert.equal(scroller.scrollTop, 1300, 'timeline follows newly revealed content at the bottom');
+  assert.equal(scroller.scrollTop, 700, 'new content does not jump the scroller during resize');
+  animate(32);
+  assert(scroller.scrollTop > 700 && scroller.scrollTop < 800, 'the first frame moves only partway towards the new end');
+  animate(1500);
+  assert.equal(scroller.scrollTop, 800, 'smooth following settles at the actual scroll limit');
   scroller.scrollTop = 100; env.fireEvent.scroll(scroller);
   assert(bottomButton(), 'jump button appears while reading earlier content');
   assert(document.querySelector('.bottom-nav[inert]') && !document.querySelector('.story-event-close'), 'jumping does not unlock an unfinished event');
@@ -215,7 +219,8 @@ try {
   scroller.scrollTop = 836; env.fireEvent.scroll(scroller); assert(!bottomButton(), 'button disappears within 64px of the end');
   scroller.scrollTop = 900; env.fireEvent.scroll(scroller);
   height = 1500; resize();
-  assert.equal(scroller.scrollTop, 1500, 'returning to the bottom resumes following');
+  animate(1500);
+  assert.equal(scroller.scrollTop, 1000, 'returning to the bottom resumes smooth following');
   env.fireEvent.click(document.querySelector('.story-reveal')); animate(6000); clickId('event:spare-change:give');
   assert.equal(modal().querySelector('.story-episode'), archived, 'appending the result keeps the previous DOM intact');
   assert(modal()); assert.equal(save().episodes.at(-1).status, 'awaiting-ack'); const result = facts();

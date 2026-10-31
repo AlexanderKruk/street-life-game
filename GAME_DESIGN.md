@@ -1,3 +1,9 @@
+Smooth Story scrolling — 31 October 2026: new blocks ease the existing
+chronology upwards in both the Story tab and event modal. Reading older text
+suspends automatic following; returning to the end resumes it. Opening starts
+at the live end, and reduced motion retains instant positioning. Scrolling is
+presentation only and changes no game clock, save or consequences.
+
 Stable Story text — 31 October 2026: typed and completed narrative share the
 same paragraph element and ordinary wrapping. During presentation it supports
 tap, Enter and Space to reveal text; completion removes that temporary control

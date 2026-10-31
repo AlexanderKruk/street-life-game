@@ -1,3 +1,16 @@
+Smooth Story following — 31 October 2026, source only: useStoryScroll owns
+presentation-only following for both the Story tab and modal. One RAF loop
+eases towards the current scroll limit (100ms time constant), with a minimum
+1px step to settle integer scroll positions. Initial opening is immediate;
+content growth does not snap. Own scroll events do not disable following; wheel,
+touch scrolling and scroll keys interrupt it, and returning within 64px resumes
+following. Existing jump control uses native smooth/instant behaviour. Disable
+scroll anchoring in Story scrollers. Cleanup cancels frames/listeners/observers.
+Standalone execution of the actual hook with stubbed React/DOM/frame ports
+passed growth, partial first frame, convergence, interruption/resume, reduced
+motion and cleanup. Modal test syntax passed; UI/build dependencies absent,
+full UI suites and iPhone/WebKit appearance unverified. Save [skip ci], no release.
+
 Stable Story paragraphs — 31 October 2026, source only: retain a single p node
 through typing and settlement instead of replacing a native button with p. While
 current, it exposes role=button, tabindex=0 and Enter/Space click parity for the

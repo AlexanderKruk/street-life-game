@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { t } from './i18n'
 import { ModalAction, ModalOverlay, ModalPanel } from './Modal'
 import StoryScreen from './StoryScreen'
 import type { StoryEpisode } from './story'
 import type { StoryInteraction } from './StoryLiveControls'
+import { useStoryScroll } from './useStoryScroll'
 import { scheduleStoryClose } from './storyAutoClose'
 
 /** The same chronology as the Story tab, opened at its live end. */
@@ -16,8 +17,7 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   const panel = useRef<HTMLElement>(null)
   const content = useRef<HTMLDivElement>(null)
   const bottomControl = useRef<HTMLButtonElement>(null)
-  const following = useRef(true)
-  const [awayFromBottom, setAwayFromBottom] = useState(false)
+  const { awayFromBottom, scrollToBottom } = useStoryScroll(content)
   const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden')
   const [closing, setClosing] = useState(false)
   useEffect(() => {
@@ -31,39 +31,9 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
     return scheduleStoryClose(window, () => setClosing(true), () => { if (current.current.canClose) current.current.onClose() },
       !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
   }, [autoClose, canClose, awayFromBottom, visible, interaction?.episodeId])
-  const updateScrollPosition = useCallback(() => {
-    const scroller = content.current
-    if (!scroller) return
-    const away = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 64
-    following.current = !away
-    if (!away && document.activeElement === bottomControl.current) panel.current?.focus({ preventScroll: true })
-    setAwayFromBottom(away)
-  }, [])
-  useLayoutEffect(() => {
-    // Reopening continues at the end; older episodes remain settled above it.
-    following.current = true
-    if (content.current) content.current.scrollTop = content.current.scrollHeight
-    setAwayFromBottom(false)
-  }, [interaction?.episodeId])
   useEffect(() => {
-    const scroller = content.current
-    const timeline = scroller?.firstElementChild
-    if (!scroller || !timeline || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(() => {
-      if (following.current) scroller.scrollTop = scroller.scrollHeight
-      updateScrollPosition()
-    })
-    observer.observe(timeline)
-    observer.observe(scroller)
-    return () => observer.disconnect()
-  }, [updateScrollPosition])
-  function scrollToBottom() {
-    const scroller = content.current
-    if (!scroller) return
-    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    scroller.scrollTo({ top: scroller.scrollHeight, behavior: reduced ? 'instant' : 'smooth' })
-    updateScrollPosition()
-  }
+    if (!awayFromBottom && document.activeElement === bottomControl.current) panel.current?.focus({ preventScroll: true })
+  }, [awayFromBottom])
   // Capture before the same commit makes the previous screen inert/disabled.
   const previousFocus = useRef(document.activeElement as HTMLElement | null)
   useEffect(() => {
@@ -94,7 +64,7 @@ export default function StoryEventDialog({ episodes, interaction, minute, label,
   return <ModalOverlay className={`story-event-overlay${closing ? ' is-auto-closing' : ''}`} role="dialog" aria-modal="true" aria-label={label} onClick={event => { if (canClose && event.target === event.currentTarget) onClose() }}>
     <ModalPanel ref={panel} tabIndex={-1} className="story-event-panel">
       {canClose && <ModalAction variant="outline" iconOnly floating className="story-event-close" aria-label={t('common.close')} onClick={onClose}><Icon name="close" className="icon" /></ModalAction>}
-      <div ref={content} className="story-event-content" onScroll={updateScrollPosition}><StoryScreen episodes={episodes} interaction={interaction} currentMinute={minute} presentation="event" /></div>
+      <div ref={content} className="story-event-content"><StoryScreen episodes={episodes} interaction={interaction} currentMinute={minute} presentation="event" /></div>
       {awayFromBottom && <ModalAction ref={bottomControl} variant="outline" iconOnly floating className="story-event-bottom" aria-label={t('story.latest')} onClick={scrollToBottom}><Icon name="arrow-down-to-line" className="icon" /></ModalAction>}
     </ModalPanel>
   </ModalOverlay>
