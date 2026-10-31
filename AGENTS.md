@@ -1,3 +1,14 @@
+Story choice entrance — 31 October 2026, source only: the retained
+src/storyPreview.html remains the animation reference. Scope its explicit
+[hidden] display:none !important contract to .story-screen so future choice
+buttons do not override hidden with display:block or start their entrance early.
+Keep the existing 650ms / 12px ease-out entrance, length-dependent sequential
+spacing, eligibility, focus and reduced-motion behaviour. The original defect
+was reproduced in published v358: hidden future buttons computed display:block
+and opacity:1. Corrected browser verification was blocked by the browser's URL
+policy; local build/UI dependencies and CSS parser are absent, so no new
+build/test or corrected browser-parity claim. Save with [skip ci]; no publication.
+
 Release v358 — 30 October 2026, publication requested: includes Story travel
 with real 250ms/minute clock and whole-phase text/dots, typed arrival followed by
 short automatic dismissal and destination opening, concise purchases and item-use

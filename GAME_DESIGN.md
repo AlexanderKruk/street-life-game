@@ -1,3 +1,11 @@
+Story choice visibility — 31 October 2026: Animation example is the motion
+reference. Within Story, elements carrying hidden are fully excluded from layout
+and animation until revealed. This applies to the same shared presenter in the
+Story tab and event modal. Choices enter one by one over 650ms, rising 12px with
+ease-out; the next starts after 650ms plus 25ms per label character beyond ten.
+Reduced motion shows choices immediately. This is a presentation-only correction;
+choice eligibility, ordering, commands and game clocks remain unchanged.
+
 Release v358 — 30 October 2026, publication requested: includes Story travel
 with real 250ms/minute clock and whole-phase text/dots, typed arrival followed by
 short automatic dismissal and destination opening, concise purchases and item-use
