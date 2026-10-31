@@ -1,3 +1,14 @@
+Release v369 is published — 31 October 2026, 19:50 Warsaw (18:50 UTC).
+Pages run 41231169285 succeeded for fa08b1be9a9fd81ea3e4474128673ca097d2891c:
+35/35 Node suites passed in 112.80s; TypeScript/Vite build, artifact upload and
+GitHub Pages deployment succeeded. Live browser DOM reports v2026.10.31-369.
+Build/test/deploy logs reviewed; full successful CI was not duplicated locally.
+Includes all accumulated map, item-gap, medicine-heart, effect-icon, aligned
+Status-bar and settings-gear changes below. First CI attempt stopped at stale
+check-mood word expectations; revised checks preserve accessible stat identity,
+visible limits and actual shared-icon parity. Physical iPhone/WebKit remains
+unverified. Earlier pending/source-only notes below are historical.
+
 Release v369 — publication explicitly requested by the user.
 Includes all accumulated UI polish below. Pages CI owns full tests and build;
 publication remains pending until that workflow succeeds. The first v369 CI
