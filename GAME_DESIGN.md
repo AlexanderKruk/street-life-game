@@ -1,3 +1,13 @@
+Release v363 — 31 October 2026, publication requested: Story stamp
+metadata now appears as one complete HH:MM · place · day line when the point
+seals, while the cursor continues its existing 500ms motion. The standalone
+animation example agrees. Story narrative uses Body/400 at 1.5 line-height,
+dice roll metadata Small/400 and discovered place names semibold 600.
+The rest of Story presentation, immutable history, saved timestamps, actual
+clock, game costs and outcome effects remain unchanged. The existing Pages
+workflow performs full tests/build/deploy once; publication awaits its result.
+Physical iPhone/WebKit remains unverified.
+
 Release v362 is published — 31 October 2026. GitHub Pages run 41205740025
 (https://github.com/AlexanderKruk/street-life-game/actions/runs/41205740025)
 succeeded for a4db38eda7952cfa27547d81286ddf8a183d0880: all 35 Node suites

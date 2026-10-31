@@ -1,3 +1,14 @@
+Release v363 — 31 October 2026, publication requested: includes Story
+typography alignment (16px/400 narrative at 1.5 line-height, compact 14px
+dice-roll metadata and 600-weight discovered-place names) plus complete
+HH:MM · place · day stamps appearing all at once when each Story point seals.
+The 500ms cursor movement and all existing narrative, effects, choices, game
+time, saves and costs remain unchanged; Story example is synchronised.
+The existing GitHub Pages workflow owns all 35 Node checks, TypeScript/Vite
+production build and deployment, with no duplicate local full test run.
+Publication is pending its successful workflow completion. A physical
+iPhone/WebKit appearance check is not claimed.
+
 Story atomic-stamp regression — 31 October 2026, source only: check-results
 asserts full native HH:MM/place/day at the first sealed frame and no per-letter
 stamp nodes; check-story verifies the same immediate content in the isolated
