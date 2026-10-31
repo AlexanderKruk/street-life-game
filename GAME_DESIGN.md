@@ -1,3 +1,12 @@
+Release v362 is published — 31 October 2026. GitHub Pages run 41205740025
+(https://github.com/AlexanderKruk/street-life-game/actions/runs/41205740025)
+succeeded for a4db38eda7952cfa27547d81286ddf8a183d0880: all 35 Node suites
+passed in 128.92s, TypeScript/Vite build and deployment succeeded (13:31 UTC).
+The live page shows v2026.10.31-362. Build/test/deploy logs reviewed; successful
+CI was not duplicated locally. Includes sequential Story levels without meter
+deltas. Physical iPhone/WebKit appearance remains unverified. Earlier pending
+and source-only notes below are historical checkpoints now included in release.
+
 Release v362 — 31 October 2026, publication requested: releases sequential Story
 levels with white starting values, 650ms counting/colour transitions and retained
 600ms holds/220ms pauses, without separate meter deltas. Full Node checks,
