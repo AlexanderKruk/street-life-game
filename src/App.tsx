@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 19043)
-Total output lines: 1025
-
 import { useStorySession } from './useStorySession'
 import type { StoryStamp } from './story'
 import type { StreetEventChoice } from './events'
@@ -422,7 +419,192 @@ export default function App() {
     document.body.style.overflow = 'hidden'
     eventModalRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true })
     function trap(event: KeyboardEvent) {
-      if (event.key …4043 tokens truncated…elling: !!trip }
+      if (event.key !== 'Tab') return
+      const buttons = Array.from(eventModalRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
+      if (!buttons.length) return
+      event.preventDefault()
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
+      buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length].focus()
+    }
+    document.addEventListener('keydown', trap)
+    return () => { document.body.style.overflow = overflow; document.removeEventListener('keydown', trap); if (previous?.isConnected && !document.querySelector('.result-modal')) previous.focus({ preventScroll: true }) }
+  }, [streetEventVisible])
+  useEffect(() => { if (phoneSearchVisible && !storyCallRunning) phoneSearchModalRef.current?.focus({ preventScroll: true }) }, [phoneSearchVisible, storyCallRunning])
+  const shelterDepartureRemaining = shelterDeparture ? Math.max(0, SHELTER_DEPARTURE_MINUTES - (absoluteMinutes(game) - shelterDeparture.startAbsolute)) : 0
+  const freeTransitActive = inventory.transitCard || effects.some(effect => effect.id === 'free-transit' && effect.expiresAt > absoluteMinutes(game))
+  const mobileServiceActive = mobileServiceUntil > absoluteMinutes(game)
+  const mobileServiceMinutesLeft = Math.max(0, mobileServiceUntil - absoluteMinutes(game))
+  const phoneUnavailable = phoneUnavailableReason(inventory, shelterPhoneCharging)
+  const navigationOn = mobileServiceActive && phoneUnavailable === null && !sleeping && !gameOver
+  const dayWorkEnergyRequired = 55
+  const storageCapacity = current.id === 'residential-shelter' ? SCHRONISKO_STORAGE : NIGHT_SHELTER_STORAGE
+  const usedStorageSlots = storageSlots(storage)
+
+  const laundryCleanAt = useRef(-1)
+  const hygieneLimit = clothingHygieneCap(inventory.clothingCleanliness)
+  const statusNeeds: StatusNeed[] = [
+    { id: 'hunger', label: t('stat.hunger'), value: game.hunger, icon: 'food' as IconName },
+    { id: 'thirst', label: t('stat.thirst'), value: game.thirst, icon: 'water' as IconName },
+    { id: 'energy', label: t('stat.energy'), value: game.energy, icon: 'energy' as IconName, cap: energyCap(game.health) },
+    { id: 'health', label: t('stat.health'), value: game.health, icon: 'heart' as IconName },
+    { id: 'hygiene', label: t('stat.hygiene'), value: game.hygiene, icon: 'shower' as IconName, cap: hygieneLimit },
+    { id: 'mood', label: t('stat.mood'), value: game.mood, icon: `face-${conditionBand(game.mood).level}` as IconName, cap: moodCeiling.cap, capReason: limitReasonsLabel(moodCeiling.reasons) },
+  ]
+  // Dangerous physical needs take precedence over a lower mood score.
+  const dangerousNeeds = statusNeeds.filter(need => need.id !== 'mood' && need.value <= 20)
+  const lowestNeed = (dangerousNeeds.length ? dangerousNeeds : statusNeeds)
+    .reduce((lowest, need) => need.value < lowest.value ? need : lowest)
+  const focusedNeed = lowestNeed.value <= 60 ? lowestNeed : null
+  useEffect(() => {
+    if (game.hygiene > hygieneLimit) setGame(prev => ({ ...prev, hygiene: Math.min(prev.hygiene, hygieneLimit) }))
+  }, [game.hygiene, hygieneLimit])
+
+  function applyAction(state: GameState, result: ActionResult) {
+    return applyGameAction(state, result, { ...moodContext(state), walking: !!travelPhase?.walking && !underRainCover, ...(rainWaiting ? { exposure: 'outside' as const } : travelPhase ? { exposure: travelPhase.exposure } : {}), music: musicOn })
+  }
+
+  const [inventoryAgedAt, setInventoryAgedAt] = useState(absoluteMinutes(game))
+  const agedThrough = useRef(absoluteMinutes(game))
+  const pausedNavigationMinutes = useRef(0)
+  useEffect(() => {
+    const now = absoluteMinutes(game)
+    const from = agedThrough.current
+    const elapsed = Math.max(0, now - from)
+    agedThrough.current = now
+    setInventoryAgedAt(now)
+    if (elapsed === 0) return
+    const movingMinutes = Math.max(0, elapsed - pausedNavigationMinutes.current)
+    pausedNavigationMinutes.current = Math.max(0, pausedNavigationMinutes.current - elapsed)
+    setStorage(prev => ageFood(prev, elapsed))
+    const groundWindow = groundSleepWindow.current
+    const extraDirt = groundWindow ? Math.max(0, Math.min(now, groundWindow.end) - Math.max(now - elapsed, groundWindow.start)) * (40 / 1440) : 0
+    const wornMinutes = Math.max(0, now - Math.max(now - elapsed, laundryCleanAt.current))
+    setInventory(prev => ({ ...ageFood(prev, elapsed),
+        clothingCleanliness: Math.max(0, prev.clothingCleanliness - wornMinutes * (20 / 1440) * (trip?.mode === 'walk' ? 1 + .5 * movingMinutes / elapsed : 1) - extraDirt),
+        phoneBattery: elapsedPhoneBattery(prev, game, { from, now, movingMinutes, travelling: !!trip, navigationOn, musicOn, charging: shelterPhoneCharging }),
+    }))
+  }, [game.day, game.minutes])
+
+  const { startOpeningCall, answerPracticalQuestion, buyMobileService, chargePhone, toggleShelterPhoneCharging,
+    tickPhoneActivity, pausePhone, phoneSearchCost, finishLocationPhoneCharge } = usePhoneController(phone, {
+    game, inventory, currentId: current.id, open, screen, firstNight, eventInteractionBlocked, sleeping: !!sleeping,
+    trip: !!trip, gameOver, insideNightShelter, shelterDeparture: !!shelterDeparture, shelterCheckoutDue, shelterBooked,
+    discoveredLocations, inventoryAgedAt,
+  }, {
+    setGame, setInventory, setMessage, setInfoModal, setPhoneOpen, setPhoneApp, setMusicOn, setDiscoveredLocations,
+    setJournalGoals, setActiveGoal, applyAction, moodCap: state => moodLimit(state, moodContext(state)).cap,
+    resultSnapshot, runWithResult, onOpeningCallStart: recordOpeningCallStart, onOpeningSearch: () => { openingSearchObservation.current = true },
+  })
+
+  // Repair older saves that already received a referral without its map address.
+  useEffect(() => {
+    if (life.schroniskoReferral || life.housing === 'Schronisko') {
+      setDiscoveredLocations(prev => prev.includes('residential-shelter') ? prev : [...prev, 'residential-shelter'])
+    }
+  }, [life.schroniskoReferral, life.housing])
+
+  function resultSnapshot(): ResultSnapshot {
+    return { game: { ...game }, housing: moodContext().housing, inventory: { ...inventory }, effects: effects.map(effect => ({ ...effect })) }
+  }
+
+  const encounterQueue = createEncounterQueue(eventSession, { game, life, inventory, weather, trip: !!trip, infoModal: !!infoModal, currentId: current.id, firstNight,
+    deferredBlocked: !!(eventInteractionBlocked || sleeping || sleepChoice || trip || phoneActivity || trashGame || shelterQueue || shelterDeparture || shelterInterview || gameOver || phoneOpen || travelChoiceOpen),
+  })
+  const { observeFirstNight, observeOrdinaryEvent, observeIdle } = encounterQueue
+  const shelterController = createShelterController(shelterSession, { game, life, current, shelterCheckoutDue,
+    departureBlocked: !!(sleeping || infoModal || pendingResult || activeEvent || diceCheck || gameOver), shelterPhoneCharging, shelterBooked,
+  }, { setGame, setLife, setMessage, setMusicOn, setPhoneOpen, setShelterPhoneCharging, setSelectedDestination, setScreen, setActiveGoal,
+    applyAction, moodContext, requestSleep: kind => requestSleep(kind), resultSnapshot, runWithResult })
+  const { recordShelterDeparture, startShelterDeparture, answerShelterInterview, beginShelterInterview, prepareShelterAction, tickShelterQueue } = shelterController
+  const sleepController = createSleepController(sleepSession, eventSession, encounterQueue, { game, inventory, effects, current, weather, underRainCover,
+    insideNightShelter, streetBenchFound, blocked: !!(activeEvent || shelterQueue || shelterDeparture || shelterCheckoutDue || trip || screen === 'travel' || gameOver),
+  }, { setGame, setLife, setEffects, setMessage, setInfoModal, setMusicOn, setTrip, setSelectedDestination, setPhoneOpen, setScreen,
+    recordShelterDeparture, moodContext, applyAction, resultSnapshot, runWithResult })
+  const { requestSleep, sleep, finishSleep, tickSleep, finishRestAction } = sleepController
+
+  const { checkUnavailableReason, resolveStreetEvent, rollDice, acceptDiceResult, stealItem } = createEventController(eventSession, {
+    game, inventory, storage, life, discoveredLocations, phoneUnavailable, shelterBooked, currentId: current.id, open,
+  }, {
+    setGame, setInventory, setMessage, setInfoModal, setEventResultOpen, setDiscoveredLocations, setActiveGoal,
+    openPage: target => { if (!storyEventVisible) openPage(target) }, resultSnapshot, runWithResult, applyAction, startFareDodgeTrip: (id, outcome) => startFareDodgeTrip(id, outcome),
+    recordStoryChoice,
+    recordFareInspectionRoll: roll => setTrip(previous => previous?.mode === 'fare-dodge' && previous.inspection?.status === 'rolling'
+      ? { ...previous, inspection: { ...previous.inspection, roll } } : previous),
+  })
+
+  const { executeInventoryCommand, returnBottles, storeItem, takeStoredItem, storeFood, takeStoredFood, buyItem, useSupply, useMedicine, smokeCigarette, useItem } = createInventoryController(
+    { game, inventory, storage, effects, locationId: current.id, open, insideNightShelter },
+    { setInventory, setStorage, setEffects, setGame, setMessage, setInfoModal, applyAction, runWithResult, resultSnapshot })
+  const { hospitalVisit, callAmbulance } = createMedicalController(
+    { game, inventory, currentId: current.id, open, activeEvent: !!activeEvent, shelterPhoneCharging },
+    { setGame, setInventory, setEffects, setMessage, setSelectedDestination, setTrip, setScreen, applyAction, runWithResult })
+  const { socialSupport, takeDayWork } = createSupportWorkController(
+    { game, inventory, storage, life, currentId: current.id, open, dayWorkEnergyRequired },
+    { setGame, setInventory, setEffects, setLife, setMessage, setDiscoveredLocations, applyAction, runWithResult })
+  const { act, actionUnavailableReason } = createLocationController(
+    { game, inventory, life, current, open, activeEvent: !!activeEvent, shelterQueue: !!shelterQueue, shelterBooked, shelterAdmitted, hygieneLimit },
+    { setGame, setInventory, setLife, setEffects, setMessage, laundryCleanAt, runWithResult, resultSnapshot, applyAction, moodContext,
+      beginShelterInterview, prepareShelterAction, requestSleep, finishRestAction, finishLocationPhoneCharge }, encounterQueue)
+  const { walkMusicCost, canWalkWithMusic, walkCity, askForMoney, streetAction } = createStreetController(
+    { game, inventory, currentId: current.id, activeEvent: !!activeEvent, sleeping: !!sleeping, trip: !!trip, infoModal: !!infoModal,
+      musicWalkUsed, mobileServiceActive, musicOn, streetBenchFound, begging },
+    { setGame, setInventory, setInfoModal, setMessage, setBegging, setMusicWalkUsed, setRainChoice, setStreetBenchFound, moodContext, resultSnapshot, runWithResult, applyAction, requestSleep }, encounterQueue)
+  const { searchStreetBottles, startTrashDrag, moveTrashItem, collectTrashBottle, finishTrashSearch, checkTrashDeadline, endTrashDrag, cancelTrashDrag } = useTrashController(
+    trashSession, { inventory, currentId: current.id, activeEvent: !!activeEvent },
+    { setInventory, setGame, setMessage, setInfoModal, applyAction, runWithResult, resultSnapshot })
+
+  function runWithResult(identity: ResultAction, action: () => void | InventoryHistoryFacts | ActionHistoryFacts, before = resultSnapshot(), includeTime = true, always = false, consumedItems: ConsumedItem[] = []) {
+    if (!resultActionAllowed(identity.id, { sleepChoice: !!sleepChoice, shelterQueue: !!shelterQueue, shelterDeparture: !!shelterDeparture, shelterCheckoutDue, activeEvent: !!activeEvent, diceCheck: !!diceCheck, shelterInterview: !!shelterInterview })) return
+    const callEpisode = !LEGACY_EVENT_DIALOGS && (identity.id.startsWith('call:') || identity.id === 'call-interrupted')
+      ? story.current().episodes.find(entry => entry.source === 'phone' && entry.sourceId === phoneActivity?.questionId && entry.status === 'active') : undefined
+    if (callEpisode) identity = { ...identity, storyEpisodeId: callEpisode.id }
+    const facts = action()
+    const inventoryHistory = facts && !('kind' in facts) ? facts : identity.inventoryHistory
+    const actionHistory = facts && 'kind' in facts ? facts : identity.actionHistory
+    setPendingResult({ ...identity, inventoryHistory, actionHistory, before, includeTime, always, consumedItems })
+  }
+
+  useEffect(() => {
+    if (!pendingResult || inventoryAgedAt !== absoluteMinutes(game) || game.hygiene > hygieneLimit || game.mood > moodCeiling.cap) return
+    setPendingResult(null)
+    if (sleeping || sleepChoice || shelterQueue || shelterDeparture || trashGame || shelterInterview || diceCheck) return
+    const after = resultSnapshot()
+    const summary = summarizeResult(pendingResult.before, after, pendingResult.includeTime, pendingResult.consumedItems)
+    if (!pendingResult.always && summary.costs.length === 0 && summary.changes.length === 0 && !infoModal) return
+    const memories = [
+      { id: 'office-routine', actions: ['city-walk'], text: t('journal.ui.memory.office-routine') },
+      { id: 'redundancy-savings', actions: ['bench-rest', 'location:station-rest', 'rain-cover'], text: t('journal.ui.memory.redundancy-savings') },
+      { id: 'unanswered-applications', actions: ['question:morning'], text: t('journal.ui.memory.unanswered-applications') },
+    ]
+    const memory = memories.find(fragment => fragment.actions.includes(pendingResult.id) && !seenMemories.includes(fragment.id))
+    const resultText = memory ? t('journal.ui.resultWithMemory', { result: infoModal?.text ?? message, memory: memory.text }) : infoModal?.text ?? message
+    if (memory) setSeenMemories(previous => [...new Set([...previous, memory.id])])
+    const firstReport = lastRecordedResult.current !== pendingResult
+    if (firstReport) {
+      lastRecordedResult.current = pendingResult
+      const actionTitle = pendingResult.title
+      const reflection = journalPresentation(pendingResult, summary, memory?.id)
+      const entry: JournalEntry = { day: game.day, minute: game.minutes, actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}), actionTitle, reflection: true, ...reflection }
+      setJournalEntries(previous => [...previous, entry].slice(-500))
+    }
+    const result = { ...infoModal, title: infoModal?.title ?? pendingResult.title, text: resultText, reflection: memory?.text, ...summary }
+    if (pendingResult.storyEpisodeId !== undefined) story.finish(pendingResult.storyEpisodeId, result, storyStamp(), { actionId: pendingResult.id, ...(pendingResult.eventHistory ? { outcomeId: pendingResult.eventHistory.outcomeId } : {}) })
+    else if (firstReport) story.recordInventoryResult(pendingResult, result, pendingResult.before.inventory, after.inventory,
+      { day: pendingResult.before.game.day, minute: pendingResult.before.game.minutes, locationId: pendingResult.before.game.locationId, locationName: locationName(pendingResult.before.game.locationId) }, storyStamp())
+    setInfoModal(result)
+  }, [pendingResult, game, inventory, effects, sleeping, sleepChoice, trashGame, shelterInterview, shelterQueue, shelterDeparture, diceCheck, message, inventoryAgedAt])
+
+  useRainResults({ game, effects, blocked: !!(goalCompletionVisible || gameOver || activeEvent || diceCheck || infoModal || pendingResult || sleeping || sleepChoice || shelterInterview || shelterQueue || shelterDeparture || closingNotice || inventoryDialogOpen || trashGame || trip?.remaining === 0 || phoneActivity?.remaining === 0) }, {
+    setGame, setEffects, setInfoModal, setEventResultOpen, setJournalEntries, resultSnapshot,
+    recordStoryResult: (rain, result) => story.finish(rainStoryId(rain), result, storyStamp(), { actionId: rainResultActionId(rain) }),
+  })
+
+  const closingWatch = useRef({ id: game.locationId, minute: absoluteMinutes(game), travelling: !!trip })
+  const locationIsClosing = !trip && !closingWatch.current.travelling && closingWatch.current.id === current.id && locationClosedSince(current, closingWatch.current.minute, absoluteMinutes(game))
+  useEffect(() => {
+    const previous = closingWatch.current
+    const now = absoluteMinutes(game)
+    closingWatch.current = { id: current.id, minute: now, travelling: !!trip }
     if (gameOver || trip || previous.travelling || previous.id !== current.id || !locationClosedSince(current, previous.minute, now)) return
     setClosingNotice(current.id)
     setGame(state => ({ ...state, locationId: 'street' }))
