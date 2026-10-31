@@ -1,3 +1,21 @@
+Release v369 — publication explicitly requested by the user.
+Includes all accumulated UI polish below. Pages CI owns full tests and build;
+publication remains pending until that workflow succeeds.
+Settings uses a symmetric eight-tooth outline gear, preserving shared stroke/size.
+Product icon/value gaps are 2px. Medicine recovery previews use the shared
+health heart icon beside ×3 instead of a pill. Map shortcuts omit icons, use content-driven
+height with the existing padding, and Street hours say 24/7 in EN/RU/PL.
+Status needs share intrinsic label/value columns via CSS subgrid so names stay
+on one line and all remaining bars have equal widths. Effect badges replace
+resource names with the same Status icons, retaining numeric caps/strengths,
+red negative/green positive colours and complete translated accessible names.
+Shared impactPreviews supplies unchanged product and effect preview meanings.
+Build, language/localisation, map-travel and needs-mood regressions, design and
+module checks passed during this work. Chromium component checks at 320/390/1280
+verified one-line RU/PL/EN needs and equal bars; effect badges retained visible
+caps, matching icons, semantic colours and no overflow. Physical iPhone/WebKit
+remains unverified. This publication request supersedes the earlier local-only hold.
+
 Release v368 is published — 31 October 2026, 19:16 Warsaw (18:16 UTC).
 GitHub Pages run 41228224877 succeeded for bad853d7ca8a92bb84bbdc62c7d4b24e3111966b:
 35/35 Node suites passed in 205.92s; TypeScript/Vite build, upload and deployment

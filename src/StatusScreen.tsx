@@ -1,6 +1,8 @@
 import { t } from './i18n'
-import { impactChip } from './effectChips'
-import type { ComponentProps } from 'react'
+import { impactChip, type EffectChip, type ImpactId } from './effectChips'
+import { impactPreviews } from './impactPreviews'
+import MoodIcon from './MoodIcon'
+import type { ComponentProps, ReactNode } from 'react'
 import { CLOTHING_WETNESS_ENABLED } from './gameplayFeatures'
 import type { GameState, Need } from './game'
 import type { ActiveEffect } from './stateTypes'
@@ -15,7 +17,18 @@ type Props = {
   game: GameState; statusEffects: ActiveEffect[]; statLimits: LimitingEffect[]; separateLimits: LimitingEffect[]
   statusNeeds: StatusNeed[]; focusedNeed: StatusNeed | null; situation: ComponentProps<typeof LifeSituation>
 }
+function EffectImpact({ label, icon, value, kind }: { label: string; icon: ReactNode; value: string; kind: EffectChip['kind'] }) {
+  return <b className={`effect-impact-badge ${kind}`} role="img" aria-label={label} title={label}><span aria-hidden="true">{icon}</span><span aria-hidden="true">{value}</span></b>
+}
+
 export default function StatusScreen({ game, statusEffects, statLimits, separateLimits, statusNeeds, focusedNeed, situation }: Props) {
+  const statIcon = (id: string | undefined, fallback: IconName) => id === 'mood'
+    ? <MoodIcon value={game.mood} /> : <Icon name={statusNeeds.find(need => need.id === id)?.icon ?? fallback} />
+  const impactBadge = (chip: EffectChip, cap?: number) => {
+    const [icon, strength] = impactPreviews[chip.id as ImpactId]
+    const value = cap === undefined ? strength : `${strength} · ≤ ${t('format.percent', { amount: Math.round(cap) })}`
+    return <EffectImpact key={chip.id} label={chip.label} icon={statIcon(chip.resourceId, icon)} value={value} kind={chip.kind} />
+  }
   const statusEffectCount = statusEffects.length + separateLimits.length + (CLOTHING_WETNESS_ENABLED && (game.wetness ?? 0) > 0 ? 1 : 0)
   return <section className="status-screen" aria-label={t('status.label')}>
       {!!statusEffectCount && <section className="status-effects" aria-labelledby="status-effects-heading">
@@ -23,18 +36,19 @@ export default function StatusScreen({ game, statusEffects, statLimits, separate
         <div className="effects-list">
           {CLOTHING_WETNESS_ENABLED && (game.wetness ?? 0) > 0 && <div className="effect negative wet-clothes">
             <span><Icon name="water" /></span><strong className="effect-name">{t('status.wetClothes')}</strong>
-            <div className="effect-details"><div className="effect-impact">{(['energy-loss', 'mood-loss'] as const).map(id => impactChip(id)).map(chip => <b key={chip.id}>{chip.label}</b>)}</div><small className="effect-time">{t('format.percent', { amount: Math.max(1, Math.round(game.wetness!)) })}</small></div>
+            <div className="effect-details"><div className="effect-impact">{(['energy-loss', 'mood-loss'] as const).map(id => impactChip(id)).map(chip => impactBadge(chip))}</div><small className="effect-time">{t('format.percent', { amount: Math.max(1, Math.round(game.wetness!)) })}</small></div>
           </div>}
           {separateLimits.map(effect => <div className="effect negative limit-effect" data-limit-reason={effect.reason} data-mood-limit={effect.limits.some(limit => limit.stat === 'mood') ? effect.reason : undefined} key={effect.reason}>
             <span><Icon name={effect.icon} /></span><strong className="effect-name" title={effect.name}>{effect.name}</strong>
-            <div className="effect-impact">{effect.limits.map(limit => <b key={limit.stat}>{t('effect.statCap', { stat: t(`stat.${limit.stat}`), cap: Math.round(limit.cap) })}</b>)}</div>
+            <div className="effect-impact">{effect.limits.map(limit => <EffectImpact key={limit.stat} label={t('effect.statCap', { stat: t(`stat.${limit.stat}`), cap: Math.round(limit.cap) })} icon={statIcon(limit.stat, limit.stat === 'hygiene' ? 'shower' : 'energy')} value={`≤ ${t('format.percent', { amount: Math.round(limit.cap) })}`} kind="negative" />)}</div>
           </div>)}
           {statusEffects.map(active => {
             const effect = EFFECTS[active.id]
             const coldLimit = active.id === 'cold' ? statLimits.find(limit => limit.reason === 'Cold') : undefined
+            const coldMoodCap = coldLimit?.limits.find(limit => limit.stat === 'mood')?.cap
             return <div className={`effect ${effect.kind}${active.id === 'cold' ? ' illness' : ''}`} key={active.id}>
               <span><Icon name={effect.icon} /></span><strong className="effect-name" title={active.id === 'cold' && active.treated ? t('effect.cold.treatedTitle') : effect.name}>{active.id === 'cold' && active.treated ? t('effect.cold.treated') : effect.name}</strong>
-              <div className="effect-details"><div className="effect-impact">{statusImpactChips(active.id, coldLimit?.limits.find(limit => limit.stat === 'mood')?.cap).map(chip => <b key={chip.id}>{chip.label}</b>)}</div>{active.id !== 'cold' && <small className="effect-time">{remainingEffect(active.expiresAt, game)}</small>}</div>
+              <div className="effect-details"><div className="effect-impact">{statusImpactChips(active.id, coldMoodCap).map(chip => impactBadge(chip, chip.resourceId === 'mood' ? coldMoodCap : undefined))}</div>{active.id !== 'cold' && <small className="effect-time">{remainingEffect(active.expiresAt, game)}</small>}</div>
             </div>
           })}
         </div>

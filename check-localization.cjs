@@ -1117,10 +1117,12 @@ try {
   const otherLimits=[{reason:'Health',name:'⟦health⟧',icon:'heart',limits:[{stat:'mood',cap:40},{stat:'energy',cap:60}]}];
   const showStatus=statLimits=>{cleanup();render(React.createElement(chipsView.StatusScreen,{game:chipsView.initialState,statusEffects:[{id:'cold',expiresAt:3000,treated:true}],statLimits,separateLimits:otherLimits,statusNeeds:[],focusedNeed:null,situation:{housing:'Street',employment:'Unemployed',income:'None',documents:'carried'}}));};
   showStatus(coldLimits);
-  const coldChips=[...document.querySelectorAll('.illness .effect-impact b')].map(n=>n.textContent);
+  const coldChips=[...document.querySelectorAll('.illness .effect-impact b')].map(n=>n.getAttribute('aria-label'));
+  assert([...document.querySelectorAll('.illness .effect-impact b')].every(n=>n.querySelector('svg')));
+  assert(document.querySelectorAll('.illness .effect-impact b')[1].textContent.includes('60'));
   assert.equal(coldChips.filter(s=>s.includes('60')).length,1);assert(coldChips[1].includes('60'));assert(!coldChips[0].includes('60'));assert(!coldChips.join('').includes('77'));
   assert(document.querySelector('.effect.illness').classList.contains('negative'));assert.equal(document.querySelector('[data-mood-limit]').dataset.moodLimit,'Health');
-  assert.deepEqual([...document.querySelectorAll('.limit-effect b')].map(n=>n.textContent),['⟦effect.statCap⟧ Mood 40','⟦effect.statCap⟧ Energy 60']);
+  assert.deepEqual([...document.querySelectorAll('.limit-effect b')].map(n=>n.getAttribute('aria-label')),['⟦effect.statCap⟧ Mood 40','⟦effect.statCap⟧ Energy 60']);
   showStatus([]);assert(!document.querySelector('.illness .effect-impact').textContent.includes('60'));
   console.log('PASS: pseudo-effect labels preserve inventory/shop colours and handlers, treated Cold Mood cap and separate stat identities.');
   let bought=[],stolen=[];

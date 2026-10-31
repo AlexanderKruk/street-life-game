@@ -30,7 +30,7 @@ export const servicesMessages = {
   "location.pin.closed": "{place} · закрыто {hours}",
   "location.pin.openHere": "{place} · открыто {hours} · ты здесь",
   "location.pin.closedHere": "{place} · закрыто {hours} · ты здесь",
-  "location.map.openAllDay": "Открыто круглосуточно",
+  "location.map.openAllDay": "24/7",
   "location.map.shopOpen": "Открыто {open}–{close}",
   "location.map.shelterReserved": "У тебя есть место. Приходи в часы входа.",
   "location.map.shelterUnreserved": "Место не гарантировано.",

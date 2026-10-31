@@ -1,5 +1,5 @@
 const env = require('../helpers/regression-env.cjs');
-const { React, render, screen, cleanup, assert, App, stateKey, invKey, lifeKey, read, setup, click, ok, advance, near } = env;
+const { React, render, screen, within, cleanup, assert, App, stateKey, invKey, lifeKey, read, setup, click, ok, advance, near } = env;
 // Unified time gives identical results for large blocks and minute ticks,
 // including effect expiry, weather change and crossing midnight.
 require('../helpers/build.cjs').buildSync({entryPoints:['src/game.ts'],bundle:true,define:{'import.meta.env':'{"VITE_CLOTHING_WETNESS_ENABLED":"true"}'},platform:'node',format:'cjs',outfile:process.env.STREET_REGRESSION_GAME});
@@ -33,7 +33,7 @@ assert(document.querySelector('.effect.wet-clothes').textContent.includes('80%')
 const wetSave=read(stateKey);cleanup();render(React.createElement(App));
 assert.equal(read(stateKey).wetness,wetSave.wetness);
 advance(1000);assert(Math.abs(read(stateKey).wetness-79.4)<1e-8);
-assert(document.querySelector('.wet-clothes .effect-impact').textContent.includes('Energy−'));
+assert(within(document.querySelector('.wet-clothes .effect-impact')).getByRole('img',{name:'Energy−'}).querySelector('svg'));
 setup({locationId:'station',wetness:0});click(/^Status$/);assert(!document.querySelector('.wet-clothes'));
 // Status promotes one need only when attention is needed and keeps all six visible.
 setup({hunger:72,thirst:66,energy:45,health:90,hygiene:75,mood:28});click(/^Status$/);
@@ -47,7 +47,10 @@ assert(document.querySelector('.status-stat[data-stat="Food"] .bar i.good'));
 assert.equal(screen.getAllByRole('meter').length,6);
 assert(screen.getByRole('heading',{name:'Condition',exact:true}));
 assert(screen.getByRole('heading',{name:'Effects',exact:true}));
-assert(document.querySelector('[data-mood-limit="Street"]').textContent.includes('Mood ≤ 50%'));
+const streetMoodBadge=within(document.querySelector('[data-mood-limit="Street"]')).getByRole('img',{name:'Mood ≤ 50%'});
+assert.equal(streetMoodBadge.textContent,'≤ 50%');
+assert(streetMoodBadge.classList.contains('negative'));
+assert.equal(streetMoodBadge.querySelector('svg').innerHTML,document.querySelector('[data-resource-id="mood"] svg').innerHTML);
 assert(!document.querySelector('[data-stat="Hygiene"] .bar-blocked'));
 setup({mood:28,hygiene:45},{[invKey]:{clothingCleanliness:10},'street-life-effects-v1':[{id:'cold',expiresAt:3000},{id:'well-fed',expiresAt:2000}]});click(/^Status$/);
 assert(document.querySelector('.status-effects + .condition-heading'));

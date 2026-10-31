@@ -43,7 +43,7 @@ export const locations = {
   "location.pin.closed": "{place} Closed {hours}",
   "location.pin.openHere": "{place} Open {hours} You are here",
   "location.pin.closedHere": "{place} Closed {hours} You are here",
-  "location.map.openAllDay": "Open 24/7",
+  "location.map.openAllDay": "24/7",
   "location.map.shopOpen": "Open {open}–{close}",
   "location.map.shelterReserved": "Use your reserved bed during admission hours.",
   "location.map.shelterUnreserved": "A place is not guaranteed.",
